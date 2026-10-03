@@ -19,8 +19,8 @@ export interface Entorno {
   crearAnthropic?: () => Pick<Anthropic, "beta">;
 }
 
-type Area = "direccion" | "ventas" | "compras" | "almacen" | "produccion" | "finanzas";
-const AREAS: Area[] = ["direccion", "ventas", "compras", "almacen", "produccion", "finanzas"];
+type Area = "direccion" | "ventas" | "compras" | "almacen" | "produccion" | "finanzas" | "importaciones";
+const AREAS: Area[] = ["direccion", "ventas", "compras", "almacen", "produccion", "finanzas", "importaciones"];
 
 export const RUTAS = [
   "/", "/ventas/oportunidades", "/ventas/cotizaciones", "/ventas/pedidos", "/ventas/clientes", "/ventas/comisiones",
@@ -29,6 +29,7 @@ export const RUTAS = [
   "/almacen/existencias", "/almacen/movimientos", "/almacen/reabasto",
   "/produccion/gerencia", "/produccion/ordenes", "/finanzas/cobranza", "/finanzas/pagos",
   "/rrhh/empleados", "/rrhh/incidencias",
+  "/importaciones", "/importaciones/dinero",
 ] as const;
 
 interface Config { modelo: string; esfuerzo: "low" | "medium" | "high" | "xhigh" | "max" }
@@ -81,6 +82,8 @@ const TABLAS: Record<string, string> = {
   costos_calculados: "articulo_id,costo_material,costo_mano_obra,costo_total,sin_costo,calculado_en",
   historial_costeo: "articulo_id,en,costo_total,precio_lista,utilidad",
   perfiles: "id,nombre,puesto",
+  // Sin montos: la RLS deja ver el embarque a almacén y al taller, el dinero no.
+  v_embarques: "folio,descripcion,modalidad,proveedores,fase,etapa_nombre,eta,arribo,dias_en_puerto,dias_libres_almacenaje,llegada_planta_estimada,siguiente_paso,debe,docs_pendientes",
 };
 // Aunque la RLS se los diera a alguien, al modelo no le hacen falta.
 const COLUMNAS_PROHIBIDAS = /^(datos_bancarios|clabe|cuenta.*|curp|nss|salario.*|sueldo.*|contrasena.*|token.*|password.*)$/;
@@ -579,6 +582,229 @@ export async function redactar(opts: {
 }
 
 // -----------------------------------------------------------------------------
+// Leer un documento de importación (PI, factura, packing list, BL, pedimento o
+// cuenta de gastos) y devolver sus campos con un esquema estricto por tipo. No
+// guarda nada: la pantalla lo muestra junto al archivo y Alondra lo confirma.
+// Hoy esos datos se copian a mano de PDFs (a veces escaneados o en chino) a la
+// hoja, a PRORRATEO.xlsx y a los correos con el agente.
+// -----------------------------------------------------------------------------
+export type TipoDocumento = "proforma" | "factura" | "lista_empaque" | "bl" | "pedimento" | "cuenta_gastos";
+type Esquema = Record<string, unknown>;
+
+// Un dato que no aparece en el documento va en null: nunca se inventa.
+const nulo = (tipo: "string" | "number", descripcion: string): Esquema =>
+  ({ anyOf: [{ type: tipo }, { type: "null" }], description: descripcion });
+const fechaONulo = (descripcion: string): Esquema =>
+  ({ anyOf: [{ type: "string", format: "date" }, { type: "null" }], description: `${descripcion} (AAAA-MM-DD)` });
+const objeto = (propiedades: Record<string, Esquema>): Esquema =>
+  ({ type: "object", properties: propiedades, required: Object.keys(propiedades), additionalProperties: false });
+const lista = (items: Esquema, descripcion?: string): Esquema => ({ type: "array", items, ...(descripcion ? { description: descripcion } : {}) });
+const advertencias = lista({ type: "string" }, "Lo que no se pudo leer, no cuadra (totales, cantidades) o hace dudar; vacío si todo está claro");
+
+const PARTIDA = objeto({
+  descripcion: nulo("string", "Descripción tal como viene"),
+  modelo: nulo("string", "Modelo, marca o número de parte"),
+  cantidad: nulo("number", "Cantidad"),
+  unidad: nulo("string", "Unidad (pcs, set, m…)"),
+  precio_unitario: nulo("number", "Precio unitario en la moneda del documento"),
+  importe: nulo("number", "Importe de la partida"),
+});
+
+export const CONCEPTOS_GASTO = ["flete_internacional", "seguro", "cargos_locales", "revalidacion", "desconsolidacion", "maniobras",
+  "almacenaje", "demoras", "limpieza", "honorarios", "flete_local", "grua", "impuestos", "anticipo", "otro"] as const;
+
+export const DOCUMENTOS: Record<TipoDocumento, { nombre: string; esquema: Esquema; guia: string }> = {
+  proforma: {
+    nombre: "proforma invoice (PI)",
+    guia: "Es la cotización formal del proveedor antes de pagar el anticipo.",
+    esquema: objeto({
+      numero: nulo("string", "Número de la PI"), fecha: fechaONulo("Fecha de la PI"), proveedor: nulo("string", "Razón social del vendedor"),
+      incoterm: nulo("string", "Incoterm (FOB, CIF, CFR, EXW…)"), moneda: nulo("string", "Moneda (USD, EUR, CNY…)"),
+      puerto_origen: nulo("string", "Puerto de carga"), condiciones_pago: nulo("string", "Condiciones de pago (30 % anticipo…)"),
+      partidas: lista(PARTIDA), subtotal: nulo("number", "Subtotal"), total: nulo("number", "Total"), advertencias,
+    }),
+  },
+  factura: {
+    nombre: "commercial invoice",
+    guia: "Es la factura comercial con la que se importa; el agente aduanal la compara con la PI y el packing list.",
+    esquema: objeto({
+      numero: nulo("string", "Número de factura"), fecha: fechaONulo("Fecha de la factura"), proveedor: nulo("string", "Vendedor"),
+      comprador: nulo("string", "Comprador (debe ser la empresa o la persona que importa)"), incoterm: nulo("string", "Incoterm"),
+      moneda: nulo("string", "Moneda"), puerto_origen: nulo("string", "Puerto de carga"), puerto_destino: nulo("string", "Puerto de destino"),
+      partidas: lista(PARTIDA), total: nulo("number", "Total de la factura"), advertencias,
+    }),
+  },
+  lista_empaque: {
+    nombre: "packing list",
+    guia: "Lista de empaque: bultos, pesos y volumen.",
+    esquema: objeto({
+      numero: nulo("string", "Número"), fecha: fechaONulo("Fecha"), bultos: nulo("number", "Total de bultos"),
+      peso_bruto_kg: nulo("number", "Peso bruto total en kg"), peso_neto_kg: nulo("number", "Peso neto total en kg"),
+      volumen_m3: nulo("number", "Volumen total en m³"),
+      partidas: lista(objeto({
+        descripcion: nulo("string", "Descripción"), cantidad: nulo("number", "Cantidad"), bultos: nulo("number", "Bultos"),
+        peso_bruto_kg: nulo("number", "Peso bruto en kg"), volumen_m3: nulo("number", "Volumen en m³"),
+      })), advertencias,
+    }),
+  },
+  bl: {
+    nombre: "conocimiento de embarque (BL) o aviso de arribo",
+    guia: "BL (original, telex o seaway) o aviso de arribo de la naviera.",
+    esquema: objeto({
+      numero_bl: nulo("string", "Número de BL (master si hay dos)"),
+      tipo: { anyOf: [{ type: "string", enum: ["original", "telex", "seaway", "draft"] }, { type: "null" }], description: "Tipo de BL" },
+      naviera: nulo("string", "Naviera o NVOCC"), buque: nulo("string", "Buque"), viaje: nulo("string", "Viaje"),
+      puerto_carga: nulo("string", "Puerto de carga"), puerto_descarga: nulo("string", "Puerto de descarga"),
+      fecha_embarque: fechaONulo("Fecha de embarque (shipped on board)"), eta: fechaONulo("Fecha estimada de arribo, si viene"),
+      consignatario: nulo("string", "Consignatario"),
+      contenedores: lista(objeto({ numero: nulo("string", "Número de contenedor"), tipo: nulo("string", "Tipo (20GP, 40HC…)"), sello: nulo("string", "Sello") })),
+      bultos: nulo("number", "Bultos"), peso_kg: nulo("number", "Peso bruto en kg"), volumen_m3: nulo("number", "Volumen en m³"), advertencias,
+    }),
+  },
+  pedimento: {
+    nombre: "pedimento de importación",
+    guia: "Pedimento pagado (simplificado o completo). IGI, DTA, IVA y PRV en pesos.",
+    esquema: objeto({
+      numero: nulo("string", "Número de pedimento (15 dígitos: año, aduana, patente, consecutivo)"), clave: nulo("string", "Clave (A1…)"),
+      aduana: nulo("string", "Aduana"), fecha_pago: fechaONulo("Fecha de pago"), tipo_cambio: nulo("number", "Tipo de cambio del pedimento"),
+      valor_aduana: nulo("number", "Valor en aduana en pesos"), igi: nulo("number", "IGI en pesos"), dta: nulo("number", "DTA en pesos"),
+      iva: nulo("number", "IVA en pesos"), prv: nulo("number", "PRV en pesos"), otros: nulo("number", "Otras contribuciones en pesos"),
+      total: nulo("number", "Total de contribuciones pagadas"),
+      partidas: lista(objeto({
+        fraccion: nulo("string", "Fracción arancelaria"), descripcion: nulo("string", "Descripción"),
+        cantidad: nulo("number", "Cantidad"), valor_aduana: nulo("number", "Valor en aduana"),
+      })), advertencias,
+    }),
+  },
+  cuenta_gastos: {
+    nombre: "cuenta de gastos del agente aduanal",
+    guia: "Cuenta de gastos: lo que el agente pagó por cuenta de Hegamex, sus honorarios, los anticipos recibidos y el saldo.",
+    esquema: objeto({
+      folio: nulo("string", "Folio o número de la cuenta de gastos"), fecha: fechaONulo("Fecha"), agente: nulo("string", "Agencia aduanal"),
+      referencia: nulo("string", "Referencia operativa del agente (LCM…, ZMZI…)"),
+      conceptos: lista(objeto({
+        descripcion: nulo("string", "Concepto tal como viene"),
+        concepto: { type: "string", enum: [...CONCEPTOS_GASTO], description: "Clasificación: impuestos = los del pedimento; anticipo = lo que Hegamex le dio al agente" },
+        monto: nulo("number", "Importe sin IVA en pesos"), iva: nulo("number", "IVA de ese concepto en pesos"),
+      })),
+      total: nulo("number", "Total de la cuenta"), anticipos: nulo("number", "Anticipos recibidos de Hegamex"),
+      saldo: nulo("number", "Saldo: positivo si es a favor de Hegamex, negativo si Hegamex debe un complemento"), advertencias,
+    }),
+  },
+};
+
+/** Revisa que lo que devolvió Claude cumpla el esquema antes de mostrarlo. Devuelve los errores. */
+export function validarEsquema(valor: unknown, esquema: Esquema, ruta = "$"): string[] {
+  if (Array.isArray(esquema.anyOf)) {
+    const opciones = (esquema.anyOf as Esquema[]).map((e) => validarEsquema(valor, e, ruta));
+    return opciones.some((e) => e.length === 0) ? [] : opciones[0];
+  }
+  const tipo = esquema.type;
+  if (tipo === "null") return valor === null ? [] : [`${ruta} debe ser null`];
+  if (tipo === "string") {
+    if (typeof valor !== "string") return [`${ruta} debe ser texto`];
+    if (Array.isArray(esquema.enum) && !esquema.enum.includes(valor)) return [`${ruta} no es un valor permitido`];
+    if (esquema.format === "date" && !/^\d{4}-\d{2}-\d{2}$/.test(valor)) return [`${ruta} no es una fecha AAAA-MM-DD`];
+    return [];
+  }
+  if (tipo === "number") return typeof valor === "number" && Number.isFinite(valor) ? [] : [`${ruta} debe ser número`];
+  if (tipo === "array") {
+    if (!Array.isArray(valor)) return [`${ruta} debe ser lista`];
+    return valor.flatMap((v, i) => validarEsquema(v, esquema.items as Esquema, `${ruta}[${i}]`));
+  }
+  if (tipo === "object") {
+    if (!valor || typeof valor !== "object" || Array.isArray(valor)) return [`${ruta} debe ser objeto`];
+    const props = esquema.properties as Record<string, Esquema>;
+    const v = valor as Record<string, unknown>;
+    return [
+      ...Object.keys(props).filter((k) => !(k in v)).map((k) => `falta ${ruta}.${k}`),
+      ...Object.keys(v).filter((k) => !(k in props)).map((k) => `sobra ${ruta}.${k}`),
+      ...Object.keys(props).filter((k) => k in v).flatMap((k) => validarEsquema(v[k], props[k], `${ruta}.${k}`)),
+    ];
+  }
+  return [];
+}
+
+export const TIPOS_ARCHIVO = ["application/pdf", "image/jpeg", "image/png"] as const;
+type TipoArchivo = (typeof TIPOS_ARCHIVO)[number];
+const MAX_BASE64 = 20_000_000; // ~15 MB de archivo
+
+export async function leerDocumento(opts: {
+  anthropic: Pick<Anthropic, "beta">; perfil: Perfil; config: Config; tipo: TipoDocumento; mediaType: TipoArchivo; datos: string;
+}) {
+  const doc = DOCUMENTOS[opts.tipo];
+  const archivo: Anthropic.Beta.BetaContentBlockParam = opts.mediaType === "application/pdf"
+    ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: opts.datos } }
+    : { type: "image", source: { type: "base64", media_type: opts.mediaType, data: opts.datos } };
+  const flujo = opts.anthropic.beta.messages.stream({
+    model: opts.config.modelo,
+    max_tokens: 16000,
+    betas: BETAS,
+    fallbacks: "default",
+    output_config: { effort: opts.config.esfuerzo, format: { type: "json_schema", schema: doc.esquema } },
+    system: sistema(opts.perfil),
+    messages: [{
+      role: "user",
+      content: [archivo, {
+        type: "text",
+        text: `Este archivo debería ser una ${doc.nombre}. ${doc.guia} Extrae los campos del esquema. ` +
+          "Copia solo lo que está escrito en el documento; si un dato no aparece o no se lee, pon null: no lo calcules ni lo supongas. " +
+          "Fechas en AAAA-MM-DD; montos como número, sin símbolos ni separadores de miles. Si el documento está en inglés o en chino, " +
+          "deja las descripciones como vienen. Si no es el tipo de documento esperado, o los totales no cuadran con las partidas, dilo en advertencias.",
+      }],
+    }],
+  });
+  const r = await flujo.finalMessage();
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso leer este documento. Captúralo a mano.");
+  if (r.stop_reason === "max_tokens") throw new ErrorHerramienta("El documento es demasiado largo para leerlo de una vez: sube solo las páginas que importan.");
+  const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
+  if (!bloque) throw new ErrorHerramienta("Claude no devolvió los datos del documento.");
+  let campos: unknown;
+  try { campos = JSON.parse(bloque.text); } catch { throw new ErrorHerramienta("Claude devolvió algo que no se puede leer. Intenta de nuevo."); }
+  const errores = validarEsquema(campos, doc.esquema);
+  if (errores.length) {
+    throw new ErrorHerramienta(`Claude devolvió datos que no cumplen el formato (${errores.slice(0, 3).join("; ")}). No se guardó nada: intenta de nuevo o captúralo a mano.`);
+  }
+  return { campos: campos as Record<string, unknown>, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+}
+
+/** Sin llave de Claude: un ejemplo con la forma de cada documento, marcado como tal. */
+export function ejemploDocumento(tipo: TipoDocumento): Record<string, unknown> {
+  const aviso = ["MODO DEMOSTRACIÓN: falta la llave de Claude. Estos datos son un ejemplo, no se leyeron de tu archivo."];
+  const partida = (descripcion: string, modelo: string, cantidad: number, precio: number) =>
+    ({ descripcion, modelo, cantidad, unidad: "pcs", precio_unitario: precio, importe: cantidad * precio });
+  switch (tipo) {
+    case "proforma":
+      return { numero: "MEHE-20261001001", fecha: "2026-09-18", proveedor: "Yao Han Industries Co., Ltd.", incoterm: "CFR", moneda: "USD",
+        puerto_origen: "Taichung", condiciones_pago: "50 % anticipo, 50 % antes del embarque",
+        partidas: [partida("Portable bag closer", "N600A", 20, 160), partida("Sewing head", "F900A", 2, 1600)], subtotal: 6400, total: 6400, advertencias: aviso };
+    case "factura":
+      return { numero: "MEHE-20261001001", fecha: "2026-09-30", proveedor: "Yao Han Industries Co., Ltd.", comprador: "Máquinas y Herramientas Gamex",
+        incoterm: "CFR", moneda: "USD", puerto_origen: "Taichung", puerto_destino: "Manzanillo",
+        partidas: [partida("Portable bag closer", "N600A", 20, 160), partida("Sewing head", "F900A", 2, 1600)], total: 6400, advertencias: aviso };
+    case "lista_empaque":
+      return { numero: "PL-20261001001", fecha: "2026-09-30", bultos: 12, peso_bruto_kg: 486, peso_neto_kg: 432, volumen_m3: 2.1,
+        partidas: [{ descripcion: "Portable bag closer N600A", cantidad: 20, bultos: 10, peso_bruto_kg: 280, volumen_m3: 1.2 },
+                   { descripcion: "Sewing head F900A", cantidad: 2, bultos: 2, peso_bruto_kg: 206, volumen_m3: 0.9 }], advertencias: aviso };
+    case "bl":
+      return { numero_bl: "800610246498", tipo: "telex", naviera: "TS Lines", buque: "TS Hongkong", viaje: "24019E", puerto_carga: "Kaohsiung",
+        puerto_descarga: "Manzanillo", fecha_embarque: "2026-09-16", eta: "2026-10-12", consignatario: "Máquinas y Herramientas Gamex",
+        contenedores: [{ numero: "TCLU1234567", tipo: "20GP", sello: "TS445566" }], bultos: 12, peso_kg: 486, volumen_m3: 2.1, advertencias: aviso };
+    case "pedimento":
+      return { numero: "26 16 1943 6004373", clave: "A1", aduana: "Manzanillo", fecha_pago: "2026-09-22", tipo_cambio: 18.92,
+        valor_aduana: 127400, igi: 6370, dta: 1100, iva: 21476, prv: 304, otros: 0, total: 29250,
+        partidas: [{ fraccion: "84522101", descripcion: "Máquinas de coser costales", cantidad: 22, valor_aduana: 127400 }], advertencias: aviso };
+    case "cuenta_gastos":
+      return { folio: "LCM2311-CG", fecha: "2026-09-29", agente: "Agencia Aduanal Careaga", referencia: "LCM2311-2026",
+        conceptos: [
+          { descripcion: "Impuestos pagados (pedimento)", concepto: "impuestos", monto: 29250, iva: 0 },
+          { descripcion: "Honorarios", concepto: "honorarios", monto: 6500, iva: 1040 },
+          { descripcion: "Maniobras y revalidación", concepto: "maniobras", monto: 3200, iva: 512 },
+        ], total: 40502, anticipos: 59127.03, saldo: 18625.03, advertencias: aviso };
+  }
+}
+
+// -----------------------------------------------------------------------------
 // La puerta: autentica, revisa cupo, despacha y registra el uso.
 // -----------------------------------------------------------------------------
 const json = (cuerpo: unknown, status = 200) =>
@@ -671,8 +897,24 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
       return json({ asunto: r.asunto, mensaje: r.mensaje, modelo: r.modelo });
     }
 
+    if (modo === "leer_documento") {
+      const tipo = texto(cuerpo.tipo) as TipoDocumento;
+      if (!(tipo in DOCUMENTOS)) return json({ error: "Tipo de documento desconocido" }, 400);
+      const mediaType = texto(cuerpo.media_type) as TipoArchivo;
+      if (!TIPOS_ARCHIVO.includes(mediaType)) return json({ error: "Claude lee PDF, JPG o PNG" }, 400);
+      const datos = texto(cuerpo.datos);
+      if (!datos || !/^[A-Za-z0-9+/]+=*$/.test(datos)) return json({ error: "Falta el archivo" }, 400);
+      if (datos.length > MAX_BASE64) return json({ error: "El archivo pesa más de 15 MB: sube solo las páginas que importan." }, 413);
+      const { data: puedeLeer } = await db.rpc("puede", { p_modulo: "importaciones", p_nivel: 2 });
+      if (!puedeLeer) return json({ error: "Leer documentos de importación es de importaciones y compras." }, 403);
+      if (!anthropic) return json({ tipo, campos: ejemploDocumento(tipo), simulado: true });
+      const r = await leerDocumento({ anthropic, perfil, config, tipo, mediaType, datos });
+      await registrar(r);
+      return json({ tipo, campos: r.campos, modelo: r.modelo });
+    }
+
     if (modo === "chat") {
-      const mensajes = (Array.isArray(cuerpo.mensajes) ? cuerpo.mensajes : [])
+      const mensajes =(Array.isArray(cuerpo.mensajes) ? cuerpo.mensajes : [])
         .filter((m): m is MensajeChat => !!m && typeof (m as MensajeChat).texto === "string")
         .map((m) => ({ rol: m.rol === "asistente" ? "asistente" as const : "usuario" as const, texto: m.texto }));
       const ruta = texto(cuerpo.ruta).slice(0, 80) || undefined;

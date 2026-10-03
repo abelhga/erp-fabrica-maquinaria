@@ -6,7 +6,7 @@ import { describe, expect, it, beforeAll } from "vitest";
 import { readFileSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
-import { atender, ejecutarHerramienta, explicarError, type Evento } from "./nucleo.ts";
+import { atender, DOCUMENTOS, ejecutarHerramienta, ejemploDocumento, explicarError, validarEsquema, type Evento, type TipoDocumento } from "./nucleo.ts";
 
 const env = Object.fromEntries(
   readFileSync(new URL("../../../.env.local", import.meta.url), "utf8").split("\n")
@@ -125,6 +125,82 @@ describe.skipIf(!hayBase)("asistente contra la base local", () => {
       method: "POST", headers: { Authorization: `Bearer ${tv.token}` }, body: JSON.stringify({ modo: "chat", mensajes: [] }),
     }), { supabaseUrl: URL_SB, supabaseAnonKey: ANON });
     expect(r.status).toBe(403);
+  });
+});
+
+describe.skipIf(!hayBase)("leer documentos de importación", () => {
+  const pdf = Buffer.from("%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\n%%EOF").toString("base64");
+  const pedir = (token: string, cuerpo: Record<string, unknown>, falso?: Pick<Anthropic, "beta">) =>
+    atender(new Request("http://x/", {
+      method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ modo: "leer_documento", ...cuerpo }),
+    }), { supabaseUrl: URL_SB, supabaseAnonKey: ANON, ...(falso ? { crearAnthropic: () => falso } : {}) });
+  const respuesta = (campos: unknown, stop_reason: Anthropic.Beta.BetaMessage["stop_reason"] = "end_turn") =>
+    ({ stop_reason, content: [{ type: "text", text: JSON.stringify(campos), citations: null }] as Anthropic.Beta.BetaContentBlock[] });
+
+  it("el PDF viaja como bloque document, con el esquema estricto del tipo, y lo devuelto se valida", async () => {
+    const alondra = await sesion("importaciones@hegamex.com");
+    const campos = { ...ejemploDocumento("bl"), advertencias: [] };
+    const { falso, recibido } = claudeFalso([respuesta(campos)]);
+    const antes = (await alondra.db.from("asistente_uso").select("id", { count: "exact", head: true }).eq("modo", "leer_documento")).count ?? 0;
+    const r = await pedir(alondra.token, { tipo: "bl", media_type: "application/pdf", datos: pdf }, falso);
+    expect(r.status).toBe(200);
+    const j = await r.json();
+    expect(j.campos.numero_bl).toBe("800610246498");
+    expect(j.simulado).toBeUndefined();
+    const contenido = recibido[0].messages[0].content as Anthropic.Beta.BetaContentBlockParam[];
+    expect(contenido[0]).toEqual({ type: "document", source: { type: "base64", media_type: "application/pdf", data: pdf } });
+    expect(contenido[1].type).toBe("text");
+    expect(recibido[0].output_config?.format).toEqual({ type: "json_schema", schema: DOCUMENTOS.bl.esquema });
+    expect(recibido[0].betas).toEqual(["server-side-fallback-2026-07-01"]);
+    expect(recibido[0].fallbacks).toBe("default");
+    const despues = (await alondra.db.from("asistente_uso").select("id", { count: "exact", head: true }).eq("modo", "leer_documento")).count ?? 0;
+    expect(despues).toBe(antes + 1);
+  });
+
+  it("una foto viaja como bloque image", async () => {
+    const alondra = await sesion("importaciones@hegamex.com");
+    const { falso, recibido } = claudeFalso([respuesta({ ...ejemploDocumento("lista_empaque"), advertencias: [] })]);
+    const r = await pedir(alondra.token, { tipo: "lista_empaque", media_type: "image/png", datos: pdf }, falso);
+    expect(r.status).toBe(200);
+    const contenido = recibido[0].messages[0].content as Anthropic.Beta.BetaContentBlockParam[];
+    expect(contenido[0]).toEqual({ type: "image", source: { type: "base64", media_type: "image/png", data: pdf } });
+  });
+
+  it("si lo devuelto no cumple el esquema o se cortó, no se entrega nada", async () => {
+    const alondra = await sesion("importaciones@hegamex.com");
+    const { eta: _sinEta, ...incompleto } = ejemploDocumento("bl") as Record<string, unknown>;
+    void _sinEta;
+    let falso = claudeFalso([respuesta(incompleto)]).falso;
+    let r = await pedir(alondra.token, { tipo: "bl", media_type: "application/pdf", datos: pdf }, falso);
+    expect(r.status).toBe(400);
+    expect((await r.json()).error).toMatch(/no cumplen el formato.*falta \$\.eta/);
+    falso = claudeFalso([respuesta({ ...ejemploDocumento("pedimento"), igi: "6,370" })]).falso;
+    r = await pedir(alondra.token, { tipo: "pedimento", media_type: "application/pdf", datos: pdf }, falso);
+    expect((await r.json()).error).toMatch(/\$\.igi debe ser número/);
+    falso = claudeFalso([respuesta({ numero: "26 16" }, "max_tokens")]).falso;
+    r = await pedir(alondra.token, { tipo: "pedimento", media_type: "application/pdf", datos: pdf }, falso);
+    expect((await r.json()).error).toMatch(/demasiado largo/);
+  });
+
+  it("sin llave es un ejemplo que lo dice; almacén y ventas no leen documentos", async () => {
+    const alondra = await sesion("importaciones@hegamex.com");
+    const r = await pedir(alondra.token, { tipo: "cuenta_gastos", media_type: "application/pdf", datos: pdf });
+    const j = await r.json();
+    expect(j.simulado).toBe(true);
+    expect(j.campos.advertencias[0]).toMatch(/MODO DEMOSTRACIÓN/);
+    for (const correo of ["almacen@hegamex.com", "isaac@hegamex.com"]) {
+      const s = await sesion(correo);
+      expect((await pedir(s.token, { tipo: "bl", media_type: "application/pdf", datos: pdf })).status).toBe(403);
+    }
+  });
+});
+
+describe("documentos de importación sin base", () => {
+  it("cada ejemplo cumple su esquema y el validador atrapa lo que sobra o falta", () => {
+    for (const t of Object.keys(DOCUMENTOS) as TipoDocumento[]) expect(validarEsquema(ejemploDocumento(t), DOCUMENTOS[t].esquema)).toEqual([]);
+    expect(validarEsquema({ ...ejemploDocumento("bl"), extra: 1 }, DOCUMENTOS.bl.esquema)).toContain("sobra $.extra");
+    expect(validarEsquema({ ...ejemploDocumento("bl"), fecha_embarque: "16/09/2026" }, DOCUMENTOS.bl.esquema)[0]).toMatch(/fecha_embarque/);
   });
 });
 

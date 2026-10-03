@@ -10,7 +10,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
 import { useTiempoReal } from "@/lib/consultas";
-import { dinero, dineroCompacto, numero } from "@/lib/formato";
+import { dinero, dineroCompacto, fecha, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { nombreCorto, todasLasFilas, useAlmacenes } from "./componentes/comun";
 import { DetalleExistencia } from "./componentes/DetalleExistencia";
@@ -18,6 +18,8 @@ import { DetalleExistencia } from "./componentes/DetalleExistencia";
 export interface FilaExistencia {
   articulo_id: string; clave: string; nombre: string; unidad: string; tipo: string; es_importado: boolean;
   en_planta: number; en_mercadolibre: number; reservado: number; en_transito: number; por_almacen: Record<string, number> | null;
+  // El tránsito de importación por tramo y la llegada a planta según la etapa real del embarque.
+  en_produccion?: number; en_mar?: number; en_puerto?: number; llegada_estimada?: string | null;
 }
 
 type Vista = "con" | "todos" | "apartados" | "transito" | "negativos";
@@ -37,7 +39,7 @@ export default function Existencias() {
   const datos = useQuery({
     queryKey: ["v_existencias"],
     queryFn: () => todasLasFilas<FilaExistencia>((d, h) => supabase.from("v_existencias")
-      .select("articulo_id, clave, nombre, unidad, tipo, es_importado, en_planta, en_mercadolibre, reservado, en_transito, por_almacen")
+      .select("articulo_id, clave, nombre, unidad, tipo, es_importado, en_planta, en_mercadolibre, reservado, en_transito, por_almacen, en_produccion, en_mar, en_puerto, llegada_estimada")
       .order("nombre").order("articulo_id").range(d, h)),
   });
   const costos = useQuery({
@@ -88,7 +90,7 @@ export default function Existencias() {
     },
     {
       clave: "en_transito", titulo: "Tránsito", alinear: "der", sinBusqueda: true, oculta: !verTransito, clase: "px-2",
-      celda: (f) => f.en_transito > 0 ? <span className="text-info">{numero(f.en_transito)}</span> : <span className="text-tenue/50">·</span>,
+      celda: (f) => f.en_transito > 0 ? <CeldaTransito f={f} /> : <span className="text-tenue/50">·</span>,
     },
     {
       clave: "disponible", titulo: "Disponible", alinear: "der", sinBusqueda: true, clase: "px-2 border-r border-borde bg-marca-suave/30",
@@ -187,5 +189,18 @@ export default function Existencias() {
         alCerrar={() => abrir(null)}
       />
     </Pagina>
+  );
+}
+
+/** Cuánto del tránsito sigue con el proveedor, en el mar o en puerto, y cuándo llega a planta. */
+function CeldaTransito({ f }: { f: FilaExistencia }) {
+  const tramos = [
+    [Number(f.en_produccion ?? 0), "con el proveedor"], [Number(f.en_mar ?? 0), "en el mar"], [Number(f.en_puerto ?? 0), "en puerto"],
+  ].filter(([n]) => Number(n) > 0).map(([n, t]) => `${numero(Number(n))} ${t}`);
+  return (
+    <span className="text-info" title={tramos.length ? tramos.join(" · ") : undefined}>
+      {numero(f.en_transito)}
+      {f.llegada_estimada && <span className="block text-[11px] text-tenue whitespace-nowrap">llega {fecha(f.llegada_estimada)}</span>}
+    </span>
   );
 }

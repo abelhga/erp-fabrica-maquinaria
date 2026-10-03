@@ -14,6 +14,7 @@ export const ROLES: { rol: Rol; descripcion: string }[] = [
   { rol: "rrhh", descripcion: "Personal, vacaciones e incidencias, con CURP, salario y cuentas." },
   { rol: "finanzas", descripcion: "Cobranza, pagos a proveedores y pago de comisiones." },
   { rol: "pantalla", descripcion: "TV del taller: entra directo al tablero de piso y no ve nada más." },
+  { rol: "importaciones", descripcion: "Embarques, documentos con el agente aduanal, pagos en dólares y costo puesto en planta." },
 ];
 
 export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; alerta?: string }[] = [
@@ -27,6 +28,7 @@ export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; ale
   { modulo: "rrhh", nombre: "Recursos humanos", descripcion: "Personal y vacaciones. 3: además CURP, RFC, NSS, salario y cuenta bancaria." },
   { modulo: "finanzas", nombre: "Finanzas", descripcion: "Cobranza y pagos. 2: registra cobros, facturas y pagos." },
   { modulo: "admin", nombre: "Sistema", descripcion: "1: ver la bitácora · 3: usuarios, roles, invitaciones y configuración." },
+  { modulo: "importaciones", nombre: "Importaciones", descripcion: "1: ver embarques y cuándo llegan (montos solo con compras, finanzas o costos) · 2: capturar · 3: administrar." },
 ];
 
 export const NIVELES = [
