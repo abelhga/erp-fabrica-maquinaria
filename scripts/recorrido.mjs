@@ -9,9 +9,9 @@ import pg from "pg";
 const base = process.env.APP_URL ?? "http://localhost:5173";
 const RUTAS = [
   "/", "/pendientes", "/semana", "/ventas/para-llamar", "/ventas/oportunidades", "/ventas/cotizaciones", "/ventas/cotizaciones/nueva", "/ventas/pedidos",
-  "/ventas/clientes", "/ventas/comisiones", "/ventas/solicitudes", "/costeo/equipos", "/costeo/componentes", "/costeo/planos", "/costeo/margenes",
+  "/ventas/clientes", "/ventas/comisiones", "/ventas/solicitudes", "/ventas/devoluciones", "/costeo/equipos", "/costeo/componentes", "/costeo/planos", "/costeo/margenes",
   "/costeo/precios-ventas", "/compras/precios", "/compras/solicitudes", "/compras/ordenes", "/compras/proveedores", "/almacen/existencias",
-  "/almacen/movimientos", "/almacen/reabasto", "/importaciones", "/importaciones/dinero", "/produccion/gerencia",
+  "/almacen/movimientos", "/almacen/reabasto", "/almacen/envios", "/importaciones", "/importaciones/dinero", "/produccion/gerencia",
   "/produccion/ordenes", "/produccion/terminal", "/piso", "/servicio", "/servicio/maquinas", "/servicio/reportar",
   "/servicio/resguardos", "/rrhh/empleados", "/rrhh/incidencias", "/rrhh/objetivos", "/rrhh/checklist", "/rrhh/prenomina",
   "/rrhh/mi-desempeno", "/finanzas/cobranza", "/finanzas/pagos", "/sistema/usuarios", "/sistema/importar",

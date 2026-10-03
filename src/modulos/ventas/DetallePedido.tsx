@@ -18,6 +18,7 @@ import { cn } from "@/lib/utilidades";
 import { Barra, CampoNumero, Dato } from "./componentes/campos";
 import { DialogoMotivo } from "./componentes/dialogos";
 import { CANAL, ESTADO_PEDIDO, LINEA, dineroEn, hoyMx, useVendedores, type EstadoPedido, type Linea, type VPedido } from "./comun";
+import { TarjetaEnvio } from "@/modulos/almacen/envios/TarjetaEnvio";
 
 interface Pedido {
   id: string; folio: string; cotizacion_id: string | null; cliente_id: string; vendedor_id: string | null; canal: keyof typeof CANAL;
@@ -242,6 +243,7 @@ export default function DetallePedido() {
         </div>
 
         <div className="space-y-4">
+          <TarjetaEnvio pedido={p} />
           <Tarjeta>
             <EncabezadoTarjeta titulo="Datos del pedido" />
             <div className="px-5 pb-5 grid grid-cols-2 gap-3">

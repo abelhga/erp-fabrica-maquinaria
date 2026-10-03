@@ -29,7 +29,7 @@ export const RUTAS = [
   "/ventas/clientes", "/ventas/comisiones", "/costeo/equipos", "/costeo/componentes", "/costeo/planos", "/costeo/margenes",
   "/costeo/precios-ventas",
   "/compras/precios", "/compras/solicitudes", "/compras/ordenes", "/compras/proveedores", "/ventas/solicitudes",
-  "/almacen/existencias", "/almacen/movimientos", "/almacen/reabasto",
+  "/almacen/existencias", "/almacen/movimientos", "/almacen/reabasto", "/almacen/envios", "/ventas/devoluciones",
   "/produccion/gerencia", "/produccion/ordenes", "/finanzas/cobranza", "/finanzas/pagos",
   "/rrhh/empleados", "/rrhh/incidencias", "/rrhh/objetivos", "/rrhh/checklist", "/rrhh/prenomina",
   "/importaciones", "/importaciones/dinero",

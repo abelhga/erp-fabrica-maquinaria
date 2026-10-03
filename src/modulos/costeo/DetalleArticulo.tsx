@@ -19,6 +19,7 @@ import { Historial } from "./componentes/Historial";
 import { DondeSeUsa } from "./componentes/DondeSeUsa";
 import { DialogoDuplicar } from "./componentes/Duplicar";
 import { FichaComponente } from "./componentes/FichaComponente";
+import { EmpaqueArticulo } from "@/modulos/almacen/envios/EmpaqueArticulo";
 
 function Cifra({ etiqueta, valor, detalle, tono }: { etiqueta: string; valor: ReactNode; detalle?: ReactNode; tono?: "ok" | "aviso" | "peligro" }) {
   return (
@@ -166,6 +167,7 @@ export default function DetalleArticulo() {
       ) : (
         <>
           <FichaComponente articulo={a} />
+          <EmpaqueArticulo articuloId={a.id} />
           <section className="space-y-2">
             <h2 className="text-base font-semibold">Planos</h2>
             <PlanosArticulo articuloId={a.id} />
