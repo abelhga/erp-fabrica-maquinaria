@@ -34,14 +34,14 @@ declare
   k int; v_costo numeric;
   -- Proveedores: legacy, nombre, razón social, categoría, país, importación, moneda, crédito, entrega (días hábiles), contacto, teléfono, correo
   provs constant text[][] := array[
-    ['DEMO-PROV-ROD', 'Rodamientos y Transmisiones del Bajío', 'Rodamientos y Transmisiones del Bajío S.A. de C.V.', 'Rodamientos y transmisión', 'México', 'f', 'MXN', '30', '3', 'Laura Medina', '33 3811 4520', 'ventas@rodamientosbajio.mx'],
+    ['DEMO-PROV-ROD', 'Rodamientos y Transmisiones del Bajío', 'Rodamientos y Transmisiones del Bajío S.A. de C.V.', 'Rodamientos y transmisión', 'México', 'f', 'MXN', '30', '3', 'Laura Medina', '', 'ventas@ejemplo.com'],
     ['DEMO-PROV-TAP', 'Tapco Inc.', 'Tapco Inc.', 'Cangilones', 'Estados Unidos', 't', 'USD', '0', '45', 'Export desk', '+1 314 739 9191', 'export@tapcoinc.example'],
-    ['DEMO-PROV-BAN', 'Bandas y Hules Industriales de Occidente', 'Bandas y Hules Industriales de Occidente S.A. de C.V.', 'Bandas transportadoras', 'México', 'f', 'MXN', '15', '7', 'Ramón Íñiguez', '33 3650 2210', 'ramon@bandasyhules.mx'],
-    ['DEMO-PROV-ACE', 'Aceros y Láminas de Jalisco', 'Aceros y Láminas de Jalisco S.A. de C.V.', 'Acero', 'México', 'f', 'MXN', '30', '2', 'Mostrador', '33 3145 9900', 'pedidos@acerosjalisco.mx'],
+    ['DEMO-PROV-BAN', 'Bandas y Hules Industriales de Occidente', 'Bandas y Hules Industriales de Occidente S.A. de C.V.', 'Bandas transportadoras', 'México', 'f', 'MXN', '15', '7', 'Ramón Íñiguez', '', 'ramon@ejemplo.com'],
+    ['DEMO-PROV-ACE', 'Aceros y Láminas de Jalisco', 'Aceros y Láminas de Jalisco S.A. de C.V.', 'Acero', 'México', 'f', 'MXN', '30', '2', 'Mostrador', '', 'pedidos@ejemplo.com'],
     ['DEMO-PROV-NGB', 'Ningbo Gearmotor Co.', 'Ningbo Gearmotor Co., Ltd.', 'Motorreductores', 'China', 't', 'USD', '0', '60', 'Kevin Zhang', '+86 574 8790 1234', 'sales@ningbogearmotor.example'],
     ['DEMO-PROV-FER', 'Ferretería Industrial Atotonilco', 'Ferretería Industrial Atotonilco S.A. de C.V.', 'Ferretería y consumibles', 'México', 'f', 'MXN', '0', '1', 'Don Chuy', '391 917 0455', 'ferreteria.atotonilco@example.mx'],
-    ['DEMO-PROV-MOT', 'Motores Eléctricos de Guadalajara', 'Motores Eléctricos de Guadalajara S.A. de C.V.', 'Motores', 'México', 'f', 'MXN', '30', '5', 'Sergio Lara', '33 3619 7788', 'slara@motoresgdl.mx'],
-    ['DEMO-PROV-RDL', 'Rodillos Transportadores del Norte', 'Rodillos Transportadores del Norte S.A. de C.V.', 'Rodillos', 'México', 'f', 'MXN', '15', '10', 'Ventas', '81 8340 1122', 'ventas@rodillosnorte.mx']
+    ['DEMO-PROV-MOT', 'Motores Eléctricos de Guadalajara', 'Motores Eléctricos de Guadalajara S.A. de C.V.', 'Motores', 'México', 'f', 'MXN', '30', '5', 'Sergio Lara', '', 'slara@ejemplo.com'],
+    ['DEMO-PROV-RDL', 'Rodillos Transportadores del Norte', 'Rodillos Transportadores del Norte S.A. de C.V.', 'Rodillos', 'México', 'f', 'MXN', '15', '10', 'Ventas', '', 'ventas@ejemplo.com']
   ];
   -- Artículos: clave, nombre, tipo, unidad, proveedor (legacy), costo, moneda, entrega propia, importado, empaque, seguridad, años de historial, alza anual
   arts constant text[][] := array[
