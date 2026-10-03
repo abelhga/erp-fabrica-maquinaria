@@ -114,7 +114,7 @@ begin
   -- ---------------------------------------------------------------------------
   perform pg_temp.como_postgres();
   insert into vendedor_plan values (v_isaac, (select id from planes_comision where nombre like 'General%'));
-  delete from pedidos;
+  -- (v_isaac es un usuario nuevo de esta prueba: solo cuentan sus pedidos, haya lo que haya en la base)
   insert into pedidos (cliente_id, vendedor_id, fecha) values (v_cli_isaac, v_isaac, '2026-09-10') returning id into v_ped;
   insert into pedido_lineas (pedido_id, titulo, cantidad, precio_unitario, linea) values
     (v_ped, 'Equipos del mes', 1, 2857000, 'maquinaria'),
