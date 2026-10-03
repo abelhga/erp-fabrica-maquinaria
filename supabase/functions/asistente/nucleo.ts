@@ -1,0 +1,712 @@
+// El asistente de Hegamex: Claude con acceso de SOLO LECTURA a los datos del ERP.
+//
+// Este archivo no sabe en qué servidor corre (Deno en Supabase, Node en local y en
+// las pruebas): recibe un Request y devuelve un Response. index.ts lo monta en
+// Supabase; scripts/asistente-local.ts, en Node.
+//
+// La regla que importa: toda consulta sale con la sesión de quien pregunta, así que
+// la RLS aplica igual que en la pantalla. Claude no puede contarle un costo a un
+// vendedor porque la base no se lo da. Nada aquí usa la llave de servicio.
+import Anthropic from "@anthropic-ai/sdk";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+export interface Entorno {
+  supabaseUrl: string;
+  supabaseAnonKey: string;
+  /** Sin llave el asistente responde en modo demostración con los hallazgos de la base. */
+  anthropicKey?: string;
+  /** Para las pruebas: un cliente de Anthropic falso. */
+  crearAnthropic?: () => Pick<Anthropic, "beta">;
+}
+
+type Area = "direccion" | "ventas" | "compras" | "almacen" | "produccion" | "finanzas";
+const AREAS: Area[] = ["direccion", "ventas", "compras", "almacen", "produccion", "finanzas"];
+
+export const RUTAS = [
+  "/", "/ventas/oportunidades", "/ventas/cotizaciones", "/ventas/pedidos", "/ventas/clientes", "/ventas/comisiones",
+  "/costeo/equipos", "/costeo/componentes", "/costeo/margenes", "/costeo/precios-ventas",
+  "/compras/precios", "/compras/ordenes", "/compras/proveedores",
+  "/almacen/existencias", "/almacen/movimientos", "/almacen/reabasto",
+  "/produccion/gerencia", "/produccion/ordenes", "/finanzas/cobranza", "/finanzas/pagos",
+  "/rrhh/empleados", "/rrhh/incidencias",
+] as const;
+
+interface Config { modelo: string; esfuerzo: "low" | "medium" | "high" | "xhigh" | "max" }
+interface Perfil { id: string; nombre: string; roles: string[] }
+
+export type Evento =
+  | { tipo: "texto"; texto: string }
+  | { tipo: "herramienta"; nombre: string; etiqueta: string }
+  | { tipo: "fin"; modelo: string; simulado?: boolean }
+  | { tipo: "error"; mensaje: string; codigo: string };
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+// Opus 5.5 rechaza los fallbacks en arreglo con este encabezado; "default" deja que
+// la API elija a quién pasarle una petición que Claude declina, según el motivo.
+const BETAS: Anthropic.Beta.AnthropicBeta[] = ["server-side-fallback-2026-07-01"];
+
+// -----------------------------------------------------------------------------
+// Herramientas. Todas leen; ninguna escribe. strict: true garantiza que los
+// argumentos cumplen el esquema (con tool_choice "auto": Opus 5.5 no deja forzar).
+// eager_input_streaming se deja apagado a propósito: las entradas son de unas
+// cuantas palabras y así la API las sigue validando contra el esquema.
+// -----------------------------------------------------------------------------
+
+/** Tablas y vistas que Claude puede consultar, con las columnas que se le dan si no pide otras. */
+const TABLAS: Record<string, string> = {
+  clientes: "id,nombre,razon_social,giro,ciudad,estado,es_distribuidor,dias_credito,activo,vendedor_id,creado_en",
+  v_cartera: "cliente_id,nombre,vendedor,ultima_venta,ultimo_seguimiento,vence_en,estado,dias_restantes",
+  contactos: "cliente_id,nombre,puesto,telefono,whatsapp,correo,principal",
+  historial_ventas_hoja: "fecha,cliente_id,cliente_nombre,tipo,monto,descripcion,factura",
+  cotizaciones: "id,folio,cliente_id,empresa,fecha,vigencia_dias,estado,moneda,total,vendedor_id",
+  pedidos: "id,folio,cliente_id,canal,fecha,fecha_compromiso,estado,moneda,total,vendedor_id",
+  pedido_lineas: "pedido_id,articulo_id,titulo,cantidad,precio_unitario,importe,linea",
+  oportunidades: "id,titulo,cliente_id,etapa,linea,canal,monto_estimado,probabilidad,fecha_cierre_estimada,vendedor_id",
+  articulos: "id,clave,tipo,nombre,familia,unidad,es_importado,tiempo_entrega_dias,se_vende,activo",
+  precios_lista: "articulo_id,precio,moneda,calculado_en",
+  existencias: "articulo_id,almacen_id,cantidad",
+  almacenes: "id,nombre,tipo,disponible_para_planta",
+  v_tablero_produccion: "folio,numero_serie,estado,prioridad,fecha_compromiso,equipo,cliente,avance,etapa_actual,pausada,materiales_faltantes,dias_restantes,atrasada,horas_pendientes",
+  v_saldos_pedido: "folio,cliente_id,fecha,estado,moneda,total,cobrado,saldo",
+  v_cuentas_por_pagar: "folio,proveedor,fecha,vence_pago,moneda,total,pagado,saldo",
+  proveedores: "id,nombre,categoria,pais,es_importacion,moneda,dias_credito,dias_entrega,activo",
+  ordenes_compra: "folio,proveedor_id,estado,fecha,fecha_entrega,moneda,total,vence_pago",
+  historial_costos: "articulo_id,costo_anterior,costo_nuevo,moneda,origen,en",
+  costos_calculados: "articulo_id,costo_material,costo_mano_obra,costo_total,sin_costo,calculado_en",
+  historial_costeo: "articulo_id,en,costo_total,precio_lista,utilidad",
+  perfiles: "id,nombre,puesto",
+};
+// Aunque la RLS se los diera a alguien, al modelo no le hacen falta.
+const COLUMNAS_PROHIBIDAS = /^(datos_bancarios|clabe|cuenta.*|curp|nss|salario.*|sueldo.*|contrasena.*|token.*|password.*)$/;
+const OPERADORES = ["igual", "distinto", "mayor", "mayor_o_igual", "menor", "menor_o_igual", "contiene", "es_nulo", "no_es_nulo", "en_lista"] as const;
+
+const sinNada = { type: "object" as const, properties: {}, required: [] as string[], additionalProperties: false };
+
+export const HERRAMIENTAS: Anthropic.Beta.BetaTool[] = [
+  {
+    name: "hallazgos",
+    description: "Lo que hoy merece atención en un área, calculado por reglas en la base: riesgos, pendientes y lo que va bien. Úsala primero para cualquier pregunta tipo '¿cómo vamos?' o '¿qué hago hoy?'.",
+    strict: true,
+    input_schema: { type: "object", properties: { area: { type: "string", enum: AREAS } }, required: ["area"], additionalProperties: false },
+  },
+  {
+    name: "tablero_direccion",
+    description: "Panorama completo en una sola llamada: ventas del año contra el anterior y proyección, mejores clientes, embudo, cotizaciones, vendedores contra meta, canales, carga del taller, inventario, costos que subieron, cobranza y por pagar. Solo trae las secciones que la persona tiene permiso de ver.",
+    strict: true,
+    input_schema: sinNada,
+  },
+  {
+    name: "ventas_por_mes",
+    description: "Ventas mensuales (importe con IVA, en pesos) desde una fecha, juntando el libro de ventas de la hoja (2018 en adelante) y los pedidos del ERP. Sirve para tendencias, estacionalidad y comparar años.",
+    strict: true,
+    input_schema: { type: "object", properties: { desde: { type: "string", format: "date", description: "Primer mes, AAAA-MM-DD" } }, required: ["desde"], additionalProperties: false },
+  },
+  {
+    name: "oportunidades_de_venta",
+    description: "A quién llamar y por qué, ordenado por valor: cotizaciones por vencer, clientes a los que ya les toca comprar según su ritmo, equipos vendidos que ya piden refacciones y clientes que dejaron de comprar. Trae el contacto. Un vendedor solo ve sus clientes y los libres.",
+    strict: true,
+    input_schema: { type: "object", properties: { limite: { type: "integer", description: "Cuántos, de 1 a 100" } }, required: ["limite"], additionalProperties: false },
+  },
+  {
+    name: "historial_cliente",
+    description: "Todo lo que un cliente ha comprado (libro de ventas desde 2018 y pedidos del ERP), sus cotizaciones y su saldo. Necesita el id del cliente: búscalo antes con consultar(tabla='clientes', filtro nombre contiene ...).",
+    strict: true,
+    input_schema: { type: "object", properties: { cliente_id: { type: "string", format: "uuid" } }, required: ["cliente_id"], additionalProperties: false },
+  },
+  {
+    name: "reabasto",
+    description: "Stock mínimo y qué pedir: por artículo, demanda mensual, punto de reorden, existencia en planta, en tránsito, disponible, sugerido y estado (ordenar, excedente, ok). Los importados tardan meses en llegar.",
+    strict: true,
+    input_schema: {
+      type: "object",
+      properties: {
+        estado: { type: "string", enum: ["ordenar", "excedente", "ok", "todos"] },
+        solo_importados: { type: "boolean" },
+        limite: { type: "integer", description: "De 1 a 200" },
+      },
+      required: ["estado", "solo_importados", "limite"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "comisiones_del_mes",
+    description: "Comisiones de vendedores de un mes: venta de maquinaria, refacciones y otros, comisión, bonos por escalón, total y cuánto le falta para la siguiente meta. Cada vendedor ve solo lo suyo.",
+    strict: true,
+    input_schema: { type: "object", properties: { mes: { type: "string", format: "date", description: "Cualquier día del mes, AAAA-MM-DD" } }, required: ["mes"], additionalProperties: false },
+  },
+  {
+    name: "consultar",
+    description: `Lee filas de una tabla o vista del ERP con filtros simples. Tablas: ${Object.keys(TABLAS).join(", ")}. Si no pides columnas te da las más útiles. Los montos de pedidos y cotizaciones pueden estar en USD (columna moneda). Para contar sin traer filas usa solo_contar. Máximo 200 filas.`,
+    strict: true,
+    input_schema: {
+      type: "object",
+      properties: {
+        tabla: { type: "string", enum: Object.keys(TABLAS) },
+        columnas: { type: "array", items: { type: "string" }, description: "Vacío = las de siempre" },
+        filtros: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              columna: { type: "string" },
+              operador: { type: "string", enum: [...OPERADORES] },
+              valor: { type: "string", description: "Para en_lista, valores separados por coma; para es_nulo/no_es_nulo, vacío" },
+            },
+            required: ["columna", "operador", "valor"],
+            additionalProperties: false,
+          },
+        },
+        ordenar_por: { type: "string", description: "Columna, o vacío" },
+        descendente: { type: "boolean" },
+        limite: { type: "integer" },
+        solo_contar: { type: "boolean" },
+      },
+      required: ["tabla", "columnas", "filtros", "ordenar_por", "descendente", "limite", "solo_contar"],
+      additionalProperties: false,
+    },
+  },
+];
+
+const ETIQUETAS: Record<string, string> = {
+  hallazgos: "Revisando qué merece atención",
+  tablero_direccion: "Leyendo el tablero",
+  ventas_por_mes: "Sumando ventas por mes",
+  oportunidades_de_venta: "Buscando a quién llamar",
+  historial_cliente: "Leyendo el historial del cliente",
+  reabasto: "Revisando stock mínimo",
+  comisiones_del_mes: "Calculando comisiones",
+  consultar: "Consultando",
+};
+
+const MAX_RESULTADO = 40_000; // caracteres por resultado de herramienta
+
+class ErrorHerramienta extends Error {}
+
+const texto = (x: unknown) => (typeof x === "string" ? x : "");
+const entero = (x: unknown, min: number, max: number, def: number) =>
+  typeof x === "number" && Number.isFinite(x) ? Math.min(max, Math.max(min, Math.round(x))) : def;
+const esFecha = (x: unknown) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x);
+const esUuid = (x: unknown) => typeof x === "string" && /^[0-9a-f-]{36}$/i.test(x);
+const esColumna = (x: string) => /^[a-z_][a-z0-9_]*$/.test(x) && !COLUMNAS_PROHIBIDAS.test(x);
+
+function compacto(datos: unknown): string {
+  const s = JSON.stringify(datos);
+  if (s.length <= MAX_RESULTADO) return s;
+  if (Array.isArray(datos)) {
+    // Recorta filas, no a media fila: un JSON roto confunde más que uno corto.
+    let n = datos.length;
+    while (n > 1 && JSON.stringify(datos.slice(0, n)).length > MAX_RESULTADO) n = Math.floor(n * 0.7);
+    return JSON.stringify({ filas: datos.slice(0, n), aviso: `Se recortó a ${n} de ${datos.length} filas; filtra más.` });
+  }
+  return s.slice(0, MAX_RESULTADO) + "…(recortado)";
+}
+
+function revisar<T>(r: { data: T; error: { message: string; code?: string } | null }): T {
+  if (r.error) {
+    if (r.error.code === "42501") throw new ErrorHerramienta("Sin permiso: esta persona no puede ver eso. Díselo así; no lo busques por otro lado.");
+    throw new ErrorHerramienta(r.error.message);
+  }
+  return r.data;
+}
+
+/** Ejecuta una herramienta con la sesión de quien pregunta. Valida todo: el modelo propone, la base dispone. */
+export async function ejecutarHerramienta(db: SupabaseClient, nombre: string, entrada: Record<string, unknown>): Promise<string> {
+  switch (nombre) {
+    case "hallazgos": {
+      const area = AREAS.includes(entrada.area as Area) ? entrada.area : "direccion";
+      return compacto(revisar(await db.rpc("hallazgos", { p_area: area })));
+    }
+    case "tablero_direccion":
+      return compacto(revisar(await db.rpc("tablero_direccion")));
+    case "ventas_por_mes": {
+      if (!esFecha(entrada.desde)) throw new ErrorHerramienta("desde debe ser AAAA-MM-DD");
+      return compacto(revisar(await db.rpc("ventas_historicas_mes", { p_desde: entrada.desde })));
+    }
+    case "oportunidades_de_venta":
+      return compacto(revisar(await db.rpc("oportunidades_sugeridas", { p_limite: entero(entrada.limite, 1, 100, 20) })));
+    case "historial_cliente": {
+      if (!esUuid(entrada.cliente_id)) throw new ErrorHerramienta("cliente_id debe ser un uuid; búscalo con consultar(clientes)");
+      const id = entrada.cliente_id as string;
+      const [cliente, libro, pedidos, cotizaciones, saldos] = await Promise.all([
+        db.from("clientes").select(TABLAS.clientes).eq("id", id).maybeSingle(),
+        db.from("historial_ventas_hoja").select("fecha,tipo,monto,descripcion,factura").eq("cliente_id", id).order("fecha", { ascending: false }).limit(150),
+        db.from("pedidos").select(TABLAS.pedidos).eq("cliente_id", id).eq("historico", false).order("fecha", { ascending: false }).limit(50),
+        db.from("cotizaciones").select(TABLAS.cotizaciones).eq("cliente_id", id).order("fecha", { ascending: false }).limit(30),
+        db.from("v_saldos_pedido").select(TABLAS.v_saldos_pedido).eq("cliente_id", id).gt("saldo", 0),
+      ]);
+      const c = revisar(cliente);
+      if (!c) throw new ErrorHerramienta("No existe ese cliente o esta persona no lo puede ver.");
+      return compacto({
+        cliente: c, libro_de_ventas: revisar(libro), pedidos_erp: revisar(pedidos),
+        cotizaciones: cotizaciones.error ? "sin permiso" : cotizaciones.data, saldos: saldos.error ? "sin permiso" : saldos.data,
+      });
+    }
+    case "reabasto": {
+      let q = db.rpc("reabasto").select("clave,nombre,unidad,es_importado,proveedor,demanda_mensual,dias_entrega,punto_reorden,en_planta,en_transito,disponible,sugerido,estado");
+      if (entrada.estado !== "todos" && ["ordenar", "excedente", "ok"].includes(texto(entrada.estado))) q = q.eq("estado", entrada.estado as string);
+      if (entrada.solo_importados === true) q = q.eq("es_importado", true);
+      return compacto(revisar(await q.limit(entero(entrada.limite, 1, 200, 50))));
+    }
+    case "comisiones_del_mes": {
+      if (!esFecha(entrada.mes)) throw new ErrorHerramienta("mes debe ser AAAA-MM-DD");
+      return compacto(revisar(await db.rpc("comisiones_mes", { p_mes: (entrada.mes as string).slice(0, 8) + "01" })));
+    }
+    case "consultar":
+      return consultar(db, entrada);
+    default:
+      throw new ErrorHerramienta(`No existe la herramienta ${nombre}`);
+  }
+}
+
+async function consultar(db: SupabaseClient, e: Record<string, unknown>): Promise<string> {
+  const tabla = texto(e.tabla);
+  if (!(tabla in TABLAS)) throw new ErrorHerramienta(`Tabla no permitida: ${tabla}`);
+  const pedidas = Array.isArray(e.columnas) ? e.columnas.map(texto).filter(Boolean) : [];
+  const malas = pedidas.filter((c) => !esColumna(c));
+  if (malas.length) throw new ErrorHerramienta(`Columnas no permitidas: ${malas.join(", ")}`);
+  const columnas = pedidas.length ? pedidas.join(",") : TABLAS[tabla];
+  const contar = e.solo_contar === true;
+  let q = db.from(tabla).select(columnas, contar ? { count: "exact", head: true } : undefined);
+  for (const f of Array.isArray(e.filtros) ? e.filtros : []) {
+    const { columna, operador, valor } = f as Record<string, string>;
+    if (!esColumna(columna)) throw new ErrorHerramienta(`Columna no permitida en filtro: ${columna}`);
+    switch (operador) {
+      case "igual": q = q.eq(columna, valor); break;
+      case "distinto": q = q.neq(columna, valor); break;
+      case "mayor": q = q.gt(columna, valor); break;
+      case "mayor_o_igual": q = q.gte(columna, valor); break;
+      case "menor": q = q.lt(columna, valor); break;
+      case "menor_o_igual": q = q.lte(columna, valor); break;
+      case "contiene": q = q.ilike(columna, `%${valor.replace(/[%_]/g, "")}%`); break;
+      case "es_nulo": q = q.is(columna, null); break;
+      case "no_es_nulo": q = q.not(columna, "is", null); break;
+      case "en_lista": q = q.in(columna, valor.split(",").map((v) => v.trim()).filter(Boolean)); break;
+      default: throw new ErrorHerramienta(`Operador no permitido: ${operador}`);
+    }
+  }
+  if (contar) {
+    const r = await q;
+    if (r.error) revisar(r);
+    return JSON.stringify({ tabla, filas: r.count });
+  }
+  const orden = texto(e.ordenar_por);
+  if (orden) {
+    if (!esColumna(orden)) throw new ErrorHerramienta(`No se puede ordenar por ${orden}`);
+    q = q.order(orden, { ascending: e.descendente !== true, nullsFirst: false });
+  }
+  return compacto(revisar(await q.limit(entero(e.limite, 1, 200, 50))));
+}
+
+// -----------------------------------------------------------------------------
+// Instrucciones. La parte fija va primero y con cache_control para que no se
+// cobre completa en cada pregunta; lo de cada persona va en un bloque aparte.
+// -----------------------------------------------------------------------------
+const INSTRUCCIONES = `Eres el asistente del ERP de Hegamex (Máquinas y Herramientas Gamex S.A. de C.V., Atotonilco el Alto, Jalisco).
+
+Hegamex fabrica bandas transportadoras, dosificadoras, cribadoras, tolvas, silos, elevadores de cangilones y bazucas, y vende componentes (colectores, poleas, cangilones, catarinas, cosedoras de costales) directo, por Mercado Libre y por su sitio web. Sus clientes son agrícolas, mineros, concreteras, constructoras, destilerías de tequila e industria.
+
+Para qué estás: para que cada persona venda más, compre mejor, entregue a tiempo y cobre. Das respuestas concretas con números del ERP y terminas con lo que conviene hacer.
+
+Cómo trabajas:
+- Las cifras salen SIEMPRE de las herramientas. Si no las tienes, consulta; nunca las inventes ni las estimes de memoria. Si un dato no existe en el ERP, dilo.
+- Empieza por la herramienta más específica (hallazgos, tablero_direccion, oportunidades_de_venta, historial_cliente, reabasto, comisiones_del_mes) y usa consultar para lo demás.
+- Si una herramienta dice "Sin permiso", esa persona no puede ver ese dato: díselo con naturalidad y no intentes conseguirlo por otro camino. Nunca menciones costos, márgenes ni utilidades si no te llegaron de una herramienta.
+- Solo lees. No puedes crear, cambiar ni borrar nada. Si te piden una acción, explica dónde hacerla en el ERP con un enlace.
+
+Cómo escribes:
+- Español de México, claro y directo, de tú. Sin rodeos ni frases de relleno.
+- Dinero como $1,234,567 o $1.2 M; fechas como "3 oct 2026". Aclara si algo está en dólares.
+- Breve: primero la respuesta, luego el porqué en 2 a 4 viñetas, al final la acción. Tablas en markdown solo si comparas varias cosas.
+- Para mandar a la persona a una pantalla usa enlaces markdown con rutas del ERP, por ejemplo [Reabasto](/almacen/reabasto) o [Cotizaciones](/ventas/cotizaciones). Rutas válidas: ${RUTAS.join(", ")}.
+- Si te piden un mensaje para un cliente, escríbelo listo para mandar por WhatsApp: corto, cálido, sin presionar, con un motivo concreto para escribirle (lo que compró, cuánto tiempo lleva, una cotización por vencer) y una pregunta que invite a contestar. Fírmalo con el nombre de quien pregunta.
+
+Reglas del negocio útiles:
+- Precio de equipo = costo × (1 + recargos sobre costo) ÷ (1 − utilidad/(1 − ISR 25 %) − recargos sobre precio), redondeado hacia arriba a $100 (o $1,000 arriba de $100 mil). Componentes: costo ÷ 0.70.
+- Stock mínimo: un artículo genera demanda si tuvo salidas en 3 de los últimos 6 meses; reorden = demanda/22 × días de entrega + seguridad; cobertura de 1 mes nacional y 6 meses importado.
+- Comisiones: 2 % sin IVA de todo lo que no es refacción, más bonos por escalón de meta de maquinaria y de refacciones.
+- Almacenes: Planta Baja, Mallado, Planta Alta, Contenedor 1 y 2, Revolución y Almacén ML (Full de Mercado Libre, no cuenta para planta).
+- Ventas del libro de la hoja: importe con IVA. Pedidos del ERP: total con IVA en su moneda por tipo de cambio.`;
+
+function contextoPersona(p: Perfil, ruta?: string): string {
+  const hoy = new Date().toLocaleDateString("es-MX", { timeZone: "America/Mexico_City", weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  return `Hoy es ${hoy}. Hablas con ${p.nombre || "una persona del equipo"} (roles: ${p.roles.join(", ") || "sin rol"}).${ruta ? ` Está en la pantalla ${ruta}.` : ""}`;
+}
+
+function sistema(p: Perfil, ruta?: string): Anthropic.Beta.BetaTextBlockParam[] {
+  return [
+    { type: "text", text: INSTRUCCIONES, cache_control: { type: "ephemeral" } },
+    { type: "text", text: contextoPersona(p, ruta) },
+  ];
+}
+
+// -----------------------------------------------------------------------------
+// Errores de la API en palabras de quien usa el ERP. Tipados, no por texto:
+// el 28 sep 2026 un tope de gasto lleno (400 sin reintento) tumbó otro sistema de
+// Hegamex horas sin que nadie supiera por qué.
+// -----------------------------------------------------------------------------
+export function explicarError(e: unknown): { mensaje: string; codigo: string } {
+  if (e instanceof Anthropic.AuthenticationError)
+    return { codigo: "llave", mensaje: "La llave de Claude no es válida. Sistemas tiene que revisar ANTHROPIC_API_KEY en Supabase." };
+  if (e instanceof Anthropic.RateLimitError)
+    return { codigo: "saturado", mensaje: "Claude está recibiendo demasiadas consultas. Intenta en un minuto." };
+  if (e instanceof Anthropic.APIConnectionError)
+    return { codigo: "red", mensaje: "No hubo conexión con Claude. Intenta de nuevo." };
+  if (e instanceof Anthropic.APIError) {
+    const sinReintento = e.headers?.get?.("x-should-retry") === "false";
+    if (e.type === "billing_error" || e.status === 402 || (e.status === 400 && sinReintento) || e.status === 403)
+      return { codigo: "cuenta", mensaje: "La cuenta de Claude no aceptó la consulta (tope de gasto o facturación). Se sube en console.anthropic.com → Settings → Limits." };
+    if ((e.status ?? 0) >= 500) return { codigo: "saturado", mensaje: "Claude tuvo un problema de su lado. Intenta en un minuto." };
+    return { codigo: "api", mensaje: `Claude no aceptó la consulta (${e.status}).` };
+  }
+  if (e instanceof ErrorHerramienta) return { codigo: "datos", mensaje: e.message };
+  return { codigo: "interno", mensaje: "Algo falló en el asistente. Intenta de nuevo." };
+}
+
+// -----------------------------------------------------------------------------
+// Conversación con herramientas, en streaming hacia el navegador.
+// -----------------------------------------------------------------------------
+interface MensajeChat { rol: "usuario" | "asistente"; texto: string }
+const MAX_VUELTAS = 10;
+
+export async function conversar(opts: {
+  anthropic: Pick<Anthropic, "beta">; db: SupabaseClient; perfil: Perfil; config: Config;
+  mensajes: MensajeChat[]; ruta?: string; emitir: (e: Evento) => void;
+}): Promise<{ modelo: string; entrada: number; salida: number; cache: number; herramientas: string[] }> {
+  const { anthropic, db, perfil, config, emitir } = opts;
+  // Solo texto de turnos anteriores: sin bloques de razonamiento no hay historia que
+  // el chequeo de razonamiento preservado pueda encontrar alterada.
+  const mensajes: Anthropic.Beta.BetaMessageParam[] = opts.mensajes.slice(-20).map((m) => ({
+    role: m.rol === "usuario" ? "user" : "assistant",
+    content: m.texto.slice(0, 8000),
+  }));
+  while (mensajes.length && mensajes[0].role !== "user") mensajes.shift();
+  if (!mensajes.length) throw new ErrorHerramienta("No hay pregunta.");
+
+  const uso = { modelo: config.modelo, entrada: 0, salida: 0, cache: 0, herramientas: [] as string[] };
+  for (let vuelta = 0; vuelta < MAX_VUELTAS; vuelta++) {
+    const flujo = anthropic.beta.messages.stream({
+      model: config.modelo,
+      max_tokens: 16000,
+      betas: BETAS,
+      fallbacks: "default",
+      output_config: { effort: config.esfuerzo },
+      system: sistema(perfil, opts.ruta),
+      tools: HERRAMIENTAS,
+      messages: mensajes,
+    });
+    flujo.on("text", (t) => emitir({ tipo: "texto", texto: t }));
+    const r = await flujo.finalMessage();
+    uso.modelo = r.model;
+    uso.entrada += r.usage.input_tokens;
+    uso.salida += r.usage.output_tokens;
+    uso.cache += r.usage.cache_read_input_tokens ?? 0;
+
+    if (r.stop_reason === "refusal") {
+      emitir({ tipo: "texto", texto: "\n\nNo puedo ayudar con eso. Si crees que es un error, pregúntalo de otra forma." });
+      return uso;
+    }
+    const usos = r.content.filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use");
+    if (r.stop_reason === "max_tokens") {
+      // Una herramienta cortada a medias no se ejecuta: sus argumentos pueden venir truncados.
+      emitir({ tipo: "texto", texto: "\n\n_(La respuesta se cortó por larga. Pide la parte que te falta.)_" });
+      return uso;
+    }
+    if (r.stop_reason === "pause_turn") { mensajes.push({ role: "assistant", content: r.content }); continue; }
+    if (r.stop_reason !== "tool_use" || usos.length === 0) return uso;
+
+    // La respuesta completa (con su razonamiento) se agrega tal cual, sin editar.
+    mensajes.push({ role: "assistant", content: r.content });
+    const resultados: Anthropic.Beta.BetaToolResultBlockParam[] = [];
+    for (const u of usos) {
+      emitir({ tipo: "herramienta", nombre: u.name, etiqueta: ETIQUETAS[u.name] ?? "Consultando" });
+      uso.herramientas.push(u.name);
+      try {
+        const contenido = await ejecutarHerramienta(db, u.name, (u.input ?? {}) as Record<string, unknown>);
+        resultados.push({ type: "tool_result", tool_use_id: u.id, content: contenido });
+      } catch (e) {
+        const msg = e instanceof ErrorHerramienta ? e.message : "Error al consultar la base.";
+        resultados.push({ type: "tool_result", tool_use_id: u.id, content: msg, is_error: true });
+      }
+    }
+    mensajes.push({ role: "user", content: resultados });
+  }
+  emitir({ tipo: "texto", texto: "\n\n_(Me detuve después de muchas consultas. Haz la pregunta más específica.)_" });
+  return uso;
+}
+
+// -----------------------------------------------------------------------------
+// Resumen de un área: el piso son los hallazgos de la base; Claude los ordena,
+// los cruza y propone qué hacer. Sale en JSON con esquema estricto.
+// -----------------------------------------------------------------------------
+export interface Resumen {
+  titular: string;
+  resumen: string;
+  puntos: { tono: "riesgo" | "atencion" | "bueno" | "info"; titulo: string; detalle: string; accion: string; ruta: string }[];
+}
+
+const ESQUEMA_RESUMEN = {
+  type: "object",
+  properties: {
+    titular: { type: "string", description: "Una frase de 6 a 14 palabras con lo más importante de hoy" },
+    resumen: { type: "string", description: "2 o 3 oraciones que conectan los puntos" },
+    puntos: {
+      type: "array",
+      description: "De 3 a 6, lo más urgente primero",
+      items: {
+        type: "object",
+        properties: {
+          tono: { type: "string", enum: ["riesgo", "atencion", "bueno", "info"] },
+          titulo: { type: "string" },
+          detalle: { type: "string", description: "Con las cifras que lo sustentan" },
+          accion: { type: "string", description: "Qué hacer, empezando con verbo" },
+          ruta: { type: "string", enum: [...RUTAS] },
+        },
+        required: ["tono", "titulo", "detalle", "accion", "ruta"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["titular", "resumen", "puntos"],
+  additionalProperties: false,
+};
+
+async function datosDeArea(db: SupabaseClient, area: Area) {
+  const hace2 = new Date(); hace2.setMonth(hace2.getMonth() - 24); hace2.setDate(1);
+  const [h, t, v, o] = await Promise.all([
+    db.rpc("hallazgos", { p_area: area }),
+    db.rpc("tablero_direccion"),
+    db.rpc("ventas_historicas_mes", { p_desde: hace2.toISOString().slice(0, 10) }),
+    area === "direccion" || area === "ventas" ? db.rpc("oportunidades_sugeridas", { p_limite: 8 }) : Promise.resolve({ data: null, error: null }),
+  ]);
+  return {
+    hallazgos: revisar(h) as { area: string; tono: string; titulo: string; detalle: string; ruta: string }[],
+    tablero: t.error ? null : t.data,
+    ventas_mensuales: v.error ? null : v.data,
+    oportunidades: o.error ? null : o.data,
+  };
+}
+
+export async function resumir(opts: { anthropic: Pick<Anthropic, "beta">; db: SupabaseClient; perfil: Perfil; config: Config; area: Area }) {
+  const datos = await datosDeArea(opts.db, opts.area);
+  const nombreArea = opts.area === "direccion" ? "toda la empresa (dirección)" : opts.area;
+  const flujo = opts.anthropic.beta.messages.stream({
+    model: opts.config.modelo,
+    max_tokens: 8000,
+    betas: BETAS,
+    fallbacks: "default",
+    output_config: { effort: opts.config.esfuerzo, format: { type: "json_schema", schema: ESQUEMA_RESUMEN } },
+    system: sistema(opts.perfil),
+    messages: [{
+      role: "user",
+      content: `Escribe el resumen de hoy para ${nombreArea}. Usa solo estos datos (vienen de la base con los permisos de esta persona). ` +
+        `Los hallazgos ya están calculados por reglas: no los repitas tal cual, ordénalos por lo que más dinero o tiempo mueve, ` +
+        `júntalos cuando estén relacionados (por ejemplo, faltantes de material y órdenes atrasadas) y di qué hacer con cada uno.\n\n` +
+        "```json\n" + JSON.stringify(datos) + "\n```",
+    }],
+  });
+  const r = await flujo.finalMessage();
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso escribir este resumen.");
+  if (r.stop_reason === "max_tokens") throw new ErrorHerramienta("El resumen salió demasiado largo; intenta de nuevo.");
+  const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
+  if (!bloque) throw new ErrorHerramienta("Claude no devolvió el resumen.");
+  const resumen = JSON.parse(bloque.text) as Resumen;
+  return { resumen, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+}
+
+/** Sin llave de Claude, el resumen se arma con los mismos hallazgos de la base. */
+export async function resumenSinIA(db: SupabaseClient, area: Area): Promise<Resumen> {
+  const { hallazgos } = await datosDeArea(db, area);
+  const bueno = hallazgos.find((h) => h.tono === "bueno");
+  const riesgos = hallazgos.filter((h) => h.tono === "riesgo").length;
+  return {
+    titular: bueno?.titulo ?? (hallazgos[0]?.titulo ?? "Sin pendientes urgentes hoy"),
+    resumen: hallazgos.length
+      ? `${riesgos ? `${riesgos} ${riesgos === 1 ? "riesgo pide" : "riesgos piden"} atención hoy. ` : ""}Esto sale de las reglas de la base; con la llave de Claude conectada el asistente además los cruza y propone qué hacer.`
+      : "No hay nada fuera de lo normal en lo que puedes ver.",
+    puntos: hallazgos.slice(0, 6).map((h) => ({
+      tono: h.tono as Resumen["puntos"][number]["tono"], titulo: h.titulo, detalle: h.detalle,
+      accion: "Revisar", ruta: (RUTAS as readonly string[]).includes(h.ruta) ? h.ruta : "/",
+    })),
+  };
+}
+
+// -----------------------------------------------------------------------------
+// Mensaje para un cliente (WhatsApp o correo), a partir de una oportunidad.
+// -----------------------------------------------------------------------------
+const ESQUEMA_MENSAJE = {
+  type: "object",
+  properties: {
+    asunto: { type: "string", description: "Solo para correo; vacío para WhatsApp" },
+    mensaje: { type: "string" },
+  },
+  required: ["asunto", "mensaje"],
+  additionalProperties: false,
+};
+
+export async function redactar(opts: {
+  anthropic: Pick<Anthropic, "beta">; db: SupabaseClient; perfil: Perfil; config: Config;
+  clienteId: string; canal: "whatsapp" | "correo"; motivo: string;
+}) {
+  const historial = JSON.parse(await ejecutarHerramienta(opts.db, "historial_cliente", { cliente_id: opts.clienteId }));
+  const contacto = revisar(await opts.db.from("contactos").select("nombre,puesto").eq("cliente_id", opts.clienteId)
+    .order("principal", { ascending: false }).limit(1));
+  const flujo = opts.anthropic.beta.messages.stream({
+    model: opts.config.modelo,
+    max_tokens: 4000,
+    betas: BETAS,
+    fallbacks: "default",
+    output_config: { effort: "low", format: { type: "json_schema", schema: ESQUEMA_MENSAJE } },
+    system: sistema(opts.perfil),
+    messages: [{
+      role: "user",
+      content: `Redacta un ${opts.canal === "whatsapp" ? "WhatsApp (máximo 5 renglones, sin asunto)" : "correo breve con asunto"} ` +
+        `de ${opts.perfil.nombre} para este cliente. Motivo para escribirle: ${opts.motivo}\n` +
+        `Contacto: ${JSON.stringify(contacto?.[0] ?? null)}\nHistorial:\n` + "```json\n" + JSON.stringify(historial).slice(0, 20000) + "\n```",
+    }],
+  });
+  const r = await flujo.finalMessage();
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso redactar este mensaje.");
+  const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
+  if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("No salió el mensaje; intenta de nuevo.");
+  return { ...(JSON.parse(bloque.text) as { asunto: string; mensaje: string }), modelo: r.model,
+    entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+}
+
+// -----------------------------------------------------------------------------
+// La puerta: autentica, revisa cupo, despacha y registra el uso.
+// -----------------------------------------------------------------------------
+const json = (cuerpo: unknown, status = 200) =>
+  new Response(JSON.stringify(cuerpo), { status, headers: { ...CORS, "Content-Type": "application/json" } });
+
+export async function atender(req: Request, entorno: Entorno): Promise<Response> {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (req.method !== "POST") return json({ error: "Solo POST" }, 405);
+
+  const auth = req.headers.get("Authorization") ?? "";
+  if (!auth.startsWith("Bearer ")) return json({ error: "Falta la sesión" }, 401);
+  const db = createClient(entorno.supabaseUrl, entorno.supabaseAnonKey, {
+    global: { headers: { Authorization: auth } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data: u, error: eu } = await db.auth.getUser(auth.slice(7));
+  if (eu || !u.user) return json({ error: "Sesión no válida" }, 401);
+
+  const [{ data: perfilFila }, { data: roles }, { data: puede }, { data: cfg }] = await Promise.all([
+    db.from("perfiles").select("nombre").eq("id", u.user.id).maybeSingle(),
+    db.rpc("mis_roles"),
+    db.rpc("puede", { p_modulo: "asistente", p_nivel: 1 }),
+    db.from("configuracion").select("valor").eq("clave", "asistente").maybeSingle(),
+  ]);
+  if (!puede) return json({ error: "Tu rol no tiene acceso al asistente." }, 403);
+  const perfil: Perfil = { id: u.user.id, nombre: (perfilFila as { nombre?: string } | null)?.nombre ?? "", roles: (roles as string[] | null) ?? [] };
+  const valor = ((cfg as { valor?: Record<string, unknown> } | null)?.valor ?? {}) as Record<string, string>;
+  const config: Config = { modelo: valor.modelo || "claude-opus-5-5", esfuerzo: (valor.esfuerzo as Config["esfuerzo"]) || "medium" };
+
+  let cuerpo: Record<string, unknown>;
+  try { cuerpo = await req.json(); } catch { return json({ error: "Cuerpo inválido" }, 400); }
+  const modo = texto(cuerpo.modo);
+  const area: Area = AREAS.includes(cuerpo.area as Area) ? (cuerpo.area as Area) : "direccion";
+
+  const anthropic = entorno.crearAnthropic?.() ?? (entorno.anthropicKey ? new Anthropic({ apiKey: entorno.anthropicKey }) : null);
+  const registrar = (r: { modelo?: string; entrada?: number; salida?: number; cache?: number; herramientas?: string[]; error?: string }) =>
+    db.from("asistente_uso").insert({
+      modo, area: modo === "resumen" ? area : null, modelo: r.modelo ?? null, entrada_tokens: r.entrada ?? null,
+      salida_tokens: r.salida ?? null, cache_tokens: r.cache ?? null, herramientas: r.herramientas ?? null, error: r.error ?? null,
+    }).then(() => undefined);
+
+  // Cupo: solo cuenta lo que cuesta. El modo demostración no gasta nada.
+  if (anthropic && !(modo === "resumen" && cuerpo.forzar !== true)) {
+    const { data: cupo } = await db.rpc("asistente_cupo");
+    if (typeof cupo === "number" && cupo <= 0)
+      return json({ error: "Ya usaste tus consultas de hoy. Mañana se renuevan; si te hacen falta más, pídelo a sistemas." }, 429);
+  }
+
+  try {
+    if (modo === "resumen") {
+      if (cuerpo.forzar !== true) {
+        const { data: guardado } = await db.from("asistente_resumenes").select("contenido,modelo,generado_en")
+          .eq("area", area).maybeSingle();
+        const g = guardado as { contenido: Resumen; modelo: string | null; generado_en: string } | null;
+        // Un resumen de las últimas 6 horas sirve; después, otro.
+        if (g && Date.now() - new Date(g.generado_en).getTime() < 6 * 3600_000 && (g.modelo || !anthropic))
+          return json({ ...g.contenido, generado_en: g.generado_en, simulado: !g.modelo, guardado: true });
+      }
+      if (!anthropic) {
+        const r = await resumenSinIA(db, area);
+        return json({ ...r, generado_en: new Date().toISOString(), simulado: true });
+      }
+      const { data: cupo } = await db.rpc("asistente_cupo");
+      if (typeof cupo === "number" && cupo <= 0) {
+        const r = await resumenSinIA(db, area);
+        return json({ ...r, generado_en: new Date().toISOString(), simulado: true, aviso: "Sin consultas de Claude por hoy: estos son los hallazgos de la base." });
+      }
+      const r = await resumir({ anthropic, db, perfil, config, area });
+      await Promise.all([
+        registrar(r),
+        db.from("asistente_resumenes").upsert({ usuario_id: perfil.id, area, contenido: r.resumen, modelo: r.modelo, generado_en: new Date().toISOString() }),
+      ]);
+      return json({ ...r.resumen, generado_en: new Date().toISOString(), modelo: r.modelo });
+    }
+
+    if (modo === "redactar") {
+      if (!esUuid(cuerpo.cliente_id)) return json({ error: "Falta el cliente" }, 400);
+      const canal = cuerpo.canal === "correo" ? "correo" : "whatsapp";
+      const motivo = texto(cuerpo.motivo).slice(0, 600) || "darle seguimiento";
+      if (!anthropic) {
+        return json({
+          simulado: true, asunto: canal === "correo" ? "Seguimiento de Hegamex" : "",
+          // El motivo es para el vendedor ("compra cada ~120 días…"), no para el cliente: no va en el texto.
+          mensaje: `Hola, ¿cómo está? Le saluda ${perfil.nombre || "su asesor"} de Hegamex. Quería saber cómo le ha funcionado su equipo ` +
+            "y si le hace falta alguna refacción o tiene algún proyecto en puerta. Con gusto le preparo una cotización.",
+        });
+      }
+      const r = await redactar({ anthropic, db, perfil, config, clienteId: cuerpo.cliente_id as string, canal, motivo });
+      await registrar(r);
+      return json({ asunto: r.asunto, mensaje: r.mensaje, modelo: r.modelo });
+    }
+
+    if (modo === "chat") {
+      const mensajes = (Array.isArray(cuerpo.mensajes) ? cuerpo.mensajes : [])
+        .filter((m): m is MensajeChat => !!m && typeof (m as MensajeChat).texto === "string")
+        .map((m) => ({ rol: m.rol === "asistente" ? "asistente" as const : "usuario" as const, texto: m.texto }));
+      const ruta = texto(cuerpo.ruta).slice(0, 80) || undefined;
+      const codificador = new TextEncoder();
+      const cuerpoSSE = new ReadableStream<Uint8Array>({
+        async start(ctrl) {
+          const emitir = (e: Evento) => ctrl.enqueue(codificador.encode(`data: ${JSON.stringify(e)}\n\n`));
+          try {
+            if (!anthropic) {
+              const r = await resumenSinIA(db, ruta?.startsWith("/ventas") ? "ventas" : "direccion");
+              emitir({ tipo: "texto", texto:
+                "Estoy en **modo demostración**: falta conectar la llave de Claude (`ANTHROPIC_API_KEY`), así que todavía no puedo contestar preguntas abiertas.\n\n" +
+                "Mientras, esto es lo que la base marca hoy:\n\n" + r.puntos.map((p) => `- **${p.titulo}.** ${p.detalle} [Ver](${p.ruta})`).join("\n") });
+              emitir({ tipo: "fin", modelo: "demostracion", simulado: true });
+            } else {
+              const uso = await conversar({ anthropic, db, perfil, config, mensajes, ruta, emitir });
+              await registrar(uso);
+              emitir({ tipo: "fin", modelo: uso.modelo });
+            }
+          } catch (e) {
+            const x = explicarError(e);
+            await registrar({ error: x.codigo });
+            emitir({ tipo: "error", ...x });
+          } finally {
+            ctrl.close();
+          }
+        },
+      });
+      return new Response(cuerpoSSE, { headers: { ...CORS, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" } });
+    }
+
+    return json({ error: `Modo desconocido: ${modo}` }, 400);
+  } catch (e) {
+    const x = explicarError(e);
+    if (anthropic) await registrar({ error: x.codigo });
+    return json({ error: x.mensaje, codigo: x.codigo }, x.codigo === "datos" ? 400 : 502);
+  }
+}

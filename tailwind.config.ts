@@ -29,6 +29,15 @@ export default {
       boxShadow: {
         tarjeta: "0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06)",
       },
+      // Movimiento corto y sobrio: que lo nuevo se note sin distraer.
+      keyframes: {
+        entrar: { from: { opacity: "0", transform: "translateY(6px)" }, to: { opacity: "1", transform: "none" } },
+        deslizar: { from: { opacity: "0", transform: "translateX(24px)" }, to: { opacity: "1", transform: "none" } },
+      },
+      animation: {
+        entrar: "entrar 350ms cubic-bezier(0.2, 0.8, 0.2, 1) both",
+        deslizar: "deslizar 250ms cubic-bezier(0.2, 0.8, 0.2, 1) both",
+      },
     },
   },
   plugins: [],

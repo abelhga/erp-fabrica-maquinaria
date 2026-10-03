@@ -43,6 +43,7 @@ const Usuarios = p(() => import("./modulos/sistema/Usuarios"));
 const Importar = p(() => import("./modulos/sistema/Importar"));
 const Bitacora = p(() => import("./modulos/sistema/Bitacora"));
 const Configuracion = p(() => import("./modulos/sistema/Configuracion"));
+const ParaLlamar = p(() => import("./modulos/asistente/ParaLlamar"));
 
 function Cargando() {
   return <div className="h-full flex items-center justify-center text-tenue"><Loader2 className="h-6 w-6 animate-spin" /></div>;
@@ -87,6 +88,7 @@ export function App() {
           <Route path="costeo/equipos/:id" element={<Con m="costeo"><DetalleArticulo /></Con>} />
           <Route path="costeo/margenes" element={<Con m="costos" n={2}><Margenes /></Con>} />
           <Route path="costeo/precios-ventas" element={<Con m="costos"><PreciosVentas /></Con>} />
+          <Route path="ventas/para-llamar" element={<Con m="ventas"><ParaLlamar /></Con>} />
           <Route path="ventas/oportunidades" element={<Con m="ventas"><Oportunidades /></Con>} />
           <Route path="ventas/cotizaciones" element={<Con m="ventas"><Cotizaciones /></Con>} />
           <Route path="ventas/cotizaciones/:id" element={<Con m="ventas"><EditorCotizacion /></Con>} />

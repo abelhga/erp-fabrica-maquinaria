@@ -6,6 +6,7 @@ import { useSesion, NOMBRE_ROL } from "@/lib/sesion";
 import { cn } from "@/lib/utilidades";
 import { Logo } from "./Logo";
 import { BuscadorGlobal } from "./BuscadorGlobal";
+import { Asistente } from "@/components/asistente/Asistente";
 
 function useTema() {
   const [oscuro, setOscuro] = useState(() => {
@@ -78,7 +79,7 @@ export function Shell() {
           <button className="lg:hidden p-2 -ml-2" onClick={() => setAbiertoMovil(true)} aria-label="Abrir menú"><Menu className="h-5 w-5" /></button>
           <button
             onClick={() => setBuscando(true)}
-            className="flex items-center gap-2 h-9 w-full max-w-md rounded-lg border border-borde bg-fondo px-3 text-sm text-tenue hover:border-marca/40"
+            className="flex items-center gap-2 h-9 flex-1 min-w-0 max-w-md rounded-lg border border-borde bg-fondo px-3 text-sm text-tenue hover:border-marca/40"
           >
             <Search className="h-4 w-4" />
             <span className="truncate">Buscar cliente, equipo, componente, folio…</span>
@@ -107,6 +108,7 @@ export function Shell() {
         </main>
       </div>
       <BuscadorGlobal abierto={buscando} alCambiar={setBuscando} />
+      <Asistente />
     </div>
   );
 }

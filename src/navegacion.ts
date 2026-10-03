@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, FileText, ShoppingCart, Trophy, Boxes, Layers, Percent, Truck, Tags,
   ClipboardList, Warehouse, ArrowLeftRight, TrendingDown, Factory, ClipboardCheck, Monitor, Tablet,
-  UserRound, CalendarOff, LineChart, Wallet, Receipt, Settings, ShieldCheck, Download, History, KanbanSquare,
+  UserRound, CalendarOff, LineChart, Wallet, Receipt, Settings, ShieldCheck, Download, History, KanbanSquare, PhoneCall,
   type LucideIcon,
 } from "lucide-react";
 import type { Modulo } from "./lib/sesion";
@@ -15,6 +15,7 @@ export const MENU: SeccionMenu[] = [
   {
     titulo: "Ventas",
     entradas: [
+      { ruta: "/ventas/para-llamar", texto: "A quién llamar hoy", icono: PhoneCall, modulo: "ventas" },
       { ruta: "/ventas/oportunidades", texto: "Oportunidades", icono: KanbanSquare, modulo: "ventas" },
       { ruta: "/ventas/cotizaciones", texto: "Cotizaciones", icono: FileText, modulo: "ventas" },
       { ruta: "/ventas/pedidos", texto: "Pedidos", icono: ShoppingCart, modulo: "ventas" },

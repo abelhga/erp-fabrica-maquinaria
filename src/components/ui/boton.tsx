@@ -26,12 +26,14 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> &
 
 export const Boton = forwardRef<HTMLButtonElement, Props>(
   ({ className, variante, tamano, asChild, cargando, children, disabled, ...props }, ref) => {
-    const C = asChild ? Slot : "button";
+    // Con asChild, Slot exige un solo hijo: el spinner junto al enlace lo rompía
+    // ("React.Children.only"). Un enlace no "carga", así que ahí no lleva spinner.
+    if (asChild) return <Slot ref={ref} className={cn(estilos({ variante, tamano }), className)} {...props}>{children}</Slot>;
     return (
-      <C ref={ref} className={cn(estilos({ variante, tamano }), className)} disabled={disabled || cargando} {...props}>
+      <button ref={ref} className={cn(estilos({ variante, tamano }), className)} disabled={disabled || cargando} {...props}>
         {cargando && <Loader2 className="h-4 w-4 animate-spin" />}
         {children}
-      </C>
+      </button>
     );
   },
 );
