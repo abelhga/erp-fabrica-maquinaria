@@ -8,7 +8,7 @@ import pg from "pg";
 
 const base = process.env.APP_URL ?? "http://localhost:5173";
 const RUTAS = [
-  "/", "/pendientes", "/ventas/para-llamar", "/ventas/oportunidades", "/ventas/cotizaciones", "/ventas/cotizaciones/nueva", "/ventas/pedidos",
+  "/", "/pendientes", "/semana", "/ventas/para-llamar", "/ventas/oportunidades", "/ventas/cotizaciones", "/ventas/cotizaciones/nueva", "/ventas/pedidos",
   "/ventas/clientes", "/ventas/comisiones", "/costeo/equipos", "/costeo/componentes", "/costeo/planos", "/costeo/margenes",
   "/costeo/precios-ventas", "/compras/precios", "/compras/ordenes", "/compras/proveedores", "/almacen/existencias",
   "/almacen/movimientos", "/almacen/reabasto", "/importaciones", "/importaciones/dinero", "/produccion/gerencia",

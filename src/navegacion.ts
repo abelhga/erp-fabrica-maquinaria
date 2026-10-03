@@ -6,7 +6,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Award, Banknote, ListChecks, Target } from "lucide-react";
-import { AlertTriangle, CalendarRange, Hand, Wrench } from "lucide-react";
+import { AlertTriangle, CalendarDays, CalendarRange, Hand, Wrench } from "lucide-react";
 import type { Modulo } from "./lib/sesion";
 
 export interface EntradaMenu { ruta: string; texto: string; icono: LucideIcon; modulo: Modulo; nivel?: number }
@@ -105,3 +105,5 @@ export const MENU: SeccionMenu[] = [
 export const INICIO: EntradaMenu = { ruta: "/", texto: "Inicio", icono: LayoutDashboard, modulo: "ventas" };
 // Todos tienen pendientes (los pide y los recibe cualquiera con rol): va junto a Inicio.
 export const PENDIENTES: EntradaMenu = { ruta: "/pendientes", texto: "Pendientes", icono: ListTodo, modulo: "ventas" };
+// El resumen de la semana lo arma el asistente: lo ve quien tiene asistente.
+export const SEMANA: EntradaMenu = { ruta: "/semana", texto: "Tu semana", icono: CalendarDays, modulo: "asistente" };

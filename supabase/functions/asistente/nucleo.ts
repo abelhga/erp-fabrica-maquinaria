@@ -25,12 +25,13 @@ const AREAS: Area[] = ["direccion", "ventas", "compras", "almacen", "produccion"
   "servicio"];
 
 export const RUTAS = [
-  "/", "/ventas/oportunidades", "/ventas/cotizaciones", "/ventas/pedidos", "/ventas/clientes", "/ventas/comisiones",
-  "/costeo/equipos", "/costeo/componentes", "/costeo/margenes", "/costeo/precios-ventas",
+  "/", "/semana", "/pendientes", "/ventas/para-llamar", "/ventas/oportunidades", "/ventas/cotizaciones", "/ventas/pedidos",
+  "/ventas/clientes", "/ventas/comisiones", "/costeo/equipos", "/costeo/componentes", "/costeo/planos", "/costeo/margenes",
+  "/costeo/precios-ventas",
   "/compras/precios", "/compras/ordenes", "/compras/proveedores",
   "/almacen/existencias", "/almacen/movimientos", "/almacen/reabasto",
   "/produccion/gerencia", "/produccion/ordenes", "/finanzas/cobranza", "/finanzas/pagos",
-  "/rrhh/empleados", "/rrhh/incidencias",
+  "/rrhh/empleados", "/rrhh/incidencias", "/rrhh/objetivos", "/rrhh/checklist", "/rrhh/prenomina",
   "/importaciones", "/importaciones/dinero",
   "/servicio", "/servicio/maquinas", "/servicio/resguardos", "/servicio/reportar",
 ] as const;
@@ -113,6 +114,12 @@ export const HERRAMIENTAS: Anthropic.Beta.BetaTool[] = [
     input_schema: sinNada,
   },
   {
+    name: "semana",
+    description: "La semana: lo que pasó la semana pasada contra la anterior (ventas, cotizaciones enviadas, ganadas y sin respuesta, cobranza, equipos terminados, compras) y lo que viene esta semana (entregas comprometidas, órdenes de producción, compras y embarques que llegan, servicios programados, pendientes). Para '¿cómo nos fue la semana pasada?' o '¿qué viene esta semana?'. Si ventas dice alcance 'tuyas', son solo las de los clientes de esa persona.",
+    strict: true,
+    input_schema: { type: "object", properties: { lunes: { type: "string", format: "date", description: "Lunes de la semana que empieza (AAAA-MM-DD); vacío para la de hoy" } }, required: ["lunes"], additionalProperties: false },
+  },
+  {
     name: "ventas_por_mes",
     description: "Ventas mensuales (importe con IVA, en pesos) desde una fecha, juntando el libro de ventas de la hoja (2018 en adelante) y los pedidos del ERP. Sirve para tendencias, estacionalidad y comparar años.",
     strict: true,
@@ -187,6 +194,7 @@ export const HERRAMIENTAS: Anthropic.Beta.BetaTool[] = [
 const ETIQUETAS: Record<string, string> = {
   hallazgos: "Revisando qué merece atención",
   tablero_direccion: "Leyendo el tablero",
+  semana: "Repasando la semana",
   ventas_por_mes: "Sumando ventas por mes",
   oportunidades_de_venta: "Buscando a quién llamar",
   historial_cliente: "Leyendo el historial del cliente",
@@ -235,6 +243,8 @@ export async function ejecutarHerramienta(db: SupabaseClient, nombre: string, en
     }
     case "tablero_direccion":
       return compacto(revisar(await db.rpc("tablero_direccion")));
+    case "semana":
+      return compacto(revisar(await db.rpc("semana_en_numeros", esFecha(entrada.lunes) ? { p_lunes: entrada.lunes } : {})));
     case "ventas_por_mes": {
       if (!esFecha(entrada.desde)) throw new ErrorHerramienta("desde debe ser AAAA-MM-DD");
       return compacto(revisar(await db.rpc("ventas_historicas_mes", { p_desde: entrada.desde })));
@@ -548,6 +558,91 @@ export async function resumenSinIA(db: SupabaseClient, area: Area): Promise<Resu
 }
 
 // -----------------------------------------------------------------------------
+// La semana: los números los arma la base (semana_en_numeros, con los permisos de
+// quien pregunta) y Claude los narra. Se guarda uno por persona y semana.
+// -----------------------------------------------------------------------------
+type Lista = Record<string, string | number | null>[];
+export interface NumerosSemana {
+  semana: { lunes: string; pasada_desde: string; pasada_hasta: string; hasta: string };
+  ventas?: { alcance: "empresa" | "tuyas"; monto: number; monto_anterior: number; operaciones: number; operaciones_anterior: number;
+    cotizaciones_enviadas: { n: number; monto: number }; cotizaciones_ganadas: { n: number; monto: number }; cotizaciones_perdidas: number;
+    cotizaciones_sin_respuesta: { n: number; monto: number }; mejores_clientes: Lista; entregas_comprometidas: Lista };
+  cobranza?: { cobrado: number; cobrado_anterior: number };
+  produccion?: { terminadas: number; terminadas_anterior: number; atrasadas: number; en_proceso: number; comprometidas: Lista };
+  compras?: { por_llegar: Lista; atrasadas: number; ajustes_pendientes: number; ajustes_semana: number };
+  importaciones?: { llegan: Lista };
+  servicio?: { cerrados: number; programados: Lista };
+  pendientes: { vencidos: number; esta_semana: number; cerrados: number };
+}
+
+export async function resumirSemana(opts: { anthropic: Pick<Anthropic, "beta">; perfil: Perfil; config: Config; numeros: NumerosSemana }) {
+  const flujo = opts.anthropic.beta.messages.stream({
+    model: opts.config.modelo,
+    max_tokens: 8000,
+    betas: BETAS,
+    fallbacks: "default",
+    output_config: { effort: opts.config.esfuerzo, format: { type: "json_schema", schema: ESQUEMA_RESUMEN } },
+    system: sistema(opts.perfil),
+    messages: [{
+      role: "user",
+      content: `Escribe el resumen de la semana para esta persona: qué pasó la semana pasada (${opts.numeros.semana.pasada_desde} a ` +
+        `${opts.numeros.semana.pasada_hasta}) contra la anterior y qué viene esta semana. Usa solo estos números (vienen de la base con ` +
+        `sus permisos; si ventas dice "tuyas", son las de sus clientes, no las de la empresa). Una semana es poca muestra: no ` +
+        `saques tendencias de un solo dato. Lo que tiene fecha de esta semana y ya pasó, dilo como atrasado. En los puntos, primero ` +
+        `lo que hay que hacer esta semana.\n\n` + "```json\n" + JSON.stringify(opts.numeros) + "\n```",
+    }],
+  });
+  const r = await flujo.finalMessage();
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso escribir este resumen.");
+  if (r.stop_reason === "max_tokens") throw new ErrorHerramienta("El resumen salió demasiado largo; intenta de nuevo.");
+  const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
+  if (!bloque) throw new ErrorHerramienta("Claude no devolvió el resumen.");
+  const resumen = JSON.parse(bloque.text) as Resumen;
+  return { resumen, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+}
+
+const pesos = (n: number) => "$" + Math.round(n).toLocaleString("es-MX");
+const cuantos = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
+const cambio = (a: number, b: number) => (b > 0 ? ` (${a >= b ? "+" : "−"}${Math.abs(Math.round((a / b - 1) * 100))} % contra la anterior)` : "");
+
+/** Sin llave de Claude, la semana se cuenta con reglas: los mismos números, sin interpretación. */
+export function semanaSinIA(n: NumerosSemana): Resumen {
+  const puntos: Resumen["puntos"] = [];
+  const v = n.ventas;
+  if (v) {
+    puntos.push({ tono: v.monto >= v.monto_anterior ? "bueno" : "atencion", titulo: `${v.alcance === "tuyas" ? "Tus ventas" : "Ventas"}: ${pesos(v.monto)}`,
+      detalle: `${cuantos(v.operaciones, "operación", "operaciones")}${cambio(v.monto, v.monto_anterior)}. ` +
+        `${cuantos(v.cotizaciones_enviadas.n, "cotización enviada", "cotizaciones enviadas")} por ${pesos(v.cotizaciones_enviadas.monto)}; ` +
+        `${cuantos(v.cotizaciones_ganadas.n, "ganada", "ganadas")}.`,
+      accion: "Revisar los pedidos", ruta: "/ventas/pedidos" });
+    if (v.cotizaciones_sin_respuesta.n > 0) puntos.push({ tono: "atencion", titulo: cuantos(v.cotizaciones_sin_respuesta.n, "cotización sin respuesta", "cotizaciones sin respuesta"),
+      detalle: `Enviadas hace más de una semana, por ${pesos(v.cotizaciones_sin_respuesta.monto)}.`, accion: "Darles seguimiento", ruta: "/ventas/cotizaciones" });
+    if (v.entregas_comprometidas.length) puntos.push({ tono: "info", titulo: `${cuantos(v.entregas_comprometidas.length, "entrega comprometida", "entregas comprometidas")} esta semana`,
+      detalle: v.entregas_comprometidas.slice(0, 4).map((e) => `${e.folio} (${e.cliente})`).join(", "), accion: "Confirmar que salen a tiempo", ruta: "/ventas/pedidos" });
+  }
+  const p = n.produccion;
+  if (p && (p.atrasadas || p.comprometidas.length)) puntos.push({ tono: p.atrasadas ? "riesgo" : "info",
+    titulo: p.atrasadas ? cuantos(p.atrasadas, "orden de producción atrasada", "órdenes de producción atrasadas")
+      : `${cuantos(p.comprometidas.length, "orden comprometida", "órdenes comprometidas")} esta semana`,
+    detalle: `${p.terminadas} terminadas la semana pasada; ${p.en_proceso} en proceso.`, accion: "Revisar la carga del taller", ruta: "/produccion/gerencia" });
+  const c = n.compras;
+  if (c && (c.atrasadas || c.por_llegar.length)) puntos.push({ tono: c.atrasadas ? "atencion" : "info",
+    titulo: `${cuantos(c.por_llegar.length, "orden de compra llega", "órdenes de compra llegan")} esta semana`,
+    detalle: c.atrasadas ? `${cuantos(c.atrasadas, "ya va atrasada", "ya van atrasadas")}.` : "Ninguna atrasada.",
+    accion: "Revisar las órdenes de compra", ruta: "/compras/ordenes" });
+  if (n.cobranza) puntos.push({ tono: "info", titulo: `Cobrado: ${pesos(n.cobranza.cobrado)}`, detalle: `La semana pasada${cambio(n.cobranza.cobrado, n.cobranza.cobrado_anterior)}.`,
+    accion: "Revisar la cobranza", ruta: "/finanzas/cobranza" });
+  if (n.pendientes.vencidos) puntos.push({ tono: "riesgo", titulo: cuantos(n.pendientes.vencidos, "pendiente tuyo vencido", "pendientes tuyos vencidos"),
+    detalle: `Y ${n.pendientes.esta_semana} vencen esta semana.`, accion: "Cerrarlos o moverles la fecha", ruta: "/pendientes" });
+  const rutas = RUTAS as readonly string[];
+  return {
+    titular: v ? `La semana pasada: ${pesos(v.monto)} en ventas${cambio(v.monto, v.monto_anterior)}` : "Tu semana en números",
+    resumen: "Estos son los números de la base, sin interpretación; con la llave de Claude conectada el asistente además los cruza y propone qué hacer.",
+    puntos: puntos.slice(0, 6).map((x) => ({ ...x, ruta: rutas.includes(x.ruta) ? x.ruta : "/" })),
+  };
+}
+
+// -----------------------------------------------------------------------------
 // Mensaje para un cliente (WhatsApp o correo), a partir de una oportunidad.
 // -----------------------------------------------------------------------------
 const ESQUEMA_MENSAJE = {
@@ -855,7 +950,7 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
     }).then(() => undefined);
 
   // Cupo: solo cuenta lo que cuesta. El modo demostración no gasta nada.
-  if (anthropic && !(modo === "resumen" && cuerpo.forzar !== true)) {
+  if (anthropic && !((modo === "resumen" || modo === "semana") && cuerpo.forzar !== true)) {
     const { data: cupo } = await db.rpc("asistente_cupo");
     if (typeof cupo === "number" && cupo <= 0)
       return json({ error: "Ya usaste tus consultas de hoy. Mañana se renuevan; si te hacen falta más, pídelo a sistemas." }, 429);
@@ -886,6 +981,30 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
         db.from("asistente_resumenes").upsert({ usuario_id: perfil.id, area, contenido: r.resumen, modelo: r.modelo, generado_en: new Date().toISOString() }),
       ]);
       return json({ ...r.resumen, generado_en: new Date().toISOString(), modelo: r.modelo });
+    }
+
+    if (modo === "semana") {
+      const numeros = revisar(await db.rpc("semana_en_numeros")) as NumerosSemana;
+      const lunes = numeros.semana.lunes;
+      if (cuerpo.forzar !== true) {
+        const { data: guardado } = await db.from("asistente_resumenes").select("contenido,modelo,generado_en")
+          .eq("area", "semana").maybeSingle();
+        const g = guardado as { contenido: Resumen & { lunes?: string }; modelo: string | null; generado_en: string } | null;
+        // Uno por semana: los números de la semana pasada ya no cambian.
+        if (g && g.contenido.lunes === lunes && (g.modelo || !anthropic))
+          return json({ ...g.contenido, numeros, generado_en: g.generado_en, simulado: !g.modelo, guardado: true });
+      }
+      const { data: cupo } = anthropic ? await db.rpc("asistente_cupo") : { data: 0 };
+      if (!anthropic || (typeof cupo === "number" && cupo <= 0))
+        return json({ ...semanaSinIA(numeros), numeros, generado_en: new Date().toISOString(), simulado: true,
+          ...(anthropic ? { aviso: "Sin consultas de Claude por hoy: estos son los números de la base." } : {}) });
+      const r = await resumirSemana({ anthropic, perfil, config, numeros });
+      await Promise.all([
+        registrar(r),
+        db.from("asistente_resumenes").upsert({ usuario_id: perfil.id, area: "semana", contenido: { ...r.resumen, lunes }, modelo: r.modelo,
+          generado_en: new Date().toISOString() }),
+      ]);
+      return json({ ...r.resumen, numeros, generado_en: new Date().toISOString(), modelo: r.modelo });
     }
 
     if (modo === "redactar") {

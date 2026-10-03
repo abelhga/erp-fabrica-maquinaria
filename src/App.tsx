@@ -48,6 +48,7 @@ const Importar = p(() => import("./modulos/sistema/Importar"));
 const Bitacora = p(() => import("./modulos/sistema/Bitacora"));
 const Configuracion = p(() => import("./modulos/sistema/Configuracion"));
 const ParaLlamar = p(() => import("./modulos/asistente/ParaLlamar"));
+const Semana = p(() => import("./modulos/asistente/Semana"));
 const Pendientes = p(() => import("./modulos/pendientes/Pendientes"));
 const Planos = p(() => import("./modulos/costeo/Planos"));
 const Embarques = p(() => import("./modulos/importaciones/Embarques"));
@@ -108,9 +109,11 @@ export function App() {
           <Route path="costeo/margenes" element={<Con m="costos" n={2}><Margenes /></Con>} />
           <Route path="costeo/precios-ventas" element={<Con m="costos"><PreciosVentas /></Con>} />
           <Route path="pendientes" element={<Pendientes />} />
+          <Route path="semana" element={<Con m="asistente"><Semana /></Con>} />
           <Route path="ventas/para-llamar" element={<Con m="ventas"><ParaLlamar /></Con>} />
           <Route path="ventas/oportunidades" element={<Con m="ventas"><Oportunidades /></Con>} />
           <Route path="ventas/cotizaciones" element={<Con m="ventas"><Cotizaciones /></Con>} />
+          <Route path="ventas/cotizaciones/nueva" element={<Con m="ventas" n={2}><EditorCotizacion /></Con>} />
           <Route path="ventas/cotizaciones/:id" element={<Con m="ventas"><EditorCotizacion /></Con>} />
           <Route path="ventas/pedidos" element={<Con m="ventas"><Pedidos /></Con>} />
           <Route path="ventas/pedidos/:id" element={<Con m="ventas"><DetallePedido /></Con>} />

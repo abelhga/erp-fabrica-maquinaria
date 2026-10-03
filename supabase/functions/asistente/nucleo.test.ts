@@ -134,6 +134,44 @@ describe.skipIf(!hayBase)("asistente contra la base local", () => {
     expect(j.puntos.length).toBeGreaterThan(0);
   });
 
+  it("la semana sin llave son los números de la base, con los permisos de quien pregunta", async () => {
+    const r = await atender(new Request("http://x/", {
+      method: "POST", headers: { Authorization: `Bearer ${isaac.token}` }, body: JSON.stringify({ modo: "semana", forzar: true }),
+    }), { supabaseUrl: URL_SB, supabaseAnonKey: ANON });
+    const j = await r.json();
+    expect(j.simulado).toBe(true);
+    expect(j.numeros.ventas.alcance).toBe("tuyas");
+    expect(j.numeros.cobranza).toBeUndefined();
+    expect(j.titular).toMatch(/ventas/i);
+  });
+
+  it("la semana con Claude se narra una vez y se guarda para toda la semana", async () => {
+    const dir = await sesion("direccion@hegamex.com");
+    const narrada = { titular: "Semana de prueba", resumen: "Texto de prueba.", puntos: [] };
+    const { falso, recibido } = claudeFalso([{ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(narrada), citations: null }] }]);
+    const pedir = (cuerpo: object, crear: () => Pick<Anthropic, "beta">) => atender(new Request("http://x/", {
+      method: "POST", headers: { Authorization: `Bearer ${dir.token}` }, body: JSON.stringify(cuerpo),
+    }), { supabaseUrl: URL_SB, supabaseAnonKey: ANON, crearAnthropic: crear });
+    try {
+      const j = await (await pedir({ modo: "semana", forzar: true }, () => falso)).json();
+      expect(j.titular).toBe("Semana de prueba");
+      expect(j.numeros.ventas.alcance).toBe("empresa");
+      // Claude recibe los números de la base, no los inventa.
+      expect(JSON.stringify(recibido[0].messages)).toContain("pasada_desde");
+      // La segunda vez no se llama a Claude: si lo hiciera, este falso no tiene respuesta.
+      const otra = await (await pedir({ modo: "semana" }, () => claudeFalso([]).falso)).json();
+      expect(otra.guardado).toBe(true);
+      expect(otra.titular).toBe("Semana de prueba");
+    } finally {
+      // La base es compartida: que la narración falsa no se quede como la semana de dirección.
+      const { default: pg } = await import("pg");
+      const db = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres" });
+      await db.connect();
+      await db.query("delete from asistente_resumenes where area = 'semana' and usuario_id = (select id from auth.users where email = 'direccion@hegamex.com')");
+      await db.end();
+    }
+  });
+
   it("la TV del taller no usa el asistente", async () => {
     const tv = await sesion("tv@hegamex.com");
     const r = await atender(new Request("http://x/", {

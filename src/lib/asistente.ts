@@ -54,6 +54,26 @@ export async function pedirResumen(area: Area, forzar = false): Promise<Resumen>
   return (await llamar({ modo: "resumen", area, forzar })).json();
 }
 
+// Lo mismo que semana_en_numeros() en SQL; cada sección llega solo si tu rol la ve.
+type Lista = Record<string, string | number | null>[];
+export interface NumerosSemana {
+  semana: { lunes: string; pasada_desde: string; pasada_hasta: string; hasta: string };
+  ventas?: { alcance: "empresa" | "tuyas"; monto: number; monto_anterior: number; operaciones: number; operaciones_anterior: number;
+    cotizaciones_enviadas: { n: number; monto: number }; cotizaciones_ganadas: { n: number; monto: number }; cotizaciones_perdidas: number;
+    cotizaciones_sin_respuesta: { n: number; monto: number }; mejores_clientes: Lista; entregas_comprometidas: Lista };
+  cobranza?: { cobrado: number; cobrado_anterior: number };
+  produccion?: { terminadas: number; terminadas_anterior: number; atrasadas: number; en_proceso: number; comprometidas: Lista };
+  compras?: { por_llegar: Lista; atrasadas: number; ajustes_pendientes: number; ajustes_semana: number };
+  importaciones?: { llegan: Lista };
+  servicio?: { cerrados: number; programados: Lista };
+  pendientes: { vencidos: number; esta_semana: number; cerrados: number };
+}
+export interface Semana extends Resumen { numeros: NumerosSemana }
+
+export async function pedirSemana(forzar = false): Promise<Semana> {
+  return (await llamar({ modo: "semana", forzar })).json();
+}
+
 export async function redactarMensaje(cliente_id: string, canal: "whatsapp" | "correo", motivo: string) {
   return (await llamar({ modo: "redactar", cliente_id, canal, motivo })).json() as Promise<{ asunto: string; mensaje: string; simulado?: boolean }>;
 }

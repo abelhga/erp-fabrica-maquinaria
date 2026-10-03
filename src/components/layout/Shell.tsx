@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
-import { MENU, INICIO, PENDIENTES } from "@/navegacion";
+import { MENU, INICIO, PENDIENTES, SEMANA } from "@/navegacion";
 import { useSesion, NOMBRE_ROL } from "@/lib/sesion";
 import { cn } from "@/lib/utilidades";
 import { Logo } from "./Logo";
@@ -44,6 +44,7 @@ export function Shell() {
       <div className="space-y-0.5">
         <ItemMenu ruta={INICIO.ruta} texto={INICIO.texto} Icono={INICIO.icono} />
         <ItemMenu ruta={PENDIENTES.ruta} texto={PENDIENTES.texto} Icono={PENDIENTES.icono} />
+        {puede(SEMANA.modulo, 1) && <ItemMenu ruta={SEMANA.ruta} texto={SEMANA.texto} Icono={SEMANA.icono} />}
       </div>
       {secciones.map((s) => (
         <div key={s.titulo}>
@@ -141,7 +142,8 @@ export function Pagina({ titulo, descripcion, acciones, children, ancho = "max-w
   titulo: React.ReactNode; descripcion?: React.ReactNode; acciones?: React.ReactNode; children: React.ReactNode; ancho?: string;
 }) {
   return (
-    <div className={cn("mx-auto px-4 lg:px-8 py-6 space-y-5", ancho)}>
+    // pb-24 abajo de escritorio: el botón flotante del asistente tapaba el último renglón de cada pantalla.
+    <div className={cn("mx-auto px-4 lg:px-8 pt-6 pb-24 lg:pb-6 space-y-5", ancho)}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{titulo}</h1>

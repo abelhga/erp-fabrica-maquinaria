@@ -118,7 +118,8 @@ export default function Cotizaciones() {
 
   return (
     <Pagina titulo="Cotizaciones" descripcion="Cada cotización con su folio, versión y estado. Ya no se pisa la anterior."
-      acciones={<Boton onClick={() => ir("/ventas/cotizaciones/nueva")}><Plus className="h-4 w-4" />Nueva cotización</Boton>}>
+      // Producción y finanzas ven ventas (nivel 1) pero no cotizan: el botón les daba un 403.
+      acciones={puede("ventas", 2) && <Boton onClick={() => ir("/ventas/cotizaciones/nueva")}><Plus className="h-4 w-4" />Nueva cotización</Boton>}>
       <Pestanas value={pestana} onValueChange={(v) => setParams(v === "abiertas" ? {} : { estado: v }, { replace: true })}>
         <ListaPestanas opciones={[
           { valor: "abiertas", texto: esGerente ? "Abiertas" : "Mías abiertas", cuenta: cuenta((c) => ABIERTAS.includes(c.estado) && (esGerente || c.vendedor_id === perfil?.id)) },
@@ -151,7 +152,7 @@ export default function Cotizaciones() {
           vacio={{
             icono: FileText, titulo: pestana === "abiertas" ? "No tienes cotizaciones abiertas" : "Nada en esta pestaña",
             texto: "Una cotización nueva tarda segundos: elige cliente, escribe el equipo y Enter.",
-            accion: <Boton onClick={() => ir("/ventas/cotizaciones/nueva")}><Plus className="h-4 w-4" />Nueva cotización</Boton>,
+            accion: puede("ventas", 2) ? <Boton onClick={() => ir("/ventas/cotizaciones/nueva")}><Plus className="h-4 w-4" />Nueva cotización</Boton> : undefined,
           }}
           pie={visibles.length > 0 && (
             <p className="text-sm text-tenue text-right">
