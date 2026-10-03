@@ -8,6 +8,7 @@ import { fecha, numero, porcentaje } from "@/lib/formato";
 import { Logo } from "@/components/layout/Logo";
 import { Boton } from "@/components/ui/boton";
 import { dineroEn, hoyMx, mensualidad, useEmpresa, usePlanesMeses, venceEl, type Cotizacion, type Partida } from "./comun";
+import { useFichas } from "./componentes/Fichas";
 
 const NOMBRE_MONEDA = { MXN: "Pesos mexicanos (MXN)", USD: "Dólares estadounidenses (USD)", EUR: "Euros (EUR)" } as const;
 
@@ -48,6 +49,7 @@ export default function ImprimirCotizacion() {
   });
   const empresa = useEmpresa();
   const planes = usePlanesMeses();
+  const fichas = useFichas((lineas.data ?? []).map((l) => l.articulo_id));
 
   // Es papel: siempre claro, aunque el usuario use el tema oscuro.
   useEffect(() => {
@@ -269,6 +271,26 @@ export default function ImprimirCotizacion() {
             </div>
           </section>
         )}
+
+        {/* Fichas técnicas vigentes de lo cotizado: la liga queda en el papel y en el PDF. */}
+        {(() => {
+          const conFicha = partidas.map((p, i) => ({ n: i + 1, p, docs: p.articulo_id ? fichas.data?.[p.articulo_id] ?? [] : [] })).filter((x) => x.docs.length);
+          if (!conFicha.length) return null;
+          return (
+            <section className="bloque mt-5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-tenue mb-1.5">Fichas técnicas</p>
+              <ul className="space-y-1 text-[11px]">
+                {conFicha.flatMap((x) => x.docs.map((d) => (
+                  <li key={d.documento_id} className="flex gap-2">
+                    <span className="text-tenue tabular-nums w-14 shrink-0">Partida {x.n}</span>
+                    <span className="min-w-0"><b className="text-texto">{d.titulo}</b>{" · "}
+                      <a href={d.drive_url} className="text-marca-texto underline break-all">{d.drive_url.replace(/^https:\/\//, "")}</a></span>
+                  </li>
+                )))}
+              </ul>
+            </section>
+          );
+        })()}
 
         <footer className="bloque mt-6 pt-3 border-t border-borde flex items-start justify-between gap-6 text-[10px] text-tenue">
           <span>{fis?.razon_social ?? "Hegamex"} · Fabricantes de bandas transportadoras, dosificadoras, cribadoras, tolvas, silos y elevadores</span>

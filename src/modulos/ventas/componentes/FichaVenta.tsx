@@ -8,6 +8,7 @@ import { Cargando } from "@/components/ui/estados";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/utilidades";
 import { Imagen } from "./Imagen";
+import { FichasTecnicas } from "./Fichas";
 import { dineroEn, mensualidad, usePlanesMeses, type Moneda } from "../comun";
 
 export interface Ficha {
@@ -144,6 +145,8 @@ export function FichaVenta({ articuloId, moneda = "MXN", tipoCambio = 1, conIva 
           </div>
         </div>
       )}
+      <FichasTecnicas articuloId={articuloId} tipo={f.tipo} />
+
       {f.actualizado && <p className="text-[11px] text-tenue">Precio recalculado {fechaYHora(f.actualizado)}</p>}
     </div>
   );

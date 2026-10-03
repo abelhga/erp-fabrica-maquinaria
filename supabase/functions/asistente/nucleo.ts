@@ -28,7 +28,7 @@ export const RUTAS = [
   "/", "/semana", "/pendientes", "/ventas/para-llamar", "/ventas/oportunidades", "/ventas/cotizaciones", "/ventas/pedidos",
   "/ventas/clientes", "/ventas/comisiones", "/costeo/equipos", "/costeo/componentes", "/costeo/planos", "/costeo/margenes",
   "/costeo/precios-ventas",
-  "/compras/precios", "/compras/ordenes", "/compras/proveedores",
+  "/compras/precios", "/compras/solicitudes", "/compras/ordenes", "/compras/proveedores", "/ventas/solicitudes",
   "/almacen/existencias", "/almacen/movimientos", "/almacen/reabasto",
   "/produccion/gerencia", "/produccion/ordenes", "/finanzas/cobranza", "/finanzas/pagos",
   "/rrhh/empleados", "/rrhh/incidencias", "/rrhh/objetivos", "/rrhh/checklist", "/rrhh/prenomina",

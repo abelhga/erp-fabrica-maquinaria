@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Command } from "cmdk";
 import * as P from "@radix-ui/react-popover";
-import { Boxes, Layers, Loader2, Search } from "lucide-react";
+import { Boxes, Layers, Loader2, MessageSquareQuote, Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { dinero, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
@@ -17,10 +17,12 @@ export interface ArticuloEncontrado {
  * materiales, órdenes de compra, salidas). Escribe parte del nombre o la clave,
  * flechas para moverse, Enter para elegir. Reemplaza al menú de 4,555 nombres
  * del cotizador en hojas.
+ * Con `alNoEncontrar`, la última opción ofrece pedírselo a compras con lo que se
+ * escribió (y si no hubo resultados, Enter la elige): así el vendedor no sale al chat.
  */
-export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo o componente…", autoFocus, className, mostrarPrecio = true }: {
+export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo o componente…", autoFocus, className, mostrarPrecio = true, alNoEncontrar }: {
   alElegir: (a: ArticuloEncontrado) => void; tipos?: ArticuloEncontrado["tipo"][]; placeholder?: string;
-  autoFocus?: boolean; className?: string; mostrarPrecio?: boolean;
+  autoFocus?: boolean; className?: string; mostrarPrecio?: boolean; alNoEncontrar?: (texto: string) => void;
 }) {
   const [q, setQ] = useState("");
   const [abierto, setAbierto] = useState(false);
@@ -38,7 +40,7 @@ export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo
       const { data } = await supabase.rpc("buscar_articulos", { q, p_tipos: tipos ?? null, p_limite: 30 });
       const lista = (data as ArticuloEncontrado[]) ?? [];
       setRes(lista);
-      setMarcado(lista[0]?.id ?? "");
+      setMarcado(lista[0]?.id ?? (alNoEncontrar ? "__pedir" : ""));
       setCargando(false);
     }, 150);
     return () => clearTimeout(t);
@@ -79,6 +81,16 @@ export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo
                   {mostrarPrecio && <span className="text-sm font-medium cifra">{dinero(a.precio)}</span>}
                 </Command.Item>
               ))}
+              {alNoEncontrar && !cargando && q.trim().length >= 3 && (
+                <Command.Item value="__pedir" onSelect={() => { const t = q.trim(); setQ(""); setAbierto(false); alNoEncontrar(t); }}
+                  className={cn("flex items-center gap-3 rounded-lg px-2 py-2 cursor-pointer text-marca-texto data-[selected=true]:bg-marca-suave", res.length > 0 && "mt-1 border-t border-borde")}>
+                  <div className="h-9 w-9 rounded bg-marca-suave flex items-center justify-center shrink-0"><MessageSquareQuote className="h-4 w-4" /></div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{res.length ? "¿No está? Pídeselo a compras" : "No está en el catálogo: pídeselo a compras"}</p>
+                    <p className="text-xs text-tenue truncate">“{q.trim()}” · se agrega como partida y compras te contesta el precio</p>
+                  </div>
+                </Command.Item>
+              )}
             </Command.List>
           </P.Content>
         </P.Portal>

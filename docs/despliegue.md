@@ -15,13 +15,14 @@ está creado todavía: requiere decisiones y cuentas del dueño.
    npx supabase link --project-ref <ref>
    npx supabase db push          # aplica supabase/migrations en orden
    ```
-   Comprobar en el SQL Editor que quedaron las seis tareas
+   Comprobar en el SQL Editor que quedaron las siete tareas
    (`select jobname, schedule from cron.job order by 1;`). Los horarios están en UTC; la planta
    está en UTC−6 todo el año:
 
    | Tarea | Cuándo (planta) | Qué hace |
    |---|---|---|
    | `avisos-periodicos` | cada 30 min | Validaciones de más de 4 horas y pendientes vencidos |
+   | `avisos-solicitudes-precio` | cada 15 min, en horario hábil | Solicitudes de precio por vencer y vencidas (a compras; vencidas, a la gerencia) |
    | `avisos-importaciones` | cada hora | Las alertas del tablero de importaciones, una vez al día mientras sigan vivas |
    | `avisos-servicio` | 6:47 diario | Genera los preventivos que vencen; recuerda vencidos y herramienta sin regresar |
    | `avisos-objetivos-nomina` | 8:05 diario | Semana de nómina sin cerrar; del 1 al 3, arma el mes de objetivos |

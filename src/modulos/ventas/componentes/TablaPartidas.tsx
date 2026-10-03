@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState, type DragEvent } from "react";
-import { ArrowDown, ArrowUp, Copy, GripVertical, Info, MoreVertical, RotateCcw, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, GripVertical, Info, MessageSquareQuote, MoreVertical, RotateCcw, Trash2 } from "lucide-react";
 import { Imagen } from "./Imagen";
 import * as P from "@radix-ui/react-popover";
 import { Insignia } from "@/components/ui/insignia";
 import { cn } from "@/lib/utilidades";
 import { CampoNumero, MenuAcciones, OpcionMenu, SeparadorMenu } from "./campos";
 import { dineroEn, type Moneda, type Partida } from "../comun";
+import { ChipsFichas, type FichaDoc } from "./Fichas";
+import { EstadoPartida } from "../solicitudes/EstadoPartida";
+import type { Solicitud } from "@/modulos/compras/solicitudes/datos";
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 /** Importe de la partida mientras se escribe (la columna generada de la base hace lo mismo al guardar). */
@@ -18,6 +21,9 @@ export interface AccionesPartida {
   reordenar: (ids: string[]) => void;
   restaurarPrecio: (l: Partida) => void;
   verFicha: (l: Partida) => void;
+  /** Pedir el precio a compras (partida libre o sin precio de lista) y aplicar el que contestó. */
+  pedirPrecio?: (l: Partida) => void;
+  aplicarPrecio?: (s: Solicitud) => void;
 }
 
 /**
@@ -28,9 +34,11 @@ export interface AccionesPartida {
  * Teclado: Tab avanza; Enter en cantidad/precio/descuento baja a la misma
  * columna de la siguiente partida, como en la hoja.
  */
-export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alSeleccionar, acciones, ancho }: {
+export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alSeleccionar, acciones, ancho, solicitudes, fichas, aplicando }: {
   lineas: Partida[]; moneda: Moneda; editable: boolean; sucias: Set<string>; seleccion: string | null;
   alSeleccionar: (id: string) => void; acciones: AccionesPartida; ancho: boolean;
+  /** La solicitud de precio más reciente de cada partida, y las fichas vigentes por artículo. */
+  solicitudes?: Record<string, Solicitud>; fichas?: Record<string, FichaDoc[]>; aplicando?: string | null;
 }) {
   const [arrastrando, setArrastrando] = useState<string | null>(null);
   const [sobre, setSobre] = useState<string | null>(null);
@@ -63,6 +71,7 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
       {l.articulo_id && <OpcionMenu icono={Info} alElegir={() => acciones.verFicha(l)}>Ver ficha de venta</OpcionMenu>}
       {editable && (
         <>
+          {acciones.pedirPrecio && !pedida(l) && <OpcionMenu icono={MessageSquareQuote} alElegir={() => acciones.pedirPrecio!(l)}>Pedir precio a compras</OpcionMenu>}
           {l.articulo_id && <OpcionMenu icono={RotateCcw} alElegir={() => acciones.restaurarPrecio(l)}>Volver al precio de lista</OpcionMenu>}
           <OpcionMenu icono={Copy} alElegir={() => acciones.duplicar(l)}>Duplicar partida</OpcionMenu>
           <OpcionMenu icono={ArrowUp} deshabilitado={i === 0} alElegir={() => mover(l.id, -1)}>Subir</OpcionMenu>
@@ -74,12 +83,30 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
     </MenuAcciones>
   );
 
+  // Una solicitud viva (o contestada sin aplicar) en la partida: no se ofrece pedirla otra vez.
+  // Ya aplicada sí (el precio del proveedor vence y se vuelve a pedir).
+  const pedida = (l: Partida) => {
+    const s = solicitudes?.[l.id];
+    return !!s && s.estado !== "cancelada" && s.estado !== "no_se_consigue" && !s.aplicada_en;
+  };
+  // Lo que suele ir a compras: lo que no tiene precio de lista o la partida libre en $0 (no los fletes ni servicios).
+  const sinPrecio = (l: Partida) => (l.articulo_id ? !Number(l.precio_lista) : !Number(l.precio_unitario) && l.unidad !== "servicio");
   const insignias = (l: Partida) => (
     <>
       {l.bajo_minimo && !sucias.has(l.id) && <Insignia tono="peligro" punto>Bajo el mínimo</Insignia>}
       {l.opcional && <Insignia tono="info">Opcional · no suma</Insignia>}
       {!l.articulo_id && <Insignia>Partida libre</Insignia>}
-      {l.articulo_id && !Number(l.precio_lista) && <Insignia tono="aviso">Sin precio de lista: escribe el precio</Insignia>}
+      {l.articulo_id && !Number(l.precio_lista) && !pedida(l) && <Insignia tono="aviso">Sin precio de lista</Insignia>}
+      {editable && acciones.pedirPrecio && sinPrecio(l) && !pedida(l) && (
+        <button type="button" onClick={(e) => { e.stopPropagation(); acciones.pedirPrecio!(l); }}
+          className="inline-flex items-center gap-1 rounded-full border border-marca/30 px-2 py-0.5 text-xs font-medium text-marca-texto hover:bg-marca-suave">
+          <MessageSquareQuote className="h-3.5 w-3.5" />Pedir precio a compras
+        </button>
+      )}
+      {solicitudes?.[l.id] && acciones.aplicarPrecio && (
+        <EstadoPartida s={solicitudes[l.id]} editable={editable} alAplicar={acciones.aplicarPrecio} aplicando={aplicando === solicitudes[l.id].id} />
+      )}
+      {l.articulo_id && <ChipsFichas docs={fichas?.[l.articulo_id]} />}
     </>
   );
 
