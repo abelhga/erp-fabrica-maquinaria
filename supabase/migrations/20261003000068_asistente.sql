@@ -236,8 +236,8 @@ $$;
 -- Se arman sobre tablero_direccion(), que ya respeta los permisos de quien llama:
 -- a quien no ve costos no le sale ningún hallazgo de costos.
 -- -----------------------------------------------------------------------------
-create or replace function public.hallazgos(p_area text default 'direccion')
-returns table (area text, tono text, titulo text, detalle text, ruta text)
+create or replace function public.hallazgos_nucleo(p_area text default 'direccion')
+returns table (area text, tono text, titulo text, detalle text, ruta text, peso int)
 language plpgsql stable security invoker as $$
 declare
   t jsonb := tablero_direccion();
@@ -415,11 +415,31 @@ begin
   end if;
 
   return query
-    select e->>'area', e->>'tono', e->>'titulo', e->>'detalle', e->>'ruta'
-    from jsonb_array_elements(h) e
-    where p_area = 'direccion' or e->>'area' = p_area
-          or (p_area = 'almacen' and e->>'area' = 'compras' and puede('inventario', 2))
-    order by case e->>'tono' when 'riesgo' then 1 when 'atencion' then 2 when 'bueno' then 3 else 4 end, (e->>'peso')::int;
+    select e->>'area', e->>'tono', e->>'titulo', e->>'detalle', e->>'ruta', (e->>'peso')::int
+    from jsonb_array_elements(h) e;
+end $$;
+
+-- hallazgos() junta los del núcleo con los de cada módulo. Un módulo nuevo
+-- (importaciones, servicio, objetivos…) agrega su función
+--   public.hallazgos_<área>(p_area text) returns table (area, tono, titulo, detalle, ruta, peso int)
+-- que revisa sus propios permisos, y aparece aquí sola. Así ningún módulo tiene
+-- que redeclarar esta función: cuando dos lo hacían, el último borraba al otro.
+create or replace function public.hallazgos(p_area text default 'direccion')
+returns table (area text, tono text, titulo text, detalle text, ruta text)
+language plpgsql stable security invoker as $$
+declare v_sql text;
+begin
+  select string_agg(format('select * from public.%I($1)', p.proname), ' union all ')
+  into v_sql
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname like 'hallazgos\_%'
+    and pg_get_function_identity_arguments(p.oid) = 'p_area text';
+  return query execute format(
+    'select h.area, h.tono, h.titulo, h.detalle, h.ruta from (%s) h
+     where $1 = ''direccion'' or h.area = $1
+           or ($1 = ''almacen'' and h.area = ''compras'' and puede(''inventario'', 2))
+     order by case h.tono when ''riesgo'' then 1 when ''atencion'' then 2 when ''bueno'' then 3 else 4 end, h.peso', v_sql)
+  using p_area;
 end $$;
 
 select public.optimizar_politicas();
