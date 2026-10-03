@@ -12,6 +12,7 @@ const Componentes = p(() => import("./modulos/costeo/Componentes"));
 const Equipos = p(() => import("./modulos/costeo/Equipos"));
 const DetalleArticulo = p(() => import("./modulos/costeo/DetalleArticulo"));
 const Margenes = p(() => import("./modulos/costeo/Margenes"));
+const PreciosVentas = p(() => import("./modulos/analisis/PreciosVentas"));
 const Oportunidades = p(() => import("./modulos/ventas/Oportunidades"));
 const Cotizaciones = p(() => import("./modulos/ventas/Cotizaciones"));
 const EditorCotizacion = p(() => import("./modulos/ventas/EditorCotizacion"));
@@ -36,12 +37,27 @@ const Terminal = p(() => import("./modulos/produccion/Terminal"));
 const PantallaPiso = p(() => import("./modulos/produccion/PantallaPiso"));
 const Empleados = p(() => import("./modulos/rrhh/Empleados"));
 const Incidencias = p(() => import("./modulos/rrhh/Incidencias"));
+const Objetivos = p(() => import("./modulos/rrhh/Objetivos"));
+const Checklist = p(() => import("./modulos/rrhh/Checklist"));
+const Prenomina = p(() => import("./modulos/rrhh/Prenomina"));
+const MiDesempeno = p(() => import("./modulos/rrhh/MiDesempeno"));
 const Cobranza = p(() => import("./modulos/finanzas/Cobranza"));
 const Pagos = p(() => import("./modulos/finanzas/Pagos"));
 const Usuarios = p(() => import("./modulos/sistema/Usuarios"));
 const Importar = p(() => import("./modulos/sistema/Importar"));
 const Bitacora = p(() => import("./modulos/sistema/Bitacora"));
 const Configuracion = p(() => import("./modulos/sistema/Configuracion"));
+const ParaLlamar = p(() => import("./modulos/asistente/ParaLlamar"));
+const Pendientes = p(() => import("./modulos/pendientes/Pendientes"));
+const Embarques = p(() => import("./modulos/importaciones/Embarques"));
+const DetalleEmbarque = p(() => import("./modulos/importaciones/DetalleEmbarque"));
+const ImprimirOCImportacion = p(() => import("./modulos/importaciones/ImprimirOC"));
+const Servicios = p(() => import("./modulos/servicio/Servicios"));
+const DetalleServicio = p(() => import("./modulos/servicio/DetalleServicio"));
+const Maquinas = p(() => import("./modulos/servicio/Maquinas"));
+const FichaMaquina = p(() => import("./modulos/servicio/FichaMaquina"));
+const ReportarFalla = p(() => import("./modulos/servicio/ReportarFalla"));
+const Resguardos = p(() => import("./modulos/servicio/Resguardos"));
 
 function Cargando() {
   return <div className="h-full flex items-center justify-center text-tenue"><Loader2 className="h-6 w-6 animate-spin" /></div>;
@@ -77,7 +93,10 @@ export function App() {
     <Suspense fallback={<Cargando />}>
       <Routes>
         <Route path="/piso" element={<Con m="produccion"><PantallaPiso /></Con>} />
+        <Route path="/produccion/terminal" element={<Con m="produccion" n={2}><Terminal /></Con>} />
+        <Route path="/servicio/reportar" element={<Con m="servicio" n={2}><ReportarFalla /></Con>} />
         <Route path="/ventas/cotizaciones/:id/imprimir" element={<Con m="ventas"><ImprimirCotizacion /></Con>} />
+        <Route path="/importaciones/oc/:id/imprimir" element={<Con m="compras" n={2}><ImprimirOCImportacion /></Con>} />
         <Route element={<Shell />}>
           <Route index element={<Inicio />} />
           <Route path="costeo/componentes" element={<Con m="costeo"><Componentes /></Con>} />
@@ -85,6 +104,9 @@ export function App() {
           <Route path="costeo/equipos" element={<Con m="costeo"><Equipos /></Con>} />
           <Route path="costeo/equipos/:id" element={<Con m="costeo"><DetalleArticulo /></Con>} />
           <Route path="costeo/margenes" element={<Con m="costos" n={2}><Margenes /></Con>} />
+          <Route path="costeo/precios-ventas" element={<Con m="costos"><PreciosVentas /></Con>} />
+          <Route path="pendientes" element={<Pendientes />} />
+          <Route path="ventas/para-llamar" element={<Con m="ventas"><ParaLlamar /></Con>} />
           <Route path="ventas/oportunidades" element={<Con m="ventas"><Oportunidades /></Con>} />
           <Route path="ventas/cotizaciones" element={<Con m="ventas"><Cotizaciones /></Con>} />
           <Route path="ventas/cotizaciones/:id" element={<Con m="ventas"><EditorCotizacion /></Con>} />
@@ -104,15 +126,26 @@ export function App() {
           <Route path="produccion/gerencia" element={<Con m="produccion"><Gerencia /></Con>} />
           <Route path="produccion/ordenes" element={<Con m="produccion"><OrdenesProduccion /></Con>} />
           <Route path="produccion/ordenes/:id" element={<Con m="produccion"><DetalleOrden /></Con>} />
-          <Route path="produccion/terminal" element={<Con m="produccion" n={2}><Terminal /></Con>} />
+          <Route path="servicio" element={<Con m="servicio"><Servicios /></Con>} />
+          <Route path="servicio/maquinas" element={<Con m="servicio"><Maquinas /></Con>} />
+          <Route path="servicio/maquinas/:id" element={<Con m="servicio"><FichaMaquina /></Con>} />
+          <Route path="servicio/resguardos" element={<Con m="servicio"><Resguardos /></Con>} />
+          <Route path="servicio/:id" element={<Con m="servicio"><DetalleServicio /></Con>} />
           <Route path="rrhh/empleados" element={<Con m="rrhh"><Empleados /></Con>} />
           <Route path="rrhh/incidencias" element={<Con m="rrhh"><Incidencias /></Con>} />
+          <Route path="rrhh/objetivos" element={<Con m="objetivos"><Objetivos /></Con>} />
+          <Route path="rrhh/checklist" element={<Con m="objetivos"><Checklist /></Con>} />
+          <Route path="rrhh/prenomina" element={<Con m="nomina"><Prenomina /></Con>} />
+          <Route path="rrhh/mi-desempeno" element={<Con m="mi_desempeno"><MiDesempeno /></Con>} />
           <Route path="finanzas/cobranza" element={<Con m="finanzas"><Cobranza /></Con>} />
           <Route path="finanzas/pagos" element={<Con m="finanzas"><Pagos /></Con>} />
           <Route path="sistema/usuarios" element={<Con m="admin" n={3}><Usuarios /></Con>} />
           <Route path="sistema/importar" element={<Con m="admin" n={3}><Importar /></Con>} />
           <Route path="sistema/bitacora" element={<Con m="admin"><Bitacora /></Con>} />
           <Route path="sistema/configuracion" element={<Con m="admin" n={3}><Configuracion /></Con>} />
+          <Route path="importaciones" element={<Con m="importaciones"><Embarques /></Con>} />
+          <Route path="importaciones/dinero" element={<Con m="importaciones"><Embarques /></Con>} />
+          <Route path="importaciones/:id" element={<Con m="importaciones"><DetalleEmbarque /></Con>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

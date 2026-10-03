@@ -11,7 +11,10 @@ import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando } from "@/components/ui/estados";
 import { SERIE, TooltipGrafica, ejeProps, Leyenda } from "@/components/graficas/comunes";
-import { useSesion } from "@/lib/sesion";
+import { useSesion, type Modulo, type Rol } from "@/lib/sesion";
+import type { Area } from "@/lib/asistente";
+import { TableroDireccion } from "./TableroDireccion";
+import { ResumenIA } from "./ResumenIA";
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { dinero, dineroCompacto, fecha, numero, porcentaje } from "@/lib/formato";
@@ -42,8 +45,25 @@ function saludo() {
   return h < 12 ? "Buenos días" : h < 19 ? "Buenas tardes" : "Buenas noches";
 }
 
+// Dirección ve el centro de mando; los demás, su tablero de área con el resumen del día.
 export default function Inicio() {
-  const { perfil, puede } = useSesion();
+  const { tieneRol } = useSesion();
+  return tieneRol("direccion") ? <TableroDireccion /> : <InicioPorArea />;
+}
+
+function areaDeRoles(tieneRol: (r: Rol) => boolean, puede: (m: Modulo, n?: number) => boolean): Area | null {
+  if (tieneRol("gerente_ventas") || tieneRol("ventas")) return "ventas";
+  if (tieneRol("gerente_produccion")) return "produccion";
+  if (tieneRol("almacen")) return "almacen";
+  if (tieneRol("compras")) return "compras";
+  if (tieneRol("finanzas")) return "finanzas";
+  if (tieneRol("importaciones")) return "importaciones";
+  return puede("asistente") ? "direccion" : null;
+}
+
+function InicioPorArea() {
+  const { perfil, puede, tieneRol } = useSesion();
+  const area = areaDeRoles(tieneRol, puede);
   const ir = useNavigate();
   const ind = useQuery({ queryKey: ["indicadores"], queryFn: () => q<Indicadores>(supabase.rpc("indicadores")) });
   const ventas = useQuery({
@@ -54,8 +74,8 @@ export default function Inicio() {
   const atrasadas = useQuery({
     queryKey: ["tablero_produccion", "atrasadas"],
     enabled: puede("produccion"),
-    queryFn: () => q<{ id: string; folio: string; equipo: string; cliente: string | null; fecha_compromiso: string; avance: number; dias_restantes: number }[]>(
-      supabase.from("v_tablero_produccion").select("id, folio, equipo, cliente, fecha_compromiso, avance, dias_restantes")
+    queryFn: () => q<{ id: string; folio: string; equipo: string; cliente: string | null; para_stock: boolean; fecha_compromiso: string; avance: number; dias_restantes: number }[]>(
+      supabase.from("v_tablero_produccion").select("id, folio, equipo, cliente, para_stock, fecha_compromiso, avance, dias_restantes")
         .or("atrasada.eq.true,dias_restantes.lte.5").order("fecha_compromiso").limit(6)),
   });
 
@@ -93,6 +113,7 @@ export default function Inicio() {
       titulo={`${saludo()}, ${perfil?.nombre.split(" ")[0] ?? ""}`}
       descripcion={new Date().toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
     >
+      {area && <ResumenIA area={area} />}
       {ind.isLoading ? <Cargando filas={4} /> : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -186,7 +207,7 @@ export default function Inicio() {
                     <tr key={o.id} className="cursor-pointer" onClick={() => ir(`/produccion/ordenes/${o.id}`)}>
                       <td className="font-medium">{o.folio}</td>
                       <td className="max-w-[280px] truncate">{o.equipo}</td>
-                      <td className="text-tenue">{o.cliente ?? "Stock"}</td>
+                      <td className="text-tenue">{o.para_stock ? "Para stock" : o.cliente ?? "—"}</td>
                       <td>
                         {fecha(o.fecha_compromiso)}{" "}
                         {o.dias_restantes < 0 ? <Insignia tono="peligro">{-o.dias_restantes} días tarde</Insignia>

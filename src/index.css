@@ -71,13 +71,19 @@
       disabled:opacity-60;
   }
   .tabla { @apply w-full text-sm; }
-  .tabla th { @apply text-left font-medium text-tenue text-xs uppercase tracking-wide px-3 py-2 border-b border-borde bg-fondo/60 sticky top-0 z-10; }
-  .tabla td { @apply px-3 py-2 border-b border-borde/70 align-middle; }
+  /* :where() deja la especificidad en una clase: así text-right en una columna sí gana. */
+  .tabla :where(th) { @apply text-left font-medium text-tenue text-xs uppercase tracking-wide px-3 py-2 border-b border-borde bg-fondo/60 sticky top-0 z-10; }
+  .tabla :where(td) { @apply px-3 py-2 border-b border-borde/70 align-middle; }
   .tabla tbody tr { @apply hover:bg-marca-suave/40 transition-colors; }
 }
 
 /* Barras de desplazamiento discretas: las tablas largas son la norma aquí. */
 * { scrollbar-width: thin; scrollbar-color: hsl(var(--borde)) transparent; }
+
+/* Quien pidió menos movimiento en su sistema no ve animaciones. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}
 
 @media print {
   .no-imprimir { display: none !important; }

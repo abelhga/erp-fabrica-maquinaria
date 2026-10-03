@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
-import { MENU, INICIO } from "@/navegacion";
+import { MENU, INICIO, PENDIENTES } from "@/navegacion";
 import { useSesion, NOMBRE_ROL } from "@/lib/sesion";
 import { cn } from "@/lib/utilidades";
 import { Logo } from "./Logo";
 import { BuscadorGlobal } from "./BuscadorGlobal";
+import { Asistente } from "@/components/asistente/Asistente";
+import { Campana } from "@/components/avisos/Campana";
 
 function useTema() {
   const [oscuro, setOscuro] = useState(() => {
@@ -39,7 +41,10 @@ export function Shell() {
 
   const menu = (
     <nav className="flex-1 overflow-y-auto px-3 pb-6 space-y-5">
-      <ItemMenu ruta={INICIO.ruta} texto={INICIO.texto} Icono={INICIO.icono} />
+      <div className="space-y-0.5">
+        <ItemMenu ruta={INICIO.ruta} texto={INICIO.texto} Icono={INICIO.icono} />
+        <ItemMenu ruta={PENDIENTES.ruta} texto={PENDIENTES.texto} Icono={PENDIENTES.icono} />
+      </div>
       {secciones.map((s) => (
         <div key={s.titulo}>
           <p className="px-3 mb-1 text-[11px] font-semibold uppercase tracking-wider text-tenue/80">{s.titulo}</p>
@@ -78,13 +83,14 @@ export function Shell() {
           <button className="lg:hidden p-2 -ml-2" onClick={() => setAbiertoMovil(true)} aria-label="Abrir menú"><Menu className="h-5 w-5" /></button>
           <button
             onClick={() => setBuscando(true)}
-            className="flex items-center gap-2 h-9 w-full max-w-md rounded-lg border border-borde bg-fondo px-3 text-sm text-tenue hover:border-marca/40"
+            className="flex items-center gap-2 h-9 flex-1 min-w-0 max-w-md rounded-lg border border-borde bg-fondo px-3 text-sm text-tenue hover:border-marca/40"
           >
             <Search className="h-4 w-4" />
             <span className="truncate">Buscar cliente, equipo, componente, folio…</span>
             <kbd className="ml-auto hidden sm:inline text-[10px] border border-borde rounded px-1.5 py-0.5">Ctrl K</kbd>
           </button>
           <div className="ml-auto flex items-center gap-1">
+            <Campana />
             <button onClick={() => setOscuro(!oscuro)} className="p-2 rounded-lg hover:bg-fondo text-tenue" aria-label="Cambiar tema">
               {oscuro ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
@@ -107,6 +113,7 @@ export function Shell() {
         </main>
       </div>
       <BuscadorGlobal abierto={buscando} alCambiar={setBuscando} />
+      <Asistente />
     </div>
   );
 }
