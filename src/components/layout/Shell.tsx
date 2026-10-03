@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
 import { MENU, INICIO } from "@/navegacion";
-import { useSesion } from "@/lib/sesion";
+import { useSesion, NOMBRE_ROL } from "@/lib/sesion";
 import { cn } from "@/lib/utilidades";
 import { Logo } from "./Logo";
 import { BuscadorGlobal } from "./BuscadorGlobal";
@@ -94,7 +94,7 @@ export function Shell() {
               </div>
               <div className="leading-tight">
                 <p className="text-sm font-medium max-w-[160px] truncate">{perfil?.nombre}</p>
-                <p className="text-[11px] text-tenue capitalize">{roles.map((r) => r.replace("_", " ")).join(", ") || "sin rol"}</p>
+                <p className="text-[11px] text-tenue">{roles.map((r) => NOMBRE_ROL[r]).join(", ") || "sin rol"}</p>
               </div>
             </div>
             <button onClick={salir} className="p-2 rounded-lg hover:bg-fondo text-tenue" aria-label="Cerrar sesión" title="Cerrar sesión">

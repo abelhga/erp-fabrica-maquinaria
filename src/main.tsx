@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { ProveedorSesion } from "./lib/sesion";
 import { App } from "./App";
+// La fuente va dentro de la app: la TV del taller no debe depender de Google Fonts.
+import "@fontsource-variable/inter";
 import "./index.css";
 
 // Aplica el tema guardado antes del primer pintado para que no parpadee.

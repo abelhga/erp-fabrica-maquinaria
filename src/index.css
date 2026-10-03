@@ -21,6 +21,10 @@
   --peligro-suave: 0 85% 96%;
   --info: 262 60% 55%;
   --info-suave: 262 80% 97%;
+  /* Series de gráficas: paleta categórica validada (orden fijo, nunca ciclada). */
+  --serie-1: #2a78d6; --serie-2: #eb6834; --serie-3: #1baf7a; --serie-4: #eda100;
+  --serie-5: #e87ba4; --serie-6: #008300; --serie-7: #4a3aa7; --serie-8: #e34948;
+  --rejilla: #e7e5e0; --eje: #6b6a66;
   color-scheme: light;
 }
 
@@ -41,6 +45,9 @@
   --peligro-suave: 0 45% 17%;
   --info: 262 70% 70%;
   --info-suave: 262 35% 18%;
+  --serie-1: #3987e5; --serie-2: #d95926; --serie-3: #199e70; --serie-4: #c98500;
+  --serie-5: #d55181; --serie-6: #008300; --serie-7: #9085e9; --serie-8: #e66767;
+  --rejilla: #2c2c2a; --eje: #a3a29b;
   color-scheme: dark;
 }
 
