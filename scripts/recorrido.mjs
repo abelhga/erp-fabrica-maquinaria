@@ -7,7 +7,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 
 const base = process.env.APP_URL ?? "http://localhost:5173";
 const RUTAS = [
-  "/", "/ventas/oportunidades", "/ventas/cotizaciones", "/ventas/cotizaciones/nueva", "/ventas/pedidos", "/ventas/clientes",
+  "/", "/ventas/para-llamar", "/ventas/oportunidades", "/ventas/cotizaciones", "/ventas/cotizaciones/nueva", "/ventas/pedidos", "/ventas/clientes",
   "/ventas/comisiones", "/costeo/equipos", "/costeo/componentes", "/costeo/margenes", "/costeo/precios-ventas",
   "/compras/precios", "/compras/ordenes", "/compras/proveedores", "/almacen/existencias", "/almacen/movimientos",
   "/almacen/reabasto", "/produccion/gerencia", "/produccion/ordenes", "/produccion/terminal", "/piso",

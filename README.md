@@ -26,7 +26,13 @@ comisiones de Isaac (sep-2026) $73,540, igual que su panel.
 
 ## Pantallas principales
 
-- **Inicio** por rol con indicadores y pendientes.
+- **Inicio** por rol con indicadores, pendientes y "lo que importa hoy". Dirección ve el
+  **centro de mando**: ventas contra los dos años anteriores, proyección con estacionalidad,
+  clientes, vendedores contra meta, taller, inventario, cobranza; se actualiza solo.
+- **Asistente** (Ctrl+J en cualquier pantalla): Claude consulta el ERP con los permisos de quien
+  pregunta, explica cifras y propone qué hacer. **A quién llamar hoy**: clientes con un motivo
+  concreto (cotización por vencer, ya le toca por su ritmo de compra, equipo que pide
+  refacciones, dejó de comprar) y el mensaje de WhatsApp redactado con su historial.
 - **Ventas**: oportunidades (tablero), cotizador con buscador de equipos/componentes, ficha de
   venta (precio mínimo, stock, envío gratis, mensualidades, precio en Mercado Libre), impresión
   en PDF con el formato actual, pedidos, clientes con privacidad entre vendedores, comisiones.
@@ -46,8 +52,12 @@ comisiones de Isaac (sep-2026) $73,540, igual que su panel.
 - **Backend**: Supabase — Postgres con la lógica de negocio en SQL (`supabase/migrations/`),
   Auth con Google Workspace, Realtime para la TV de piso y los precios.
 - **Seguridad**: Row Level Security en todas las tablas; permisos rol × módulo × nivel.
+- **Claude**: función de borde `supabase/functions/asistente` (la llave vive solo ahí). Lo
+  barato primero: `hallazgos()` y `oportunidades_sugeridas()` son reglas en SQL que funcionan
+  sin IA; Claude las cruza, contesta preguntas abiertas y redacta. Solo lee.
 - **Pruebas**: `supabase/pruebas/*.sql` prueban reglas y permisos con usuarios reales de cada
-  rol; `src/**/*.test.ts` prueba el importador con filas reales de las hojas.
+  rol; `src/**/*.test.ts` prueba el importador con filas reales de las hojas;
+  `supabase/functions/**/*.test.ts` prueba el asistente contra la base local con un Claude falso.
 
 Detalles para quien programa: [`CLAUDE.md`](CLAUDE.md). Despliegue: [`docs/despliegue.md`](docs/despliegue.md).
 Plan de arranque: [`docs/arranque.md`](docs/arranque.md). Análisis de cada hoja original: [`docs/analisis/`](docs/analisis/).
@@ -61,6 +71,8 @@ npx supabase db reset                # crea la base desde las migraciones
 node scripts/usuarios-locales.mjs    # un usuario por rol, contraseña hegamex-local
 npx supabase status -o env           # copia API_URL y ANON_KEY a .env.local (ver .env.example)
 npm run dev                          # http://localhost:5173
+npx tsx scripts/asistente-local.ts   # el asistente en :54329 (VITE_ASISTENTE_URL en .env.local);
+                                     # con ANTHROPIC_API_KEY en el entorno usa Claude de verdad
 npm run db:test && npm test          # pruebas
 ```
 

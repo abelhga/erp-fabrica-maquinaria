@@ -31,6 +31,25 @@ está creado todavía: requiere decisiones y cuentas del dueño.
    `pantalla`, crear el usuario en **Authentication → Users → Add user** con contraseña, y en
    la TV entrar con "correo y contraseña". Solo ve la pantalla de piso.
 
+8. **Asistente con Claude** (función de borde `asistente`):
+   ```bash
+   npx supabase functions deploy asistente
+   npx supabase secrets set ANTHROPIC_API_KEY=sk-ant-...   # de console.anthropic.com → API Keys
+   ```
+   - Sin la llave, el asistente funciona en **modo demostración**: los resúmenes salen de las
+     reglas de la base (`hallazgos()`) y la pantalla lo dice. Nada se rompe.
+   - **Tope de gasto**: en console.anthropic.com → Settings → Limits poner un tope mensual y un
+     aviso por correo. Si el tope se llena, el asistente lo dice en pantalla ("la cuenta de
+     Claude no aceptó la consulta") en lugar de fallar en silencio, que es lo que le pasó al
+     teléfono el 28 de septiembre de 2026.
+   - **Cupo por persona**: `configuracion.asistente.limite_diario` (40 consultas al día por
+     defecto). El modelo y el esfuerzo también van ahí (`modelo`, `esfuerzo`).
+   - Cuánto se usa: tabla `asistente_uso` (quién, cuándo, tokens, errores). Dirección y
+     sistemas la ven completa; cada quien ve la suya.
+   - La llave **nunca** va en el navegador ni en `.env` del sitio: solo como secreto de la
+     función. Cada consulta corre con la sesión de quien pregunta, así que Claude ve lo mismo
+     que esa persona y nada más.
+
 ## 2. Sitio (Cloudflare Pages)
 
 - Conectar el repositorio. Comando de build `npm run build`, carpeta `dist`.
