@@ -121,6 +121,9 @@ export function DialogoConvertir({ abierto, alCambiar, padre, lineas, alTerminar
           <p className="text-sm rounded-lg bg-info-suave text-info px-3 py-2">
             {conParametro.length === 1 ? "Una línea depende" : `${conParametro.length} líneas dependen`} de {parametros.map((p) => <code key={p} className="mx-0.5">{p}</code>)}:
             el subensamble recibe su propia copia con el mismo valor, para que las cantidades no cambien.
+            {/* Un subensamble compartido no puede seguir el largo de cada equipo que lo usa: al duplicar
+                la banda de 20 m como de 22 m, lo de adentro se queda en 20 m. Mejor saberlo antes. */}
+            <span className="block mt-1">Ojo: si después duplicas el equipo con otro valor, esas cantidades ya no lo siguen. Lo que cambia con el largo conviene dejarlo fuera del subensamble.</span>
           </p>
         )}
         <form id="convertir-sub" onSubmit={crear} className="grid gap-4 sm:grid-cols-[190px_1fr]">

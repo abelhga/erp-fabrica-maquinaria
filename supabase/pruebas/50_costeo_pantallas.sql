@@ -58,6 +58,23 @@ begin
   assert v_n = 0, format('un vendedor recibió %s precios simulados (con costo)', v_n);
   select count(*) into v_n from subensambles_coincidentes(v_eq, array[v_l_motor]);
   assert v_n = 0, 'no debía haber candidatos';
+  -- La RLS es la barrera, no la pantalla: aunque un vendedor pida las columnas de costo, le llegan vacías.
+  select count(*) into v_n from v_catalogo where id = v_eq and precio is not null;
+  assert v_n = 1, 'el vendedor debe ver el precio de lista';
+  select count(*) into v_n from v_catalogo where id in (v_eq, v_motor)
+    and (costo_total is not null or costo_material is not null or costo_capturado is not null or costo_mano_obra is not null);
+  assert v_n = 0, 'un vendedor vio costos en v_catalogo';
+  select count(*) into v_n from serie_costeo(v_eq);
+  assert v_n = 0, 'un vendedor vio el historial de costo y precio de un equipo';
+  select count(*) into v_n from historial_costos;
+  assert v_n = 0, 'un vendedor vio el historial de costos de compra';
+  select count(*) into v_n from simular_politica((select id from politicas_precio where nombre = 'Banda Transportadora'), 0.4);
+  assert v_n = 0, 'un vendedor simuló precios (trae costos)';
+  begin
+    perform duplicar_articulo(v_eq, 'T50-B22-V', 'No debe crearse', '{"largo_m": 22}');
+    assert false, 'un vendedor pudo duplicar un equipo';
+  exception when insufficient_privilege then null;
+  end;
   perform pg_temp.como_postgres();
   assert not exists (select 1 from articulos where clave = 'T50-SUB-X'), 'quedó un subensamble del vendedor';
 
@@ -165,6 +182,15 @@ begin
        = (select precio from precios_lista where articulo_id = v_tolva), 'la copia idéntica de la tolva no da el mismo precio';
   assert (select costo_total from costos_calculados where articulo_id = v_copia) > (select costo_total from costos_calculados where articulo_id = v_eq),
     'la banda de 22 m debía costar más que la de 20 m';
+  -- "La banda de 20 m pero de 22 m": la copia lleva largo_m = 22 y las cantidades que dependen de él se recalculan.
+  assert (select valor from articulo_parametros where articulo_id = v_copia and nombre = 'largo_m') = 22, 'la copia no quedó con largo_m = 22';
+  assert (select valor from articulo_parametros where articulo_id = v_eq and nombre = 'largo_m') = 20, 'duplicar cambió el largo del original';
+  assert (select cantidad_linea(b) from bom_lineas b where b.padre_id = v_copia and b.hijo_id = v_rod) = 19,
+    'rodillos de la copia: 0.83 × 22 = 18.26 hacia arriba debían ser 19';
+  assert (select horas_operacion(o) from bom_operaciones o where o.articulo_id = v_copia) = 20 + 1.5 * 22, 'las horas de la copia no siguen el largo';
+  -- El subensamble se comparte, no se copia: un cambio en él llega al original y a la copia.
+  assert exists (select 1 from bom_lineas where padre_id = v_copia and hijo_id = v_sub), 'la copia no usa el mismo subensamble';
+  assert (select count(*) from articulos where nombre = 'Cabezal motriz de prueba') = 1, 'duplicar copió el subensamble';
   select count(*) into v_n from historial_costeo where articulo_id = v_copia;
   assert v_n = 1, format('la copia debía nacer con una sola foto en el historial, tiene %s', v_n);
   assert not exists (select 1 from historial_costeo where articulo_id = v_copia and costo_total = 0), 'quedó una foto de $0 de la copia';
@@ -258,6 +284,13 @@ begin
   assert v_n = 4, format('esperaba 4 líneas del subensamble en el árbol, hay %s', v_n);
   perform pg_temp.como_postgres();
 
-  -- Clave sugerida: siguiente número con el prefijo más usado del tipo.
-  assert sugerir_clave('subensamble') is not null, 'sin clave sugerida';
+  -- Clave sugerida: siguiente número de una serie de verdad, nunca una que ya existe.
+  -- "T50-CM18" y "T50-TC18" (pulgadas, no consecutivos) no son serie: no debe salir "T50-CM19".
+  insert into articulos (clave, tipo, nombre) values ('T50-CM18', 'subensamble', 'Cabezal 18'), ('T50-TC18', 'subensamble', 'Tambor 18');
+  assert sugerir_clave('subensamble') not like 'T50-%', format('propuso %s a partir de claves que no son serie', sugerir_clave('subensamble'));
+  insert into articulos (clave, tipo, nombre) select 'ZZSUB-' || lpad(g::text, 4, '0'), 'subensamble', 'Serie ' || g from generate_series(1, 500) g;
+  assert sugerir_clave('subensamble') = 'ZZSUB-0501', format('con una serie de 500 debía proponer ZZSUB-0501 y propuso %s', sugerir_clave('subensamble'));
+  insert into articulos (clave, tipo, nombre) values ('ZZSUB-0501', 'equipo', 'Ocupa la siguiente clave con otro tipo');
+  assert sugerir_clave('subensamble') = 'ZZSUB-0502', 'propuso una clave que ya existe';
+  assert not exists (select 1 from articulos where clave = sugerir_clave('equipo')), 'la clave sugerida de equipo ya existe';
 end $$;

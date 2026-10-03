@@ -23,7 +23,8 @@
 --  * arbol_bom: ordenaba por los uuid del camino, no por el orden de las líneas.
 --  * precio_canal: ingeniería y compras no ven la tabla de canales y recibían null.
 --  * configuracion: el ISR de compensación solo lo podía cambiar sistemas.
---  * bitácora: tipos de cambio, categorías, parámetros y horas no quedaban.
+--  * bitácora: categorías, parámetros, horas y altas de tarifas no quedaban.
+--  * sugerir_clave: proponía claves que no son el siguiente de ninguna serie.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -553,31 +554,47 @@ end $$;
 -- -----------------------------------------------------------------------------
 -- Clave sugerida para un artículo nuevo
 -- -----------------------------------------------------------------------------
--- Toma el prefijo más usado en ese tipo (E-, SUB-…) y el siguiente número,
--- con el mismo ancho. Evita que dos personas inventen claves con formatos distintos.
+-- Toma el prefijo más usado en ese tipo (E-, C-N…) y el siguiente número, con
+-- el mismo ancho. Evita que dos personas inventen claves con formatos distintos.
+-- Un prefijo cuenta solo si es una serie de verdad (3 claves o más): con pocos
+-- subensambles, "SUB-CM18" (cabezal de 18") proponía "SUB-CM19", que no es el
+-- siguiente de nada. Sin serie se usa el prefijo de siempre del tipo. Nunca
+-- propone una clave que ya existe.
 create or replace function public.sugerir_clave(p_tipo public.tipo_articulo) returns text
-language sql stable security invoker as $$
-  with partes as (
-    select (regexp_match(clave, '^(.*?)(\d+)$'))[1] prefijo, (regexp_match(clave, '^(.*?)(\d+)$'))[2] num
-    from articulos where tipo = p_tipo and clave ~ '\d$'
-  ),
-  pref as (
-    select prefijo, max(num::numeric) maximo, max(length(num)) ancho
-    from partes group by prefijo order by count(*) desc, prefijo limit 1
-  )
-  select coalesce(
-    (select prefijo || lpad((maximo + 1)::text, ancho, '0') from pref),
-    case p_tipo when 'equipo' then 'E-001' when 'subensamble' then 'SUB-001' when 'materia_prima' then 'MP-001'
-                when 'servicio' then 'SRV-001' else 'C-0001' end)
-$$;
+language plpgsql stable security invoker set search_path = public as $$
+declare v_pref text; v_max numeric; v_ancho int; v_clave text;
+begin
+  select prefijo, maximo, ancho into v_pref, v_max, v_ancho from (
+    select m[1] prefijo, max(m[2]::numeric) maximo, max(length(m[2])) ancho, count(*) n
+    from (select regexp_match(clave, '^(.*?)(\d+)$') m from articulos where tipo = p_tipo) x
+    where m is not null group by m[1]
+  ) p where n >= 3 order by n desc, prefijo limit 1;
+
+  if v_pref is null then
+    v_pref := case p_tipo when 'equipo' then 'E-' when 'subensamble' then 'SUB-' when 'materia_prima' then 'MP-'
+                          when 'servicio' then 'SRV-' else 'C-' end;
+    select max((regexp_match(clave, '^' || v_pref || '(\d+)$'))[1]::numeric),
+           max(length((regexp_match(clave, '^' || v_pref || '(\d+)$'))[1]))
+      into v_max, v_ancho
+    from articulos where clave like v_pref || '%';
+  end if;
+
+  v_max := coalesce(v_max, 0);
+  v_ancho := greatest(coalesce(v_ancho, 3), 3);
+  loop
+    v_max := v_max + 1;
+    v_clave := v_pref || lpad(v_max::text, v_ancho, '0');
+    exit when not exists (select 1 from articulos where clave = v_clave);
+  end loop;
+  return v_clave;
+end $$;
 
 -- -----------------------------------------------------------------------------
 -- Bitácora de lo que mueve precios
 -- -----------------------------------------------------------------------------
--- Estas tablas cambian precios y no dejaban rastro: con esto "quién subió el
--- dólar" o "quién cambió el largo de la banda" se contesta desde Bitácora.
-drop trigger if exists auditar on public.tipos_cambio;
-create trigger auditar after insert or update or delete on public.tipos_cambio for each row execute function public.auditar();
+-- Estas tablas cambian precios y no dejaban rastro: con esto "quién cambió el
+-- largo de la banda" o "quién movió las horas de pailería" se contesta desde
+-- Bitácora. (Tipos de cambio ya lo deja 20261003000050.)
 drop trigger if exists auditar on public.categorias;
 create trigger auditar after insert or update or delete on public.categorias for each row execute function public.auditar();
 drop trigger if exists auditar on public.articulo_parametros;

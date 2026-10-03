@@ -7,6 +7,9 @@ import { cn } from "@/lib/utilidades";
 
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 const mesCorto = (t: number) => { const d = new Date(t); return `${MESES[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`; };
+/** Eje en pesos: abajo de $10 k en pesos completos; "$1.2 k" repetía la misma etiqueta en cinco renglones
+ *  cuando una chumacera pasa de $1,117 a $1,200. */
+const ejePesos = (v: number) => (Math.abs(v) < 10_000 ? "$" + v.toLocaleString("es-MX", { maximumFractionDigits: Math.abs(v) < 100 ? 2 : 0 }) : dineroCompacto(v));
 
 type Rango = "12m" | "36m" | "todo";
 const RANGOS: { valor: Rango; texto: string }[] = [
@@ -162,7 +165,7 @@ export function GraficaCosteo({ puntos }: { puntos: PuntoCosteo[] }) {
             <LineChart data={filas} margin={{ top: 8, right: 16, left: 4, bottom: 0 }}>
               <CartesianGrid vertical={false} stroke="var(--rejilla)" />
               <XAxis dataKey="t" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={mesCorto} {...ejeProps} minTickGap={24} />
-              <YAxis {...ejeProps} tickFormatter={(v) => dineroCompacto(v)} width={60} domain={["auto", "auto"]} />
+              <YAxis {...ejeProps} tickFormatter={ejePesos} width={64} domain={["auto", "auto"]} />
               <Tooltip content={<TooltipCosteo />} cursor={{ stroke: "var(--eje)", strokeWidth: 1 }} />
               {/* Estimación: mismo color, punteado */}
               <Line dataKey="costoEst" type="stepAfter" stroke={SERIE(1)} strokeWidth={2} strokeDasharray="4 4" dot={false} activeDot={false} isAnimationActive={false} connectNulls={false} />
@@ -201,7 +204,7 @@ export function GraficaEscalonada({ puntos, moneda }: { puntos: { en: string; co
           <CartesianGrid vertical={false} stroke="var(--rejilla)" />
           <XAxis dataKey="t" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={mesCorto} {...ejeProps} minTickGap={24} />
           <YAxis {...ejeProps} width={64} domain={["auto", "auto"]}
-            tickFormatter={(v) => (moneda === "MXN" ? dineroCompacto(v) : `${v.toLocaleString("es-MX", { maximumFractionDigits: 1 })}`)} />
+            tickFormatter={(v) => (moneda === "MXN" ? ejePesos(v) : `${v.toLocaleString("es-MX", { maximumFractionDigits: 2 })}`)} />
           <Tooltip cursor={{ stroke: "var(--eje)", strokeWidth: 1 }} content={({ active, payload }) => {
             if (!active || !payload?.length) return null;
             const p = payload[0].payload as { t: number; costo: number };

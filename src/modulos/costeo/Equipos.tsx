@@ -142,7 +142,7 @@ function Solicitudes({ filas, cargando, error }: { filas: Solicitud[] | undefine
             <div className="flex justify-end gap-1">
               <Boton tamano="sm" variante="secundario" onClick={(e) => { e.stopPropagation(); if (s.articulo) ir(rutaArticulo(s.articulo) + "?pestana=lista"); }}>Abrir lista</Boton>
               <Boton tamano="sm" variante="exito" title="Ya lo corregí en la lista de materiales" cargando={resolver.isPending && resolver.variables?.id === s.id}
-                onClick={(e) => { e.stopPropagation(); resolver.mutate({ id: s.id, estado: "aplicada" }); }}><Check className="h-3.5 w-3.5" /> Aplicada</Boton>
+                onClick={(e) => { e.stopPropagation(); resolver.mutate({ id: s.id, estado: "aplicada" }); }}><Check className="h-3.5 w-3.5" /> Marcar aplicada</Boton>
               <Boton tamano="sm" variante="fantasma" title="Descartar: no procede" aria-label="Descartar"
                 onClick={(e) => { e.stopPropagation(); resolver.mutate({ id: s.id, estado: "descartada" }); }}><X className="h-3.5 w-3.5" /></Boton>
             </div>
