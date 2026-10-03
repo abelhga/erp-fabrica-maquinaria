@@ -29,6 +29,13 @@ comisiones de Isaac (sep-2026) $73,540, igual que su panel.
 - **Inicio** por rol con indicadores, pendientes y "lo que importa hoy". Dirección ve el
   **centro de mando**: ventas contra los dos años anteriores, proyección con estacionalidad,
   clientes, vendedores contra meta, taller, inventario, cobranza; se actualiza solo.
+- **Análisis de ventas** (dirección y gerencia de ventas): **mapa de ventas** de país a estado y
+  a municipio (INEGI 2023) con venta, clientes, ticket o crecimiento en cualquier periodo desde
+  2018, y las **zonas que se enfriaron** con los clientes que dejaron de comprar; tendencias y
+  estacionalidad; clientes (concentración, cohortes, segmentos); producto × región con familias
+  clasificadas desde el texto del libro de ventas; **metas** repartidas por la estacionalidad,
+  real contra meta y ritmo necesario. La ciudad de cada cliente se liga a su municipio y lo que
+  no se reconoce va a "Ubicaciones por revisar". El asistente contesta las mismas preguntas.
 - **Tu semana**: el lunes temprano llega un aviso con lo que pasó la semana pasada contra la
   anterior (ventas, cotizaciones, cobranza, equipos terminados, compras) y la agenda de la
   semana (entregas, órdenes comprometidas, lo que llega, servicios), con lo que cada rol ve.

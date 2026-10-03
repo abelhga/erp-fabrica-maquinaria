@@ -15,7 +15,8 @@ const RUTAS = [
   "/produccion/ordenes", "/produccion/terminal", "/piso", "/servicio", "/servicio/maquinas", "/servicio/reportar",
   "/servicio/resguardos", "/rrhh/empleados", "/rrhh/incidencias", "/rrhh/objetivos", "/rrhh/checklist", "/rrhh/prenomina",
   "/rrhh/mi-desempeno", "/finanzas/cobranza", "/finanzas/pagos", "/sistema/usuarios", "/sistema/importar",
-  "/sistema/bitacora", "/sistema/configuracion",
+  "/sistema/bitacora", "/sistema/configuracion", "/analisis", "/analisis/tendencias", "/analisis/clientes",
+  "/analisis/producto", "/analisis/planeacion", "/analisis/ubicaciones",
 ];
 // Una ficha de cada tipo, la más reciente: las pantallas de detalle son las que más
 // consultas hacen y las que un recorrido solo de listas nunca abre.

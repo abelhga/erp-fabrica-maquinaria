@@ -8,6 +8,7 @@ import {
 import { Award, Banknote, ListChecks, Target } from "lucide-react";
 import { AlertTriangle, CalendarDays, CalendarRange, Hand, Wrench } from "lucide-react";
 import { MessageSquareQuote, PackageCheck, Undo2 } from "lucide-react";
+import { Map as MapaIcono } from "lucide-react";
 import type { Modulo } from "./lib/sesion";
 
 export interface EntradaMenu { ruta: string; texto: string; icono: LucideIcon; modulo: Modulo; nivel?: number }
@@ -27,6 +28,14 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/ventas/clientes", texto: "Clientes", icono: Users, modulo: "ventas" },
       { ruta: "/ventas/comisiones", texto: "Comisiones", icono: Trophy, modulo: "ventas" },
       { ruta: "/ventas/devoluciones", texto: "Devoluciones y reclamos", icono: Undo2, modulo: "envios" },
+    ],
+  },
+  {
+    // Dónde y en qué crecer: el BI de dirección. La gerencia de ventas lo ve sin poder cambiar metas.
+    titulo: "Dirección",
+    entradas: [
+      // Una sola entrada: mapa, tendencias, clientes, producto, metas y ubicaciones son pestañas.
+      { ruta: "/analisis", texto: "Análisis y metas", icono: MapaIcono, modulo: "analisis" },
     ],
   },
   {

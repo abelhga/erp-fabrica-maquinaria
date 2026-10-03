@@ -172,6 +172,14 @@ describe.skipIf(!hayBase)("asistente contra la base local", () => {
     }
   });
 
+  it("el mapa de ventas: dirección pregunta por Jalisco por nombre; un vendedor no tiene análisis", async () => {
+    const dir = await sesion("direccion@hegamex.com");
+    const r = JSON.parse(await ejecutarHerramienta(dir.db, "ventas_por_region", { desde: "2025-01-01", hasta: "2025-12-31", estado: "jalisco" }));
+    expect(JSON.stringify(r)).toContain("Zapopan");
+    await expect(ejecutarHerramienta(isaac.db, "ventas_por_region", { desde: "2025-01-01", hasta: "2025-12-31", estado: "" }))
+      .rejects.toThrow();
+  });
+
   it("la TV del taller no usa el asistente", async () => {
     const tv = await sesion("tv@hegamex.com");
     const r = await atender(new Request("http://x/", {

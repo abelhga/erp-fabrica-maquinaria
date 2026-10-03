@@ -34,6 +34,7 @@ export const RUTAS = [
   "/rrhh/empleados", "/rrhh/incidencias", "/rrhh/objetivos", "/rrhh/checklist", "/rrhh/prenomina",
   "/importaciones", "/importaciones/dinero",
   "/servicio", "/servicio/maquinas", "/servicio/resguardos", "/servicio/reportar",
+  "/analisis", "/analisis/tendencias", "/analisis/clientes", "/analisis/producto", "/analisis/planeacion", "/analisis/ubicaciones",
 ] as const;
 
 interface Config { modelo: string; esfuerzo: "low" | "medium" | "high" | "xhigh" | "max" }
@@ -120,6 +121,48 @@ export const HERRAMIENTAS: Anthropic.Beta.BetaTool[] = [
     input_schema: { type: "object", properties: { lunes: { type: "string", format: "date", description: "Lunes de la semana que empieza (AAAA-MM-DD); vacío para la de hoy" } }, required: ["lunes"], additionalProperties: false },
   },
   {
+    name: "ventas_por_region",
+    description: "Dónde se vende: venta, clientes que compraron, ticket y crecimiento contra el periodo anterior por estado (o por municipio si se da un estado), con lo que no se pudo ubicar y la exportación aparte. Para '¿dónde vendemos más?', '¿cómo vamos en Jalisco?'. Solo dirección y gerencia de ventas.",
+    strict: true,
+    input_schema: { type: "object", properties: {
+      desde: { type: "string", format: "date" }, hasta: { type: "string", format: "date" },
+      estado: { type: "string", description: "Nombre o clave INEGI de 2 dígitos (14 = Jalisco); vacío para todo el país" },
+    }, required: ["desde", "hasta", "estado"], additionalProperties: false },
+  },
+  {
+    name: "zonas_que_se_enfriaron",
+    description: "Estados o municipios que compraban y cayeron fuerte contra el periodo anterior (o dejaron de comprar), con el monto perdido y los clientes que dejaron de comprar ahí. Solo dirección y gerencia de ventas.",
+    strict: true,
+    input_schema: { type: "object", properties: {
+      desde: { type: "string", format: "date" }, hasta: { type: "string", format: "date" },
+      estado: { type: "string", description: "Nombre o clave de 2 dígitos para ver sus municipios; vacío para el país" },
+    }, required: ["desde", "hasta", "estado"], additionalProperties: false },
+  },
+  {
+    name: "analisis_de_clientes",
+    description: "Concentración (qué % de clientes hace el 80 % de la venta), nuevos contra recurrentes por año, cohortes por año de primera compra y segmentos (campeones, leales, en riesgo, perdidos…) con cuántos y cuánto. Solo dirección y gerencia de ventas.",
+    strict: true,
+    input_schema: { type: "object", properties: { desde: { type: "string", format: "date" }, hasta: { type: "string", format: "date" } },
+      required: ["desde", "hasta"], additionalProperties: false },
+  },
+  {
+    name: "producto_por_region",
+    description: "Qué familias de producto se venden en qué estado (dosificadoras, bandas, helicoidales, tolvas y silos, refacciones…), con su índice contra el país. Solo dirección y gerencia de ventas.",
+    strict: true,
+    input_schema: { type: "object", properties: {
+      desde: { type: "string", format: "date" }, hasta: { type: "string", format: "date" },
+      estado: { type: "string", description: "Nombre o clave de 2 dígitos; vacío para todos" },
+    }, required: ["desde", "hasta", "estado"], additionalProperties: false },
+  },
+  {
+    name: "metas_y_planeacion",
+    description: "Meta anual de ventas contra lo real por mes y acumulado, cuánto falta y a qué ritmo mensual hay que vender para llegar, y un escenario de crecimiento. Solo dirección y gerencia de ventas.",
+    strict: true,
+    input_schema: { type: "object", properties: {
+      anio: { type: "integer" }, crecimiento: { type: "number", description: "Escenario: crecimiento sobre el año anterior en fracción (0.12 = 12 %); 0 para no usarlo" },
+    }, required: ["anio", "crecimiento"], additionalProperties: false },
+  },
+  {
     name: "ventas_por_mes",
     description: "Ventas mensuales (importe con IVA, en pesos) desde una fecha, juntando el libro de ventas de la hoja (2018 en adelante) y los pedidos del ERP. Sirve para tendencias, estacionalidad y comparar años.",
     strict: true,
@@ -195,6 +238,11 @@ const ETIQUETAS: Record<string, string> = {
   hallazgos: "Revisando qué merece atención",
   tablero_direccion: "Leyendo el tablero",
   semana: "Repasando la semana",
+  ventas_por_region: "Revisando el mapa de ventas",
+  zonas_que_se_enfriaron: "Buscando zonas que se enfriaron",
+  analisis_de_clientes: "Analizando clientes",
+  producto_por_region: "Cruzando producto y región",
+  metas_y_planeacion: "Revisando la meta",
   ventas_por_mes: "Sumando ventas por mes",
   oportunidades_de_venta: "Buscando a quién llamar",
   historial_cliente: "Leyendo el historial del cliente",
@@ -245,6 +293,22 @@ export async function ejecutarHerramienta(db: SupabaseClient, nombre: string, en
       return compacto(revisar(await db.rpc("tablero_direccion")));
     case "semana":
       return compacto(revisar(await db.rpc("semana_en_numeros", esFecha(entrada.lunes) ? { p_lunes: entrada.lunes } : {})));
+    case "ventas_por_region":
+    case "zonas_que_se_enfriaron":
+    case "analisis_de_clientes":
+    case "producto_por_region": {
+      if (!esFecha(entrada.desde) || !esFecha(entrada.hasta)) throw new ErrorHerramienta("desde y hasta deben ser AAAA-MM-DD");
+      const rango = { p_desde: entrada.desde, p_hasta: entrada.hasta };
+      if (nombre === "analisis_de_clientes") return compacto(revisar(await db.rpc("analisis_clientes", rango)));
+      const estado = await claveEstado(db, entrada.estado);
+      if (nombre === "ventas_por_region") return compacto(revisar(await db.rpc("analisis_mapa", { ...rango, p_cve_ent: estado })));
+      if (nombre === "zonas_que_se_enfriaron") return compacto(revisar(await db.rpc("analisis_zonas_frias", { ...rango, p_cve_ent: estado })));
+      return compacto(revisar(await db.rpc("analisis_producto_region", { ...rango, p_cve_ent: estado, p_familia: null })));
+    }
+    case "metas_y_planeacion": {
+      const crec = typeof entrada.crecimiento === "number" && entrada.crecimiento !== 0 ? entrada.crecimiento : null;
+      return compacto(revisar(await db.rpc("analisis_planeacion", { p_anio: entero(entrada.anio, 2018, 2100, new Date().getFullYear()), p_crecimiento: crec })));
+    }
     case "ventas_por_mes": {
       if (!esFecha(entrada.desde)) throw new ErrorHerramienta("desde debe ser AAAA-MM-DD");
       return compacto(revisar(await db.rpc("ventas_historicas_mes", { p_desde: entrada.desde })));
@@ -283,6 +347,16 @@ export async function ejecutarHerramienta(db: SupabaseClient, nombre: string, en
     default:
       throw new ErrorHerramienta(`No existe la herramienta ${nombre}`);
   }
+}
+
+/** "Jalisco", "edo de mexico" o "14" → clave INEGI; vacío → todo el país. */
+async function claveEstado(db: SupabaseClient, v: unknown): Promise<string | null> {
+  const t = typeof v === "string" ? v.trim() : "";
+  if (!t) return null;
+  if (/^\d{1,2}$/.test(t)) return t.padStart(2, "0");
+  const { data } = await db.rpc("geo_estado_de", { p_texto: t });
+  if (!data) throw new ErrorHerramienta(`No reconozco el estado "${t}"`);
+  return data as string;
 }
 
 async function consultar(db: SupabaseClient, e: Record<string, unknown>): Promise<string> {

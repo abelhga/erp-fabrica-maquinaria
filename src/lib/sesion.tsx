@@ -20,7 +20,9 @@ export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" |
   | "objetivos" | "nomina" | "mi_desempeno"
   | "importaciones"
   | "envios"
-  | "servicio";
+  | "servicio"
+  // analisis: el BI de dirección (mapa, tendencias, clientes, producto, metas). Sin costos.
+  | "analisis";
 
 export interface Perfil { id: string; nombre: string; correo: string; puesto: string | null; iniciales: string | null; activo: boolean; telefono: string | null }
 
