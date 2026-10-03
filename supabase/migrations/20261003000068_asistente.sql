@@ -438,6 +438,10 @@ begin
     'select h.area, h.tono, h.titulo, h.detalle, h.ruta from (%s) h
      where $1 = ''direccion'' or h.area = $1
            or ($1 = ''almacen'' and h.area = ''compras'' and puede(''inventario'', 2))
+           -- La gerencia de producción también responde por máquinas y servicios en campo;
+           -- compras, por lo que viene de importación.
+           or ($1 = ''produccion'' and h.area = ''servicio'')
+           or ($1 = ''compras'' and h.area = ''importaciones'')
      order by case h.tono when ''riesgo'' then 1 when ''atencion'' then 2 when ''bueno'' then 3 else 4 end, h.peso', v_sql)
   using p_area;
 end $$;
