@@ -118,3 +118,21 @@ describe("paneles de ventas", () => {
     expect(ventas.map((v) => [v.linea, v.monto])).toEqual([["maquinaria", 226000], ["refacciones", 12900]]);
   });
 });
+
+describe("BASE DE DATOS ACTUAL", async () => {
+  const { directorioClientes, libroVentas } = await import("./transformar");
+  it("lee el directorio con RFC, agente y dos contactos", () => {
+    const filas = [[], [], ["", "Cliente / Empresa", "TELÉFONO", "TELÉFONO 2", "CONTACTO 1", "CORREO ELECTRÓNICO CONTACTO 1", "CELULAR CONTACTO 1", "CONTACTO 2", "CORREO ELECTRÓNICO CONTACTO 2", "CELULAR CONTACTO 2", "DOMICILIO", "Municipio ", "CP", "ESTADO", "PAÍS", "RFC", "NUMERO DE CUENTA", "NOTAS", "Adeudo fin 2021", "BALANCE", "Ventas Históricas", "Agente de Ventas"],
+      ["", "Concretos Prueba SA de CV", "", "", "Ing. Ruiz", "ruiz@concretos.mx", "33 1234 5678", "", "", "", "Calle 6", "Guadalajara ", "44940", "Jalisco", "México", "CPR141006570", "", "", "$0.00", "$0.00", "$60,000.00", "J. Manuel"]];
+    const [c] = directorioClientes(filas);
+    expect(c).toMatchObject({ nombre: "Concretos Prueba SA de CV", rfc: "CPR141006570", ciudad: "Guadalajara", agente: "J. Manuel" });
+    expect(c.contactos).toEqual([{ nombre: "Ing. Ruiz", correo: "ruiz@concretos.mx", telefono: "3312345678" }]);
+  });
+  it("lee el libro de ventas y cobros (montos con y sin $)", () => {
+    const filas = [...Array(11).fill([]), ["", "Fecha", "Cliente ", "Tipo", "MONTO NETO", "CUENTA RECEPTORA DE PAGO", "Descripción", "N. Factura", "N. Pedido"],
+      ["", "03/01/22", "Grupo X", "Venta", "5,646.88", "", "5.50 g.t. 18\"", "A 1731", "-"],
+      ["", "03/01/22", "Grupo X", "Pago", "$5,646.88", "SANTANDER FISCAL", "transferencia", "A 1731", "-"]];
+    const { movimientos } = libroVentas(filas);
+    expect(movimientos.map((m) => [m.tipo, m.monto, m.factura, m.pedido])).toEqual([["Venta", 5646.88, "A 1731", null], ["Pago", 5646.88, "A 1731", null]]);
+  });
+});

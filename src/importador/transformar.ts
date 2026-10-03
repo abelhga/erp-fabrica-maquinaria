@@ -329,3 +329,75 @@ export function descripciones(v: Filas): Map<string, { descripcion: string | nul
 }
 
 export { limpiarNombre, llave };
+
+// ---------------------------------------------------------------------------
+// "BASE DE DATOS ACTUAL HEGAMEX": directorio de clientes, CRM unificado y libro de ventas
+// ---------------------------------------------------------------------------
+export interface ClienteDirectorio {
+  llave: string; nombre: string; rfc: string | null; telefono: string | null; ciudad: string | null; estado: string | null;
+  pais: string | null; cp: string | null; domicilio: string | null; agente: string | null; notas: string | null;
+  contactos: { nombre: string; correo: string | null; telefono: string | null }[];
+}
+
+function contactosDe(f: string[], pares: [number, number, number][]) {
+  return pares.map(([n, m, t]) => ({ nombre: celda(f, n), correo: correo(f[m]), telefono: telefono(f[t]) }))
+    .filter((x) => x.nombre || x.correo || x.telefono).map((x) => ({ ...x, nombre: x.nombre || "Contacto" }));
+}
+
+/** "Directorio Clientes" (encabezado en la fila 3, columna A vacía). */
+export function directorioClientes(v: Filas): ClienteDirectorio[] {
+  const fe = v.findIndex((f) => llave(f[1]) === "cliente / empresa");
+  const c = columnas(v[fe], {
+    nombre: /^cliente \/ empresa/, tel: /^telefono$/, c1: /^contacto 1$/, m1: /^correo electronico contacto 1/, t1: /^celular contacto 1/,
+    c2: /^contacto 2$/, m2: /^correo electronico contacto 2/, t2: /^celular contacto 2/, dom: /^domicilio/, mun: /^municipio/, cp: /^cp$/,
+    estado: /^estado$/, pais: /^pais$/, rfc: /^rfc$/, notas: /^notas$/, agente: /^agente de ventas/,
+  });
+  const r = new Map<string, ClienteDirectorio>();
+  for (const f of v.slice(fe + 1)) {
+    const nombre = celda(f, c.nombre);
+    if (!nombre || r.has(llave(nombre))) continue;
+    r.set(llave(nombre), {
+      llave: llave(nombre), nombre, rfc: rfc(f[c.rfc]), telefono: telefono(f[c.tel]), ciudad: celda(f, c.mun) || null,
+      estado: celda(f, c.estado) || null, pais: celda(f, c.pais) || null, cp: celda(f, c.cp) || null,
+      domicilio: celda(f, c.dom) || null, agente: celda(f, c.agente) || null, notas: celda(f, c.notas) || null,
+      contactos: contactosDe(f, [[c.c1, c.m1, c.t1], [c.c2, c.m2, c.t2]]),
+    });
+  }
+  return [...r.values()];
+}
+
+/** 'Clientes-Contacto Unified': sin encabezado; columnas A–P en el orden del CRM (ver docs/analisis/04-cotizador.md §2.5). */
+export function clientesUnified(v: Filas): ClienteDirectorio[] {
+  const r = new Map<string, ClienteDirectorio>();
+  for (const f of v) {
+    const nombre = celda(f, 0);
+    if (!nombre || r.has(llave(nombre))) continue;
+    r.set(llave(nombre), {
+      llave: llave(nombre), nombre, rfc: null, telefono: telefono(f[1]) ?? telefono(f[2]), ciudad: celda(f, 10) || null,
+      estado: celda(f, 12) || null, pais: celda(f, 13) || null, cp: celda(f, 11) || null, domicilio: celda(f, 9) || null,
+      agente: celda(f, 15) || null, notas: null, contactos: contactosDe(f, [[3, 4, 5], [6, 7, 8]]),
+    });
+  }
+  return [...r.values()];
+}
+
+export interface MovimientoVenta { fecha: string; cliente: string; llave_cliente: string; tipo: string; monto: number; cuenta: string | null; descripcion: string | null; factura: string | null; pedido: string | null; fila: number }
+/** Pestaña VENTAS (encabezado en la fila 12): Venta / Pago / Reembolso por cliente y fecha. */
+export function libroVentas(v: Filas): { movimientos: MovimientoVenta[]; descartados: number } {
+  const fe = v.findIndex((f) => llave(f[1]) === "fecha" && llave(f[3]) === "tipo");
+  const c = columnas(v[fe], { fecha: /^fecha$/, cliente: /^cliente/, tipo: /^tipo$/, monto: /^monto neto/, cuenta: /^cuenta receptora/,
+    desc: /^descripcion/, fact: /^n\. factura/, ped: /^n\. pedido/ });
+  const movimientos: MovimientoVenta[] = [];
+  let descartados = 0;
+  v.slice(fe + 1).forEach((f, i) => {
+    const fch = fecha(f[c.fecha]);
+    const monto = dinero(f[c.monto]);
+    const cliente = celda(f, c.cliente);
+    const tipo = celda(f, c.tipo);
+    if (!fch || monto == null || !cliente || !tipo) { if (cliente) descartados++; return; }
+    const nulo = (x: string) => (x && x !== "-" ? x : null);
+    movimientos.push({ fecha: fch, cliente, llave_cliente: llave(cliente), tipo, monto, cuenta: nulo(celda(f, c.cuenta)),
+      descripcion: nulo(celda(f, c.desc)), factura: nulo(celda(f, c.fact)), pedido: nulo(celda(f, c.ped)), fila: fe + i + 2 });
+  });
+  return { movimientos, descartados };
+}

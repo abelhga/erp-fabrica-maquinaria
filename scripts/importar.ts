@@ -53,10 +53,13 @@ async function leerGoogle(nombre: string): Promise<Filas> {
   return todo;
 }
 
-function leerArchivo(dir: string, nombre: string): Filas {
-  const partes = readdirSync(dir).filter((f) => f === `${nombre}.json` || f.startsWith(`${nombre}_parte`)).sort();
-  if (!partes.length) throw new Error(`No está ${nombre}.json en ${dir}`);
-  return partes.flatMap((f) => (JSON.parse(readFileSync(join(dir, f), "utf8")).values ?? []) as Filas);
+// --dir acepta varias carpetas separadas por coma (los volcados vienen de varios archivos).
+function leerArchivo(dirs: string, nombre: string): Filas {
+  for (const dir of dirs.split(",")) {
+    const partes = readdirSync(dir).filter((f) => f === `${nombre}.json` || f.startsWith(`${nombre}_parte`)).sort();
+    if (partes.length) return partes.flatMap((f) => (JSON.parse(readFileSync(join(dir, f), "utf8")).values ?? []) as Filas);
+  }
+  throw new Error(`No está ${nombre}.json en ${dirs}`);
 }
 
 async function fuente(nombre: string): Promise<Filas> {
@@ -88,9 +91,11 @@ async function paso<T>(nombre: string, fn: () => Promise<T>): Promise<T> {
 }
 
 // Disparadores pesados apagados durante la carga; al final se recalcula una vez.
+// (los "recalcular_*" son los incrementales de 20261003000061_costeo_incremental.sql)
 const PESADOS: [string, string][] = [
-  ["costos_articulo", "recalcular"], ["costos_articulo", "historial"], ["bom_lineas", "recalcular"], ["bom_lineas", "auditar"],
-  ["bom_lineas", "evitar_ciclos"], ["bom_operaciones", "recalcular"], ["articulos", "recalcular"], ["articulos", "auditar"],
+  ...["costos_articulo", "bom_lineas", "bom_operaciones"].flatMap((t) => [[t, "recalcular_alta"], [t, "recalcular_cambio"], [t, "recalcular_baja"]] as [string, string][]),
+  ["costos_articulo", "historial"], ["bom_lineas", "auditar"], ["bom_lineas", "evitar_ciclos"],
+  ["articulos", "recalcular_alta"], ["articulos", "recalcular_cambio"], ["articulos", "auditar"],
   ["tarifas_mano_obra", "recalcular"], ["proveedores", "auditar"], ["clientes", "auditar"], ["pedidos", "auditar"],
 ];
 async function disparadores(activos: boolean) {
@@ -111,14 +116,18 @@ async function main() {
   const demanda = T.demanda(await fuente("demanda_b"));
   const { movimientos, descartados: movDescartados } = T.registro([await fuente("registro_a")]);
   const descripciones = T.descripciones(await fuente("cot_descripciones"));
+  const directorio = T.directorioClientes(await fuente("clientes_directorio"));
+  const unified = T.clientesUnified(await fuente("clientes_unified"));
+  const { movimientos: libro, descartados: libroDescartados } = T.libroVentas(await fuente("ventas"));
   const paneles = await Promise.all(Object.entries(config.vendedores as Record<string, { correo: string; panel: string; nombre: string }>).map(async ([clave, v]) => ({
     clave, ...v, clientes: T.clientesPanel(await fuente(`${v.panel}_clientes`)), ventas: T.ventasPanel(await fuente(`${v.panel}_ventas`)),
   })));
   Object.assign(resumen, {
     leidos: { proveedores: provs.length, componentes: componentes.length, precios_historicos: precios.length, equipos: equipos.length,
       lineas_bom: bom.length, filas_inventario: inventario.length, movimientos_hoja: movimientos.length,
-      clientes_paneles: paneles.reduce((s, p) => s + p.clientes.length, 0), ventas_paneles: paneles.reduce((s, p) => s + p.ventas.ventas.length, 0) },
-    descartados: { componentes_nombre_repetido: duplicados.length, precios_sin_fecha_o_costo: preciosDescartados, movimientos_incompletos: movDescartados },
+      clientes_paneles: paneles.reduce((s, p) => s + p.clientes.length, 0), ventas_paneles: paneles.reduce((s, p) => s + p.ventas.ventas.length, 0),
+      clientes_directorio: directorio.length, clientes_crm: unified.length, libro_ventas: libro.length },
+    descartados: { componentes_nombre_repetido: duplicados.length, precios_sin_fecha_o_costo: preciosDescartados, movimientos_incompletos: movDescartados, libro_incompletos: libroDescartados },
   });
   if (duplicados.length) avisos.push(`${duplicados.length} componentes con nombre repetido en ListaComponentes (se tomó el primero): ${duplicados.slice(0, 5).join("; ")}…`);
 
@@ -397,6 +406,7 @@ async function main() {
 
   // 11. Clientes y ventas de los paneles
   await paso("Clientes y ventas de los paneles", async () => {
+    await db.query(`update clientes set legacy_ref = 'CLI:' || substr(legacy_ref, 7) where legacy_ref like 'PANEL:%'`);
     const vendedores = new Map<string, string>();
     for (const p of paneles) {
       const { rows } = await db.query(`select id from perfiles where correo = $1`, [p.correo]);
@@ -416,15 +426,15 @@ async function main() {
     }
     await db.query(`
       insert into clientes (legacy_ref, nombre, rfc, estado, ciudad, pais, vendedor_id, notas)
-      select 'PANEL:' || x.llave, x.nombre, x.rfc, x.estado, x.ciudad, coalesce(nullif(x.pais, ''), 'México'), x.vendedor::uuid,
+      select 'CLI:' || x.llave, x.nombre, x.rfc, x.estado, x.ciudad, coalesce(nullif(x.pais, ''), 'México'), x.vendedor::uuid,
              case when jsonb_array_length(x.otros) > 0 then 'También aparece en el panel de ' || (select string_agg(value, ', ') from jsonb_array_elements_text(x.otros)) end
       from jsonb_to_recordset($1) x(llave text, nombre text, rfc text, estado text, ciudad text, pais text, vendedor text, otros jsonb)
-      where not exists (select 1 from clientes c where c.legacy_ref = 'PANEL:' || x.llave)`, [json(clientes)]);
+      where not exists (select 1 from clientes c where c.legacy_ref = 'CLI:' || x.llave)`, [json(clientes)]);
     await db.query(`
       insert into contactos (cliente_id, nombre, correo, telefono, whatsapp, domicilio, principal)
       select c.id, k.nombre, k.correo, k.telefono, k.telefono, x.domicilio, k.ord = 1
       from jsonb_to_recordset($1) x(llave text, domicilio text, contactos jsonb)
-      join clientes c on c.legacy_ref = 'PANEL:' || x.llave
+      join clientes c on c.legacy_ref = 'CLI:' || x.llave
       cross join lateral rows from (jsonb_to_recordset(x.contactos) as (nombre text, correo text, telefono text)) with ordinality k(nombre, correo, telefono, ord)
       where not exists (select 1 from contactos o where o.cliente_id = c.id)`, [json(clientes)]);
 
@@ -442,7 +452,7 @@ async function main() {
                            'Factura ' || x.factura, 'Pedido ' || x.pedido, x.notas), x.fecha::timestamptz
           from jsonb_to_recordset($1) x(folio text, llave_cliente text, canal text, fecha text, fila int, fuente text, cotizacion text,
                factura text, pedido text, notas text)
-          join clientes c on c.legacy_ref = 'PANEL:' || x.llave_cliente
+          join clientes c on c.legacy_ref = 'CLI:' || x.llave_cliente
           returning id, folio
         )
         insert into pedido_lineas (pedido_id, titulo, cantidad, precio_unitario, linea)
@@ -454,6 +464,72 @@ async function main() {
     resumen.clientes_paneles = clientes.length;
     resumen.clientes_en_varios_paneles = clientes.filter((c) => c.otros.length).length;
     resumen.ventas_historicas = n;
+  });
+
+  // 12. Directorio de clientes y CRM unificado: completa los de los paneles y agrega los demás.
+  await paso("Directorio de clientes", async () => {
+    const alias = config.alias_vendedores as Record<string, string | null>;
+    const correos = [...new Set(Object.values(alias).filter((x): x is string => !!x && x.includes("@")))];
+    const ids = new Map<string, string>((await db.query(`select correo, id from perfiles where correo = any($1)`, [correos])).rows.map((r) => [r.correo, r.id]));
+    const sinAlias = new Map<string, number>();
+    const duenioDe = (agente: string | null) => {
+      if (!agente) return null;
+      const k = llave(agente);
+      if (!(k in alias)) { sinAlias.set(agente, (sinAlias.get(agente) ?? 0) + 1); return null; }
+      return alias[k] ? ids.get(alias[k]!) ?? null : null;
+    };
+    // El directorio manda (tiene RFC); el CRM unificado agrega los que faltan y contactos.
+    const porLlave = new Map<string, T.ClienteDirectorio>();
+    for (const c of [...directorio, ...unified]) {
+      const prev = porLlave.get(c.llave);
+      if (!prev) { porLlave.set(c.llave, c); continue; }
+      prev.rfc ??= c.rfc; prev.telefono ??= c.telefono; prev.ciudad ??= c.ciudad; prev.estado ??= c.estado; prev.agente ??= c.agente;
+      for (const k of c.contactos) if (!prev.contactos.some((x) => llave(x.nombre) === llave(k.nombre))) prev.contactos.push(k);
+    }
+    const filas = [...porLlave.values()].map((c) => ({ ...c, vendedor: duenioDe(c.agente),
+      notas: [c.notas, c.agente ? `Agente en la hoja: ${c.agente}` : null, c.telefono ? `Tel. ${c.telefono}` : null].filter(Boolean).join(" · ") || null }));
+    // Nuevos: se crean. Existentes (de los paneles): se completan sin pisar al dueño ni lo capturado.
+    await db.query(`
+      insert into clientes (legacy_ref, nombre, rfc, estado, ciudad, pais, vendedor_id, notas)
+      select 'CLI:' || x.llave, x.nombre, x.rfc, x.estado, x.ciudad, coalesce(nullif(x.pais, ''), 'México'), x.vendedor::uuid, x.notas
+      from jsonb_to_recordset($1) x(llave text, nombre text, rfc text, estado text, ciudad text, pais text, vendedor text, notas text)
+      on conflict do nothing`, [json(filas)]);
+    await db.query(`
+      update clientes c set rfc = coalesce(c.rfc, x.rfc), estado = coalesce(c.estado, x.estado), ciudad = coalesce(c.ciudad, x.ciudad),
+        vendedor_id = coalesce(c.vendedor_id, x.vendedor::uuid)
+      from jsonb_to_recordset($1) x(llave text, rfc text, estado text, ciudad text, vendedor text)
+      where c.legacy_ref = 'CLI:' || x.llave`, [json(filas)]);
+    await db.query(`
+      insert into contactos (cliente_id, nombre, correo, telefono, whatsapp, domicilio, principal)
+      select c.id, k.nombre, k.correo, k.telefono, k.telefono, x.domicilio, k.ord = 1
+      from jsonb_to_recordset($1) x(llave text, domicilio text, contactos jsonb)
+      join clientes c on c.legacy_ref = 'CLI:' || x.llave
+      cross join lateral rows from (jsonb_to_recordset(x.contactos) as (nombre text, correo text, telefono text)) with ordinality k(nombre, correo, telefono, ord)
+      where not exists (select 1 from contactos o where o.cliente_id = c.id and lower(o.nombre) = lower(k.nombre))`, [json(filas)]);
+    resumen.clientes_directorio = filas.length;
+    resumen.clientes_sin_duenio = filas.filter((f) => !f.vendedor).length;
+    if (sinAlias.size) avisos.push(`Agentes del directorio sin equivalencia en importar.config.json (sus clientes quedan sin dueño): ${[...sinAlias.keys()].join(", ")}`);
+  });
+
+  // 13. Libro de ventas y cobros (2022 → hoy): historial y saldo de arranque por cliente.
+  await paso("Libro de ventas y cobros", async () => {
+    await db.query(`truncate historial_ventas_hoja`);
+    // Clientes que solo aparecen en el libro (p.ej. "Público General (Mercadolibre)").
+    const nuevos = [...new Map(libro.map((m) => [m.llave_cliente, m.cliente])).entries()].map(([llave_, nombre]) => ({ llave: llave_, nombre }));
+    await db.query(`
+      insert into clientes (legacy_ref, nombre, notas)
+      select 'CLI:' || x.llave, x.nombre, 'Solo aparece en el libro de ventas de la hoja'
+      from jsonb_to_recordset($1) x(llave text, nombre text)
+      where not exists (select 1 from clientes c where c.legacy_ref = 'CLI:' || x.llave)`, [json(nuevos)]);
+    await db.query(`
+      insert into historial_ventas_hoja (fecha, cliente_id, cliente_nombre, tipo, monto, cuenta, descripcion, factura, pedido, fila_origen)
+      select x.fecha::date, c.id, x.cliente, x.tipo, x.monto, x.cuenta, x.descripcion, x.factura, x.pedido, x.fila
+      from jsonb_to_recordset($1) x(fecha text, cliente text, llave_cliente text, tipo text, monto numeric, cuenta text, descripcion text,
+           factura text, pedido text, fila int)
+      left join clientes c on c.legacy_ref = 'CLI:' || x.llave_cliente`, [json(libro)]);
+    const { rows } = await db.query(`select count(*) filter (where saldo > 1) deudores, round(sum(saldo) filter (where saldo > 1)) por_cobrar from v_saldo_arranque_clientes`);
+    resumen.libro_ventas = libro.length;
+    resumen.saldo_arranque = { clientes_con_saldo: Number(rows[0].deudores), por_cobrar: Number(rows[0].por_cobrar) };
   });
 
   await db.query(`insert into importaciones (fuente, resumen) values ($1, $2)`,
