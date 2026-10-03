@@ -115,7 +115,10 @@ begin
     r := r || jsonb_build_object('ventas', (
       select jsonb_build_object(
         'mes', coalesce(sum(p.subtotal * p.tipo_cambio) filter (where p.fecha >= v_mes), 0),
-        'mes_anterior', coalesce(sum(p.subtotal * p.tipo_cambio) filter (where p.fecha >= v_mes - interval '1 month' and p.fecha < v_mes), 0),
+        -- El mismo tramo del mes pasado (del 1 al día de hoy): contra el mes completo,
+        -- los primeros días siempre salían "77 % abajo".
+        'mes_anterior', coalesce(sum(p.subtotal * p.tipo_cambio) filter (where p.fecha >= v_mes - interval '1 month'
+                          and p.fecha <= (now() at time zone 'America/Mexico_City')::date - interval '1 month'), 0),
         'anio', coalesce(sum(p.subtotal * p.tipo_cambio) filter (where p.fecha >= date_trunc('year', current_date)), 0),
         'pedidos_mes', count(*) filter (where p.fecha >= v_mes))
       from pedidos p where p.estado <> 'cancelado'),

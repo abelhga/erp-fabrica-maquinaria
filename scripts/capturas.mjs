@@ -29,7 +29,12 @@ for (const ruta of rutas.length ? rutas : ["/"]) {
   await pag.waitForLoadState("networkidle");
   await pag.waitForTimeout(Number(process.env.ESPERA ?? 800));
   // CLIC="texto" pulsa algo antes de la foto (un botón, una pestaña); PREGUNTA="…" la escribe en el asistente.
-  if (process.env.CLIC) { await pag.getByText(process.env.CLIC, { exact: false }).first().click(); await pag.waitForTimeout(600); }
+  if (process.env.CLIC) {
+    // CLIC="css=…" para algo sin texto (un ícono); si no, por el texto visible.
+    const c = process.env.CLIC;
+    await (c.startsWith("css=") ? pag.locator(c.slice(4)) : pag.getByText(c, { exact: false })).first().click();
+    await pag.waitForTimeout(600);
+  }
   if (process.env.PREGUNTA) {
     await pag.getByPlaceholder("Pregunta algo del negocio…").fill(process.env.PREGUNTA);
     await pag.keyboard.press("Enter");

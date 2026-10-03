@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, FileText, ShoppingCart, Trophy, Boxes, Layers, Percent, Truck, Tags,
   ClipboardList, Warehouse, ArrowLeftRight, TrendingDown, Factory, ClipboardCheck, Monitor, Tablet,
-  UserRound, CalendarOff, LineChart, Wallet, Receipt, Settings, ShieldCheck, Download, History, KanbanSquare, PhoneCall,
+  UserRound, CalendarOff, LineChart, Wallet, Receipt, Settings, ShieldCheck, Download, History, KanbanSquare, PhoneCall, ListTodo,
   type LucideIcon,
 } from "lucide-react";
 import type { Modulo } from "./lib/sesion";
@@ -78,3 +78,5 @@ export const MENU: SeccionMenu[] = [
 ];
 
 export const INICIO: EntradaMenu = { ruta: "/", texto: "Inicio", icono: LayoutDashboard, modulo: "ventas" };
+// Todos tienen pendientes (los pide y los recibe cualquiera con rol): va junto a Inicio.
+export const PENDIENTES: EntradaMenu = { ruta: "/pendientes", texto: "Pendientes", icono: ListTodo, modulo: "ventas" };
