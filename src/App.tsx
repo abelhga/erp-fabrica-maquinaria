@@ -79,6 +79,7 @@ export function App() {
     <Suspense fallback={<Cargando />}>
       <Routes>
         <Route path="/piso" element={<Con m="produccion"><PantallaPiso /></Con>} />
+        <Route path="/produccion/terminal" element={<Con m="produccion" n={2}><Terminal /></Con>} />
         <Route path="/ventas/cotizaciones/:id/imprimir" element={<Con m="ventas"><ImprimirCotizacion /></Con>} />
         <Route element={<Shell />}>
           <Route index element={<Inicio />} />
@@ -108,7 +109,6 @@ export function App() {
           <Route path="produccion/gerencia" element={<Con m="produccion"><Gerencia /></Con>} />
           <Route path="produccion/ordenes" element={<Con m="produccion"><OrdenesProduccion /></Con>} />
           <Route path="produccion/ordenes/:id" element={<Con m="produccion"><DetalleOrden /></Con>} />
-          <Route path="produccion/terminal" element={<Con m="produccion" n={2}><Terminal /></Con>} />
           <Route path="rrhh/empleados" element={<Con m="rrhh"><Empleados /></Con>} />
           <Route path="rrhh/incidencias" element={<Con m="rrhh"><Incidencias /></Con>} />
           <Route path="finanzas/cobranza" element={<Con m="finanzas"><Cobranza /></Con>} />

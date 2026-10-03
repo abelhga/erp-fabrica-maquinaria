@@ -33,7 +33,8 @@ export function hace(f: string | Date | null | undefined) {
   if (dias === 1) return "ayer";
   if (dias < 30) return `hace ${dias} días`;
   const meses = Math.round(dias / 30);
-  return meses < 12 ? `hace ${meses} ${meses === 1 ? "mes" : "meses"}` : `hace ${Math.round(meses / 12)} años`;
+  const anios = Math.round(meses / 12);
+  return meses < 12 ? `hace ${meses} ${meses === 1 ? "mes" : "meses"}` : `hace ${anios} ${anios === 1 ? "año" : "años"}`;
 }
 
 export const hoyISO = () => new Date().toLocaleDateString("en-CA");

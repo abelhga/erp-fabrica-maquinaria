@@ -75,7 +75,8 @@ const TABLAS: Record<string, string> = {
   v_saldos_pedido: "folio,cliente_id,fecha,estado,moneda,total,cobrado,saldo",
   v_cuentas_por_pagar: "folio,proveedor,fecha,vence_pago,moneda,total,pagado,saldo",
   proveedores: "id,nombre,categoria,pais,es_importacion,moneda,dias_credito,dias_entrega,activo",
-  ordenes_compra: "folio,proveedor_id,estado,fecha,fecha_entrega,moneda,total,vence_pago",
+  // La vista y no la tabla: a quien no maneja costos le deja ver qué viene, sin importes.
+  v_ordenes_compra: "folio,proveedor,estado,fecha,fecha_entrega,moneda,total,atrasada,dias_atraso,avance_recibido",
   historial_costos: "articulo_id,costo_anterior,costo_nuevo,moneda,origen,en",
   costos_calculados: "articulo_id,costo_material,costo_mano_obra,costo_total,sin_costo,calculado_en",
   historial_costeo: "articulo_id,en,costo_total,precio_lista,utilidad",

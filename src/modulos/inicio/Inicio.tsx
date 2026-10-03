@@ -73,8 +73,8 @@ function InicioPorArea() {
   const atrasadas = useQuery({
     queryKey: ["tablero_produccion", "atrasadas"],
     enabled: puede("produccion"),
-    queryFn: () => q<{ id: string; folio: string; equipo: string; cliente: string | null; fecha_compromiso: string; avance: number; dias_restantes: number }[]>(
-      supabase.from("v_tablero_produccion").select("id, folio, equipo, cliente, fecha_compromiso, avance, dias_restantes")
+    queryFn: () => q<{ id: string; folio: string; equipo: string; cliente: string | null; para_stock: boolean; fecha_compromiso: string; avance: number; dias_restantes: number }[]>(
+      supabase.from("v_tablero_produccion").select("id, folio, equipo, cliente, para_stock, fecha_compromiso, avance, dias_restantes")
         .or("atrasada.eq.true,dias_restantes.lte.5").order("fecha_compromiso").limit(6)),
   });
 
@@ -206,7 +206,7 @@ function InicioPorArea() {
                     <tr key={o.id} className="cursor-pointer" onClick={() => ir(`/produccion/ordenes/${o.id}`)}>
                       <td className="font-medium">{o.folio}</td>
                       <td className="max-w-[280px] truncate">{o.equipo}</td>
-                      <td className="text-tenue">{o.cliente ?? "Stock"}</td>
+                      <td className="text-tenue">{o.para_stock ? "Para stock" : o.cliente ?? "—"}</td>
                       <td>
                         {fecha(o.fecha_compromiso)}{" "}
                         {o.dias_restantes < 0 ? <Insignia tono="peligro">{-o.dias_restantes} días tarde</Insignia>

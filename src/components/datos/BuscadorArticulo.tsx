@@ -26,6 +26,9 @@ export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo
   const [abierto, setAbierto] = useState(false);
   const [res, setRes] = useState<ArticuloEncontrado[]>([]);
   const [cargando, setCargando] = useState(false);
+  // cmdk no vuelve a marcar el primero cuando los resultados llegan después de
+  // escribir: sin esto, Enter solo no elegía nada y había que bajar con la flecha.
+  const [marcado, setMarcado] = useState("");
   const entrada = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -33,7 +36,9 @@ export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo
     setCargando(true);
     const t = setTimeout(async () => {
       const { data } = await supabase.rpc("buscar_articulos", { q, p_tipos: tipos ?? null, p_limite: 30 });
-      setRes((data as ArticuloEncontrado[]) ?? []);
+      const lista = (data as ArticuloEncontrado[]) ?? [];
+      setRes(lista);
+      setMarcado(lista[0]?.id ?? "");
       setCargando(false);
     }, 150);
     return () => clearTimeout(t);
@@ -41,7 +46,7 @@ export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo
 
   return (
     <P.Root open={abierto && (q.length > 0 || res.length > 0)} onOpenChange={setAbierto}>
-      <Command shouldFilter={false} className={cn("relative", className)} loop>
+      <Command shouldFilter={false} className={cn("relative", className)} loop value={marcado} onValueChange={setMarcado}>
         <P.Anchor asChild>
           <div className="relative">
             {cargando ? <Loader2 className="h-4 w-4 text-tenue absolute left-3 top-1/2 -translate-y-1/2 animate-spin" />
@@ -52,14 +57,15 @@ export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo
         </P.Anchor>
         <P.Portal>
           <P.Content align="start" sideOffset={4} onOpenAutoFocus={(e) => e.preventDefault()}
-            className="z-50 w-[var(--radix-popover-trigger-width)] min-w-[420px] tarjeta shadow-xl overflow-hidden">
+            className="z-50 w-[var(--radix-popover-trigger-width)] min-w-[min(420px,calc(100vw-24px))] tarjeta shadow-xl overflow-hidden">
             <Command.List className="max-h-[360px] overflow-y-auto p-1">
               {!cargando && <Command.Empty className="p-4 text-sm text-tenue text-center">No hay artículos con “{q}”.</Command.Empty>}
               {res.map((a) => (
                 <Command.Item key={a.id} value={a.id}
                   onSelect={() => { alElegir(a); setQ(""); setAbierto(false); entrada.current?.focus(); }}
                   className="flex items-center gap-3 rounded-lg px-2 py-2 cursor-pointer data-[selected=true]:bg-marca-suave">
-                  {a.imagen_url ? <img src={a.imagen_url} alt="" className="h-9 w-9 rounded object-cover bg-fondo shrink-0" loading="lazy" />
+                  {a.imagen_url ? <img src={a.imagen_url} alt="" className="h-9 w-9 rounded object-cover bg-fondo shrink-0" loading="lazy"
+                    onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} />
                     : <div className="h-9 w-9 rounded bg-fondo flex items-center justify-center shrink-0">
                         {a.tipo === "equipo" || a.tipo === "subensamble" ? <Layers className="h-4 w-4 text-tenue" /> : <Boxes className="h-4 w-4 text-tenue" />}
                       </div>}

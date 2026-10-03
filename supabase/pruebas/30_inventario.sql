@@ -138,7 +138,7 @@ begin
 
   perform pg_temp.como(v_alm);
   perform recibir_orden_compra(v_oc, jsonb_build_array(jsonb_build_object(
-    'linea_id', (select id from oc_lineas where orden_compra_id = v_oc), 'cantidad', 10, 'almacen_id', v_pb)), 'F-123');
+    'linea_id', (select id from v_oc_lineas where orden_compra_id = v_oc), 'cantidad', 10, 'almacen_id', v_pb)), 'F-123');
   -- (las salidas históricas se insertaron sin el disparador, así que no tocaron la existencia: 2 + 10)
   assert (select cantidad from existencias where articulo_id = v_import and almacen_id = v_pb) = 12, 'entraron 10';
   perform pg_temp.como_postgres();

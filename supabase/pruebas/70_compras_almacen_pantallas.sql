@@ -138,7 +138,7 @@ begin
   -- Llega una parte: ya no se puede cancelar.
   perform pg_temp.como(v_alm);
   perform recibir_orden_compra(v_oc, jsonb_build_array(jsonb_build_object(
-    'linea_id', (select id from oc_lineas where orden_compra_id = v_oc and articulo_id = v_chu), 'cantidad', 5, 'almacen_id', v_mall)));
+    'linea_id', (select id from v_oc_lineas where orden_compra_id = v_oc and articulo_id = v_chu), 'cantidad', 5, 'almacen_id', v_mall)));
   perform pg_temp.como(v_comp);
   begin
     perform cancelar_orden_compra(v_oc, 'ya no se necesita');
