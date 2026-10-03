@@ -95,10 +95,11 @@ export default function DetalleCliente() {
         <Kpi titulo="Saldo por cobrar" icono={History} tono={Number(resumen.data?.saldo ?? 0) > 0.5 ? "aviso" : "ok"}
           valor={contactosVisibles || Number(resumen.data?.saldo) ? corto(resumen.data?.saldo ?? 0) : "Privado"}
           detalle={arranque.data?.saldo ? `+ ${dinero(arranque.data.saldo)} de arranque (hoja)` : "Pedidos del ERP"} />
-        <Kpi titulo="Compras 12 meses" icono={History} tono="marca" valor={corto(resumen.data?.compras_12m ?? 0)} detalle="Sin IVA, pedidos del ERP" />
+        {/* Del cliente de otro vendedor solo se sabe de quién es y hasta cuándo (la regla de cartera); lo que compra es suyo. */}
+        <Kpi titulo="Compras 12 meses" icono={History} tono="marca" valor={contactosVisibles ? corto(resumen.data?.compras_12m ?? 0) : "Privado"} detalle="Sin IVA, pedidos del ERP" />
         <Kpi titulo="Última compra" icono={History} tono="neutro"
-          valor={(() => { const u = [resumen.data?.ultima_compra, cartera.data?.ultima_venta, arranque.data?.ultima_venta].filter(Boolean).sort().pop(); return u ? haceCuanto(u) : "—"; })()}
-          detalle={cartera.data?.ultimo_seguimiento ? `Último seguimiento ${fecha(cartera.data.ultimo_seguimiento)}` : undefined} />
+          valor={!contactosVisibles ? "Privado" : (() => { const u = [resumen.data?.ultima_compra, cartera.data?.ultima_venta, arranque.data?.ultima_venta].filter(Boolean).sort().pop(); return u ? haceCuanto(u) : "—"; })()}
+          detalle={contactosVisibles && cartera.data?.ultimo_seguimiento ? `Último seguimiento ${fecha(cartera.data.ultimo_seguimiento)}` : undefined} />
         <Kpi titulo="Cotizaciones abiertas" icono={FilePlus} tono="info" valor={String(resumen.data?.cotizaciones_abiertas ?? 0)} />
       </div>
 

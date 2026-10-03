@@ -1,4 +1,4 @@
--- Pantallas de ventas: los huecos que cerró 20261003000020_ventas_pantallas.sql
+-- Pantallas de ventas: los huecos que cerró 20261003000082_ventas_pantallas.sql
 -- (descuento general que tronaba, precio mínimo distinto en la ficha y en la
 -- base, autorizaciones que el vendedor se podía dar solo, comisión con total en
 -- cero) y las funciones del editor, con la RLS de verdad.
@@ -296,4 +296,159 @@ begin
   assert (select count(*) from pedidos_comision(v_isaac, hoy_mx())) = 0, 'Juan ve el detalle de comisión de Isaac';
   perform pg_temp.como(v_gerente);
   assert (select count(*) from comisiones_mes(hoy_mx()) where vendedor_id = v_isaac) = 1, 'la gerente ve la comisión de Isaac';
+
+  -- ---------------------------------------------------------------------------
+  -- Pago de la comisión: la foto del cálculo la toma la base, y no se paga dos veces
+  -- ---------------------------------------------------------------------------
+  begin
+    perform pagar_comision(v_isaac, hoy_mx());
+    assert false, 'la gerente de ventas marcó una comisión como pagada (es de finanzas)';
+  exception when insufficient_privilege then null;
+  end;
+  perform pg_temp.como(v_fin);
+  v_num := pagar_comision(v_isaac, hoy_mx(), null, ' SPEI 4471 ');
+  assert v_num = 4840, format('se pagó %s y el cálculo da 4,840', v_num);
+  select * into r from comision_pagos where vendedor_id = v_isaac and mes = date_trunc('month', hoy_mx());
+  assert r.total = 4840 and (r.detalle->>'comision')::numeric = 4040 and r.referencia = 'SPEI 4471' and r.pagado_en = hoy_mx(),
+    'la foto del pago trae el desglose que calculó la base';
+  begin
+    perform pagar_comision(v_isaac, hoy_mx());
+    assert false, 'se pagó dos veces la misma comisión';
+  exception when others then
+    if sqlerrm not like '%ya está marcada como pagada%' then raise; end if;
+  end;
+
+  -- ---------------------------------------------------------------------------
+  -- Crédito compartido: suma 100 % o no hay reparto; solo la gerencia lo reparte
+  -- ---------------------------------------------------------------------------
+  select id into v_ped from pedidos where cliente_id = v_cli and canal = 'directo' and estado = 'entregado';
+  perform pg_temp.como(v_isaac);
+  begin
+    perform compartir_credito(v_ped, jsonb_build_array(jsonb_build_object('vendedor_id', v_juan, 'porcentaje', 100)));
+    assert false, 'Isaac le pasó el crédito de su venta a otro';
+  exception when insufficient_privilege then null;
+  end;
+  perform pg_temp.como(v_gerente);
+  perform compartir_credito(v_ped, jsonb_build_array(jsonb_build_object('vendedor_id', v_isaac, 'porcentaje', 70),
+                                                      jsonb_build_object('vendedor_id', v_juan, 'porcentaje', 30)));
+  assert (select sum(porcentaje) from pedido_vendedores where pedido_id = v_ped) = 100
+     and (select credito_compartido from v_pedidos where id = v_ped), 'reparto 70/30';
+  begin
+    perform compartir_credito(v_ped, jsonb_build_array(jsonb_build_object('vendedor_id', v_isaac, 'porcentaje', 70),
+                                                        jsonb_build_object('vendedor_id', v_juan, 'porcentaje', 20)));
+    assert false, 'se aceptó un reparto que suma 90 %';
+  exception when others then
+    if sqlerrm not like '%sumar 100 %%' then raise; end if;
+  end;
+  begin
+    perform compartir_credito(v_ped, jsonb_build_array(jsonb_build_object('vendedor_id', v_isaac, 'porcentaje', 50),
+                                                        jsonb_build_object('vendedor_id', v_isaac, 'porcentaje', 50)));
+    assert false, 'se aceptó el mismo vendedor dos veces';
+  exception when others then
+    if sqlerrm not like '%dos veces%' then raise; end if;
+  end;
+  -- Ni escribiendo directo en la tabla (la revisión es al cerrar la transacción; aquí se adelanta).
+  set constraints credito_completo immediate;
+  begin
+    update pedido_vendedores set porcentaje = 50 where pedido_id = v_ped and vendedor_id = v_juan;
+    assert false, 'el reparto quedó en 120 % escribiendo directo';
+  exception when check_violation then null;
+  end;
+  set constraints credito_completo deferred;
+  -- Todo a Isaac, que ya es el vendedor del pedido = no compartir.
+  perform compartir_credito(v_ped, jsonb_build_array(jsonb_build_object('vendedor_id', v_isaac, 'porcentaje', 100)));
+  assert not exists (select 1 from pedido_vendedores where pedido_id = v_ped), 'el 100 % al dueño no deja reparto';
+
+  -- ---------------------------------------------------------------------------
+  -- Cola de autorización: cuánto abajo de lista va, sin enseñar costos
+  -- ---------------------------------------------------------------------------
+  perform pg_temp.como(v_isaac);
+  v_cot := nueva_cotizacion(v_cli);
+  select id into v_l from agregar_partida(v_cot, v_banda, 1);
+  update cotizacion_lineas set precio_unitario = 171700 where id = v_l;   -- 202,000 − 15 %
+  assert (select descuento_vs_lista from v_cotizaciones where id = v_cot) = 0.15, 'la banda va 15 % abajo de lista';
+  perform ajustar_moneda_cotizacion(v_cot, 'USD', 20, true);
+  assert abs((select descuento_vs_lista from v_cotizaciones where id = v_cot) - 0.15) < 0.0001, 'en dólares con IVA incluido sigue siendo 15 %';
+  -- El vendedor no lee costos ni políticas de precio por ningún lado.
+  assert (select count(*) from costos_articulo) = 0 and (select count(*) from politicas_precio) = 0, 'un vendedor ve costos';
+  assert not exists (select 1 from information_schema.columns where table_name in ('v_cotizaciones', 'v_pedidos', 'v_clientes', 'v_oportunidades')
+                     and (column_name like '%costo%' or column_name like '%margen%' or column_name like '%utilidad%')), 'una vista de ventas trae costos';
+  -- Ni los contactos ni la historia del cliente de otro.
+  perform pg_temp.como(v_juan);
+  assert (select count(*) from contactos where cliente_id = v_cli) = 0, 'Juan ve los contactos del cliente de Isaac';
+  assert (select count(*) from v_pedidos where cliente_id = v_cli) = 0, 'Juan ve los pedidos del cliente de Isaac';
+  update clientes set notas = 'Juan estuvo aquí' where id = v_cli;
+  assert (select notas from clientes where id = v_cli) is distinct from 'Juan estuvo aquí', 'Juan editó el cliente de Isaac';
+
+  -- ---------------------------------------------------------------------------
+  -- Una pieza del catálogo en $0 es un descuento del 100 %: pide autorización
+  -- ---------------------------------------------------------------------------
+  perform pg_temp.como(v_isaac);
+  v_cot := nueva_cotizacion(v_cli);
+  select id into v_l from agregar_partida(v_cot, v_polea, 1);
+  update cotizacion_lineas set precio_unitario = 0 where id = v_l;
+  assert (select bajo_minimo from cotizacion_lineas where id = v_l) and (select estado::text from cotizaciones where id = v_cot) = 'por_autorizar',
+    'la polea regalada debe pedir autorización';
+  -- Una partida libre (flete) en $0 no: no tiene mínimo.
+  insert into cotizacion_lineas (cotizacion_id, orden, titulo, cantidad, precio_unitario) values (v_cot, 2, 'Flete por cuenta de Hegamex', 1, 0);
+  update cotizacion_lineas set precio_unitario = 1050 where id = v_l;
+  assert (select estado::text from cotizaciones where id = v_cot) = 'borrador', 'el flete en $0 no pide autorización';
+
+  -- ---------------------------------------------------------------------------
+  -- Partidas del pedido: lo autorizado no se deshace por la puerta de atrás
+  -- ---------------------------------------------------------------------------
+  -- Pedido que sale de una cotización: el vendedor ya no le mueve el precio.
+  v_cot := nueva_cotizacion(v_cli);
+  perform agregar_partida(v_cot, v_banda, 1);
+  v_ped := convertir_a_pedido(v_cot, current_date + 30);
+  begin
+    update pedido_lineas set precio_unitario = 150000 where pedido_id = v_ped;
+    assert false, 'Isaac bajó el precio del pedido que salió de su cotización';
+  exception when insufficient_privilege then
+    if sqlerrm not like '%viene de la cotización%' then raise; end if;
+  end;
+  update pedido_lineas set cantidad = 2 where pedido_id = v_ped;
+  assert (select subtotal from pedidos where id = v_ped) = 404000, 'la cantidad sí la ajusta el vendedor';
+  begin
+    update pedido_lineas set linea = 'otros' where pedido_id = v_ped;
+    assert false, 'Isaac cambió la línea de comisión';
+  exception when insufficient_privilege then null;
+  end;
+  perform pg_temp.como(v_gerente);
+  update pedido_lineas set precio_unitario = 150000 where pedido_id = v_ped;
+  assert (select subtotal from pedidos where id = v_ped) = 300000, 'la gerencia sí corrige el precio';
+
+  -- Pedido de Mercado Libre: precio libre, pero no abajo del mínimo; la línea la pone el catálogo.
+  perform pg_temp.como(v_isaac);
+  select id into v_ped from pedidos where cliente_id = v_cli and canal = 'mercadolibre';
+  update pedido_lineas set precio_unitario = 1100 where pedido_id = v_ped;
+  assert (select precio_unitario from pedido_lineas where pedido_id = v_ped) = 1100, 'precio de ML arriba del mínimo';
+  begin
+    update pedido_lineas set precio_unitario = 500 where pedido_id = v_ped;
+    assert false, 'Isaac dejó la polea de ML abajo del mínimo';
+  exception when insufficient_privilege then null;
+  end;
+  insert into pedido_lineas (pedido_id, articulo_id, titulo, cantidad, precio_unitario, linea)
+  values (v_ped, v_polea, 'Polea 8"', 1, 1050, 'maquinaria') returning linea into v_txt;
+  assert v_txt = 'refacciones', format('una polea capturada como maquinaria se guardó como %s', v_txt);
+  begin
+    insert into pedido_lineas (pedido_id, articulo_id, titulo, cantidad, precio_unitario) values (v_ped, v_polea, 'Polea 8"', 1, 0);
+    assert false, 'Isaac regaló una polea en un pedido';
+  exception when insufficient_privilege then
+    if sqlerrm not like '%va en $0%' then raise; end if;
+  end;
+  perform pg_temp.como_postgres();
+  insert into articulos (clave, tipo, nombre) values ('T60-SINPRECIO', 'componente', 'Pieza sin costear') returning id into v_l;
+  perform pg_temp.como(v_isaac);
+  begin
+    perform agregar_partida_pedido(v_ped, v_l, 1);
+    assert false, 'se agregó al pedido una pieza sin precio de lista';
+  exception when others then
+    if sqlerrm not like '%no tiene precio de lista%' then raise; end if;
+  end;
+  -- Juan no toca las partidas de Isaac.
+  perform pg_temp.como(v_juan);
+  update pedido_lineas set precio_unitario = 1 where pedido_id = v_ped;
+  get diagnostics v_n = row_count;
+  assert v_n = 0, 'Juan cambió precios de un pedido de Isaac';
 end $$;

@@ -18,7 +18,7 @@ import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Lateral } from "@/components/ui/dialogo";
 import { BuscadorArticulo } from "@/components/datos/BuscadorArticulo";
 import {
-  EDITABLES, ESTADO_COT, dineroEn, mensualidad, usePlanesMeses, useTextosComerciales, venceEl, hoyMx,
+  EDITABLES, ESTADO_COT, dineroEn, mensualidad, useAncho, usePlanesMeses, useTextosComerciales, venceEl, hoyMx,
   type Contacto, type Cotizacion, type Partida, type Moneda, haceCuanto,
 } from "./comun";
 import { CampoNumero, MenuAcciones, OpcionMenu, SelectorTexto, SeparadorMenu } from "./componentes/campos";
@@ -48,17 +48,6 @@ function CrearCotizacion() {
     });
   }, [ir, params]);
   return <div className="p-8"><Cargando filas={6} /></div>;
-}
-
-function useAncho(px: number) {
-  const [si, setSi] = useState(() => typeof window !== "undefined" && window.matchMedia(`(min-width: ${px}px)`).matches);
-  useEffect(() => {
-    const m = window.matchMedia(`(min-width: ${px}px)`);
-    const f = () => setSi(m.matches);
-    m.addEventListener("change", f);
-    return () => m.removeEventListener("change", f);
-  }, [px]);
-  return si;
 }
 
 type Guardado = "guardado" | "pendiente" | "guardando" | "error";
@@ -216,6 +205,9 @@ function Editor({ id }: { id: string }) {
     return { subtotal: r2(sub), descuento: desc, iva: r2((sub - desc) * iva), total: r2((sub - desc) * (1 + iva)) };
   }, [c, lineas, sucio]);
   const plan = planes.data?.find((p) => p.meses === c?.plan_meses) ?? null;
+  // Lo que de verdad cobra la partida (con su descuento y el general): con eso
+  // la juzga partida_bajo_minimo() en la base, y la ficha debe decir lo mismo.
+  const precioEfectivo = (l: Partida) => Number(l.precio_unitario) * (1 - Number(l.descuento_pct)) * (1 - Number(c?.descuento_pct ?? 0));
   const bajoMinimo = lineas.filter((l) => l.bajo_minimo && !sucias.has(l.id));
   const vence = c ? venceEl(c.fecha, c.vigencia_dias) : null;
   const vencida = !!c && ["borrador", "por_autorizar", "autorizada", "enviada"].includes(c.estado) && !!vence && vence < hoyMx();
@@ -367,8 +359,11 @@ function Editor({ id }: { id: string }) {
   const textosDe = (t: string) => (textos.data ?? []).filter((x) => x.tipo === t).map((x) => x.texto);
   const notasCatalogo = textosDe("nota");
   const contactoSel = contactos.data?.find((x) => x.id === c.contacto_id) ?? null;
-  const puedeEnviar = editable && (c.estado === "borrador" || c.estado === "autorizada") && bajoMinimo.length === 0 && lineas.some((l) => !l.opcional);
-  const puedeConvertir = ["borrador", "autorizada", "enviada"].includes(c.estado) && bajoMinimo.length === 0 && (propia || esGerente) && lineas.length > 0;
+  // Una partida autorizada sigue "bajo el mínimo" (eso no cambia): lo que la
+  // deja pasar es la autorización vigente, igual que en convertir_a_pedido().
+  const preciosEnRegla = bajoMinimo.length === 0 || !!c.autorizada_por;
+  const puedeEnviar = editable && (c.estado === "borrador" || c.estado === "autorizada") && preciosEnRegla && lineas.some((l) => !l.opcional);
+  const puedeConvertir = ["borrador", "autorizada", "enviada"].includes(c.estado) && preciosEnRegla && (propia || esGerente) && lineas.length > 0;
 
   const indicador = (
     <span className={cn("inline-flex items-center gap-1.5 text-xs", guardado === "error" ? "text-peligro" : "text-tenue")}>
@@ -379,15 +374,17 @@ function Editor({ id }: { id: string }) {
     </span>
   );
 
-  const botonPrincipal = (() => {
-    if (c.estado === "por_autorizar" && esGerente) return <Boton onClick={() => autorizar.mutate(undefined)} cargando={autorizar.isPending}><ShieldCheck className="h-4 w-4" />Autorizar precios</Boton>;
-    if (c.estado === "por_autorizar") return <Boton variante={c.autorizacion_pedida_en ? "secundario" : "primario"} onClick={() => setDlg("autorizacion")}><ShieldCheck className="h-4 w-4" />{c.autorizacion_pedida_en ? "Autorización pedida" : "Pedir autorización"}</Boton>;
-    if (puedeEnviar) return <Boton onClick={() => setDlg("enviar")}><Send className="h-4 w-4" />Enviar</Boton>;
-    if (c.estado === "enviada" && puedeConvertir) return <Boton variante="exito" onClick={() => setDlg("convertir")}><PackageCheck className="h-4 w-4" />Convertir a pedido</Boton>;
-    if (c.estado === "aceptada" && pedido.data?.[0]) return <Boton asChild variante="secundario"><Link to={`/ventas/pedidos/${pedido.data[0].id}`}><Truck className="h-4 w-4" />Ver pedido {pedido.data[0].folio}</Link></Boton>;
-    if (["rechazada", "cancelada", "vencida"].includes(c.estado)) return <Boton onClick={() => nuevaVersion.mutate(undefined)} cargando={nuevaVersion.isPending}><CopyPlus className="h-4 w-4" />Nueva versión</Boton>;
+  // En la barra de abajo del celular va en tamaño chico: si no, el total no cabe.
+  const principal = (tamano?: "sm") => {
+    if (c.estado === "por_autorizar" && esGerente) return <Boton tamano={tamano} onClick={() => autorizar.mutate(undefined)} cargando={autorizar.isPending}><ShieldCheck className="h-4 w-4" />Autorizar precios</Boton>;
+    if (c.estado === "por_autorizar") return <Boton tamano={tamano} variante={c.autorizacion_pedida_en ? "secundario" : "primario"} onClick={() => setDlg("autorizacion")}><ShieldCheck className="h-4 w-4" />{c.autorizacion_pedida_en ? "Autorización pedida" : "Pedir autorización"}</Boton>;
+    if (puedeEnviar) return <Boton tamano={tamano} onClick={() => setDlg("enviar")}><Send className="h-4 w-4" />Enviar</Boton>;
+    if (c.estado === "enviada" && puedeConvertir) return <Boton tamano={tamano} variante="exito" onClick={() => setDlg("convertir")}><PackageCheck className="h-4 w-4" />Convertir a pedido</Boton>;
+    if (c.estado === "aceptada" && pedido.data?.[0]) return <Boton tamano={tamano} asChild variante="secundario"><Link to={`/ventas/pedidos/${pedido.data[0].id}`}><Truck className="h-4 w-4" />Ver pedido {pedido.data[0].folio}</Link></Boton>;
+    if (["rechazada", "cancelada", "vencida"].includes(c.estado)) return <Boton tamano={tamano} onClick={() => nuevaVersion.mutate(undefined)} cargando={nuevaVersion.isPending}><CopyPlus className="h-4 w-4" />Nueva versión</Boton>;
     return null;
-  })();
+  };
+  const botonPrincipal = principal();
 
   const menuMas = (
     <MenuAcciones disparador={<Boton variante="secundario" tamano="icono" aria-label="Más acciones"><MoreHorizontal className="h-4 w-4" /></Boton>}>
@@ -459,7 +456,7 @@ function Editor({ id }: { id: string }) {
       <EncabezadoTarjeta titulo="Ficha de venta" descripcion={`Partida ${lineas.indexOf(seleccionada) + 1}`} />
       <div className="px-5 pb-5">
         <FichaVenta articuloId={seleccionada.articulo_id} moneda={c.moneda} tipoCambio={Number(c.tipo_cambio)} conIva={c.precios_con_iva}
-          tasaIva={Number(c.tasa_iva)} precioActual={Number(seleccionada.precio_unitario) * (1 - Number(seleccionada.descuento_pct))}
+          tasaIva={Number(c.tasa_iva)} precioActual={precioEfectivo(seleccionada)}
           alAplicarPrecio={editable ? (p) => editarLinea(seleccionada.id, { precio_unitario: p }) : undefined} />
       </div>
     </Tarjeta>
@@ -684,12 +681,13 @@ function Editor({ id }: { id: string }) {
 
       {/* Celular y pantallas medianas: total y acción principal siempre a la mano */}
       {!dosColumnas && tot && (
-        <div className="fixed bottom-0 inset-x-0 lg:left-64 z-30 border-t border-borde bg-superficie/95 backdrop-blur px-4 py-2.5 flex items-center gap-3 no-imprimir">
+        // pr-20: a la derecha flota el botón del asistente y tapaba la acción principal.
+        <div className="fixed bottom-0 inset-x-0 lg:left-64 z-30 border-t border-borde bg-superficie/95 backdrop-blur pl-4 pr-20 py-2.5 flex items-center gap-3 no-imprimir">
           <div className="min-w-0">
             <p className="text-[11px] text-tenue leading-none">Total {c.precios_con_iva ? "(IVA incl.)" : "con IVA"}</p>
-            <p className="text-lg font-semibold cifra leading-tight">{dineroEn(tot.total, c.moneda)}</p>
+            <p className="text-base font-semibold cifra leading-tight whitespace-nowrap">{dineroEn(tot.total, c.moneda)}</p>
           </div>
-          <div className="ml-auto flex items-center gap-2">{botonPrincipal}</div>
+          <div className="ml-auto flex items-center gap-2">{principal("sm")}</div>
         </div>
       )}
 
@@ -713,7 +711,7 @@ function Editor({ id }: { id: string }) {
       <Lateral abierto={!!fichaMovil} alCambiar={(v) => !v && setFichaMovil(null)} titulo="Ficha de venta" subtitulo={fichaMovil?.titulo} ancho="max-w-md">
         {fichaMovil?.articulo_id && (
           <FichaVenta articuloId={fichaMovil.articulo_id} moneda={c.moneda} tipoCambio={Number(c.tipo_cambio)} conIva={c.precios_con_iva} tasaIva={Number(c.tasa_iva)}
-            precioActual={Number(fichaMovil.precio_unitario)}
+            precioActual={precioEfectivo(fichaMovil)}
             alAplicarPrecio={editable ? (p) => { editarLinea(fichaMovil.id, { precio_unitario: p }); setFichaMovil(null); } : undefined} />
         )}
       </Lateral>

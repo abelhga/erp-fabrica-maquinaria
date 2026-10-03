@@ -11,9 +11,9 @@ import { Vacio, Cargando } from "@/components/ui/estados";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
-import { dinero, fecha } from "@/lib/formato";
+import { dinero, fecha, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
-import { ESTADO_COT, dineroEn, todas, type VCotizacion, haceCuanto } from "./comun";
+import { ESTADO_COT, dineroEn, todas, useAncho, type VCotizacion, haceCuanto } from "./comun";
 
 const ABIERTAS = ["borrador", "por_autorizar", "autorizada", "enviada"];
 type Pestana = "abiertas" | "por_autorizar" | "enviadas" | "aceptadas" | "todas";
@@ -30,6 +30,9 @@ export default function Cotizaciones() {
   const [params, setParams] = useSearchParams();
   const [vendedor, setVendedor] = useState<string>("todos");
   const [soloVencidas, setSoloVencidas] = useState(false);
+  // En el celular (los vendedores cotizan en la calle) la tabla se queda en tres
+  // columnas: folio con fecha y estado, cliente y total. Sin desplazarse de lado.
+  const angosta = !useAncho(640);
 
   const lista = useQuery({
     queryKey: ["v_cotizaciones"],
@@ -69,22 +72,30 @@ export default function Cotizaciones() {
         <span className="whitespace-nowrap">
           <span className="font-medium cifra">{c.folio}</span>
           {c.iniciales && <span className="ml-1.5 text-[10px] font-bold text-tenue">{c.iniciales}</span>}
+          {angosta && (
+            <span className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-tenue">
+              {fecha(c.fecha)}
+              <Insignia tono={ESTADO_COT[c.estado].tono}>{ESTADO_COT[c.estado].texto}</Insignia>
+              {c.vencida && <Insignia tono="peligro">Vencida</Insignia>}
+            </span>
+          )}
         </span>
       ),
     },
-    { clave: "fecha", titulo: "Emisión", valor: (c) => c.fecha, celda: (c) => <span className="whitespace-nowrap">{fecha(c.fecha)}</span> },
+    { clave: "fecha", titulo: "Emisión", oculta: angosta, valor: (c) => c.fecha, celda: (c) => <span className="whitespace-nowrap">{fecha(c.fecha)}</span> },
     {
       clave: "cliente", titulo: "Cliente", valor: (c) => `${c.cliente ?? ""} ${c.atencion ?? ""} ${c.primera_partida ?? ""}`,
       celda: (c) => (
-        <div className="min-w-[220px] max-w-[380px]">
+        <div className={angosta ? "w-[150px]" : "min-w-[220px] max-w-[380px]"}>
           <p className="truncate font-medium">{c.cliente ?? c.empresa ?? c.atencion ?? <span className="text-tenue">Sin cliente</span>}</p>
-          <p className="truncate text-xs text-tenue">{[c.atencion, c.primera_partida && `${c.primera_partida}${c.partidas > 1 ? ` +${c.partidas - 1}` : ""}`].filter(Boolean).join(" · ")}</p>
+          {angosta ? <p className="text-sm font-medium cifra">{dineroEn(Number(c.total), c.moneda)}</p>
+            : <p className="truncate text-xs text-tenue">{[c.atencion, c.primera_partida && `${c.primera_partida}${c.partidas > 1 ? ` +${c.partidas - 1}` : ""}`].filter(Boolean).join(" · ")}</p>}
         </div>
       ),
     },
     { clave: "vendedor", titulo: "Vendedor", oculta: !esGerente, valor: (c) => c.vendedor },
     {
-      clave: "estado", titulo: "Estado", valor: (c) => ESTADO_COT[c.estado].texto,
+      clave: "estado", titulo: "Estado", oculta: angosta, valor: (c) => ESTADO_COT[c.estado].texto,
       celda: (c) => (
         <div className="flex flex-wrap gap-1">
           <Insignia tono={ESTADO_COT[c.estado].tono} punto>{ESTADO_COT[c.estado].texto}</Insignia>
@@ -94,11 +105,11 @@ export default function Cotizaciones() {
       ),
     },
     {
-      clave: "vence", titulo: "Vence", valor: (c) => c.vence,
+      clave: "vence", titulo: "Vence", oculta: angosta, valor: (c) => c.vence,
       celda: (c) => <span className={cn("whitespace-nowrap", c.vencida && "text-peligro font-medium")}>{ABIERTAS.includes(c.estado) ? fecha(c.vence) : "—"}</span>,
     },
     {
-      clave: "total", titulo: "Total", alinear: "der", sinBusqueda: true, valor: (c) => Number(c.total),
+      clave: "total", titulo: "Total", oculta: angosta, alinear: "der", sinBusqueda: true, valor: (c) => Number(c.total),
       celda: (c) => <span className="font-medium whitespace-nowrap">{dineroEn(Number(c.total), c.moneda)}</span>,
     },
   ];
@@ -176,6 +187,11 @@ function ColaAutorizacion({ filas, cargando, alAutorizar, autorizando }: {
             <div className="text-right shrink-0">
               <p className="text-lg font-semibold cifra">{dineroEn(Number(c.total), c.moneda)}</p>
               <Insignia tono="peligro">{c.partidas_bajo_minimo} bajo el mínimo</Insignia>
+              {c.descuento_vs_lista != null && Number(c.descuento_vs_lista) > 0 && (
+                <p className="text-xs text-tenue mt-1 cifra" title="Lo cotizado del catálogo contra su precio de lista, con todos los descuentos">
+                  {porcentaje(Number(c.descuento_vs_lista), 1)} abajo de lista
+                </p>
+              )}
             </div>
           </div>
           {c.nota_autorizacion && <p className="rounded-lg bg-aviso-suave px-3 py-2 text-sm">“{c.nota_autorizacion}”</p>}

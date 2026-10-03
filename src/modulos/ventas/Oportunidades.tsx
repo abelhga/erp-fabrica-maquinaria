@@ -71,9 +71,10 @@ export default function Oportunidades() {
     setArrastrando(null);
     if (!o || o.etapa === etapa) return;
     if (etapa === "perdida") { setPerder(o); return; }
-    // Se mueve al instante en pantalla; si la base no lo acepta, regresa solo al recargar.
+    // Se mueve al instante en pantalla; si la base no lo acepta (no es tuya, la
+    // cartera es de otro), se vuelve a leer y la tarjeta regresa a su columna.
     qc.setQueryData<VOportunidad[]>(["v_oportunidades"], (v) => v?.map((x) => (x.id === o.id ? { ...x, etapa, dias_en_etapa: 0 } : x)));
-    mover.mutate({ id: o.id, etapa });
+    mover.mutate({ id: o.id, etapa }, { onError: () => qc.invalidateQueries({ queryKey: ["v_oportunidades"] }) });
   }
 
   const hoy = hoyMx();
@@ -164,7 +165,8 @@ export default function Oportunidades() {
       ) : (
         <div className="-mx-4 lg:mx-0 px-4 lg:px-0 overflow-x-auto pb-2 snap-x">
           {/* Cuatro etapas abiertas y una columna de cierre (ganada arriba, perdida abajo): cabe en una laptop sin desplazarse. */}
-          <div className="grid grid-cols-[repeat(5,minmax(240px,1fr))] lg:grid-cols-5 gap-3 min-w-max lg:min-w-0">
+          {/* En el celular cada columna mide casi la pantalla y se desliza de una en una. */}
+          <div className="grid grid-cols-[repeat(5,82vw)] sm:grid-cols-[repeat(5,minmax(240px,1fr))] lg:grid-cols-5 gap-3 min-w-max lg:min-w-0">
             {ETAPAS.slice(0, 4).map((et) => columna(et, false))}
             <div className="flex flex-col gap-3 max-h-[calc(100vh-220px)] min-h-[300px]">
               {ETAPAS.slice(4).map((et) => columna(et, true))}

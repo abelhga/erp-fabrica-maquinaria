@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
@@ -74,7 +75,7 @@ export interface VCotizacion {
   cliente: string | null; atencion: string | null; empresa: string | null; vendedor_id: string; vendedor: string; iniciales: string | null;
   moneda: Moneda; tipo_cambio: number; subtotal: number; total: number; neto_mxn: number; requiere_autorizacion: boolean;
   autorizacion_pedida_en: string | null; nota_autorizacion: string | null; enviada_en: string | null; vencida: boolean;
-  partidas: number; partidas_bajo_minimo: number; primera_partida: string | null; pedido_id: string | null; oportunidad_id: string | null;
+  partidas: number; partidas_bajo_minimo: number; descuento_vs_lista: number | null; primera_partida: string | null; pedido_id: string | null; oportunidad_id: string | null;
   motivo_rechazo: string | null; creado_en: string; actualizado_en: string;
 }
 export interface VOportunidad {
@@ -239,4 +240,16 @@ export function useFuentes() {
     queryKey: ["fuentes_contacto"], staleTime: 30 * 60_000,
     queryFn: () => q<{ id: number; nombre: string }[]>(supabase.from("fuentes_contacto").select("id, nombre").eq("activa", true).order("id")),
   });
+}
+
+/** ¿La ventana mide al menos `px` de ancho? Para cambiar de tabla a tarjetas en el celular. */
+export function useAncho(px: number) {
+  const [si, setSi] = useState(() => typeof window !== "undefined" && window.matchMedia(`(min-width: ${px}px)`).matches);
+  useEffect(() => {
+    const m = window.matchMedia(`(min-width: ${px}px)`);
+    const f = () => setSi(m.matches);
+    m.addEventListener("change", f);
+    return () => m.removeEventListener("change", f);
+  }, [px]);
+  return si;
 }

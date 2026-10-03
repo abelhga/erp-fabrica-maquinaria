@@ -79,7 +79,7 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
       {l.bajo_minimo && !sucias.has(l.id) && <Insignia tono="peligro" punto>Bajo el mínimo</Insignia>}
       {l.opcional && <Insignia tono="info">Opcional · no suma</Insignia>}
       {!l.articulo_id && <Insignia>Partida libre</Insignia>}
-      {l.articulo_id && l.precio_lista != null && Number(l.precio_lista) === 0 && <Insignia tono="aviso">Sin precio de lista</Insignia>}
+      {l.articulo_id && !Number(l.precio_lista) && <Insignia tono="aviso">Sin precio de lista: escribe el precio</Insignia>}
     </>
   );
 

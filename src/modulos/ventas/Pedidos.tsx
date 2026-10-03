@@ -16,7 +16,7 @@ import { dinero, fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { Barra } from "./componentes/campos";
 import { DialogoCliente, ElegirCliente } from "./componentes/dialogos";
-import { CANAL, ESTADO_PEDIDO, dineroEn, todas, type Canal, type VPedido } from "./comun";
+import { CANAL, ESTADO_PEDIDO, dineroEn, todas, useAncho, type Canal, type VPedido } from "./comun";
 
 type Vista = "abiertos" | "entregados" | "cancelados" | "todos";
 const ABIERTOS = ["confirmado", "en_produccion", "listo"];
@@ -33,6 +33,8 @@ export default function Pedidos() {
   const [canal, setCanal] = useState<"todos" | Canal>("todos");
   const [historicos, setHistoricos] = useState(false);
   const [alta, setAlta] = useState(false);
+  // En el celular: pedido (con fecha y estado) y cliente (con total y saldo), sin desplazarse de lado.
+  const angosta = !useAncho(640);
 
   const lista = useQuery({
     queryKey: ["v_pedidos"],
@@ -51,11 +53,18 @@ export default function Pedidos() {
         <div className="whitespace-nowrap">
           <p className="font-medium cifra">{p.folio}</p>
           <p className="text-[11px] text-tenue">{p.id_externo ? `#${p.id_externo}` : p.cotizacion_folio ?? (p.historico ? "histórico" : "")}</p>
+          {angosta && (
+            <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-tenue">
+              {fecha(p.fecha)}
+              <Insignia tono={ESTADO_PEDIDO[p.estado].tono}>{ESTADO_PEDIDO[p.estado].texto}</Insignia>
+              {p.atrasado && <Insignia tono="peligro">atrasado</Insignia>}
+            </div>
+          )}
         </div>
       ),
     },
     {
-      clave: "fecha", titulo: "Fecha / entrega", valor: (p) => p.fecha,
+      clave: "fecha", titulo: "Fecha / entrega", oculta: angosta, valor: (p) => p.fecha,
       celda: (p) => (
         <div className="whitespace-nowrap">
           <p>{fecha(p.fecha)}</p>
@@ -68,15 +77,20 @@ export default function Pedidos() {
     {
       clave: "cliente", titulo: "Cliente", valor: (p) => `${p.cliente} ${CANAL[p.canal]}`,
       celda: (p) => (
-        <div className="max-w-[260px]">
+        <div className={angosta ? "w-[150px]" : "max-w-[260px]"}>
           <p className="truncate">{p.cliente}</p>
+          {angosta && (
+            <p className="text-sm font-medium cifra">{dineroEn(Number(p.total), p.moneda)}
+              {!p.historico && Number(p.saldo) > 0.5 && <span className="block text-[11px] font-normal text-aviso">saldo {dineroEn(Number(p.saldo), p.moneda)}</span>}
+            </p>
+          )}
           {p.canal !== "directo" && <Insignia className="mt-0.5" tono={p.canal === "mercadolibre" ? "aviso" : p.canal === "sitio_web" ? "info" : "neutro"}>{CANAL[p.canal]}</Insignia>}
         </div>
       ),
     },
-    { clave: "vendedor", titulo: "Vendedor", valor: (p) => p.vendedor, oculta: !puede("ventas", 3) && !puede("finanzas", 1) && !puede("produccion", 2) },
+    { clave: "vendedor", titulo: "Vendedor", valor: (p) => p.vendedor, oculta: angosta || (!puede("ventas", 3) && !puede("finanzas", 1) && !puede("produccion", 2)) },
     {
-      clave: "estado", titulo: "Estado", valor: (p) => ESTADO_PEDIDO[p.estado].texto,
+      clave: "estado", titulo: "Estado", oculta: angosta, valor: (p) => ESTADO_PEDIDO[p.estado].texto,
       celda: (p) => (
         <div className="flex flex-wrap gap-1">
           <Insignia tono={ESTADO_PEDIDO[p.estado].tono} punto>{ESTADO_PEDIDO[p.estado].texto}</Insignia>
@@ -85,7 +99,7 @@ export default function Pedidos() {
       ),
     },
     {
-      clave: "avance", titulo: "Producción", valor: (p) => p.avance ?? -1, sinBusqueda: true,
+      clave: "avance", titulo: "Producción", oculta: angosta, valor: (p) => p.avance ?? -1, sinBusqueda: true,
       celda: (p) => p.ordenes ? (
         <div className="w-28">
           <Barra valor={p.avance} tono={p.avance === 100 ? "ok" : "marca"} />
@@ -93,9 +107,9 @@ export default function Pedidos() {
         </div>
       ) : <span className="text-tenue text-xs">—</span>,
     },
-    { clave: "total", titulo: "Total", alinear: "der", sinBusqueda: true, valor: (p) => Number(p.total), celda: (p) => <span className="font-medium whitespace-nowrap">{dineroEn(Number(p.total), p.moneda)}</span> },
+    { clave: "total", titulo: "Total", oculta: angosta, alinear: "der", sinBusqueda: true, valor: (p) => Number(p.total), celda: (p) => <span className="font-medium whitespace-nowrap">{dineroEn(Number(p.total), p.moneda)}</span> },
     {
-      clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, valor: (p) => Number(p.saldo),
+      clave: "saldo", titulo: "Saldo", oculta: angosta, alinear: "der", sinBusqueda: true, valor: (p) => Number(p.saldo),
       celda: (p) => p.historico ? <span className="text-tenue text-xs">histórico</span> : (
         <div className="whitespace-nowrap">
           {Number(p.saldo) > 0.5 ? <p className="font-medium text-aviso">{dineroEn(Number(p.saldo), p.moneda)}</p> : <p className="text-ok text-xs font-medium">pagado</p>}

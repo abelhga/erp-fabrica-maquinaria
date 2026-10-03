@@ -57,6 +57,7 @@ export default function Comisiones() {
   const planes = useQuery({ queryKey: ["planes_comision"], staleTime: 10 * 60_000, queryFn: () => q<Plan[]>(supabase.from("planes_comision").select("id, nombre, pct_maquinaria, otros_como_maquinaria, base").eq("activo", true).order("id")) });
   const escalones = useQuery({ queryKey: ["plan_escalones"], staleTime: 10 * 60_000, queryFn: () => q<Escalon[]>(supabase.from("plan_escalones").select("*").order("desde")) });
   const ajustes = useQuery({ queryKey: ["comision_ajustes", mes], queryFn: () => q<Ajuste[]>(supabase.from("comision_ajustes").select("id, vendedor_id, concepto, monto").eq("mes", mes).order("creado_en")) });
+  const pagos = useQuery({ queryKey: ["comision_pagos", mes], queryFn: () => q<{ vendedor_id: string; total: number; referencia: string | null }[]>(supabase.from("comision_pagos").select("vendedor_id, total, referencia").eq("mes", mes)) });
   const [ajustar, setAjustar] = useState<FilaComision | null>(null);
   const [pagar, setPagar] = useState<FilaComision | null>(null);
 
@@ -93,6 +94,9 @@ export default function Comisiones() {
             const refSig = refs.find((e) => Number(e.desde) > Number(f.venta_refacciones));
             const refPiso = [...refs].reverse().find((e) => Number(e.desde) <= Number(f.venta_refacciones))?.desde ?? 0;
             const misAjustes = (ajustes.data ?? []).filter((a) => a.vendedor_id === f.vendedor_id);
+            // Pagada con un total y hoy el cálculo da otro: alguien movió un pedido después del pago.
+            const pago = f.pagado_en ? pagos.data?.find((x) => x.vendedor_id === f.vendedor_id) : undefined;
+            const difiere = !!pago && Math.abs(Number(pago.total) - Number(f.total)) > 0.5;
             return (
               <Tarjeta key={f.vendedor_id} className="flex flex-col">
                 <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-3 border-b border-borde">
@@ -152,10 +156,16 @@ export default function Comisiones() {
                   </section>
                   <DetallePedidos vendedorId={f.vendedor_id} mes={mes} />
                 </div>
+                {difiere && (
+                  <p className="mx-5 mb-3 rounded-lg bg-aviso-suave px-3 py-2 text-xs">
+                    Se pagaron <b className="cifra">{dinero(pago!.total)}</b>{pago!.referencia ? ` (${pago!.referencia})` : ""}; con los pedidos de hoy el cálculo
+                    da <b className="cifra">{dinero(f.total)}</b>. La diferencia va como ajuste del mes siguiente.
+                  </p>
+                )}
                 <div className="px-5 py-3 border-t border-borde bg-fondo/50 rounded-b-xl flex items-center justify-between">
-                  <span className="text-sm font-medium">Total a pagar</span>
+                  <span className="text-sm font-medium">{f.pagado_en ? "Total pagado" : "Total a pagar"}</span>
                   <span className="flex items-center gap-3">
-                    <span className="text-lg font-semibold cifra">{dinero(f.total)}</span>
+                    <span className="text-lg font-semibold cifra">{dinero(pago ? pago.total : f.total)}</span>
                     {puedePagar && !f.pagado_en && <Boton tamano="sm" variante="exito" onClick={() => setPagar(f)}>Marcar pagada</Boton>}
                   </span>
                 </div>
@@ -268,9 +278,11 @@ function DialogoAjuste({ f, mes, alCerrar }: { f: FilaComision | null; mes: stri
 function DialogoPago({ f, mes, alCerrar }: { f: FilaComision | null; mes: string; alCerrar: () => void }) {
   const [ref, setRef] = useState("");
   const [cuando, setCuando] = useState(hoyMx());
+  // La base calcula el total y guarda la foto del desglose al momento del pago
+  // (no lo que traiga el navegador) y no deja pagar dos veces el mismo mes.
   const guardar = useAccion(
-    () => q(supabase.from("comision_pagos").upsert({ vendedor_id: f!.vendedor_id, mes, total: f!.total, detalle: f, pagado_en: cuando, referencia: ref.trim() || null })),
-    { exito: "Comisión marcada como pagada", invalidar: [["comisiones_mes", mes]], alTerminar: () => { setRef(""); alCerrar(); } },
+    () => q<number>(supabase.rpc("pagar_comision", { p_vendedor: f!.vendedor_id, p_mes: mes, p_pagado_en: cuando, p_referencia: ref })),
+    { exito: (t) => `Comisión de ${dinero(t)} marcada como pagada`, invalidar: [["comisiones_mes", mes], ["comision_pagos", mes]], alTerminar: () => { setRef(""); alCerrar(); } },
   );
   return (
     <Dialogo abierto={!!f} alCambiar={(v) => !v && alCerrar()} titulo={`Pagar comisión de ${f?.vendedor ?? ""}`}

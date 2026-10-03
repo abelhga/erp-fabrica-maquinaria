@@ -49,7 +49,10 @@ export default function Clientes() {
     return [...m].sort((a, b) => a[1].localeCompare(b[1]));
   }, [lista.data]);
   const ultima = (c: VCliente) => {
-    const k = porId.get(c.id)?.ultima_venta ?? null;
+    // La fecha de la cartera la calcula la base para todos (es la que da la vigencia),
+    // pero lo que compró el cliente de otro vendedor no se enseña aquí.
+    const propio = esGerente || puede("finanzas", 1) || !c.vendedor_id || c.vendedor_id === perfil?.id;
+    const k = propio ? porId.get(c.id)?.ultima_venta ?? null : null;
     return [c.ultima_compra, k].filter(Boolean).sort().pop() ?? null;
   };
 

@@ -59,7 +59,6 @@ export default function DetallePedido() {
   });
   const p = ped.data;
   const cliente = useQuery({ queryKey: ["cliente", p?.cliente_id], enabled: !!p?.cliente_id, queryFn: () => q<{ nombre: string }>(supabase.from("clientes").select("nombre").eq("id", p!.cliente_id).single()) });
-  const cot = useQuery({ queryKey: ["cotizacion_folio", p?.cotizacion_id], enabled: !!p?.cotizacion_id, queryFn: () => q<{ folio: string }>(supabase.from("cotizaciones").select("folio").eq("id", p!.cotizacion_id!).single()) });
   const vendedor = useQuery({ queryKey: ["perfil", p?.vendedor_id], enabled: !!p?.vendedor_id, queryFn: () => q<{ nombre: string; telefono: string | null; iniciales: string | null }>(supabase.from("perfiles").select("nombre, telefono, iniciales").eq("id", p!.vendedor_id!).single()) });
 
   const inv = [["pedido", id], ["v_pedidos"], ["pedido_lineas", id], ["indicadores"]];
@@ -80,6 +79,9 @@ export default function DetallePedido() {
   const mio = p.vendedor_id === perfil?.id;
   const puedeCambiar = (mio && puede("ventas", 2)) || esGerente || puede("produccion", 2) || puede("finanzas", 2);
   const editablePartidas = !p.historico && p.estado === "confirmado" && ((mio && puede("ventas", 2)) || esGerente);
+  // El precio que salió de una cotización ya pasó por la autorización: solo la
+  // gerencia lo mueve (la base lo exige, trg_pedido_linea_reglas).
+  const editablePrecio = editablePartidas && (!p.cotizacion_id || esGerente);
   const abierto = !["entregado", "cancelado"].includes(p.estado);
   const r = resumen.data;
   const avance = ordenes.data?.length ? Math.round((ordenes.data ?? []).filter((o) => o.estado !== "cancelada")
@@ -105,7 +107,10 @@ export default function DetallePedido() {
       descripcion={<span>
         <Link to={`/ventas/clientes/${p.cliente_id}`} className="text-marca-texto hover:underline">{cliente.data?.nombre ?? "…"}</Link>
         {" · "}{CANAL[p.canal]}{p.id_externo ? ` #${p.id_externo}` : ""}
-        {p.cotizacion_id && <> · de <Link to={`/ventas/cotizaciones/${p.cotizacion_id}`} className="text-marca-texto hover:underline">{cot.data?.folio ?? "cotización"}</Link></>}
+        {/* El folio llega de v_pedidos, que lo trae solo si la RLS deja ver la cotización (finanzas y producción no la ven). */}
+        {p.cotizacion_id && (r?.cotizacion_folio
+          ? <> · de <Link to={`/ventas/cotizaciones/${p.cotizacion_id}`} className="text-marca-texto hover:underline">{r.cotizacion_folio}</Link></>
+          : <> · de cotización</>)}
         {vendedor.data && <> · {vendedor.data.nombre}</>}
       </span>}
       acciones={!p.historico && <>
@@ -170,7 +175,7 @@ export default function DetallePedido() {
                         {Number(l.cantidad_entregada) > 0 && <span className="block text-[11px] text-ok">{numero(Number(l.cantidad_entregada))} entregado</span>}
                       </td>
                       <td className="text-right cifra w-32">
-                        {editablePartidas ? <NumeroAlSalir valor={Number(l.precio_unitario)} min={0}
+                        {editablePrecio ? <NumeroAlSalir valor={Number(l.precio_unitario)} min={0}
                           alGuardar={(n) => editarLinea.mutate({ id: l.id, cambios: { precio_unitario: n } })} /> : dineroEn(Number(l.precio_unitario), p.moneda)}
                       </td>
                       {conDescuento && <td className="text-right cifra">{Number(l.descuento_pct) ? porcentaje(Number(l.descuento_pct), 1) : "—"}</td>}
@@ -182,7 +187,12 @@ export default function DetallePedido() {
                 </tbody>
               </table>
             </div>
-            {editablePartidas && <p className="px-4 py-2 text-xs text-tenue border-t border-borde">Cantidad y precio se guardan al salir del campo (Enter o Tab). Precios sin IVA.</p>}
+            {editablePartidas && (
+              <p className="px-4 py-2 text-xs text-tenue border-t border-borde">
+                {editablePrecio ? "Cantidad y precio se guardan al salir del campo (Enter o Tab). Precios sin IVA."
+                  : "La cantidad se guarda al salir del campo. Los precios son los de la cotización: para cambiarlos, saca una nueva versión o pídeselo a la gerencia."}
+              </p>
+            )}
             <div className="flex justify-end px-5 py-4 border-t border-borde">
               <dl className="w-72 text-sm space-y-1">
                 <div className="flex justify-between"><dt className="text-tenue">Subtotal</dt><dd className="cifra">{dineroEn(Number(p.subtotal), p.moneda)}</dd></div>
@@ -365,14 +375,12 @@ function DialogoCredito({ abierto, alCambiar, pedidoId, vendedorId, actual }: {
   const [filas, setFilas] = useState<{ vendedor_id: string; porcentaje: number }[]>([]);
   useEffect(() => { if (abierto) setFilas(actual.length ? actual : vendedorId ? [{ vendedor_id: vendedorId, porcentaje: 100 }] : []); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [abierto]);
   const suma = filas.reduce((s, x) => s + x.porcentaje, 0);
-  const guardar = useAccion(async () => {
-    await q(supabase.from("pedido_vendedores").delete().eq("pedido_id", pedidoId));
-    const validas = filas.filter((x) => x.vendedor_id && x.porcentaje > 0);
-    // Una sola fila al 100 % es lo mismo que no compartir: se deja vacío.
-    if (!(validas.length === 1 && validas[0].vendedor_id === vendedorId)) {
-      await q(supabase.from("pedido_vendedores").insert(validas.map((x) => ({ ...x, pedido_id: pedidoId }))));
-    }
-  }, { exito: "Crédito actualizado", invalidar: [["pedido_vendedores", pedidoId], ["v_pedidos"]], alTerminar: () => alCambiar(false) });
+  // Todo en una llamada: la base revisa que sume 100 % y reescribe el reparto de
+  // un jalón (antes eran dos peticiones y una falla dejaba el pedido sin reparto).
+  const guardar = useAccion(
+    () => q(supabase.rpc("compartir_credito", { p_pedido: pedidoId, p_reparto: filas.filter((x) => x.vendedor_id && x.porcentaje > 0) })),
+    { exito: "Crédito actualizado", invalidar: [["pedido_vendedores", pedidoId], ["v_pedidos"]], alTerminar: () => alCambiar(false) },
+  );
   return (
     <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="Compartir crédito de la venta" descripcion="Cada vendedor cobra comisión sobre su porcentaje."
       pie={<><Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton><Boton onClick={() => guardar.mutate(undefined)} cargando={guardar.isPending} disabled={Math.abs(suma - 100) > 0.01}>Guardar ({numero(suma)}%)</Boton></>}>

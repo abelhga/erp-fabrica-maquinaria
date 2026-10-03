@@ -18,6 +18,13 @@
 --  4. comisiones_mes() devolvía total = 0 siempre ("se completa abajo").
 --  5. nueva_version_cotizacion() le cambiaba el dueño a la cotización cuando la
 --     versión la sacaba la gerente.
+--  6. El crédito compartido de un pedido podía sumar 70 % o 130 % (y la
+--     comisión con él), y la pantalla lo reescribía en dos pasos sueltos.
+--  7. "Marcar pagada" guardaba como foto del cálculo lo que mandaba el navegador.
+--
+-- Corre después de las demás (082) porque redeclara funciones de 003 y 007 y
+-- usa pedidos.historico (060). Las columnas de la autorización van aparte en
+-- 020, porque los avisos de 071 ya las necesitan.
 --
 -- Y lo nuevo que piden las pantallas: alta de cotización con las condiciones
 -- por defecto, agregar partida con el precio ya en la moneda de la cotización,
@@ -90,15 +97,24 @@ $$;
 -- 2. Autorización de precios bajo el mínimo, sin puertas traseras
 -- ----------------------------------------------------------------------------
 
--- Una partida está bajo el mínimo si su precio efectivo (MXN, sin IVA, con los
--- dos descuentos) queda abajo de lista × (1 − descuento máximo de su política).
+-- Un precio efectivo (MXN, sin IVA, con todos los descuentos) de un artículo
+-- del catálogo está bajo el mínimo si queda abajo de lista × (1 − descuento
+-- máximo de su política). Y en cero (o sin precio de lista y en cero) también:
+-- una pieza del catálogo regalada es un descuento del 100 % y lo autoriza la
+-- gerencia. Las partidas libres (flete, instalación) no tienen mínimo.
+create or replace function public.precio_bajo_minimo(p_articulo uuid, p_precio_mxn numeric, p_lista numeric) returns boolean
+language sql stable as $$
+  select coalesce(p_articulo is not null and (
+    p_precio_mxn <= 0
+    or (p_lista is not null and p_precio_mxn < p_lista * (1 - coalesce(descuento_maximo_de(p_articulo), 0.10)) - 0.005)), false)
+$$;
+
 create or replace function public.partida_bajo_minimo(l public.cotizacion_lineas, c public.cotizaciones) returns boolean
 language sql stable as $$
-  select coalesce(
-    l.articulo_id is not null and l.precio_lista is not null and not l.opcional and
-    (l.precio_unitario * (1 - l.descuento_pct) * (1 - c.descuento_pct) * c.tipo_cambio
-       / case when c.precios_con_iva then 1 + c.tasa_iva else 1 end)
-    < l.precio_lista * (1 - coalesce(descuento_maximo_de(l.articulo_id), 0.10)) - 0.005, false)
+  select not l.opcional and precio_bajo_minimo(l.articulo_id,
+    l.precio_unitario * (1 - l.descuento_pct) * (1 - c.descuento_pct) * c.tipo_cambio
+      / case when c.precios_con_iva then 1 + c.tasa_iva else 1 end,
+    l.precio_lista)
 $$;
 
 -- Se calcula contra los precios de verdad: la bandera guardada (bajo_minimo,
@@ -498,12 +514,56 @@ begin
   update pedidos set estado = 'entregado' where id = p_id;
 end $$;
 
+-- Partidas del pedido: lo que se autorizó en la cotización no se deshace por
+-- la puerta de atrás. La política deja al vendedor editar las partidas de su
+-- pedido confirmado (para ajustar cantidades o capturar uno de Mercado Libre),
+-- y con eso podía bajar el precio autorizado después de convertir o pasar una
+-- refacción a "maquinaria" para cobrar más comisión. Solo aplica a lo que llega
+-- directo de la pantalla (rol authenticated) de quien no es gerencia; las
+-- funciones de la base (convertir_a_pedido, que ya revisó la autorización) y
+-- los scripts de importación escriben como su dueño.
+create or replace function public.trg_pedido_linea_reglas() returns trigger
+language plpgsql as $$
+declare p pedidos; v_lista numeric;
+begin
+  if current_user <> 'authenticated' or puede('ventas', 3) then return new; end if;
+  -- La línea decide la comisión: la pone el catálogo, no quien captura.
+  if tg_op = 'INSERT' then
+    new.linea := linea_de(new.articulo_id);
+  elsif new.linea is distinct from old.linea or new.articulo_id is distinct from old.articulo_id then
+    raise exception 'La línea de comisión (maquinaria, refacciones, otros) la pone el catálogo; si está mal, que la cambie la gerencia'
+      using errcode = '42501';
+  end if;
+  if tg_op = 'UPDATE' and (new.precio_unitario, new.descuento_pct) is not distinct from (old.precio_unitario, old.descuento_pct) then
+    return new;
+  end if;
+  select * into p from pedidos where id = new.pedido_id;
+  if tg_op = 'UPDATE' and p.cotizacion_id is not null then
+    raise exception 'El precio viene de la cotización %: para cambiarlo saca una nueva versión o pídeselo a la gerencia',
+      (select folio from cotizaciones where id = p.cotizacion_id) using errcode = '42501';
+  end if;
+  select precio into v_lista from precios_lista where articulo_id = new.articulo_id;
+  if precio_bajo_minimo(new.articulo_id, new.precio_unitario * (1 - new.descuento_pct) * coalesce(p.tipo_cambio, 1), v_lista) then
+    if new.precio_unitario * (1 - new.descuento_pct) <= 0 then
+      raise exception '"%" va en $0: escríbele su precio (regalar una pieza lo autoriza la gerencia)', new.titulo using errcode = '42501';
+    end if;
+    raise exception '"%" queda abajo del precio mínimo: ese precio lo captura la gerencia', new.titulo using errcode = '42501';
+  end if;
+  return new;
+end $$;
+drop trigger if exists reglas_partida on public.pedido_lineas;
+create trigger reglas_partida before insert or update on public.pedido_lineas
+  for each row execute function public.trg_pedido_linea_reglas();
+
 -- Pedidos sin cotización (Mercado Libre, sitio web, mostrador): partida con el
 -- precio de lista en la moneda del pedido y su línea de comisión.
 create or replace function public.agregar_partida_pedido(p_pedido uuid, p_articulo uuid, p_cantidad numeric default 1)
 returns public.pedido_lineas language plpgsql security invoker as $$
 declare r pedido_lineas;
 begin
+  if not exists (select 1 from precios_lista where articulo_id = p_articulo and precio > 0) then
+    raise exception 'Ese artículo todavía no tiene precio de lista: cotízalo (ahí sí se escribe el precio) y convierte la cotización en pedido';
+  end if;
   insert into pedido_lineas (pedido_id, orden, articulo_id, titulo, descripcion, unidad, cantidad, precio_unitario, linea)
   select p.id, coalesce((select max(orden) from pedido_lineas where pedido_id = p.id), 0) + 1, a.id, a.nombre, a.descripcion, a.unidad,
     coalesce(p_cantidad, 1), round(coalesce(pl.precio, 0) / p.tipo_cambio, 2), linea_de(a.id)
@@ -583,6 +643,72 @@ language sql stable as $$
   select round(p_total / (1 - pm.tasa) / pm.meses, 2) from planes_meses pm where pm.meses = p_meses
 $$;
 
+-- Crédito compartido ("* Pinto, Isaac, Susy" en la hoja): si el reparto no
+-- suma 100 %, comisiones_mes paga de más o de menos sin que nadie lo note. La
+-- revisión es diferida (al terminar la transacción) para poder borrar y volver
+-- a capturar el reparto, o insertarlo renglón por renglón.
+create or replace function public.trg_credito_completo() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare v_pedido uuid := case when tg_op = 'DELETE' then old.pedido_id else new.pedido_id end; v_suma numeric;
+begin
+  select sum(porcentaje) into v_suma from pedido_vendedores where pedido_id = v_pedido;
+  -- 3 × 33.33 = 99.99: se tolera el redondeo de repartos en partes iguales.
+  if v_suma is not null and abs(v_suma - 100) > 0.05 then
+    raise exception 'El crédito de la venta tiene que sumar 100 %% entre los vendedores (suma %)', v_suma using errcode = '23514';
+  end if;
+  return null;
+end $$;
+drop trigger if exists credito_completo on public.pedido_vendedores;
+create constraint trigger credito_completo after insert or update or delete on public.pedido_vendedores
+  deferrable initially deferred for each row execute function public.trg_credito_completo();
+
+-- La pantalla mandaba "borra todo" y luego "inserta": dos peticiones, y si la
+-- segunda fallaba el pedido se quedaba sin reparto. Aquí va todo junto.
+-- security invoker: la RLS de pedido_vendedores ya dice que solo la gerencia.
+create or replace function public.compartir_credito(p_pedido uuid, p_reparto jsonb) returns void
+language plpgsql security invoker as $$
+declare v_vendedor uuid; v_n int; v_distintos int; v_suma numeric;
+begin
+  if not puede('ventas', 3) then raise exception 'Solo la gerencia de ventas reparte el crédito de una venta' using errcode = '42501'; end if;
+  select vendedor_id into v_vendedor from pedidos where id = p_pedido;
+  if not found then raise exception 'No existe el pedido'; end if;
+  select count(*), count(distinct x->>'vendedor_id'), coalesce(sum((x->>'porcentaje')::numeric), 0)
+  into v_n, v_distintos, v_suma
+  from jsonb_array_elements(coalesce(p_reparto, '[]'::jsonb)) x where coalesce((x->>'porcentaje')::numeric, 0) > 0;
+  if v_n <> v_distintos then raise exception 'Un vendedor aparece dos veces en el reparto'; end if;
+  if v_n > 0 and abs(v_suma - 100) > 0.05 then raise exception 'El reparto tiene que sumar 100 %% (suma %)', v_suma; end if;
+
+  delete from pedido_vendedores where pedido_id = p_pedido;
+  -- Un solo vendedor al 100 % que además es el del pedido es lo mismo que no compartir.
+  if v_n > 1 or (v_n = 1 and (select (x->>'vendedor_id')::uuid from jsonb_array_elements(p_reparto) x
+                               where coalesce((x->>'porcentaje')::numeric, 0) > 0) is distinct from v_vendedor) then
+    insert into pedido_vendedores (pedido_id, vendedor_id, porcentaje)
+    select p_pedido, (x->>'vendedor_id')::uuid, (x->>'porcentaje')::numeric
+    from jsonb_array_elements(p_reparto) x where coalesce((x->>'porcentaje')::numeric, 0) > 0;
+  end if;
+end $$;
+
+-- Marcar pagada guardaba el total y el "detalle" que mandaba la pantalla: lo
+-- que finanzas tuviera en su navegador (o lo que alguien escribiera). La foto
+-- del cálculo la toma la base al momento del pago, y una comisión pagada no
+-- se vuelve a pagar encima.
+create or replace function public.pagar_comision(p_vendedor uuid, p_mes date, p_pagado_en date default null, p_referencia text default null)
+returns numeric language plpgsql security invoker as $$
+declare r record; v_mes date := date_trunc('month', p_mes)::date;
+begin
+  if not puede('finanzas', 2) then raise exception 'Solo finanzas marca las comisiones como pagadas' using errcode = '42501'; end if;
+  if exists (select 1 from comision_pagos where vendedor_id = p_vendedor and mes = v_mes and pagado_en is not null) then
+    raise exception 'Esa comisión ya está marcada como pagada';
+  end if;
+  select * into r from comisiones_mes(v_mes) c where c.vendedor_id = p_vendedor;
+  if r.vendedor_id is null then raise exception 'Ese vendedor no tiene plan de comisión'; end if;
+  insert into comision_pagos (vendedor_id, mes, total, detalle, pagado_en, referencia)
+  values (p_vendedor, v_mes, r.total, to_jsonb(r), coalesce(p_pagado_en, hoy_mx()), nullif(trim(p_referencia), ''))
+  on conflict (vendedor_id, mes) do update set total = excluded.total, detalle = excluded.detalle, pagado_en = excluded.pagado_en,
+    referencia = excluded.referencia, registrado_por = auth.uid();
+  return r.total;
+end $$;
+
 -- ----------------------------------------------------------------------------
 -- 8. Vistas para las listas (security_invoker: la RLS de cada tabla decide)
 -- ----------------------------------------------------------------------------
@@ -608,6 +734,14 @@ select c.id, c.folio, c.version, c.origen_id, c.fecha, c.vigencia_dias, c.fecha 
   (c.estado in ('borrador', 'por_autorizar', 'autorizada', 'enviada') and c.fecha + c.vigencia_dias < hoy_mx()) as vencida,
   (select count(*) from public.cotizacion_lineas l where l.cotizacion_id = c.id) as partidas,
   (select count(*) from public.cotizacion_lineas l where l.cotizacion_id = c.id and l.bajo_minimo) as partidas_bajo_minimo,
+  -- Cuánto abajo de lista va lo que se cotizó del catálogo (con los dos
+  -- descuentos, en pesos y sin IVA): la gerente decide con esto sin abrir cada
+  -- partida. Es contra el precio de lista, que el vendedor ya ve; nada de costos.
+  (select round(1 - sum(l.cantidad * l.precio_unitario * (1 - l.descuento_pct)) * (1 - c.descuento_pct) * c.tipo_cambio
+                    / case when c.precios_con_iva then 1 + c.tasa_iva else 1 end
+                    / nullif(sum(l.cantidad * l.precio_lista), 0), 4)
+   from public.cotizacion_lineas l
+   where l.cotizacion_id = c.id and not l.opcional and l.articulo_id is not null and l.precio_lista > 0) as descuento_vs_lista,
   (select l.titulo from public.cotizacion_lineas l where l.cotizacion_id = c.id and not l.opcional order by l.orden limit 1) as primera_partida,
   (select p.id from public.pedidos p where p.cotizacion_id = c.id and p.estado <> 'cancelado' limit 1) as pedido_id,
   c.creado_en, c.actualizado_en
@@ -616,17 +750,13 @@ left join public.clientes cl on cl.id = c.cliente_id
 left join public.perfiles pf on pf.id = c.vendedor_id;
 
 -- Los pedidos "históricos" de los paneles (importación, 060) cuentan para el
--- historial y las comisiones pero no son cuentas por cobrar: saldo 0. La
--- columna llega en una migración posterior a esta, por eso se lee con to_jsonb
--- (si todavía no existe, todos son del ERP).
+-- historial y las comisiones pero no son cuentas por cobrar: saldo 0.
 create or replace view public.v_pedidos with (security_invoker = true) as
-select p.id, p.folio, p.fecha, p.fecha_compromiso, p.estado, p.canal, p.id_externo,
-  coalesce((to_jsonb(p) ->> 'historico')::boolean, false) as historico,
+select p.id, p.folio, p.fecha, p.fecha_compromiso, p.estado, p.canal, p.id_externo, p.historico,
   p.cliente_id, cl.nombre as cliente, p.vendedor_id, pf.nombre as vendedor,
   p.cotizacion_id, ct.folio as cotizacion_folio, p.moneda, p.tipo_cambio, p.subtotal, p.iva, p.total,
   coalesce(cb.cobrado, 0) as cobrado,
-  case when p.estado = 'cancelado' or coalesce((to_jsonb(p) ->> 'historico')::boolean, false) then 0
-       else p.total - coalesce(cb.cobrado, 0) end as saldo,
+  case when p.estado = 'cancelado' or p.historico then 0 else p.total - coalesce(cb.cobrado, 0) end as saldo,
   exists (select 1 from public.facturas f where f.pedido_id = p.id) as facturado,
   op.ordenes, op.terminadas, op.avance,
   (p.fecha_compromiso < hoy_mx() and p.estado not in ('entregado', 'cancelado')) as atrasado,
@@ -656,8 +786,7 @@ select c.id, c.nombre, c.razon_social, c.rfc, c.giro, c.ciudad, c.estado, c.pais
   -- Solo de los pedidos que la RLS deja ver: la historia de un cliente ajeno es privada.
   (select max(p.fecha) from public.pedidos p where p.cliente_id = c.id and p.estado <> 'cancelado') as ultima_compra,
   (select coalesce(sum((p.total - coalesce((select sum(cb.monto) from public.cobros cb where cb.pedido_id = p.id), 0)) * p.tipo_cambio), 0)
-   from public.pedidos p where p.cliente_id = c.id and p.estado <> 'cancelado'
-     and not coalesce((to_jsonb(p) ->> 'historico')::boolean, false)) as saldo,
+   from public.pedidos p where p.cliente_id = c.id and p.estado <> 'cancelado' and not p.historico) as saldo,
   (select coalesce(sum(p.subtotal * p.tipo_cambio), 0) from public.pedidos p
    where p.cliente_id = c.id and p.estado <> 'cancelado' and p.fecha >= current_date - 365) as compras_12m,
   (select count(*) from public.cotizaciones q where q.cliente_id = c.id
