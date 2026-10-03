@@ -39,3 +39,7 @@ alter table public.historial_ventas_hoja enable row level security;
 -- Como los contactos: el dueño de la cuenta, la gerencia y finanzas.
 create policy ver on public.historial_ventas_hoja for select to authenticated
   using ((select puede('finanzas', 1)) or (cliente_id is not null and cliente_visible(cliente_id)));
+
+-- Llave de origen única: sin esto, reimportar duplicaba clientes ("on conflict do
+-- nothing" no tenía con qué chocar) y cada venta del libro salía repetida al ligarla.
+create unique index if not exists clientes_legacy_ref on public.clientes (legacy_ref) where legacy_ref is not null;

@@ -118,7 +118,12 @@ async function main() {
   const descripciones = T.descripciones(await fuente("cot_descripciones"));
   const directorio = T.directorioClientes(await fuente("clientes_directorio"));
   const unified = T.clientesUnified(await fuente("clientes_unified"));
-  const { movimientos: libro, descartados: libroDescartados } = T.libroVentas(await fuente("ventas"));
+  // Libro de ventas: 2018-2021 de la base unificada (cortada al 31/12/2021) y 2022→hoy de BASE ACTUAL.
+  // El archivo "Fut BASE DE DATOS UNIFICADA" es un empalme de estas dos: no se usa (duplicaría todo).
+  const libro22 = T.libroVentas(await fuente("ventas"));
+  const libro18 = T.libroVentas(await fuente("ventas_2018_2021"));
+  const libro = [...libro18.movimientos.filter((m) => m.fecha < "2022-01-01"), ...libro22.movimientos.filter((m) => m.fecha >= "2022-01-01")];
+  const libroDescartados = libro18.descartados + libro22.descartados;
   const paneles = await Promise.all(Object.entries(config.vendedores as Record<string, { correo: string; panel: string; nombre: string }>).map(async ([clave, v]) => ({
     clave, ...v, clientes: T.clientesPanel(await fuente(`${v.panel}_clientes`)), ventas: T.ventasPanel(await fuente(`${v.panel}_ventas`)),
   })));
@@ -493,7 +498,7 @@ async function main() {
       insert into clientes (legacy_ref, nombre, rfc, estado, ciudad, pais, vendedor_id, notas)
       select 'CLI:' || x.llave, x.nombre, x.rfc, x.estado, x.ciudad, coalesce(nullif(x.pais, ''), 'México'), x.vendedor::uuid, x.notas
       from jsonb_to_recordset($1) x(llave text, nombre text, rfc text, estado text, ciudad text, pais text, vendedor text, notas text)
-      on conflict do nothing`, [json(filas)]);
+      on conflict (legacy_ref) where legacy_ref is not null do nothing`, [json(filas)]);
     await db.query(`
       update clientes c set rfc = coalesce(c.rfc, x.rfc), estado = coalesce(c.estado, x.estado), ciudad = coalesce(c.ciudad, x.ciudad),
         vendedor_id = coalesce(c.vendedor_id, x.vendedor::uuid)
