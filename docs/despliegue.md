@@ -7,13 +7,29 @@ está creado todavía: requiere decisiones y cuentas del dueño.
 
 1. Crear un proyecto nuevo (región `us-east` o la más cercana disponible). Para un ERP
    conviene el plan **Pro**: respaldos diarios y opción de restaurar a un punto en el tiempo.
-2. Desde el repositorio:
+2. **Database → Extensions**: activar `pg_cron` y `pg_net` **antes** de aplicar las
+   migraciones. Las migraciones son las que programan las tareas automáticas; si la extensión
+   no está, solo dejan un aviso y siguen, y nada queda programado.
+3. Desde el repositorio:
    ```bash
    npx supabase link --project-ref <ref>
    npx supabase db push          # aplica supabase/migrations en orden
    ```
-3. **Database → Extensions**: activar `pg_cron` (la liberación nocturna de clientes vencidos
-   la usa; si no está, la migración solo avisa).
+   Comprobar en el SQL Editor que quedaron las seis tareas
+   (`select jobname, schedule from cron.job order by 1;`). Los horarios están en UTC; la planta
+   está en UTC−6 todo el año:
+
+   | Tarea | Cuándo (planta) | Qué hace |
+   |---|---|---|
+   | `avisos-periodicos` | cada 30 min | Validaciones de más de 4 horas y pendientes vencidos |
+   | `avisos-importaciones` | cada hora | Las alertas del tablero de importaciones, una vez al día mientras sigan vivas |
+   | `avisos-servicio` | 6:47 diario | Genera los preventivos que vencen; recuerda vencidos y herramienta sin regresar |
+   | `avisos-objetivos-nomina` | 8:05 diario | Semana de nómina sin cerrar; del 1 al 3, arma el mes de objetivos |
+   | `liberar-clientes-vencidos` | 2:10 diario | Libera clientes sin venta ni seguimiento (regla de cartera) |
+   | `resumen-semanal` | lunes 6:53 | Aviso "Tu semana" a quien usa el asistente |
+
+   Si `pg_cron` se activó después, vuelve a correr solo los bloques `cron.schedule` de esas
+   migraciones (buscar `cron.schedule` en `supabase/migrations/`).
 4. **Authentication → Providers → Google**:
    - En Google Cloud (con la cuenta de Workspace de Hegamex) crear un cliente OAuth de tipo
      *Aplicación web*. Pantalla de consentimiento **Interna**: así solo cuentas de la empresa
