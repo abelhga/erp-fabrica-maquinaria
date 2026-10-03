@@ -458,25 +458,34 @@ returns table (vendedor_id uuid, vendedor text, plan text, venta_maquinaria nume
                comision numeric, bono_meta numeric, bono_refacciones numeric, ajustes numeric, total numeric,
                siguiente_meta numeric, pagado_en date)
 language sql stable security definer set search_path = public as $$
-  select pf.id, pf.nombre, pc.nombre,
-    round(coalesce(v.maquinaria, 0), 2), round(coalesce(v.refacciones, 0), 2), round(coalesce(v.otros, 0), 2),
-    round((coalesce(v.maquinaria, 0) + case when pc.otros_como_maquinaria then coalesce(v.otros, 0) else 0 end) * pc.pct_maquinaria, 2),
-    coalesce((select bono from plan_escalones e where e.plan_id = pc.id and e.tipo = 'meta_maquinaria'
-              and e.desde <= coalesce(v.maquinaria, 0) + case when pc.otros_como_maquinaria then coalesce(v.otros, 0) else 0 end
-              order by e.desde desc limit 1), 0),
-    coalesce((select bono from plan_escalones e where e.plan_id = pc.id and e.tipo = 'bono_refacciones'
-              and e.desde <= coalesce(v.refacciones, 0) order by e.desde desc limit 1), 0),
-    coalesce((select sum(monto) from comision_ajustes a where a.vendedor_id = pf.id and a.mes = p_mes), 0),
-    0, -- se completa abajo
-    (select min(desde) from plan_escalones e where e.plan_id = pc.id and e.tipo = 'meta_maquinaria'
-       and e.desde > coalesce(v.maquinaria, 0) + case when pc.otros_como_maquinaria then coalesce(v.otros, 0) else 0 end),
-    (select pagado_en from comision_pagos cp where cp.vendedor_id = pf.id and cp.mes = p_mes)
-  from vendedor_plan vp
-  join perfiles pf on pf.id = vp.vendedor_id
-  join planes_comision pc on pc.id = vp.plan_id
-  left join ventas_vendedor_mes(p_mes) v on v.vendedor_id = pf.id
-  -- Cada vendedor ve solo lo suyo; la gerencia, dirección y finanzas ven a todos.
-  where pf.id = auth.uid() or puede('ventas', 3) or puede('finanzas', 1)
+  with base as (
+    select pf.id, pf.nombre, pc.nombre plan, pc.id plan_id, pc.pct_maquinaria, pc.otros_como_maquinaria,
+      round(coalesce(v.maquinaria, 0), 2) maq, round(coalesce(v.refacciones, 0), 2) ref, round(coalesce(v.otros, 0), 2) otros
+    from vendedor_plan vp
+    join perfiles pf on pf.id = vp.vendedor_id
+    join planes_comision pc on pc.id = vp.plan_id
+    left join ventas_vendedor_mes(p_mes) v on v.vendedor_id = pf.id
+    -- Cada vendedor ve solo lo suyo; la gerencia, dirección y finanzas ven a todos.
+    where pf.id = auth.uid() or puede('ventas', 3) or puede('finanzas', 1)
+  ),
+  calc as (
+    select b.*, b.maq + case when b.otros_como_maquinaria then b.otros else 0 end as base_meta,
+      round((b.maq + case when b.otros_como_maquinaria then b.otros else 0 end) * b.pct_maquinaria, 2) as com,
+      coalesce((select bono from plan_escalones e where e.plan_id = b.plan_id and e.tipo = 'bono_refacciones'
+                and e.desde <= b.ref order by e.desde desc limit 1), 0) as bref,
+      coalesce((select sum(monto) from comision_ajustes a where a.vendedor_id = b.id and a.mes = p_mes), 0) as aj
+    from base b
+  )
+  select c.id, c.nombre, c.plan, c.maq, c.ref, c.otros, c.com,
+    coalesce((select bono from plan_escalones e where e.plan_id = c.plan_id and e.tipo = 'meta_maquinaria'
+              and e.desde <= c.base_meta order by e.desde desc limit 1), 0),
+    c.bref, c.aj,
+    -- total = comisión + bono de meta + bono de refacciones + ajustes (antes salía siempre en 0)
+    c.com + coalesce((select bono from plan_escalones e where e.plan_id = c.plan_id and e.tipo = 'meta_maquinaria'
+              and e.desde <= c.base_meta order by e.desde desc limit 1), 0) + c.bref + c.aj,
+    (select min(desde) from plan_escalones e where e.plan_id = c.plan_id and e.tipo = 'meta_maquinaria' and e.desde > c.base_meta),
+    (select pagado_en from comision_pagos cp where cp.vendedor_id = c.id and cp.mes = p_mes)
+  from calc c
 $$;
 
 -- ----------------------------------------------------------------------------

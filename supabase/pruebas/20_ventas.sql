@@ -129,6 +129,7 @@ begin
   assert r.bono_meta = 10000, format('bono meta: esperaba 10,000, salió %s', r.bono_meta);
   assert r.bono_refacciones = 6400, format('bono refacciones: esperaba 6,400, salió %s', r.bono_refacciones);
   assert r.siguiente_meta = 5000000, 'siguiente meta';
+  assert r.total = 73540, format('total de comisión: esperaba 73,540 y salió %s (antes salía siempre 0)', r.total);
 
   -- Crédito compartido 50/50 con Juan: a Isaac le toca la mitad.
   perform pg_temp.como_postgres();
