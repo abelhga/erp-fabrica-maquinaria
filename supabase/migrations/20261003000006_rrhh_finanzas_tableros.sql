@@ -109,7 +109,7 @@ $$;
 -- Indicadores de un vistazo. Cada sección solo se llena si el usuario puede verla.
 create or replace function public.indicadores() returns jsonb
 language plpgsql stable security invoker as $$
-declare r jsonb := '{}'; v_mes date := date_trunc('month', current_date);
+declare r jsonb := '{}'::jsonb; v_mes date := date_trunc('month', current_date);
 begin
   if puede('ventas', 1) then
     r := r || jsonb_build_object('ventas', (

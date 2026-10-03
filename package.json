@@ -12,7 +12,7 @@
     "db:start": "SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io supabase start -x logflare,vector,imgproxy,edge-runtime,studio,mailpit,supavisor",
     "db:reset": "supabase db reset",
     "db:test": "node scripts/probar-bd.mjs",
-    "e2e": "node scripts/e2e.mjs",
+    "e2e": "node scripts/recorrido.mjs",
     "importar": "tsx scripts/importar.ts",
     "usuarios:locales": "node scripts/usuarios-locales.mjs"
   },

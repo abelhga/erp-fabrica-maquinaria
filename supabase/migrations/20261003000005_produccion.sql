@@ -173,7 +173,7 @@ end $$;
 -- Una orden por cada unidad de equipo del pedido (como hoy: una pestaña por equipo).
 create or replace function public.ordenes_desde_pedido(p_pedido uuid) returns int
 language plpgsql security definer set search_path = public as $$
-declare l record; v_n int := 0; i int;
+declare l record; v_n int := 0;
 begin
   for l in select pl.* from pedido_lineas pl join articulos a on a.id = pl.articulo_id
            where pl.pedido_id = p_pedido and a.tipo in ('equipo', 'subensamble')
