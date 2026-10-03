@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, FileText, ShoppingCart, Trophy, Boxes, Layers, Percent, Truck, Tags,
   ClipboardList, Warehouse, ArrowLeftRight, TrendingDown, Factory, ClipboardCheck, Monitor, Tablet,
-  UserRound, CalendarOff, Wallet, Receipt, Settings, ShieldCheck, Download, History, KanbanSquare,
+  UserRound, CalendarOff, LineChart, Wallet, Receipt, Settings, ShieldCheck, Download, History, KanbanSquare,
   type LucideIcon,
 } from "lucide-react";
 import type { Modulo } from "./lib/sesion";
@@ -28,6 +28,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/costeo/equipos", texto: "Equipos y subensambles", icono: Layers, modulo: "costeo" },
       { ruta: "/costeo/componentes", texto: "Componentes", icono: Boxes, modulo: "costeo" },
       { ruta: "/costeo/margenes", texto: "Márgenes y precios", icono: Percent, modulo: "costos", nivel: 2 },
+      { ruta: "/costeo/precios-ventas", texto: "Precios vs ventas", icono: LineChart, modulo: "costos" },
     ],
   },
   {

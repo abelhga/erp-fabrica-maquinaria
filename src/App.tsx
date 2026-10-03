@@ -12,6 +12,7 @@ const Componentes = p(() => import("./modulos/costeo/Componentes"));
 const Equipos = p(() => import("./modulos/costeo/Equipos"));
 const DetalleArticulo = p(() => import("./modulos/costeo/DetalleArticulo"));
 const Margenes = p(() => import("./modulos/costeo/Margenes"));
+const PreciosVentas = p(() => import("./modulos/analisis/PreciosVentas"));
 const Oportunidades = p(() => import("./modulos/ventas/Oportunidades"));
 const Cotizaciones = p(() => import("./modulos/ventas/Cotizaciones"));
 const EditorCotizacion = p(() => import("./modulos/ventas/EditorCotizacion"));
@@ -85,6 +86,7 @@ export function App() {
           <Route path="costeo/equipos" element={<Con m="costeo"><Equipos /></Con>} />
           <Route path="costeo/equipos/:id" element={<Con m="costeo"><DetalleArticulo /></Con>} />
           <Route path="costeo/margenes" element={<Con m="costos" n={2}><Margenes /></Con>} />
+          <Route path="costeo/precios-ventas" element={<Con m="costos"><PreciosVentas /></Con>} />
           <Route path="ventas/oportunidades" element={<Con m="ventas"><Oportunidades /></Con>} />
           <Route path="ventas/cotizaciones" element={<Con m="ventas"><Cotizaciones /></Con>} />
           <Route path="ventas/cotizaciones/:id" element={<Con m="ventas"><EditorCotizacion /></Con>} />

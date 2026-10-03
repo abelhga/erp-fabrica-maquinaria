@@ -532,6 +532,14 @@ async function main() {
     resumen.saldo_arranque = { clientes_con_saldo: Number(rows[0].deudores), por_cobrar: Number(rows[0].por_cobrar) };
   });
 
+  // 14. Costo mensual hacia atrás de cada equipo (para "Precios vs ventas"). Tarda ~1 min.
+  if (!bandera("--sin-historia")) {
+    await paso("Reconstruir costo mensual desde 2019", async () => {
+      const { rows } = await db.query(`select reconstruir_historial_costeo('2019-01-01') n`);
+      resumen.costos_mensuales_reconstruidos = Number(rows[0].n);
+    });
+  }
+
   await db.query(`insert into importaciones (fuente, resumen) values ($1, $2)`,
     [bandera("--google") ? "google" : `archivos:${arg("--dir")}`, json({ ...resumen, avisos })]);
 
