@@ -34,6 +34,10 @@ un movimiento no se edite), va en SQL con su prueba, no en un `if` de React.
   corrige con un ajuste que autoriza otra persona.
 - Funciones nuevas: `security invoker` si solo leen (la RLS filtra sola); `security definer`
   solo si de verdad tienen que saltarse la RLS, y entonces **revisan `puede()` al inicio**.
+- En una política, **nada que se evalúe por renglón**: `(select puede('x', n))`,
+  `(select auth.uid())` y `id in (select mis_…())` (una función que regresa el conjunto). Una
+  función `security definer` por renglón (`pedido_visible(id)`) o `puede()` dentro del `where`
+  de una función de conjunto le costaba 0.5 s a cada consulta de un vendedor (ver `086`).
 
 ## Cómo se prueba aquí
 
@@ -59,6 +63,11 @@ npx tsc --noEmit -p tsconfig.json
 - Docker: si `docker info` falla, arranca el demonio con `dockerd &`.
 - La base local es compartida: **no hagas `db reset` si hay otro trabajo en curso** sobre
   ella; aplica tu migración nueva con `psql "$DB_URL" -f archivo.sql`.
+- Para probar **desde cero** sin borrar la base de nadie, levanta otra instancia con otro
+  `project_id` y puertos 55xxx (receta en el README, "Verificar desde cero"). `probar-bd.mjs`,
+  `vitest`, `importar.ts`, `recorrido.mjs` y `asistente-local.ts` aceptan `DATABASE_URL` /
+  `VITE_SUPABASE_URL` / `APP_URL` del entorno.
+- Para detener tu Vite, mata **su PID**; nunca `pkill vite` (puede haber otros corriendo).
 
 ## Convenciones del frontend
 
