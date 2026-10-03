@@ -59,6 +59,8 @@ const Maquinas = p(() => import("./modulos/servicio/Maquinas"));
 const FichaMaquina = p(() => import("./modulos/servicio/FichaMaquina"));
 const ReportarFalla = p(() => import("./modulos/servicio/ReportarFalla"));
 const Resguardos = p(() => import("./modulos/servicio/Resguardos"));
+const SolicitudesPrecio = p(() => import("./modulos/compras/Solicitudes"));
+const MisSolicitudesPrecio = p(() => import("./modulos/ventas/solicitudes/MisSolicitudes"));
 
 function Cargando() {
   return <div className="h-full flex items-center justify-center text-tenue"><Loader2 className="h-6 w-6 animate-spin" /></div>;
@@ -117,7 +119,10 @@ export function App() {
           <Route path="ventas/clientes" element={<Con m="ventas"><Clientes /></Con>} />
           <Route path="ventas/clientes/:id" element={<Con m="ventas"><DetalleCliente /></Con>} />
           <Route path="ventas/comisiones" element={<Con m="ventas"><Comisiones /></Con>} />
+          {/* La piden ventas e ingeniería (costeo 3): la pantalla revisa los dos permisos; la RLS decide qué ve cada quien. */}
+          <Route path="ventas/solicitudes" element={<MisSolicitudesPrecio />} />
           <Route path="compras/precios" element={<Con m="compras" n={2}><Precios /></Con>} />
+          <Route path="compras/solicitudes" element={<Con m="compras" n={2}><SolicitudesPrecio /></Con>} />
           <Route path="compras/ordenes" element={<Con m="compras"><OrdenesCompra /></Con>} />
           <Route path="compras/ordenes/:id" element={<Con m="compras"><DetalleOrdenCompra /></Con>} />
           <Route path="compras/proveedores" element={<Con m="compras"><Proveedores /></Con>} />

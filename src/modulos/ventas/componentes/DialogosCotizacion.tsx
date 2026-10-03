@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FileText, MessageCircle, Send } from "lucide-react";
+import { textoFichas } from "./Fichas";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, Entrada } from "@/components/ui/campo";
@@ -16,19 +17,33 @@ import {
  * cotización como "enviada" para darle seguimiento. wa.me no permite adjuntar:
  * el PDF se descarga con "Abrir PDF" y se arrastra al chat.
  */
-export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vendedor, plan, yaEnviada, alMarcarEnviada, alAbrirPdf, enviando }: {
+export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vendedor, plan, yaEnviada, alMarcarEnviada, alAbrirPdf, enviando, fichas = [] }: {
   abierto: boolean; alCambiar: (v: boolean) => void; c: Cotizacion; partidas: Partida[]; contacto: Contacto | null | undefined;
   vendedor: { nombre?: string | null; telefono?: string | null } | null | undefined; plan: PlanMeses | null | undefined;
   yaEnviada: boolean; alMarcarEnviada: () => Promise<unknown>; alAbrirPdf: () => void; enviando?: boolean;
+  /** Fichas técnicas vigentes de las partidas: el cliente las pide y antes se buscaban en Drive. */
+  fichas?: { titulo: string; drive_url: string }[];
 }) {
   const [tel, setTel] = useState("");
   const [texto, setTexto] = useState("");
+  const [conFichas, setConFichas] = useState(false);
+  const bloqueFichas = textoFichas(fichas);
   useEffect(() => {
     if (!abierto) return;
     setTel(contacto?.whatsapp || contacto?.telefono || "");
     setTexto(textoWhatsApp(c, partidas, vendedor, plan));
+    setConFichas(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [abierto]);
+  // Las ligas se agregan antes de la despedida; quitarlas deja el texto como estaba (aunque se haya editado).
+  function alternarFichas(si: boolean) {
+    setConFichas(si);
+    setTexto((t) => {
+      if (!si) return t.replace(bloqueFichas, "");
+      const i = t.lastIndexOf("\n\nQuedo a sus órdenes");
+      return i >= 0 ? t.slice(0, i) + bloqueFichas + t.slice(i) : t + bloqueFichas;
+    });
+  }
 
   async function porWhatsApp() {
     // Se abre antes del await: los navegadores bloquean ventanas que no salen directo del clic.
@@ -52,6 +67,13 @@ export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vende
         <Campo etiqueta="Mensaje">
           <AreaTexto value={texto} onChange={(e) => setTexto(e.target.value)} className="min-h-[180px] text-sm" />
         </Campo>
+        {fichas.length > 0 && (
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" checked={conFichas} onChange={(e) => alternarFichas(e.target.checked)} />
+            Incluir las ligas de las fichas técnicas ({fichas.length})
+            <span className="text-xs text-tenue">· van también en el PDF</span>
+          </label>
+        )}
       </div>
     </Dialogo>
   );

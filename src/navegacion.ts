@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Award, Banknote, ListChecks, Target } from "lucide-react";
 import { AlertTriangle, CalendarRange, Hand, Wrench } from "lucide-react";
+import { MessageSquareQuote } from "lucide-react";
 import type { Modulo } from "./lib/sesion";
 
 export interface EntradaMenu { ruta: string; texto: string; icono: LucideIcon; modulo: Modulo; nivel?: number }
@@ -21,6 +22,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/ventas/para-llamar", texto: "A quién llamar hoy", icono: PhoneCall, modulo: "ventas" },
       { ruta: "/ventas/oportunidades", texto: "Oportunidades", icono: KanbanSquare, modulo: "ventas" },
       { ruta: "/ventas/cotizaciones", texto: "Cotizaciones", icono: FileText, modulo: "ventas" },
+      { ruta: "/ventas/solicitudes", texto: "Solicitudes de precio", icono: MessageSquareQuote, modulo: "ventas", nivel: 2 },
       { ruta: "/ventas/pedidos", texto: "Pedidos", icono: ShoppingCart, modulo: "ventas" },
       { ruta: "/ventas/clientes", texto: "Clientes", icono: Users, modulo: "ventas" },
       { ruta: "/ventas/comisiones", texto: "Comisiones", icono: Trophy, modulo: "ventas" },
@@ -39,6 +41,7 @@ export const MENU: SeccionMenu[] = [
   {
     titulo: "Compras",
     entradas: [
+      { ruta: "/compras/solicitudes", texto: "Solicitudes de precio", icono: MessageSquareQuote, modulo: "compras", nivel: 2 },
       { ruta: "/compras/precios", texto: "Actualizar precios", icono: Tags, modulo: "compras", nivel: 2 },
       { ruta: "/compras/ordenes", texto: "Órdenes de compra", icono: ClipboardList, modulo: "compras" },
       { ruta: "/compras/proveedores", texto: "Proveedores", icono: Truck, modulo: "compras" },

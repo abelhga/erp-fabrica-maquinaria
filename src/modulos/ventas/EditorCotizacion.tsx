@@ -26,6 +26,11 @@ import { TablaPartidas, importeLocal } from "./componentes/TablaPartidas";
 import { FichaVenta } from "./componentes/FichaVenta";
 import { DialogoCliente, DialogoMotivo, ElegirCliente, MOTIVOS_PERDIDA, type ClienteNuevo } from "./componentes/dialogos";
 import { DialogoConvertir, DialogoEnviar, DialogoPedirAutorizacion } from "./componentes/DialogosCotizacion";
+import { useFichas } from "./componentes/Fichas";
+import { DialogoPedirPrecio, type DatosPedido, type InicialPedido } from "./solicitudes/DialogoPedirPrecio";
+import { CLAVE as CLAVE_SOLICITUDES, queSePide, useSolicitudes, useSolicitudesEnVivo, type Solicitud } from "@/modulos/compras/solicitudes/datos";
+import { EstadoPartida } from "./solicitudes/EstadoPartida";
+import { DetalleSolicitud, RespuestaVenta } from "@/modulos/compras/solicitudes/Componentes";
 
 export default function EditorCotizacion() {
   const { id } = useParams();
@@ -96,6 +101,9 @@ function Editor({ id }: { id: string }) {
     queryKey: ["pedido_de_cotizacion", id], enabled: cot.data?.estado === "aceptada",
     queryFn: () => q<{ id: string; folio: string }[]>(supabase.from("pedidos").select("id, folio").eq("cotizacion_id", id).neq("estado", "cancelado")),
   });
+  // Precios pedidos a compras desde esta cotización (en vivo: el vendedor ve cuando la toman y cuando contestan).
+  const solicitudesQ = useSolicitudes({ cotizacionId: id });
+  useSolicitudesEnVivo();
 
   // ---------------------------------------------------------------- guardado automático
   // Lo que el vendedor escribe vive aquí hasta que se guarda (700 ms después de
@@ -185,6 +193,21 @@ function Editor({ id }: { id: string }) {
   const [seleccion, setSeleccion] = useState<string | null>(null);
   const [fichaMovil, setFichaMovil] = useState<Partida | null>(null);
   const seleccionada = lineas.find((l) => l.id === seleccion) ?? lineas.find((l) => l.articulo_id) ?? null;
+  // La solicitud más reciente de cada partida (la lista viene de la más nueva a la más vieja).
+  const porPartida = useMemo(() => {
+    const m: Record<string, Solicitud> = {};
+    for (const s of solicitudesQ.data ?? []) if (s.partida_id && !m[s.partida_id] && s.estado !== "cancelada") m[s.partida_id] = s;
+    return m;
+  }, [solicitudesQ.data]);
+  // Las que se pidieron para la cotización pero no para una partida (o cuya partida ya se quitó).
+  const sueltas = useMemo(() => (solicitudesQ.data ?? []).filter((s) => s.estado !== "cancelada" && !s.aplicada_en
+    && (!s.partida_id || !lineas.some((l) => l.id === s.partida_id))), [solicitudesQ.data, lineas]);
+  const fichas = useFichas(lineas.map((l) => l.articulo_id));
+  const ligasFichas = useMemo(() => {
+    const vistas = new Set<string>();
+    return lineas.filter((l) => !l.opcional && l.articulo_id).flatMap((l) => (fichas.data?.[l.articulo_id!] ?? []))
+      .filter((d) => !vistas.has(d.documento_id) && !!vistas.add(d.documento_id));
+  }, [lineas, fichas.data]);
 
   const propia = !!c && c.vendedor_id === perfil?.id;
   const editable = !!c && EDITABLES.includes(c.estado) && ((propia && puede("ventas", 2)) || esGerente);
@@ -259,6 +282,37 @@ function Editor({ id }: { id: string }) {
     const l = lineas.find((x) => x.id === lid);
     if (l && l.orden !== i + 1) editarLinea(lid, { orden: i + 1 });
   });
+  // Pedir precio a compras sin salir de la cotización: desde la partida, o desde el
+  // buscador ("¿No está?"), que primero agrega la partida libre con lo que se escribió.
+  const [pedirPara, setPedirPara] = useState<(InicialPedido & { nuevaPartida?: boolean }) | null>(null);
+  const pedirPrecio = async (l: Partida) => {
+    await guardar();
+    setPedirPara({
+      descripcion: l.articulo_id ? "" : [l.titulo, l.descripcion].filter(Boolean).join(" · "), cantidad: Number(l.cantidad),
+      articulo: l.articulo_id ? { id: l.articulo_id, clave: "", nombre: l.titulo } : null,
+      cotizacionId: id, partidaId: l.id, para: `${c?.folio ?? "la cotización"}${cliente.data ? " · " + cliente.data.nombre : ""}`,
+    });
+  };
+  const crearConPartida = async (d: DatosPedido) => {
+    await guardar();
+    const nid = crypto.randomUUID();
+    await q(supabase.from("cotizacion_lineas").insert({
+      id: nid, cotizacion_id: id, orden: Math.max(0, ...lineas.map((l) => l.orden)) + 1, titulo: d.descripcion.trim(),
+      unidad: "pieza", cantidad: d.cantidad || 1, precio_unitario: 0,
+    }));
+    setSeleccion(nid);
+    qc.invalidateQueries({ queryKey: ["cotizacion_lineas", id] });
+    return q<string>(supabase.rpc("pedir_precio", {
+      p_descripcion: d.descripcion.trim(), p_cantidad: d.cantidad || 1, p_urgente: d.urgente, p_marca: d.marca.trim() || null,
+      p_modelo: d.modelo.trim() || null, p_notas: d.notas.trim() || null, p_cotizacion: id, p_partida: nid,
+    }));
+  };
+  const aplicarPrecio = useAccion(
+    async (s: Solicitud) => { await guardar(); return q<string>(supabase.rpc("aplicar_solicitud_precio", { p_solicitud: s.id })); },
+    { exito: "Precio de compras aplicado a la partida", invalidar: [["cotizacion", id], ["cotizacion_lineas", id], [...CLAVE_SOLICITUDES]],
+      alTerminar: (pid) => setSeleccion(pid) },
+  );
+
   const restaurarPrecio = async (l: Partida) => {
     if (!c || !l.articulo_id) return;
     const { data } = await supabase.from("precios_lista").select("precio").eq("articulo_id", l.articulo_id).maybeSingle();
@@ -617,7 +671,9 @@ function Editor({ id }: { id: string }) {
               {editable ? (
                 <>
                   <BuscadorArticulo className="flex-1" autoFocus={lineas.length === 0 && !!c.cliente_id} placeholder="Agregar partida: escribe equipo, componente o clave y Enter…"
-                    alElegir={(a) => agregar.mutate(a)} />
+                    alElegir={(a) => agregar.mutate(a)}
+                    alNoEncontrar={(texto) => setPedirPara({ descripcion: texto, cantidad: 1, cotizacionId: id, nuevaPartida: true,
+                      para: `${c.folio}${cliente.data ? " · " + cliente.data.nombre : ""} (se agrega como partida)` })} />
                   <MenuAcciones alinear="end" disparador={<Boton variante="secundario"><Plus className="h-4 w-4" />Partida libre<ChevronDown className="h-3.5 w-3.5" /></Boton>}>
                     <OpcionMenu alElegir={() => agregarLibre.mutate("Flete a ")}>Flete</OpcionMenu>
                     <OpcionMenu alElegir={() => agregarLibre.mutate("Instalación y puesta en marcha")}>Instalación</OpcionMenu>
@@ -632,11 +688,26 @@ function Editor({ id }: { id: string }) {
               <Vacio icono={FileText} titulo="Sin partidas todavía" texto="Escribe arriba parte del nombre o la clave (“banda 20”, “E-315”, “chumacera 1 7/16”) y Enter. Precio, descripción y foto se llenan solos." />
             ) : (
               <TablaPartidas lineas={lineas} moneda={c.moneda} editable={editable} sucias={sucias} seleccion={seleccionada?.id ?? null}
-                alSeleccionar={setSeleccion} ancho={tablaAncha}
+                alSeleccionar={setSeleccion} ancho={tablaAncha} solicitudes={porPartida} fichas={fichas.data}
+                aplicando={aplicarPrecio.isPending ? aplicarPrecio.variables?.id ?? null : null}
                 acciones={{
                   editar: editarLinea, eliminar: (lid) => eliminarLinea.mutate(lid), duplicar: (l) => duplicarLinea.mutate(l),
                   reordenar, restaurarPrecio, verFicha: (l) => { setSeleccion(l.id); if (!dosColumnas) setFichaMovil(l); },
+                  pedirPrecio: editable ? pedirPrecio : undefined, aplicarPrecio: (s) => aplicarPrecio.mutate(s),
                 }} />
+            )}
+            {sueltas.length > 0 && (
+              <div className="border-t border-borde px-3 sm:px-4 py-3 space-y-2">
+                <p className="text-xs font-medium uppercase tracking-wide text-tenue">Precios pedidos a compras para esta cotización</p>
+                {sueltas.map((s) => (
+                  <div key={s.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="text-sm font-medium">{queSePide(s)}</span>
+                    <span className="text-xs text-tenue">{Number(s.cantidad)} {s.unidad}</span>
+                    <EstadoPartida s={s} editable={editable} alAplicar={(x) => aplicarPrecio.mutate(x)} textoAplicar="Agregar a la cotización"
+                      aplicando={aplicarPrecio.isPending && aplicarPrecio.variables?.id === s.id} />
+                  </div>
+                ))}
+              </div>
             )}
           </Tarjeta>
 
@@ -672,9 +743,18 @@ function Editor({ id }: { id: string }) {
         {dosColumnas ? (
           <div className="space-y-4 sticky top-4">
             {totales}
-            {ficha ?? (
+            {ficha ?? (seleccionada && porPartida[seleccionada.id] ? (
+              // Partida libre con precio pedido: lo que va de la solicitud (sin costo; eso no llega a ventas).
+              <Tarjeta>
+                <EncabezadoTarjeta titulo="Precio pedido a compras" descripcion={`Partida ${lineas.indexOf(seleccionada) + 1} · ${porPartida[seleccionada.id].folio}`} />
+                <div className="px-5 pb-5 space-y-3">
+                  <DetalleSolicitud s={porPartida[seleccionada.id]} />
+                  <RespuestaVenta s={porPartida[seleccionada.id]} />
+                </div>
+              </Tarjeta>
+            ) : (
               <Tarjeta className="p-5 text-sm text-tenue">Elige una partida del catálogo para ver su precio mínimo, existencia, plazo y precio en Mercado Libre.</Tarjeta>
-            )}
+            ))}
           </div>
         ) : totales}
       </div>
@@ -696,7 +776,9 @@ function Editor({ id }: { id: string }) {
         alCrear={(n: ClienteNuevo) => cambiarCliente(n, n.contacto ?? null)} />
       <DialogoEnviar abierto={dlg === "enviar"} alCambiar={(v) => setDlg(v ? "enviar" : null)} c={{ ...c, ...(tot ?? {}) }} partidas={lineas}
         contacto={contactoSel} vendedor={vendedor.data} plan={plan} yaEnviada={!["borrador", "autorizada"].includes(c.estado)}
-        alMarcarEnviada={() => cambiarEstado.mutateAsync("enviada")} alAbrirPdf={abrirPdf} enviando={cambiarEstado.isPending} />
+        alMarcarEnviada={() => cambiarEstado.mutateAsync("enviada")} alAbrirPdf={abrirPdf} enviando={cambiarEstado.isPending} fichas={ligasFichas} />
+      <DialogoPedirPrecio abierto={!!pedirPara} alCambiar={(v) => !v && setPedirPara(null)} inicial={pedirPara ?? {}}
+        crear={pedirPara?.nuevaPartida ? crearConPartida : undefined} />
       <DialogoConvertir abierto={dlg === "convertir"} alCambiar={(v) => setDlg(v ? "convertir" : null)} c={c} partidas={lineas}
         cargando={convertir.isPending} alConfirmar={(f, ids) => convertir.mutate({ fecha: f, ids })} />
       <DialogoPedirAutorizacion abierto={dlg === "autorizacion"} alCambiar={(v) => setDlg(v ? "autorizacion" : null)} partidasBajo={bajoMinimo}
