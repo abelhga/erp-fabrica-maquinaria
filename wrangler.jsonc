@@ -1,0 +1,12 @@
+// Cloudflare Workers sirve el ERP como archivos fijos (lo que deja `npm run build` en dist/).
+// "single-page-application": una ruta como /ventas/pedidos/123 no es un archivo; Cloudflare
+// entrega index.html y React Router decide qué pantalla mostrar. El nombre debe coincidir con
+// el del proyecto en el panel de Cloudflare o el build falla.
+{
+  "name": "erp-fabrica-maquinaria",
+  "compatibility_date": "2026-10-03",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}

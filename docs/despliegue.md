@@ -1,6 +1,6 @@
 # Despliegue
 
-Dos piezas: la base (Supabase) y el sitio (estático, en Cloudflare Pages). Nada de esto
+Dos piezas: la base (Supabase) y el sitio (estático, en Cloudflare Workers). Nada de esto
 está creado todavía: requiere decisiones y cuentas del dueño.
 
 ## 1. Supabase
@@ -68,13 +68,19 @@ está creado todavía: requiere decisiones y cuentas del dueño.
      función. Cada consulta corre con la sesión de quien pregunta, así que Claude ve lo mismo
      que esa persona y nada más.
 
-## 2. Sitio (Cloudflare Pages)
+## 2. Sitio (Cloudflare Workers)
 
-- Conectar el repositorio. Comando de build `npm run build`, carpeta `dist`.
-- Variables de entorno: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (Project Settings → API,
-  llave publicable) y `VITE_DOMINIO_EMPRESA=hegamex.com`.
-- `public/_redirects` ya manda todas las rutas a `index.html` (la app maneja sus rutas).
-- Dominio propio: `erp.hegamex.com` → CNAME al proyecto de Pages.
+- **Workers & Pages → Create application → Import a repository**, elegir el repositorio y la
+  rama. Nombre del proyecto: `erp-fabrica-maquinaria` (tiene que coincidir con `name` en
+  `wrangler.jsonc`, o el build falla).
+- Build command `npm run build`; deploy command `npx wrangler deploy` (lo pone solo).
+  `wrangler.jsonc` sirve `dist/` y manda cualquier ruta a `index.html` (modo
+  `single-page-application`), así que /ventas/pedidos/123 abre bien aunque no sea un archivo.
+- **Variables de build** (Advanced settings → Build variables, o después en Settings → Build):
+  `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (Project Settings → API, llave publicable) y
+  `VITE_DOMINIO_EMPRESA=hegamex.com`. Vite las mete en el código al construir: si se cambian,
+  hay que volver a construir.
+- Dominio propio: Settings → Domains & Routes → `erp.hegamex.com`.
 
 ## 3. Datos
 

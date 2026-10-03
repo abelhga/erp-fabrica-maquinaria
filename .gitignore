@@ -10,3 +10,7 @@ capturas
 
 # Copias de trabajo de agentes (git worktree): no son parte del proyecto
 .claude/worktrees/
+
+# Caché de tsc -b
+*.tsbuildinfo
+.wrangler
