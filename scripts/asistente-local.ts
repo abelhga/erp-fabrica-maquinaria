@@ -20,7 +20,9 @@ createServer(async (req, res) => {
     method: req.method, headers: req.headers as Record<string, string>, body: cuerpo, duplex: "half",
   } as RequestInit);
   const r = await atender(peticion, {
-    supabaseUrl: env.VITE_SUPABASE_URL, supabaseAnonKey: env.VITE_SUPABASE_ANON_KEY,
+    // Las variables del proceso ganan, igual que en Vite (para apuntar a otra base local).
+    supabaseUrl: process.env.VITE_SUPABASE_URL ?? env.VITE_SUPABASE_URL,
+    supabaseAnonKey: process.env.VITE_SUPABASE_ANON_KEY ?? env.VITE_SUPABASE_ANON_KEY,
     anthropicKey: process.env.ANTHROPIC_API_KEY || undefined,
   });
   res.writeHead(r.status, Object.fromEntries(r.headers));

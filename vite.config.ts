@@ -10,8 +10,10 @@ export default defineConfig({
     host: true,
     // Las copias de trabajo de git (.claude/worktrees) viven dentro del proyecto:
     // sin esto Vite las vigila y las rastrea como entradas, y termina cargando
-    // React dos veces ("Invalid hook call").
-    watch: { ignored: ["**/.claude/**", "**/capturas/**"] },
+    // React dos veces ("Invalid hook call"). Solo la .claude de la raíz: con
+    // "**/.claude/**", un Vite levantado DENTRO de una copia ignoraba todos sus
+    // archivos (su ruta contiene .claude) y no recargaba nada al editar.
+    watch: { ignored: [path.resolve(__dirname, ".claude") + "/**", "**/capturas/**"] },
   },
   optimizeDeps: { entries: ["index.html"] },
   build: {

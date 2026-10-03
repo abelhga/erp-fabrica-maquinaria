@@ -12,7 +12,9 @@ const env = Object.fromEntries(
   readFileSync(new URL("../../../.env.local", import.meta.url), "utf8").split("\n")
     .map((l) => l.match(/^([A-Z_]+)=(.*)$/)).filter((m): m is RegExpMatchArray => !!m).map((m) => [m[1], m[2]]),
 );
-const URL_SB = env.VITE_SUPABASE_URL, ANON = env.VITE_SUPABASE_ANON_KEY;
+// Las variables del proceso ganan, igual que en Vite: así se prueba contra otra base
+// local (una recién creada) sin tocar .env.local.
+const URL_SB = process.env.VITE_SUPABASE_URL ?? env.VITE_SUPABASE_URL, ANON = process.env.VITE_SUPABASE_ANON_KEY ?? env.VITE_SUPABASE_ANON_KEY;
 const hayBase = await fetch(`${URL_SB}/auth/v1/health`, { headers: { apikey: ANON } }).then((r) => r.ok).catch(() => false);
 
 // Cada prueba con el Claude falso cuenta contra el cupo diario (40) de su usuario,

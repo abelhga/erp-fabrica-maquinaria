@@ -18,7 +18,8 @@ begin
   v_ven := pg_temp.usuario('ven95@hegamex.com', '{ventas}');
   v_fin := pg_temp.usuario('fin95@hegamex.com', '{finanzas}');
   v_comp := pg_temp.usuario('comp95@hegamex.com', '{compras}');
-  select id into v_art from articulos order by clave limit 1;
+  -- Artículo propio: en una base recién creada el catálogo está vacío.
+  insert into articulos (clave, tipo, nombre, unidad) values ('T-P95', 'componente', 'Artículo de la prueba 95', 'pieza') returning id into v_art;
   select id into v_almacen from almacenes order by id limit 1;
 
   -- Permisos nuevos tal como se pidieron.

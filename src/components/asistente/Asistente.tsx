@@ -97,10 +97,11 @@ export function Asistente() {
   return (
     <>
       <button onClick={() => setAbierto(true)} aria-label="Abrir asistente (Ctrl+J)" title="Asistente · Ctrl+J"
-        className={cn("no-imprimir fixed bottom-5 right-5 z-40 h-12 pl-3.5 pr-4 rounded-full shadow-lg flex items-center gap-2",
+        className={cn("no-imprimir fixed bottom-5 right-5 z-40 h-12 px-3.5 lg:pr-4 rounded-full shadow-lg flex items-center gap-2",
           "bg-gradient-to-br from-marca to-marca/70 text-white text-sm font-medium hover:shadow-xl hover:-translate-y-0.5 transition",
           abierto && "opacity-0 pointer-events-none")}>
-        <Sparkles className="h-5 w-5" /><span className="hidden sm:inline">Pregúntale al ERP</span>
+        {/* Solo ícono hasta escritorio: con texto medía ~190 px y en tableta tapaba la barra de acciones del cotizador. */}
+        <Sparkles className="h-5 w-5" /><span className="hidden lg:inline">Pregúntale al ERP</span>
       </button>
 
       {abierto && <div className="fixed inset-0 z-40 bg-texto/10 backdrop-blur-[1px] lg:hidden" onClick={() => setAbierto(false)} />}
