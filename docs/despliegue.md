@@ -1,7 +1,12 @@
 # Despliegue
 
-Dos piezas: la base (Supabase) y el sitio (estático, en Cloudflare Workers). Nada de esto
-está creado todavía: requiere decisiones y cuentas del dueño.
+Dos piezas: la base (Supabase) y el sitio (estático, en Cloudflare Workers).
+
+El 3 de octubre de 2026 se creó el proyecto de demostración `erp-hegamex` (Supabase,
+us-west-1) con las migraciones, los datos de la instancia local de verificación y usuarios
+de prueba por rol con contraseña propia (no "hegamex-local"). Los registros nuevos están
+cerrados (`disable_signup`): solo entra quien se crea a mano o se invita. Antes de usarlo
+con datos de verdad falta lo de los pasos 4, 5 y 8 de abajo (Google, dominio y llave de Claude).
 
 ## 1. Supabase
 
@@ -67,6 +72,27 @@ está creado todavía: requiere decisiones y cuentas del dueño.
    - La llave **nunca** va en el navegador ni en `.env` del sitio: solo como secreto de la
      función. Cada consulta corre con la sesión de quien pregunta, así que Claude ve lo mismo
      que esa persona y nada más.
+
+### Sin `supabase link`: por la API de administración
+
+Si no hay salida directa a Postgres (puerto 5432/6543), como en una sesión de Claude en la
+nube, lo mismo se hace por HTTPS con `scripts/nube/`:
+
+```bash
+export NUBE_REF=<ref>                       # Project Settings → General → Reference ID
+export SUPABASE_ACCESS_TOKEN=sbp_...        # supabase.com/dashboard/account/tokens
+python3 scripts/nube/migrar.py              # aplica las migraciones que falten y las registra
+python3 scripts/nube/pruebas.py             # supabase/pruebas/*.sql, cada una se deshace
+python3 scripts/nube/sql_nube.py consulta.sql
+```
+
+- `migrar.py` registra cada versión en `supabase_migrations.schema_migrations`, la misma
+  tabla que lee `supabase db push`: se pueden mezclar los dos sin aplicar nada dos veces.
+- El token personal da control total de **todos** los proyectos de la cuenta. Créalo con
+  vencimiento corto y bórralo al terminar. En una sesión de Claude en la nube va como
+  *API credential* del entorno (el proxy lo agrega; Claude no lo ve), nunca en el chat.
+- No se usa una función de borde que ejecute SQL "para cargar rápido": queda como puerta
+  abierta a la base aunque se borre después.
 
 ## 2. Sitio (Cloudflare Workers)
 
