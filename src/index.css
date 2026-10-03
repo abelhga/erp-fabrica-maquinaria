@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Paleta: neutros fríos de taller + el azul del engrane del logo.
+   Todo en HSL sin la función, para que Tailwind pueda aplicar opacidad. */
+:root {
+  --fondo: 220 20% 97%;
+  --superficie: 0 0% 100%;
+  --borde: 220 14% 89%;
+  --texto: 222 30% 14%;
+  --tenue: 220 9% 46%;
+  --marca: 214 100% 52%;
+  --marca-suave: 214 100% 96%;
+  --marca-texto: 214 90% 40%;
+  --ok: 152 60% 36%;
+  --ok-suave: 150 60% 95%;
+  --aviso: 35 92% 45%;
+  --aviso-suave: 45 100% 94%;
+  --peligro: 0 72% 50%;
+  --peligro-suave: 0 85% 96%;
+  --info: 262 60% 55%;
+  --info-suave: 262 80% 97%;
+  color-scheme: light;
+}
+
+.dark {
+  --fondo: 222 25% 8%;
+  --superficie: 222 22% 12%;
+  --borde: 220 15% 22%;
+  --texto: 220 20% 92%;
+  --tenue: 220 10% 62%;
+  --marca: 214 100% 60%;
+  --marca-suave: 214 60% 18%;
+  --marca-texto: 214 100% 72%;
+  --ok: 152 55% 48%;
+  --ok-suave: 152 40% 15%;
+  --aviso: 38 92% 55%;
+  --aviso-suave: 38 50% 15%;
+  --peligro: 0 75% 60%;
+  --peligro-suave: 0 45% 17%;
+  --info: 262 70% 70%;
+  --info-suave: 262 35% 18%;
+  color-scheme: dark;
+}
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body {
+    @apply bg-fondo text-texto font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  /* Cifras alineadas en tablas de dinero: sin esto los totales "bailan". */
+  .cifra { font-variant-numeric: tabular-nums; }
+  ::selection { @apply bg-marca/20; }
+}
+
+@layer components {
+  .tarjeta { @apply bg-superficie border border-borde rounded-xl shadow-tarjeta; }
+  .etiqueta { @apply text-xs font-medium text-tenue uppercase tracking-wide; }
+  .campo {
+    @apply w-full h-9 rounded-lg border border-borde bg-superficie px-3 text-sm
+      placeholder:text-tenue/70 focus:outline-none focus:ring-2 focus:ring-marca/40 focus:border-marca
+      disabled:opacity-60;
+  }
+  .tabla { @apply w-full text-sm; }
+  .tabla th { @apply text-left font-medium text-tenue text-xs uppercase tracking-wide px-3 py-2 border-b border-borde bg-fondo/60 sticky top-0 z-10; }
+  .tabla td { @apply px-3 py-2 border-b border-borde/70 align-middle; }
+  .tabla tbody tr { @apply hover:bg-marca-suave/40 transition-colors; }
+}
+
+/* Barras de desplazamiento discretas: las tablas largas son la norma aquí. */
+* { scrollbar-width: thin; scrollbar-color: hsl(var(--borde)) transparent; }
+
+@media print {
+  .no-imprimir { display: none !important; }
+  body { background: white; }
+}
