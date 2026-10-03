@@ -13,10 +13,10 @@ begin
   v_vend := pg_temp.usuario('vend@hegamex.com', '{ventas}');
   select id into v_pb from almacenes where nombre = 'Planta Baja';
 
-  insert into articulos (clave, tipo, nombre, unidad) values ('C-TUBO', 'materia_prima', 'Tubo 2" ced. 40', 'metro') returning id into v_tubo;
-  insert into articulos (clave, tipo, nombre, unidad) values ('C-CHUM', 'componente', 'Chumacera 1 1/2', 'pieza') returning id into v_chum;
-  insert into articulos (clave, tipo, nombre, unidad) values ('C-TOR', 'componente', 'Tornillo 3/8', 'pieza') returning id into v_tornillo;
-  insert into articulos (clave, tipo, nombre) values ('E-BAZ', 'equipo', 'Bazuca 10" x 12 m') returning id into v_bazuca;
+  insert into articulos (clave, tipo, nombre, unidad) values ('T-C-TUBO', 'materia_prima', 'Tubo 2" ced. 40', 'metro') returning id into v_tubo;
+  insert into articulos (clave, tipo, nombre, unidad) values ('T-C-CHUM', 'componente', 'Chumacera 1 1/2', 'pieza') returning id into v_chum;
+  insert into articulos (clave, tipo, nombre, unidad) values ('T-C-TOR', 'componente', 'Tornillo 3/8', 'pieza') returning id into v_tornillo;
+  insert into articulos (clave, tipo, nombre) values ('T-E-BAZ', 'equipo', 'Bazuca 10" x 12 m') returning id into v_bazuca;
   insert into bom_lineas (padre_id, hijo_id, cantidad) values (v_bazuca, v_tubo, 14), (v_bazuca, v_chum, 4);
   insert into bom_operaciones (articulo_id, etapa_id, horas) values
     (v_bazuca, (select id from etapas where nombre = 'Pailería'), 30),

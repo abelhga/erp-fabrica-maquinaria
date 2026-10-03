@@ -12,9 +12,9 @@ begin
   v_prod := pg_temp.usuario('taller@hegamex.com', '{produccion}');
 
   -- Catálogo con precio: banda $202,000; polea $1,050 (componente, piso ≈ 9.09 %).
-  insert into articulos (clave, tipo, nombre, categoria_id) values ('E-315', 'equipo', 'Banda cargadora 18" x 13 m',
+  insert into articulos (clave, tipo, nombre, categoria_id) values ('T-E-315', 'equipo', 'Banda cargadora 18" x 13 m',
     (select id from categorias where nombre = 'Banda Transportadora')) returning id into v_banda;
-  insert into articulos (clave, tipo, nombre) values ('C-POL', 'componente', 'Polea 8"') returning id into v_polea;
+  insert into articulos (clave, tipo, nombre) values ('T-C-POL', 'componente', 'Polea 8"') returning id into v_polea;
   insert into costos_articulo (articulo_id, costo) values (v_polea, 735);
   insert into bom_lineas (padre_id, hijo_id, cantidad) values (v_banda, v_polea, 91345.69 / 735);
   assert (select precio from precios_lista where articulo_id = v_banda) = 202000, 'precio de la banda';

@@ -105,4 +105,13 @@ begin
     assert false, 'se permitió lista de materiales en un componente';
   exception when check_violation then null;
   end;
+
+  -- El recálculo incremental (solo lo afectado) debe dejar exactamente lo mismo que
+  -- recalcular todo. Si alguna vez difieren, un cambio de costo dejaría precios viejos.
+  create temp table _antes on commit drop as
+    select cc.articulo_id, cc.costo_total, pl.precio from costos_calculados cc left join precios_lista pl using (articulo_id);
+  perform recalcular_costos();
+  select count(*) into v_n from _antes a join costos_calculados cc using (articulo_id) left join precios_lista pl using (articulo_id)
+  where round(a.costo_total, 4) <> round(cc.costo_total, 4) or a.precio is distinct from pl.precio;
+  assert v_n = 0, format('%s artículos quedaron distintos entre el recálculo incremental y el completo', v_n);
 end $$;

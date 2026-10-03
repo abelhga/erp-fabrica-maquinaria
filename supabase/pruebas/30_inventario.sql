@@ -15,8 +15,8 @@ begin
   select id into v_mall from almacenes where nombre = 'Mallado';
 
   insert into proveedores (nombre, dias_entrega) values ('Tapco Inc', 7) returning id into v_prov;
-  insert into articulos (clave, tipo, nombre, unidad, proveedor_id) values ('C-TAP', 'componente', 'Cangilon 5x4 azul, marca Tapco', 'pieza', v_prov) returning id into v_tapco;
-  insert into articulos (clave, tipo, nombre, unidad, es_importado, tiempo_entrega_dias) values ('C-IMP', 'componente', 'Reductor importado', 'pieza', true, 60) returning id into v_import;
+  insert into articulos (clave, tipo, nombre, unidad, proveedor_id) values ('T-C-TAP', 'componente', 'Cangilon 5x4 azul, marca Tapco', 'pieza', v_prov) returning id into v_tapco;
+  insert into articulos (clave, tipo, nombre, unidad, es_importado, tiempo_entrega_dias) values ('T-C-IMP', 'componente', 'Reductor importado', 'pieza', true, 60) returning id into v_import;
   insert into costos_articulo (articulo_id, costo) values (v_tapco, 100), (v_import, 5000);
 
   -- Saldo inicial (lo pone la importación, como postgres).
