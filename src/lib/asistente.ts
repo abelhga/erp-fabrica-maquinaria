@@ -2,7 +2,8 @@
 // Claude vive en el servidor; aquí solo viaja la sesión de quien pregunta.
 import { supabase } from "./supabase";
 
-export type Area = "direccion" | "ventas" | "compras" | "almacen" | "produccion" | "finanzas" | "importaciones";
+export type Area = "direccion" | "ventas" | "compras" | "almacen" | "produccion" | "finanzas" | "importaciones"
+  | "servicio";
 export type Tono = "riesgo" | "atencion" | "bueno" | "info";
 
 export interface Resumen {

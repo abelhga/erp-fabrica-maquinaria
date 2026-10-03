@@ -6,6 +6,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Award, Banknote, ListChecks, Target } from "lucide-react";
+import { AlertTriangle, CalendarRange, Hand, Wrench } from "lucide-react";
 import type { Modulo } from "./lib/sesion";
 
 export interface EntradaMenu { ruta: string; texto: string; icono: LucideIcon; modulo: Modulo; nivel?: number }
@@ -63,6 +64,17 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/produccion/ordenes", texto: "Órdenes y material", icono: ClipboardCheck, modulo: "produccion" },
       { ruta: "/produccion/terminal", texto: "Terminal de piso", icono: Tablet, modulo: "produccion", nivel: 2 },
       { ruta: "/piso", texto: "Pantalla de piso (TV)", icono: Monitor, modulo: "produccion" },
+    ],
+  },
+  {
+    titulo: "Servicio",
+    // Máquinas, falla y resguardos son del personal de producción (nivel 2): un vendedor
+    // tiene "servicio" para pedir servicios a sus clientes, no para el mantenimiento del taller.
+    entradas: [
+      { ruta: "/servicio", texto: "Servicios y cuadrillas", icono: CalendarRange, modulo: "servicio" },
+      { ruta: "/servicio/maquinas", texto: "Máquinas y herramienta", icono: Wrench, modulo: "produccion", nivel: 2 },
+      { ruta: "/servicio/reportar", texto: "Reportar falla", icono: AlertTriangle, modulo: "produccion", nivel: 2 },
+      { ruta: "/servicio/resguardos", texto: "Resguardo de herramienta", icono: Hand, modulo: "produccion", nivel: 2 },
     ],
   },
   {

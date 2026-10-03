@@ -19,8 +19,10 @@ export interface Entorno {
   crearAnthropic?: () => Pick<Anthropic, "beta">;
 }
 
-type Area = "direccion" | "ventas" | "compras" | "almacen" | "produccion" | "finanzas" | "importaciones";
-const AREAS: Area[] = ["direccion", "ventas", "compras", "almacen", "produccion", "finanzas", "importaciones"];
+type Area = "direccion" | "ventas" | "compras" | "almacen" | "produccion" | "finanzas" | "importaciones"
+  | "servicio";
+const AREAS: Area[] = ["direccion", "ventas", "compras", "almacen", "produccion", "finanzas", "importaciones",
+  "servicio"];
 
 export const RUTAS = [
   "/", "/ventas/oportunidades", "/ventas/cotizaciones", "/ventas/pedidos", "/ventas/clientes", "/ventas/comisiones",
@@ -30,6 +32,7 @@ export const RUTAS = [
   "/produccion/gerencia", "/produccion/ordenes", "/finanzas/cobranza", "/finanzas/pagos",
   "/rrhh/empleados", "/rrhh/incidencias",
   "/importaciones", "/importaciones/dinero",
+  "/servicio", "/servicio/maquinas", "/servicio/resguardos", "/servicio/reportar",
 ] as const;
 
 interface Config { modelo: string; esfuerzo: "low" | "medium" | "high" | "xhigh" | "max" }
@@ -84,6 +87,11 @@ const TABLAS: Record<string, string> = {
   perfiles: "id,nombre,puesto",
   // Sin montos: la RLS deja ver el embarque a almacén y al taller, el dinero no.
   v_embarques: "folio,descripcion,modalidad,proveedores,fase,etapa_nombre,eta,arribo,dias_en_puerto,dias_libres_almacenaje,llegada_planta_estimada,siguiente_paso,debe,docs_pendientes",
+  // Servicio y mantenimiento: las vistas no traen dinero (los costos van aparte, con su RLS).
+  v_servicios: "folio,tipo_nombre,estado,cliente,equipo,numero_serie,lugar,descripcion,solicitado_en,inicio,fin,horas_por_persona,en_garantia,garantia_vence,dias_esperando",
+  v_maquinas: "numero,nombre,categoria,etapa,estado,critica,orden_folio,orden_falla,orden_desde,fallas_12m,horas_paro_12m,preventivo,preventivo_fecha,preventivo_situacion,prestada_a,prestada_desde",
+  v_ordenes_mantenimiento: "folio,numero,maquina,tipo,estado,falla,diagnostico,detiene,reportado_en,cerrada_en,horas_paro,vence,vencida",
+  v_resguardos: "numero,herramienta,quien,entregado_en,devuelto_en,dias,vencido,servicio_folio",
 };
 // Aunque la RLS se los diera a alguien, al modelo no le hacen falta.
 const COLUMNAS_PROHIBIDAS = /^(datos_bancarios|clabe|cuenta.*|curp|nss|salario.*|sueldo.*|contrasena.*|token.*|password.*)$/;

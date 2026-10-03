@@ -11,6 +11,7 @@ import { cn } from "@/lib/utilidades";
 import { fecha } from "@/lib/formato";
 import { CLAVE, useEtapas, usePiso, useProduccionEnVivo, type Etapa, type OperacionPiso } from "./componentes/datos";
 import { abreviarEquipo, folioCorto, haceRato, textoDias, tonoCompromiso } from "./componentes/util";
+import { useSesion } from "@/lib/sesion";
 
 // La tablet se queda en su estación: etapa y nombres se recuerdan en el aparato.
 const LS = { etapa: "terminal.etapa", nombre: "terminal.nombre", recientes: "terminal.recientes" };
@@ -42,6 +43,7 @@ function tintaSobre(hex: string) {
 export default function Terminal() {
   useProduccionEnVivo();
   const etapas = useEtapas();
+  const { puede } = useSesion();
   const piso = usePiso({ intervalo: 60_000 });
   const [etapaId, setEtapaId] = useState<number | null>(() => Number(leer(LS.etapa)) || null);
   const [nombre, setNombre] = useState<string>(() => leer(LS.nombre) ?? "");
@@ -95,6 +97,13 @@ export default function Terminal() {
         <Logo className="hidden md:flex" />
         <span className="hidden lg:inline text-tenue">Terminal de piso</span>
         <div className="ml-auto flex items-center gap-2 min-w-0">
+          {/* Una máquina descompuesta se reporta desde aquí mismo, con foto (antes: foto al chat). */}
+          {puede("servicio", 2) && (
+            <Link to={`/servicio/reportar?volver=/produccion/terminal${etapaId ? `&etapa=${etapaId}` : ""}`}
+                  className="h-12 rounded-xl px-3 sm:px-4 flex items-center gap-2 border-2 border-peligro/60 bg-superficie text-peligro font-semibold shrink-0" aria-label="Reportar falla de una máquina">
+              <AlertTriangle className="h-6 w-6 shrink-0" /><span className="hidden sm:inline">Reportar falla</span>
+            </Link>
+          )}
           {etapa && (
             <button onClick={() => elegirEtapa(null)} className="h-12 rounded-xl px-3 sm:px-4 flex items-center gap-2 font-semibold min-w-0"
                     style={{ background: etapa.color, color: tintaSobre(etapa.color) }} aria-label="Cambiar de etapa">
