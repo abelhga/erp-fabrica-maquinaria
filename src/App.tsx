@@ -52,6 +52,12 @@ const Pendientes = p(() => import("./modulos/pendientes/Pendientes"));
 const Embarques = p(() => import("./modulos/importaciones/Embarques"));
 const DetalleEmbarque = p(() => import("./modulos/importaciones/DetalleEmbarque"));
 const ImprimirOCImportacion = p(() => import("./modulos/importaciones/ImprimirOC"));
+const Servicios = p(() => import("./modulos/servicio/Servicios"));
+const DetalleServicio = p(() => import("./modulos/servicio/DetalleServicio"));
+const Maquinas = p(() => import("./modulos/servicio/Maquinas"));
+const FichaMaquina = p(() => import("./modulos/servicio/FichaMaquina"));
+const ReportarFalla = p(() => import("./modulos/servicio/ReportarFalla"));
+const Resguardos = p(() => import("./modulos/servicio/Resguardos"));
 
 function Cargando() {
   return <div className="h-full flex items-center justify-center text-tenue"><Loader2 className="h-6 w-6 animate-spin" /></div>;
@@ -88,6 +94,7 @@ export function App() {
       <Routes>
         <Route path="/piso" element={<Con m="produccion"><PantallaPiso /></Con>} />
         <Route path="/produccion/terminal" element={<Con m="produccion" n={2}><Terminal /></Con>} />
+        <Route path="/servicio/reportar" element={<Con m="servicio" n={2}><ReportarFalla /></Con>} />
         <Route path="/ventas/cotizaciones/:id/imprimir" element={<Con m="ventas"><ImprimirCotizacion /></Con>} />
         <Route path="/importaciones/oc/:id/imprimir" element={<Con m="compras" n={2}><ImprimirOCImportacion /></Con>} />
         <Route element={<Shell />}>
@@ -119,6 +126,11 @@ export function App() {
           <Route path="produccion/gerencia" element={<Con m="produccion"><Gerencia /></Con>} />
           <Route path="produccion/ordenes" element={<Con m="produccion"><OrdenesProduccion /></Con>} />
           <Route path="produccion/ordenes/:id" element={<Con m="produccion"><DetalleOrden /></Con>} />
+          <Route path="servicio" element={<Con m="servicio"><Servicios /></Con>} />
+          <Route path="servicio/maquinas" element={<Con m="servicio"><Maquinas /></Con>} />
+          <Route path="servicio/maquinas/:id" element={<Con m="servicio"><FichaMaquina /></Con>} />
+          <Route path="servicio/resguardos" element={<Con m="servicio"><Resguardos /></Con>} />
+          <Route path="servicio/:id" element={<Con m="servicio"><DetalleServicio /></Con>} />
           <Route path="rrhh/empleados" element={<Con m="rrhh"><Empleados /></Con>} />
           <Route path="rrhh/incidencias" element={<Con m="rrhh"><Incidencias /></Con>} />
           <Route path="rrhh/objetivos" element={<Con m="objetivos"><Objetivos /></Con>} />
