@@ -1,0 +1,116 @@
+{
+  "comentario": "Fuentes y vendedores para scripts/importar.ts. 'correo' debe existir como usuario del ERP (invítalo antes o usa --crear-vendedores con la llave de servicio).",
+  "vendedores": {
+    "isaac": {
+      "nombre": "Isaac Hernández",
+      "correo": "isaac@hegamex.com",
+      "panel": "panel_isaac"
+    },
+    "juan": {
+      "nombre": "Juan Manuel Ramírez",
+      "correo": "juan@hegamex.com",
+      "panel": "panel_juan"
+    },
+    "susy": {
+      "nombre": "Susana Rizo",
+      "correo": "susana@hegamex.com",
+      "panel": "panel_susy"
+    }
+  },
+  "hojas": {
+    "proveedores": [
+      "1yMB2r3KAPPpIBghyd8qzB-dgmpxPiq1fs1lY03smRxw",
+      "'Directorio Proveedores'!A1:Z999"
+    ],
+    "lista_componentes": [
+      "1yMB2r3KAPPpIBghyd8qzB-dgmpxPiq1fs1lY03smRxw",
+      "ListaComponentes!A1:AH4497"
+    ],
+    "actualizaciones": [
+      "1yMB2r3KAPPpIBghyd8qzB-dgmpxPiq1fs1lY03smRxw",
+      "ACTUALIZACIONES!A1:AA20000"
+    ],
+    "equipos": [
+      "1sFjjiLxpsiFf0zroiv4RSWb4a5zmvCacABNg2bf9y6E",
+      "EQUIPOS!A1:AG990"
+    ],
+    "base_equipos": [
+      "1sFjjiLxpsiFf0zroiv4RSWb4a5zmvCacABNg2bf9y6E",
+      "'BASE EQUIPOS'!A1:H30000"
+    ],
+    "inventario": [
+      "1sOh_Gyj0ofi7aSYKdKmCJSyT_H6G1_wH18OlrybY2QE",
+      "Inventario!A1:AA8000"
+    ],
+    "demanda_b": [
+      "1gSkwDhdQ3xiVBrGUJszNK_af2dOtfBk4_s3GAq6_9Eg",
+      "Demanda!A1:Z8000"
+    ],
+    "registro_a": [
+      "1sOh_Gyj0ofi7aSYKdKmCJSyT_H6G1_wH18OlrybY2QE",
+      "Registro!A1:X",
+      8000
+    ],
+    "cot_descripciones": [
+      "1q7GcReynay14azuRvWBNzUND5KbMap6dSziqXtt8ZH8",
+      "ListaDeDescripciones!A1:Y1000"
+    ],
+    "panel_isaac_clientes": [
+      "1Db6Og9Qg1q3VpR5Wcad2qthq9ACpnSn2PZN4Kq11ll0",
+      "'Registro de Clientes'!A1:X1000"
+    ],
+    "panel_isaac_ventas": [
+      "1Db6Og9Qg1q3VpR5Wcad2qthq9ACpnSn2PZN4Kq11ll0",
+      "'Registro Ventas'!A1:AC2000"
+    ],
+    "panel_juan_clientes": [
+      "10CSFm-DZD4UCAHwmgTM-LeFSatBQGjo9JDxwispKLg4",
+      "'Registro de Clientes'!A1:X1000"
+    ],
+    "panel_juan_ventas": [
+      "10CSFm-DZD4UCAHwmgTM-LeFSatBQGjo9JDxwispKLg4",
+      "'Registro Ventas'!A1:AC2000"
+    ],
+    "panel_susy_clientes": [
+      "1uAo5cuNSACBkPsuh8sle7j15V7WfPtDpMV5fTrojlgo",
+      "'Registro de Clientes'!A1:X1000"
+    ],
+    "panel_susy_ventas": [
+      "1uAo5cuNSACBkPsuh8sle7j15V7WfPtDpMV5fTrojlgo",
+      "'Registro Ventas'!A1:AC2000"
+    ],
+    "clientes_directorio": [
+      "1bMPe8wRcFv66tap2k7qW6MOIDWDYMeng8Mii4ZwAdFs",
+      "'Directorio Clientes'!A1:W2000"
+    ],
+    "clientes_unified": [
+      "1bMPe8wRcFv66tap2k7qW6MOIDWDYMeng8Mii4ZwAdFs",
+      "'Clientes-Contacto Unified'!A1:Z4000"
+    ],
+    "ventas": [
+      "1bMPe8wRcFv66tap2k7qW6MOIDWDYMeng8Mii4ZwAdFs",
+      "VENTAS!A1:S8000"
+    ],
+    "ventas_2018_2021": [
+      "1TtNqWOn1ooYDTlUpeDY-7ukRqhCdMr5p82nB_OjoJUU",
+      "VENTAS!A1:T4000"
+    ]
+  },
+  "alias_vendedores": {
+    "comentario": "Cómo aparece el vendedor en el directorio de clientes → correo del usuario en el ERP. null = la cuenta queda sin dueño (libre).",
+    "isaac": "isaac@hegamex.com",
+    "issac": "isaac@hegamex.com",
+    "j. manuel": "juan@hegamex.com",
+    "juan manuel": "juan@hegamex.com",
+    "susy": "susana@hegamex.com",
+    "susana": "susana@hegamex.com",
+    "sr. abel": "direccion@hegamex.com",
+    "sr abel": "direccion@hegamex.com",
+    "abel hernandez": "direccion@hegamex.com",
+    "victor": null,
+    "abel jr.": null,
+    "abel jr": null,
+    "pag. web": null,
+    "ml": null
+  }
+}

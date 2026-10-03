@@ -4,15 +4,22 @@ import { supabase } from "./supabase";
 
 export type Rol =
   | "direccion" | "admin" | "gerente_ventas" | "ventas" | "ingenieria" | "compras" | "almacen"
-  | "gerente_produccion" | "produccion" | "rrhh" | "finanzas" | "pantalla";
+  | "gerente_produccion" | "produccion" | "rrhh" | "finanzas" | "pantalla"
+  | "importaciones";
 
 export const NOMBRE_ROL: Record<Rol, string> = {
   direccion: "Dirección", admin: "Sistemas", gerente_ventas: "Gerencia de ventas", ventas: "Ventas",
   ingenieria: "Ingeniería", compras: "Compras", almacen: "Almacén", gerente_produccion: "Gerencia de producción",
   produccion: "Producción", rrhh: "Recursos humanos", finanzas: "Finanzas", pantalla: "Pantalla de piso",
+  importaciones: "Importaciones",
 };
 
-export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" | "produccion" | "rrhh" | "finanzas" | "admin";
+export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" | "produccion" | "rrhh" | "finanzas" | "admin" | "asistente"
+  // objetivos: calificar (1 = jefe de su gente, 3 = RRHH y dirección); nomina: todo lo que tiene pesos;
+  // mi_desempeno no es de rol: lo da mi_sesion() a quien tiene ficha de empleado ligada.
+  | "objetivos" | "nomina" | "mi_desempeno"
+  | "importaciones"
+  | "servicio";
 
 export interface Perfil { id: string; nombre: string; correo: string; puesto: string | null; iniciales: string | null; activo: boolean; telefono: string | null }
 

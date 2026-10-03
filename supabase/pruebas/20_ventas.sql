@@ -12,9 +12,9 @@ begin
   v_prod := pg_temp.usuario('taller@hegamex.com', '{produccion}');
 
   -- Catálogo con precio: banda $202,000; polea $1,050 (componente, piso ≈ 9.09 %).
-  insert into articulos (clave, tipo, nombre, categoria_id) values ('E-315', 'equipo', 'Banda cargadora 18" x 13 m',
+  insert into articulos (clave, tipo, nombre, categoria_id) values ('T-E-315', 'equipo', 'Banda cargadora 18" x 13 m',
     (select id from categorias where nombre = 'Banda Transportadora')) returning id into v_banda;
-  insert into articulos (clave, tipo, nombre) values ('C-POL', 'componente', 'Polea 8"') returning id into v_polea;
+  insert into articulos (clave, tipo, nombre) values ('T-C-POL', 'componente', 'Polea 8"') returning id into v_polea;
   insert into costos_articulo (articulo_id, costo) values (v_polea, 735);
   insert into bom_lineas (padre_id, hijo_id, cantidad) values (v_banda, v_polea, 91345.69 / 735);
   assert (select precio from precios_lista where articulo_id = v_banda) = 202000, 'precio de la banda';
@@ -114,7 +114,7 @@ begin
   -- ---------------------------------------------------------------------------
   perform pg_temp.como_postgres();
   insert into vendedor_plan values (v_isaac, (select id from planes_comision where nombre like 'General%'));
-  delete from pedidos;
+  -- (v_isaac es un usuario nuevo de esta prueba: solo cuentan sus pedidos, haya lo que haya en la base)
   insert into pedidos (cliente_id, vendedor_id, fecha) values (v_cli_isaac, v_isaac, '2026-09-10') returning id into v_ped;
   insert into pedido_lineas (pedido_id, titulo, cantidad, precio_unitario, linea) values
     (v_ped, 'Equipos del mes', 1, 2857000, 'maquinaria'),
@@ -129,6 +129,7 @@ begin
   assert r.bono_meta = 10000, format('bono meta: esperaba 10,000, salió %s', r.bono_meta);
   assert r.bono_refacciones = 6400, format('bono refacciones: esperaba 6,400, salió %s', r.bono_refacciones);
   assert r.siguiente_meta = 5000000, 'siguiente meta';
+  assert r.total = 73540, format('total de comisión: esperaba 73,540 y salió %s (antes salía siempre 0)', r.total);
 
   -- Crédito compartido 50/50 con Juan: a Isaac le toca la mitad.
   perform pg_temp.como_postgres();

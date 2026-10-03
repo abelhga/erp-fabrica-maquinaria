@@ -28,12 +28,20 @@ export const fechaYHora = (f: string | Date | null | undefined) => (f ? fechaHor
 
 export function hace(f: string | Date | null | undefined) {
   if (!f) return "—";
-  const dias = Math.round((Date.now() - aFecha(f).getTime()) / 86_400_000);
+  const ms = Date.now() - aFecha(f).getTime();
+  // Con hora (un aviso, un movimiento) lo de hoy se dice en minutos u horas; una fecha sola es "hoy".
+  const conHora = f instanceof Date || !/^\d{4}-\d{2}-\d{2}$/.test(f);
+  if (conHora && ms < 86_400_000) {
+    const min = Math.max(0, Math.round(ms / 60_000));
+    return min < 1 ? "ahora" : min < 60 ? `hace ${min} min` : `hace ${Math.round(min / 60)} h`;
+  }
+  const dias = Math.round(ms / 86_400_000);
   if (dias <= 0) return "hoy";
   if (dias === 1) return "ayer";
   if (dias < 30) return `hace ${dias} días`;
   const meses = Math.round(dias / 30);
-  return meses < 12 ? `hace ${meses} ${meses === 1 ? "mes" : "meses"}` : `hace ${Math.round(meses / 12)} años`;
+  const anios = Math.round(meses / 12);
+  return meses < 12 ? `hace ${meses} ${meses === 1 ? "mes" : "meses"}` : `hace ${anios} ${anios === 1 ? "año" : "años"}`;
 }
 
 export const hoyISO = () => new Date().toLocaleDateString("en-CA");

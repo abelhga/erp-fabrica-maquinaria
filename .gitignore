@@ -7,3 +7,6 @@ supabase/.branches
 supabase/.temp
 test-results
 capturas
+
+# Copias de trabajo de agentes (git worktree): no son parte del proyecto
+.claude/worktrees/

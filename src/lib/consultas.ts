@@ -48,13 +48,18 @@ export function useAccion<A, R = unknown>(fn: (a: A) => Promise<R>, opciones: { 
 export function useTiempoReal(tabla: string, claves: QueryKey[], filtro?: string) {
   const qc = useQueryClient();
   useEffect(() => {
+    // Una acción toca varias filas (una orden y sus 20 partidas) y cada fila manda
+    // su aviso: recargar en cada uno hacía que las consultas se cancelaran entre sí.
+    // Se junta todo lo que llega en 400 ms y se recarga una vez.
+    let espera: ReturnType<typeof setTimeout> | undefined;
     const canal = supabase
       .channel(`rt-${tabla}-${filtro ?? "todo"}-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: tabla, ...(filtro ? { filter: filtro } : {}) }, () => {
-        claves.forEach((k) => qc.invalidateQueries({ queryKey: k }));
+        clearTimeout(espera);
+        espera = setTimeout(() => claves.forEach((k) => qc.invalidateQueries({ queryKey: k })), 400);
       })
       .subscribe();
-    return () => { supabase.removeChannel(canal); };
+    return () => { clearTimeout(espera); supabase.removeChannel(canal); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabla, filtro]);
 }

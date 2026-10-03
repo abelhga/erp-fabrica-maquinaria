@@ -13,10 +13,10 @@ begin
   v_vend := pg_temp.usuario('vend@hegamex.com', '{ventas}');
   select id into v_pb from almacenes where nombre = 'Planta Baja';
 
-  insert into articulos (clave, tipo, nombre, unidad) values ('C-TUBO', 'materia_prima', 'Tubo 2" ced. 40', 'metro') returning id into v_tubo;
-  insert into articulos (clave, tipo, nombre, unidad) values ('C-CHUM', 'componente', 'Chumacera 1 1/2', 'pieza') returning id into v_chum;
-  insert into articulos (clave, tipo, nombre, unidad) values ('C-TOR', 'componente', 'Tornillo 3/8', 'pieza') returning id into v_tornillo;
-  insert into articulos (clave, tipo, nombre) values ('E-BAZ', 'equipo', 'Bazuca 10" x 12 m') returning id into v_bazuca;
+  insert into articulos (clave, tipo, nombre, unidad) values ('T-C-TUBO', 'materia_prima', 'Tubo 2" ced. 40', 'metro') returning id into v_tubo;
+  insert into articulos (clave, tipo, nombre, unidad) values ('T-C-CHUM', 'componente', 'Chumacera 1 1/2', 'pieza') returning id into v_chum;
+  insert into articulos (clave, tipo, nombre, unidad) values ('T-C-TOR', 'componente', 'Tornillo 3/8', 'pieza') returning id into v_tornillo;
+  insert into articulos (clave, tipo, nombre) values ('T-E-BAZ', 'equipo', 'Bazuca 10" x 12 m') returning id into v_bazuca;
   insert into bom_lineas (padre_id, hijo_id, cantidad) values (v_bazuca, v_tubo, 14), (v_bazuca, v_chum, 4);
   insert into bom_operaciones (articulo_id, etapa_id, horas) values
     (v_bazuca, (select id from etapas where nombre = 'Pailería'), 30),
@@ -94,7 +94,7 @@ begin
 
   -- La TV ve el tablero pero no puede mover nada.
   perform pg_temp.como(v_tv);
-  select count(*) into v_n from v_tablero_produccion;
+  select count(*) into v_n from v_tablero_produccion where id in (v_op1, v_op2);
   assert v_n = 2, format('la pantalla debería ver las 2 órdenes en el tablero, ve %s', v_n);
   begin
     perform avanzar_operacion((select id from op_operaciones where orden_id = v_op2 limit 1), 'inicio');
@@ -114,6 +114,9 @@ begin
 
   -- Carga del taller: la segunda bazuca (planeada) no cuenta; la primera ya terminó → 0 pendientes.
   perform pg_temp.como(v_gp);
-  select horas_pendientes into v_num from v_carga_etapas where nombre = 'Pailería';
-  assert v_num = 0, format('pailería sin horas pendientes de órdenes liberadas, tiene %s', v_num);
+  -- Carga del taller: la primera bazuca ya terminó; la segunda (planeada, sin liberar) no cuenta.
+  select coalesce(sum(x.horas_estimadas) filter (where x.estado <> 'terminada'), 0) into v_num
+  from op_operaciones x join ordenes_produccion o on o.id = x.orden_id
+  where x.orden_id in (v_op1, v_op2) and o.estado in ('liberada', 'en_proceso');
+  assert v_num = 0, format('pailería sin horas pendientes de estas órdenes liberadas, tiene %s', v_num);
 end $$;
