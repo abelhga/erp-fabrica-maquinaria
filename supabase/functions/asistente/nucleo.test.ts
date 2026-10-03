@@ -15,6 +15,19 @@ const env = Object.fromEntries(
 const URL_SB = env.VITE_SUPABASE_URL, ANON = env.VITE_SUPABASE_ANON_KEY;
 const hayBase = await fetch(`${URL_SB}/auth/v1/health`, { headers: { apikey: ANON } }).then((r) => r.ok).catch(() => false);
 
+// Cada prueba con el Claude falso cuenta contra el cupo diario (40) de su usuario,
+// y la base local es compartida: tras varias corridas en el día el cupo se agotaba y
+// las pruebas fallaban con 429 sin que nada estuviera roto. Se limpia el uso del día
+// de los usuarios de prueba antes de empezar (solo en la base local).
+if (hayBase) {
+  const { default: pg } = await import("pg");
+  const db = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres" });
+  await db.connect();
+  await db.query(`delete from asistente_uso where en >= current_date
+    and usuario_id in (select id from auth.users where email in ('isaac@hegamex.com','importaciones@hegamex.com','direccion@hegamex.com','almacen@hegamex.com'))`);
+  await db.end();
+}
+
 async function sesion(correo: string) {
   const db = createClient(URL_SB, ANON, { auth: { persistSession: false } });
   const { data, error } = await db.auth.signInWithPassword({ email: correo, password: "hegamex-local" });
