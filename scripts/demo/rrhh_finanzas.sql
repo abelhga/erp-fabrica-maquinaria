@@ -32,33 +32,33 @@ do $$ begin perform pg_temp.como('rrhh@hegamex.com'); end $$;
 create temp table demo_emp (numero text, nombre text, puesto text, depto text, etapa text, ingreso date, nacimiento date,
   telefono text, usuario text, rfc4 text, sexo text, salario numeric) on commit drop;
 insert into demo_emp values
-  ('1001', 'José Luis Ramírez Ortega',      'Jefe de taller',             'Producción',       'Pailería',  '2009-03-02', '1976-04-12', '348 112 4501', null, 'RAOJ', 'H', 920),
-  ('1002', 'Martín Hernández Gómez',        'Soldador',                   'Producción',       'Pailería',  '2014-06-16', '1985-09-03', '348 109 2287', null, 'HEGM', 'H', 560),
-  ('1003', 'Ricardo Pérez Navarro',         'Soldador',                   'Producción',       'Pailería',  '2019-01-14', '1992-01-27', '348 127 9034', null, 'PENR', 'H', 520),
-  ('1004', 'Juan Carlos Mendoza Ruiz',      'Pailero',                    'Producción',       'Pailería',  '2021-08-02', '1990-11-08', '348 133 5512', null, 'MERJ', 'H', 500),
-  ('1005', 'Luis Ángel Torres Velázquez',   'Ayudante de pailería',       'Producción',       'Pailería',  current_date - 180, '2004-06-21', '348 140 7788', null, 'TOVL', 'H', 330),
-  ('1006', 'Francisco Javier Gutiérrez Luna','Pailero',                   'Producción',       'Pailería',  '2023-02-13', '1988-02-14', '348 118 3321', null, 'GULF', 'H', 500),
-  ('1007', 'Alejandro Castillo Reyes',      'Tornero',                    'Producción',       'Torno',     '2011-09-05', '1980-07-30', '348 102 6650', null, 'CARA', 'H', 640),
-  ('1008', 'Miguel Ángel Flores Jiménez',   'Tornero',                    'Producción',       'Torno',     '2020-10-19', '1994-03-15', '348 125 0943', null, 'FOJM', 'H', 560),
-  ('1009', 'Raúl Sánchez Medina',           'Fresador',                   'Producción',       'Torno',     '2024-07-01', '1997-12-02', '348 131 4410', null, 'SAMR', 'H', 480),
-  ('1010', 'Jorge Alberto Morales Díaz',    'Pintor',                     'Producción',       'Pintura',   '2016-05-09', '1983-05-19', '348 107 8876', null, 'MODJ', 'H', 470),
-  ('1011', 'Eduardo Vargas Luna',           'Pintor',                     'Producción',       'Pintura',   current_date - 330, '2001-10-11', '348 144 1209', null, 'VALE', 'H', 400),
-  ('1012', 'Héctor Romero Aguilar',         'Ayudante de pintura',        'Producción',       'Pintura',   '2022-03-22', '1999-08-25', '348 136 3354', null, 'ROAH', 'H', 340),
-  ('1013', 'Daniel Ruiz Cervantes',         'Operador de corte (plasma)', 'Producción',       'Corte',     '2018-02-05', '1991-04-04', '348 121 7765', null, 'RUCD', 'H', 520),
-  ('1014', 'Óscar Jiménez Salazar',         'Detallador',                 'Producción',       'Detallado', '2015-08-17', '1984-06-29', '348 110 2093', null, 'JISO', 'H', 500),
-  ('1015', 'Arturo Domínguez Campos',       'Electricista',               'Producción',       'Eléctrico', '2017-11-27', '1986-01-16', '348 115 6621', null, 'DOCA', 'H', 610),
-  ('1016', 'Sergio Navarro Ibarra',         'Ayudante general',           'Producción',       'Embarque',  current_date - 45, '2006-02-09', '348 149 3008', null, 'NAIS', 'H', 315.04),
-  ('1017', 'Gerardo López Fuentes',         'Almacenista',                'Almacén',          null,        '2013-04-08', '1982-10-05', '348 104 5547', null, 'LOFG', 'H', 480),
-  ('1018', 'Rosa María Delgado Cruz',       'Auxiliar de almacén',        'Almacén',          null,        '2022-09-12', '1995-03-08', '348 138 9902', null, 'DECR', 'M', 380),
-  ('1019', 'Isaac Hernández García',        'Ejecutivo de ventas',        'Ventas',           null,        '2012-01-09', '1987-08-14', '33 1450 2201', 'isaac@hegamex.com', 'HEGI', 'H', 650),
-  ('1020', 'Juan Manuel Ramírez Soto',      'Ejecutivo de ventas',        'Ventas',           null,        '2019-05-20', '1990-05-01', '33 1450 2202', 'juan@hegamex.com', 'RASJ', 'H', 600),
-  ('1021', 'Susana Rizo Mercado',           'Ejecutiva de ventas',        'Ventas',           null,        '2021-01-11', '1993-12-12', '33 1450 2203', 'susana@hegamex.com', 'RIMS', 'M', 600),
-  ('1022', 'Elizabeth Hernández García',    'Gerente de ventas',          'Ventas',           null,        '2010-07-05', '1982-02-20', '33 1450 2204', 'gerente.ventas@hegamex.com', 'HEGE', 'M', 950),
-  ('1023', 'Miguel Ángel Ortiz Plascencia', 'Ingeniero de diseño',        'Ingeniería',       null,        '2018-08-27', '1989-09-09', '33 1450 2205', 'ingenieria@hegamex.com', 'OIPM', 'H', 820),
-  ('1024', 'Laura Patricia Gómez Ruvalcaba','Contadora',                  'Administración',   null,        '2016-02-01', '1984-11-23', '33 1450 2206', 'finanzas@hegamex.com', 'GORL', 'M', 780),
-  ('1025', 'Mariana Castañeda Villa',       'Auxiliar de RRHH',           'Recursos Humanos', null,        '2020-06-15', '1996-07-07', '33 1450 2207', 'rrhh@hegamex.com', 'CAVM', 'M', 520),
-  ('1026', 'Claudia Ivonne Rivas Orozco',   'Compradora',                 'Compras',          null,        '2018-09-03', '1991-05-30', '33 1450 2208', 'compras@hegamex.com', 'RIOC', 'M', 620),
-  ('1027', 'Abel Hernández G.',             'Director general',           'Dirección',        null,        '2005-01-03', '1970-03-21', '33 1450 2200', 'direccion@hegamex.com', 'HEGA', 'H', 1800);
+  ('1001', 'José Luis Ramírez Ortega',      'Jefe de taller',             'Producción',       'Pailería',  '2009-03-02', '1976-04-12', null, null, 'RAOJ', 'H', 920),
+  ('1002', 'Martín Hernández Gómez',        'Soldador',                   'Producción',       'Pailería',  '2014-06-16', '1985-09-03', null, null, 'HEGM', 'H', 560),
+  ('1003', 'Ricardo Pérez Navarro',         'Soldador',                   'Producción',       'Pailería',  '2019-01-14', '1992-01-27', null, null, 'PENR', 'H', 520),
+  ('1004', 'Juan Carlos Mendoza Ruiz',      'Pailero',                    'Producción',       'Pailería',  '2021-08-02', '1990-11-08', null, null, 'MERJ', 'H', 500),
+  ('1005', 'Luis Ángel Torres Velázquez',   'Ayudante de pailería',       'Producción',       'Pailería',  current_date - 180, '2004-06-21', null, null, 'TOVL', 'H', 330),
+  ('1006', 'Francisco Javier Gutiérrez Luna','Pailero',                   'Producción',       'Pailería',  '2023-02-13', '1988-02-14', null, null, 'GULF', 'H', 500),
+  ('1007', 'Alejandro Castillo Reyes',      'Tornero',                    'Producción',       'Torno',     '2011-09-05', '1980-07-30', null, null, 'CARA', 'H', 640),
+  ('1008', 'Miguel Ángel Flores Jiménez',   'Tornero',                    'Producción',       'Torno',     '2020-10-19', '1994-03-15', null, null, 'FOJM', 'H', 560),
+  ('1009', 'Raúl Sánchez Medina',           'Fresador',                   'Producción',       'Torno',     '2024-07-01', '1997-12-02', null, null, 'SAMR', 'H', 480),
+  ('1010', 'Jorge Alberto Morales Díaz',    'Pintor',                     'Producción',       'Pintura',   '2016-05-09', '1983-05-19', null, null, 'MODJ', 'H', 470),
+  ('1011', 'Eduardo Vargas Luna',           'Pintor',                     'Producción',       'Pintura',   current_date - 330, '2001-10-11', null, null, 'VALE', 'H', 400),
+  ('1012', 'Héctor Romero Aguilar',         'Ayudante de pintura',        'Producción',       'Pintura',   '2022-03-22', '1999-08-25', null, null, 'ROAH', 'H', 340),
+  ('1013', 'Daniel Ruiz Cervantes',         'Operador de corte (plasma)', 'Producción',       'Corte',     '2018-02-05', '1991-04-04', null, null, 'RUCD', 'H', 520),
+  ('1014', 'Óscar Jiménez Salazar',         'Detallador',                 'Producción',       'Detallado', '2015-08-17', '1984-06-29', null, null, 'JISO', 'H', 500),
+  ('1015', 'Arturo Domínguez Campos',       'Electricista',               'Producción',       'Eléctrico', '2017-11-27', '1986-01-16', null, null, 'DOCA', 'H', 610),
+  ('1016', 'Sergio Navarro Ibarra',         'Ayudante general',           'Producción',       'Embarque',  current_date - 45, '2006-02-09', null, null, 'NAIS', 'H', 315.04),
+  ('1017', 'Gerardo López Fuentes',         'Almacenista',                'Almacén',          null,        '2013-04-08', '1982-10-05', null, null, 'LOFG', 'H', 480),
+  ('1018', 'Rosa María Delgado Cruz',       'Auxiliar de almacén',        'Almacén',          null,        '2022-09-12', '1995-03-08', null, null, 'DECR', 'M', 380),
+  ('1019', 'Isaac Hernández García',        'Ejecutivo de ventas',        'Ventas',           null,        '2012-01-09', '1987-08-14', null, 'isaac@hegamex.com', 'HEGI', 'H', 650),
+  ('1020', 'Juan Manuel Ramírez Soto',      'Ejecutivo de ventas',        'Ventas',           null,        '2019-05-20', '1990-05-01', null, 'juan@hegamex.com', 'RASJ', 'H', 600),
+  ('1021', 'Susana Rizo Mercado',           'Ejecutiva de ventas',        'Ventas',           null,        '2021-01-11', '1993-12-12', null, 'susana@hegamex.com', 'RIMS', 'M', 600),
+  ('1022', 'Elizabeth Hernández García',    'Gerente de ventas',          'Ventas',           null,        '2010-07-05', '1982-02-20', null, 'gerente.ventas@hegamex.com', 'HEGE', 'M', 950),
+  ('1023', 'Miguel Ángel Ortiz Plascencia', 'Ingeniero de diseño',        'Ingeniería',       null,        '2018-08-27', '1989-09-09', null, 'ingenieria@hegamex.com', 'OIPM', 'H', 820),
+  ('1024', 'Laura Patricia Gómez Ruvalcaba','Contadora',                  'Administración',   null,        '2016-02-01', '1984-11-23', null, 'finanzas@hegamex.com', 'GORL', 'M', 780),
+  ('1025', 'Mariana Castañeda Villa',       'Auxiliar de RRHH',           'Recursos Humanos', null,        '2020-06-15', '1996-07-07', null, 'rrhh@hegamex.com', 'CAVM', 'M', 520),
+  ('1026', 'Claudia Ivonne Rivas Orozco',   'Compradora',                 'Compras',          null,        '2018-09-03', '1991-05-30', null, 'compras@hegamex.com', 'RIOC', 'M', 620),
+  ('1027', 'DEMO Dirección General',        'Director general',           'Dirección',        null,        '2005-01-03', '1970-01-01', null, 'direccion@hegamex.com', 'HEGA', 'H', 1800);
 
 insert into public.empleados (id, numero, nombre, puesto, departamento_id, etapa_id, fecha_ingreso, fecha_nacimiento,
   telefono, correo, contacto_emergencia, usuario_id)
@@ -87,7 +87,7 @@ on conflict do nothing;
 insert into public.empleados (id, numero, nombre, puesto, departamento_id, etapa_id, fecha_ingreso, fecha_nacimiento, telefono, activo, baja_en, motivo_baja)
 select pg_temp.id('emp:1028'), '1028', 'Pedro Salinas Ochoa', 'Soldador',
   (select id from public.departamentos where nombre = 'Producción'), (select id from public.etapas where nombre = 'Pailería'),
-  '2022-05-02', '1993-02-17', '348 150 1100', false, current_date - 35, 'Renuncia voluntaria: se fue a trabajar a Estados Unidos'
+  '2022-05-02', '1993-02-17', null, false, current_date - 35, 'Renuncia voluntaria: se fue a trabajar a Estados Unidos'
 where not exists (select 1 from public.empleados where id = pg_temp.id('emp:1028'))
 on conflict do nothing;
 
