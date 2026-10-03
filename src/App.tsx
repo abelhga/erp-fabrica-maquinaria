@@ -60,6 +60,7 @@ const Maquinas = p(() => import("./modulos/servicio/Maquinas"));
 const FichaMaquina = p(() => import("./modulos/servicio/FichaMaquina"));
 const ReportarFalla = p(() => import("./modulos/servicio/ReportarFalla"));
 const Resguardos = p(() => import("./modulos/servicio/Resguardos"));
+const Analisis = p(() => import("./modulos/analisis/Analisis"));
 
 function Cargando() {
   return <div className="h-full flex items-center justify-center text-tenue"><Loader2 className="h-6 w-6 animate-spin" /></div>;
@@ -151,6 +152,7 @@ export function App() {
           <Route path="importaciones" element={<Con m="importaciones"><Embarques /></Con>} />
           <Route path="importaciones/dinero" element={<Con m="importaciones"><Embarques /></Con>} />
           <Route path="importaciones/:id" element={<Con m="importaciones"><DetalleEmbarque /></Con>} />
+          <Route path="analisis/*" element={<Con m="analisis"><Analisis /></Con>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

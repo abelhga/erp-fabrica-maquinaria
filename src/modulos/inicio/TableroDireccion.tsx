@@ -17,6 +17,7 @@ import { useSesion } from "@/lib/sesion";
 import { dinero, dineroCompacto, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { ResumenIA } from "./ResumenIA";
+import { DondeVendemos } from "@/modulos/analisis/DondeVendemos";
 
 interface Tablero {
   generado: string;
@@ -245,7 +246,7 @@ export function TableroDireccion() {
 
       {/* Comercial */}
       {(d.vendedores || d.embudo) && (
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-4">
           {d.vendedores && (
             <Tarjeta>
               <EncabezadoTarjeta titulo="Vendedores este mes" descripcion="Maquinaria contra su siguiente meta de bono" acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/ventas/comisiones")}>Comisiones</button>} />
@@ -292,6 +293,7 @@ export function TableroDireccion() {
               </div>
             </Tarjeta>
           )}
+          <DondeVendemos />
         </div>
       )}
 

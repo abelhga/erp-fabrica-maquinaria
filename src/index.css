@@ -25,6 +25,19 @@
   --serie-1: #2a78d6; --serie-2: #eb6834; --serie-3: #1baf7a; --serie-4: #eda100;
   --serie-5: #e87ba4; --serie-6: #008300; --serie-7: #4a3aa7; --serie-8: #e34948;
   --rejilla: #e7e5e0; --eje: #6b6a66;
+  /* Magnitud (mapas y mapas de calor): un solo tono, claro = poco, oscuro = mucho. Generada en
+     OKLCH con el tono de --serie-1; validada con validate_palette.js --ordinal (L monótona,
+     ΔL ≥ 0.06, el paso más claro a 2.07:1 sobre la tarjeta). --seq-tinta-N: texto encima. */
+  --seq-1: #8cb7f0; --seq-2: #69a1eb; --seq-3: #428be6; --seq-4: #2975d1;
+  --seq-5: #1d61b2; --seq-6: #144e93; --seq-7: #0a3c75;
+  --seq-tinta-1: #0b1b33; --seq-tinta-2: #0b1b33; --seq-tinta-3: #0b1b33; --seq-tinta-4: #ffffff;
+  --seq-tinta-5: #ffffff; --seq-tinta-6: #ffffff; --seq-tinta-7: #ffffff;
+  /* Polaridad (crecimiento): rojo cae, azul crece, gris en el cero. Cada brazo validado como
+     rampa; entre brazos ΔE CVD 13.0 (todos los pares). */
+  --div-1: #8b2827; --div-2: #d24c4a; --div-3: #ed9b94; --div-4: #c9c8c1;
+  --div-5: #8cb7f0; --div-6: #3380de; --div-7: #144f94;
+  --mapa-vacio: #e6e5e0;   /* sin venta: gris neutro, que no se confunda con "poco" (azul claro) */
+  --serie-resto: #a3a29b;  /* lo que se junta en "Resto" cuando hay más de 7 series */
   color-scheme: light;
 }
 
@@ -48,6 +61,16 @@
   --serie-1: #3987e5; --serie-2: #d95926; --serie-3: #199e70; --serie-4: #c98500;
   --serie-5: #d55181; --serie-6: #008300; --serie-7: #9085e9; --serie-8: #e66767;
   --rejilla: #2c2c2a; --eje: #a3a29b;
+  /* En oscuro la rampa se voltea: poco = cerca de la tarjeta (oscuro), mucho = claro. El paso
+     más oscuro queda a 2.37:1 sobre la tarjeta oscura (#181c25). */
+  --seq-1: #1757a2; --seq-2: #246abf; --seq-3: #317edc; --seq-4: #5294e7;
+  --seq-5: #75a9ed; --seq-6: #97bef3; --seq-7: #b9d3f6;
+  --seq-tinta-1: #ffffff; --seq-tinta-2: #ffffff; --seq-tinta-3: #0b0b0b; --seq-tinta-4: #0b0b0b;
+  --seq-tinta-5: #0b0b0b; --seq-tinta-6: #0b0b0b; --seq-tinta-7: #0b0b0b;
+  --div-1: #f1a8a1; --div-2: #db5854; --div-3: #9c2e2e; --div-4: #4a4a46;
+  --div-5: #185aa6; --div-6: #4089e6; --div-7: #9ac1f3;
+  --mapa-vacio: #2c313b;
+  --serie-resto: #6b6a66;
   color-scheme: dark;
 }
 
