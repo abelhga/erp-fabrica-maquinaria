@@ -2,7 +2,7 @@
 -- cuánto costó. Antes compras nivel 1 (que tienen almacén, producción y sistemas)
 -- bastaba para leer costo_unitario directo de la tabla.
 do $$
-declare v_comp uuid; v_alm uuid; v_taller uuid; v_fin uuid; v_rh uuid; v_prov uuid; v_art uuid; v_oc uuid; r record;
+declare v_folio text; v_comp uuid; v_alm uuid; v_taller uuid; v_fin uuid; v_rh uuid; v_prov uuid; v_art uuid; v_oc uuid; r record;
 begin
   v_comp := pg_temp.usuario('compras@hegamex.com', '{compras}');
   v_alm := pg_temp.usuario('almacen@hegamex.com', '{almacen}');
@@ -13,6 +13,7 @@ begin
   insert into articulos (clave, tipo, nombre, unidad) values ('T-OC-1', 'componente', 'T Polea de prueba', 'pieza') returning id into v_art;
   insert into ordenes_compra (proveedor_id, estado, fecha_entrega) values (v_prov, 'enviada', current_date + 10) returning id into v_oc;
   insert into oc_lineas (orden_compra_id, articulo_id, cantidad, costo_unitario) values (v_oc, v_art, 10, 1234.56);
+  select folio into v_folio from ordenes_compra where id = v_oc;
 
   perform pg_temp.como(v_alm);
   assert not exists (select 1 from oc_lineas where orden_compra_id = v_oc), 'almacén leyó la tabla con costos';
@@ -22,6 +23,10 @@ begin
   assert r.costo_unitario is null and r.importe is null, 'almacén vio el costo en la vista';
   assert (select total from v_ordenes_compra where id = v_oc) is null, 'almacén vio el total en la vista';
   assert (select fecha_entrega from v_ordenes_compra where id = v_oc) = current_date + 10, 'almacén ve cuándo llega';
+
+  -- …y lo sigue encontrando como antes de cerrar las tablas (buscador, inicio).
+  assert exists (select 1 from buscar_global(v_folio) b where b::text like '%' || v_folio || '%'), 'almacén ya no encuentra la orden por folio';
+  assert (indicadores()->'compras'->>'oc_abiertas')::int >= 1, 'almacén ve 0 compras en camino';
 
   perform pg_temp.como(v_taller);
   assert (select costo_unitario from v_oc_lineas where orden_compra_id = v_oc) is null, 'el taller vio el costo';

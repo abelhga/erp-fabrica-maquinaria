@@ -143,6 +143,7 @@ function Detalle({ id }: { id: string }) {
           acciones={<>
             <Boton variante="fantasma" onClick={() => ir("/compras/ordenes")}><ArrowLeft className="h-4 w-4" /> Órdenes</Boton>
             {verDinero && <Boton variante="secundario" onClick={() => window.print()} disabled={!lineas.data?.length}><Printer className="h-4 w-4" /> Imprimir</Boton>}
+            {compra && (o.es_importacion || o.moneda !== "MXN") && o.estado !== "cancelada" && <Boton asChild variante="secundario"><Link to={`/importaciones/oc/${o.id}/imprimir`}><Globe2 className="h-4 w-4" /> OC y contrato para aduana</Link></Boton>}
             {compra && borrador && <Boton variante="fantasma" onClick={() => { if (confirm(`¿Eliminar el borrador ${o.folio}?`)) borrar.mutate(undefined); }}><Trash2 className="h-4 w-4" /> Eliminar</Boton>}
             {compra && o.estado === "enviada" && !recibido && <Boton variante="secundario" onClick={() => setCancelando(true)}><Ban className="h-4 w-4" /> Cancelar</Boton>}
             {compra && borrador && <Boton onClick={() => enviar.mutate(undefined)} cargando={enviar.isPending} disabled={!lineas.data?.length}><Send className="h-4 w-4" /> Enviar al proveedor</Boton>}

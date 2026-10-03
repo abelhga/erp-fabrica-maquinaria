@@ -2,6 +2,7 @@ import {
   LayoutDashboard, Users, FileText, ShoppingCart, Trophy, Boxes, Layers, Percent, Truck, Tags,
   ClipboardList, Warehouse, ArrowLeftRight, TrendingDown, Factory, ClipboardCheck, Monitor, Tablet,
   UserRound, CalendarOff, LineChart, Wallet, Receipt, Settings, ShieldCheck, Download, History, KanbanSquare, PhoneCall, ListTodo,
+  Ship,
   type LucideIcon,
 } from "lucide-react";
 import { Award, Banknote, ListChecks, Target } from "lucide-react";
@@ -47,6 +48,12 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/almacen/existencias", texto: "Existencias", icono: Warehouse, modulo: "inventario" },
       { ruta: "/almacen/movimientos", texto: "Entradas y salidas", icono: ArrowLeftRight, modulo: "inventario" },
       { ruta: "/almacen/reabasto", texto: "Reabasto", icono: TrendingDown, modulo: "inventario" },
+    ],
+  },
+  {
+    titulo: "Importaciones",
+    entradas: [
+      { ruta: "/importaciones", texto: "Embarques", icono: Ship, modulo: "importaciones" },
     ],
   },
   {

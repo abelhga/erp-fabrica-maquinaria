@@ -2,7 +2,7 @@
 // Claude vive en el servidor; aquí solo viaja la sesión de quien pregunta.
 import { supabase } from "./supabase";
 
-export type Area = "direccion" | "ventas" | "compras" | "almacen" | "produccion" | "finanzas";
+export type Area = "direccion" | "ventas" | "compras" | "almacen" | "produccion" | "finanzas" | "importaciones";
 export type Tono = "riesgo" | "atencion" | "bueno" | "info";
 
 export interface Resumen {
@@ -55,6 +55,20 @@ export async function pedirResumen(area: Area, forzar = false): Promise<Resumen>
 
 export async function redactarMensaje(cliente_id: string, canal: "whatsapp" | "correo", motivo: string) {
   return (await llamar({ modo: "redactar", cliente_id, canal, motivo })).json() as Promise<{ asunto: string; mensaje: string; simulado?: boolean }>;
+}
+
+export type TipoDocumento = "proforma" | "factura" | "lista_empaque" | "bl" | "pedimento" | "cuenta_gastos";
+
+/** Claude lee un PDF o una foto y devuelve sus campos. No guarda nada: eso lo confirma quien lo revisa. */
+export async function leerDocumento(tipo: TipoDocumento, archivo: File, signal?: AbortSignal) {
+  const datos = await new Promise<string>((ok, mal) => {
+    const lector = new FileReader();
+    lector.onload = () => ok(String(lector.result).split(",")[1] ?? "");
+    lector.onerror = () => mal(new Error("No se pudo leer el archivo."));
+    lector.readAsDataURL(archivo);
+  });
+  const r = await llamar({ modo: "leer_documento", tipo, media_type: archivo.type, datos }, signal);
+  return r.json() as Promise<{ tipo: TipoDocumento; campos: Record<string, unknown>; simulado?: boolean; modelo?: string }>;
 }
 
 /** Conversación en streaming: cada evento llega en cuanto Claude lo escribe. */

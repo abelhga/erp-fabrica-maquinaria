@@ -49,6 +49,9 @@ const Bitacora = p(() => import("./modulos/sistema/Bitacora"));
 const Configuracion = p(() => import("./modulos/sistema/Configuracion"));
 const ParaLlamar = p(() => import("./modulos/asistente/ParaLlamar"));
 const Pendientes = p(() => import("./modulos/pendientes/Pendientes"));
+const Embarques = p(() => import("./modulos/importaciones/Embarques"));
+const DetalleEmbarque = p(() => import("./modulos/importaciones/DetalleEmbarque"));
+const ImprimirOCImportacion = p(() => import("./modulos/importaciones/ImprimirOC"));
 
 function Cargando() {
   return <div className="h-full flex items-center justify-center text-tenue"><Loader2 className="h-6 w-6 animate-spin" /></div>;
@@ -86,6 +89,7 @@ export function App() {
         <Route path="/piso" element={<Con m="produccion"><PantallaPiso /></Con>} />
         <Route path="/produccion/terminal" element={<Con m="produccion" n={2}><Terminal /></Con>} />
         <Route path="/ventas/cotizaciones/:id/imprimir" element={<Con m="ventas"><ImprimirCotizacion /></Con>} />
+        <Route path="/importaciones/oc/:id/imprimir" element={<Con m="compras" n={2}><ImprimirOCImportacion /></Con>} />
         <Route element={<Shell />}>
           <Route index element={<Inicio />} />
           <Route path="costeo/componentes" element={<Con m="costeo"><Componentes /></Con>} />
@@ -127,6 +131,9 @@ export function App() {
           <Route path="sistema/importar" element={<Con m="admin" n={3}><Importar /></Con>} />
           <Route path="sistema/bitacora" element={<Con m="admin"><Bitacora /></Con>} />
           <Route path="sistema/configuracion" element={<Con m="admin" n={3}><Configuracion /></Con>} />
+          <Route path="importaciones" element={<Con m="importaciones"><Embarques /></Con>} />
+          <Route path="importaciones/dinero" element={<Con m="importaciones"><Embarques /></Con>} />
+          <Route path="importaciones/:id" element={<Con m="importaciones"><DetalleEmbarque /></Con>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

@@ -14,6 +14,7 @@ export const ROLES: { rol: Rol; descripcion: string }[] = [
   { rol: "rrhh", descripcion: "Personal, vacaciones e incidencias, con CURP, salario y cuentas." },
   { rol: "finanzas", descripcion: "Cobranza, pagos a proveedores y pago de comisiones." },
   { rol: "pantalla", descripcion: "TV del taller: entra directo al tablero de piso y no ve nada más." },
+  { rol: "importaciones", descripcion: "Embarques, documentos con el agente aduanal, pagos en dólares y costo puesto en planta." },
 ];
 
 export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; alerta?: string }[] = [
@@ -30,6 +31,7 @@ export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; ale
   { modulo: "nomina", nombre: "Nómina", descripcion: "Sueldos, prenómina, préstamos y el bono en pesos. 2: captura conceptos · 3: cierra la semana y registra sueldos.",
     alerta: "Quien tenga Nómina, aunque sea en nivel 1, ve lo que gana cada persona. Los jefes califican con Objetivos sin necesitarla." },
   { modulo: "admin", nombre: "Sistema", descripcion: "1: ver la bitácora · 3: usuarios, roles, invitaciones y configuración." },
+  { modulo: "importaciones", nombre: "Importaciones", descripcion: "1: ver embarques y cuándo llegan (montos solo con compras, finanzas o costos) · 2: capturar · 3: administrar." },
 ];
 
 export const NIVELES = [

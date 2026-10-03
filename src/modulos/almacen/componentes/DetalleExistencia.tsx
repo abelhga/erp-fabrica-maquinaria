@@ -82,6 +82,15 @@ export function DetalleExistencia({ articuloId, fila, alCerrar }: {
             <Cifra titulo={puede("compras", 1) || puede("finanzas", 1) ? "En tránsito" : "En ML Full"}
               valor={puede("compras", 1) || puede("finanzas", 1) ? fila.en_transito : fila.en_mercadolibre} tono="info" />
           </div>
+          {/* Lo importado no "llega en N días": va por tramos y la fecha sale de la etapa real del embarque. */}
+          {(puede("compras", 1) || puede("finanzas", 1)) && Number(fila.en_produccion ?? 0) + Number(fila.en_mar ?? 0) + Number(fila.en_puerto ?? 0) > 0 && (
+            <p className="text-sm text-tenue -mt-3">
+              Importación: {[
+                [fila.en_produccion, "con el proveedor"], [fila.en_mar, "en el mar"], [fila.en_puerto, "en puerto"],
+              ].filter(([n]) => Number(n ?? 0) > 0).map(([n, t]) => `${numero(Number(n))} ${t}`).join(" · ")}
+              {fila.llegada_estimada && <> · a planta hacia el <span className="text-texto">{fecha(fila.llegada_estimada)}</span></>}
+            </p>
+          )}
 
           <section>
             <h3 className="etiqueta mb-2">Por almacén</h3>
