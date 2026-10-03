@@ -7,6 +7,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { Pestanas, ListaPestanas, ContenidoPestana } from "@/components/ui/pestanas";
+import { PlanosArticulo } from "@/components/planos/PlanosArticulo";
 import { useSesion } from "@/lib/sesion";
 import { dinero, fecha, hace, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
@@ -121,6 +122,7 @@ export default function DetalleArticulo() {
     { valor: "horas", texto: "Horas por etapa" },
     ...(costos ? [{ valor: "costo", texto: "Costo y precio" }, { valor: "historial", texto: "Historial" }] : []),
     ...(a.tipo === "subensamble" || a.usado_en > 0 ? [{ valor: "usos", texto: "Dónde se usa", cuenta: a.usado_en }] : []),
+    { valor: "planos", texto: "Planos" },
   ] : [];
   const pestana = pestanas.some((p) => p.valor === params.get("pestana")) ? params.get("pestana")! : "lista";
   const volver = fab ? { ruta: a.tipo === "subensamble" ? "/costeo/equipos?vista=subensambles" : "/costeo/equipos", texto: "Equipos y subensambles" }
@@ -159,8 +161,17 @@ export default function DetalleArticulo() {
           {costos && <ContenidoPestana value="costo" className="pt-4"><CostoPrecio articulo={a} /></ContenidoPestana>}
           {costos && <ContenidoPestana value="historial" className="pt-4"><Historial id={a.id} /></ContenidoPestana>}
           <ContenidoPestana value="usos" className="pt-4"><DondeSeUsa id={a.id} unidad={a.unidad} /></ContenidoPestana>
+          <ContenidoPestana value="planos" className="pt-4"><PlanosArticulo articuloId={a.id} /></ContenidoPestana>
         </Pestanas>
-      ) : <FichaComponente articulo={a} />}
+      ) : (
+        <>
+          <FichaComponente articulo={a} />
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold">Planos</h2>
+            <PlanosArticulo articuloId={a.id} />
+          </section>
+        </>
+      )}
 
       {fab && <DialogoDuplicar abierto={duplicando} alCambiar={setDuplicando} articulo={a} parametros={parametros} />}
     </Pagina>

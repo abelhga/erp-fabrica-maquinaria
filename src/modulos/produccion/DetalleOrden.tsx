@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
+import { PlanosOrden } from "@/components/planos/PlanosArticulo";
 import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
@@ -195,6 +196,10 @@ export default function DetalleOrden() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3 2xl:grid-cols-1 items-start">
+          <Tarjeta>
+            <EncabezadoTarjeta titulo="Planos" descripcion="Con qué revisión se fabrica esta orden" />
+            <div className="px-5 pb-5"><PlanosOrden ordenId={id} /></div>
+          </Tarjeta>
           <Tarjeta>
             <EncabezadoTarjeta titulo="Etapas" descripcion="Horas estimadas del costeo y quién la trabaja" />
             <ul className="px-3 pb-3 space-y-1">

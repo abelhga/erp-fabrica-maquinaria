@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, FileText, ShoppingCart, Trophy, Boxes, Layers, Percent, Truck, Tags,
   ClipboardList, Warehouse, ArrowLeftRight, TrendingDown, Factory, ClipboardCheck, Monitor, Tablet,
-  UserRound, CalendarOff, LineChart, Wallet, Receipt, Settings, ShieldCheck, Download, History, KanbanSquare, PhoneCall, ListTodo,
+  UserRound, CalendarOff, LineChart, Wallet, Receipt, Settings, ShieldCheck, Download, History, KanbanSquare, PhoneCall, ListTodo, FileStack,
   Ship,
   type LucideIcon,
 } from "lucide-react";
@@ -31,6 +31,7 @@ export const MENU: SeccionMenu[] = [
     entradas: [
       { ruta: "/costeo/equipos", texto: "Equipos y subensambles", icono: Layers, modulo: "costeo" },
       { ruta: "/costeo/componentes", texto: "Componentes", icono: Boxes, modulo: "costeo" },
+      { ruta: "/costeo/planos", texto: "Planos", icono: FileStack, modulo: "costeo" },
       { ruta: "/costeo/margenes", texto: "Márgenes y precios", icono: Percent, modulo: "costos", nivel: 2 },
       { ruta: "/costeo/precios-ventas", texto: "Precios vs ventas", icono: LineChart, modulo: "costos" },
     ],

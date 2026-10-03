@@ -49,6 +49,7 @@ const Bitacora = p(() => import("./modulos/sistema/Bitacora"));
 const Configuracion = p(() => import("./modulos/sistema/Configuracion"));
 const ParaLlamar = p(() => import("./modulos/asistente/ParaLlamar"));
 const Pendientes = p(() => import("./modulos/pendientes/Pendientes"));
+const Planos = p(() => import("./modulos/costeo/Planos"));
 const Embarques = p(() => import("./modulos/importaciones/Embarques"));
 const DetalleEmbarque = p(() => import("./modulos/importaciones/DetalleEmbarque"));
 const ImprimirOCImportacion = p(() => import("./modulos/importaciones/ImprimirOC"));
@@ -103,6 +104,7 @@ export function App() {
           <Route path="costeo/componentes/:id" element={<Con m="costeo"><DetalleArticulo /></Con>} />
           <Route path="costeo/equipos" element={<Con m="costeo"><Equipos /></Con>} />
           <Route path="costeo/equipos/:id" element={<Con m="costeo"><DetalleArticulo /></Con>} />
+          <Route path="costeo/planos" element={<Con m="costeo"><Planos /></Con>} />
           <Route path="costeo/margenes" element={<Con m="costos" n={2}><Margenes /></Con>} />
           <Route path="costeo/precios-ventas" element={<Con m="costos"><PreciosVentas /></Con>} />
           <Route path="pendientes" element={<Pendientes />} />
