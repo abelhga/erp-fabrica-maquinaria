@@ -4,6 +4,7 @@ import {
   UserRound, CalendarOff, LineChart, Wallet, Receipt, Settings, ShieldCheck, Download, History, KanbanSquare, PhoneCall,
   type LucideIcon,
 } from "lucide-react";
+import { Award, Banknote, ListChecks, Target } from "lucide-react";
 import type { Modulo } from "./lib/sesion";
 
 export interface EntradaMenu { ruta: string; texto: string; icono: LucideIcon; modulo: Modulo; nivel?: number }
@@ -62,6 +63,10 @@ export const MENU: SeccionMenu[] = [
     entradas: [
       { ruta: "/rrhh/empleados", texto: "Personal", icono: UserRound, modulo: "rrhh" },
       { ruta: "/rrhh/incidencias", texto: "Vacaciones e incidencias", icono: CalendarOff, modulo: "rrhh" },
+      { ruta: "/rrhh/objetivos", texto: "Objetivos y bonos", icono: Target, modulo: "objetivos" },
+      { ruta: "/rrhh/checklist", texto: "Checklist diario", icono: ListChecks, modulo: "objetivos" },
+      { ruta: "/rrhh/prenomina", texto: "Prenómina", icono: Banknote, modulo: "nomina" },
+      { ruta: "/rrhh/mi-desempeno", texto: "Mi desempeño", icono: Award, modulo: "mi_desempeno" },
       { ruta: "/finanzas/cobranza", texto: "Cobranza", icono: Wallet, modulo: "finanzas" },
       { ruta: "/finanzas/pagos", texto: "Pagos a proveedores", icono: Receipt, modulo: "finanzas" },
     ],

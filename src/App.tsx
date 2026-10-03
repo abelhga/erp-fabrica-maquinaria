@@ -37,6 +37,10 @@ const Terminal = p(() => import("./modulos/produccion/Terminal"));
 const PantallaPiso = p(() => import("./modulos/produccion/PantallaPiso"));
 const Empleados = p(() => import("./modulos/rrhh/Empleados"));
 const Incidencias = p(() => import("./modulos/rrhh/Incidencias"));
+const Objetivos = p(() => import("./modulos/rrhh/Objetivos"));
+const Checklist = p(() => import("./modulos/rrhh/Checklist"));
+const Prenomina = p(() => import("./modulos/rrhh/Prenomina"));
+const MiDesempeno = p(() => import("./modulos/rrhh/MiDesempeno"));
 const Cobranza = p(() => import("./modulos/finanzas/Cobranza"));
 const Pagos = p(() => import("./modulos/finanzas/Pagos"));
 const Usuarios = p(() => import("./modulos/sistema/Usuarios"));
@@ -111,6 +115,10 @@ export function App() {
           <Route path="produccion/ordenes/:id" element={<Con m="produccion"><DetalleOrden /></Con>} />
           <Route path="rrhh/empleados" element={<Con m="rrhh"><Empleados /></Con>} />
           <Route path="rrhh/incidencias" element={<Con m="rrhh"><Incidencias /></Con>} />
+          <Route path="rrhh/objetivos" element={<Con m="objetivos"><Objetivos /></Con>} />
+          <Route path="rrhh/checklist" element={<Con m="objetivos"><Checklist /></Con>} />
+          <Route path="rrhh/prenomina" element={<Con m="nomina"><Prenomina /></Con>} />
+          <Route path="rrhh/mi-desempeno" element={<Con m="mi_desempeno"><MiDesempeno /></Con>} />
           <Route path="finanzas/cobranza" element={<Con m="finanzas"><Cobranza /></Con>} />
           <Route path="finanzas/pagos" element={<Con m="finanzas"><Pagos /></Con>} />
           <Route path="sistema/usuarios" element={<Con m="admin" n={3}><Usuarios /></Con>} />
