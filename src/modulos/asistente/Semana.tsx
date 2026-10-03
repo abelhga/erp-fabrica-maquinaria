@@ -174,7 +174,7 @@ export default function SemanaPagina() {
 
           {n && (
             <div className="grid gap-4 lg:grid-cols-3">
-              <section className="tarjeta lg:col-span-2 min-w-0 overflow-hidden">
+              <section className={cn("tarjeta min-w-0 overflow-hidden", n.ventas ? "lg:col-span-2" : "lg:col-span-3")}>
                 <div className="px-4 py-3 border-b border-borde flex flex-wrap items-center gap-x-2 gap-y-0.5">
                   <CalendarDays className="h-4 w-4 text-tenue" />
                   <h2 className="font-semibold">Esta semana</h2>
