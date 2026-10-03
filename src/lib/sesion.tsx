@@ -19,6 +19,7 @@ export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" |
   // mi_desempeno no es de rol: lo da mi_sesion() a quien tiene ficha de empleado ligada.
   | "objetivos" | "nomina" | "mi_desempeno"
   | "importaciones"
+  | "envios"
   | "servicio";
 
 export interface Perfil { id: string; nombre: string; correo: string; puesto: string | null; iniciales: string | null; activo: boolean; telefono: string | null }

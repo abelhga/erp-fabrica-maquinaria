@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Award, Banknote, ListChecks, Target } from "lucide-react";
 import { AlertTriangle, CalendarRange, Hand, Wrench } from "lucide-react";
+import { PackageCheck, Undo2 } from "lucide-react";
 import type { Modulo } from "./lib/sesion";
 
 export interface EntradaMenu { ruta: string; texto: string; icono: LucideIcon; modulo: Modulo; nivel?: number }
@@ -24,6 +25,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/ventas/pedidos", texto: "Pedidos", icono: ShoppingCart, modulo: "ventas" },
       { ruta: "/ventas/clientes", texto: "Clientes", icono: Users, modulo: "ventas" },
       { ruta: "/ventas/comisiones", texto: "Comisiones", icono: Trophy, modulo: "ventas" },
+      { ruta: "/ventas/devoluciones", texto: "Devoluciones y reclamos", icono: Undo2, modulo: "envios" },
     ],
   },
   {
@@ -50,6 +52,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/almacen/existencias", texto: "Existencias", icono: Warehouse, modulo: "inventario" },
       { ruta: "/almacen/movimientos", texto: "Entradas y salidas", icono: ArrowLeftRight, modulo: "inventario" },
       { ruta: "/almacen/reabasto", texto: "Reabasto", icono: TrendingDown, modulo: "inventario" },
+      { ruta: "/almacen/envios", texto: "Envíos", icono: PackageCheck, modulo: "envios" },
     ],
   },
   {
