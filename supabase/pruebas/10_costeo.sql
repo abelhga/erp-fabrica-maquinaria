@@ -71,11 +71,9 @@ begin
   assert v_horas = 60, format('horas de la banda de 20 m: esperaba 60 y salieron %s', v_horas);
 
   -- "La de 20 m pero de 22 m": duplicar y cambiar el parámetro.
-  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000000"}', true);
-  insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000a1', 'ingenieria@hegamex.com');
-  insert into usuario_roles values ('00000000-0000-0000-0000-0000000000a1', 'ingenieria');
-  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1"}', true);
+  perform pg_temp.como(pg_temp.usuario('ingenieria@hegamex.com', '{ingenieria}'));
   v_eq22 := duplicar_articulo(v_eq20, 'T-B22', 'Banda 18" x 22 m', '{"largo_m": 22}');
+  perform pg_temp.como_postgres();
   -- 22 m: banda 45.5 × 500 = 22,750; rodillos ceil(18.26)=19 × 300 = 5,700; motor 10,000;
   -- horas 10 + 20 + 33 = 63 × 87.67 = 5,523.21 → 43,973.21
   select costo_total into v_costo from costos_calculados where articulo_id = v_eq22;
