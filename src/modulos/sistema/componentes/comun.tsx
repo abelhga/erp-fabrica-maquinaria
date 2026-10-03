@@ -26,6 +26,9 @@ export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; ale
   { modulo: "produccion", nombre: "Producción", descripcion: "1: ver el avance (lo tienen los vendedores) · 2: personal de piso · 3: gerencia." },
   { modulo: "rrhh", nombre: "Recursos humanos", descripcion: "Personal y vacaciones. 3: además CURP, RFC, NSS, salario y cuenta bancaria." },
   { modulo: "finanzas", nombre: "Finanzas", descripcion: "Cobranza y pagos. 2: registra cobros, facturas y pagos." },
+  { modulo: "objetivos", nombre: "Objetivos", descripcion: "1: ve y califica solo a su gente (jefe directo) · 3: todos, plantillas, revisión y ajustes. Sin montos." },
+  { modulo: "nomina", nombre: "Nómina", descripcion: "Sueldos, prenómina, préstamos y el bono en pesos. 2: captura conceptos · 3: cierra la semana y registra sueldos.",
+    alerta: "Quien tenga Nómina, aunque sea en nivel 1, ve lo que gana cada persona. Los jefes califican con Objetivos sin necesitarla." },
   { modulo: "admin", nombre: "Sistema", descripcion: "1: ver la bitácora · 3: usuarios, roles, invitaciones y configuración." },
 ];
 

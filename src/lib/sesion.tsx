@@ -12,7 +12,10 @@ export const NOMBRE_ROL: Record<Rol, string> = {
   produccion: "Producción", rrhh: "Recursos humanos", finanzas: "Finanzas", pantalla: "Pantalla de piso",
 };
 
-export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" | "produccion" | "rrhh" | "finanzas" | "admin" | "asistente";
+export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" | "produccion" | "rrhh" | "finanzas" | "admin" | "asistente"
+  // objetivos: calificar (1 = jefe de su gente, 3 = RRHH y dirección); nomina: todo lo que tiene pesos;
+  // mi_desempeno no es de rol: lo da mi_sesion() a quien tiene ficha de empleado ligada.
+  | "objetivos" | "nomina" | "mi_desempeno";
 
 export interface Perfil { id: string; nombre: string; correo: string; puesto: string | null; iniciales: string | null; activo: boolean; telefono: string | null }
 
