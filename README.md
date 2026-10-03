@@ -40,13 +40,16 @@ comisiones de Isaac (sep-2026) $73,540, igual que su panel.
   concreto (cotización por vencer, ya le toca por su ritmo de compra, equipo que pide
   refacciones, dejó de comprar) y el mensaje de WhatsApp redactado con su historial.
 - **Ventas**: oportunidades (tablero), cotizador con buscador de equipos/componentes, ficha de
-  venta (precio mínimo, stock, envío gratis, mensualidades, precio en Mercado Libre), impresión
-  en PDF con el formato actual, pedidos, clientes con privacidad entre vendedores, comisiones.
+  venta (precio mínimo, stock, envío gratis, mensualidades, precio en Mercado Libre, **fichas
+  técnicas** vigentes), impresión en PDF con el formato actual, pedidos, clientes con privacidad
+  entre vendedores, comisiones.
 - **Ingeniería y costeo**: equipos y subensambles con editor de lista de materiales, duplicar
   con parámetros, historial de costo/precio, panel de márgenes con simulador. **Planos** con
   folio y revisión (A, B, C…): el archivo sigue en Drive, el ERP sabe cuál es el vigente y con
   cuál se fabricó cada orden, y avisa al taller si cambió después.
-- **Compras**: actualización rápida de costos, órdenes de compra, requisiciones, proveedores.
+- **Compras**: actualización rápida de costos, órdenes de compra, requisiciones, proveedores y
+  la **cola de solicitudes de precio** de ventas, con vencimiento en horas hábiles: el vendedor
+  pide desde el cotizador y recibe el precio de lista y la entrega (nunca el costo).
 - **Almacén**: existencias por almacén (incluido Full de Mercado Libre), entradas/salidas,
   traspasos, ajustes con autorización, conteos físicos, reabasto.
 - **Importaciones**: embarques de la proforma a la bodega (ETD/ETA, días libres, documentos
