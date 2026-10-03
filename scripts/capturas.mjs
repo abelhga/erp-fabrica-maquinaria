@@ -1,5 +1,6 @@
 // Abre la app en Chromium, entra con un usuario de prueba y toma capturas.
 // Uso: node scripts/capturas.mjs <correo> <ruta1> [ruta2…]   (servidor en APP_URL, por defecto :5173)
+// Contra el sitio publicado: APP_URL=https://… CONTRASENA=… (los usuarios de la nube no usan "hegamex-local").
 // Las capturas quedan en capturas/<usuario>-<ruta>.png. Muestra errores de consola: una pantalla
 // que "se ve bien" pero tira errores no está bien.
 import { chromium } from "playwright-core";
@@ -20,7 +21,7 @@ await pag.goto(base);
 if (process.env.OSCURO) await pag.evaluate(() => localStorage.setItem("tema", "oscuro"));
 await pag.getByText("Entrar con correo y contraseña").click();
 await pag.getByLabel("Correo").fill(correo);
-await pag.getByLabel("Contraseña").fill("hegamex-local");
+await pag.getByLabel("Contraseña").fill(process.env.CONTRASENA ?? "hegamex-local");
 await pag.getByRole("button", { name: "Entrar", exact: true }).click();
 await pag.waitForTimeout(1500);
 
