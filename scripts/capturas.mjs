@@ -11,7 +11,8 @@ const base = process.env.APP_URL ?? "http://localhost:5173";
 const ancho = Number(process.env.ANCHO ?? 1440), alto = Number(process.env.ALTO ?? 900);
 mkdirSync("capturas", { recursive: true });
 
-const nav = await chromium.launch({ executablePath: process.env.CHROMIUM ?? "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const nav = await chromium.launch({ executablePath: process.env.CHROMIUM ?? "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
+  args: (process.env.CHROMIUM_ARGS ?? "").split(" ").filter(Boolean) });
 const pag = await nav.newPage({ viewport: { width: ancho, height: alto }, colorScheme: process.env.OSCURO ? "dark" : "light" });
 const errores = [];
 pag.on("console", (m) => { if (m.type() === "error") errores.push(m.text()); });

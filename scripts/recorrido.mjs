@@ -1,9 +1,12 @@
 // Recorre todas las pantallas con cada rol, toma captura y junta errores de
 // consola y pantallas que no cargan. Es la revisión final antes de entregar.
 //   node scripts/recorrido.mjs [rol…]      (servidor en APP_URL, por defecto :5173)
+// Contra el sitio publicado, donde no hay conexión directa a la base ni "hegamex-local":
+//   APP_URL=https://… CONTRASENAS=claves.json RUTAS_DETALLE=/ventas/pedidos/<id>,… node scripts/recorrido.mjs
+// (claves.json = {"correo": "contraseña"}; fuera del repositorio).
 // Capturas en capturas/recorrido/<correo>/<ruta>.png y un resumen al final.
 import { chromium } from "playwright-core";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import pg from "pg";
 
 const base = process.env.APP_URL ?? "http://localhost:5173";
@@ -20,8 +23,6 @@ const RUTAS = [
 ];
 // Una ficha de cada tipo, la más reciente: las pantallas de detalle son las que más
 // consultas hacen y las que un recorrido solo de listas nunca abre.
-const db = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres" });
-await db.connect();
 const DETALLES = [
   ["/costeo/equipos/", "select id from articulos where tipo = 'equipo' and activo order by (select count(*) from bom_lineas b where b.padre_id = articulos.id) desc limit 1"],
   ["/costeo/componentes/", "select id from articulos where tipo = 'componente' and activo order by clave limit 1"],
@@ -35,11 +36,18 @@ const DETALLES = [
   ["/servicio/", "select id from servicios order by creado_en desc limit 1"],
   ["/importaciones/", "select id from embarques order by creado_en desc limit 1"],
 ];
-for (const [prefijo, sql] of DETALLES) {
-  const r = await db.query(sql).catch((e) => { console.log(`✘ no se pudo elegir ${prefijo}: ${e.message}`); return { rows: [] }; });
-  if (r.rows[0]) RUTAS.push(prefijo + Object.values(r.rows[0])[0]);
+if (process.env.RUTAS_DETALLE) {
+  RUTAS.push(...process.env.RUTAS_DETALLE.split(",").filter(Boolean));
+} else {
+  const db = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres" });
+  await db.connect();
+  for (const [prefijo, sql] of DETALLES) {
+    const r = await db.query(sql).catch((e) => { console.log(`✘ no se pudo elegir ${prefijo}: ${e.message}`); return { rows: [] }; });
+    if (r.rows[0]) RUTAS.push(prefijo + Object.values(r.rows[0])[0]);
+  }
+  await db.end();
 }
-await db.end();
+const CLAVES = process.env.CONTRASENAS ? JSON.parse(readFileSync(process.env.CONTRASENAS, "utf8")) : {};
 const USUARIOS = {
   direccion: "direccion@hegamex.com", ventas: "isaac@hegamex.com", gerente_ventas: "gerente.ventas@hegamex.com",
   ingenieria: "ingenieria@hegamex.com", compras: "compras@hegamex.com", almacen: "almacen@hegamex.com",
@@ -48,7 +56,9 @@ const USUARIOS = {
   importaciones: "importaciones@hegamex.com",
 };
 const roles = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(USUARIOS);
-const nav = await chromium.launch({ executablePath: process.env.CHROMIUM ?? "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+// CHROMIUM_ARGS: banderas extra del navegador (p. ej. confiar en el certificado de un proxy).
+const nav = await chromium.launch({ executablePath: process.env.CHROMIUM ?? "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
+  args: (process.env.CHROMIUM_ARGS ?? "").split(" ").filter(Boolean) });
 const resumen = [];
 
 for (const rol of roles) {
@@ -62,7 +72,7 @@ for (const rol of roles) {
   await pag.goto(base);
   await pag.getByText("Entrar con correo y contraseña").click();
   await pag.getByLabel("Correo").fill(correo);
-  await pag.getByLabel("Contraseña").fill("hegamex-local");
+  await pag.getByLabel("Contraseña").fill(CLAVES[correo] ?? "hegamex-local");
   await pag.getByRole("button", { name: "Entrar", exact: true }).click();
   await pag.waitForTimeout(1500);
   for (const ruta of rol === "pantalla" ? ["/"] : RUTAS) {
