@@ -440,4 +440,21 @@ begin
   insert into bono_bases (puesto_id, base_mensual, desde, nota) values (v_puesto, 1000, '2025-01-01', 'Base de prueba');
   select * into r from prenomina(v_viernes) where empleado_id = e_sup;
   assert r.bono_monto = 800 and r.bono_aviso is null, format('con base 1,000 y 80 %%: 800, salió %s', r.bono_monto);
+
+  -- ---------------------------------------------------------------------------
+  -- Sin nadie activo en la nómina no hay prenómina que cerrar (la base quedó así al
+  -- quitar la demostración): ni el hallazgo de Inicio ni el aviso del viernes.
+  -- ---------------------------------------------------------------------------
+  perform pg_temp.como_postgres();
+  delete from nomina_semanas where inicio = hoy_planta() - ((extract(isodow from hoy_planta())::int - 5 + 7) % 7) - 7;
+  perform pg_temp.como(v_dir);
+  assert exists (select 1 from hallazgos() where titulo like 'La prenómina del % no se ha cerrado'), 'con empleados, la prenómina abierta no se avisó';
+  perform pg_temp.como_postgres();
+  update empleados set activo = false, baja_en = current_date, motivo_baja = 'Prueba 95';
+  perform pg_temp.como(v_dir);
+  assert not exists (select 1 from hallazgos() where titulo like 'La prenómina del % no se ha cerrado'), 'sin empleados activos se avisó la prenómina';
+  perform pg_temp.como_postgres();
+  delete from avisos where tipo = 'nomina_por_cerrar';
+  perform avisos_objetivos_nomina();
+  assert not exists (select 1 from avisos where tipo = 'nomina_por_cerrar'), 'sin empleados activos salió el aviso de la prenómina';
 end $$;
