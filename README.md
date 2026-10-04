@@ -69,6 +69,11 @@ comisiones de Isaac (sep-2026) $73,540, igual que su panel.
 - **Administración**: personal, vacaciones (LFT 2023), **objetivos y bonos** por puesto,
   checklist diario, **prenómina** semanal, "mi desempeño", cobranza, pagos a proveedores.
 - **Sistema**: usuarios y permisos, importación desde Sheets, bitácora, configuración.
+- **Ver como** (solo dirección, botón del ojo arriba): recorre el ERP con los permisos de
+  cualquier rol para probar qué ve cada quien. No es un disfraz del menú: la base aplica ese
+  rol en toda la RLS (un "vendedor" no recibe costos aunque llame a la API). Lo personal sigue
+  siendo de quien simula, así que se ve lo de un vendedor **nuevo**, no el de Isaac; para eso,
+  entrar con su usuario. Lo que se guarde mientras tanto es real, a nombre de quien simula.
 
 ## Arquitectura
 

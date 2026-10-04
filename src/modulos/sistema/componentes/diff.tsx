@@ -11,7 +11,7 @@ export const TABLAS: Record<string, string> = {
   empleado_datos: "Datos sensibles de empleados", incidencias: "Vacaciones e incidencias", departamentos: "Departamentos",
   perfiles: "Usuarios", usuario_roles: "Roles de usuario", permisos_rol: "Permisos por rol", invitaciones: "Invitaciones",
   configuracion: "Configuración", etapas: "Etapas del taller", tipos_cambio: "Tipos de cambio", textos_comerciales: "Textos comerciales",
-  planes_meses: "Planes de meses", canales: "Canales de venta",
+  planes_meses: "Planes de meses", canales: "Canales de venta", simulacion_rol: "Ver como otro rol",
 };
 export const nombreTabla = (t: string) => TABLAS[t] ?? t.replace(/_/g, " ");
 
@@ -23,7 +23,7 @@ const COLUMNAS: Record<string, string> = {
   dias: "Días", horas: "Horas", tipo: "Tipo", salario_diario: "Salario diario", curp: "CURP", rfc: "RFC", nss: "NSS",
   cuenta_bancaria: "Cuenta bancaria", domicilio: "Domicilio", fecha_ingreso: "Fecha de ingreso", fecha_nacimiento: "Fecha de nacimiento",
   baja_en: "Fecha de baja", motivo_baja: "Motivo de baja", departamento_id: "Departamento", etapa_id: "Área de piso",
-  usuario_id: "Usuario", vendedor_id: "Vendedor", cliente_id: "Cliente", proveedor_id: "Proveedor", pedido_id: "Pedido",
+  usuario_id: "Usuario", desde: "Desde", vendedor_id: "Vendedor", cliente_id: "Cliente", proveedor_id: "Proveedor", pedido_id: "Pedido",
   orden_compra_id: "Orden de compra", empleado_id: "Empleado", resuelta_por: "Resuelta por", solicitada_por: "Solicitada por",
   registrado_por: "Registrado por", creado_por: "Creado por", invitado_por: "Invitado por", uuid_sat: "UUID del SAT",
   vence_pago: "Vence el pago", tipo_cambio: "Tipo de cambio", moneda: "Moneda", comision_pct: "Comisión", cuota_fija: "Cuota fija",

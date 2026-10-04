@@ -32,6 +32,12 @@ un movimiento no se edite), va en SQL con su prueba, no en un `if` de React.
   de escritura: solo las funciones `security definer` (`registrar_salida`, `traspasar`,
   `surtir_material`, `recibir_orden_compra`, `resolver_ajuste`…) insertan. Un error se
   corrige con un ajuste que autoriza otra persona.
+- **"Ver como"**: dirección puede simular un rol (`ver_como()`); `mis_roles()` devuelve el
+  simulado y de ahí salen `puede()`, `tiene_rol()` y toda la RLS. Por eso lo que el usuario
+  actual **puede ver o hacer** sale siempre de `mis_roles()`/`puede()`; leer `usuario_roles`
+  directo es para los roles de verdad de alguien (a quién avisar, a quién escalar). Y
+  **dirección tiene nivel 3 en todo módulo**: si agregas uno sin dárselo, simular se vuelve
+  una puerta (`06_ver_como_rol.sql` lo revisa).
 - Funciones nuevas: `security invoker` si solo leen (la RLS filtra sola); `security definer`
   solo si de verdad tienen que saltarse la RLS, y entonces **revisan `puede()` al inicio**.
 - En una política, **nada que se evalúe por renglón**: `(select puede('x', n))`,

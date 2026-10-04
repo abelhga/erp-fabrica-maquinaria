@@ -8,6 +8,7 @@ import { Logo } from "./Logo";
 import { BuscadorGlobal } from "./BuscadorGlobal";
 import { Asistente } from "@/components/asistente/Asistente";
 import { Campana } from "@/components/avisos/Campana";
+import { AvisoVerComo, BotonVerComo } from "./VerComo";
 
 function useTema() {
   const [oscuro, setOscuro] = useState(() => {
@@ -80,6 +81,7 @@ export function Shell() {
       )}
 
       <div className="flex-1 min-w-0 flex flex-col">
+        <AvisoVerComo />
         <header className="no-imprimir h-16 shrink-0 flex items-center gap-3 px-4 lg:px-8 border-b border-borde bg-superficie/80 backdrop-blur sticky top-0 z-30">
           <button className="lg:hidden p-2 -ml-2" onClick={() => setAbiertoMovil(true)} aria-label="Abrir menú"><Menu className="h-5 w-5" /></button>
           <button
@@ -91,6 +93,7 @@ export function Shell() {
             <kbd className="ml-auto hidden sm:inline text-[10px] border border-borde rounded px-1.5 py-0.5">Ctrl K</kbd>
           </button>
           <div className="ml-auto flex items-center gap-1">
+            <BotonVerComo />
             <Campana />
             <button onClick={() => setOscuro(!oscuro)} className="p-2 rounded-lg hover:bg-fondo text-tenue" aria-label="Cambiar tema">
               {oscuro ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
