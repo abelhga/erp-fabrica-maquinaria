@@ -1,116 +1,159 @@
-// "Ver como…": dirección y sistemas eligen a una persona y el ERP se abre en otra
-// pestaña con la sesión de ella, solo para ver. La función de borde ver-como crea la
-// sesión (la base decide si se puede) y la entrega a la pestaña nueva por
-// postMessage: nunca pasa por la barra de direcciones ni por el historial.
-import { useMemo, useState } from "react";
-import { Eye, Search, UserRound } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import * as P from "@radix-ui/react-popover";
+import { Check, Eye, Loader2, Undo2, UserRound } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
-import { useRpc } from "@/lib/consultas";
-import { NOMBRE_ROL, type Rol } from "@/lib/sesion";
-import { RUTA_VISTA_PREVIA, type MensajeVista } from "@/lib/vistaPrevia";
-import { coincide } from "@/lib/utilidades";
-import { Dialogo } from "@/components/ui/dialogo";
-import { Cargando, Vacio } from "@/components/ui/estados";
+import { useSesion, NOMBRE_ROL, type Rol } from "@/lib/sesion";
+import { mensajeError } from "@/lib/consultas";
+import { Boton } from "@/components/ui/boton";
+import { cn } from "@/lib/utilidades";
+import { ROLES } from "@/modulos/sistema/componentes/comun";
+import { VerComoPersona } from "./VerComoPersona";
 
-const URL_VER_COMO = import.meta.env.VITE_VER_COMO_URL || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ver-como`;
+// "Ver como": dirección prueba el ERP con los permisos de otro rol. No es un
+// disfraz del menú: la base (mis_roles) aplica el rol elegido en toda la RLS,
+// así que lo que se ve aquí es lo que vería alguien nuevo con ese rol.
+// Abajo, "Una persona en particular…" abre la sesión real de alguien en otra pestaña
+// (VerComoPersona): para lo que depende de quién es y no del rol (sus pedidos, sus
+// clientes, sus avisos). Esa también la puede abrir sistemas.
 
-interface Persona { id: string; nombre: string; correo: string; roles: Rol[] }
-
-/** Abre la pestaña de inmediato (si espera a la red, el navegador la bloquea) y le pasa la sesión cuando avisa que está lista. */
-async function abrirVistaPrevia(usuarioId: string) {
-  const ventana = window.open(RUTA_VISTA_PREVIA, "_blank");
-  if (!ventana) throw new Error("El navegador bloqueó la pestaña nueva. Permite ventanas emergentes para este sitio y vuelve a intentar.");
-  const lista = new Promise<void>((ok, mal) => {
-    const tope = setTimeout(() => { window.removeEventListener("message", oir); mal(new Error("La pestaña nueva no respondió. Ciérrala y vuelve a intentar.")); }, 20_000);
-    function oir(e: MessageEvent<MensajeVista>) {
-      if (e.source !== ventana || e.origin !== window.location.origin || e.data?.tipo !== "vista-previa-lista") return;
-      clearTimeout(tope); window.removeEventListener("message", oir); ok();
-    }
-    window.addEventListener("message", oir);
-  });
-  try {
-    const { data } = await supabase.auth.getSession();
-    const r = await fetch(URL_VER_COMO, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${data.session?.access_token}`, apikey: import.meta.env.VITE_SUPABASE_ANON_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify({ usuario_id: usuarioId }),
-    }).catch(() => { throw new Error("No se pudo hablar con el servidor. ¿Está desplegada la función ver-como?"); });
-    const cuerpo = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(cuerpo.error ?? `El servidor respondió ${r.status}`);
-    await lista;
-    const mensaje: MensajeVista = { tipo: "vista-previa-sesion", access_token: cuerpo.access_token, refresh_token: cuerpo.refresh_token };
-    ventana.postMessage(mensaje, window.location.origin);
-  } catch (e) {
-    ventana.close();
-    throw e;
+function useCambiarRol() {
+  const { verComo } = useSesion();
+  const [cambiando, setCambiando] = useState<Rol | "propia" | null>(null);
+  async function elegir(r: Rol | null) {
+    setCambiando(r ?? "propia");
+    try { await verComo(r); return true; }
+    catch (e) { toast.error(mensajeError(e)); return false; }
+    finally { setCambiando(null); }
   }
+  return { cambiando, elegir };
 }
 
-export function VerComo({ abierto, alCambiar }: { abierto: boolean; alCambiar: (v: boolean) => void }) {
-  const personas = useRpc<Persona[]>("personas_para_vista_previa", {}, { habilitado: abierto });
-  const [filtro, setFiltro] = useState("");
-  const [abriendo, setAbriendo] = useState<string | null>(null);
-
-  // Agrupadas por su primer rol, en el orden en que la base las regresa.
-  const grupos = useMemo(() => {
-    const m = new Map<string, Persona[]>();
-    for (const p of personas.data ?? []) {
-      if (!coincide(`${p.nombre} ${p.correo} ${p.roles.map((r) => NOMBRE_ROL[r]).join(" ")}`, filtro)) continue;
-      const g = NOMBRE_ROL[p.roles[0]] ?? p.roles[0];
-      m.set(g, [...(m.get(g) ?? []), p]);
-    }
-    return [...m.entries()];
-  }, [personas.data, filtro]);
-
-  const ver = async (p: Persona) => {
-    setAbriendo(p.id);
-    try {
-      await abrirVistaPrevia(p.id);
-      alCambiar(false);
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setAbriendo(null);
-    }
-  };
+function SelectorRol({ children, align = "end", alElegirPersona }: {
+  children: ReactNode; align?: "start" | "center" | "end"; alElegirPersona?: () => void;
+}) {
+  const { viendoComo } = useSesion();
+  const { cambiando, elegir } = useCambiarRol();
+  const [abierto, setAbierto] = useState(false);
+  const ir = async (r: Rol | null) => { if (await elegir(r)) setAbierto(false); };
 
   return (
-    <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="Ver el ERP como…" ancho="max-w-xl"
-      descripcion="Se abre otra pestaña con la sesión de esa persona: su menú, sus clientes, sus avisos. Solo para ver; la base no deja guardar nada y queda registrado.">
-      <div className="space-y-4">
-        <label className="flex items-center gap-2 h-9 rounded-lg border border-borde bg-fondo px-3 text-sm">
-          <Search className="h-4 w-4 text-tenue" />
-          <input autoFocus value={filtro} onChange={(e) => setFiltro(e.target.value)} placeholder="Nombre, correo o rol"
-            className="flex-1 bg-transparent outline-none" />
-        </label>
-        {personas.isLoading && <Cargando filas={4} />}
-        {personas.error && <p className="text-sm text-peligro">{(personas.error as Error).message}</p>}
-        {personas.data && grupos.length === 0 && (
-          <Vacio icono={UserRound} titulo={filtro ? "Nadie coincide con la búsqueda" : "Todavía no hay a quién ver"}
-            texto={filtro ? "Prueba con otro nombre o rol." : "Aquí salen las personas activas con algún rol que no sea dirección ni sistemas. Dalas de alta en Sistema → Usuarios."} />
-        )}
-        {grupos.map(([grupo, gente]) => (
-          <div key={grupo}>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-tenue mb-1">{grupo}</p>
-            <ul className="divide-y divide-borde rounded-lg border border-borde">
-              {gente.map((p) => (
-                <li key={p.id} className="flex items-center gap-3 px-3 py-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{p.nombre}</p>
-                    <p className="text-xs text-tenue truncate">{p.correo} · {p.roles.map((r) => NOMBRE_ROL[r] ?? r).join(", ")}</p>
-                  </div>
-                  <button onClick={() => ver(p)} disabled={!!abriendo}
-                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium border border-borde hover:bg-fondo disabled:opacity-50">
-                    <Eye className={abriendo === p.id ? "h-3.5 w-3.5 animate-pulse" : "h-3.5 w-3.5"} />
-                    {abriendo === p.id ? "Abriendo…" : "Ver como"}
-                  </button>
-                </li>
-              ))}
-            </ul>
+    <P.Root open={abierto} onOpenChange={setAbierto}>
+      <P.Trigger asChild>{children}</P.Trigger>
+      <P.Portal>
+        {/* Por encima del aviso flotante y de la pantalla del taller, y con cursor: la TV lo esconde. */}
+        <P.Content align={align} sideOffset={8} style={{ cursor: "auto" }}
+          className="z-[70] w-[min(380px,calc(100vw-24px))] tarjeta shadow-xl overflow-hidden animate-entrar">
+          <div className="px-4 py-3 border-b border-borde">
+            <p className="font-semibold text-sm">Ver el ERP como…</p>
+            <p className="text-xs text-tenue mt-0.5">
+              Menú, pantallas y datos de ese rol, con los permisos que pone la base. Lo que guardes mientras tanto es real y queda a tu nombre.
+            </p>
           </div>
-        ))}
+          <div className="max-h-[min(420px,55vh)] overflow-y-auto py-1">
+            {ROLES.filter((r) => r.rol !== "direccion").map((r) => {
+              const actual = viendoComo === r.rol;
+              return (
+                <button key={r.rol} onClick={() => ir(r.rol)} disabled={!!cambiando || actual}
+                  className={cn("w-full text-left flex gap-3 px-4 py-2 transition-colors hover:bg-fondo disabled:cursor-default",
+                    actual && "bg-marca-suave/60 hover:bg-marca-suave/60", cambiando && !actual && "opacity-60")}>
+                  <span className="w-4 shrink-0 pt-0.5 text-marca-texto">
+                    {cambiando === r.rol ? <Loader2 className="h-4 w-4 animate-spin" /> : actual && <Check className="h-4 w-4" />}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium">{NOMBRE_ROL[r.rol]}</span>
+                    <span className="block text-xs text-tenue leading-snug">{r.descripcion}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {alElegirPersona && (
+            <button onClick={() => { setAbierto(false); alElegirPersona(); }} disabled={!!cambiando}
+              className="w-full text-left flex gap-3 px-4 py-2.5 border-t border-borde hover:bg-fondo">
+              <UserRound className="h-4 w-4 shrink-0 mt-0.5 text-marca-texto" />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">Una persona en particular…</span>
+                <span className="block text-xs text-tenue leading-snug">Su sesión en otra pestaña: sus pedidos, sus clientes, sus avisos. Solo para ver; no se guarda nada.</span>
+              </span>
+            </button>
+          )}
+          {viendoComo && (
+            <button onClick={() => ir(null)} disabled={!!cambiando}
+              className="w-full h-11 border-t border-borde text-sm text-marca-texto font-medium hover:bg-fondo inline-flex items-center justify-center gap-2">
+              {cambiando === "propia" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}
+              Volver a mi vista
+            </button>
+          )}
+        </P.Content>
+      </P.Portal>
+    </P.Root>
+  );
+}
+
+/**
+ * Botón de la barra de arriba. Dirección (de verdad, aunque esté viendo como otro rol)
+ * elige un rol o una persona; sistemas solo una persona (simular un rol le abriría
+ * los costos). En una vista previa no sale: ahí la sesión es de otra persona.
+ */
+export function BotonVerComo() {
+  const { rolesReales, viendoComo, vistaPrevia } = useSesion();
+  const [persona, setPersona] = useState(false);
+  const esDireccion = rolesReales.includes("direccion");
+  if (vistaPrevia || !(esDireccion || rolesReales.includes("admin"))) return null;
+  const boton = (
+    <button aria-label="Ver el ERP como otro rol o persona" title="Ver el ERP como otro rol o persona"
+      onClick={esDireccion ? undefined : () => setPersona(true)}
+      className={cn("h-9 px-2 rounded-lg hover:bg-fondo inline-flex items-center gap-1.5 text-sm",
+        viendoComo ? "text-aviso" : "text-tenue")}>
+      <Eye className="h-5 w-5" />
+      <span className="hidden md:inline">Ver como</span>
+    </button>
+  );
+  return (
+    <>
+      {esDireccion ? <SelectorRol alElegirPersona={() => setPersona(true)}>{boton}</SelectorRol> : boton}
+      <VerComoPersona abierto={persona} alCambiar={setPersona} />
+    </>
+  );
+}
+
+/**
+ * Aviso mientras dirección ve como otro rol: sin él, un rato después se olvida y
+ * parece que el ERP "perdió" los costos. En el marco normal es una franja arriba;
+ * en la TV del taller, la terminal y las hojas para imprimir, que ocupan toda la
+ * pantalla, flota abajo (y no sale en papel).
+ */
+export function AvisoVerComo({ flotante = false }: { flotante?: boolean }) {
+  const { viendoComo } = useSesion();
+  const { cambiando, elegir } = useCambiarRol();
+  if (!viendoComo) return null;
+  const rol = NOMBRE_ROL[viendoComo];
+
+  if (flotante) {
+    return (
+      <div role="status" style={{ cursor: "auto" }}
+        className="no-imprimir fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] w-max max-w-[calc(100vw-24px)] flex flex-wrap items-center justify-center gap-2 rounded-xl border border-aviso/40 bg-aviso-suave px-3 py-2 text-sm text-texto shadow-xl">
+        <Eye className="h-4 w-4 text-aviso shrink-0" />
+        <span>Viendo como <b>{rol}</b></span>
+        <SelectorRol align="center"><Boton variante="secundario" tamano="sm">Cambiar</Boton></SelectorRol>
+        <Boton tamano="sm" cargando={cambiando === "propia"} onClick={() => elegir(null)}>Volver a mi vista</Boton>
       </div>
-    </Dialogo>
+    );
+  }
+  return (
+    <div role="status" className="no-imprimir shrink-0 flex flex-wrap items-center gap-x-3 gap-y-2 px-4 lg:px-8 py-2 bg-aviso-suave border-b border-aviso/30 text-sm text-texto">
+      <Eye className="h-4 w-4 text-aviso shrink-0" />
+      {/* Con base de 14rem los botones bajan a su renglón en celular en vez de partir el texto palabra por palabra. */}
+      <p className="min-w-0 flex-1 basis-56">
+        <b>Estás viendo el ERP como {rol}.</b>{" "}
+        <span className="hidden sm:inline text-texto/80">Menú y datos son los de ese rol; lo que guardes es real y queda a tu nombre.</span>
+      </p>
+      <div className="flex items-center gap-2">
+        <SelectorRol><Boton variante="secundario" tamano="sm">Cambiar de rol</Boton></SelectorRol>
+        <Boton tamano="sm" cargando={cambiando === "propia"} onClick={() => elegir(null)}>
+          {cambiando !== "propia" && <Undo2 className="h-3.5 w-3.5" />}Volver a mi vista
+        </Boton>
+      </div>
+    </div>
   );
 }

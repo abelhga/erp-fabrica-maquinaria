@@ -37,6 +37,13 @@ begin
   end;
   perform pg_temp.como(v_adm);
   assert vista_previa_destino(v_alm) is not null, 'sistemas no pudo ver como almacén';
+  -- Dirección que está viendo como "ventas" (092) sigue siendo dirección para esto.
+  perform pg_temp.como(v_dir);
+  perform ver_como('ventas');
+  assert not tiene_rol('direccion'), 'la simulación de rol no aplicó';
+  assert vista_previa_destino(v_ven) is not null, 'dirección viendo como ventas no pudo abrir la vista de una persona';
+  assert exists (select 1 from personas_para_vista_previa() where id = v_ven), 'dirección viendo como ventas no vio la lista';
+  perform ver_como(null);
 
   -- La función de borde anota la sesión (aquí, a mano, como postgres).
   perform pg_temp.como_postgres();

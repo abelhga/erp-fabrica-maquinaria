@@ -1,8 +1,9 @@
 import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { Loader2, Lock } from "lucide-react";
 import { useSesion, type Modulo } from "./lib/sesion";
 import { Shell } from "./components/layout/Shell";
+import { AvisoVerComo } from "./components/layout/VerComo";
 import { Entrar, SinAcceso } from "./paginas/Entrar";
 import { EsperandoVistaPrevia } from "./paginas/VistaPrevia";
 import { EN_VISTA_PREVIA } from "./lib/supabase";
@@ -87,6 +88,11 @@ function Con({ m, n = 1, children }: { m: Modulo; n?: number; children: ReactNod
   return <>{children}</>;
 }
 
+/** Pantallas completas, sin el menú (TV, terminal, hojas para imprimir): el aviso de "ver como" flota encima. */
+function SinMarco() {
+  return <><Outlet /><AvisoVerComo flotante /></>;
+}
+
 export function App() {
   const { cargando, session, perfil, roles, salir } = useSesion();
   if (cargando) return <Cargando />;
@@ -95,17 +101,19 @@ export function App() {
 
   // La TV del taller entra directo a su pantalla y no ve nada más.
   if (roles.length === 1 && roles[0] === "pantalla") {
-    return <Suspense fallback={<Cargando />}><PantallaPiso /></Suspense>;
+    return <><Suspense fallback={<Cargando />}><PantallaPiso /></Suspense><AvisoVerComo flotante /></>;
   }
 
   return (
     <Suspense fallback={<Cargando />}>
       <Routes>
-        <Route path="/piso" element={<Con m="produccion"><PantallaPiso /></Con>} />
-        <Route path="/produccion/terminal" element={<Con m="produccion" n={2}><Terminal /></Con>} />
-        <Route path="/servicio/reportar" element={<Con m="servicio" n={2}><ReportarFalla /></Con>} />
-        <Route path="/ventas/cotizaciones/:id/imprimir" element={<Con m="ventas"><ImprimirCotizacion /></Con>} />
-        <Route path="/importaciones/oc/:id/imprimir" element={<Con m="compras" n={2}><ImprimirOCImportacion /></Con>} />
+        <Route element={<SinMarco />}>
+          <Route path="/piso" element={<Con m="produccion"><PantallaPiso /></Con>} />
+          <Route path="/produccion/terminal" element={<Con m="produccion" n={2}><Terminal /></Con>} />
+          <Route path="/servicio/reportar" element={<Con m="servicio" n={2}><ReportarFalla /></Con>} />
+          <Route path="/ventas/cotizaciones/:id/imprimir" element={<Con m="ventas"><ImprimirCotizacion /></Con>} />
+          <Route path="/importaciones/oc/:id/imprimir" element={<Con m="compras" n={2}><ImprimirOCImportacion /></Con>} />
+        </Route>
         <Route element={<Shell />}>
           <Route index element={<Inicio />} />
           <Route path="costeo/componentes" element={<Con m="costeo"><Componentes /></Con>} />

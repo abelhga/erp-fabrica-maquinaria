@@ -32,12 +32,19 @@ un movimiento no se edite), va en SQL con su prueba, no en un `if` de React.
   de escritura: solo las funciones `security definer` (`registrar_salida`, `traspasar`,
   `surtir_material`, `recibir_orden_compra`, `resolver_ajuste`…) insertan. Un error se
   corrige con un ajuste que autoriza otra persona.
+- **"Ver como"**: dirección puede simular un rol (`ver_como()`); `mis_roles()` devuelve el
+  simulado y de ahí salen `puede()`, `tiene_rol()` y toda la RLS. Por eso lo que el usuario
+  actual **puede ver o hacer** sale siempre de `mis_roles()`/`puede()`; leer `usuario_roles`
+  directo es para los roles de verdad de alguien (a quién avisar, a quién escalar). Y
+  **dirección tiene nivel 3 en todo módulo**: si agregas uno sin dárselo, simular se vuelve
+  una puerta (`06_ver_como_rol.sql` lo revisa).
+  La otra mitad, **"ver como una persona"**: dirección/sistemas abren la sesión real de
+  alguien (función `ver-como`) y la base la vuelve de solo lectura antes de cada petición
+  (`antes_de_cada_peticion`, 091). Esa función corre en **cada** petición de la API: que
+  siga siendo una búsqueda por llave, nada más. Para decidir quién puede abrirla cuentan
+  los roles de verdad (`mis_roles_reales()`), no los simulados.
 - Funciones nuevas: `security invoker` si solo leen (la RLS filtra sola); `security definer`
   solo si de verdad tienen que saltarse la RLS, y entonces **revisan `puede()` al inicio**.
-- **"Ver como" (vistas previas)**: dirección/sistemas abren la sesión real de otra persona
-  (función `ver-como`) y la base la vuelve de solo lectura antes de cada petición
-  (`antes_de_cada_peticion`, migración 091). Esa función corre en **cada** petición de la
-  API: que siga siendo una búsqueda por llave, nada más.
 - En una política, **nada que se evalúe por renglón**: `(select puede('x', n))`,
   `(select auth.uid())` y `id in (select mis_…())` (una función que regresa el conjunto). Una
   función `security definer` por renglón (`pedido_visible(id)`) o `puede()` dentro del `where`
