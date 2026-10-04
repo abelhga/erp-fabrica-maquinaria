@@ -105,6 +105,11 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
     puede: (m, nivel = 1) => (datos.permisos[m] ?? 0) >= nivel,
     tieneRol: (r) => datos.roles.includes(r),
     verComo: async (r) => {
+      // Lo que se está pidiendo con el rol de ahora llegaría a la base ya con el nuevo
+      // y la RLS lo rechazaría (el mapa del tablero de dirección daba 403 si se cambiaba
+      // de rol mientras cargaba). Se espera a que termine, máximo 4 s.
+      const limite = Date.now() + 4000;
+      while (qc.isFetching() > 0 && Date.now() < limite) await new Promise((ok) => setTimeout(ok, 100));
       const { error } = await supabase.rpc("ver_como", { p_rol: r });
       if (error) throw new Error(error.message);
       await cargarDatos(session);
@@ -116,7 +121,7 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
       if (EN_VISTA_PREVIA) { await supabase.auth.signOut({ scope: "local" }); window.close(); return; }
       await supabase.auth.signOut();
     },
-  }), [cargando, session, datos, cargarDatos]);
+  }), [cargando, session, datos, cargarDatos, qc]);
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }
