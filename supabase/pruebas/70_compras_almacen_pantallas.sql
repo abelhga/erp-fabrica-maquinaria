@@ -184,6 +184,11 @@ begin
   -- Almacén sí puede pedírselo a compras como requisición (pero no lo ya pedido).
   update articulos set stock_minimo_fijo = 300 where id = v_tuerca;   -- ahora hacen falta 300 (⌈(300−20)/100⌉·100); 200 ya en borrador
   perform pg_temp.como(v_alm);
+  -- La lista en una llamada trae lo mismo que la función por filas, y sin costos para almacén.
+  assert jsonb_array_length(reabasto_lista()) = (select count(*) from reabasto_detalle()), 'reabasto_lista no trae todas las filas';
+  assert (select (e->>'en_borrador')::numeric from jsonb_array_elements(reabasto_lista()) e where (e->>'articulo_id')::uuid = v_tuerca) = 200,
+    'reabasto_lista no trae lo que está en borrador';
+  assert not exists (select 1 from jsonb_array_elements(reabasto_lista()) e where e->>'costo_mxn' is not null), 'almacén vio costos en el reabasto';
   v_res := requisicion_desde_reabasto(array[v_tuerca]);
   assert (select cantidad from requisicion_lineas where requisicion_id = (v_res->>'id')::uuid) = 100, 'pide solo lo que falta';
   assert (select origen from requisiciones where id = (v_res->>'id')::uuid) = 'reabasto', 'origen reabasto';

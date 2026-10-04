@@ -14,7 +14,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { dinero, dineroCompacto, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
-import { SinPermiso, todasLasFilas } from "./componentes/comun";
+import { SinPermiso } from "./componentes/comun";
 import { PorQue, Sparkline, type FilaReabasto, type ReglaReabasto } from "./componentes/Reabasto";
 
 type Vista = "ordenar" | "importados" | "excedente" | "negativo" | "todos";
@@ -56,7 +56,8 @@ export default function Reabasto() {
   const datos = useQuery({
     queryKey: ["reabasto_detalle"],
     enabled: verMovimientos,
-    queryFn: () => todasLasFilas<FilaReabasto>((d, h) => supabase.rpc("reabasto_detalle").order("articulo_id").range(d, h)),
+    // De una vez (jsonb): por páginas, cada página recalculaba los 5 mil artículos.
+    queryFn: async () => (await q<FilaReabasto[]>(supabase.rpc("reabasto_lista"))) ?? [],
   });
   const filas = useMemo(() => (datos.data ?? []).map((r) => ({
     ...r, demanda_mensual: Number(r.demanda_mensual), punto_reorden: Number(r.punto_reorden), lote: Number(r.lote), disponible: Number(r.disponible),

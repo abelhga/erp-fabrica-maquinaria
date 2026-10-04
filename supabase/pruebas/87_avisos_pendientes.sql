@@ -61,7 +61,9 @@ begin
   -- Pendientes: el vendedor le pide algo a compras.
   perform pg_temp.como(v_vend);
   insert into pendientes (titulo, responsable_id, vence, tabla, registro_id, ruta)
-  values ('Precio de motorreductor 5 HP para la cotización', v_comp, current_date - 1, 'pedidos', v_ped::text, '/ventas/pedidos/' || v_ped)
+  -- Ayer en la planta, no en UTC: de 18 a 24 h (hora de la planta) current_date ya es
+  -- mañana y el pendiente aún no estaba vencido, así que la prueba fallaba de noche.
+  values ('Precio de motorreductor 5 HP para la cotización', v_comp, (now() at time zone 'America/Mexico_City')::date - 1, 'pedidos', v_ped::text, '/ventas/pedidos/' || v_ped)
   returning id into v_pend;
   perform pg_temp.como_postgres();
   assert exists (select 1 from avisos where usuario_id = v_comp and tipo = 'pendiente_nuevo' and registro_id = v_pend::text), 'compras no supo del pendiente';
