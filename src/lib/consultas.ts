@@ -1,12 +1,14 @@
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "./supabase";
+import { EN_VISTA_PREVIA, supabase } from "./supabase";
+import { MSJ_VISTA_PREVIA } from "./vistaPrevia";
 
 /** Traduce errores de Postgres/PostgREST a algo que un usuario entienda. Los
  *  que lanzamos nosotros (raise exception) ya vienen en español y pasan tal cual. */
 export function mensajeError(e: unknown): string {
   const m = e instanceof Error ? e.message : typeof e === "object" && e && "message" in e ? String((e as { message: unknown }).message) : String(e);
+  if (/read-only transaction/i.test(m)) return MSJ_VISTA_PREVIA;
   if (/row-level security|permission denied/i.test(m)) return "No tienes permiso para hacer esto.";
   if (/duplicate key value.*\((\w+)\)/i.test(m)) return `Ya existe un registro con ese ${m.match(/\((\w+)\)/)?.[1] ?? "dato"}.`;
   if (/violates foreign key/i.test(m)) return "No se puede: hay otros registros que dependen de este.";
@@ -34,7 +36,7 @@ export function useRpc<T>(nombre: string, args: Record<string, unknown> = {}, op
 export function useAccion<A, R = unknown>(fn: (a: A) => Promise<R>, opciones: { exito?: string | ((r: R) => string); invalidar?: QueryKey[]; alTerminar?: (r: R) => void } = {}) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: fn,
+    mutationFn: (a: A) => (EN_VISTA_PREVIA ? Promise.reject(new Error(MSJ_VISTA_PREVIA)) : fn(a)),
     onSuccess: (r) => {
       if (opciones.exito) toast.success(typeof opciones.exito === "function" ? opciones.exito(r) : opciones.exito);
       opciones.invalidar?.forEach((k) => qc.invalidateQueries({ queryKey: k }));

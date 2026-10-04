@@ -4,6 +4,8 @@ import { Loader2, Lock } from "lucide-react";
 import { useSesion, type Modulo } from "./lib/sesion";
 import { Shell } from "./components/layout/Shell";
 import { Entrar, SinAcceso } from "./paginas/Entrar";
+import { EsperandoVistaPrevia } from "./paginas/VistaPrevia";
+import { EN_VISTA_PREVIA } from "./lib/supabase";
 
 // Cada pantalla se baja solo cuando se abre: el almacenista no descarga el cotizador.
 const p = (f: () => Promise<{ default: ComponentType }>) => lazy(f);
@@ -88,7 +90,7 @@ function Con({ m, n = 1, children }: { m: Modulo; n?: number; children: ReactNod
 export function App() {
   const { cargando, session, perfil, roles, salir } = useSesion();
   if (cargando) return <Cargando />;
-  if (!session) return <Entrar />;
+  if (!session) return EN_VISTA_PREVIA ? <EsperandoVistaPrevia /> : <Entrar />;
   if (!perfil || roles.length === 0) return <SinAcceso correo={session.user.email ?? ""} salir={salir} />;
 
   // La TV del taller entra directo a su pantalla y no ve nada más.

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
+import { Eye, LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
 import { MENU, INICIO, PENDIENTES, SEMANA } from "@/navegacion";
 import { useSesion, NOMBRE_ROL } from "@/lib/sesion";
 import { cn } from "@/lib/utilidades";
@@ -8,6 +8,8 @@ import { Logo } from "./Logo";
 import { BuscadorGlobal } from "./BuscadorGlobal";
 import { Asistente } from "@/components/asistente/Asistente";
 import { Campana } from "@/components/avisos/Campana";
+import { VerComo } from "./VerComo";
+import { FranjaVistaPrevia } from "@/paginas/VistaPrevia";
 
 function useTema() {
   const [oscuro, setOscuro] = useState(() => {
@@ -21,8 +23,11 @@ function useTema() {
 }
 
 export function Shell() {
-  const { perfil, puede, salir, roles } = useSesion();
+  const { perfil, puede, salir, roles, tieneRol, vistaPrevia } = useSesion();
   const [abiertoMovil, setAbiertoMovil] = useState(false);
+  const [verComo, setVerComo] = useState(false);
+  // Lo mismo que revisa la base (vista_previa_destino): dirección o sistemas, y no desde otra vista previa.
+  const puedeVerComo = (tieneRol("direccion") || tieneRol("admin")) && !vistaPrevia;
   const [buscando, setBuscando] = useState(false);
   const [oscuro, setOscuro] = useTema();
   const { pathname } = useLocation();
@@ -80,6 +85,7 @@ export function Shell() {
       )}
 
       <div className="flex-1 min-w-0 flex flex-col">
+        <FranjaVistaPrevia />
         <header className="no-imprimir h-16 shrink-0 flex items-center gap-3 px-4 lg:px-8 border-b border-borde bg-superficie/80 backdrop-blur sticky top-0 z-30">
           <button className="lg:hidden p-2 -ml-2" onClick={() => setAbiertoMovil(true)} aria-label="Abrir menú"><Menu className="h-5 w-5" /></button>
           <button
@@ -92,6 +98,11 @@ export function Shell() {
           </button>
           <div className="ml-auto flex items-center gap-1">
             <Campana />
+            {puedeVerComo && (
+              <button onClick={() => setVerComo(true)} className="p-2 rounded-lg hover:bg-fondo text-tenue" aria-label="Ver como otra persona" title="Ver como…">
+                <Eye className="h-5 w-5" />
+              </button>
+            )}
             <button onClick={() => setOscuro(!oscuro)} className="p-2 rounded-lg hover:bg-fondo text-tenue" aria-label="Cambiar tema">
               {oscuro ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
@@ -114,7 +125,9 @@ export function Shell() {
         </main>
       </div>
       <BuscadorGlobal abierto={buscando} alCambiar={setBuscando} />
-      <Asistente />
+      {/* En una vista previa el asistente no se usa (gastaría a nombre de la otra persona). */}
+      {!vistaPrevia && <Asistente />}
+      {puedeVerComo && <VerComo abierto={verComo} alCambiar={setVerComo} />}
     </div>
   );
 }

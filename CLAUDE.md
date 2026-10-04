@@ -34,6 +34,10 @@ un movimiento no se edite), va en SQL con su prueba, no en un `if` de React.
   corrige con un ajuste que autoriza otra persona.
 - Funciones nuevas: `security invoker` si solo leen (la RLS filtra sola); `security definer`
   solo si de verdad tienen que saltarse la RLS, y entonces **revisan `puede()` al inicio**.
+- **"Ver como" (vistas previas)**: dirección/sistemas abren la sesión real de otra persona
+  (función `ver-como`) y la base la vuelve de solo lectura antes de cada petición
+  (`antes_de_cada_peticion`, migración 091). Esa función corre en **cada** petición de la
+  API: que siga siendo una búsqueda por llave, nada más.
 - En una política, **nada que se evalúe por renglón**: `(select puede('x', n))`,
   `(select auth.uid())` y `id in (select mis_…())` (una función que regresa el conjunto). Una
   función `security definer` por renglón (`pedido_visible(id)`) o `puede()` dentro del `where`

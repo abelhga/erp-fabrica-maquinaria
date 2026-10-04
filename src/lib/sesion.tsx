@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { supabase } from "./supabase";
+import { EN_VISTA_PREVIA, supabase } from "./supabase";
 
 export type Rol =
   | "direccion" | "admin" | "gerente_ventas" | "ventas" | "ingenieria" | "compras" | "almacen"
@@ -25,6 +25,8 @@ export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" |
   | "analisis";
 
 export interface Perfil { id: string; nombre: string; correo: string; puesto: string | null; iniciales: string | null; activo: boolean; telefono: string | null }
+/** "Ver como": esta sesión es de otra persona, abierta por dirección o sistemas, solo para ver. */
+export interface VistaPrevia { abierta_por: string; desde: string }
 
 interface Sesion {
   cargando: boolean;
@@ -32,6 +34,7 @@ interface Sesion {
   perfil: Perfil | null;
   roles: Rol[];
   permisos: Partial<Record<Modulo, number>>;
+  vistaPrevia: VistaPrevia | null;
   /** ¿Puede el usuario actual hacer esto? 1 = ver, 2 = editar, 3 = administrar. Espejo de public.puede() en la base. */
   puede: (m: Modulo, nivel?: number) => boolean;
   tieneRol: (r: Rol) => boolean;
@@ -43,14 +46,16 @@ const Ctx = createContext<Sesion | null>(null);
 
 export function ProveedorSesion({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [datos, setDatos] = useState<{ perfil: Perfil | null; roles: Rol[]; permisos: Sesion["permisos"] }>({ perfil: null, roles: [], permisos: {} });
+  const [datos, setDatos] = useState<{ perfil: Perfil | null; roles: Rol[]; permisos: Sesion["permisos"]; vistaPrevia: VistaPrevia | null }>(
+    { perfil: null, roles: [], permisos: {}, vistaPrevia: null });
   const [cargando, setCargando] = useState(true);
 
   const cargarDatos = useCallback(async (s: Session | null) => {
-    if (!s) { setDatos({ perfil: null, roles: [], permisos: {} }); return; }
+    const vacio = { perfil: null, roles: [], permisos: {}, vistaPrevia: null };
+    if (!s) { setDatos(vacio); return; }
     const { data, error } = await supabase.rpc("mi_sesion");
-    if (error || !data) { setDatos({ perfil: null, roles: [], permisos: {} }); return; }
-    setDatos({ perfil: data.perfil, roles: data.roles ?? [], permisos: data.permisos ?? {} });
+    if (error || !data) { setDatos(vacio); return; }
+    setDatos({ perfil: data.perfil, roles: data.roles ?? [], permisos: data.permisos ?? {}, vistaPrevia: data.vista_previa ?? null });
   }, []);
 
   useEffect(() => {
@@ -74,7 +79,12 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
     puede: (m, nivel = 1) => (datos.permisos[m] ?? 0) >= nivel,
     tieneRol: (r) => datos.roles.includes(r),
     recargar: () => cargarDatos(session),
-    salir: async () => { await supabase.auth.signOut(); },
+    // En una vista previa solo se cierra ESTA sesión ("local"): las de la otra persona
+    // en sus propios equipos siguen abiertas. Y la pestaña ya no sirve para nada.
+    salir: async () => {
+      if (EN_VISTA_PREVIA) { await supabase.auth.signOut({ scope: "local" }); window.close(); return; }
+      await supabase.auth.signOut();
+    },
   }), [cargando, session, datos, cargarDatos]);
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;

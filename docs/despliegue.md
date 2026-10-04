@@ -97,6 +97,20 @@ python3 scripts/nube/sql_nube.py consulta.sql
 - No se usa una función de borde que ejecute SQL "para cargar rápido": queda como puerta
   abierta a la base aunque se borre después.
 
+### "Ver como" (función de borde `ver-como`)
+
+```bash
+npx supabase functions deploy ver-como --no-verify-jwt
+```
+- No necesita secretos: usa `SUPABASE_SERVICE_ROLE_KEY`, que Supabase pone solo, y solo
+  después de que `vista_previa_destino()` dijo que quien la pide es dirección o sistemas.
+- La migración 091 pone `pgrst.db_pre_request = public.antes_de_cada_peticion` en el rol
+  `authenticator`: antes de cada petición de la API revisa si la sesión es una vista
+  previa y, si lo es, vuelve la transacción de solo lectura. Si algún día la API entera
+  empieza a fallar con un error de esa función, se quita con
+  `alter role authenticator reset pgrst.db_pre_request; notify pgrst, 'reload config';`.
+- El registro de quién vio como quién está en la tabla `vistas_previas`.
+
 ## 2. Sitio (Cloudflare Workers)
 
 - **Workers & Pages → Create application → Import a repository**, elegir el repositorio y la

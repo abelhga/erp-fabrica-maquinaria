@@ -1,6 +1,6 @@
 // Cliente de la función `asistente` (supabase/functions/asistente). La llave de
 // Claude vive en el servidor; aquí solo viaja la sesión de quien pregunta.
-import { supabase } from "./supabase";
+import { EN_VISTA_PREVIA, supabase } from "./supabase";
 
 export type Area = "direccion" | "ventas" | "compras" | "almacen" | "produccion" | "finanzas" | "importaciones"
   | "servicio";
@@ -36,6 +36,9 @@ async function cabeceras() {
 }
 
 async function llamar(cuerpo: unknown, signal?: AbortSignal) {
+  // En una vista previa no se le pregunta a Claude: gastaría y anotaría el uso a
+  // nombre de la otra persona. La tarjeta de Inicio cae sola a las reglas de la base.
+  if (EN_VISTA_PREVIA) throw new Error("En la vista previa no se usa el asistente.");
   let r: Response;
   try {
     r = await fetch(URL_ASISTENTE, { method: "POST", headers: await cabeceras(), body: JSON.stringify(cuerpo), signal });
