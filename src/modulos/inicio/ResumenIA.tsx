@@ -1,6 +1,9 @@
 // "Lo que importa hoy": el resumen de un área. Si Claude está conectado, lo escribe
 // él con los datos de la base; si no (o si la función no responde), salen los
 // hallazgos calculados por reglas en SQL. Nunca se queda vacío por culpa de la IA.
+// Tampoco se queda esperando: la primera vez del día Claude tarda ~30 s, y mientras
+// tanto se ven los hallazgos de la base (tardan menos de un segundo).
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { AlertTriangle, ArrowRight, CheckCircle2, Info, RefreshCw, Sparkles, Siren } from "lucide-react";
@@ -35,6 +38,19 @@ export function ResumenIA({ area = "direccion" }: { area?: Area }) {
     queryFn: () => pedirResumen(area).catch(() => resumenDeRespaldo(area)),
     staleTime: 10 * 60_000,
   });
+  // Si el resumen ya estaba guardado llega en ~1 s: esperar un poco antes de mostrar
+  // los hallazgos evita que la tarjeta parpadee de una versión a otra.
+  const [esperando, setEsperando] = useState(false);
+  useEffect(() => {
+    if (r.data || !r.isFetching) { setEsperando(false); return; }
+    const t = setTimeout(() => setEsperando(true), 1500);
+    return () => clearTimeout(t);
+  }, [r.data, r.isFetching]);
+  const respaldo = useQuery({ queryKey: ["resumen_reglas", area], queryFn: () => resumenDeRespaldo(area), enabled: esperando, staleTime: 60_000 });
+  const analizando = !r.data && esperando && !!respaldo.data;
+  const datos = r.data ?? (analizando ? respaldo.data : undefined);
+  const cargando = !datos;
+
   const actualizar = async () => {
     qc.setQueryData(clave, undefined);
     await qc.fetchQuery({ queryKey: clave, queryFn: () => pedirResumen(area, true).catch(() => resumenDeRespaldo(area)) });
@@ -52,16 +68,18 @@ export function ResumenIA({ area = "direccion" }: { area?: Area }) {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-medium text-tenue uppercase tracking-wide">Lo que importa hoy</p>
-              {r.isLoading || !r.data
+              {cargando
                 ? <div className="mt-1.5 h-5 w-80 max-w-full rounded bg-fondo animate-pulse" />
-                : <h2 className="text-lg font-semibold leading-snug text-balance">{r.data.titular}</h2>}
-              {r.data?.resumen && <p className="mt-1 text-sm text-tenue max-w-3xl">{r.data.resumen}</p>}
+                : <h2 className="text-lg font-semibold leading-snug text-balance">{datos.titular}</h2>}
+              {datos?.resumen && <p className="mt-1 text-sm text-tenue max-w-3xl">{datos.resumen}</p>}
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-tenue">
-            {r.data && (r.data.simulado
-              ? <Insignia tono="neutro">Reglas de la base · sin IA</Insignia>
-              : <Insignia tono="marca"><Sparkles className="h-3 w-3" />Claude · {hace(r.data.generado_en)}</Insignia>)}
+            {analizando
+              ? <Insignia tono="marca"><Sparkles className="h-3 w-3 animate-pulse" />Claude está analizando…</Insignia>
+              : datos && (datos.simulado
+                ? <Insignia tono="neutro">Reglas de la base · sin IA</Insignia>
+                : <Insignia tono="marca"><Sparkles className="h-3 w-3" />Claude · {hace(datos.generado_en)}</Insignia>)}
             <button onClick={actualizar} disabled={r.isFetching} title="Volver a analizar"
               className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo disabled:opacity-50">
               <RefreshCw className={cn("h-4 w-4", r.isFetching && "animate-spin")} />
@@ -70,8 +88,8 @@ export function ResumenIA({ area = "direccion" }: { area?: Area }) {
         </div>
 
         <div className="mt-4 grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
-          {r.isLoading && Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-24 rounded-xl bg-fondo animate-pulse" />)}
-          {r.data?.puntos.map((p, i) => {
+          {cargando && Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-24 rounded-xl bg-fondo animate-pulse" />)}
+          {datos?.puntos.map((p, i) => {
             const t = TONOS[p.tono] ?? TONOS.info;
             return (
               <Link key={i} to={p.ruta || "/"}
@@ -90,11 +108,11 @@ export function ResumenIA({ area = "direccion" }: { area?: Area }) {
               </Link>
             );
           })}
-          {r.data && r.data.puntos.length === 0 && (
+          {datos && datos.puntos.length === 0 && (
             <p className="text-sm text-tenue">Nada fuera de lo normal en lo que puedes ver. Buen día para vender.</p>
           )}
         </div>
-        {r.data?.aviso && <p className="mt-3 text-xs text-aviso">{r.data.aviso}</p>}
+        {datos?.aviso && <p className="mt-3 text-xs text-aviso">{datos.aviso}</p>}
       </div>
     </section>
   );
