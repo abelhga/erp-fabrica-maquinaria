@@ -4,6 +4,9 @@
 // Contra el sitio publicado, donde no hay conexión directa a la base ni "hegamex-local":
 //   APP_URL=https://… CONTRASENAS=claves.json RUTAS_DETALLE=/ventas/pedidos/<id>,… node scripts/recorrido.mjs
 // (claves.json = {"correo": "contraseña"}; fuera del repositorio).
+// SIN_ALTAS=1 para una base con datos reales: no abre pantallas que crean registros
+// al entrar (/ventas/cotizaciones/nueva deja un borrador) ni le pide nada a Claude
+// (cada rol gastaría un resumen); la tarjeta de Inicio sale con las reglas de la base.
 // Capturas en capturas/recorrido/<correo>/<ruta>.png y un resumen al final.
 import { chromium } from "playwright-core";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -67,7 +70,12 @@ for (const rol of roles) {
   mkdirSync(dir, { recursive: true });
   const pag = await nav.newPage({ viewport: { width: 1440, height: 900 } });
   let errores = [];
-  pag.on("console", (m) => { if (m.type() === "error" && !/ERR_CERT|favicon/.test(m.text())) errores.push(m.text().slice(0, 200)); });
+  if (process.env.SIN_ALTAS) await pag.route("**/functions/v1/asistente", (r) => r.abort());
+  pag.on("console", (m) => {
+    if (m.type() !== "error" || /ERR_CERT|favicon/.test(m.text())) return;
+    if (process.env.SIN_ALTAS && /ERR_FAILED|functions\/v1\/asistente/.test(m.text())) return;
+    errores.push(m.text().slice(0, 200));
+  });
   pag.on("pageerror", (e) => errores.push("EXCEPCIÓN: " + e.message.slice(0, 200)));
   await pag.goto(base);
   await pag.getByText("Entrar con correo y contraseña").click();
@@ -75,7 +83,7 @@ for (const rol of roles) {
   await pag.getByLabel("Contraseña").fill(CLAVES[correo] ?? "hegamex-local");
   await pag.getByRole("button", { name: "Entrar", exact: true }).click();
   await pag.waitForTimeout(1500);
-  for (const ruta of rol === "pantalla" ? ["/"] : RUTAS) {
+  for (const ruta of rol === "pantalla" ? ["/"] : RUTAS.filter((r) => !(process.env.SIN_ALTAS && r.endsWith("/nueva")))) {
     errores = [];
     await pag.goto(base + ruta);
     await pag.waitForLoadState("networkidle").catch(() => {});

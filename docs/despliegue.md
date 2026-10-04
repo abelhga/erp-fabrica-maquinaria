@@ -2,11 +2,14 @@
 
 Dos piezas: la base (Supabase) y el sitio (estático, en Cloudflare Workers).
 
-El 3 de octubre de 2026 se creó el proyecto de demostración `erp-hegamex` (Supabase,
-us-west-1) con las migraciones, los datos de la instancia local de verificación y usuarios
-de prueba por rol con contraseña propia (no "hegamex-local"). Los registros nuevos están
-cerrados (`disable_signup`): solo entra quien se crea a mano o se invita. Antes de usarlo
-con datos de verdad falta lo de los pasos 4, 5 y 8 de abajo (Google, dominio y llave de Claude).
+El 3 de octubre de 2026 se creó el proyecto `erp-hegamex` (Supabase, us-west-1) con las
+migraciones, los datos de la instancia local de verificación y usuarios de prueba por rol con
+contraseña propia (no "hegamex-local"). Ya tiene entrada con Google, la llave de Claude y el
+sitio en `erp-fabrica-maquinaria.figugu.workers.dev`. El 4 de octubre se le quitó toda la
+demostración con `scripts/demo/limpiar_todo.sql`: quedan solo las migraciones, lo importado
+de las hojas y lo que han capturado personas reales. Si alguna vez se vuelve a cargar
+demostración en una base que se va a usar en serio, ese mismo script la quita (corre en una
+transacción y se detiene si algo real depende de lo que iba a borrar).
 
 ## 1. Supabase
 
