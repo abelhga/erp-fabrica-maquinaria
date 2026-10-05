@@ -49,6 +49,11 @@ export function Documentos({ e }: { e: Embarque }) {
   const invalidar = [["embarque_documentos"], CLAVE_EMBARQUES, ["alertas_importacion"]];
   const cambiar = useAccion(({ id, cambios }: { id: string; cambios: Record<string, unknown> }) =>
     q(supabase.from("embarque_documentos").update(cambios).eq("id", id)), { invalidar });
+  const pedi = useAccion(({ id }: { id: string; antes: string | null }) =>
+    q(supabase.from("embarque_documentos").update({ ultimo_seguimiento: hoyISO() }).eq("id", id)), {
+    exito: "Anotado: lo pediste hoy", invalidar,
+    deshacer: (_, { id, antes }) => q(supabase.from("embarque_documentos").update({ ultimo_seguimiento: antes }).eq("id", id)),
+  });
 
   const subir = async (doc: { id?: string; tipo: string }, f: File | undefined) => {
     if (!f) return;
@@ -119,7 +124,7 @@ export function Documentos({ e }: { e: Embarque }) {
                       </label>
                     )}
                     {captura && d.estado === "pendiente" && d.ultimo_seguimiento !== hoyISO() && (
-                      <Boton variante="secundario" tamano="sm" title="Anotar que hoy lo pediste" onClick={() => cambiar.mutate({ id: d.id, cambios: { ultimo_seguimiento: hoyISO() } })}>
+                      <Boton variante="secundario" tamano="sm" title="Anotar que hoy lo pediste" onClick={() => pedi.mutate({ id: d.id, antes: d.ultimo_seguimiento })}>
                         <Clock className="h-3.5 w-3.5" /> Ya lo pedí
                       </Boton>
                     )}

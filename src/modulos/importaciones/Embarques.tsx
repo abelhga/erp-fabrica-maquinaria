@@ -261,8 +261,10 @@ function Esperando({ embarques }: { embarques: Embarque[] }) {
       .select("id, embarque_id, tipo, debe, estado, ultimo_seguimiento, creado_en, documentos_importacion(nombre, orden)")
       .in("estado", ["pendiente", "observado"]).overrideTypes<DocPendiente[], { merge: false }>()),
   });
-  const pedi = useAccion((id: string) => q(supabase.from("embarque_documentos").update({ ultimo_seguimiento: hoyISO() }).eq("id", id)),
-    { exito: "Anotado: lo pediste hoy", invalidar: [["embarque_documentos"]] });
+  const pedi = useAccion(({ id }: { id: string; antes: string | null }) => q(supabase.from("embarque_documentos").update({ ultimo_seguimiento: hoyISO() }).eq("id", id)), {
+    exito: "Anotado: lo pediste hoy", invalidar: [["embarque_documentos"]],
+    deshacer: (_, { id, antes }) => q(supabase.from("embarque_documentos").update({ ultimo_seguimiento: antes }).eq("id", id)),
+  });
   const activos = new Map(embarques.filter((e) => ["produccion", "listo", "transito", "puerto", "planta"].includes(e.fase)).map((e) => [e.id, e]));
   const grupos = useMemo(() => {
     const g = new Map<Debe, (DocPendiente & { emb: Embarque })[]>();
@@ -304,7 +306,7 @@ function Esperando({ embarques }: { embarques: Embarque[] }) {
                       </p>
                     </div>
                     {puede("importaciones", 2) && d.ultimo_seguimiento !== hoyISO() && (
-                      <Boton variante="secundario" tamano="sm" className="shrink-0" onClick={() => pedi.mutate(d.id)} title="Anotar que hoy se pidió">
+                      <Boton variante="secundario" tamano="sm" className="shrink-0" onClick={() => pedi.mutate({ id: d.id, antes: d.ultimo_seguimiento })} title="Anotar que hoy se pidió">
                         <Clock className="h-3.5 w-3.5" /> Ya lo pedí
                       </Boton>
                     )}
