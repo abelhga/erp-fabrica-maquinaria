@@ -304,8 +304,8 @@ function Esperando({ embarques }: { embarques: Embarque[] }) {
                       </p>
                     </div>
                     {puede("importaciones", 2) && d.ultimo_seguimiento !== hoyISO() && (
-                      <Boton variante="fantasma" tamano="sm" onClick={() => pedi.mutate(d.id)} title="Anotar que hoy se pidió">
-                        <Clock className="h-3.5 w-3.5" /> Lo pedí hoy
+                      <Boton variante="secundario" tamano="sm" className="shrink-0" onClick={() => pedi.mutate(d.id)} title="Anotar que hoy se pidió">
+                        <Clock className="h-3.5 w-3.5" /> Ya lo pedí
                       </Boton>
                     )}
                   </li>

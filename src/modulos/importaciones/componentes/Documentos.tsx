@@ -119,8 +119,8 @@ export function Documentos({ e }: { e: Embarque }) {
                       </label>
                     )}
                     {captura && d.estado === "pendiente" && d.ultimo_seguimiento !== hoyISO() && (
-                      <Boton variante="fantasma" tamano="sm" title="Anotar que hoy lo pediste" onClick={() => cambiar.mutate({ id: d.id, cambios: { ultimo_seguimiento: hoyISO() } })}>
-                        <Clock className="h-3.5 w-3.5" /> Lo pedí hoy
+                      <Boton variante="secundario" tamano="sm" title="Anotar que hoy lo pediste" onClick={() => cambiar.mutate({ id: d.id, cambios: { ultimo_seguimiento: hoyISO() } })}>
+                        <Clock className="h-3.5 w-3.5" /> Ya lo pedí
                       </Boton>
                     )}
                   </div>

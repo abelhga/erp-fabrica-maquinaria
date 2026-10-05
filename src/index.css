@@ -76,6 +76,9 @@
 
 @layer base {
   html, body, #root { height: 100%; }
+  /* La página se desplaza dentro de <main>: de lado nunca. Sin esto, en iPhone lo que
+     queda fuera de la pantalla (el panel del asistente cerrado) dejaba arrastrarla. */
+  html, body { overflow-x: clip; }
   body {
     @apply bg-fondo text-texto font-sans antialiased;
     font-feature-settings: "cv11", "ss01";
