@@ -33,13 +33,21 @@ export function useRpc<T>(nombre: string, args: Record<string, unknown> = {}, op
 }
 
 /** Mutación con aviso de éxito/error y recarga de las consultas afectadas. */
-export function useAccion<A, R = unknown>(fn: (a: A) => Promise<R>, opciones: { exito?: string | ((r: R) => string); invalidar?: QueryKey[]; alTerminar?: (r: R) => void } = {}) {
+export function useAccion<A, R = unknown>(fn: (a: A) => Promise<R>, opciones: {
+  exito?: string | ((r: R) => string); invalidar?: QueryKey[]; alTerminar?: (r: R) => void;
+  /** Para lo que se hace con un solo toque y es fácil tocar sin querer: el aviso trae "Deshacer". */
+  deshacer?: (r: R, a: A) => Promise<unknown>;
+} = {}) {
   const qc = useQueryClient();
+  const recargar = () => opciones.invalidar?.forEach((k) => qc.invalidateQueries({ queryKey: k }));
   return useMutation({
     mutationFn: (a: A) => (EN_VISTA_PREVIA ? Promise.reject(new Error(MSJ_VISTA_PREVIA)) : fn(a)),
-    onSuccess: (r) => {
-      if (opciones.exito) toast.success(typeof opciones.exito === "function" ? opciones.exito(r) : opciones.exito);
-      opciones.invalidar?.forEach((k) => qc.invalidateQueries({ queryKey: k }));
+    onSuccess: (r, a) => {
+      const deshacer = opciones.deshacer;
+      if (opciones.exito) toast.success(typeof opciones.exito === "function" ? opciones.exito(r) : opciones.exito, deshacer ? {
+        action: { label: "Deshacer", onClick: () => { deshacer(r, a).then(() => { recargar(); toast("Deshecho"); }, (e) => toast.error(mensajeError(e))); } },
+      } : undefined);
+      recargar();
       opciones.alTerminar?.(r);
     },
     onError: (e) => toast.error(mensajeError(e)),
