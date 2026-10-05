@@ -463,8 +463,11 @@ export function explicarError(e: unknown): { mensaje: string; codigo: string } {
     // varios rechazos (402, 403, 400 sin reintento) y sin el original no se sabe
     // cuál fue ni qué arreglar en la consola de Anthropic.
     console.error(`[anthropic] ${e.status} ${e.type ?? ""} ${e.requestID ?? ""}: ${e.message}`);
-    const sinReintento = e.headers?.get?.("x-should-retry") === "false";
-    if (e.type === "billing_error" || e.status === 402 || (e.status === 400 && sinReintento) || e.status === 403)
+    // Un 400 de tope o saldo y un 400 por una petición mal hecha llegan igual (sin
+    // reintento): solo el mensaje los distingue. Confundirlos mandó a revisar la
+    // facturación cuando lo que fallaba era el esquema del BL.
+    const deCuenta = /usage limit|credit balance|billing|spend/i.test(e.message);
+    if (e.type === "billing_error" || e.status === 402 || e.status === 403 || (e.status === 400 && deCuenta))
       return { codigo: "cuenta", mensaje: "La cuenta de Claude no aceptó la consulta (tope de gasto o facturación). Se sube en console.anthropic.com → Settings → Limits." };
     if ((e.status ?? 0) >= 500) return { codigo: "saturado", mensaje: "Claude tuvo un problema de su lado. Intenta en un minuto." };
     return { codigo: "api", mensaje: `Claude no aceptó la consulta (${e.status}).` };
@@ -848,7 +851,10 @@ export const DOCUMENTOS: Record<TipoDocumento, { nombre: string; esquema: Esquem
       mercancia: nulo("string", "Descripción de la mercancía (description of goods), corta, traducida al español si viene en otro idioma"),
       modalidad: { anyOf: [{ type: "string", enum: ["fcl", "lcl"] }, { type: "null" }],
         description: "fcl si el contenedor completo es del consignatario (FCL/FCL, CY/CY); lcl si es carga consolidada (LCL, CFS/CFS, parte de un contenedor)" },
-      contenedores: lista(objeto({ numero: nulo("string", "Número de contenedor"), tipo: nulo("string", "Tipo (20GP, 40HC…)"), sello: nulo("string", "Sello") })),
+      // Texto y no null: la API acepta hasta 16 campos que pueden ser null en todo el
+      // esquema y el BL ya usa los demás (registrar_documento_importacion ignora "").
+      contenedores: lista(objeto({ numero: { type: "string", description: "Número de contenedor" },
+        tipo: { type: "string", description: "Tipo (20GP, 40HC…); vacío si no viene" }, sello: { type: "string", description: "Sello; vacío si no viene" } })),
       bultos: nulo("number", "Bultos"), peso_kg: nulo("number", "Peso bruto en kg"), volumen_m3: nulo("number", "Volumen en m³"), advertencias,
     }),
   },

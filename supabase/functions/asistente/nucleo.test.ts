@@ -277,13 +277,33 @@ describe("resumen guardado y \"ver como\"", () => {
   });
 });
 
+// La API rechaza un esquema con más de 16 campos que pueden ser null (anyOf o tipo
+// en arreglo), contando los de adentro de listas y objetos.
+function camposConUnion(e: unknown): number {
+  if (Array.isArray(e)) return e.reduce((n, x) => n + camposConUnion(x), 0);
+  if (!e || typeof e !== "object") return 0;
+  const o = e as Record<string, unknown>;
+  return (o.anyOf || Array.isArray(o.type) ? 1 : 0) + Object.values(o).reduce<number>((n, x) => n + camposConUnion(x), 0);
+}
+describe("esquemas de documentos", () => {
+  it("ninguno pasa del tope de la API de 16 campos que pueden ser null", () => {
+    for (const [tipo, d] of Object.entries(DOCUMENTOS)) expect(camposConUnion(d.esquema), tipo).toBeLessThanOrEqual(16);
+  });
+});
+
 describe("errores de la API en español", () => {
   it("el tope de gasto se distingue de un error cualquiera", () => {
-    const tope = new Anthropic.BadRequestError(400, { type: "error" }, "usage limits", new Headers({ "x-should-retry": "false" }));
+    const cuerpo = (tipo: string, mensaje: string) => ({ type: "error", error: { type: tipo, message: mensaje } });
+    const sinReintento = new Headers({ "x-should-retry": "false" });
+    const tope = new Anthropic.BadRequestError(400, cuerpo("invalid_request_error", "You have reached your specified API usage limits."), undefined, sinReintento);
     expect(explicarError(tope).codigo).toBe("cuenta");
     expect(explicarError(tope).mensaje).toMatch(/console\.anthropic\.com/);
     expect(explicarError(new Anthropic.RateLimitError(429, {}, "x", new Headers())).codigo).toBe("saturado");
     expect(explicarError(new Anthropic.AuthenticationError(401, {}, "x", new Headers())).codigo).toBe("llave");
     expect(explicarError(new Anthropic.BadRequestError(400, {}, "x", new Headers())).codigo).toBe("api");
+    // Un esquema que la API no acepta también es 400 sin reintento, y no es de la cuenta.
+    const esquema = new Anthropic.BadRequestError(400, cuerpo("invalid_request_error", "Schemas contains too many parameters with union types"), undefined, sinReintento);
+    expect(explicarError(esquema).codigo).toBe("api");
+    expect(explicarError(new Anthropic.BadRequestError(400, cuerpo("invalid_request_error", "Your credit balance is too low"), undefined, sinReintento)).codigo).toBe("cuenta");
   });
 });
