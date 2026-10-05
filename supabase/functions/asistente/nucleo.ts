@@ -440,6 +440,12 @@ function sistema(p: Perfil, ruta?: string): Anthropic.Beta.BetaTextBlockParam[] 
   ];
 }
 
+// El resumen guardado se escribió con los permisos de los roles de ese momento. Si
+// dirección está viendo como otro rol, el de su vista propia trae ventas, cobranza y
+// costos que ese rol no ve: se guarda con qué roles se hizo y solo se reusa con los mismos.
+export const vista = (p: Pick<Perfil, "roles">) => [...p.roles].sort().join(",");
+export const mismaVista = (c: { roles?: unknown } | null | undefined, p: Pick<Perfil, "roles">) => c?.roles === vista(p);
+
 // -----------------------------------------------------------------------------
 // Errores de la API en palabras de quien usa el ERP. Tipados, no por texto:
 // el 28 sep 2026 un tope de gasto lleno (400 sin reintento) tumbó otro sistema de
@@ -453,6 +459,10 @@ export function explicarError(e: unknown): { mensaje: string; codigo: string } {
   if (e instanceof Anthropic.APIConnectionError)
     return { codigo: "red", mensaje: "No hubo conexión con Claude. Intenta de nuevo." };
   if (e instanceof Anthropic.APIError) {
+    // El mensaje de la API se queda en el log de la función: "tope de gasto" cubre
+    // varios rechazos (402, 403, 400 sin reintento) y sin el original no se sabe
+    // cuál fue ni qué arreglar en la consola de Anthropic.
+    console.error(`[anthropic] ${e.status} ${e.type ?? ""} ${e.requestID ?? ""}: ${e.message}`);
     const sinReintento = e.headers?.get?.("x-should-retry") === "false";
     if (e.type === "billing_error" || e.status === 402 || (e.status === 400 && sinReintento) || e.status === 403)
       return { codigo: "cuenta", mensaje: "La cuenta de Claude no aceptó la consulta (tope de gasto o facturación). Se sube en console.anthropic.com → Settings → Limits." };
@@ -1042,7 +1052,7 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
           .eq("area", area).maybeSingle();
         const g = guardado as { contenido: Resumen; modelo: string | null; generado_en: string } | null;
         // Un resumen de las últimas 6 horas sirve; después, otro.
-        if (g && Date.now() - new Date(g.generado_en).getTime() < 6 * 3600_000 && (g.modelo || !anthropic))
+        if (g && Date.now() - new Date(g.generado_en).getTime() < 6 * 3600_000 && (g.modelo || !anthropic) && mismaVista(g.contenido, perfil))
           return json({ ...g.contenido, generado_en: g.generado_en, simulado: !g.modelo, guardado: true });
       }
       if (!anthropic) {
@@ -1057,7 +1067,8 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
       const r = await resumir({ anthropic, db, perfil, config, area });
       await Promise.all([
         registrar(r),
-        db.from("asistente_resumenes").upsert({ usuario_id: perfil.id, area, contenido: r.resumen, modelo: r.modelo, generado_en: new Date().toISOString() }),
+        db.from("asistente_resumenes").upsert({ usuario_id: perfil.id, area, contenido: { ...r.resumen, roles: vista(perfil) }, modelo: r.modelo,
+          generado_en: new Date().toISOString() }),
       ]);
       return json({ ...r.resumen, generado_en: new Date().toISOString(), modelo: r.modelo });
     }
@@ -1068,9 +1079,9 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
       if (cuerpo.forzar !== true) {
         const { data: guardado } = await db.from("asistente_resumenes").select("contenido,modelo,generado_en")
           .eq("area", "semana").maybeSingle();
-        const g = guardado as { contenido: Resumen & { lunes?: string }; modelo: string | null; generado_en: string } | null;
+        const g = guardado as { contenido: Resumen & { lunes?: string; roles?: string }; modelo: string | null; generado_en: string } | null;
         // Uno por semana: los números de la semana pasada ya no cambian.
-        if (g && g.contenido.lunes === lunes && (g.modelo || !anthropic))
+        if (g && g.contenido.lunes === lunes && (g.modelo || !anthropic) && mismaVista(g.contenido, perfil))
           return json({ ...g.contenido, numeros, generado_en: g.generado_en, simulado: !g.modelo, guardado: true });
       }
       const { data: cupo } = anthropic ? await db.rpc("asistente_cupo") : { data: 0 };
@@ -1080,7 +1091,7 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
       const r = await resumirSemana({ anthropic, perfil, config, numeros });
       await Promise.all([
         registrar(r),
-        db.from("asistente_resumenes").upsert({ usuario_id: perfil.id, area: "semana", contenido: { ...r.resumen, lunes }, modelo: r.modelo,
+        db.from("asistente_resumenes").upsert({ usuario_id: perfil.id, area: "semana", contenido: { ...r.resumen, lunes, roles: vista(perfil) }, modelo: r.modelo,
           generado_en: new Date().toISOString() }),
       ]);
       return json({ ...r.resumen, numeros, generado_en: new Date().toISOString(), modelo: r.modelo });

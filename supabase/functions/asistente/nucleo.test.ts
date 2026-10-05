@@ -6,7 +6,7 @@ import { describe, expect, it, beforeAll } from "vitest";
 import { readFileSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
-import { atender, DOCUMENTOS, ejecutarHerramienta, ejemploDocumento, explicarError, validarEsquema, type Evento, type TipoDocumento } from "./nucleo.ts";
+import { atender, DOCUMENTOS, ejecutarHerramienta, ejemploDocumento, explicarError, mismaVista, validarEsquema, vista, type Evento, type TipoDocumento } from "./nucleo.ts";
 
 const env = Object.fromEntries(
   readFileSync(new URL("../../../.env.local", import.meta.url), "utf8").split("\n")
@@ -262,6 +262,18 @@ describe("documentos de importación sin base", () => {
     for (const t of Object.keys(DOCUMENTOS) as TipoDocumento[]) expect(validarEsquema(ejemploDocumento(t), DOCUMENTOS[t].esquema)).toEqual([]);
     expect(validarEsquema({ ...ejemploDocumento("bl"), extra: 1 }, DOCUMENTOS.bl.esquema)).toContain("sobra $.extra");
     expect(validarEsquema({ ...ejemploDocumento("bl"), fecha_embarque: "16/09/2026" }, DOCUMENTOS.bl.esquema)[0]).toMatch(/fecha_embarque/);
+  });
+});
+
+describe("resumen guardado y \"ver como\"", () => {
+  it("solo se reusa con los mismos roles con que se escribió", () => {
+    const direccion = { roles: ["direccion"] }, comoImportaciones = { roles: ["importaciones"] };
+    const guardado = { titular: "x", roles: vista(direccion) };
+    expect(mismaVista(guardado, direccion)).toBe(true);
+    expect(mismaVista(guardado, comoImportaciones)).toBe(false);
+    // Los de antes no dicen con qué roles se hicieron: se vuelven a hacer.
+    expect(mismaVista({ titular: "x" }, direccion)).toBe(false);
+    expect(vista({ roles: ["ventas", "compras"] })).toBe(vista({ roles: ["compras", "ventas"] }));
   });
 });
 
