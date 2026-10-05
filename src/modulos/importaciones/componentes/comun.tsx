@@ -42,6 +42,8 @@ export interface Embarque {
   referencia_agente: string | null; bl: string | null; bl_house: string | null; contenedores: string | null; buque: string | null; viaje: string | null;
   bultos: number | null; peso_kg: number | null; volumen_m3: number | null; etd: string | null; eta: string | null; eta_original: string | null;
   dias_libres_almacenaje: number; dias_libres_demoras: number | null; carpeta_url: string | null; notas: string | null; cancelado: boolean;
+  /** El de sus órdenes manda; este es para cuando todavía no tiene orden ligada (093). */
+  proveedor_id: string | null;
   creado_en: string; fase: Fase; etapa: string | null; etapa_nombre: string | null; fechas: Record<string, string>;
   arribo: string | null; despacho: string | null; en_planta: string | null; vacio: string | null;
   dias_en_puerto: number | null; dias_contenedor: number | null; llegada_planta_estimada: string | null; cambios_eta: number;

@@ -24,7 +24,7 @@ export const EL_DOC: Record<TipoAlta, string> = { bl: "el BL", proforma: "la pro
 
 export type DatosEmbarque = Partial<Pick<Embarque, "descripcion" | "modalidad" | "importador" | "incoterm" | "puerto_origen" | "puerto_destino"
   | "naviera" | "forwarder" | "agente_aduanal" | "referencia_agente" | "bl" | "bl_house" | "contenedores" | "buque" | "viaje" | "etd" | "eta"
-  | "dias_libres_almacenaje" | "dias_libres_demoras" | "carpeta_url" | "notas">>;
+  | "dias_libres_almacenaje" | "dias_libres_demoras" | "carpeta_url" | "notas" | "proveedor_id">>;
 
 export interface Leido { tipo: TipoAlta; archivo: File; campos: Record<string, unknown> }
 
