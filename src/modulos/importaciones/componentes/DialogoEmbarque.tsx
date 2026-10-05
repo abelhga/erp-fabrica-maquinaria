@@ -7,6 +7,7 @@ import { Campo, Entrada, Seleccion, AreaTexto } from "@/components/ui/campo";
 import { supabase } from "@/lib/supabase";
 import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
+import { SelectorProveedor } from "@/modulos/compras/componentes/comun";
 import { CLAVE_EMBARQUES, INCOTERMS, MODALIDADES, subirArchivo, type Embarque, type Modalidad } from "./comun";
 import { camposParaRegistrar, datosDesdeDocumento, DOC_DE, EL_DOC, LlenarConDocumento, type DatosEmbarque, type Leido } from "./LlenarConDocumento";
 
@@ -25,9 +26,11 @@ export function DialogoEmbarque({ abierto, alCambiar, embarque }: { abierto: boo
   const [leido, setLeido] = useState<Leido | null>(null);
   // Lo que llenó Claude va marcado hasta que alguien lo toca: así se ve qué falta revisar.
   const [deClaude, setDeClaude] = useState<Set<keyof Datos>>(new Set());
+  const [proveedor, setProveedor] = useState<{ id: string; nombre: string } | null>(null);
   useEffect(() => {
     if (!abierto) return;
     setD(embarque ? { ...embarque } : VACIO);
+    setProveedor(embarque?.proveedor_id ? { id: embarque.proveedor_id, nombre: embarque.proveedores ?? "" } : null);
     setLeido(null); setDeClaude(new Set());
   }, [abierto, embarque]);
   const tocar = (k: keyof Datos) => setDeClaude((s) => { if (!s.has(k)) return s; const n = new Set(s); n.delete(k); return n; });
@@ -49,7 +52,7 @@ export function DialogoEmbarque({ abierto, alCambiar, embarque }: { abierto: boo
       bl: limpio(d.bl), bl_house: limpio(d.bl_house), contenedores: limpio(d.contenedores), buque: limpio(d.buque), viaje: limpio(d.viaje),
       etd: limpio(d.etd), eta: limpio(d.eta), dias_libres_almacenaje: Number(d.dias_libres_almacenaje ?? 7),
       dias_libres_demoras: d.dias_libres_demoras === null || d.dias_libres_demoras === undefined || String(d.dias_libres_demoras) === "" ? null : Number(d.dias_libres_demoras),
-      carpeta_url: limpio(d.carpeta_url), notas: limpio(d.notas),
+      carpeta_url: limpio(d.carpeta_url), notas: limpio(d.notas), proveedor_id: proveedor?.id ?? null,
     };
     if (embarque) return { ...(await q<{ id: string }>(supabase.from("embarques").update(fila).eq("id", embarque.id).select("id").single())), hechos: null };
     const nuevo = await q<{ id: string }>(supabase.from("embarques").insert(fila).select("id").single());
@@ -95,6 +98,10 @@ export function DialogoEmbarque({ abierto, alCambiar, embarque }: { abierto: boo
         )}
         <Campo etiqueta="¿Qué viene?" className="sm:col-span-2" ayuda="Como la carpeta del expediente: “71 celdas de carga”, “24 colectores y silo de 60 t”.">
           <Entrada autoFocus value={d.descripcion ?? ""} onChange={poner("descripcion")} placeholder="20 cosedoras N600A y 2 cabezales F900A" className={marca("descripcion")} />
+        </Campo>
+        <Campo etiqueta="Proveedor" className="sm:col-span-2"
+          ayuda={embarque?.ordenes.length ? "Ya tiene orden de compra ligada: en la lista sale el proveedor de la orden." : "Mientras no haya orden de compra ligada, de aquí sale el proveedor del embarque."}>
+          <SelectorProveedor valor={proveedor} alCambiar={(p) => setProveedor({ id: p.id, nombre: p.nombre })} placeholder="Elegir proveedor (opcional)…" />
         </Campo>
         <Campo etiqueta="Modalidad">
           <Seleccion value={d.modalidad} className={marca("modalidad")} onChange={(e) => { tocar("modalidad"); setD((x) => ({ ...x, modalidad: e.target.value as Modalidad })); }}>
