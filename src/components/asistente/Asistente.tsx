@@ -107,7 +107,9 @@ export function Asistente() {
       {abierto && <div className="fixed inset-0 z-40 bg-texto/10 backdrop-blur-[1px] lg:hidden" onClick={() => setAbierto(false)} />}
       <aside aria-hidden={!abierto}
         className={cn("no-imprimir fixed z-50 inset-y-0 right-0 w-full sm:w-[440px] bg-superficie border-l border-borde shadow-2xl flex flex-col",
-          "transition-transform duration-300 ease-out", abierto ? "translate-x-0" : "translate-x-full")}>
+          // Cerrado queda fuera de la pantalla a la derecha: invisible para que Safari en iPhone no deje arrastrar
+          // la página de lado hacia él (y que el teclado no entre). La visibilidad cambia al terminar de cerrarse.
+          "transition-[transform,visibility] duration-300 ease-out", abierto ? "translate-x-0 visible" : "translate-x-full invisible")}>
         <header className="h-16 shrink-0 px-4 flex items-center gap-3 border-b border-borde">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-marca to-marca/60 grid place-items-center text-white"><Sparkles className="h-[18px] w-[18px]" /></div>
           <div className="flex-1 min-w-0">
