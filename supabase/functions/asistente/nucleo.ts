@@ -834,6 +834,10 @@ export const DOCUMENTOS: Record<TipoDocumento, { nombre: string; esquema: Esquem
       puerto_carga: nulo("string", "Puerto de carga"), puerto_descarga: nulo("string", "Puerto de descarga"),
       fecha_embarque: fechaONulo("Fecha de embarque (shipped on board)"), eta: fechaONulo("Fecha estimada de arribo, si viene"),
       consignatario: nulo("string", "Consignatario"),
+      // Con estos dos el BL alcanza para dar de alta un embarque nuevo (qué viene y cómo).
+      mercancia: nulo("string", "Descripción de la mercancía (description of goods), corta, traducida al español si viene en otro idioma"),
+      modalidad: { anyOf: [{ type: "string", enum: ["fcl", "lcl"] }, { type: "null" }],
+        description: "fcl si el contenedor completo es del consignatario (FCL/FCL, CY/CY); lcl si es carga consolidada (LCL, CFS/CFS, parte de un contenedor)" },
       contenedores: lista(objeto({ numero: nulo("string", "Número de contenedor"), tipo: nulo("string", "Tipo (20GP, 40HC…)"), sello: nulo("string", "Sello") })),
       bultos: nulo("number", "Bultos"), peso_kg: nulo("number", "Peso bruto en kg"), volumen_m3: nulo("number", "Volumen en m³"), advertencias,
     }),
@@ -966,6 +970,7 @@ export function ejemploDocumento(tipo: TipoDocumento): Record<string, unknown> {
     case "bl":
       return { numero_bl: "800610246498", tipo: "telex", naviera: "TS Lines", buque: "TS Hongkong", viaje: "24019E", puerto_carga: "Kaohsiung",
         puerto_descarga: "Manzanillo", fecha_embarque: "2026-09-16", eta: "2026-10-12", consignatario: "Máquinas y Herramientas Gamex",
+        mercancia: "Cosedoras portátiles y cabezales cosedores", modalidad: "fcl",
         contenedores: [{ numero: "TCLU1234567", tipo: "20GP", sello: "TS445566" }], bultos: 12, peso_kg: 486, volumen_m3: 2.1, advertencias: aviso };
     case "pedimento":
       return { numero: "26 16 1943 6004373", clave: "A1", aduana: "Manzanillo", fecha_pago: "2026-09-22", tipo_cambio: 18.92,

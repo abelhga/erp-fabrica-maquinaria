@@ -34,7 +34,7 @@ const ETIQUETAS: Record<string, string> = {
   otros: "Otras contribuciones", folio: "Folio", agente: "Agente aduanal", referencia: "Referencia", anticipos: "Anticipos recibidos",
   saldo: "Saldo a favor (+) o a cargo (−)", partidas: "Partidas", contenedores: "Contenedores", conceptos: "Conceptos",
   descripcion: "Descripción", modelo: "Modelo", cantidad: "Cant.", unidad: "Unidad", precio_unitario: "Precio unit.", importe: "Importe",
-  fraccion: "Fracción", concepto: "Va como", monto: "Monto sin IVA", sello: "Sello",
+  fraccion: "Fracción", concepto: "Va como", monto: "Monto sin IVA", sello: "Sello", mercancia: "Mercancía", modalidad: "Modalidad (fcl o lcl)",
 };
 const FECHAS = new Set(["fecha", "fecha_embarque", "eta", "fecha_pago"]);
 const NUMEROS = new Set(["subtotal", "total", "bultos", "peso_bruto_kg", "peso_neto_kg", "volumen_m3", "peso_kg", "tipo_cambio", "valor_aduana",
