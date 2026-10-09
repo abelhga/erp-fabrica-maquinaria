@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabase";
 import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { fecha, hace, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
-import type { TipoDocumento } from "@/lib/asistente";
+import type { TipoImportacion as TipoDocumento } from "@/lib/asistente";
 import { abrirArchivo, CLAVE_EMBARQUES, NOMBRE_DEBE, subirArchivo, useVeDinero, type Debe, type Embarque } from "./comun";
 import { DOC_A_CLAUDE, LeerDocumento } from "./LeerDocumento";
 

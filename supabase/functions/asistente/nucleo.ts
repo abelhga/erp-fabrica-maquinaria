@@ -778,7 +778,7 @@ export async function redactar(opts: {
 // Hoy esos datos se copian a mano de PDFs (a veces escaneados o en chino) a la
 // hoja, a PRORRATEO.xlsx y a los correos con el agente.
 // -----------------------------------------------------------------------------
-export type TipoDocumento = "proforma" | "factura" | "lista_empaque" | "bl" | "pedimento" | "cuenta_gastos";
+export type TipoDocumento = "proforma" | "factura" | "lista_empaque" | "bl" | "pedimento" | "cuenta_gastos" | "cotizacion_proveedor";
 type Esquema = Record<string, unknown>;
 
 // Un dato que no aparece en el documento va en null: nunca se inventa.
@@ -888,6 +888,41 @@ export const DOCUMENTOS: Record<TipoDocumento, { nombre: string; esquema: Esquem
       saldo: nulo("number", "Saldo: positivo si es a favor de Hegamex, negativo si Hegamex debe un complemento"), advertencias,
     }),
   },
+  cotizacion_proveedor: {
+    nombre: "cotización de un proveedor",
+    guia: "Es la cotización que un proveedor le manda a Hegamex para venderle material, componentes o servicios: Hegamex compra, el proveedor es quien la emite. " +
+      "El precio unitario va sin IVA y ya con descuentos; si la cotización trae precios con IVA, quítaselo y dilo en advertencias. " +
+      "Los cargos aparte (flete, maniobras, instalación) van como una partida más.",
+    esquema: objeto({
+      proveedor: nulo("string", "Nombre o razón social de quien cotiza (no Hegamex)"),
+      rfc: nulo("string", "RFC (o tax ID si es del extranjero) de quien cotiza"),
+      numero: nulo("string", "Número o folio de la cotización"), fecha: fechaONulo("Fecha de la cotización"),
+      vigencia: fechaONulo("Vigente hasta"),
+      moneda: { anyOf: [{ type: "string", enum: ["MXN", "USD", "EUR"] }, { type: "null" }], description: "Moneda de los precios" },
+      condiciones_pago: nulo("string", "Condiciones de pago tal como vienen (contado, 30 días, 50 % anticipo…)"),
+      dias_entrega: nulo("number", "Tiempo de entrega en días hábiles; si viene en semanas, multiplícalo por 5"),
+      // La descripción es texto obligatorio y no null: el esquema completo no puede pasar
+      // de 16 campos que aceptan null (tope de la API).
+      partidas: lista(objeto({
+        descripcion: { type: "string", description: "Descripción tal como viene" },
+        clave: nulo("string", "Clave, código o número de parte del proveedor"),
+        cantidad: nulo("number", "Cantidad cotizada"), unidad: nulo("string", "Unidad (pza, m, kg, juego…)"),
+        precio_unitario: nulo("number", "Precio unitario sin IVA y con descuento"),
+      })),
+      total: nulo("number", "Total de la cotización tal como viene (con o sin IVA, como lo traiga)"), advertencias,
+    }),
+  },
+};
+
+/** Quién puede pedir leer cada documento: los de importación, importaciones (compras también tiene nivel 2); la cotización, compras. */
+const PERMISO_DOCUMENTO: Record<TipoDocumento, { modulo: string; mensaje: string }> = {
+  proforma: { modulo: "importaciones", mensaje: "Leer documentos de importación es de importaciones y compras." },
+  factura: { modulo: "importaciones", mensaje: "Leer documentos de importación es de importaciones y compras." },
+  lista_empaque: { modulo: "importaciones", mensaje: "Leer documentos de importación es de importaciones y compras." },
+  bl: { modulo: "importaciones", mensaje: "Leer documentos de importación es de importaciones y compras." },
+  pedimento: { modulo: "importaciones", mensaje: "Leer documentos de importación es de importaciones y compras." },
+  cuenta_gastos: { modulo: "importaciones", mensaje: "Leer documentos de importación es de importaciones y compras." },
+  cotizacion_proveedor: { modulo: "compras", mensaje: "Leer cotizaciones de proveedores es de compras." },
 };
 
 /** Revisa que lo que devolvió Claude cumpla el esquema antes de mostrarlo. Devuelve los errores. */
@@ -999,6 +1034,14 @@ export function ejemploDocumento(tipo: TipoDocumento): Record<string, unknown> {
           { descripcion: "Honorarios", concepto: "honorarios", monto: 6500, iva: 1040 },
           { descripcion: "Maniobras y revalidación", concepto: "maniobras", monto: 3200, iva: 512 },
         ], total: 40502, anticipos: 59127.03, saldo: 18625.03, advertencias: aviso };
+    case "cotizacion_proveedor":
+      return { proveedor: "Rodamientos y Bandas del Bajío SA de CV", rfc: "RBB980512KZ3", numero: "COT-4471", fecha: "2026-10-08",
+        vigencia: "2026-10-23", moneda: "MXN", condiciones_pago: "Crédito a 30 días", dias_entrega: 3,
+        partidas: [
+          { descripcion: "Rodamiento rígido de bolas 6205 2RS", clave: "6205-2RS", cantidad: 20, unidad: "pza", precio_unitario: 86.5 },
+          { descripcion: "Chumacera de piso UCP 205", clave: "UCP205", cantidad: 8, unidad: "pza", precio_unitario: 312 },
+          { descripcion: "Flete a planta", clave: null, cantidad: 1, unidad: "servicio", precio_unitario: 450 },
+        ], total: 7166.2, advertencias: aviso };
   }
 }
 
@@ -1128,8 +1171,9 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
       const datos = texto(cuerpo.datos);
       if (!datos || !/^[A-Za-z0-9+/]+=*$/.test(datos)) return json({ error: "Falta el archivo" }, 400);
       if (datos.length > MAX_BASE64) return json({ error: "El archivo pesa más de 15 MB: sube solo las páginas que importan." }, 413);
-      const { data: puedeLeer } = await db.rpc("puede", { p_modulo: "importaciones", p_nivel: 2 });
-      if (!puedeLeer) return json({ error: "Leer documentos de importación es de importaciones y compras." }, 403);
+      const permiso = PERMISO_DOCUMENTO[tipo];
+      const { data: puedeLeer } = await db.rpc("puede", { p_modulo: permiso.modulo, p_nivel: 2 });
+      if (!puedeLeer) return json({ error: permiso.mensaje }, 403);
       if (!anthropic) return json({ tipo, campos: ejemploDocumento(tipo), simulado: true });
       const r = await leerDocumento({ anthropic, perfil, config, tipo, mediaType, datos });
       await registrar(r);
