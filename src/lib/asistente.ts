@@ -81,7 +81,9 @@ export async function redactarMensaje(cliente_id: string, canal: "whatsapp" | "c
   return (await llamar({ modo: "redactar", cliente_id, canal, motivo })).json() as Promise<{ asunto: string; mensaje: string; simulado?: boolean }>;
 }
 
-export type TipoDocumento = "proforma" | "factura" | "lista_empaque" | "bl" | "pedimento" | "cuenta_gastos";
+/** Los que lee importaciones dentro de un embarque. */
+export type TipoImportacion = "proforma" | "factura" | "lista_empaque" | "bl" | "pedimento" | "cuenta_gastos";
+export type TipoDocumento = TipoImportacion | "cotizacion_proveedor";
 
 /** Claude lee un PDF o una foto y devuelve sus campos. No guarda nada: eso lo confirma quien lo revisa. */
 export async function leerDocumento(tipo: TipoDocumento, archivo: File, signal?: AbortSignal) {

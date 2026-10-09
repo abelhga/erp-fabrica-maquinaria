@@ -10,7 +10,7 @@ import { Dialogo } from "@/components/ui/dialogo";
 import { Campo, Seleccion } from "@/components/ui/campo";
 import { supabase } from "@/lib/supabase";
 import { q, mensajeError } from "@/lib/consultas";
-import { leerDocumento, type TipoDocumento } from "@/lib/asistente";
+import { leerDocumento, type TipoImportacion as TipoDocumento } from "@/lib/asistente";
 import { cn } from "@/lib/utilidades";
 import { CLAVE_EMBARQUES, CONCEPTOS_GASTO, subirArchivo, type Embarque } from "./comun";
 

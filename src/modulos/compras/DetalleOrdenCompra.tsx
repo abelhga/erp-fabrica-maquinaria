@@ -17,6 +17,7 @@ import { cn } from "@/lib/utilidades";
 import { CantidadConSigno, nombreCorto } from "@/modulos/almacen/componentes/comun";
 import { InsigniaOC, SelectorProveedor, useTiposCambio, type Moneda, type OrdenCompra, type ProveedorBreve } from "./componentes/comun";
 import { DialogoRecibir } from "./componentes/DialogoRecibir";
+import { RevisarCotizacion, SubirCotizacion, type CotizacionLeida } from "./componentes/LeerCotizacion";
 import { ImpresionOC, type Empresa } from "./componentes/ImpresionOC";
 import { PagosOC } from "./componentes/PagosOC";
 import type { LineaOC, ProveedorCompleto } from "./componentes/tipos";
@@ -26,13 +27,17 @@ export default function DetalleOrdenCompra() {
   return id === "nueva" ? <NuevaOrden /> : <Detalle id={id!} />;
 }
 
-/** Nueva orden: primero el proveedor (de él salen moneda, crédito y tiempo de entrega). */
+/**
+ * Nueva orden: primero el proveedor (de él salen moneda, crédito y tiempo de entrega).
+ * O de una vez desde la cotización del proveedor: Claude la lee y compras la revisa.
+ */
 function NuevaOrden() {
   const { puede } = useSesion();
   const ir = useNavigate();
   const [params] = useSearchParams();
   const tc = useTiposCambio();
   const [prov, setProv] = useState<ProveedorBreve | null>(null);
+  const [cotizacion, setCotizacion] = useState<CotizacionLeida | null>(null);
   const desde = params.get("proveedor");
   useEffect(() => {
     if (!desde) return;
@@ -46,8 +51,16 @@ function NuevaOrden() {
   }).select("id").single()), { alTerminar: (r) => ir(`/compras/ordenes/${r.id}`, { replace: true }), invalidar: [["v_ordenes_compra"]] });
 
   if (!puede("compras", 2)) return <Pagina titulo="Nueva orden de compra"><div className="tarjeta"><Vacio icono={Truck} titulo="Las órdenes las crea compras" /></div></Pagina>;
+  if (cotizacion) return (
+    <Pagina titulo="Nueva orden desde la cotización" descripcion="Lo que leyó Claude, emparejado con el catálogo. Revísalo y crea la orden en borrador.">
+      <div className="max-w-5xl">
+        <RevisarCotizacion leida={cotizacion} alQuitar={() => setCotizacion(null)} alCrear={(id) => ir(`/compras/ordenes/${id}`, { replace: true })} />
+      </div>
+    </Pagina>
+  );
   return (
     <Pagina titulo="Nueva orden de compra" descripcion="Elige al proveedor; después agregas las partidas.">
+      <div className="max-w-lg mb-4"><SubirCotizacion alLeer={setCotizacion} /></div>
       <Tarjeta className="max-w-lg p-5 space-y-4">
         <SelectorProveedor valor={prov} alCambiar={setProv} />
         {prov && (

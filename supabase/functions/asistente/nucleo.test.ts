@@ -26,7 +26,7 @@ if (hayBase) {
   const db = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres" });
   await db.connect();
   await db.query(`delete from asistente_uso where en >= current_date
-    and usuario_id in (select id from auth.users where email in ('isaac@hegamex.com','importaciones@hegamex.com','direccion@hegamex.com','almacen@hegamex.com'))`);
+    and usuario_id in (select id from auth.users where email in ('isaac@hegamex.com','importaciones@hegamex.com','direccion@hegamex.com','almacen@hegamex.com','compras@hegamex.com'))`);
   await db.end();
 }
 
@@ -254,6 +254,13 @@ describe.skipIf(!hayBase)("leer documentos de importación", () => {
       const s = await sesion(correo);
       expect((await pedir(s.token, { tipo: "bl", media_type: "application/pdf", datos: pdf })).status).toBe(403);
     }
+    // La cotización de un proveedor es de compras (nivel 2): almacén la ve pero no la lee, compras sí.
+    const almacen = await sesion("almacen@hegamex.com");
+    expect((await pedir(almacen.token, { tipo: "cotizacion_proveedor", media_type: "application/pdf", datos: pdf })).status).toBe(403);
+    const compras = await sesion("compras@hegamex.com");
+    const c = await (await pedir(compras.token, { tipo: "cotizacion_proveedor", media_type: "application/pdf", datos: pdf })).json();
+    expect(c.simulado).toBe(true);
+    expect(c.campos.partidas.length).toBeGreaterThan(0);
   });
 });
 
