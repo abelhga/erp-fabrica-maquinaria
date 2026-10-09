@@ -69,7 +69,8 @@ export function Etapas({ e }: { e: Embarque }) {
                     )}
                   </div>
                   <p className="text-xs text-tenue">{ev?.detalle ?? t.descripcion}{ev?.perfiles?.nombre ? ` · ${ev.perfiles.nombre}` : ""}</p>
-                  {captura && (editando === t.tipo || (!ev && (siguiente || i <= ultima + 2))) && (
+                  {/* Cerrado, lo que no se registró se queda así: solo se corrige lo que ya tiene fecha. */}
+                  {captura && (editando === t.tipo || (!ev && e.fase !== "cerrado" && e.fase !== "cancelado" && (siguiente || i <= ultima + 2))) && (
                     <CapturaFecha inicial={ev?.fecha} etiqueta={t.nombre} cargando={registrar.isPending}
                       alGuardar={(f) => registrar.mutate({ tipo: t.tipo, fecha: f }, { onSuccess: () => setEditando(null) })}
                       alCancelar={editando === t.tipo ? () => setEditando(null) : undefined} />
