@@ -4,23 +4,36 @@ import { Boton } from "@/components/ui/boton";
 import { Campo, Entrada, Seleccion, AreaTexto } from "@/components/ui/campo";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
+import { LlenarConConstancia, type DatosConstancia } from "@/components/datos/LlenarConConstancia";
 import type { ProveedorCompleto } from "./tipos";
 
 type Datos = Omit<ProveedorCompleto, "id">;
 const VACIO: Datos = {
   nombre: "", razon_social: null, rfc: null, contacto: null, telefono: null, correo: null, sitio: null, categoria: null, pais: "México",
   es_importacion: false, moneda: "MXN", dias_credito: 0, dias_entrega: null, datos_bancarios: null, notas: null, activo: true,
+  domicilio: null, regimen_fiscal: null, cp_fiscal: null,
 };
 
 const CAMPOS = ["nombre", "razon_social", "rfc", "contacto", "telefono", "correo", "sitio", "categoria", "pais", "es_importacion",
-  "moneda", "dias_credito", "dias_entrega", "datos_bancarios", "notas", "activo"] as const;
+  "moneda", "dias_credito", "dias_entrega", "datos_bancarios", "notas", "activo", "domicilio", "regimen_fiscal", "cp_fiscal"] as const;
 
-/** Alta y edición de proveedor en una sola ventana: lo indispensable arriba, lo demás opcional. */
-export function DialogoProveedor({ abierto, alCambiar, proveedor, alGuardar }: {
-  abierto: boolean; alCambiar: (v: boolean) => void; proveedor?: ProveedorCompleto; alGuardar?: (id: string) => void;
+/**
+ * Alta y edición de proveedor en una sola ventana: lo indispensable arriba, lo demás opcional.
+ * `inicial` llena el alta con lo que ya se sabe (p. ej. lo que leyó Claude de su cotización);
+ * la constancia de situación fiscal llena los datos fiscales.
+ */
+export function DialogoProveedor({ abierto, alCambiar, proveedor, alGuardar, inicial }: {
+  abierto: boolean; alCambiar: (v: boolean) => void; proveedor?: ProveedorCompleto; alGuardar?: (id: string) => void; inicial?: Partial<Datos>;
 }) {
   const [d, setD] = useState<Datos>(VACIO);
-  useEffect(() => { if (abierto) setD(proveedor ? { ...VACIO, ...proveedor } : VACIO); }, [abierto, proveedor]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (abierto) setD(proveedor ? { ...VACIO, ...proveedor } : { ...VACIO, ...inicial }); }, [abierto, proveedor]);
+  // De la constancia: lo fiscal se toma tal cual; el nombre comercial solo si no había.
+  const deConstancia = (c: DatosConstancia) => setD((x) => ({
+    ...x, nombre: x.nombre.trim() || c.nombre || "", razon_social: c.razon_social ?? x.razon_social, rfc: c.rfc ?? x.rfc,
+    domicilio: c.domicilio ?? x.domicilio, regimen_fiscal: c.regimen_fiscal ?? x.regimen_fiscal, cp_fiscal: c.cp_fiscal ?? x.cp_fiscal,
+    pais: c.rfc ? "México" : x.pais,
+  }));
   const pon = <K extends keyof Datos>(k: K, v: Datos[K]) => setD((x) => ({ ...x, [k]: v }));
   const texto = (k: keyof Datos) => ({ value: (d[k] as string | null) ?? "", onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => pon(k, (e.target.value || null) as never) });
 
@@ -40,9 +53,13 @@ export function DialogoProveedor({ abierto, alCambiar, proveedor, alGuardar }: {
       pie={<><Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
         <Boton onClick={() => guardar.mutate(undefined)} disabled={!d.nombre.trim()} cargando={guardar.isPending}>Guardar</Boton></>}>
       <form className="grid gap-3 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); if (d.nombre.trim()) guardar.mutate(undefined); }}>
+        <LlenarConConstancia para="proveedor" alLeer={deConstancia} excluir={proveedor?.id} />
         <Campo etiqueta="Nombre comercial" className="sm:col-span-2"><Entrada autoFocus value={d.nombre} onChange={(e) => pon("nombre", e.target.value)} placeholder="Como lo conoce compras" /></Campo>
         <Campo etiqueta="Razón social"><Entrada {...texto("razon_social")} /></Campo>
         <Campo etiqueta="RFC"><Entrada {...texto("rfc")} className="uppercase" /></Campo>
+        <Campo etiqueta="Régimen fiscal"><Entrada {...texto("regimen_fiscal")} placeholder="601 General de Ley Personas Morales" /></Campo>
+        <Campo etiqueta="CP fiscal"><Entrada {...texto("cp_fiscal")} inputMode="numeric" maxLength={5} /></Campo>
+        <Campo etiqueta="Domicilio fiscal" className="sm:col-span-2"><Entrada {...texto("domicilio")} /></Campo>
         <Campo etiqueta="Categoría" ayuda="Rodamientos, acero, bandas, motores…"><Entrada {...texto("categoria")} /></Campo>
         <Campo etiqueta="País"><Entrada value={d.pais} onChange={(e) => pon("pais", e.target.value)} /></Campo>
         <Campo etiqueta="Moneda">

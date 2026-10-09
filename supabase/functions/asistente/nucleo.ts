@@ -778,7 +778,7 @@ export async function redactar(opts: {
 // Hoy esos datos se copian a mano de PDFs (a veces escaneados o en chino) a la
 // hoja, a PRORRATEO.xlsx y a los correos con el agente.
 // -----------------------------------------------------------------------------
-export type TipoDocumento = "proforma" | "factura" | "lista_empaque" | "bl" | "pedimento" | "cuenta_gastos" | "cotizacion_proveedor";
+export type TipoDocumento = "proforma" | "factura" | "lista_empaque" | "bl" | "pedimento" | "cuenta_gastos" | "cotizacion_proveedor" | "constancia_fiscal";
 type Esquema = Record<string, unknown>;
 
 // Un dato que no aparece en el documento va en null: nunca se inventa.
@@ -912,17 +912,42 @@ export const DOCUMENTOS: Record<TipoDocumento, { nombre: string; esquema: Esquem
       total: nulo("number", "Total de la cotización tal como viene (con o sin IVA, como lo traiga)"), advertencias,
     }),
   },
+  constancia_fiscal: {
+    nombre: "constancia de situación fiscal del SAT",
+    guia: "Es la constancia de situación fiscal (cédula de identificación fiscal) de un cliente o proveedor de Hegamex. " +
+      "razon_social va como la pide el CFDI 4.0: en persona moral la denominación SIN el régimen de capital (\"CONCRETOS DEL BAJIO\", no " +
+      "\"CONCRETOS DEL BAJIO SA DE CV\"), y el régimen de capital aparte; en persona física, nombre(s) y apellidos en ese orden. " +
+      "Mayúsculas y acentos tal como vienen. Cada régimen con su clave de 3 dígitos del catálogo del SAT (601, 612, 626…).",
+    esquema: objeto({
+      rfc: nulo("string", "RFC"),
+      tipo_persona: { anyOf: [{ type: "string", enum: ["moral", "fisica"] }, { type: "null" }], description: "Persona moral o física" },
+      razon_social: nulo("string", "Denominación o razón social sin régimen de capital; en persona física, nombre completo"),
+      regimen_capital: nulo("string", "Régimen de capital (SA DE CV, S DE RL DE CV…); null en persona física"),
+      nombre_comercial: nulo("string", "Nombre comercial, si viene"),
+      codigo_postal: nulo("string", "Código postal del domicilio fiscal (5 dígitos)"),
+      domicilio: nulo("string", "Calle, número exterior e interior y colonia, en una línea"),
+      municipio: nulo("string", "Municipio o demarcación territorial"), estado: nulo("string", "Entidad federativa"),
+      estatus: nulo("string", "Estatus en el padrón (ACTIVO, SUSPENDIDO…)"),
+      fecha_emision: fechaONulo("Fecha en que se emitió la constancia"),
+      regimenes: lista(objeto({
+        clave: { type: "string", description: "Clave del régimen en el catálogo del SAT (3 dígitos)" },
+        descripcion: { type: "string", description: "Nombre del régimen tal como viene" },
+      }), "Regímenes fiscales vigentes; el principal primero"),
+      advertencias,
+    }),
+  },
 };
 
-/** Quién puede pedir leer cada documento: los de importación, importaciones (compras también tiene nivel 2); la cotización, compras. */
-const PERMISO_DOCUMENTO: Record<TipoDocumento, { modulo: string; mensaje: string }> = {
-  proforma: { modulo: "importaciones", mensaje: "Leer documentos de importación es de importaciones y compras." },
-  factura: { modulo: "importaciones", mensaje: "Leer documentos de importación es de importaciones y compras." },
-  lista_empaque: { modulo: "importaciones", mensaje: "Leer documentos de importación es de importaciones y compras." },
-  bl: { modulo: "importaciones", mensaje: "Leer documentos de importación es de importaciones y compras." },
-  pedimento: { modulo: "importaciones", mensaje: "Leer documentos de importación es de importaciones y compras." },
-  cuenta_gastos: { modulo: "importaciones", mensaje: "Leer documentos de importación es de importaciones y compras." },
-  cotizacion_proveedor: { modulo: "compras", mensaje: "Leer cotizaciones de proveedores es de compras." },
+/**
+ * Quién puede pedir leer cada documento (nivel 2 en alguno de los módulos): los de importación,
+ * importaciones (compras también tiene nivel 2); la cotización, compras; la constancia, quien da
+ * de alta clientes o proveedores.
+ */
+const IMPORTACION = { modulos: ["importaciones"], mensaje: "Leer documentos de importación es de importaciones y compras." };
+const PERMISO_DOCUMENTO: Record<TipoDocumento, { modulos: string[]; mensaje: string }> = {
+  proforma: IMPORTACION, factura: IMPORTACION, lista_empaque: IMPORTACION, bl: IMPORTACION, pedimento: IMPORTACION, cuenta_gastos: IMPORTACION,
+  cotizacion_proveedor: { modulos: ["compras"], mensaje: "Leer cotizaciones de proveedores es de compras." },
+  constancia_fiscal: { modulos: ["ventas", "compras"], mensaje: "Leer constancias fiscales es de quien da de alta clientes o proveedores." },
 };
 
 /** Revisa que lo que devolvió Claude cumpla el esquema antes de mostrarlo. Devuelve los errores. */
@@ -1042,6 +1067,11 @@ export function ejemploDocumento(tipo: TipoDocumento): Record<string, unknown> {
           { descripcion: "Chumacera de piso UCP 205", clave: "UCP205", cantidad: 8, unidad: "pza", precio_unitario: 312 },
           { descripcion: "Flete a planta", clave: null, cantidad: 1, unidad: "servicio", precio_unitario: 450 },
         ], total: 7166.2, advertencias: aviso };
+    case "constancia_fiscal":
+      return { rfc: "CBA160202AB1", tipo_persona: "moral", razon_social: "CONCRETOS DEL BAJIO", regimen_capital: "SA DE CV",
+        nombre_comercial: null, codigo_postal: "47750", domicilio: "AV. INDUSTRIAL 455 INT. 2, COL. EL SALTO", municipio: "ATOTONILCO EL ALTO",
+        estado: "JALISCO", estatus: "ACTIVO", fecha_emision: "2026-09-30",
+        regimenes: [{ clave: "601", descripcion: "Régimen General de Ley Personas Morales" }], advertencias: aviso };
   }
 }
 
@@ -1172,8 +1202,8 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
       if (!datos || !/^[A-Za-z0-9+/]+=*$/.test(datos)) return json({ error: "Falta el archivo" }, 400);
       if (datos.length > MAX_BASE64) return json({ error: "El archivo pesa más de 15 MB: sube solo las páginas que importan." }, 413);
       const permiso = PERMISO_DOCUMENTO[tipo];
-      const { data: puedeLeer } = await db.rpc("puede", { p_modulo: permiso.modulo, p_nivel: 2 });
-      if (!puedeLeer) return json({ error: permiso.mensaje }, 403);
+      const permisos = await Promise.all(permiso.modulos.map((m) => db.rpc("puede", { p_modulo: m, p_nivel: 2 })));
+      if (!permisos.some((r) => r.data === true)) return json({ error: permiso.mensaje }, 403);
       if (!anthropic) return json({ tipo, campos: ejemploDocumento(tipo), simulado: true });
       const r = await leerDocumento({ anthropic, perfil, config, tipo, mediaType, datos });
       await registrar(r);

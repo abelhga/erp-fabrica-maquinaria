@@ -8,5 +8,5 @@ export interface ProveedorCompleto {
   id: string; nombre: string; razon_social: string | null; rfc: string | null; contacto: string | null; telefono: string | null;
   correo: string | null; sitio: string | null; categoria: string | null; pais: string; es_importacion: boolean; moneda: "MXN" | "USD" | "EUR";
   dias_credito: number; dias_entrega: number | null; datos_bancarios: string | null; notas: string | null; activo: boolean;
-  domicilio?: string | null;
+  domicilio?: string | null; regimen_fiscal?: string | null; cp_fiscal?: string | null;
 }

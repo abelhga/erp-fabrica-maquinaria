@@ -12,6 +12,7 @@ import { Dialogo } from "@/components/ui/dialogo";
 import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { Pestanas, ListaPestanas, ContenidoPestana } from "@/components/ui/pestanas";
 import { TablaDatos, type Columna } from "@/components/datos/TablaDatos";
+import { LlenarConConstancia, type DatosConstancia } from "@/components/datos/LlenarConConstancia";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
@@ -137,6 +138,11 @@ function DatosFiscales({ c, editable, esGerente }: { c: Cliente; editable: boole
     { exito: "Datos guardados", invalidar: [["cliente_detalle", c.id], ["v_clientes"], ["v_cartera"]], alTerminar: () => setEditando(false) },
   );
   const t = (k: keyof Cliente) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
+  // Con la constancia se actualiza lo fiscal; el nombre comercial no se toca.
+  const deConstancia = (k: DatosConstancia) => setF((x) => ({
+    ...x, razon_social: k.razon_social ?? x.razon_social, rfc: k.rfc ?? x.rfc, regimen_fiscal: k.regimen_fiscal ?? x.regimen_fiscal,
+    cp_fiscal: k.cp_fiscal ?? x.cp_fiscal, ciudad: k.ciudad ?? x.ciudad, estado: k.estado ?? x.estado,
+  }));
 
   if (!editando) {
     const fila = (et: string, v: React.ReactNode) => (
@@ -170,6 +176,7 @@ function DatosFiscales({ c, editable, esGerente }: { c: Cliente; editable: boole
     <Tarjeta>
       <EncabezadoTarjeta titulo="Editar datos del cliente" />
       <form className="px-5 pb-5 grid gap-3 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); if (!rfcMalo && f.nombre.trim()) guardar.mutate(undefined); }}>
+        <LlenarConConstancia para="cliente" alLeer={deConstancia} excluir={c.id} />
         <Campo etiqueta="Nombre comercial"><Entrada value={f.nombre} onChange={t("nombre")} /></Campo>
         <Campo etiqueta="Razón social"><Entrada value={f.razon_social ?? ""} onChange={t("razon_social")} /></Campo>
         <Campo etiqueta="RFC" error={rfcMalo ? "Formato inválido: 3-4 letras, 6 dígitos de fecha y 3 de homoclave" : undefined}

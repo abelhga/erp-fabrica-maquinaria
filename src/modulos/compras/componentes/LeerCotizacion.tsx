@@ -282,7 +282,9 @@ export function RevisarCotizacion({ leida, alQuitar, alCrear }: { leida: Cotizac
         </div>
       </div>
 
-      <DialogoProveedor abierto={alta} alCambiar={setAlta} alGuardar={async (id) => {
+      <DialogoProveedor abierto={alta} alCambiar={setAlta}
+        inicial={{ nombre: texto(c.proveedor) ?? "", razon_social: texto(c.proveedor), rfc: texto(c.rfc), moneda }}
+        alGuardar={async (id) => {
         const { data } = await supabase.from("proveedores").select("id, nombre, categoria, pais, es_importacion, moneda, dias_entrega, dias_credito").eq("id", id).maybeSingle();
         if (data) elegirProveedor(data as ProveedorBreve);
       }} />
