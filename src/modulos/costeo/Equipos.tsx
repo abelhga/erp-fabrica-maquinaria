@@ -55,10 +55,10 @@ function TablaFabricados({ filas, cargando, error, tipo }: {
     { clave: "clave", titulo: "Clave", clase: "whitespace-nowrap font-medium cifra" },
     { clave: "nombre", titulo: "Nombre", valor: (a) => `${a.nombre} ${a.categoria ?? ""}`,
       celda: (a) => (
-        <div className="min-w-[220px] max-w-[330px]">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="truncate" title={a.nombre}>{a.nombre}</span>
-            {a.medida_especial && <Insignia tono="info" className="shrink-0">medida especial</Insignia>}
+        <div className="min-w-[260px]">
+          <div>
+            {a.nombre}
+            {a.medida_especial && <Insignia tono="info" className="ml-2 align-middle">medida especial</Insignia>}
           </div>
           {tipo === "equipo" && <span className="block text-xs text-tenue truncate">{a.categoria ?? "Sin tipo de equipo"}</span>}
         </div>

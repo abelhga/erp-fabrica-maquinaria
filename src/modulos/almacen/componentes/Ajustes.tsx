@@ -43,7 +43,7 @@ export function Ajustes() {
   const columnas: Columna<Ajuste>[] = [
     { clave: "folio", titulo: "Folio", clase: "whitespace-nowrap font-medium" },
     { clave: "solicitado_en", titulo: "Pedido", clase: "whitespace-nowrap text-xs text-tenue", celda: (a) => fecha(a.solicitado_en) },
-    { clave: "nombre", titulo: "Artículo", clase: "max-w-[260px]", celda: (a) => <><p className="truncate">{a.nombre}</p><p className="text-xs text-tenue">{a.clave}</p></> },
+    { clave: "nombre", titulo: "Artículo", clase: "min-w-[220px]", celda: (a) => <><p>{a.nombre}</p><p className="text-xs text-tenue">{a.clave}</p></> },
     { clave: "almacen", titulo: "Almacén", clase: "whitespace-nowrap", celda: (a) => nombreCorto(a.almacen) },
     { clave: "diferencia", titulo: "Diferencia", alinear: "der", sinBusqueda: true, valor: (a) => Number(a.aplicado ?? a.diferencia),
       celda: (a) => (

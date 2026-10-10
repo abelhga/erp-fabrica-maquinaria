@@ -196,8 +196,8 @@ export default function Precios() {
                     return (
                       <tr key={f.articulo_id} className={cn(pendiente && "bg-aviso-suave/50", guardados[f.articulo_id] && !pendiente && "bg-ok-suave/40")}>
                         <td className="px-2 text-xs text-tenue whitespace-nowrap">{f.clave}</td>
-                        <td className="max-w-[280px]">
-                          <p className="truncate" title={f.nombre}>{f.nombre}</p>
+                        <td className="min-w-[240px]">
+                          <p>{f.nombre}</p>
                           <p className="text-xs text-tenue">{f.unidad}{f.es_importado && <span className="text-info"> · importado</span>}
                             {guardados[f.articulo_id] && !pendiente && <span className="text-ok"> · guardado, {guardados[f.articulo_id]}</span>}</p>
                         </td>

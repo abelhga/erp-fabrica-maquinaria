@@ -95,8 +95,8 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
                   </tr>
                   {filas.map((m) => (
                     <tr key={m.id} className={cn(m.faltante > 0 && "bg-peligro-suave/50")}>
-                      <td className="max-w-[360px]">
-                        <p className="truncate" title={m.nombre}>{m.nombre}</p>
+                      <td className="min-w-[240px]">
+                        <p>{m.nombre}</p>
                         <p className="text-xs text-tenue flex flex-wrap items-center gap-1.5">
                           <span>{m.clave}</span>
                           {m.agregado && <Insignia tono={m.requerido === 0 ? "aviso" : "info"}>{m.requerido === 0 ? "Fuera de lista" : "Agregado"}</Insignia>}

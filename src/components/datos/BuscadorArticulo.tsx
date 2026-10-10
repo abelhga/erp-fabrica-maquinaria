@@ -72,7 +72,7 @@ export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo
                         {a.tipo === "equipo" || a.tipo === "subensamble" ? <Layers className="h-4 w-4 text-tenue" /> : <Boxes className="h-4 w-4 text-tenue" />}
                       </div>}
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm truncate">{a.nombre}</p>
+                    <p className="text-sm">{a.nombre}</p>
                     <p className="text-xs text-tenue">
                       {a.clave} · {a.unidad}
                       {a.existencia != null && <> · <span className={a.existencia > 0 ? "text-ok" : "text-peligro"}>{numero(a.existencia)} en planta</span></>}

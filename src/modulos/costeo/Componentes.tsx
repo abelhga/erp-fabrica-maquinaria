@@ -72,10 +72,12 @@ export default function Componentes() {
     {
       clave: "nombre", titulo: "Nombre",
       celda: (a) => (
-        <div className="flex items-center gap-2 min-w-[200px] max-w-[280px]">
-          <span className="truncate" title={a.nombre}>{a.nombre}</span>
-          {a.tipo !== "componente" && <Insignia className="shrink-0">{NOMBRE_TIPO[a.tipo]}</Insignia>}
-          {a.es_importado && <Insignia tono="info" className="shrink-0">importado</Insignia>}
+        // El nombre va completo (lo que distingue a dos bandas suele estar al final) y las
+        // etiquetas fluyen detrás del texto en vez de quitarle ancho a su columna.
+        <div className="min-w-[260px]">
+          {a.nombre}
+          {a.tipo !== "componente" && <Insignia className="ml-2 align-middle">{NOMBRE_TIPO[a.tipo]}</Insignia>}
+          {a.es_importado && <Insignia tono="info" className="ml-2 align-middle">importado</Insignia>}
         </div>
       ),
     },
