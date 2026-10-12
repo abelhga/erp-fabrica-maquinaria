@@ -129,7 +129,7 @@ export function Requisiciones() {
                     <tr key={l.id} className={cn(sel.has(l.id) && "bg-marca-suave/50")}>
                       {compra && <td><input type="checkbox" className="accent-[hsl(var(--marca))]" checked={sel.has(l.id)} aria-label={`Elegir ${l.nombre}`}
                         onChange={(e) => alternar([l.id], e.target.checked)} /></td>}
-                      <td className="max-w-[320px]"><p className="truncate" title={l.nombre}>{l.nombre}</p><p className="text-xs text-tenue">{l.clave}{l.es_importado && " · importado"}</p></td>
+                      <td className="min-w-[240px]"><p>{l.nombre}</p><p className="text-xs text-tenue">{l.clave}{l.es_importado && " · importado"}</p></td>
                       <td className="text-right cifra font-medium whitespace-nowrap">{numero(l.cantidad)} <span className="text-xs text-tenue font-normal">{l.unidad}</span></td>
                       <td className="text-right cifra text-tenue">{numero(l.en_planta ?? 0)}</td>
                       <td className="max-w-[220px]">{l.proveedor ? <p className="truncate text-sm">{l.proveedor}</p>

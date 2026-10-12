@@ -65,7 +65,7 @@ export function BuscadorGlobal({ abierto, alCambiar }: { abierto: boolean; alCam
                       >
                         <Icono className="h-4 w-4 text-tenue shrink-0" />
                         <div className="min-w-0">
-                          <p className="truncate">{r.titulo}</p>
+                          <p>{r.titulo}</p>
                           {r.subtitulo && <p className="text-xs text-tenue truncate">{r.subtitulo}</p>}
                         </div>
                       </Command.Item>

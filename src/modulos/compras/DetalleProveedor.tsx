@@ -71,7 +71,7 @@ export default function DetalleProveedor() {
 
   const columnas: Columna<ArticuloSurtido>[] = [
     { clave: "clave", titulo: "Clave", clase: "text-xs text-tenue whitespace-nowrap" },
-    { clave: "nombre", titulo: "Artículo", clase: "max-w-[320px]", celda: (a) => <><p className="truncate" title={a.nombre}>{a.nombre}</p><p className="text-xs text-tenue">{a.unidad}{a.proveedor_id !== id && " · su costo vigente es de otro proveedor"}</p></> },
+    { clave: "nombre", titulo: "Artículo", clase: "min-w-[240px]", celda: (a) => <><p>{a.nombre}</p><p className="text-xs text-tenue">{a.unidad}{a.proveedor_id !== id && " · su costo vigente es de otro proveedor"}</p></> },
     { clave: "costo", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !verCostos, valor: (a) => Number(a.costo ?? 0),
       celda: (a) => a.costo == null ? <span className="text-peligro text-xs">sin costo</span> : dinero(a.costo, a.moneda === "USD" ? "USD" : "MXN") },
     { clave: "actualizado_en", titulo: "Actualizado", clase: "whitespace-nowrap text-xs", oculta: !verCostos,

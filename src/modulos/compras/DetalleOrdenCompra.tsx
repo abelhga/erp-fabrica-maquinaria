@@ -187,8 +187,8 @@ function Detalle({ id }: { id: string }) {
                           const dif = vig && Number(l.costo_unitario) ? Number(l.costo_unitario) / vig - 1 : null;
                           return (
                             <tr key={l.id}>
-                              <td className="max-w-[340px]">
-                                <p className="truncate" title={l.nombre}>{l.nombre}</p>
+                              <td className="min-w-[240px]">
+                                <p>{l.nombre}</p>
                                 <p className="text-xs text-tenue">{[l.clave, l.unidad, l.empaque && Number(l.empaque) > 1 ? `empaque de ${numero(l.empaque)}` : null, l.para && `para ${l.para}`].filter(Boolean).join(" · ")}</p>
                               </td>
                               <td className="text-right">

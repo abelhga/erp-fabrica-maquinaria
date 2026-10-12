@@ -75,10 +75,10 @@ export default function Existencias() {
   const columnas: Columna<(typeof filas)[number]>[] = [
     { clave: "clave", titulo: "Clave", clase: "whitespace-nowrap text-tenue text-xs" },
     {
-      clave: "nombre", titulo: "Artículo", clase: "min-w-[200px] max-w-[280px]",
+      clave: "nombre", titulo: "Artículo", clase: "min-w-[280px]",
       celda: (f) => (
         <div className="min-w-0">
-          <p className="truncate">{f.nombre}</p>
+          <p>{f.nombre}</p>
           <p className="text-xs text-tenue">{f.unidad}{f.es_importado && <> · <span className="text-info">importado</span></>}</p>
         </div>
       ),

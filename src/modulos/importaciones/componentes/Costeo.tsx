@@ -133,7 +133,7 @@ export function Costeo({ e }: { e: Embarque }) {
                       const cambio = l.costo_anterior ? Number(l.costo_unitario) / Number(l.costo_anterior) - 1 : null;
                       return (
                         <tr key={l.id}>
-                          <td className="max-w-[220px]"><p className="truncate" title={l.descripcion}>{l.descripcion}</p><p className="text-xs text-tenue">{l.articulos?.clave ?? "sin artículo del catálogo"}</p></td>
+                          <td className="min-w-[220px]"><p>{l.descripcion}</p><p className="text-xs text-tenue">{l.articulos?.clave ?? "sin artículo del catálogo"}</p></td>
                           <td className="text-right cifra">{numero(l.cantidad)}</td>
                           <td className="text-right cifra whitespace-nowrap">{dinero(l.precio, l.moneda === "USD" ? "USD" : "MXN")}
                             {l.moneda !== "MXN" && <span className="block text-[11px] text-tenue">TC {Number(l.tipo_cambio).toFixed(4)}</span>}</td>

@@ -128,10 +128,10 @@ export default function Reabasto() {
         : null,
     },
     {
-      clave: "nombre", titulo: "Artículo", clase: "min-w-[180px] max-w-[230px] pl-1", valor: (r) => `${r.clave} ${r.nombre} ${r.proveedor ?? ""}`,
+      clave: "nombre", titulo: "Artículo", clase: "min-w-[200px] pl-1", valor: (r) => `${r.clave} ${r.nombre} ${r.proveedor ?? ""}`,
       celda: (r) => (
         <div className="min-w-0">
-          <p className="truncate" title={r.nombre}>{r.nombre}</p>
+          <p>{r.nombre}</p>
           <p className="text-xs text-tenue truncate">{r.clave}{r.proveedor ? ` · ${r.proveedor}` : " · sin proveedor"}{r.es_importado && <span className="text-info"> · importado</span>}</p>
         </div>
       ),

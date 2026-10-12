@@ -71,8 +71,8 @@ export function Historial() {
       clase: "px-2", celda: (m) => <><InsigniaMovimiento tipo={m.tipo} />{m.fuera_de_lista && <Insignia tono="aviso" className="ml-1">fuera de lista</Insignia>}</> },
     // La clave va en su columna solo en pantallas muy anchas; el CSV la trae siempre.
     { clave: "clave", titulo: "Clave", clase: "whitespace-nowrap text-tenue text-xs hidden 2xl:table-cell" },
-    { clave: "nombre", titulo: "Artículo", clase: "max-w-[260px]",
-      celda: (m) => <><p className="truncate" title={m.nombre}>{m.nombre}</p><p className="text-xs text-tenue 2xl:hidden">{m.clave}</p></> },
+    { clave: "nombre", titulo: "Artículo", clase: "min-w-[220px]",
+      celda: (m) => <><p>{m.nombre}</p><p className="text-xs text-tenue 2xl:hidden">{m.clave}</p></> },
     { clave: "almacen", titulo: "Almacén", clase: "whitespace-nowrap px-2", celda: (m) => nombreCorto(m.almacen) },
     { clave: "cantidad", titulo: "Cantidad", alinear: "der", sinBusqueda: true, clase: "px-2", valor: (m) => Number(m.cantidad),
       celda: (m) => <CantidadConSigno n={Number(m.cantidad)} unidad={m.unidad} /> },
