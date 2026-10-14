@@ -1,0 +1,695 @@
+<title>Manual del ERP Hegamex</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: lectura en una columna con índice fijo; el recorrido del pedido es la pieza
+   central (estaciones arriba, detalle abajo) y el selector de rol colorea lo que es tuyo.
+   Mismos tokens que el ERP para que el manual se vea como la pantalla. */
+:root {
+  --fondo: hsl(220 20% 97%);
+  --superficie: hsl(0 0% 100%);
+  --borde: hsl(220 14% 89%);
+  --texto: hsl(222 30% 14%);
+  --tenue: hsl(220 9% 46%);
+  --marca: hsl(214 100% 52%);
+  --marca-suave: hsl(214 100% 96%);
+  --marca-texto: hsl(214 90% 40%);
+  --ok: hsl(152 60% 36%);
+  --ok-suave: hsl(150 60% 95%);
+  --aviso: hsl(35 92% 40%);
+  --aviso-suave: hsl(45 100% 94%);
+  --peligro: hsl(0 72% 48%);
+  --peligro-suave: hsl(0 85% 96%);
+  --info: hsl(262 60% 52%);
+  --info-suave: hsl(262 80% 97%);
+  --sombra: 0 1px 2px hsl(222 40% 20% / .05), 0 2px 6px hsl(222 40% 20% / .06);
+  --f-texto: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fondo: hsl(222 25% 8%); --superficie: hsl(222 22% 12%); --borde: hsl(220 15% 22%);
+    --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 64%);
+    --marca: hsl(214 100% 62%); --marca-suave: hsl(214 60% 18%); --marca-texto: hsl(214 100% 74%);
+    --ok: hsl(152 55% 50%); --ok-suave: hsl(152 40% 15%);
+    --aviso: hsl(38 92% 58%); --aviso-suave: hsl(38 50% 15%);
+    --peligro: hsl(0 75% 64%); --peligro-suave: hsl(0 45% 17%);
+    --info: hsl(262 70% 74%); --info-suave: hsl(262 35% 18%);
+    --sombra: 0 1px 2px hsl(0 0% 0% / .3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fondo: hsl(222 25% 8%); --superficie: hsl(222 22% 12%); --borde: hsl(220 15% 22%);
+  --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 64%);
+  --marca: hsl(214 100% 62%); --marca-suave: hsl(214 60% 18%); --marca-texto: hsl(214 100% 74%);
+  --ok: hsl(152 55% 50%); --ok-suave: hsl(152 40% 15%);
+  --aviso: hsl(38 92% 58%); --aviso-suave: hsl(38 50% 15%);
+  --peligro: hsl(0 75% 64%); --peligro-suave: hsl(0 45% 17%);
+  --info: hsl(262 70% 74%); --info-suave: hsl(262 35% 18%);
+  --sombra: 0 1px 2px hsl(0 0% 0% / .3);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--fondo); color: var(--texto); font-family: var(--f-texto); font-size: 15px; line-height: 1.6; }
+.envoltura { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 16px; font-weight: 600; }
+p { margin: 0; }
+a { color: var(--marca-texto); }
+code, .ruta { font-family: var(--f-mono); font-size: 0.85em; background: var(--marca-suave); color: var(--marca-texto); padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+.tenue { color: var(--tenue); }
+.etiqueta { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--tenue); }
+.lectura { max-width: 68ch; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; border-radius: 6px; }
+
+.cabecera { padding-block: 40px 24px; display: grid; gap: 14px; }
+.cabecera .lectura { font-size: 17px; color: var(--tenue); }
+
+.indice { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--fondo) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--borde); margin-bottom: 20px; }
+.indice nav { display: flex; gap: 4px; overflow-x: auto; padding-block: 8px; scrollbar-width: none; }
+.indice a { flex: none; text-decoration: none; color: var(--tenue); font-size: 13.5px; font-weight: 500; padding: 6px 12px; border-radius: 999px; }
+.indice a:hover { color: var(--texto); background: var(--superficie); }
+.indice a.activo { color: var(--marca-texto); background: var(--marca-suave); }
+
+section.bloque { display: grid; gap: 18px; padding-block: 28px; scroll-margin-top: 64px; }
+section.bloque > header { display: grid; gap: 6px; }
+section.bloque > * { min-width: 0; }
+select { max-width: 100%; }
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; box-shadow: var(--sombra); }
+
+.insignia { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 999px; white-space: nowrap; background: var(--fondo); color: var(--tenue); border: 1px solid var(--borde); }
+.insignia.punto::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.t-info { background: var(--info-suave); color: var(--info); border-color: transparent; }
+.t-marca { background: var(--marca-suave); color: var(--marca-texto); border-color: transparent; }
+.t-aviso { background: var(--aviso-suave); color: var(--aviso); border-color: transparent; }
+.t-ok { background: var(--ok-suave); color: var(--ok); border-color: transparent; }
+.t-peligro { background: var(--peligro-suave); color: var(--peligro); border-color: transparent; }
+.btn-ui { display: inline-block; font-size: 12.5px; font-weight: 600; padding: 0 7px; border-radius: 6px; border: 1px solid var(--borde); background: var(--fondo); white-space: nowrap; line-height: 1.6; }
+
+/* Selector de rol */
+.roles { display: grid; gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--borde); background: var(--superficie); border-radius: 999px; padding: 6px 13px; font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.chip:hover { border-color: var(--marca); }
+.chip[aria-pressed="true"] { background: var(--marca); border-color: var(--marca); color: hsl(0 0% 100%); }
+.mi-dia { padding: 16px 18px; display: grid; gap: 10px; }
+.mi-dia ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14.5px; }
+.mi-dia .cab { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; justify-content: space-between; }
+
+/* Recorrido */
+.recorrido { overflow: hidden; }
+.estaciones { display: grid; grid-template-columns: repeat(10, minmax(96px, 1fr)); overflow-x: auto; border-bottom: 1px solid var(--borde); scrollbar-width: thin; }
+.estacion { position: relative; border: 0; background: transparent; text-align: left; padding: 14px 12px 12px; cursor: pointer; display: grid; gap: 6px; align-content: start; border-right: 1px solid var(--borde); min-width: 0; }
+.estacion:last-child { border-right: 0; }
+.estacion .n { font-family: var(--f-mono); font-size: 11.5px; color: var(--tenue); }
+.estacion .t { font-size: 13px; font-weight: 600; line-height: 1.25; }
+.estacion .quien-mini { display: flex; gap: 3px; flex-wrap: wrap; }
+.estacion .quien-mini i { width: 7px; height: 7px; border-radius: 50%; background: var(--borde); }
+.estacion.tuya .quien-mini i.yo { background: var(--marca); }
+.estacion:hover { background: var(--fondo); }
+.estacion[aria-selected="true"] { background: var(--marca-suave); }
+.estacion[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: var(--marca); }
+.estacion.atenuada .t, .estacion.atenuada .n { opacity: .45; }
+.estacion.tuya .t { color: var(--marca-texto); }
+.detalle { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+.detalle > div { padding: 22px; display: grid; gap: 16px; align-content: start; min-width: 0; }
+.detalle .lado { border-left: 1px solid var(--borde); background: color-mix(in srgb, var(--fondo) 55%, var(--superficie)); }
+.detalle h3 { font-size: 20px; }
+.pasos { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+.pasos li { padding-left: 2px; }
+.bloquecito { display: grid; gap: 6px; }
+.bloquecito h4 { margin: 0; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--tenue); font-weight: 600; }
+.bloquecito ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; font-size: 14px; }
+.ejemplo { background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 12px; display: grid; gap: 8px; font-size: 13.5px; }
+.ejemplo .doc { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.ejemplo .folio { font-family: var(--f-mono); font-size: 12.5px; font-weight: 500; }
+.navegar { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.boton { display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; background: var(--marca); color: hsl(0 0% 100%); font-size: 13.5px; font-weight: 600; padding: 7px 14px; border-radius: 8px; cursor: pointer; }
+.boton.sec { background: var(--superficie); color: var(--texto); border-color: var(--borde); font-weight: 500; }
+.boton:disabled { opacity: .4; cursor: not-allowed; }
+.nota { display: grid; grid-template-columns: auto 1fr; gap: 10px; font-size: 13.5px; padding: 10px 12px; border-radius: 10px; background: var(--marca-suave); }
+.nota.ojo { background: var(--aviso-suave); }
+.nota b.m { color: var(--marca-texto); }
+.nota.ojo b.m { color: var(--aviso); }
+
+/* Estados */
+.pestanas { display: flex; gap: 4px; flex-wrap: wrap; padding: 12px 12px 0; }
+.pestana { border: 0; background: transparent; padding: 7px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--tenue); cursor: pointer; }
+.pestana[aria-selected="true"] { background: var(--marca-suave); color: var(--marca-texto); }
+.maquina { padding: 18px; display: grid; gap: 14px; }
+.cadena { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cadena .flecha { color: var(--tenue); }
+.cadena button { cursor: pointer; }
+.cadena button[aria-pressed="true"] { outline: 2px solid var(--marca); outline-offset: 1px; }
+.explica { font-size: 14px; background: var(--fondo); border-radius: 10px; padding: 12px 14px; display: grid; gap: 4px; min-height: 64px; }
+
+/* Rejillas */
+.flujos { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.flujo { padding: 16px; display: grid; gap: 10px; align-content: start; }
+.flujo ol { margin: 0; padding-left: 18px; display: grid; gap: 5px; font-size: 14px; }
+.flujo .quien { font-size: 12.5px; color: var(--tenue); }
+.herramientas { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.herr { padding: 16px; display: grid; gap: 6px; align-content: start; }
+.herr p { font-size: 14px; color: var(--tenue); }
+.tecla { font-family: var(--f-mono); font-size: 12px; border: 1px solid var(--borde); border-bottom-width: 2px; border-radius: 5px; padding: 0 5px; background: var(--fondo); }
+.reglas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.regla { padding: 16px; display: grid; gap: 6px; }
+.regla p { font-size: 14px; color: var(--tenue); }
+
+.tabla-env { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th { text-align: left; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--borde); white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+tr.yo td { background: var(--marca-suave); }
+.pie { border-top: 1px solid var(--borde); margin-top: 24px; padding-top: 18px; font-size: 13px; color: var(--tenue); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+
+@media (max-width: 900px) {
+  .detalle { grid-template-columns: minmax(0, 1fr); }
+  .detalle .lado { border-left: 0; border-top: 1px solid var(--borde); }
+}
+@media (max-width: 620px) {
+  .detalle > div { padding: 16px; }
+  .estaciones { grid-template-columns: repeat(10, 118px); }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<div class="envoltura">
+  <header class="cabecera">
+    <span class="etiqueta">ERP Hegamex · Manual de uso</span>
+    <h1>De la llamada al cliente a la cobranza</h1>
+    <p class="lectura">Cómo se mueve el trabajo en el ERP: un equipo pasa de oportunidad a cotización, pedido, orden de producción, compra de faltantes, taller, envío y cobro. Cada área ve su parte y el sistema avisa a la siguiente. Elige tu puesto y el manual te marca lo que te toca.</p>
+  </header>
+</div>
+
+<div class="indice">
+  <div class="envoltura" style="padding-block: 0;">
+    <nav id="indice" aria-label="Secciones">
+      <a href="#tu-puesto">Tu puesto</a>
+      <a href="#recorrido">Recorrido de un pedido</a>
+      <a href="#otros">Otros flujos</a>
+      <a href="#estados">Estados</a>
+      <a href="#herramientas">Herramientas</a>
+      <a href="#reglas">Reglas de la casa</a>
+      <a href="#permisos">Quién ve qué</a>
+    </nav>
+  </div>
+</div>
+
+<main class="envoltura">
+
+  <!-- TU PUESTO -->
+  <section class="bloque" id="tu-puesto">
+    <header>
+      <span class="etiqueta">Empieza aquí</span>
+      <h2>¿Qué haces en Hegamex?</h2>
+      <p class="lectura tenue">El menú se arma con lo que tu rol puede ver: un soldador no ve compras y un vendedor no ve costos. Elige tu puesto para ver tu día en el ERP y resaltar tus pasos en el recorrido.</p>
+    </header>
+    <div class="roles">
+      <div class="chips" id="roles" role="group" aria-label="Puesto"></div>
+      <div class="tarjeta mi-dia" id="mi-dia"></div>
+    </div>
+  </section>
+
+  <!-- RECORRIDO -->
+  <section class="bloque" id="recorrido">
+    <header>
+      <span class="etiqueta">El flujo principal</span>
+      <h2>El recorrido de un pedido de equipo</h2>
+      <p class="lectura tenue">Sigue una banda transportadora de 20 m de la primera llamada al último pago. Toca cada estación: qué se hace, dónde, quién, y qué hace el sistema solo. Los folios del ejemplo son inventados.</p>
+    </header>
+    <div class="tarjeta recorrido">
+      <div class="estaciones" id="estaciones" role="tablist" aria-label="Estaciones del recorrido"></div>
+      <div class="detalle" id="detalle"></div>
+    </div>
+  </section>
+
+  <!-- OTROS FLUJOS -->
+  <section class="bloque" id="otros">
+    <header>
+      <span class="etiqueta">Lo que pasa todos los días fuera del pedido de equipo</span>
+      <h2>Otros flujos</h2>
+    </header>
+    <div class="flujos">
+      <div class="tarjeta flujo">
+        <h3>Venta de componentes (mostrador, Mercado Libre, web)</h3>
+        <p class="quien">Ventas · Almacén</p>
+        <ol>
+          <li><span class="ruta">/ventas/pedidos</span> → <span class="btn-ui">Pedido sin cotización</span> → <span class="btn-ui">Crear y agregar partidas</span>. Usa el precio de lista; un precio bajo el mínimo solo lo captura la gerencia.</li>
+          <li>Si sale por paquetería: <span class="btn-ui">Pedir envío</span> en el pedido.</li>
+          <li>Venta de mostrador directa: Almacén → Entradas y salidas → <span class="btn-ui">Salida</span> tipo «Venta (mostrador, ML)».</li>
+          <li>Para mandar mercancía al Full de Mercado Libre: <span class="btn-ui">Envío a Full</span> en Envíos. El Almacén ML existe pero no cuenta para planta.</li>
+        </ol>
+      </div>
+      <div class="tarjeta flujo">
+        <h3>Pedirle un precio a compras</h3>
+        <p class="quien">Ventas → Compras</p>
+        <ol>
+          <li>En la cotización: menú de la partida → <span class="btn-ui">Pedir precio a compras</span>, o en el buscador «¿No está? Pídeselo a compras». Marca «El cliente está esperando» si urge.</li>
+          <li>Se crea una solicitud <code>SP-2026-…</code> con plazo en horas hábiles: 10 h normal, 4 h urgente.</li>
+          <li>Compras, en <span class="ruta">/compras/solicitudes</span>: <span class="btn-ui">Tomar</span> → <span class="btn-ui">Contestar</span> (Enter) o «No se consigue…».</li>
+          <li>Al vendedor le llega «Precio listo» y en la partida aparece <span class="btn-ui">Aplicar precio</span>. Recibe precio de lista y plazo, nunca el costo.</li>
+        </ol>
+      </div>
+      <div class="tarjeta flujo">
+        <h3>Reabasto de inventario</h3>
+        <p class="quien">Almacén · Compras</p>
+        <ol>
+          <li><span class="ruta">/almacen/reabasto</span> muestra cada artículo como Ordenar, OK, Excedente o Negativo, con la regla de la hoja Demanda.</li>
+          <li>Ajusta en línea los meses de cobertura (vacío = 1 nacional, 6 importado) y el stock de seguridad.</li>
+          <li>Selecciona y da <span class="btn-ui">Generar órdenes de compra</span> (compras) o <span class="btn-ui">Pedir a compras</span> (almacén, crea una requisición).</li>
+        </ol>
+      </div>
+      <div class="tarjeta flujo">
+        <h3>Corregir el inventario</h3>
+        <p class="quien">Almacén pide · otra persona autoriza</p>
+        <ol>
+          <li>Entradas y salidas → <span class="btn-ui">Ajustes</span> → <span class="btn-ui">Pedir un ajuste</span> → <span class="btn-ui">Pedir autorización</span>. La existencia no cambia todavía.</li>
+          <li>Almacén nivel 3, dirección o gerencia de producción lo <span class="btn-ui">Aprobar</span> o rechazan. Tiene que ser alguien distinto de quien lo pidió.</li>
+          <li>Conteo físico: <span class="btn-ui">Conteos físicos</span> → <span class="btn-ui">Empezar a contar</span> (un almacén a la vez) → <span class="btn-ui">Cerrar y pedir N ajuste(s)</span>.</li>
+        </ol>
+      </div>
+      <div class="tarjeta flujo">
+        <h3>Un costo sube y el precio se mueve solo</h3>
+        <p class="quien">Compras · Ingeniería · Dirección</p>
+        <ol>
+          <li>El costo cambia en <span class="ruta">/compras/precios</span> («Escribe el costo nuevo y Enter»), al recibir una OC con la casilla de actualizar costo, al contestar una solicitud de precio o con el costeo final de un embarque.</li>
+          <li>La base recalcula el precio de lista de cada equipo que usa esa pieza, con su historial. Componentes: costo ÷ 0.70.</li>
+          <li>Dirección revisa en <span class="ruta">/costeo/margenes</span> y simula políticas. Ventas solo ve el precio nuevo.</li>
+        </ol>
+      </div>
+      <div class="tarjeta flujo">
+        <h3>Importar mercancía</h3>
+        <p class="quien">Importaciones · Compras · Finanzas</p>
+        <ol>
+          <li>Embarques con etapas, documentos, pagos en USD y costo puesto en planta.</li>
+          <li>Tiene su propio manual: <a href="https://claude.ai/artifact/JE9GJshYh1zd6DNMzDFDuZ">Manual de Importaciones Hegamex</a>.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ESTADOS -->
+  <section class="bloque" id="estados">
+    <header>
+      <span class="etiqueta">Lo que dicen las insignias</span>
+      <h2>Estados de cada documento</h2>
+      <p class="lectura tenue">Toca un estado para ver qué lo provoca y qué sigue.</p>
+    </header>
+    <div class="tarjeta">
+      <div class="pestanas" id="maq-pestanas" role="tablist" aria-label="Documento"></div>
+      <div class="maquina">
+        <div class="cadena" id="maq-cadena"></div>
+        <div class="explica" id="maq-explica" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HERRAMIENTAS -->
+  <section class="bloque" id="herramientas">
+    <header>
+      <span class="etiqueta">Para todos</span>
+      <h2>Herramientas que sirven en cualquier pantalla</h2>
+    </header>
+    <div class="herramientas">
+      <div class="tarjeta herr"><h3>Inicio</h3><p>Tus indicadores, un resumen de tu área y la lista de lo que te toca: «cotizaciones esperan tu autorización», «ajustes por autorizar», «requisiciones por comprar». Dirección ve el centro de mando.</p></div>
+      <div class="tarjeta herr"><h3>La campana de avisos</h3><p>Te avisa lo que es tuyo: pedido nuevo, orden por validar, precio listo, material que llegó, cotización autorizada, pago de tu cliente. Cada aviso tiene <span class="btn-ui">Ver</span> para ir directo.</p></div>
+      <div class="tarjeta herr"><h3>Pendientes</h3><p><span class="ruta">/pendientes</span> → <span class="btn-ui">Pedir algo a alguien</span>: responsable, fecha y liga al registro. Avisa al asignar, al cerrar («Listo: …») y al vencer.</p></div>
+      <div class="tarjeta herr"><h3>Pregúntale al ERP</h3><p><span class="tecla">Ctrl</span> + <span class="tecla">J</span> en cualquier pantalla. Claude lee el ERP con tus permisos, solo consulta: «¿qué cotizaciones vencen esta semana?», «¿por qué subió esta banda?».</p></div>
+      <div class="tarjeta herr"><h3>Tu semana</h3><p>El lunes temprano llega el resumen: lo que pasó contra la semana anterior y la agenda (entregas, órdenes comprometidas, lo que llega, servicios).</p></div>
+      <div class="tarjeta herr"><h3>Las tablas</h3><p>Todas buscan sin acentos, ordenan al tocar el encabezado y exportan a CSV. Enter guarda y Tab avanza, como en la hoja.</p></div>
+      <div class="tarjeta herr"><h3>Ver como (dirección)</h3><p>El botón del ojo: recorre el ERP con los permisos de otro rol («Viendo como …», <span class="btn-ui">Volver a mi vista</span>). Lo que guardes es real y a tu nombre. «Una persona en particular…» abre su sesión solo para ver.</p></div>
+      <div class="tarjeta herr"><h3>Modo oscuro y celular</h3><p>Todas las pantallas funcionan en celular y en modo oscuro. La terminal de piso está pensada para tablet y la TV del taller para pantalla grande.</p></div>
+    </div>
+  </section>
+
+  <!-- REGLAS -->
+  <section class="bloque" id="reglas">
+    <header>
+      <span class="etiqueta">La base de datos las hace cumplir, no la buena voluntad</span>
+      <h2>Reglas de la casa</h2>
+    </header>
+    <div class="reglas">
+      <div class="tarjeta regla"><h3>Ventas nunca ve costos ni márgenes</h3><p>Ni en pantalla ni preguntándole al asistente. Ve precio de lista, mínimo, existencia y plazo.</p></div>
+      <div class="tarjeta regla"><h3>Bajo el mínimo, autoriza la gerencia</h3><p>Una partida con precio menor a lista × (1 − descuento máximo, 10 % si no se definió) manda la cotización a «Por autorizar». Sin autorización no se envía ni se convierte.</p></div>
+      <div class="tarjeta regla"><h3>Los movimientos no se editan ni se borran</h3><p>Un error se corrige con un ajuste que autoriza otra persona. Todo queda en la bitácora.</p></div>
+      <div class="tarjeta regla"><h3>Lo apartado es de su orden</h3><p>«Apartar material» reserva lo libre de los almacenes de planta. «Surtir» no deja sacar material apartado para otra orden.</p></div>
+      <div class="tarjeta regla"><h3>Una cotización enviada ya no se toca</h3><p>Para cambiarla, «Nueva versión» (mismo folio con -v2). Para otro cliente, «Duplicar con folio nuevo».</p></div>
+      <div class="tarjeta regla"><h3>No se cobra de más</h3><p>La base rechaza un cobro mayor al saldo o a un pedido cancelado, y un pago a proveedor mayor a lo que se debe.</p></div>
+    </div>
+  </section>
+
+  <!-- PERMISOS -->
+  <section class="bloque" id="permisos">
+    <header>
+      <span class="etiqueta">Nivel 1 ve · 2 captura · 3 administra</span>
+      <h2>Quién ve qué</h2>
+      <p class="lectura tenue">El menú y las rutas se esconden por comodidad; la barrera real está en la base. Tu puesto aparece resaltado.</p>
+    </header>
+    <div class="tarjeta tabla-env">
+      <table>
+        <thead><tr><th>Puesto</th><th>Captura en</th><th>Solo ve</th><th>No ve</th></tr></thead>
+        <tbody id="tabla-permisos"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="pie">
+    <span>Manual general · ERP Hegamex · octubre 2026</span>
+    <span>Ver también: <a href="https://claude.ai/artifact/JE9GJshYh1zd6DNMzDFDuZ">Manual de Importaciones Hegamex</a></span>
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var B = function (t) { return '<span class="btn-ui">' + t + "</span>"; };
+  var R = function (t) { return '<span class="ruta">' + t + "</span>"; };
+
+  var ROLES = [
+    { k: "ventas", n: "Vendedor", dia: [
+      "Abre " + R("/ventas/para-llamar") + ": clientes con motivo (cotización por vencer, ya le toca, refacciones, reactivar). " + B("Redactar mensaje") + " y " + B("Abrir en WhatsApp") + ".",
+      "Mueve tus oportunidades en el tablero de " + R("/ventas/oportunidades") + ".",
+      "Cotiza: " + B("Nueva cotización") + ", busca la partida y Enter. Se guarda sola.",
+      "Revisa la campana: precio listo de compras, cotización autorizada, «Terminado» de tus equipos, pago de tu cliente.",
+      "Convierte lo que se cerró con " + B("Convertir a pedido") + " y sigue el avance en el pedido."
+    ], estaciones: [1, 2, 4, 8, 9, 10] },
+    { k: "gerente_ventas", n: "Gerencia de ventas", dia: [
+      "Pestaña «Por autorizar» en Cotizaciones: " + B("Autorizar") + " lo que baja del mínimo.",
+      "Revisa el embudo en Oportunidades y la cartera de cada vendedor.",
+      "Reparte el crédito de ventas compartidas (" + B("Compartir") + ", debe sumar 100 %).",
+      "Comisiones del mes y, si aplica, " + B("Ajuste") + ".",
+      "Análisis y metas en " + R("/analisis") + " (solo lectura de metas)."
+    ], estaciones: [1, 2, 3, 4, 9] },
+    { k: "ingenieria", n: "Ingeniería", dia: [
+      "Avisos «Orden OP-… por validar»: abre la orden y " + B("Marcar revisada") + " la lista de materiales.",
+      "Atiende «Solicitudes de cambio» en " + R("/costeo/equipos") + " (" + B("Abrir lista") + ").",
+      "Mantén equipos y subensambles: lista de materiales, parámetros, horas por etapa, planos vigentes.",
+      "Revisa márgenes y precios cuando cambian costos."
+    ], estaciones: [5] },
+    { k: "compras", n: "Compras", dia: [
+      "Cola de " + R("/compras/solicitudes") + ": " + B("Tomar") + " y " + B("Contestar") + " antes de que venza.",
+      "Requisiciones del taller y de reabasto → " + B("Crear órdenes de compra") + " (una por proveedor).",
+      "Órdenes desde la cotización del proveedor: " + B("Subir cotización") + ", Claude la lee y tú revisas.",
+      B("Enviar al proveedor") + " cada orden lista; el material queda «en tránsito».",
+      "Actualiza costos en " + R("/compras/precios") + "."
+    ], estaciones: [2, 6] },
+    { k: "almacen", n: "Almacén", dia: [
+      "Avisos «Pedido nuevo» y «Orden por validar»: " + B("Apartar material") + ", " + B("Pedir a compras") + " lo que falte y " + B("Marcar revisado") + ".",
+      B("Surtir") + " a las órdenes liberadas.",
+      B("Recibir") + " las órdenes de compra que llegan.",
+      "Envíos del día: " + B("Cotizar") + ", " + B("Registrar guía") + ", empacar con fotos y número de serie, " + B("Ya salió") + ".",
+      "Salidas, traspasos, devoluciones y ajustes en " + R("/almacen/movimientos") + "."
+    ], estaciones: [5, 6, 8, 10] },
+    { k: "gerente_produccion", n: "Gerencia de producción", dia: [
+      "Pedidos confirmados sin orden: " + B("Crear órdenes desde pedido") + ".",
+      "Con ingeniería y almacén listos: " + B("Liberar al taller") + ".",
+      "Tablero de " + R("/produccion/gerencia") + ": atrasadas, con faltantes, carga del taller.",
+      "Programa servicios e instalaciones; aprueba ajustes de inventario."
+    ], estaciones: [5, 7, 10] },
+    { k: "produccion", n: "Taller (terminal de piso)", dia: [
+      "En la tablet: «¿En qué etapa estás?».",
+      B("Iniciar") + " al empezar una orden, " + B("Pausar") + "/" + B("Reanudar") + " y " + B("Terminar") + " al acabar tu etapa.",
+      "La terminal pregunta «¿Quién trabaja?»: confirma que eres tú.",
+      B("Problema") + " si algo detiene la orden; " + B("Reportar falla") + " si una máquina falla."
+    ], estaciones: [7] },
+    { k: "finanzas", n: "Finanzas", dia: [
+      R("/finanzas/cobranza") + ": antigüedad por pedido, cliente y vendedor. " + B("Registrar cobro") + " y " + B("Registrar factura") + ".",
+      R("/finanzas/pagos") + ": órdenes recibidas con saldo y su vencimiento. " + B("Registrar pago") + ".",
+      "Fin de mes: " + B("Marcar pagada") + " en Comisiones (guarda la foto del cálculo).",
+      "Dinero de importaciones en dólares, si te toca."
+    ], estaciones: [9] },
+    { k: "direccion", n: "Dirección", dia: [
+      "Centro de mando en Inicio: ventas contra años anteriores, proyección, taller, inventario, cobranza.",
+      "Autoriza precios bajo el mínimo cuando haga falta.",
+      "Márgenes y políticas de precio en " + R("/costeo/margenes") + ".",
+      "Análisis y metas, mapa de ventas.",
+      "«Ver como» para revisar qué ve cada puesto."
+    ], estaciones: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }
+  ];
+
+  var EST = [
+    { n: "Encontrar al cliente", quien: ["ventas", "gerente_ventas"], ruta: "/ventas/para-llamar · /ventas/oportunidades",
+      pasos: [
+        "En " + R("/ventas/para-llamar") + " el ERP te propone a quién llamar y por qué. " + B("Redactar mensaje") + " escribe el WhatsApp con el historial del cliente.",
+        "En Oportunidades: " + B("Nueva oportunidad") + " → " + B("Registrar") + ". Arrástrala en el tablero: prospecto → contactado → cotizado → negociación.",
+        "Si se pierde, la base pide el motivo («Anota por qué se perdió…»).",
+        "Desde el panel de la oportunidad: " + B("Nueva cotización") + "."
+      ],
+      solo: ["Al enviar una cotización sin oportunidad, se crea una en «cotizado».", "Un cliente es tuyo mientras le vendas en 12 meses o le des seguimiento en 90 días (configurable)."],
+      ej: [["Oportunidad", "Banda transportadora 20 m · Cliente de Jalisco", "contactado", "t-info"]],
+      ojo: "Clientes con privacidad entre vendedores: cada quien ve su cartera." },
+    { n: "Cotizar", quien: ["ventas"], ruta: "/ventas/cotizaciones",
+      pasos: [
+        B("Nueva cotización") + ": toma folio, condiciones de pago y entrega y el contacto principal del cliente.",
+        "Escribe en «Agregar partida: escribe equipo, componente o clave y Enter…». Pone el precio de lista en la moneda de la cotización.",
+        B("Partida libre") + " para flete, instalación o servicio. En el menú de cada partida: " + B("Ver ficha de venta") + ", " + B("Pedir precio a compras") + ", " + B("Duplicar partida") + ".",
+        "Ajusta moneda, tipo de cambio, «Precios con IVA incluido», vigencia, meses con tarjeta y descuento general.",
+        "No hay botón de guardar: se guarda sola («Guardado 10:42»)."
+      ],
+      solo: ["Folio automático COT-2026-00148.", "Cada partida sabe su precio mínimo; si bajas de ahí, la cotización pasa sola a «Por autorizar»."],
+      ej: [["Cotización", "COT-2026-00148", "Borrador", ""]],
+      ojo: "La ficha de venta muestra precio mínimo, existencia, envío gratis, mensualidades, precio en Mercado Libre y fichas técnicas vigentes." },
+    { n: "Autorizar precio", quien: ["gerente_ventas", "direccion"], ruta: "/ventas/cotizaciones → Por autorizar", condicional: true,
+      pasos: [
+        "Solo si alguna partida quedó bajo el mínimo. El vendedor da " + B("Pedir autorización") + " con una nota.",
+        "La gerencia (ventas nivel 3: gerencia de ventas o dirección) recibe el aviso y da " + B("Autorizar precios") + " en el editor o " + B("Autorizar") + " en la pestaña «Por autorizar».",
+        "El vendedor recibe «COT-… autorizada»."
+      ],
+      solo: ["Si después cambias un precio, una partida, el descuento, el tipo de cambio o el IVA, la autorización se pierde y hay que pedirla otra vez.", "Si vuelves a subir el precio al mínimo, regresa sola a «Borrador»."],
+      ej: [["Cotización", "COT-2026-00148", "Por autorizar", "t-aviso"], ["", "COT-2026-00148", "Autorizada", "t-ok"]],
+      ojo: "Sin autorización vigente la base no deja enviar, aceptar ni convertir a pedido." },
+    { n: "Enviar y cerrar la venta", quien: ["ventas", "gerente_ventas"], ruta: "/ventas/cotizaciones/:id",
+      pasos: [
+        B("Enviar") + " → «Abrir PDF», «Enviar por WhatsApp» o «Solo marcar enviada».",
+        "¿El cliente pide cambios? Menú «Más acciones» → " + B("Nueva versión") + " (COT-2026-00148-v2).",
+        "Cuando acepta: " + B("Convertir a pedido") + ". Elige la «Fecha compromiso de entrega» y las partidas, y da " + B("Crear pedido por $X") + ".",
+        "Si no se dio: " + B("Marcar rechazada…") + " con motivo."
+      ],
+      solo: ["Crea PED-2026-00093 en «Confirmado», copia las partidas repartiendo el descuento y quitando el IVA si venía incluido.", "Marca la cotización «Aceptada» y la oportunidad «Ganada».", "Avisa «Pedido nuevo» a gerencia de producción y almacén."],
+      ej: [["Cotización", "COT-2026-00148", "Aceptada", "t-ok"], ["Pedido", "PED-2026-00093", "Confirmado", "t-info"]],
+      ojo: "Convertir no aparta material ni crea órdenes de producción: eso es la siguiente estación." },
+    { n: "Orden y material", quien: ["gerente_produccion", "ingenieria", "almacen"], ruta: "/produccion/ordenes",
+      pasos: [
+        "Gerencia de producción: " + B("Mandar a producción") + " en el pedido, o " + B("Crear órdenes desde pedido") + " en " + R("/produccion/ordenes") + ".",
+        "En la orden, sección «Validación de material»:",
+        "&nbsp;&nbsp;a. Ingeniería: " + B("Marcar revisada") + " la lista de materiales.",
+        "&nbsp;&nbsp;b. Almacén o producción: " + B("Apartar material") + " (reserva lo libre de los almacenes de planta).",
+        "&nbsp;&nbsp;c. Lo que falte: " + B("Pedir a compras") + " crea una requisición REQ-….",
+        "&nbsp;&nbsp;d. Almacén: " + B("Marcar revisado") + ".",
+        "&nbsp;&nbsp;e. Gerencia: " + B("Liberar al taller") + " (exige la revisión de ingeniería).",
+        "Almacén: " + B("Surtir") + " el material a la orden liberada."
+      ],
+      solo: ["Una OP por cada unidad de equipo, con la lista de materiales y las horas congeladas.", "El pedido pasa a «En producción».", "Aviso «Orden OP-… por validar» a ingeniería y almacén; si en 4 horas nadie la revisa, vuelve a avisar."],
+      ej: [["Pedido", "PED-2026-00093", "En producción", "t-info"], ["Orden", "OP-2026-00211", "Liberada", "t-info"], ["Requisición", "REQ-2026-00057", "Abierta", ""]],
+      ojo: "Lo que no está en la lista se surte «fuera de lista» con su motivo, para que ingeniería lo vea." },
+    { n: "Comprar faltantes", quien: ["compras", "almacen"], ruta: "/compras/ordenes",
+      pasos: [
+        "Compras, pestaña «Requisiciones»: selecciona partidas → " + B("Crear órdenes de compra") + " (una por proveedor).",
+        "O " + B("Nueva orden") + " a mano, o " + B("Subir cotización") + " del proveedor y revisar lo que leyó Claude.",
+        B("Enviar al proveedor") + ": la orden pasa a «Enviada» y el material cuenta como en tránsito.",
+        "Cuando llega, almacén: " + B("Recibir") + " → factura o remisión, almacén de destino → " + B("Dar entrada a N partida(s)") + "."
+      ],
+      solo: ["La entrada crea el movimiento en el almacén y la orden pasa a «Recibida en parte» o «Recibida».", "Calcula el vencimiento del pago con los días de crédito del proveedor (aparece en Pagos a proveedores).", "Avisa «Llegó material de OC-…» a quien pidió."],
+      ej: [["Orden de compra", "OC-2026-00310", "Enviada", "t-info"], ["", "OC-2026-00310", "Recibida", "t-ok"]],
+      ojo: "Se acepta hasta 10 % más de lo pedido. Al recibir puedes marcar «Actualizar el costo de estos artículos con el precio de esta orden»." },
+    { n: "Fabricar", quien: ["produccion", "gerente_produccion"], ruta: "/produccion/terminal · /piso",
+      pasos: [
+        "En la terminal de piso, el operador elige «¿En qué etapa estás?».",
+        "Ve «Trabajando ahora», «Listas para empezar» y «Todavía en otra etapa».",
+        B("Iniciar") + ", " + B("Pausar") + ", " + B("Reanudar") + ", " + B("Terminar") + ". " + B("Problema") + " si algo lo detiene.",
+        "La TV del taller (" + R("/piso") + ") muestra la producción en vivo, lo urgente y lo último que pasó.",
+        "Gerencia sigue órdenes atrasadas y con faltantes en " + R("/produccion/gerencia") + "."
+      ],
+      solo: ["La primera etapa iniciada pasa la orden a «En proceso».", "Al terminar la última etapa: orden «Terminada» y aviso «Terminado: …» al vendedor.", "Cuando todas las órdenes del pedido terminan, el pedido pasa a «Listo para entregar»."],
+      ej: [["Orden", "OP-2026-00211", "Terminada", "t-ok"], ["Pedido", "PED-2026-00093", "Listo para entregar", "t-ok"]],
+      ojo: "El taller ve el plano vigente; si ingeniería lo cambia después, el ERP avisa." },
+    { n: "Entregar", quien: ["almacen", "ventas"], ruta: "/almacen/envios",
+      pasos: [
+        "Vendedor: " + B("Pedir envío") + " en la tarjeta «Envío» del pedido.",
+        "Almacén: " + B("Cotizar") + " → " + B("Registrar guía") + ".",
+        "Empacar en tres pasos: fotos, «Check list de salida» y «Número de serie» → " + B("Marcar empacado") + ".",
+        B("Ya salió") + " → " + B("Marcar entregado") + ". Si recoge el cliente, el último paso es «Se lo llevaron».",
+        "Sin envío: " + B("Entregar") + " en el pedido."
+      ],
+      solo: ["Al salir, da la salida de inventario y marca «Entregada» la orden de producción.", "Cuando se entrega todo, el pedido pasa a «Entregado».", "La garantía (12 meses) cuenta desde la entrega."],
+      ej: [["Envío", "ENV-2026-00184", "En camino", "t-marca"], ["Pedido", "PED-2026-00093", "Entregado", "t-ok"]],
+      ojo: "Pestañas de Envíos: «Por cotizar y guía», «Por empacar», «Hoy salen o recogen», «En camino», «Entregados»." },
+    { n: "Cobrar y comisiones", quien: ["finanzas", "ventas"], ruta: "/finanzas/cobranza · /ventas/comisiones",
+      pasos: [
+        "Finanzas: en el pedido o en " + R("/finanzas/cobranza") + ", " + B("Registrar factura") + " y " + B("Registrar cobro") + " (transferencia, efectivo, tarjeta, cheque, Mercado Pago…).",
+        "El anticipo es un cobro más: «50% anticipo, 50% al aviso de la entrega» vive en las condiciones de pago.",
+        "Antigüedad de saldos por pedido, cliente y vendedor: 0–30, 31–60, 61–90 y más de 90 días.",
+        "Comisiones: se calculan solas de los pedidos. Finanzas da " + B("Marcar pagada") + " al pagarlas."
+      ],
+      solo: ["Cada cobro avisa al vendedor «Pago de {cliente}».", "Comisión: 2 % sin IVA de lo que no es refacción + bonos por escalón de meta de maquinaria y de refacciones; con crédito compartido entre vendedores."],
+      ej: [["Cobranza", "PED-2026-00093", "Saldo $0", "t-ok"]],
+      ojo: "La base no deja cobrar de más ni cobrar un pedido cancelado." },
+    { n: "Después de la venta", quien: ["ventas", "gerente_produccion", "almacen"], ruta: "/servicio · /ventas/devoluciones",
+      pasos: [
+        "Instalación, puesta en marcha, garantía o reparación: " + B("Pedir servicio") + " (el vendedor también puede).",
+        "Gerencia: " + B("Programar") + " con cuadrilla → " + B("Iniciar") + " → " + B("Cerrar servicio") + " con firma y evidencia.",
+        "Devoluciones y reclamos: " + B("Nueva") + " → " + B("Recibir en almacén") + " → " + B("Decidir qué se hace") + " → " + B("Cerrar con resultado") + ".",
+        "«A quién llamar hoy» te recordará cuándo ese cliente necesite refacciones."
+      ],
+      solo: ["El servicio sabe si el equipo sigue en garantía.", "Una merma de devolución crea un ajuste que otra persona autoriza."],
+      ej: [["Servicio", "SRV-2026-00042", "Programada", "t-info"]],
+      ojo: "Máquinas del taller, fallas y resguardos de herramienta son del personal de producción, no de ventas." }
+  ];
+
+  var MAQ = {
+    "Cotización": [
+      ["Borrador", "", "Recién creada o regresada porque ya no hay precios bajo el mínimo. Se edita libremente."],
+      ["Por autorizar", "t-aviso", "Alguna partida está bajo el precio mínimo. Espera a la gerencia de ventas o dirección."],
+      ["Autorizada", "t-ok", "La gerencia aprobó los precios. Cambiar un precio la regresa a pedir autorización."],
+      ["Enviada", "t-marca", "Ya la tiene el cliente. No se edita: «Nueva versión» para cambiarla."],
+      ["Aceptada", "t-ok", "Se convirtió en pedido. La oportunidad queda «Ganada»."],
+      ["Rechazada", "t-peligro", "«Marcar rechazada…» con motivo. La oportunidad se pierde si no hay otra cotización viva."],
+      ["Vencida", "t-aviso", "Pasó su vigencia. La lista la marca con la insignia «Vencida» y «A quién llamar hoy» te avisa antes."]
+    ],
+    "Pedido": [
+      ["Confirmado", "t-info", "Nace al convertir la cotización (o «Pedido sin cotización»). Avisa a producción y almacén."],
+      ["En producción", "t-info", "Se crearon sus órdenes de producción. Finanzas lo ve como «En taller»."],
+      ["Listo para entregar", "t-ok", "Todas sus órdenes terminaron, o se dio «Marcar listo»."],
+      ["Entregado", "t-ok", "Salió todo por envío o se dio «Entregar»."],
+      ["Cancelado", "t-peligro", "«Cancelar» con motivo (por ejemplo «Sin anticipo en el plazo»). No se le puede cobrar."]
+    ],
+    "Orden de producción": [
+      ["Planeada", "", "Recién creada. Ingeniería revisa, almacén aparta y pide faltantes."],
+      ["Liberada", "t-info", "La gerencia la liberó al taller. Almacén surte."],
+      ["En proceso", "t-marca", "El taller inició la primera etapa en la terminal."],
+      ["Terminada", "t-ok", "Todas las etapas terminadas. Aviso al vendedor."],
+      ["Entregada", "t-ok", "Salió con el envío o se marcó entregada. Libera sus reservas."],
+      ["Cancelada", "t-peligro", "Libera el material apartado."]
+    ],
+    "Orden de compra": [
+      ["Borrador", "", "Creada desde requisición, reabasto, a mano o desde la cotización del proveedor."],
+      ["Enviada", "t-info", "«Enviar al proveedor»: el material cuenta como en tránsito."],
+      ["Recibida en parte", "t-aviso", "Llegó parte. Se puede volver a «Recibir»."],
+      ["Recibida", "t-ok", "Entró todo. Su pago aparece en Pagos a proveedores con vencimiento."],
+      ["Cancelada", "t-peligro", "Solo si no ha recibido nada. Sus requisiciones regresan a pendiente."]
+    ],
+    "Envío": [
+      ["Por cotizar", "", "El vendedor lo pidió desde el pedido."],
+      ["Cotizado", "t-info", "Almacén cotizó la paquetería."],
+      ["Guía lista", "t-info", "Ya tiene guía."],
+      ["Empacado", "t-marca", "Fotos, check list de salida y número de serie."],
+      ["En camino", "t-marca", "«Ya salió»: da la salida de inventario."],
+      ["Entregado", "t-ok", "Llegó. Si es lo último del pedido, el pedido queda «Entregado»."],
+      ["Cancelado", "t-peligro", "No salió."]
+    ],
+    "Servicio": [
+      ["Por programar", "", "Se pidió (instalación, puesta en marcha, garantía, reparación en planta o en campo)."],
+      ["Programada", "t-info", "Tiene fecha y cuadrilla."],
+      ["En curso", "t-marca", "La cuadrilla lo inició."],
+      ["Cerrada", "t-ok", "Con firma, evidencia y si procedió la garantía."],
+      ["Cancelada", "t-peligro", "No se hizo."]
+    ]
+  };
+
+  var PERMISOS = [
+    ["ventas", "Vendedor", "Ventas, servicio, envíos", "Costeo (sin costos), inventario, producción", "Costos, márgenes, compras, finanzas"],
+    ["gerente_ventas", "Gerencia de ventas", "Ventas (autoriza), envíos", "Análisis y metas", "Costos y márgenes"],
+    ["ingenieria", "Ingeniería", "Equipos, subensambles, planos, costos", "", "Finanzas"],
+    ["compras", "Compras", "Compras, costeo, costos, inventario", "", "Finanzas de clientes"],
+    ["almacen", "Almacén", "Inventario, producción, envíos, servicio", "Qué llega en importaciones", "Costos y dinero"],
+    ["gerente_produccion", "Gerencia de producción", "Producción, servicio, inventario", "Qué llega en importaciones", "Costos"],
+    ["produccion", "Taller", "Terminal de piso, fallas, resguardos", "", "Todo lo demás"],
+    ["finanzas", "Finanzas", "Cobranza, pagos, comisiones pagadas", "Costos", "Edición de costeo"],
+    ["direccion", "Dirección", "Todo (nivel 3 en todo módulo)", "", "—"]
+  ];
+
+  // ---------- Estado ----------
+  var rol = null, est = 0, maq = "Cotización", maqSel = 0;
+  try { rol = localStorage.getItem("hegamex-manual-rol"); } catch (e) { rol = null; }
+  if (!ROLES.some(function (r) { return r.k === rol; })) rol = "ventas";
+  var rolDe = function (k) { return ROLES.filter(function (r) { return r.k === k; })[0]; };
+  var nombreRol = function (k) { var r = rolDe(k); return r ? r.n : k; };
+
+  var pintarRoles = function () {
+    $("roles").innerHTML = ROLES.map(function (r) { return '<button type="button" class="chip" data-rol="' + r.k + '" aria-pressed="' + (r.k === rol) + '">' + r.n + "</button>"; }).join("");
+    var r = rolDe(rol);
+    $("mi-dia").innerHTML = '<div class="cab"><h3>Tu día como ' + r.n.toLowerCase() + '</h3><span class="tenue" style="font-size:13px">Participas en ' + r.estaciones.length + " de 10 estaciones del recorrido</span></div><ol>" +
+      r.dia.map(function (d) { return "<li>" + d + "</li>"; }).join("") + "</ol>";
+    $("tabla-permisos").innerHTML = PERMISOS.map(function (p) {
+      return '<tr class="' + (p[0] === rol ? "yo" : "") + '"><td><b>' + p[1] + "</b></td><td>" + p[2] + '</td><td class="tenue">' + (p[3] || "—") + '</td><td class="tenue">' + p[4] + "</td></tr>";
+    }).join("");
+  };
+
+  var pintarRecorrido = function () {
+    var r = rolDe(rol);
+    $("estaciones").innerHTML = EST.map(function (e, i) {
+      var mia = r.estaciones.indexOf(i + 1) >= 0;
+      return '<button type="button" role="tab" class="estacion' + (mia ? " tuya" : " atenuada") + '" aria-selected="' + (i === est) + '" data-est="' + i + '">' +
+        '<span class="n">' + String(i + 1).padStart(2, "0") + (e.condicional ? " · si aplica" : "") + '</span><span class="t">' + e.n + '</span><span class="quien-mini" aria-hidden="true">' +
+        e.quien.map(function (q) { return '<i class="' + (q === rol || rol === "direccion" ? "yo" : "") + '"></i>'; }).join("") + "</span></button>";
+    }).join("");
+    var e = EST[est];
+    var quien = e.quien.map(function (q) { return '<span class="insignia ' + (q === rol ? "t-marca" : "") + '">' + nombreRol(q) + "</span>"; }).join(" ");
+    var ej = e.ej.map(function (x) {
+      return '<div class="doc"><span class="tenue" style="min-width:110px">' + (x[0] || "&nbsp;") + '</span><span class="folio">' + x[1] + '</span><span class="insignia punto ' + x[3] + '">' + x[2] + "</span></div>";
+    }).join("");
+    $("detalle").innerHTML =
+      '<div><div style="display:grid;gap:6px"><span class="etiqueta">Estación ' + (est + 1) + " de 10 · " + R(e.ruta) + "</span><h3>" + e.n + "</h3><div style=\"display:flex;flex-wrap:wrap;gap:6px\">" + quien + "</div></div>" +
+      '<ol class="pasos">' + e.pasos.map(function (p) { return p.indexOf("&nbsp;") === 0 ? '<li style="list-style:none;margin-left:-4px">' + p + "</li>" : "<li>" + p + "</li>"; }).join("") + "</ol>" +
+      '<div class="nota ojo"><b class="m">!</b><p>' + e.ojo + "</p></div>" +
+      '<div class="navegar"><button type="button" class="boton sec" id="ant"' + (est === 0 ? " disabled" : "") + '>← Anterior</button><button type="button" class="boton" id="sig"' + (est === EST.length - 1 ? " disabled" : "") + ">Siguiente estación →</button></div></div>" +
+      '<div class="lado"><div class="bloquecito"><h4>Lo que hace el sistema solo</h4><ul>' + e.solo.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ul></div>" +
+      '<div class="bloquecito"><h4>Así va el ejemplo</h4><div class="ejemplo">' + ej + "</div></div></div>";
+    $("ant").onclick = function () { est = Math.max(0, est - 1); pintarRecorrido(); };
+    $("sig").onclick = function () { est = Math.min(EST.length - 1, est + 1); pintarRecorrido(); };
+  };
+
+  var pintarMaq = function () {
+    $("maq-pestanas").innerHTML = Object.keys(MAQ).map(function (k) { return '<button type="button" role="tab" class="pestana" data-maq="' + k + '" aria-selected="' + (k === maq) + '">' + k + "</button>"; }).join("");
+    var lista = MAQ[maq];
+    $("maq-cadena").innerHTML = lista.map(function (s, i) {
+      return (i ? '<span class="flecha" aria-hidden="true">›</span>' : "") + '<button type="button" class="insignia punto ' + s[1] + '" data-sel="' + i + '" aria-pressed="' + (i === maqSel) + '">' + s[0] + "</button>";
+    }).join("");
+    var s = lista[maqSel];
+    $("maq-explica").innerHTML = '<b>' + s[0] + "</b><span>" + s[2] + "</span>";
+  };
+
+  $("roles").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-rol]"); if (!b) return;
+    rol = b.getAttribute("data-rol");
+    try { localStorage.setItem("hegamex-manual-rol", rol); } catch (e) { /* sin almacenamiento */ }
+    var r = rolDe(rol); est = (r.estaciones[0] || 1) - 1;
+    pintarRoles(); pintarRecorrido();
+  });
+  $("estaciones").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-est]"); if (!b) return;
+    est = Number(b.getAttribute("data-est")); pintarRecorrido();
+  });
+  $("maq-pestanas").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-maq]"); if (!b) return;
+    maq = b.getAttribute("data-maq"); maqSel = 0; pintarMaq();
+  });
+  $("maq-cadena").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-sel]"); if (!b) return;
+    maqSel = Number(b.getAttribute("data-sel")); pintarMaq();
+  });
+
+  est = (rolDe(rol).estaciones[0] || 1) - 1;
+  pintarRoles(); pintarRecorrido(); pintarMaq();
+
+  var enlaces = Array.prototype.slice.call(document.querySelectorAll("#indice a"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (en) {
+        if (en.isIntersecting) enlaces.forEach(function (a) { a.classList.toggle("activo", a.getAttribute("href") === "#" + en.target.id); });
+      });
+    }, { rootMargin: "-30% 0px -60% 0px" });
+    document.querySelectorAll("section.bloque").forEach(function (sec) { obs.observe(sec); });
+  }
+})();
+</script>
