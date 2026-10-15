@@ -24,7 +24,6 @@ export const VENTAS = {
   partidaLibre: "Renglón escrito a mano que no viene del catálogo (flete, instalación, servicio). No tiene precio de lista ni precio mínimo.",
   fichaVenta: "Lo que veías en el BUSCADOR de la hoja: precio de lista y mínimo, existencia en planta (y cuánto está apartado), piezas en Full de Mercado Libre, tiempo de entrega, envío gratis y precio sugerido en Mercado Libre.",
   envioGratis: "Si la pieza alcanza el monto de envío gratis (con IVA) que fija la gerencia. Cuando no lo alcanza sola, dice desde cuántas piezas aplica. Algunos productos, como bandas y cangilones, nunca llevan envío gratis.",
-  enFullMl: "Piezas en el almacén Full de Mercado Libre. Existen, pero no cuentan como existencia de planta.",
 
   // --- Pedidos ---
   estadoPedido: "Confirmado → En producción → Listo para entregar → Entregado. Cancelado lleva su motivo y deja de contar para comisiones y cobranza.",

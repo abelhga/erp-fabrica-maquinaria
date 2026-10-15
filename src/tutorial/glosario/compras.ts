@@ -17,7 +17,7 @@ export const COMPRAS = {
 
   // --- Órdenes de compra ---
   estadoOrdenCompra: "Borrador: todavía se edita y el proveedor no la tiene. Enviada: ya se mandó y lo pedido cuenta como en camino. Recibida en parte: llegó algo y falta lo demás. Recibida: llegó todo. Cancelada: lo que venía de requisiciones regresa a pendiente.",
-  ordenAtrasada: "Una orden enviada o recibida en parte cuya fecha de entrega ya pasó. Llámale al proveedor o mueve la fecha si ya te dio otra.",
+  ocAtrasada: "Una orden enviada o recibida en parte cuya fecha de entrega ya pasó. Llámale al proveedor o mueve la fecha si ya te dio otra.",
   avanceRecibido: "Qué parte de lo pedido ya llegó al almacén, sumando todas las partidas.",
   porPagarOrden: "Total de la orden menos los pagos que ha registrado finanzas.",
   requisicionCompra: "Lo que producción y almacén le piden a compras: los faltantes de las órdenes de producción y lo que almacén pide desde el reabasto. Elige partidas y se vuelven órdenes en borrador, una por proveedor; el mismo artículo pedido varias veces se suma.",
@@ -33,5 +33,4 @@ export const COMPRAS = {
   ordenesAbiertasProveedor: "Órdenes enviadas o recibidas en parte que todavía esperan mercancía. «Tarde» cuenta las que ya pasaron su fecha de entrega.",
   compradoDoceMeses: "Suma de sus órdenes de compra de los últimos 12 meses (sin canceladas), en pesos y con IVA.",
   indicePreciosProveedor: "Cómo se han movido sus precios, con 100 en el primer mes con datos. Cada mes promedia cuánto cambió el costo de cada artículo que nos vende (los que no cambiaron cuentan como 0 %): 110 quiere decir 10 % más caro.",
-  directorioProveedores: "El directorio que vino de las hojas mezcla proveedores con acreedores (nómina, casetas, hoteles). Por eso de entrada solo se ven los que surten algún artículo o tienen órdenes abiertas.",
 } satisfies Record<string, string>;

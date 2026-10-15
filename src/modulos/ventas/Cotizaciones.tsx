@@ -13,6 +13,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { dinero, fecha, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 import { ESTADO_COT, dineroEn, todas, useAncho, type VCotizacion, haceCuanto } from "./comun";
 
 const ABIERTAS = ["borrador", "por_autorizar", "autorizada", "enviada"];
@@ -95,7 +96,7 @@ export default function Cotizaciones() {
     },
     { clave: "vendedor", titulo: "Vendedor", oculta: !esGerente, valor: (c) => c.vendedor },
     {
-      clave: "estado", titulo: "Estado", oculta: angosta, valor: (c) => ESTADO_COT[c.estado].texto,
+      clave: "estado", titulo: "Estado", oculta: angosta, explica: GLOSARIO.estadoCotizacion, valor: (c) => ESTADO_COT[c.estado].texto,
       celda: (c) => (
         <div className="flex flex-wrap gap-1">
           <Insignia tono={ESTADO_COT[c.estado].tono} punto>{ESTADO_COT[c.estado].texto}</Insignia>
@@ -105,7 +106,7 @@ export default function Cotizaciones() {
       ),
     },
     {
-      clave: "vence", titulo: "Vence", oculta: angosta, valor: (c) => c.vence,
+      clave: "vence", titulo: "Vence", oculta: angosta, explica: GLOSARIO.vigenciaCotizacion, valor: (c) => c.vence,
       celda: (c) => <span className={cn("whitespace-nowrap", c.vencida && "text-peligro font-medium")}>{ABIERTAS.includes(c.estado) ? fecha(c.vence) : "—"}</span>,
     },
     {
@@ -122,8 +123,8 @@ export default function Cotizaciones() {
       acciones={puede("ventas", 2) && <Boton onClick={() => ir("/ventas/cotizaciones/nueva")}><Plus className="h-4 w-4" />Nueva cotización</Boton>}>
       <Pestanas value={pestana} onValueChange={(v) => setParams(v === "abiertas" ? {} : { estado: v }, { replace: true })}>
         <ListaPestanas opciones={[
-          { valor: "abiertas", texto: esGerente ? "Abiertas" : "Mías abiertas", cuenta: cuenta((c) => ABIERTAS.includes(c.estado) && (esGerente || c.vendedor_id === perfil?.id)) },
-          ...(esGerente ? [{ valor: "por_autorizar", texto: "Por autorizar", cuenta: cuenta((c) => c.estado === "por_autorizar") }] : []),
+          { valor: "abiertas", texto: esGerente ? "Abiertas" : "Mías abiertas", explica: GLOSARIO.cotizacionAbierta, cuenta: cuenta((c) => ABIERTAS.includes(c.estado) && (esGerente || c.vendedor_id === perfil?.id)) },
+          ...(esGerente ? [{ valor: "por_autorizar", texto: "Por autorizar", explica: GLOSARIO.autorizacionPrecios, cuenta: cuenta((c) => c.estado === "por_autorizar") }] : []),
           { valor: "enviadas", texto: "Enviadas", cuenta: cuenta((c) => c.estado === "enviada") },
           { valor: "aceptadas", texto: "Aceptadas", cuenta: cuenta((c) => c.estado === "aceptada") },
           { valor: "todas", texto: "Todas", cuenta: cuenta(() => true) },
@@ -187,9 +188,9 @@ function ColaAutorizacion({ filas, cargando, alAutorizar, autorizando }: {
             </div>
             <div className="text-right shrink-0">
               <p className="text-lg font-semibold cifra">{dineroEn(Number(c.total), c.moneda)}</p>
-              <Insignia tono="peligro">{c.partidas_bajo_minimo} bajo el mínimo</Insignia>
+              <span data-explain={GLOSARIO.bajoMinimo} data-explain-title="Bajo el mínimo"><Insignia tono="peligro">{c.partidas_bajo_minimo} bajo el mínimo</Insignia></span>
               {c.descuento_vs_lista != null && Number(c.descuento_vs_lista) > 0 && (
-                <p className="text-xs text-tenue mt-1 cifra" title="Lo cotizado del catálogo contra su precio de lista, con todos los descuentos">
+                <p className="text-xs text-tenue mt-1 cifra" title="Lo cotizado del catálogo contra su precio de lista, con todos los descuentos" data-explain={GLOSARIO.descuentoVsLista}>
                   {porcentaje(Number(c.descuento_vs_lista), 1)} abajo de lista
                 </p>
               )}

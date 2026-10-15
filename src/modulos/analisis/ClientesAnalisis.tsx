@@ -13,6 +13,7 @@ import { q } from "@/lib/consultas";
 import { dinero, dineroCompacto, fecha, hace, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { BarraRanking, Cifra, NOMBRE_SEGMENTO, SEQ, SEQ_TINTA, TarjetaGrafica, usePeriodo } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface DatosClientes {
   resumen: { clientes: number; monto: number; operaciones: number; clientes_80: number | null; pct_clientes_80: number | null; top10_participacion: number | null; nuevos: number };
@@ -74,14 +75,14 @@ export default function ClientesAnalisis() {
     <div className={cn("space-y-4 transition-opacity", c.isFetching && c.isPlaceholderData && "opacity-60")}>
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
         <Cifra titulo="Clientes que compraron" valor={numero(r.clientes)} detalle={<>{numero(r.operaciones)} operaciones en {periodo.etiqueta}</>} />
-        <Cifra titulo="Hacen el 80 % de la venta" valor={r.clientes_80 == null ? "—" : `${numero(r.clientes_80)} clientes`}
+        <Cifra titulo="Hacen el 80 % de la venta" explica={GLOSARIO.paretoClientes} valor={r.clientes_80 == null ? "—" : `${numero(r.clientes_80)} clientes`}
           detalle={r.pct_clientes_80 == null ? "—" : <>el {porcentaje(r.pct_clientes_80, 0)} de los que compraron</>} />
-        <Cifra titulo="Los 10 más grandes pesan" valor={porcentaje(r.top10_participacion, 0)} detalle="de la venta del periodo" />
-        <Cifra titulo="Clientes nuevos" valor={numero(r.nuevos)} detalle={<>su primera compra fue en {periodo.etiqueta}</>} />
+        <Cifra titulo="Los 10 más grandes pesan" explica={GLOSARIO.participacionVenta} valor={porcentaje(r.top10_participacion, 0)} detalle="de la venta del periodo" />
+        <Cifra titulo="Clientes nuevos" explica={GLOSARIO.clientesNuevosRecurrentes} valor={numero(r.nuevos)} detalle={<>su primera compra fue en {periodo.etiqueta}</>} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <TarjetaGrafica titulo="Concentración de la venta (Pareto)"
+        <TarjetaGrafica titulo="Concentración de la venta (Pareto)" explica={GLOSARIO.paretoClientes}
           descripcion="Clientes ordenados del que más compró al que menos: qué parte de la venta juntan."
           tabla={<div className="overflow-y-auto max-h-[300px] px-1 pb-2"><table className="tabla text-xs">
             <thead><tr><th>% de clientes</th><th className="text-right">% de la venta</th></tr></thead>
@@ -130,7 +131,7 @@ export default function ClientesAnalisis() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <TarjetaGrafica titulo="Clientes nuevos y recurrentes por año"
+        <TarjetaGrafica titulo="Clientes nuevos y recurrentes por año" explica={GLOSARIO.clientesNuevosRecurrentes}
           descripcion="Nuevo: su primera compra fue ese año. Recurrente: ya había comprado antes."
           tabla={<div className="overflow-x-auto px-1 pb-2"><table className="tabla text-xs">
             <thead><tr><th>Año</th><th className="text-right">Nuevos</th><th className="text-right">Venta nuevos</th><th className="text-right">Recurrentes</th><th className="text-right">Venta recurrentes</th></tr></thead>
@@ -151,7 +152,7 @@ export default function ClientesAnalisis() {
           </div>
         </TarjetaGrafica>
 
-        <TarjetaGrafica titulo="¿Cuántos vuelven a comprar? (cohortes)"
+        <TarjetaGrafica titulo="¿Cuántos vuelven a comprar? (cohortes)" explica={GLOSARIO.cohortesClientes}
           descripcion="Clientes por año de su primera compra, y qué parte volvió a comprar 1, 2, 3… años después.">
           <div className="px-5 pb-4 overflow-x-auto">
             <table className="w-full text-xs border-separate" style={{ borderSpacing: 2 }}>
@@ -192,7 +193,7 @@ export default function ClientesAnalisis() {
 
       <section className="space-y-3">
         <div>
-          <h3 className="font-semibold">Segmentos de clientes al {fecha(d.corte)}</h3>
+          <h3 className="font-semibold" data-explain={GLOSARIO.segmentoCliente}>Segmentos de clientes al {fecha(d.corte)}</h3>
           <p className="text-sm text-tenue">Por qué tan reciente fue su última compra, qué tan seguido compran y cuánto. Elige uno para ver quiénes son.</p>
         </div>
         <div className="grid gap-2 grid-cols-2 sm:grid-cols-4 xl:grid-cols-7">

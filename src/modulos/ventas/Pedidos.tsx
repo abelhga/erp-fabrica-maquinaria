@@ -14,6 +14,7 @@ import { mensajeError } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { dinero, fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 import { Barra } from "./componentes/campos";
 import { DialogoCliente, ElegirCliente } from "./componentes/dialogos";
 import { CANAL, ESTADO_PEDIDO, dineroEn, todas, useAncho, type Canal, type VPedido } from "./comun";
@@ -57,14 +58,14 @@ export default function Pedidos() {
             <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-tenue">
               {fecha(p.fecha)}
               <Insignia tono={ESTADO_PEDIDO[p.estado].tono}>{ESTADO_PEDIDO[p.estado].texto}</Insignia>
-              {p.atrasado && <Insignia tono="peligro">atrasado</Insignia>}
+              {p.atrasado && <span data-explain={GLOSARIO.pedidoAtrasado}><Insignia tono="peligro">atrasado</Insignia></span>}
             </div>
           )}
         </div>
       ),
     },
     {
-      clave: "fecha", titulo: "Fecha / entrega", oculta: angosta, valor: (p) => p.fecha,
+      clave: "fecha", titulo: "Fecha / entrega", oculta: angosta, explica: GLOSARIO.fechaCompromisoPedido, valor: (p) => p.fecha,
       celda: (p) => (
         <div className="whitespace-nowrap">
           <p>{fecha(p.fecha)}</p>
@@ -84,22 +85,22 @@ export default function Pedidos() {
               {!p.historico && Number(p.saldo) > 0.5 && <span className="block text-[11px] font-normal text-aviso">saldo {dineroEn(Number(p.saldo), p.moneda)}</span>}
             </p>
           )}
-          {p.canal !== "directo" && <Insignia className="mt-0.5" tono={p.canal === "mercadolibre" ? "aviso" : p.canal === "sitio_web" ? "info" : "neutro"}>{CANAL[p.canal]}</Insignia>}
+          {p.canal !== "directo" && <span data-explain={GLOSARIO.canalVenta}><Insignia className="mt-0.5" tono={p.canal === "mercadolibre" ? "aviso" : p.canal === "sitio_web" ? "info" : "neutro"}>{CANAL[p.canal]}</Insignia></span>}
         </div>
       ),
     },
     { clave: "vendedor", titulo: "Vendedor", valor: (p) => p.vendedor, oculta: angosta || (!puede("ventas", 3) && !puede("finanzas", 1) && !puede("produccion", 2)) },
     {
-      clave: "estado", titulo: "Estado", oculta: angosta, valor: (p) => ESTADO_PEDIDO[p.estado].texto,
+      clave: "estado", titulo: "Estado", oculta: angosta, explica: GLOSARIO.estadoPedido, valor: (p) => ESTADO_PEDIDO[p.estado].texto,
       celda: (p) => (
         <div className="flex flex-wrap gap-1">
           <Insignia tono={ESTADO_PEDIDO[p.estado].tono} punto>{ESTADO_PEDIDO[p.estado].texto}</Insignia>
-          {p.atrasado && <Insignia tono="peligro">atrasado</Insignia>}
+          {p.atrasado && <span data-explain={GLOSARIO.pedidoAtrasado}><Insignia tono="peligro">atrasado</Insignia></span>}
         </div>
       ),
     },
     {
-      clave: "avance", titulo: "Producción", oculta: angosta, valor: (p) => p.avance ?? -1, sinBusqueda: true,
+      clave: "avance", titulo: "Producción", oculta: angosta, explica: GLOSARIO.avancePedido, valor: (p) => p.avance ?? -1, sinBusqueda: true,
       celda: (p) => p.ordenes ? (
         <div className="w-28">
           <Barra valor={p.avance} tono={p.avance === 100 ? "ok" : "marca"} />
@@ -109,7 +110,7 @@ export default function Pedidos() {
     },
     { clave: "total", titulo: "Total", oculta: angosta, alinear: "der", sinBusqueda: true, valor: (p) => Number(p.total), celda: (p) => <span className="font-medium whitespace-nowrap">{dineroEn(Number(p.total), p.moneda)}</span> },
     {
-      clave: "saldo", titulo: "Saldo", oculta: angosta, alinear: "der", sinBusqueda: true, valor: (p) => Number(p.saldo),
+      clave: "saldo", titulo: "Saldo", oculta: angosta, alinear: "der", sinBusqueda: true, explica: GLOSARIO.saldoPorCobrar, valor: (p) => Number(p.saldo),
       celda: (p) => p.historico ? <span className="text-tenue text-xs">histórico</span> : (
         <div className="whitespace-nowrap">
           {Number(p.saldo) > 0.5 ? <p className="font-medium text-aviso">{dineroEn(Number(p.saldo), p.moneda)}</p> : <p className="text-ok text-xs font-medium">pagado</p>}
@@ -141,7 +142,7 @@ export default function Pedidos() {
               {Object.entries(CANAL).map(([v, t]) => <option key={v} value={v}>{t}</option>)}
             </select>
             {hayHistoricos && (
-              <label className="inline-flex items-center gap-1.5 text-xs text-tenue">
+              <label className="inline-flex items-center gap-1.5 text-xs text-tenue" data-explain={GLOSARIO.pedidoHistorico}>
                 <input type="checkbox" checked={historicos} onChange={(e) => setHistoricos(e.target.checked)} /> Incluir históricos de los paneles
               </label>
             )}

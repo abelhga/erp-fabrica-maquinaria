@@ -18,6 +18,7 @@ import { CLAVE, TIPO_MAQUINA, comprimirImagen, horas, subirArchivo, useServicioE
 import { Dato, EnlaceBoton, InsigniaMaquina, InsigniaMto, usePermisosServicio } from "./componentes/piezas";
 import { LateralMantenimiento } from "./componentes/LateralMantenimiento";
 import { DialogoMaquina } from "./componentes/DialogoMaquina";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface CostoOrden { mantenimiento_id: string; material: number | null; servicio_externo: number | null; mano_obra: number | null; otro: number | null; total: number }
 
@@ -102,16 +103,16 @@ export default function FichaMaquina() {
           <div className="p-4 grid grid-cols-2 gap-3">
             <Dato etiqueta="Marca y modelo">{[m.marca, m.modelo].filter(Boolean).join(" ") || "—"}</Dato>
             <Dato etiqueta="Serie">{m.numero_serie ?? "—"}</Dato>
-            <Dato etiqueta="Horas de uso">{m.usa_horometro ? <>{horas(m.horas_uso)}<span className="block text-xs text-tenue">{m.horas_actualizado_en ? hace(m.horas_actualizado_en) : ""}</span></> : "Sin horómetro"}</Dato>
+            <Dato etiqueta="Horas de uso" explica={GLOSARIO.horometro}>{m.usa_horometro ? <>{horas(m.horas_uso)}<span className="block text-xs text-tenue">{m.horas_actualizado_en ? hace(m.horas_actualizado_en) : ""}</span></> : "Sin horómetro"}</Dato>
             <Dato etiqueta="Alta">{fecha(m.fecha_alta)}</Dato>
-            {m.critica && <Dato etiqueta="Importancia"><Insignia tono="aviso">Crítica: si se para, se para el área</Insignia></Dato>}
+            {m.critica && <Dato etiqueta="Importancia" explica={GLOSARIO.maquinaCritica}><Insignia tono="aviso">Crítica: si se para, se para el área</Insignia></Dato>}
             {m.notas && <Dato etiqueta="Notas" className="col-span-2">{m.notas}</Dato>}
           </div>
         </Tarjeta>
 
         <div className="lg:col-span-2 space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            <Kpi titulo="Fallas en 12 meses" valor={numero(m.fallas_12m)} icono={AlertTriangle} tono={m.fallas_12m >= 3 ? "peligro" : m.fallas_12m ? "aviso" : "ok"}
+            <Kpi titulo="Fallas en 12 meses" explica={GLOSARIO.fallasUltimoAnio} valor={numero(m.fallas_12m)} icono={AlertTriangle} tono={m.fallas_12m >= 3 ? "peligro" : m.fallas_12m ? "aviso" : "ok"}
                  detalle={m.ultima_falla ? `La última ${hace(m.ultima_falla)}` : "Sin fallas registradas"} />
             <Kpi titulo="Tiempo parada en 12 meses" valor={m.horas_paro_12m >= 48 ? `${Math.round(m.horas_paro_12m / 24)} días` : horas(m.horas_paro_12m)} icono={History} tono={m.horas_paro_12m > 0 ? "aviso" : "ok"}
                  detalle="Desde que se reporta parada hasta que se cierra" />
@@ -150,7 +151,7 @@ export default function FichaMaquina() {
 
           <div className="grid gap-4 md:grid-cols-2 items-start">
             <Tarjeta>
-              <EncabezadoTarjeta titulo="Plan preventivo" descripcion="La orden sale sola cuando vence (por fecha o por horas)."
+              <EncabezadoTarjeta titulo="Plan preventivo" explica={GLOSARIO.planPreventivo} descripcion="La orden sale sola cuando vence (por fecha o por horas)."
                 acciones={p.gerencia && <Boton variante="secundario" tamano="sm" onClick={() => { setPlan(null); setDialogo("plan"); }}><CalendarPlus className="h-3.5 w-3.5" />Agregar</Boton>} />
               <div className="px-5 pb-4 space-y-2">
                 {(planes.data ?? []).length === 0 ? <p className="text-sm text-tenue">Sin plan. Un preventivo a tiempo cuesta menos que la falla.</p>
@@ -174,7 +175,7 @@ export default function FichaMaquina() {
             </Tarjeta>
 
             <Tarjeta>
-              <EncabezadoTarjeta titulo="Resguardo" descripcion={m.prestable || m.tipo === "herramienta" ? "Quién se la llevó y cuándo la regresó." : "Equipo fijo: no se presta."} />
+              <EncabezadoTarjeta titulo="Resguardo" explica={GLOSARIO.resguardo} descripcion={m.prestable || m.tipo === "herramienta" ? "Quién se la llevó y cuándo la regresó." : "Equipo fijo: no se presta."} />
               <div className="px-5 pb-4 space-y-2 text-sm">
                 {abierto && (
                   <div className={`rounded-lg border p-3 ${abierto.vencido ? "border-peligro/30 bg-peligro-suave" : "border-borde"}`}>

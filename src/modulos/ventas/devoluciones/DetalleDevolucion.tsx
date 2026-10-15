@@ -17,6 +17,7 @@ import { EvidenciaSalida } from "@/modulos/almacen/envios/EvidenciaSalida";
 import {
   CLAVE, RESULTADO, faltan, useAlmacenes, useArchivos, useEnvios, useEventos, useLineasDevolucion, type Devolucion,
 } from "@/modulos/almacen/envios/datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const CANAL: Record<string, string> = { mercadolibre: "Mercado Libre", sitio_web: "Sitio web", amazon: "Amazon", directo: "Directo", mostrador: "Mostrador", distribuidor: "Distribuidor" };
 
@@ -75,7 +76,7 @@ export function DetalleDevolucion({ dev: d }: { dev: Devolucion }) {
           <span className="block text-xs text-tenue font-normal">{d.pedido_folio} · {CANAL[d.canal] ?? d.canal}</span></Dato>
         <Dato etiqueta="Cliente">{d.cliente ?? "—"}{d.vendedor && <span className="block text-xs text-tenue font-normal">{d.vendedor}</span>}</Dato>
         <Dato etiqueta="Lo lleva">{d.responsable ?? "—"}</Dato>
-        <Dato etiqueta="Código de autorización">
+        <Dato etiqueta="Código de autorización" explica={GLOSARIO.codigoAutorizacion}>
           {d.abierta && captura ? <CampoTexto valor={d.codigo_autorizacion} alGuardar={(v) => actualizar.mutate({ codigo_autorizacion: v })} placeholder="El de Mercado Libre" />
             : <span className="cifra">{d.codigo_autorizacion ?? "—"}</span>}
         </Dato>

@@ -84,10 +84,10 @@ export default function Componentes() {
     },
     { clave: "categoria", titulo: "Categoría", clase: "text-tenue", celda: (a) => <span className="block max-w-[110px] truncate" title={a.categoria ?? undefined}>{a.categoria ?? "—"}</span> },
     {
-      clave: "existencia", titulo: "Existencia", alinear: "der", sinBusqueda: true, valor: (a) => a.existencia ?? 0, clase: "whitespace-nowrap",
+      clave: "existencia", titulo: "Existencia", alinear: "der", sinBusqueda: true, valor: (a) => a.existencia ?? 0, clase: "whitespace-nowrap", explica: GLOSARIO.enPlanta,
       celda: (a) => <span className={cn(!a.existencia && "text-tenue")}>{numero(a.existencia ?? 0)} <span className="text-xs text-tenue">{a.unidad}</span></span>,
     },
-    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (a) => a.precio, celda: (a) => dinero(a.precio) },
+    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (a) => a.precio, celda: (a) => dinero(a.precio), explica: GLOSARIO.precioLista },
     {
       clave: "costo", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, clase: "whitespace-nowrap", explica: GLOSARIO.costoArticulo,
       valor: (a) => a.costo_total ?? null, celda: (a) => <CeldaCosto a={a} />,

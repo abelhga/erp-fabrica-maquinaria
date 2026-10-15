@@ -13,7 +13,6 @@ export const COSTEO = {
   mermaLinea: "Lo que se pierde al cortar o armar. La cantidad se divide entre (1 − merma): 10 m con 5 % de merma piden 10.53 m.",
   redondearArriba: "Si está marcado, la cantidad sube a piezas enteras (2.3 rodillos se vuelven 3). Sirve para lo que no se compra en fracciones.",
   horasEtapa: "Horas hombre de cada etapa del taller para fabricar este artículo, sin contar las de sus subensambles (cada uno trae las suyas). Producción planea el taller con estas mismas horas.",
-  solicitudCambioLista: "Aviso que manda producción desde una orden cuando la lista de materiales no cuadra con lo que se fabrica en piso («los rodillos son de 14\"»). Ingeniería corrige la lista y la marca aplicada, o la descarta si no procede.",
   medidaEspecial: "Equipo hecho a una medida fuera de la estándar. Se marca en su ficha y su precio de lista ya lo toma en cuenta.",
   noSeVendeSuelto: "Artículo que solo se usa dentro de un equipo: no se cotiza por separado.",
   duplicarConParametros: "Hace una copia del equipo con su lista, horas y parámetros, para otra medida. Los subensambles no se copian: la copia usa los mismos.",

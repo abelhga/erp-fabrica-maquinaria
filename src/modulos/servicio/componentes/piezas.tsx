@@ -37,9 +37,9 @@ export const estiloTipo = (tipo: TipoServicio) => ({
   borderLeft: `3px solid ${TIPOS[tipo].color}`,
 });
 
-export function Dato({ etiqueta, children, className }: { etiqueta: string; children: ReactNode; className?: string }) {
+export function Dato({ etiqueta, children, className, explica }: { etiqueta: string; children: ReactNode; className?: string; explica?: string }) {
   return (
-    <div className={cn("min-w-0", className)}>
+    <div className={cn("min-w-0", className)} data-explain={explica} data-explain-title={explica ? etiqueta : undefined}>
       <p className="etiqueta">{etiqueta}</p>
       <div className="mt-0.5 text-sm break-words">{children}</div>
     </div>

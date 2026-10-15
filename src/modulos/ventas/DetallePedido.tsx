@@ -19,6 +19,7 @@ import { Barra, CampoNumero, Dato } from "./componentes/campos";
 import { DialogoMotivo } from "./componentes/dialogos";
 import { CANAL, ESTADO_PEDIDO, LINEA, dineroEn, hoyMx, useVendedores, type EstadoPedido, type Linea, type VPedido } from "./comun";
 import { TarjetaEnvio } from "@/modulos/almacen/envios/TarjetaEnvio";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Pedido {
   id: string; folio: string; cotizacion_id: string | null; cliente_id: string; vendedor_id: string | null; canal: keyof typeof CANAL;
@@ -104,7 +105,7 @@ export default function DetallePedido() {
   return (
     <Pagina ancho="max-w-[1400px]"
       titulo={<span className="inline-flex flex-wrap items-center gap-2"><span className="cifra">{p.folio}</span><Insignia tono={ESTADO_PEDIDO[p.estado].tono} punto>{ESTADO_PEDIDO[p.estado].texto}</Insignia>
-        {r?.atrasado && <Insignia tono="peligro">atrasado</Insignia>}{p.historico && <Insignia>histórico (paneles)</Insignia>}</span>}
+        {r?.atrasado && <span data-explain={GLOSARIO.pedidoAtrasado}><Insignia tono="peligro">atrasado</Insignia></span>}{p.historico && <span data-explain={GLOSARIO.pedidoHistorico}><Insignia>histórico (paneles)</Insignia></span>}</span>}
       descripcion={<span>
         <Link to={`/ventas/clientes/${p.cliente_id}`} className="text-marca-texto hover:underline">{cliente.data?.nombre ?? "…"}</Link>
         {" · "}{CANAL[p.canal]}{p.id_externo ? ` #${p.id_externo}` : ""}
@@ -137,7 +138,7 @@ export default function DetallePedido() {
       {/* Línea de tiempo */}
       {p.estado !== "cancelado" && (
         <Tarjeta className="px-5 py-4">
-          <ol className="grid grid-cols-4 gap-2">
+          <ol className="grid grid-cols-4 gap-2" data-explain={GLOSARIO.estadoPedido} data-explain-title="Estado del pedido">
             {pasos.map((s, i) => (
               <li key={s.estado} className="relative">
                 {i > 0 && <span className={cn("absolute top-3 right-1/2 w-full h-0.5 -z-0", s.hecho ? "bg-ok" : "bg-borde")} />}
@@ -168,7 +169,7 @@ export default function DetallePedido() {
                     <tr key={l.id}>
                       <td className="min-w-[220px]">
                         <p className="font-medium">{l.titulo}</p>
-                        <Insignia className="mt-1" tono={l.linea === "maquinaria" ? "marca" : l.linea === "refacciones" ? "info" : "neutro"}>{LINEA[l.linea]}</Insignia>
+                        <span data-explain={GLOSARIO.lineaVenta}><Insignia className="mt-1" tono={l.linea === "maquinaria" ? "marca" : l.linea === "refacciones" ? "info" : "neutro"}>{LINEA[l.linea]}</Insignia></span>
                       </td>
                       <td className="text-right cifra w-24">
                         {editablePartidas ? <NumeroAlSalir valor={Number(l.cantidad)} decimales={3} min={0.001}
@@ -209,7 +210,7 @@ export default function DetallePedido() {
 
           {(puede("produccion") || puede("inventario")) && (
             <Tarjeta>
-              <EncabezadoTarjeta titulo="Producción" descripcion={avance != null ? `Avance del pedido: ${avance}%` : "Órdenes de taller de este pedido"}
+              <EncabezadoTarjeta titulo="Producción" explica={GLOSARIO.avancePedido} descripcion={avance != null ? `Avance del pedido: ${avance}%` : "Órdenes de taller de este pedido"}
                 acciones={avance != null && <div className="w-32"><Barra valor={avance} tono={avance === 100 ? "ok" : "marca"} /></div>} />
               {(ordenes.data?.length ?? 0) === 0 ? (
                 <p className="px-5 pb-5 text-sm text-tenue">
@@ -248,24 +249,24 @@ export default function DetallePedido() {
             <EncabezadoTarjeta titulo="Datos del pedido" />
             <div className="px-5 pb-5 grid grid-cols-2 gap-3">
               <Dato etiqueta="Fecha">{fecha(p.fecha)}</Dato>
-              <Dato etiqueta="Compromiso">
+              <Dato etiqueta="Compromiso" explica={GLOSARIO.fechaCompromisoPedido}>
                 {abierto && puedeCambiar && !p.historico ? (
                   <input type="date" className="campo h-8" defaultValue={p.fecha_compromiso ?? ""} min={hoyMx()}
                     onBlur={(e) => { if (e.target.value !== (p.fecha_compromiso ?? "")) actualizar.mutate({ fecha_compromiso: e.target.value || null }); }} />
                 ) : fecha(p.fecha_compromiso)}
               </Dato>
-              <Dato etiqueta="Canal">{CANAL[p.canal]}</Dato>
-              <Dato etiqueta={p.canal === "mercadolibre" ? "Número de venta ML" : "Número externo"}>
+              <Dato etiqueta="Canal" explica={GLOSARIO.canalVenta}>{CANAL[p.canal]}</Dato>
+              <Dato etiqueta={p.canal === "mercadolibre" ? "Número de venta ML" : "Número externo"} explica={GLOSARIO.numeroVentaExterno}>
                 {puedeCambiar && !p.historico ? <CampoExterno valor={p.id_externo} alGuardar={(v) => actualizar.mutate({ id_externo: v })} /> : p.id_externo ?? "—"}
               </Dato>
               <Dato etiqueta="Condiciones de pago" className="col-span-2">{p.condiciones_pago ?? "—"}</Dato>
               {p.notas && <Dato etiqueta="Notas" className="col-span-2">{p.notas}</Dato>}
-              {p.moneda !== "MXN" && <Dato etiqueta="Tipo de cambio" className="col-span-2">${numero(Number(p.tipo_cambio))} MXN por {p.moneda}</Dato>}
+              {p.moneda !== "MXN" && <Dato etiqueta="Tipo de cambio" className="col-span-2" explica={GLOSARIO.tipoCambio}>${numero(Number(p.tipo_cambio))} MXN por {p.moneda}</Dato>}
             </div>
           </Tarjeta>
 
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Crédito de la venta" descripcion={(credito.data?.length ?? 0) > 1 ? "Compartido entre vendedores" : "Para comisiones"}
+            <EncabezadoTarjeta titulo="Crédito de la venta" explica={GLOSARIO.creditoCompartido} descripcion={(credito.data?.length ?? 0) > 1 ? "Compartido entre vendedores" : "Para comisiones"}
               acciones={esGerente && !p.historico && <Boton variante="secundario" tamano="sm" onClick={() => setDlg("credito")}><Users className="h-3.5 w-3.5" />Compartir</Boton>} />
             <div className="px-5 pb-4 space-y-1.5 text-sm">
               {(credito.data?.length ?? 0) === 0 ? <p className="flex justify-between"><span>{vendedor.data?.nombre ?? "Sin vendedor"}</span><span className="cifra">100%</span></p>
@@ -283,7 +284,7 @@ export default function DetallePedido() {
           </Tarjeta>
 
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Cobros" descripcion={!p.historico && r ? `${dineroEn(Number(r.cobrado), p.moneda)} de ${dineroEn(Number(p.total), p.moneda)}` : undefined}
+            <EncabezadoTarjeta titulo="Cobros" explica={GLOSARIO.saldoPorCobrar} descripcion={!p.historico && r ? `${dineroEn(Number(r.cobrado), p.moneda)} de ${dineroEn(Number(p.total), p.moneda)}` : undefined}
               acciones={puede("finanzas", 2) && !p.historico && <Boton variante="secundario" tamano="sm" onClick={() => setDlg("cobro")}><Wallet className="h-3.5 w-3.5" />Registrar</Boton>} />
             <div className="px-5 pb-4 text-sm space-y-2">
               {!p.historico && Number(p.total) > 0 && <Barra valor={(Number(r?.cobrado ?? 0) / Number(p.total)) * 100} tono="ok" />}

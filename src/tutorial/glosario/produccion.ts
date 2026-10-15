@@ -9,7 +9,7 @@ export const PRODUCCION = {
   fechaCompromiso: "El día en que se prometió terminar. Verde si va con tiempo, ámbar si quedan 3 días o menos, rojo si ya pasó.",
   ordenAtrasada: "Ya pasó su fecha compromiso y no está terminada.",
   avanceOrden: "Cuánto lleva: las horas de las etapas terminadas contra las horas estimadas de todas sus etapas.",
-  faltanteMaterial: "Partidas de la lista que todavía no están ni surtidas ni apartadas. Después de apartar, lo que queda es lo que no había libre en planta. En ámbar si todo ya se pidió a compras; en rojo si alguna nadie la ha pedido.",
+  faltanteMaterial: "Lo que la orden necesita y todavía no está ni surtido ni apartado. Después de apartar, lo que queda es lo que no había libre en planta. En las tarjetas: ámbar si todo ya se pidió a compras, rojo si algo nadie lo ha pedido.",
   faltanteSinPedir: "Material que falta para la orden y todavía no se pidió a compras. Es lo primero que hay que resolver.",
   apartadoOrden: "Material reservado para esta orden: sigue en el almacén, pero nadie más lo puede tomar.",
   surtidoOrden: "Lo que almacén ya le entregó al taller para esta orden (salió del inventario).",

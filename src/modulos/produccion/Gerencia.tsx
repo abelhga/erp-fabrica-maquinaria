@@ -20,6 +20,7 @@ import { BotonLink } from "./componentes/BotonLink";
 import { CargaTaller } from "./componentes/CargaTaller";
 import { FilaEvento } from "./componentes/piezas";
 import { horas } from "./componentes/util";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const COLUMNAS: { estado: EstadoOP; titulo: string; ayuda: string }[] = [
   { estado: "planeada", titulo: "Planeada", ayuda: "Validando material" },
@@ -29,6 +30,10 @@ const COLUMNAS: { estado: EstadoOP; titulo: string; ayuda: string }[] = [
 ];
 
 type Vista = "todas" | "atrasadas" | "faltantes" | "en_proceso";
+
+const EXPLICA_COLUMNA: Partial<Record<EstadoOP, string>> = {
+  planeada: GLOSARIO.opPlaneada, liberada: GLOSARIO.opLiberada, en_proceso: GLOSARIO.opEnProceso, terminada: GLOSARIO.opTerminada,
+};
 
 /** Orden dentro de cada columna: lo urgente y lo atrasado arriba. */
 const prioridadDe = (o: OrdenTablero) => [o.prioridad, o.atrasada ? 0 : 1, o.dias_restantes ?? 9999] as const;
@@ -95,17 +100,17 @@ export default function Gerencia() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             <Kpi titulo="Órdenes abiertas" valor={numero(abiertas.length)} icono={Factory} tono="marca"
                  detalle={`${abiertas.filter((o) => o.estado === "planeada").length} planeadas · ${abiertas.filter((o) => o.estado === "liberada").length} liberadas`}
-                 alClic={() => setVista("todas")} />
+                 alClic={() => setVista("todas")} explica={GLOSARIO.ordenProduccion} />
             <Kpi titulo="En proceso" valor={numero(abiertas.filter((o) => o.estado === "en_proceso").length)} icono={Wrench} tono="info"
-                 detalle={`${abiertas.filter((o) => o.pausada).length} con una etapa pausada`} alClic={() => setVista("en_proceso")} />
+                 detalle={`${abiertas.filter((o) => o.pausada).length} con una etapa pausada`} alClic={() => setVista("en_proceso")} explica={GLOSARIO.opEnProceso} />
             <Kpi titulo="Atrasadas" valor={numero(abiertas.filter((o) => o.atrasada).length)} icono={AlarmClock}
                  tono={abiertas.some((o) => o.atrasada) ? "peligro" : "ok"}
                  detalle={`${abiertas.filter((o) => !o.atrasada && o.dias_restantes != null && o.dias_restantes <= 3).length} vencen en 3 días o menos`}
-                 alClic={() => setVista("atrasadas")} />
+                 alClic={() => setVista("atrasadas")} explica={GLOSARIO.ordenAtrasada} />
             <Kpi titulo="Con faltantes de material" valor={numero(abiertas.filter((o) => o.materiales_faltantes > 0).length)} icono={PackageX}
                  tono={abiertas.some((o) => o.faltantes_sin_pedir > 0) ? "peligro" : "aviso"}
                  detalle={`${abiertas.filter((o) => o.faltantes_sin_pedir > 0).length} con faltantes sin pedir a compras`}
-                 alClic={() => setVista("faltantes")} />
+                 alClic={() => setVista("faltantes")} explica={GLOSARIO.faltanteMaterial} />
             <Kpi titulo="Terminadas este mes" valor={numero(terminadasMes.data)} icono={CheckCircle2} tono="ok"
                  detalle={`${ordenes.filter((o) => o.estado === "terminada").length} esperan entrega`} />
           </div>
@@ -150,7 +155,7 @@ export default function Gerencia() {
                   <section key={c.estado} className="rounded-xl bg-fondo border border-borde/70 p-2" aria-label={c.titulo}>
                     <header className="flex items-baseline justify-between gap-2 px-1.5 pt-1 pb-2">
                       <div>
-                        <h2 className="font-semibold text-sm">{c.titulo} <span className="text-tenue font-normal cifra">{lista.length}</span></h2>
+                        <h2 className="font-semibold text-sm" data-explain={EXPLICA_COLUMNA[c.estado]} data-explain-title={c.titulo}>{c.titulo} <span className="text-tenue font-normal cifra">{lista.length}</span></h2>
                         <p className="text-xs text-tenue">{c.ayuda}</p>
                       </div>
                       {c.estado !== "terminada" && lista.length > 0 && (

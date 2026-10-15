@@ -115,7 +115,7 @@ export default function OrdenesCompra() {
             <Kpi titulo="Por recibir" explica={GLOSARIO.estadoOrdenCompra} valor={numero(porRecibir.length)} icono={Truck} tono="info"
               detalle={verDinero ? `${dineroCompacto(porRecibir.reduce((s, o) => s + enPesos(o) * (1 - Number(o.avance_recibido)), 0))} en camino` : "enviadas al proveedor"}
               alClic={() => cambiar("filtro", "por_recibir")} />
-            <Kpi titulo="Atrasadas" explica={GLOSARIO.ordenAtrasada} valor={numero(todas.filter((o) => o.atrasada).length)} icono={AlertTriangle}
+            <Kpi titulo="Atrasadas" explica={GLOSARIO.ocAtrasada} valor={numero(todas.filter((o) => o.atrasada).length)} icono={AlertTriangle}
               tono={todas.some((o) => o.atrasada) ? "peligro" : "ok"} detalle="pasó su fecha de entrega" alClic={() => cambiar("filtro", "atrasadas")} />
             <Kpi titulo="En borrador" valor={numero(todas.filter((o) => o.estado === "borrador").length)} icono={FilePen} tono="neutro"
               detalle="falta enviarlas al proveedor" alClic={() => cambiar("filtro", "borrador")} />

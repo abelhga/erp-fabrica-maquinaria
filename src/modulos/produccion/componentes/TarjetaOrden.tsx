@@ -10,6 +10,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { CLAVE, type OrdenTablero } from "./datos";
 import { BarraAvance, ChipEtapa, InsigniaCompromiso } from "./piezas";
 import { abreviarEquipo, horas } from "./util";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
  * Tarjeta del kanban del gerente: lo que necesita para decidir sin abrir la
@@ -32,7 +33,7 @@ export function TarjetaOrden({ o, puedeGestionar }: { o: OrdenTablero; puedeGest
           <Link to={`/produccion/ordenes/${o.id}`} className="font-semibold hover:text-marca-texto hover:underline cifra">{o.folio}</Link>
           {o.numero_serie && <p className="text-xs text-tenue truncate cifra">{o.numero_serie}</p>}
         </div>
-        {o.prioridad === 1 && <Insignia tono="peligro"><Flame className="h-3 w-3" />Urgente</Insignia>}
+        {o.prioridad === 1 && <span data-explain={GLOSARIO.prioridadOrden}><Insignia tono="peligro"><Flame className="h-3 w-3" />Urgente</Insignia></span>}
         {o.prioridad === 3 && <Insignia>Baja</Insignia>}
       </div>
 
@@ -52,7 +53,7 @@ export function TarjetaOrden({ o, puedeGestionar }: { o: OrdenTablero; puedeGest
         <ChipEtapa nombre={`Sigue: ${o.siguiente_etapa}`} color={o.siguiente_etapa_color} className="text-tenue" />
       ) : null}
 
-      <div className="space-y-1">
+      <div className="space-y-1" data-explain={GLOSARIO.avanceOrden} data-explain-title="Avance">
         <div className="flex justify-between text-xs text-tenue cifra">
           <span>{o.avance}%</span>
           <span>{horas(o.horas_terminadas)} de {horas(o.horas_totales)}</span>
@@ -63,12 +64,14 @@ export function TarjetaOrden({ o, puedeGestionar }: { o: OrdenTablero; puedeGest
       <div className="flex flex-wrap gap-1.5">
         <InsigniaCompromiso dias={o.dias_restantes} fechaCompromiso={o.fecha_compromiso} cerrada={cerrada} />
         {o.materiales_faltantes > 0 && (
-          <Insignia tono={o.faltantes_sin_pedir > 0 ? "peligro" : "aviso"}>
-            <PackageX className="h-3 w-3" />{o.materiales_faltantes} faltante{o.materiales_faltantes === 1 ? "" : "s"}
-          </Insignia>
+          <span data-explain={GLOSARIO.faltanteMaterial}>
+            <Insignia tono={o.faltantes_sin_pedir > 0 ? "peligro" : "aviso"}>
+              <PackageX className="h-3 w-3" />{o.materiales_faltantes} faltante{o.materiales_faltantes === 1 ? "" : "s"}
+            </Insignia>
+          </span>
         )}
-        {o.pausada && <Insignia tono="aviso"><PauseCircle className="h-3 w-3" />Pausada</Insignia>}
-        {o.estado === "planeada" && !o.revisada_ingenieria && <Insignia><AlertTriangle className="h-3 w-3" />Sin revisión de ingeniería</Insignia>}
+        {o.pausada && <span data-explain={GLOSARIO.etapaPausada}><Insignia tono="aviso"><PauseCircle className="h-3 w-3" />Pausada</Insignia></span>}
+        {o.estado === "planeada" && !o.revisada_ingenieria && <span data-explain={GLOSARIO.revisionIngenieria}><Insignia><AlertTriangle className="h-3 w-3" />Sin revisión de ingeniería</Insignia></span>}
       </div>
 
       {puedeGestionar && (

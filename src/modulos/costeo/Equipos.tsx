@@ -69,7 +69,7 @@ function TablaFabricados({ filas, cargando, error, tipo }: {
       celda: (a) => a.usado_en ? <span>{a.usado_en} {a.usado_en === 1 ? "lista" : "listas"}</span> : <span className="text-tenue">en ninguna</span> },
     { clave: "horas", titulo: "Horas", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (a) => a.horas ?? null, celda: (a) => numero(a.horas), explica: GLOSARIO.horasEtapa },
     { clave: "costo_total", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (a) => a.costo_total ?? null, celda: (a) => dinero(a.costo_total), explica: GLOSARIO.costoArticulo },
-    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (a) => a.precio,
+    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (a) => a.precio, explica: GLOSARIO.precioLista,
       celda: (a) => a.precio == null ? <span className="text-tenue">sin precio</span> : <span className="font-medium">{dinero(a.precio)}</span> },
     { clave: "sin_costo", titulo: "Sin costo", oculta: !costos, sinBusqueda: true, valor: (a) => a.sin_costo ?? 0, celda: (a) => <SinCosto a={a} />, explica: GLOSARIO.piezasSinCosto },
     { clave: "costo_mas_viejo", titulo: "Más viejo", oculta: !costos, sinBusqueda: true, valor: (a) => a.costo_mas_viejo ?? null, explica: GLOSARIO.costoMasViejo,
@@ -239,7 +239,7 @@ export default function Equipos() {
         <ListaPestanas opciones={[
           { valor: "equipos", texto: "Equipos", cuenta: equipos?.length },
           { valor: "subensambles", texto: "Subensambles", cuenta: subensambles?.length, explica: GLOSARIO.subensamble },
-          ...(verSolicitudes ? [{ valor: "solicitudes", texto: "Solicitudes de cambio", cuenta: pendientes || undefined, explica: GLOSARIO.solicitudCambioLista }] : []),
+          ...(verSolicitudes ? [{ valor: "solicitudes", texto: "Solicitudes de cambio", cuenta: pendientes || undefined, explica: GLOSARIO.solicitudCambio }] : []),
         ]} />
         <ContenidoPestana value="equipos" className="pt-4">
           <TablaFabricados filas={equipos} cargando={cat.isLoading} error={cat.error} tipo="equipo" />

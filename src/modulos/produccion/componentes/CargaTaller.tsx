@@ -5,6 +5,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { cn } from "@/lib/utilidades";
 import { useCarga } from "./datos";
 import { horas } from "./util";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const sem = (n: number) => new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 }).format(n);
 
@@ -27,7 +28,7 @@ export function CargaTaller({ className }: { className?: string }) {
 
   return (
     <Tarjeta className={className}>
-      <EncabezadoTarjeta titulo="Carga del taller" descripcion="Semanas de trabajo pendientes por etapa, contra su capacidad semanal" />
+      <EncabezadoTarjeta titulo="Carga del taller" descripcion="Semanas de trabajo pendientes por etapa, contra su capacidad semanal" explica={GLOSARIO.cargaTaller} />
       {carga.error ? <ErrorCarga error={carga.error} /> : carga.isLoading ? <Cargando filas={4} /> : conCarga.length === 0 ? (
         <Vacio icono={Gauge} titulo="El taller no tiene horas pendientes" texto="Cuando liberes órdenes, aquí verás cuántas semanas de trabajo tiene cada etapa." />
       ) : (

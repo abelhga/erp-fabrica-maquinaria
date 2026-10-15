@@ -15,6 +15,7 @@ import { fecha, fechaYHora, hace, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { CLAVE, isoLocal, useMaquinas, usePersonal, useServicioEnVivo, useServicios, type Resguardo } from "./datos";
 import { usePermisosServicio } from "./componentes/piezas";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type Vista = "prestadas" | "vencidas" | "historial";
 
@@ -57,7 +58,7 @@ export default function Resguardos() {
     ) },
     { clave: "quien", titulo: "La tiene", celda: (r) => <span>{r.quien}{r.puesto && <span className="block text-xs text-tenue">{r.puesto}</span>}</span> },
     { clave: "entregado_en", titulo: "Desde", celda: (r) => <span className="whitespace-nowrap">{fecha(r.entregado_en)}<span className="block text-xs text-tenue">entregó {r.entregado_por_nombre ?? "—"}</span></span> },
-    { clave: "dias", titulo: "Días", alinear: "der", celda: (r) => (
+    { clave: "dias", titulo: "Días", alinear: "der", explica: GLOSARIO.herramientaSinRegresar, celda: (r) => (
       <span className={cn("cifra font-semibold", tarde(r) && "text-peligro")}>{numero(r.dias)}</span>
     ) },
     { clave: "servicio_folio", titulo: "Para", celda: (r) => r.servicio_folio ?? <span className="text-tenue">{r.notas ?? "—"}</span> },
@@ -78,11 +79,11 @@ export default function Resguardos() {
       acciones={p.personal && <Boton onClick={() => setPrestar("")}><Plus className="h-4 w-4" />Prestar herramienta</Boton>}
     >
       <div className="grid gap-3 sm:grid-cols-3">
-        <Kpi titulo="Prestadas ahora" valor={numero(abiertos.length)} icono={Hand} tono="marca" alClic={() => setVista("prestadas")}
+        <Kpi titulo="Prestadas ahora" valor={numero(abiertos.length)} icono={Hand} tono="marca" alClic={() => setVista("prestadas")} explica={GLOSARIO.resguardo}
              detalle={abiertos.filter((r) => r.servicio_id).length ? `${abiertos.filter((r) => r.servicio_id).length} en servicios de campo` : "Ninguna en servicio"} />
-        <Kpi titulo={`Más de ${n} días sin regresar`} valor={numero(vencidos.length)} icono={AlarmClock} tono={vencidos.length ? "peligro" : "ok"}
+        <Kpi titulo={`Más de ${n} días sin regresar`} valor={numero(vencidos.length)} icono={AlarmClock} tono={vencidos.length ? "peligro" : "ok"} explica={GLOSARIO.herramientaSinRegresar}
              alClic={() => setVista("vencidas")} detalle={vencidos[0] ? `${vencidos[0].herramienta}: ${vencidos[0].quien}, ${vencidos[0].dias} días` : "Todo a tiempo"} />
-        <Kpi titulo="Regresaron dañadas (historial)" valor={numero((lista.data ?? []).filter((r) => r.estado_devolucion && r.estado_devolucion !== "bien").length)}
+        <Kpi titulo="Regresaron dañadas (historial)" explica={GLOSARIO.devolucionDanada} valor={numero((lista.data ?? []).filter((r) => r.estado_devolucion && r.estado_devolucion !== "bien").length)}
              icono={PackageCheck} tono="neutro" alClic={() => setVista("historial")} detalle="Se reporta la falla sola al recibirla" />
       </div>
       <TablaDatos filas={filas} columnas={columnas} cargando={lista.isLoading} error={lista.error} claveFila={(r) => r.id}

@@ -2,6 +2,7 @@ import { AlertTriangle, Wallet } from "lucide-react";
 import { dinero, fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { useSaldos } from "./datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
  * Saldo estimado de cada paquetería de prepago: recargas menos lo que costaron las
@@ -13,7 +14,7 @@ export function Saldos({ alRecargar }: { alRecargar?: (paqueteriaId: number) => 
   const conSaldo = (saldos.data ?? []).filter((s) => s.usa_saldo && (Number(s.recargas) !== 0 || Number(s.consumo) !== 0));
   if (conSaldo.length === 0) return null;
   return (
-    <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
+    <div className="grid gap-2 grid-cols-2 md:grid-cols-4" data-explain={GLOSARIO.saldoPaqueteria} data-explain-title="Saldo de paquetería">
       {conSaldo.map((s) => (
         <button key={s.paqueteria_id} type="button" onClick={alRecargar ? () => alRecargar(s.paqueteria_id) : undefined} disabled={!alRecargar}
           title={`Recargas ${dinero(s.recargas)} − guías ${dinero(s.consumo)}. Mínimo ${dinero(s.saldo_minimo)}.`}

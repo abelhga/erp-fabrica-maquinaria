@@ -9,6 +9,7 @@ import { dineroEn, type Moneda, type Partida } from "../comun";
 import { ChipsFichas, type FichaDoc } from "./Fichas";
 import { EstadoPartida } from "../solicitudes/EstadoPartida";
 import type { Solicitud } from "@/modulos/compras/solicitudes/datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 /** Importe de la partida mientras se escribe (la columna generada de la base hace lo mismo al guardar). */
@@ -93,10 +94,10 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
   const sinPrecio = (l: Partida) => (l.articulo_id ? !Number(l.precio_lista) : !Number(l.precio_unitario) && l.unidad !== "servicio");
   const insignias = (l: Partida) => (
     <>
-      {l.bajo_minimo && !sucias.has(l.id) && <Insignia tono="peligro" punto>Bajo el mínimo</Insignia>}
-      {l.opcional && <Insignia tono="info">Opcional · no suma</Insignia>}
-      {!l.articulo_id && <Insignia>Partida libre</Insignia>}
-      {l.articulo_id && !Number(l.precio_lista) && !pedida(l) && <Insignia tono="aviso">Sin precio de lista</Insignia>}
+      {l.bajo_minimo && !sucias.has(l.id) && <span data-explain={GLOSARIO.bajoMinimo} data-explain-title="Bajo el mínimo"><Insignia tono="peligro" punto>Bajo el mínimo</Insignia></span>}
+      {l.opcional && <span data-explain={GLOSARIO.partidaOpcional}><Insignia tono="info">Opcional · no suma</Insignia></span>}
+      {!l.articulo_id && <span data-explain={GLOSARIO.partidaLibre}><Insignia>Partida libre</Insignia></span>}
+      {l.articulo_id && !Number(l.precio_lista) && !pedida(l) && <span data-explain={GLOSARIO.solicitudPrecio} data-explain-title="Sin precio de lista"><Insignia tono="aviso">Sin precio de lista</Insignia></span>}
       {editable && acciones.pedirPrecio && sinPrecio(l) && !pedida(l) && (
         <button type="button" onClick={(e) => { e.stopPropagation(); acciones.pedirPrecio!(l); }}
           className="inline-flex items-center gap-1 rounded-full border border-marca/30 px-2 py-0.5 text-xs font-medium text-marca-texto hover:bg-marca-suave">

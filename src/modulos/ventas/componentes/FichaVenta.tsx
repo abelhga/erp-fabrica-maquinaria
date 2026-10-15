@@ -10,6 +10,7 @@ import { cn } from "@/lib/utilidades";
 import { Imagen } from "./Imagen";
 import { FichasTecnicas } from "./Fichas";
 import { dineroEn, mensualidad, usePlanesMeses, type Moneda } from "../comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface Ficha {
   clave: string; nombre: string; tipo: string; unidad: string; imagen_url: string | null; es_importado: boolean;
@@ -62,7 +63,7 @@ export function FichaVenta({ articuloId, moneda = "MXN", tipoCambio = 1, conIva 
 
       <div className="rounded-lg border border-borde">
         <div className="flex items-start justify-between gap-3 px-3 py-2">
-          <span className="text-sm text-tenue">Precio de lista</span>
+          <span className="text-sm text-tenue" data-explain={GLOSARIO.precioLista}>Precio de lista</span>
           <span className="text-right">
             <span className="block font-semibold cifra">{dinero(f.precio)}</span>
             <span className="block text-xs text-tenue cifra">{dinero(f.precio == null ? null : f.precio * (1 + tasaIva))} con IVA</span>
@@ -70,7 +71,7 @@ export function FichaVenta({ articuloId, moneda = "MXN", tipoCambio = 1, conIva 
         </div>
         <div className={cn("flex items-start justify-between gap-3 px-3 py-2 border-t border-borde rounded-b-lg", bajo ? "bg-peligro-suave" : "bg-aviso-suave/50")}>
           <span className="text-sm">
-            <span className="flex items-center gap-1 font-medium"><ShieldCheck className="h-3.5 w-3.5" />Precio mínimo</span>
+            <span className="flex items-center gap-1 font-medium" data-explain={GLOSARIO.precioMinimo}><ShieldCheck className="h-3.5 w-3.5" />Precio mínimo</span>
             <span className="block text-xs text-tenue">−{porcentaje(f.descuento_maximo, 2).replace(".00%", "%")} máx.</span>
           </span>
           <span className="text-right">
@@ -94,14 +95,14 @@ export function FichaVenta({ articuloId, moneda = "MXN", tipoCambio = 1, conIva 
 
       <dl className="grid grid-cols-2 gap-x-3 gap-y-2.5 text-sm">
         <div>
-          <dt className="text-xs text-tenue flex items-center gap-1"><PackageCheck className="h-3.5 w-3.5" /> En planta</dt>
+          <dt className="text-xs text-tenue flex items-center gap-1" data-explain={GLOSARIO.enPlanta}><PackageCheck className="h-3.5 w-3.5" /> En planta</dt>
           <dd className={cn("font-medium cifra", (f.existencia ?? 0) > 0 ? "text-ok" : fabricado ? "text-texto" : "text-peligro")}>
             {!(Number(f.existencia ?? 0) > 0) && fabricado ? "Sobre pedido" : <>{numero(f.existencia ?? 0)} {f.unidad}</>}
-            {Number(f.apartado ?? 0) > 0 && <span className="block text-xs font-normal text-tenue">{numero(disponible)} libres ({numero(f.apartado)} apartadas)</span>}
+            {Number(f.apartado ?? 0) > 0 && <span className="block text-xs font-normal text-tenue" data-explain={GLOSARIO.disponible}>{numero(disponible)} libres ({numero(f.apartado)} apartadas)</span>}
           </dd>
         </div>
         <div>
-          <dt className="text-xs text-tenue flex items-center gap-1"><Store className="h-3.5 w-3.5" /> En Full ML</dt>
+          <dt className="text-xs text-tenue flex items-center gap-1" data-explain={GLOSARIO.mlFull}><Store className="h-3.5 w-3.5" /> En Full ML</dt>
           <dd className="font-medium cifra">{numero(f.en_mercadolibre ?? 0)}</dd>
         </div>
         <div>
@@ -109,7 +110,7 @@ export function FichaVenta({ articuloId, moneda = "MXN", tipoCambio = 1, conIva 
           <dd className="font-medium">{f.tiempo_entrega_dias != null ? `${f.tiempo_entrega_dias} días hábiles` : (f.tipo === "equipo" ? "Según taller" : "—")}</dd>
         </div>
         <div>
-          <dt className="text-xs text-tenue flex items-center gap-1"><Truck className="h-3.5 w-3.5" /> Envío gratis</dt>
+          <dt className="text-xs text-tenue flex items-center gap-1" data-explain={GLOSARIO.envioGratis}><Truck className="h-3.5 w-3.5" /> Envío gratis</dt>
           <dd className="font-medium">
             {f.envio_gratis ? <Insignia tono="ok">Sí aplica</Insignia>
               : f.envio_gratis_desde ? <span className="text-sm">desde {numero(f.envio_gratis_desde)} pzas</span>
@@ -134,7 +135,7 @@ export function FichaVenta({ articuloId, moneda = "MXN", tipoCambio = 1, conIva 
 
       {!compacta && f.precio != null && (planes.data?.length ?? 0) > 0 && (
         <div className="text-sm">
-          <p className="text-xs font-medium text-tenue uppercase tracking-wide mb-1">Mensualidades (1 pieza, con IVA)</p>
+          <p className="text-xs font-medium text-tenue uppercase tracking-wide mb-1" data-explain={GLOSARIO.mesesConTarjeta}>Mensualidades (1 pieza, con IVA)</p>
           <div className="grid grid-cols-3 gap-1.5">
             {planes.data!.map((p) => (
               <div key={p.meses} className="rounded-md bg-fondo px-2 py-1">

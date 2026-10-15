@@ -80,11 +80,11 @@ function Encabezado({ a }: { a: ArticuloCatalogo }) {
               detalle={x ? <>política {x.politica.nombre}: {pct(x.utilidad)}{x.politica.compensar_isr ? " después de ISR" : ""}</> : undefined} />
             <Cifra etiqueta="Precio ÷ costo" explica={GLOSARIO.precioEntreCosto} valor={x?.factor ? `${(Math.round(x.factor * 100) / 100).toLocaleString("es-MX")}×` : "—"} detalle="antes del redondeo" />
             {fab ? <Cifra etiqueta="Horas hombre" valor={numero(a.horas)} detalle="con las de sus subensambles" explica={GLOSARIO.horasEtapa} />
-              : <Cifra etiqueta="Existencia en planta" valor={`${numero(a.existencia ?? 0)}`} detalle={a.unidad} />}
+              : <Cifra etiqueta="Existencia en planta" valor={`${numero(a.existencia ?? 0)}`} detalle={a.unidad} explica={GLOSARIO.enPlanta} />}
           </>
         ) : (
           <>
-            {fab ? <Cifra etiqueta="Líneas de material" valor={numero(a.lineas_bom)} explica={GLOSARIO.lineasLista} /> : <Cifra etiqueta="Existencia en planta" valor={numero(a.existencia ?? 0)} detalle={a.unidad} />}
+            {fab ? <Cifra etiqueta="Líneas de material" valor={numero(a.lineas_bom)} explica={GLOSARIO.lineasLista} /> : <Cifra etiqueta="Existencia en planta" valor={numero(a.existencia ?? 0)} detalle={a.unidad} explica={GLOSARIO.enPlanta} />}
             {!fab && <Cifra etiqueta="Tiempo de entrega" valor={a.tiempo_entrega_dias != null ? `${a.tiempo_entrega_dias} días` : "—"} />}
             {a.usado_en > 0 && <Cifra etiqueta="Se usa en" explica={GLOSARIO.usadoEnListas} valor={numero(a.usado_en)} detalle={a.usado_en === 1 ? "lista de materiales" : "listas de materiales"} />}
           </>

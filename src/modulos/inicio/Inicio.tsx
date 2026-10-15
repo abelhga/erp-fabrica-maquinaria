@@ -149,7 +149,7 @@ function InicioPorArea() {
             )}
             {i.por_pagar && (
               <Kpi titulo="Por pagar a proveedores" valor={dineroCompacto(i.por_pagar.total)} icono={ShoppingCart}
-                tono={i.por_pagar.vencido > 0 ? "peligro" : "neutro"} detalle={`${dinero(i.por_pagar.vencido)} vencido`}
+                tono={i.por_pagar.vencido > 0 ? "peligro" : "neutro"} detalle={`${dinero(i.por_pagar.vencido)} vencido`} explica={GLOSARIO.porPagar}
                 alClic={() => ir("/finanzas/pagos")} />
             )}
             {i.rrhh && (

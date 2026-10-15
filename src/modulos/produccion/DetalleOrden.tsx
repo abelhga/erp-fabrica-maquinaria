@@ -21,6 +21,7 @@ import { PasosValidacion, type AccionPaso } from "./componentes/Validacion";
 import { DialogoSurtir, MaterialOrden } from "./componentes/MaterialOrden";
 import { DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, type OrdenBasica } from "./componentes/DialogosOrden";
 import { ESTADO_OP, ESTADO_OPERACION, PRIORIDAD, horas, textoEvento } from "./componentes/util";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Orden {
   id: string; folio: string; numero_serie: string | null; estado: EstadoOP; prioridad: number; cantidad: number;
@@ -154,7 +155,7 @@ export default function DetalleOrden() {
       )}
 
       <Tarjeta className="grid gap-px bg-borde overflow-hidden sm:grid-cols-2 lg:grid-cols-5">
-        <Dato titulo="Número de serie"><span className="cifra">{o.numero_serie ?? <span className="text-tenue">Sin serie</span>}</span></Dato>
+        <Dato titulo="Número de serie" explica={GLOSARIO.numeroSerie}><span className="cifra">{o.numero_serie ?? <span className="text-tenue">Sin serie</span>}</span></Dato>
         <Dato titulo="Equipo">
           {puede("costeo") ? <Link to={`/costeo/equipos/${o.articulo_id}`} className="hover:text-marca-texto hover:underline">{o.articulo.clave}</Link> : o.articulo.clave}
         </Dato>
@@ -170,7 +171,7 @@ export default function DetalleOrden() {
           <InsigniaCompromiso dias={t?.dias_restantes ?? null} fechaCompromiso={o.fecha_compromiso} cerrada={!abierta} />
           {o.terminada_en && <span className="block text-xs text-tenue mt-1">Terminada {fecha(o.terminada_en)}</span>}
         </Dato>
-        <Dato titulo="Avance">
+        <Dato titulo="Avance" explica={GLOSARIO.avanceOrden}>
           {t ? (
             <div className="space-y-1">
               <p className="cifra">{t.avance}% <span className="text-xs text-tenue font-normal">· {horas(t.horas_terminadas)} de {horas(t.horas_totales)}</span></p>
@@ -182,7 +183,7 @@ export default function DetalleOrden() {
       {o.notas && <p className="text-sm rounded-lg bg-aviso-suave border border-aviso/25 px-3 py-2"><b className="font-medium">Notas:</b> {o.notas}</p>}
 
       <section className="space-y-2">
-        <h2 className="font-semibold">Validación de material</h2>
+        <h2 className="font-semibold" data-explain={GLOSARIO.validacionMaterial} data-explain-title="Validación de material">Validación de material</h2>
         {pasos.error ? <ErrorCarga error={pasos.error} /> : pasos.isLoading ? <Cargando filas={2} /> : <PasosValidacion pasos={pasos.data ?? []} acciones={acciones} />}
       </section>
 
@@ -231,7 +232,7 @@ export default function DetalleOrden() {
           </Tarjeta>
 
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Cambios pedidos a ingeniería" descripcion="Correcciones a la lista del equipo que salieron de esta orden" />
+            <EncabezadoTarjeta titulo="Cambios pedidos a ingeniería" explica={GLOSARIO.solicitudCambio} descripcion="Correcciones a la lista del equipo que salieron de esta orden" />
             <div className="px-3 pb-3 space-y-2">
               {(solicitudes.data ?? []).length === 0 ? (
                 <p className="text-sm text-tenue px-2 py-3">Ninguno. Si algo de la lista está mal, usa “Solicitar cambio a ingeniería”.</p>
@@ -285,9 +286,9 @@ export default function DetalleOrden() {
   );
 }
 
-function Dato({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+function Dato({ titulo, children, explica }: { titulo: string; children: React.ReactNode; explica?: string }) {
   return (
-    <div className="bg-superficie px-4 py-3 min-w-0">
+    <div className="bg-superficie px-4 py-3 min-w-0" data-explain={explica} data-explain-title={explica ? titulo : undefined}>
       <p className="etiqueta">{titulo}</p>
       <div className="mt-1 font-medium">{children}</div>
     </div>

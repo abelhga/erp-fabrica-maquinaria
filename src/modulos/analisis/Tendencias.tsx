@@ -12,6 +12,7 @@ import { cn } from "@/lib/utilidades";
 import {
   DIV, FAMILIAS_CON_COLOR, LeyendaEscala, MESES_CORTOS, MESES_LARGOS, SEQ_TINTA, TarjetaGrafica, colorFamilia, escalaCuantiles,
 } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Mes { mes: string; monto: number; operaciones: number; clientes: number; parcial: boolean; movil_12: number | null; crecimiento_12: number | null }
 interface DatosTendencias {
@@ -72,6 +73,7 @@ export default function Tendencias() {
     <div className="space-y-4">
       <div className="grid gap-4 xl:grid-cols-2">
         <TarjetaGrafica titulo={`Venta por mes: ${anioActual} contra ${anterior} y los años anteriores`}
+          explica={GLOSARIO.ventaAnalisis}
           descripcion="Importe con IVA, con la misma regla que el tablero de inicio. Los años viejos en gris, para comparar la forma; el mes en curso entra cuando cierre."
           tabla={<TablaAnioMes anios={anios} porMes={porMes} />}>
           <div className="px-5"><Leyenda series={[
@@ -96,7 +98,7 @@ export default function Tendencias() {
           </div>
         </TarjetaGrafica>
 
-        <TarjetaGrafica titulo="Venta de los últimos 12 meses, mes con mes"
+        <TarjetaGrafica titulo="Venta de los últimos 12 meses, mes con mes" explica={GLOSARIO.ventaMovil12}
           descripcion="Cada punto suma los 12 meses que terminan ahí: quita la estacionalidad y deja ver la tendencia."
           tabla={<TablaSimple filas={movil.map((m) => ({ etiqueta: etiquetaMes(m.mes), valor: dinero(m.valor) }))} titulo="Últimos 12 meses" />}>
           <div className="h-64 px-2 pb-3">
@@ -113,7 +115,7 @@ export default function Tendencias() {
         </TarjetaGrafica>
       </div>
 
-        <TarjetaGrafica titulo="Estacionalidad: venta por año y mes"
+        <TarjetaGrafica titulo="Estacionalidad: venta por año y mes" explica={GLOSARIO.estacionalidadVenta}
           descripcion="Cada celda es un mes, con el tono de la leyenda de abajo. Sirve para ver qué meses pesan cada año."
           tabla={<TablaAnioMes anios={anios} porMes={porMes} />}
           pie={<LeyendaEscala escala={escalaCalor} formato={dineroCompacto} vacio={null} />}>
@@ -151,7 +153,7 @@ export default function Tendencias() {
           </div>
         </TarjetaGrafica>
 
-        <TarjetaGrafica titulo="Crecimiento anual móvil"
+        <TarjetaGrafica titulo="Crecimiento anual móvil" explica={GLOSARIO.crecimientoMovil}
           descripcion={<>Los 12 meses que terminan en cada mes contra los 12 anteriores. Azul creció, rojo cayó.
             {ultimoCrec && <> Al cierre de {etiquetaMes(ultimoCrec.mes)}: <b className="text-texto">{ultimoCrec.valor >= 0 ? "+" : "−"}{porcentaje(Math.abs(ultimoCrec.valor), 1)}</b>.</>}</>}
           tabla={<TablaSimple filas={crec.map((m) => ({ etiqueta: etiquetaMes(m.mes), valor: `${m.valor >= 0 ? "+" : "−"}${porcentaje(Math.abs(m.valor), 1)}` }))} titulo="Crecimiento" />}>
@@ -171,7 +173,7 @@ export default function Tendencias() {
           </div>
         </TarjetaGrafica>
 
-      <TarjetaGrafica titulo="Mezcla por familia de producto"
+      <TarjetaGrafica titulo="Mezcla por familia de producto" explica={GLOSARIO.familiaProducto}
         descripcion="Qué parte de la venta de cada año fue de cada familia. Las familias salen del texto de cada venta (reglas en «Producto × región»)."
         tabla={<TablaMezcla mezcla={mezcla} series={seriesMezcla} />}>
         <div className="px-5"><Leyenda series={seriesMezcla.map((s) => ({ nombre: s.nombre, color: s.color }))} /></div>

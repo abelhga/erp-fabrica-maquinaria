@@ -131,10 +131,11 @@ export function Barra({ valor, tono = "marca", className, alto = "h-2" }: { valo
 }
 
 /** Dato con etiqueta pequeña arriba (fichas de detalle). */
-export function Dato({ etiqueta, children, className }: { etiqueta: string; children: ReactNode; className?: string }) {
+/** `explica`: qué es este dato, para el modo tutorial (se muestra al pasar por la etiqueta). */
+export function Dato({ etiqueta, children, className, explica }: { etiqueta: string; children: ReactNode; className?: string; explica?: string }) {
   return (
     <div className={cn("min-w-0", className)}>
-      <p className="text-xs text-tenue">{etiqueta}</p>
+      <p className="text-xs text-tenue" data-explain={explica} data-explain-title={explica ? etiqueta : undefined}>{etiqueta}</p>
       <div className="text-sm font-medium mt-0.5 break-words">{children}</div>
     </div>
   );
