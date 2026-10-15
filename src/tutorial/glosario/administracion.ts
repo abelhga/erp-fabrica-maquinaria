@@ -55,5 +55,5 @@ export const ADMINISTRACION = {
   porPagar: "Lo que debemos a proveedores por órdenes de compra recibidas (completas o parciales) que tienen saldo, en pesos.",
   vencePago: "La fecha en que hay que pagar: la recepción del material más los días de crédito del proveedor. Rojo = vencida; amarillo = vence en 7 días o menos.",
   agendaPagos: "Lo que hay que pagar acomodado por semana, de lunes a domingo: primero lo vencido y luego las próximas 4 semanas. Clic en un proveedor para registrar el pago.",
-  saldosHojaProveedores: "Lo que se debía según el libro de compras de la hoja (adeudo de 2021 más compras menos pagos). Va aparte de las órdenes del ERP para no contarlo dos veces; los préstamos de socios y bancos van separados.",
+  saldosHojaProveedores: "Lo que se debía según el libro de compras de la hoja (adeudo de 2021 más compras menos pagos), menos lo que ya se pagó en el ERP. Va aparte de las órdenes del ERP para no contarlo dos veces; los préstamos de socios y bancos van separados.",
 } satisfies Record<string, string>;
