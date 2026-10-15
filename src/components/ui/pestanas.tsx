@@ -6,7 +6,8 @@ export const Pestanas = T.Root;
 export const ContenidoPestana = T.Content;
 
 export function ListaPestanas({ opciones, className }: {
-  opciones: { valor: string; texto: ReactNode; cuenta?: number }[]; className?: string;
+  /** `explica`: qué hay en esa pestaña, para el modo tutorial. */
+  opciones: { valor: string; texto: ReactNode; cuenta?: number; explica?: string }[]; className?: string;
 }) {
   return (
     <T.List className={cn("flex gap-1 border-b border-borde overflow-x-auto", className)}>
@@ -14,6 +15,7 @@ export function ListaPestanas({ opciones, className }: {
         <T.Trigger
           key={o.valor}
           value={o.valor}
+          data-explain={o.explica}
           className="px-3 py-2 text-sm font-medium text-tenue border-b-2 border-transparent -mb-px whitespace-nowrap data-[state=active]:text-marca-texto data-[state=active]:border-marca hover:text-texto"
         >
           {o.texto}

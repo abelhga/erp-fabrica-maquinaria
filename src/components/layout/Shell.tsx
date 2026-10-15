@@ -10,6 +10,9 @@ import { Asistente } from "@/components/asistente/Asistente";
 import { Campana } from "@/components/avisos/Campana";
 import { AvisoVerComo, BotonVerComo } from "./VerComo";
 import { FranjaVistaPrevia } from "@/paginas/VistaPrevia";
+import { BotonTutorial, Explicacion } from "@/tutorial/Explicacion";
+import { CapaExplicacion } from "@/tutorial/CapaExplicacion";
+import { ayudaDe } from "@/tutorial/pantallas";
 
 function useTema() {
   const [oscuro, setOscuro] = useState(() => {
@@ -96,6 +99,7 @@ export function Shell() {
           </button>
           <div className="ml-auto flex items-center gap-1">
             <BotonVerComo />
+            <BotonTutorial />
             <Campana />
             <button onClick={() => setOscuro(!oscuro)} className="p-2 rounded-lg hover:bg-fondo text-tenue" aria-label="Cambiar tema">
               {oscuro ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
@@ -119,6 +123,7 @@ export function Shell() {
         </main>
       </div>
       <BuscadorGlobal abierto={buscando} alCambiar={setBuscando} />
+      <CapaExplicacion />
       {/* En una vista previa el asistente no se usa (gastaría a nombre de la otra persona). */}
       {!vistaPrevia && <Asistente />}
     </div>
@@ -143,10 +148,15 @@ function ItemMenu({ ruta, texto, Icono }: { ruta: string; texto: string; Icono: 
   );
 }
 
-/** Encabezado estándar de cada página: título, contexto y acciones a la derecha. */
+/**
+ * Encabezado estándar de cada página: título, contexto y acciones a la derecha. Con el modo
+ * tutorial encendido, abajo del título va el texto de esta ruta (`tutorial/pantallas/`).
+ */
 export function Pagina({ titulo, descripcion, acciones, children, ancho = "max-w-7xl" }: {
   titulo: React.ReactNode; descripcion?: React.ReactNode; acciones?: React.ReactNode; children: React.ReactNode; ancho?: string;
 }) {
+  const { pathname } = useLocation();
+  const ayuda = ayudaDe(pathname);
   return (
     // pb-24 abajo de escritorio: el botón flotante del asistente tapaba el último renglón de cada pantalla.
     <div className={cn("mx-auto px-4 lg:px-8 pt-6 pb-24 lg:pb-6 space-y-5", ancho)}>
@@ -157,6 +167,7 @@ export function Pagina({ titulo, descripcion, acciones, children, ancho = "max-w
         </div>
         {acciones && <div className="no-imprimir flex flex-wrap items-center gap-2">{acciones}</div>}
       </div>
+      {ayuda && <Explicacion>{ayuda.map((p) => <p key={p}>{p}</p>)}</Explicacion>}
       {children}
     </div>
   );
