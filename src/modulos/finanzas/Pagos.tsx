@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, CalendarDays, CalendarRange, ExternalLink, Receipt, Wallet } from "lucide-react";
+import { AlertTriangle, CalendarDays, CalendarRange, ExternalLink, FileSpreadsheet, Receipt, Wallet } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
 import { Insignia } from "@/components/ui/insignia";
@@ -9,6 +9,7 @@ import { Boton } from "@/components/ui/boton";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
+import { Pestanas, ListaPestanas, ContenidoPestana } from "@/components/ui/pestanas";
 import { Cargando } from "@/components/ui/estados";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { useSesion } from "@/lib/sesion";
@@ -17,6 +18,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { dinero, dineroCompacto, fecha, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { METODOS, TipoCambioDia, iso, lunesDe, enMoneda, nombreMetodo, type Moneda } from "./componentes/comun";
+import { SaldosProveedoresHoja, type SaldoProveedorHoja } from "./componentes/SaldosProveedoresHoja";
 
 interface PorPagar {
   orden_compra_id: string; folio: string; proveedor_id: string; proveedor: string; fecha: string; vence_pago: string | null;
@@ -33,12 +35,23 @@ function Vence({ f }: { f: PorPagar }) {
 }
 
 export default function Pagos() {
+  const { puede } = useSesion();
+  // El libro de la hoja trae nómina y préstamos: solo quien lleva finanzas (la RLS es la que manda).
+  const verHoja = puede("finanzas", 2);
   const [vista, setVista] = useState<"todas" | "vencidas" | "semana">("todas");
   const [abierta, setAbierta] = useState<PorPagar | null>(null);
+  const [pestana, setPestana] = useState<"ordenes" | "hoja">("ordenes");
   const datos = useQuery({
     queryKey: ["v_por_pagar"],
     queryFn: () => q<PorPagar[]>(supabase.from("v_por_pagar").select("*")),
   });
+  // Lo que se debe según la hoja (hasta que todo se compre y pague en el ERP).
+  const hoja = useQuery({
+    queryKey: ["v_saldo_arranque_proveedores"],
+    enabled: verHoja,
+    queryFn: () => q<SaldoProveedorHoja[]>(supabase.from("v_saldo_arranque_proveedores").select("*")),
+  });
+  const debemosHoja = (hoja.data ?? []).filter((f) => Number(f.saldo) > 1);
   // Vencidas primero (la más vieja arriba), luego por fecha; las que no tienen fecha al final.
   const todas = [...(datos.data ?? [])].sort((a, b) => (a.dias_para_vencer ?? 1e9) - (b.dias_para_vencer ?? 1e9));
   const vencidas = todas.filter((f) => (f.dias_para_vencer ?? 1) < 0);
@@ -74,56 +87,69 @@ export default function Pagos() {
 
   return (
     <Pagina titulo="Pagos a proveedores" descripcion="Lo que debemos por material recibido: lo vencido primero y lo que viene en las próximas 4 semanas." acciones={<TipoCambioDia />}>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi titulo="Por pagar" valor={dineroCompacto(suma(todas))} icono={Wallet} tono="marca" detalle={`${todas.length} órdenes recibidas con saldo`} alClic={() => setVista("todas")} />
+      <div className={cn("grid gap-3 sm:grid-cols-2", verHoja ? "xl:grid-cols-5" : "xl:grid-cols-4")}>
+        <Kpi titulo="Por pagar" valor={dineroCompacto(suma(todas))} icono={Wallet} tono="marca" detalle={`${todas.length} órdenes recibidas con saldo`} alClic={() => { setPestana("ordenes"); setVista("todas"); }} />
         <Kpi titulo="Vencido" valor={dineroCompacto(suma(vencidas))} icono={AlertTriangle} tono={vencidas.length ? "peligro" : "ok"}
           detalle={vencidas.length ? `${vencidas.length} órdenes · la más vieja hace ${-Math.min(...vencidas.map((f) => f.dias_para_vencer!))} días` : "Nada vencido"} alClic={() => setVista("vencidas")} />
         <Kpi titulo="Vence en 7 días" valor={dineroCompacto(suma(semana))} icono={CalendarDays} tono="aviso" detalle={`${semana.length} órdenes`} alClic={() => setVista("semana")} />
         <Kpi titulo="Próximas 4 semanas" valor={dineroCompacto(cuatroSemanas)} icono={CalendarRange} tono="info" detalle="Sin contar lo vencido" />
+        {verHoja && <Kpi titulo="Saldo de la hoja" valor={dineroCompacto(debemosHoja.reduce((s, f) => s + Number(f.saldo), 0))} icono={FileSpreadsheet} tono="neutro"
+          detalle={`${debemosHoja.length} proveedores · libro de compras`} alClic={() => setPestana("hoja")} />}
       </div>
 
-      <Tarjeta>
-        <EncabezadoTarjeta titulo="Agenda de pagos" descripcion="Por fecha de vencimiento (fecha de recepción + días de crédito del proveedor)" />
-        {datos.isLoading ? <Cargando filas={3} /> : (
-          <div className="grid gap-3 px-4 pb-4 sm:grid-cols-2 lg:grid-cols-5">
-            {columnasAgenda.map((c) => (
-              <div key={c.titulo} className={cn("rounded-xl border p-3 flex flex-col", c.peligro && c.filas.length ? "border-peligro/30 bg-peligro-suave/50" : "border-borde bg-fondo/50")}>
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className={cn("font-medium text-sm", c.peligro && c.filas.length && "text-peligro")}>{c.titulo}</p>
-                  <p className="text-xs text-tenue">{c.detalle}</p>
-                </div>
-                <p className="text-lg font-semibold cifra mt-1">{dinero(suma(c.filas))}</p>
-                <ul className="mt-2 space-y-1 flex-1">
-                  {c.filas.length === 0 && <li className="text-xs text-tenue py-1">Nada que pagar</li>}
-                  {c.filas.slice(0, 5).map((f) => (
-                    <li key={f.orden_compra_id}>
-                      <button onClick={() => setAbierta(f)} className="w-full text-left rounded-md px-1.5 py-1 hover:bg-superficie flex justify-between gap-2 text-xs">
-                        <span className="truncate">{f.proveedor.replace(/^DEMO /, "")}<span className="text-tenue"> · {fecha(f.vence_pago).slice(0, 6)}</span></span>
-                        <span className="cifra shrink-0">{dineroCompacto(f.saldo_mxn)}</span>
-                      </button>
-                    </li>
-                  ))}
-                  {c.filas.length > 5 && <li className="text-xs text-tenue px-1.5">y {c.filas.length - 5} más</li>}
-                </ul>
-              </div>
-            ))}
-          </div>
-        )}
-      </Tarjeta>
-
-      <TablaDatos
-        filas={filas} columnas={columnas} cargando={datos.isLoading} error={datos.error}
-        claveFila={(f) => f.orden_compra_id} alClicFila={setAbierta} exportarComo="cuentas-por-pagar"
-        placeholder="Buscar proveedor, orden o factura…"
-        claseFila={(f) => ((f.dias_para_vencer ?? 1) < 0 ? "bg-peligro-suave/30" : undefined)}
-        filtros={<Filtro valor={vista} alCambiar={setVista} opciones={[
-          { valor: "todas", texto: "Todas", cuenta: todas.length },
-          { valor: "vencidas", texto: "Vencidas", cuenta: vencidas.length },
-          { valor: "semana", texto: "Próximos 7 días", cuenta: semana.length },
+      <Pestanas value={pestana} onValueChange={(v) => setPestana(v as "ordenes" | "hoja")}>
+        {verHoja && <ListaPestanas opciones={[
+          { valor: "ordenes", texto: "Órdenes del ERP", cuenta: todas.length },
+          { valor: "hoja", texto: "Saldos de la hoja", cuenta: debemosHoja.length },
         ]} />}
-        pie={filas.length > 0 && <div className="flex justify-end gap-6 text-sm"><span className="text-tenue">Saldo de lo que se ve:</span><b className="cifra">{dinero(suma(filas))}</b></div>}
-        vacio={{ icono: Receipt, titulo: vista === "vencidas" ? "Nada vencido" : "No debemos nada", texto: "Aquí aparecen las órdenes de compra recibidas (completas o parciales) que tienen saldo." }}
-      />
+        <ContenidoPestana value="ordenes" className="pt-4 space-y-4">
+          <Tarjeta>
+            <EncabezadoTarjeta titulo="Agenda de pagos" descripcion="Por fecha de vencimiento (fecha de recepción + días de crédito del proveedor)" />
+            {datos.isLoading ? <Cargando filas={3} /> : (
+              <div className="grid gap-3 px-4 pb-4 sm:grid-cols-2 lg:grid-cols-5">
+                {columnasAgenda.map((c) => (
+                  <div key={c.titulo} className={cn("rounded-xl border p-3 flex flex-col", c.peligro && c.filas.length ? "border-peligro/30 bg-peligro-suave/50" : "border-borde bg-fondo/50")}>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className={cn("font-medium text-sm", c.peligro && c.filas.length && "text-peligro")}>{c.titulo}</p>
+                      <p className="text-xs text-tenue">{c.detalle}</p>
+                    </div>
+                    <p className="text-lg font-semibold cifra mt-1">{dinero(suma(c.filas))}</p>
+                    <ul className="mt-2 space-y-1 flex-1">
+                      {c.filas.length === 0 && <li className="text-xs text-tenue py-1">Nada que pagar</li>}
+                      {c.filas.slice(0, 5).map((f) => (
+                        <li key={f.orden_compra_id}>
+                          <button onClick={() => setAbierta(f)} className="w-full text-left rounded-md px-1.5 py-1 hover:bg-superficie flex justify-between gap-2 text-xs">
+                            <span className="truncate">{f.proveedor.replace(/^DEMO /, "")}<span className="text-tenue"> · {fecha(f.vence_pago).slice(0, 6)}</span></span>
+                            <span className="cifra shrink-0">{dineroCompacto(f.saldo_mxn)}</span>
+                          </button>
+                        </li>
+                      ))}
+                      {c.filas.length > 5 && <li className="text-xs text-tenue px-1.5">y {c.filas.length - 5} más</li>}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Tarjeta>
+
+          <TablaDatos
+            filas={filas} columnas={columnas} cargando={datos.isLoading} error={datos.error}
+            claveFila={(f) => f.orden_compra_id} alClicFila={setAbierta} exportarComo="cuentas-por-pagar"
+            placeholder="Buscar proveedor, orden o factura…"
+            claseFila={(f) => ((f.dias_para_vencer ?? 1) < 0 ? "bg-peligro-suave/30" : undefined)}
+            filtros={<Filtro valor={vista} alCambiar={setVista} opciones={[
+              { valor: "todas", texto: "Todas", cuenta: todas.length },
+              { valor: "vencidas", texto: "Vencidas", cuenta: vencidas.length },
+              { valor: "semana", texto: "Próximos 7 días", cuenta: semana.length },
+            ]} />}
+            pie={filas.length > 0 && <div className="flex justify-end gap-6 text-sm"><span className="text-tenue">Saldo de lo que se ve:</span><b className="cifra">{dinero(suma(filas))}</b></div>}
+            vacio={{ icono: Receipt, titulo: vista === "vencidas" ? "Nada vencido" : "No debemos nada", texto: "Aquí aparecen las órdenes de compra recibidas (completas o parciales) que tienen saldo. Lo que se compró en la hoja está en «Saldos de la hoja»." }}
+          />
+        </ContenidoPestana>
+        {verHoja && <ContenidoPestana value="hoja" className="pt-4">
+          <SaldosProveedoresHoja />
+        </ContenidoPestana>}
+      </Pestanas>
 
       <RegistrarPago orden={abierta} alCerrar={() => setAbierta(null)} />
     </Pagina>
