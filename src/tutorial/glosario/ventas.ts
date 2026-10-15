@@ -45,7 +45,7 @@ export const VENTAS = {
   comisionPagada: "Finanzas la marca pagada y se guarda una foto del cálculo de ese momento. Si después se mueve un pedido del mes, la tarjeta te avisa la diferencia.",
 
   // --- Clientes ---
-  cartera: "Cada cliente es de un vendedor hasta la fecha que ves: la más lejana entre su última venta con él + 12 meses, su último seguimiento (cotización, oportunidad o actividad) + 90 días y, si es nuevo, su alta + 90 días. Los plazos los fija dirección. Pasada esa fecha la cuenta vence y puede quedar libre.",
+  cartera: "Cada cliente es de un vendedor hasta la fecha que ves: la más lejana entre su última venta con él + 12 meses, su último seguimiento (cotización, oportunidad o actividad) + 90 días y, si es nuevo, su alta + 90 días. Los plazos se ajustan en Configuración. Pasada esa fecha la cuenta vence y puede quedar libre.",
   clienteLibre: "Cliente sin vendedor dueño: cualquiera le puede cotizar o darle “Hacerlo mío”.",
   ultimaCompra: "Fecha del último pedido del cliente (o de la última venta en el libro de la hoja, si es más reciente). De clientes de otro vendedor no se muestra.",
   compras12m: "Suma sin IVA, en pesos, de los pedidos no cancelados del cliente en los últimos 365 días.",

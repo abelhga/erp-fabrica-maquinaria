@@ -72,7 +72,7 @@ function Indicador({ titulo, valor, detalle, delta, icono: Icono, serie, alClic,
     <Caja onClick={alClic} data-explain={explica} data-explain-title={explica ? titulo : undefined}
       className="tarjeta text-left p-4 flex flex-col gap-2 hover:border-marca/40 hover:shadow-md transition group relative overflow-hidden">
       <div className="flex items-center gap-2 text-sm text-tenue">
-        <Icono className={cn("h-4 w-4", color)} />{titulo}
+        <Icono className={cn("h-4 w-4", color)} /><span className="titulo-explicable">{titulo}</span>
       </div>
       <div className="flex items-end gap-2">
         <span className="text-[28px] leading-none font-semibold tracking-tight cifra">{valor}</span>
@@ -203,7 +203,8 @@ export function TableroDireccion() {
         {d.cobranza && (
           <Indicador titulo="Por cobrar" valor={dineroCompacto(porCobrar)} icono={Wallet} tono={aging && aging.d90 > 0 ? "aviso" : "marca"}
             detalle={<>Cobrado este mes {dineroCompacto(d.cobranza.cobrado_mes)}{aging && aging.d90 > 0 && <> · <b className="text-peligro">{dineroCompacto(aging.d90)} +90 d</b></>}</>}
-            alClic={() => ir("/finanzas/cobranza")} explica={GLOSARIO.porCobrar} />
+            alClic={() => ir("/finanzas/cobranza")}
+            explica={`${GLOSARIO.porCobrar} Aquí se suma además el saldo que ya venía de la hoja el día del arranque.`} />
         )}
         {d.inventario && (
           <Indicador titulo="Inventario" valor={dineroCompacto(d.inventario.valor)} icono={Boxes} tono="marca"

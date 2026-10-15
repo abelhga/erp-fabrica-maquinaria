@@ -109,11 +109,16 @@ Todo vive en `src/tutorial/`:
 
 - `pantallas/<sección>.ts`: el texto de cada pantalla, con la ruta de `App.tsx` como llave
   (`"/ventas/pedidos/:id"`). `Pagina` lo encuentra sola; ninguna pantalla lo pide.
+  Una pantalla que no usa `Pagina` (el tablero de dirección, el editor de cotización) pone
+  su recuadro a mano: `<Explicacion>` con `PANTALLAS["/su/ruta"]`.
 - `glosario/<sección>.ts`: **una definición por concepto** ("disponible", "punto de reorden",
   "anticipo"…), reutilizada donde aparezca para que diga lo mismo en todas las pantallas.
 - Se conecta declarando, no programando: `explica={GLOSARIO.x}` en `Kpi`, en una `Columna`
   de `TablaDatos`, en una opción de `ListaPestanas` o en `EncabezadoTarjeta`; en cualquier
   otro elemento, `data-explain={GLOSARIO.x}` (y `data-explain-title` si hace falta).
+  Lo que no reenvía atributos (`Insignia`) va envuelto en `<span data-explain>`. Nada
+  explicable puede ser un botón `disabled`: Chrome no le da el mouse ni el foco (por eso
+  `Kpi` sin clic es un `<div>`).
   `CapaExplicacion` es la única que escucha eventos, y solo con el modo encendido.
   `<Explicacion>` sirve para un recuadro dentro de una pantalla (una sección, un diálogo).
 

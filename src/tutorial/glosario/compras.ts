@@ -3,7 +3,7 @@
 export const COMPRAS = {
   // --- Solicitudes de precio (la cola que manda ventas) ---
   semaforoSolicitud: "Verde: a tiempo. Amarillo: vence en menos de una hora hábil. Rojo: ya venció y el vendedor sigue esperando. Las vencidas van arriba de la lista.",
-  plazoSolicitud: "Cuánto tiempo tiene compras para contestar: normalmente un día hábil (10 horas hábiles), o 4 si el vendedor la marcó urgente porque el cliente está esperando. Solo corre en horario de la planta: una solicitud del domingo empieza a contar el lunes.",
+  plazoSolicitud: "Cuánto tiempo tiene compras para contestar: unas horas hábiles que se fijan en Configuración (al arrancar: un día hábil, o medio día si el vendedor la marcó urgente porque el cliente está esperando). Solo corre en horario de la planta: una solicitud del domingo empieza a contar el lunes.",
   tomarSolicitud: "«Tomar» le avisa al vendedor que ya la tienes tú y que estás cotizando. No contesta nada todavía; evita que dos compradores busquen el mismo precio.",
   estadoSolicitud: "Sin tomar: nadie la ha agarrado. Cotizando: alguien de compras la tomó. Con precio: ya se contestó y el vendedor ve el precio de lista. No se consigue: se le explicó por qué. Cancelada: el vendedor ya no la necesita.",
   contestarSolicitud: "Contestar es capturar el costo que dio el proveedor: entra al catálogo con su historial, el precio de lista se recalcula solo y el vendedor lo ve en su cotización. La nota para el vendedor nunca lleva costos.",
