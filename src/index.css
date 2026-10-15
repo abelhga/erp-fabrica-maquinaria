@@ -114,4 +114,8 @@
 @media print {
   .no-imprimir { display: none !important; }
   body { background: white; }
+  /* Safari (Mac) imprimía la hoja EN BLANCO: el overflow-x: clip de arriba (para que en
+     iPhone la página no se arrastre de lado) más el height: 100% recortan todo el
+     documento al paginar. Chrome lo ignoraba. En papel no hay nada que arrastrar. */
+  html, body, #root { height: auto !important; overflow: visible !important; }
 }
