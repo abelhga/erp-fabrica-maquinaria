@@ -160,6 +160,13 @@ async function main() {
           correo = coalesce(excluded.correo, proveedores.correo), rfc = coalesce(excluded.rfc, proveedores.rfc),
           domicilio = coalesce(excluded.domicilio, proveedores.domicilio), pais = excluded.pais, es_importacion = excluded.es_importacion,
           dias_credito = excluded.dias_credito`, [json(todos)]);
+      // Préstamos de socios y créditos de banco: en la hoja son "proveedores", pero no
+      // cuentan como deuda con proveedores. Solo se marca lo que diga la configuración
+      // (no se desmarca nada: si finanzas lo cambió en el ERP, se respeta).
+      const tipos = Object.entries((config.tipos_acreedor ?? {}) as Record<string, string>).filter(([k]) => !k.startsWith("comentario"));
+      if (tipos.length) await db.query(`
+        update proveedores p set tipo_acreedor = x.tipo from jsonb_each_text($1) x(llave, tipo)
+        where p.legacy_id = 'PROV:' || x.llave and p.tipo_acreedor = 'proveedor'`, [json(Object.fromEntries(tipos))]);
       resumen.proveedores = todos.length;
     });
 

@@ -34,7 +34,8 @@ begin
 
   -- Tablero: lo que debemos y lo que nos deben van por separado, no neteados.
   t := tablero_direccion();
-  select sum(saldo) filter (where saldo > 1) into v_esperado from v_saldo_arranque_proveedores;
+  -- Solo proveedores: préstamos de socios y créditos van en su propio renglón (prueba 97).
+  select sum(saldo) filter (where saldo > 1) into v_esperado from v_saldo_arranque_proveedores where tipo_acreedor = 'proveedor';
   assert (t #>> '{por_pagar,arranque}')::numeric = v_esperado and v_esperado >= 2900, format('por pagar de la hoja: %s', t -> 'por_pagar');
   assert (t #>> '{por_pagar,arranque_a_favor}')::numeric >= 7000, format('a favor: %s', t -> 'por_pagar');
   assert exists (select 1 from hallazgos('finanzas') h where h.titulo like '%por pagar a % proveedores según la hoja%'),

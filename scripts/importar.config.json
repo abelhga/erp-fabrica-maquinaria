@@ -104,6 +104,11 @@
       "'Directorio Proveedores'!A1:Y1500"
     ]
   },
+  "tipos_acreedor": {
+    "comentario": "Llave del proveedor en la hoja (sin acentos, minúsculas) → socio o financiamiento. No cuentan en 'por pagar a proveedores'.",
+    "abel hernandez guzman (prestamos)": "socio",
+    "santander (capital de creditos)": "financiamiento"
+  },
   "alias_vendedores": {
     "comentario": "Cómo aparece el vendedor en el directorio de clientes → correo del usuario en el ERP. null = la cuenta queda sin dueño (libre).",
     "isaac": "isaac@hegamex.com",
