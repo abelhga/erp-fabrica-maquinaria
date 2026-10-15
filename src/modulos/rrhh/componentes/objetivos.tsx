@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, fechaYHora, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 // ---------------------------------------------------------------------------
 // Tipos (espejo de las tablas y de v_objetivo_evaluaciones)
@@ -266,7 +267,7 @@ export function PanelEvaluacion({ evaluacion: e, propia = false }: { evaluacion:
     <div className="space-y-5">
       {/* Resultado del mes */}
       <div className="grid gap-3 sm:grid-cols-[auto_1fr] items-start">
-        <div className="tarjeta px-5 py-4 text-center min-w-[150px]">
+        <div className="tarjeta px-5 py-4 text-center min-w-[150px]" data-explain={GLOSARIO.resultadoObjetivos} data-explain-title="Resultado del mes">
           <p className="text-xs text-tenue">Resultado del mes</p>
           <p className={cn("text-4xl font-semibold cifra leading-tight mt-1", e.llave_activada ? "text-peligro" : "")}>{puntos(e.total_final)}</p>
           {e.total_corregido != null && <p className="text-xs text-tenue mt-1">ajustado; calificado {puntos(e.total)}</p>}
@@ -277,7 +278,7 @@ export function PanelEvaluacion({ evaluacion: e, propia = false }: { evaluacion:
             </p>
           )}
         </div>
-        <ol className="grid grid-cols-4 gap-1">
+        <ol className="grid grid-cols-4 gap-1" data-explain={GLOSARIO.flujoEvaluacion} data-explain-title="Pasos del mes">
           {pasos.map((p, i) => (
             <li key={p.estado} className="min-w-0">
               <div className={cn("h-1.5 rounded-full", i <= actual ? (e.estado === "aprobada" ? "bg-ok" : "bg-marca") : "bg-fondo border border-borde")} />
@@ -375,12 +376,12 @@ function Renglon({ r, evidencias, editable, puedoImpugnar, puedoResolver, yo }: 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="font-medium">{r.indicador?.nombre}</p>
-            <Insignia tono={FUENTES[r.fuente].tono}>{FUENTES[r.fuente].texto}</Insignia>
-            {r.regla === "llave" && <Insignia tono="peligro"><KeyRound className="h-3 w-3" /> Llave</Insignia>}
-            {pendientes > 0 && <Insignia tono="aviso"><Flag className="h-3 w-3" /> {pendientes} impugnada{pendientes > 1 ? "s" : ""}</Insignia>}
+            <span data-explain={GLOSARIO.fuenteIndicador}><Insignia tono={FUENTES[r.fuente].tono}>{FUENTES[r.fuente].texto}</Insignia></span>
+            {r.regla === "llave" && <span data-explain={GLOSARIO.llaveBono} data-explain-title="Llave del bono"><Insignia tono="peligro"><KeyRound className="h-3 w-3" /> Llave</Insignia></span>}
+            {pendientes > 0 && <span data-explain={GLOSARIO.impugnacion} data-explain-title="Impugnación"><Insignia tono="aviso"><Flag className="h-3 w-3" /> {pendientes} impugnada{pendientes > 1 ? "s" : ""}</Insignia></span>}
           </div>
           {r.texto && <p className="text-sm text-tenue mt-0.5">{r.texto}</p>}
-          <p className="text-xs text-tenue mt-1">
+          <p className="text-xs text-tenue mt-1" data-explain={GLOSARIO.reglaIndicador} data-explain-title="Regla">
             {reglaCorta({ ...r, unidad: r.indicador?.unidad })}
             {valor && <> · <span className="text-texto font-medium">{valor}</span></>}
             {r.capturo && r.capturado_en && <> · calificó {r.capturo.nombre}</>}
@@ -397,7 +398,7 @@ function Renglon({ r, evidencias, editable, puedoImpugnar, puedoResolver, yo }: 
       {capturable && <Captura r={r} />}
       {evidencias.length > 0 && (
         <div className="mt-2">
-          <button className="text-xs text-marca-texto inline-flex items-center gap-1" onClick={() => setAbierto(!abierto)}>
+          <button className="text-xs text-marca-texto inline-flex items-center gap-1" onClick={() => setAbierto(!abierto)} data-explain={GLOSARIO.evidenciaObjetivo} data-explain-title="Evidencia">
             <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", abierto && "rotate-180")} />
             {abierto ? "Ocultar" : "Ver"} evidencia ({evidencias.length}{enContra.length ? `, ${enContra.length} en contra` : ""})
           </button>

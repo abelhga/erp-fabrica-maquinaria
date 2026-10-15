@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
 import { MODULOS, NIVELES, ROLES } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Permiso { rol: Rol; modulo: Modulo; nivel: number }
 
@@ -56,7 +57,7 @@ export function MatrizPermisos() {
         <table className="tabla">
           <thead>
             <tr>
-              <th className="w-[120px] sticky left-0 z-20">Rol</th>
+              <th className="w-[120px] sticky left-0 z-20" data-explain={GLOSARIO.permisosRolModulo} data-explain-title="Rol × módulo">Rol</th>
               {MODULOS.map((m) => (
                 <th key={m.modulo} title={m.descripcion} className={cn("!text-center whitespace-nowrap !px-1.5", m.modulo === "costos" && "!bg-aviso-suave !text-aviso")}>
                   {m.modulo === "rrhh" ? "RR. HH." : m.nombre}
@@ -101,7 +102,7 @@ export function MatrizPermisos() {
           </div>
         ))}
       </div>
-      <p className="text-xs text-tenue">
+      <p className="text-xs text-tenue" data-explain={GLOSARIO.nivelPermiso} data-explain-title="Niveles">
         Niveles: {NIVELES.slice(1).map((n) => `${n.nivel} = ${n.largo}`).join(" · ")}. El menú se arma con esto y la base de datos lo hace cumplir:
         aunque alguien llame a la API directo, solo recibe lo que su rol permite. Cada cambio queda en la bitácora.
       </p>

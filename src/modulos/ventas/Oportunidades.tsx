@@ -15,6 +15,7 @@ import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { dinero, dineroCompacto, fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 import { CampoNumero } from "./componentes/campos";
 import { Actividades } from "./componentes/Actividades";
 import { DialogoCliente, DialogoMotivo, ElegirCliente, MOTIVOS_PERDIDA } from "./componentes/dialogos";
@@ -80,12 +81,12 @@ export default function Oportunidades() {
   const hoy = hoyMx();
   const columnas: Columna<VOportunidad>[] = [
     { clave: "titulo", titulo: "Oportunidad", celda: (o) => <div className="min-w-[200px]"><p className="font-medium">{o.titulo}</p><p className="text-xs text-tenue">{o.cliente}</p></div>, valor: (o) => `${o.titulo} ${o.cliente}` },
-    { clave: "etapa", titulo: "Etapa", valor: (o) => ETAPAS.findIndex((e) => e.valor === o.etapa), celda: (o) => <Insignia tono={ETAPA[o.etapa].tono} punto>{ETAPA[o.etapa].texto}</Insignia> },
+    { clave: "etapa", titulo: "Etapa", explica: GLOSARIO.etapaOportunidad, valor: (o) => ETAPAS.findIndex((e) => e.valor === o.etapa), celda: (o) => <Insignia tono={ETAPA[o.etapa].tono} punto>{ETAPA[o.etapa].texto}</Insignia> },
     { clave: "vendedor", titulo: "Vendedor", oculta: !esGerente, valor: (o) => o.vendedor },
-    { clave: "linea", titulo: "Línea", valor: (o) => LINEA[o.linea] },
-    { clave: "dias", titulo: "Días en etapa", alinear: "der", valor: (o) => o.dias_en_etapa, sinBusqueda: true },
-    { clave: "tarea", titulo: "Próxima tarea", valor: (o) => o.tarea_vence ?? "", celda: (o) => o.tarea ? <span className={cn("text-xs", (o.tarea_vence ?? "") < hoy && "text-peligro font-medium")}>{fecha(o.tarea_vence)} · {o.tarea}</span> : <span className="text-tenue">—</span> },
-    { clave: "monto", titulo: "Monto estimado", alinear: "der", sinBusqueda: true, valor: (o) => Number(o.monto_estimado ?? 0), celda: (o) => dinero(o.monto_estimado) },
+    { clave: "linea", titulo: "Línea", explica: GLOSARIO.lineaVenta, valor: (o) => LINEA[o.linea] },
+    { clave: "dias", titulo: "Días en etapa", explica: GLOSARIO.diasEnEtapa, alinear: "der", valor: (o) => o.dias_en_etapa, sinBusqueda: true },
+    { clave: "tarea", titulo: "Próxima tarea", explica: GLOSARIO.proximaTarea, valor: (o) => o.tarea_vence ?? "", celda: (o) => o.tarea ? <span className={cn("text-xs", (o.tarea_vence ?? "") < hoy && "text-peligro font-medium")}>{fecha(o.tarea_vence)} · {o.tarea}</span> : <span className="text-tenue">—</span> },
+    { clave: "monto", titulo: "Monto estimado", explica: GLOSARIO.montoEstimado, alinear: "der", sinBusqueda: true, valor: (o) => Number(o.monto_estimado ?? 0), celda: (o) => dinero(o.monto_estimado) },
   ];
 
   function columna(et: (typeof ETAPAS)[number], cerrada: boolean) {
@@ -100,7 +101,7 @@ export default function Oportunidades() {
         <header className="px-3 pt-3 pb-2">
           <div className="flex items-center gap-2">
             <span className={cn("h-2.5 w-2.5 rounded-full", COLOR_COLUMNA[et.valor])} />
-            <h2 className="font-semibold text-sm">{et.texto}</h2>
+            <h2 className="font-semibold text-sm" data-explain={GLOSARIO.etapaOportunidad} data-explain-title={et.texto}>{et.texto}</h2>
             <span className="ml-auto rounded-full bg-superficie border border-borde px-2 text-xs cifra">{tarjetas.length}</span>
           </div>
           <p className="text-xs text-tenue mt-0.5 cifra">{dineroCompacto(suma)}{["ganada", "perdida"].includes(et.valor) ? " · últimos 60 días" : ""}</p>
@@ -118,7 +119,7 @@ export default function Oportunidades() {
                 <div className="mt-2 flex items-center justify-between gap-2">
                   <span className="text-sm font-semibold cifra">{o.monto_estimado ? dinero(o.monto_estimado) : <span className="text-tenue font-normal">Sin monto</span>}</span>
                   <span className={cn("text-[11px] cifra", o.dias_en_etapa > 14 && !["ganada", "perdida"].includes(o.etapa) ? "text-aviso font-medium" : "text-tenue")}
-                    title="Días en esta etapa">{o.dias_en_etapa === 0 ? "hoy" : `${o.dias_en_etapa} d`}</span>
+                    title="Días en esta etapa" data-explain={GLOSARIO.diasEnEtapa}>{o.dias_en_etapa === 0 ? "hoy" : `${o.dias_en_etapa} d`}</span>
                 </div>
                 {o.tarea && !["ganada", "perdida"].includes(o.etapa) && (
                   <p className={cn("mt-2 flex items-start gap-1.5 rounded-md px-2 py-1 text-xs", vencida ? "bg-peligro-suave text-peligro" : "bg-fondo text-tenue")}>
@@ -239,7 +240,7 @@ function DetalleOportunidad({ o, puedeEditar, alPerder }: { o: VOportunidad; pue
           </Seleccion>
         </Campo>
         <Campo etiqueta="Notas" className="sm:col-span-2"><AreaTexto value={f.notas ?? ""} disabled={!puedeEditar} onChange={(e) => setF({ ...f, notas: e.target.value })} /></Campo>
-        {o.motivo_perdida && <p className="sm:col-span-2 rounded-lg bg-peligro-suave text-peligro text-sm px-3 py-2">Perdida: {o.motivo_perdida}</p>}
+        {o.motivo_perdida && <p className="sm:col-span-2 rounded-lg bg-peligro-suave text-peligro text-sm px-3 py-2" data-explain={GLOSARIO.motivoPerdida}>Perdida: {o.motivo_perdida}</p>}
         {puedeEditar && cambio && <div className="sm:col-span-2 flex justify-end"><Boton type="submit" cargando={guardar.isPending}>Guardar cambios</Boton></div>}
       </form>
 

@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { dinero, fecha, fechaYHora, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 import { CantidadConSigno, InsigniaMovimiento, nombreCorto, useAlmacenes, type TipoMovimiento } from "./comun";
 import type { FilaExistencia } from "../Existencias";
 
@@ -76,11 +77,12 @@ export function DetalleExistencia({ articuloId, fila, alCerrar }: {
       {!fila ? <Cargando /> : (
         <div className="space-y-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <Cifra titulo="En planta" valor={fila.en_planta} />
-            <Cifra titulo="Apartado" valor={fila.reservado} tono="aviso" />
-            <Cifra titulo="Disponible" valor={fila.disponible} fuerte />
+            <Cifra titulo="En planta" valor={fila.en_planta} explica={GLOSARIO.enPlanta} />
+            <Cifra titulo="Apartado" valor={fila.reservado} tono="aviso" explica={GLOSARIO.apartado} />
+            <Cifra titulo="Disponible" valor={fila.disponible} fuerte explica={GLOSARIO.disponible} />
             <Cifra titulo={puede("compras", 1) || puede("finanzas", 1) ? "En tránsito" : "En ML Full"}
-              valor={puede("compras", 1) || puede("finanzas", 1) ? fila.en_transito : fila.en_mercadolibre} tono="info" />
+              valor={puede("compras", 1) || puede("finanzas", 1) ? fila.en_transito : fila.en_mercadolibre} tono="info"
+              explica={puede("compras", 1) || puede("finanzas", 1) ? GLOSARIO.enTransito : GLOSARIO.mlFull} />
           </div>
           {/* Lo importado no "llega en N días": va por tramos y la fecha sale de la etapa real del embarque. */}
           {(puede("compras", 1) || puede("finanzas", 1)) && Number(fila.en_produccion ?? 0) + Number(fila.en_mar ?? 0) + Number(fila.en_puerto ?? 0) > 0 && (
@@ -129,7 +131,7 @@ export function DetalleExistencia({ articuloId, fila, alCerrar }: {
           </section>
 
           <section>
-            <h3 className="etiqueta mb-2 flex items-center gap-1.5"><History className="h-3.5 w-3.5" /> Kardex</h3>
+            <h3 className="etiqueta mb-2 flex items-center gap-1.5" data-explain={GLOSARIO.kardex}><History className="h-3.5 w-3.5" /> Kardex</h3>
             {!verMovimientos ? (
               <p className="text-sm text-tenue rounded-lg bg-fondo px-3 py-3">
                 Tu rol ve existencias y apartados. Los movimientos (quién sacó qué y para qué) los consulta almacén.
@@ -147,7 +149,7 @@ export function DetalleExistencia({ articuloId, fila, alCerrar }: {
                       <tr key={m.id}>
                         <td className="whitespace-nowrap text-xs text-tenue">{fechaYHora(m.en)}</td>
                         <td>
-                          <InsigniaMovimiento tipo={m.tipo} />{m.fuera_de_lista && <Insignia tono="aviso" className="ml-1">fuera de lista</Insignia>}
+                          <InsigniaMovimiento tipo={m.tipo} />{m.fuera_de_lista && <span data-explain={GLOSARIO.fueraDeLista}><Insignia tono="aviso" className="ml-1">fuera de lista</Insignia></span>}
                           <p className="text-xs text-tenue mt-0.5">{m.almacen}</p>
                         </td>
                         <td className="text-right"><CantidadConSigno n={Number(m.cantidad)} /></td>
@@ -199,9 +201,9 @@ export function DetalleExistencia({ articuloId, fila, alCerrar }: {
   );
 }
 
-function Cifra({ titulo, valor, tono, fuerte }: { titulo: string; valor: number; tono?: "aviso" | "info"; fuerte?: boolean }) {
+function Cifra({ titulo, valor, tono, fuerte, explica }: { titulo: string; valor: number; tono?: "aviso" | "info"; fuerte?: boolean; explica?: string }) {
   return (
-    <div className={cn("rounded-lg px-3 py-2", fuerte ? "bg-marca-suave" : "bg-fondo")}>
+    <div className={cn("rounded-lg px-3 py-2", fuerte ? "bg-marca-suave" : "bg-fondo")} data-explain={explica} data-explain-title={explica ? titulo : undefined}>
       <p className="text-xs text-tenue">{titulo}</p>
       <p className={cn("text-xl font-semibold cifra", tono === "aviso" && valor > 0 && "text-aviso", tono === "info" && valor > 0 && "text-info",
         valor < 0 && "text-peligro", fuerte && "text-marca-texto")}>{numero(valor)}</p>

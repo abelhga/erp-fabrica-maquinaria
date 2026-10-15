@@ -16,6 +16,7 @@ import { dinero, fecha, numero, porcentaje } from "@/lib/formato";
 import { cn, coincide } from "@/lib/utilidades";
 import { todasLasFilas } from "@/modulos/almacen/componentes/comun";
 import { useTiposCambio, type Moneda, hace } from "./componentes/comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Precio {
   articulo_id: string; clave: string; nombre: string; unidad: string; tipo: string; es_importado: boolean;
@@ -183,9 +184,9 @@ export default function Precios() {
                 <thead>
                   <tr>
                     <th className="px-2">Clave</th><th>Artículo</th><th className="hidden xl:table-cell px-2">Proveedor</th>
-                    <th className="text-right px-2">Costo actual</th><th className="px-2">Actualizado</th>
-                    <th className="text-right w-32 px-2">Nuevo costo</th><th className="px-1">Moneda</th><th className="text-right px-2">Cambio</th>
-                    <th className="text-right hidden 2xl:table-cell" title="Equipos y subensambles que lo usan directamente">Usado en</th>
+                    <th className="text-right px-2" data-explain={GLOSARIO.costoVigente}>Costo actual</th><th className="px-2" data-explain={GLOSARIO.costoViejo}>Actualizado</th>
+                    <th className="text-right w-32 px-2">Nuevo costo</th><th className="px-1">Moneda</th><th className="text-right px-2" data-explain={GLOSARIO.cambioCosto}>Cambio</th>
+                    <th className="text-right hidden 2xl:table-cell" title="Equipos y subensambles que lo usan directamente" data-explain={GLOSARIO.usadoEnEquipos}>Usado en</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -269,7 +270,7 @@ export default function Precios() {
 
         <Tarjeta className="2xl:sticky 2xl:top-4">
           <EncabezadoTarjeta titulo={<span className="flex items-center gap-2"><History className="h-4 w-4 text-tenue" /> Últimos cambios</span>}
-            descripcion="Quién movió qué costo y cuándo" />
+            descripcion="Quién movió qué costo y cuándo" explica={GLOSARIO.origenCosto} />
           {historial.isLoading ? <Cargando filas={5} /> : (historial.data?.length ?? 0) === 0 ? (
             <p className="px-5 pb-5 text-sm text-tenue">Todavía no hay cambios registrados.</p>
           ) : (

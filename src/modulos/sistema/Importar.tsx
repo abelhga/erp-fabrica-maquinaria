@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { fechaYHora, numero } from "@/lib/formato";
 import { SugerenciasSubensamble } from "./SugerenciasSubensamble";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Importacion {
   id: number; fuente: string; en: string;
@@ -50,11 +51,11 @@ export default function Importar() {
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {v && (
-              <Kpi titulo="Precios de equipo iguales a Nuevo Costeo" valor={`${v.iguales} de ${v.comparados}`}
+              <Kpi titulo="Precios de equipo iguales a Nuevo Costeo" valor={`${v.iguales} de ${v.comparados}`} explica={GLOSARIO.precioIgualHoja}
                 icono={v.distintos ? AlertTriangle : CheckCircle2} tono={v.distintos ? "aviso" : "ok"}
                 detalle={v.distintos ? `${v.distintos} con diferencia: revisar antes de cotizar` : "El ERP calcula exactamente lo mismo que la hoja"} />
             )}
-            <Kpi titulo="Existencias de arranque" valor={numero(cargado.data?.existencias)} icono={Database} tono="marca" detalle="Artículo × almacén, cargadas una sola vez" />
+            <Kpi titulo="Existencias de arranque" valor={numero(cargado.data?.existencias)} icono={Database} explica={GLOSARIO.existenciasArranque} tono="marca" detalle="Artículo × almacén, cargadas una sola vez" />
             <Kpi titulo="Historial de costos" valor={numero(ultima.resumen.historial_costos)} icono={Database} tono="info" detalle="Precios de compra desde 2011" />
             <Kpi titulo="Ventas históricas" valor={numero(ultima.resumen.ventas_historicas)} icono={Database} tono="neutro" detalle={`${numero(ultima.resumen.clientes_paneles)} clientes de los paneles`} />
           </div>

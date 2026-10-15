@@ -8,6 +8,7 @@ import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { dinero, fechaYHora, hoyISO, numero } from "@/lib/formato";
+import { GLOSARIO } from "@/tutorial/glosario";
 import { CantidadConSigno, InsigniaMovimiento, TIPO_MOV, nombreCorto, todasLasFilas, useAlmacenes, type TipoMovimiento } from "./comun";
 
 interface Mov {
@@ -67,8 +68,8 @@ export function Historial() {
 
   const columnas: Columna<Mov>[] = [
     { clave: "en", titulo: "Fecha", clase: "whitespace-nowrap text-xs text-tenue px-2", valor: (m) => m.en, celda: (m) => fechaYHora(m.en) },
-    { clave: "tipo", titulo: "Movimiento", valor: (m) => TIPO_MOV[m.tipo]?.texto ?? m.tipo,
-      clase: "px-2", celda: (m) => <><InsigniaMovimiento tipo={m.tipo} />{m.fuera_de_lista && <Insignia tono="aviso" className="ml-1">fuera de lista</Insignia>}</> },
+    { clave: "tipo", titulo: "Movimiento", valor: (m) => TIPO_MOV[m.tipo]?.texto ?? m.tipo, explica: GLOSARIO.tipoMovimiento,
+      clase: "px-2", celda: (m) => <><InsigniaMovimiento tipo={m.tipo} />{m.fuera_de_lista && <span data-explain={GLOSARIO.fueraDeLista}><Insignia tono="aviso" className="ml-1">fuera de lista</Insignia></span>}</> },
     // La clave va en su columna solo en pantallas muy anchas; el CSV la trae siempre.
     { clave: "clave", titulo: "Clave", clase: "whitespace-nowrap text-tenue text-xs hidden 2xl:table-cell" },
     { clave: "nombre", titulo: "Artículo", clase: "min-w-[220px]",

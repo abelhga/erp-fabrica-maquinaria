@@ -17,6 +17,7 @@ import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utilidades";
 import { SelectorProveedor, type Moneda, type ProveedorBreve } from "./comun";
 import { DialogoProveedor } from "./DialogoProveedor";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface ArticuloBreve { id: string; clave: string; nombre: string; unidad: string | null }
 type Origen = "recordado" | "clave" | "sugerido" | "manual" | null;
@@ -76,7 +77,7 @@ export function SubirCotizacion({ alLeer }: { alLeer: (c: CotizacionLeida) => vo
       <div className="flex flex-wrap items-center gap-3">
         <Sparkles className="h-5 w-5 text-marca shrink-0" />
         <p className="text-sm flex-1 min-w-[200px]">
-          <b>¿Tienes la cotización del proveedor?</b> Súbela y Claude arma la orden. <span className="text-tenue">PDF o foto.</span>
+          <b data-explain={GLOSARIO.leerCotizacionProveedor}>¿Tienes la cotización del proveedor?</b> Súbela y Claude arma la orden. <span className="text-tenue">PDF o foto.</span>
         </p>
         <Boton type="button" variante="secundario" onClick={() => entrada.current?.click()} cargando={leyendo}>
           {!leyendo && <FileUp className="h-4 w-4" />}{leyendo ? "Leyendo…" : "Subir cotización"}

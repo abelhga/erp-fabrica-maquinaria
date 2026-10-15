@@ -13,6 +13,7 @@ import { normalizar } from "@/lib/utilidades";
 import { CeldaNumero, CeldaTexto } from "./Celdas";
 import { cant, leerNumero, type ArticuloCatalogo, type Parametro } from "./comun";
 import { useArbol } from "./datosLista";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Operacion {
   id: string; articulo_id: string; etapa_id: number; horas: number; parametro: string | null; horas_por_parametro: number;
@@ -192,7 +193,7 @@ export function HorasEtapa({ articulo, parametros }: { articulo: ArticuloCatalog
             <tr>
               <th className="w-44">Etapa</th><th className="text-right w-28">Horas fijas</th><th className="w-32">Parámetro</th>
               <th className="text-right w-28 whitespace-nowrap" title="Horas que se suman por cada unidad del parámetro">h por parám.</th><th className="text-right w-24">Total</th>
-              {costos && <th className="text-right w-28">Tarifa</th>}{costos && <th className="text-right w-32">Mano de obra</th>}
+              {costos && <th className="text-right w-28" data-explain={GLOSARIO.tarifaManoObra}>Tarifa</th>}{costos && <th className="text-right w-32">Mano de obra</th>}
               <th>Notas</th>
             </tr>
           </thead>

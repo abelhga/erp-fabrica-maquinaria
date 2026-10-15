@@ -18,6 +18,7 @@ import { ResumenIA } from "./ResumenIA";
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { dinero, dineroCompacto, fecha, numero, porcentaje } from "@/lib/formato";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Indicadores {
   ventas?: { mes: number; mes_anterior: number; anio: number; pedidos_mes: number };
@@ -120,16 +121,17 @@ function InicioPorArea() {
             {i.ventas && (
               <Kpi titulo="Ventas del mes" valor={dineroCompacto(i.ventas.mes)} icono={TrendingUp} tono="marca"
                 detalle={variacion == null ? `${i.ventas.pedidos_mes} pedidos` : `${variacion >= 0 ? "▲" : "▼"} ${porcentaje(Math.abs(variacion), 0)} vs. mes anterior · ${i.ventas.pedidos_mes} pedidos`}
-                alClic={() => ir("/ventas/pedidos")} />
+                alClic={() => ir("/ventas/pedidos")} explica={GLOSARIO.ventasDelMes} />
             )}
             {i.cotizaciones && (
               <Kpi titulo="Cotizaciones vivas" valor={numero(i.cotizaciones.abiertas)} icono={FileText} tono="info"
                 detalle={`${dineroCompacto(i.cotizaciones.monto_abierto)} enviadas${conversion != null ? ` · cierre ${porcentaje(conversion, 0)} (90 días)` : ""}`}
-                alClic={() => ir("/ventas/cotizaciones")} />
+                alClic={() => ir("/ventas/cotizaciones")} explica={GLOSARIO.cotizacionesVivas} />
             )}
             {i.cobranza && (
               <Kpi titulo="Por cobrar" valor={dineroCompacto(i.cobranza.por_cobrar)} icono={Wallet} tono="aviso"
-                detalle={`${i.cobranza.pedidos_con_saldo} pedidos con saldo`} alClic={puede("finanzas") ? () => ir("/finanzas/cobranza") : undefined} />
+                detalle={`${i.cobranza.pedidos_con_saldo} pedidos con saldo`} alClic={puede("finanzas") ? () => ir("/finanzas/cobranza") : undefined}
+                explica={GLOSARIO.porCobrar} />
             )}
             {i.produccion && (
               <Kpi titulo="Órdenes en taller" valor={numero(i.produccion.abiertas)} icono={Factory}
@@ -159,7 +161,7 @@ function InicioPorArea() {
           <div className="grid gap-4 lg:grid-cols-3">
             {puede("ventas") && (
               <Tarjeta className="lg:col-span-2">
-                <EncabezadoTarjeta titulo="Ventas por mes" descripcion="Pedidos sin IVA, por línea"
+                <EncabezadoTarjeta titulo="Ventas por mes" descripcion="Pedidos sin IVA, por línea" explica={GLOSARIO.lineaVenta}
                   acciones={i.ventas && <span className="text-sm text-tenue">Año: <b className="text-texto cifra">{dinero(i.ventas.anio)}</b></span>} />
                 <div className="px-5"><Leyenda series={LINEAS.map((l, k) => ({ nombre: l.nombre, color: SERIE(k + 1) }))} /></div>
                 <div className="h-64 px-2 pb-3 pt-2">

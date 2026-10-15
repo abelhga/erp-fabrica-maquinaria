@@ -9,6 +9,7 @@ import { q } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { dinero, fecha, numero } from "@/lib/formato";
 import { GraficaCosteo, type PuntoCosteo } from "./Graficas";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
  * Pestaña Historial: lo que pidió el dueño, "cuánto ha cambiado el costo de un
@@ -52,7 +53,7 @@ export function Historial({ id }: { id: string }) {
   return (
     <div className="space-y-4">
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Costo y precio en el tiempo"
+        <EncabezadoTarjeta titulo="Costo y precio en el tiempo" explica={GLOSARIO.historialCosteo}
           descripcion="Costo de fabricarlo, precio de lista que regía y el que habría tenido con la utilidad de hoy: si las dos líneas de precio se separan, la diferencia vino de cambiar la utilidad." />
         <div className="px-5 pb-5">
           {puntos.filter((p) => (p.costo ?? 0) > 0).length < 2 ? (

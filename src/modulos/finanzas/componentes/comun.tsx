@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, hoyISO } from "@/lib/formato";
 import type { Tono } from "@/components/ui/insignia";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export type Moneda = "MXN" | "USD" | "EUR";
 
@@ -77,11 +78,11 @@ export function TipoCambioDia() {
       {editable && <Pencil className="h-3.5 w-3.5 text-tenue" />}
     </span>
   );
-  if (!editable) return <div className="h-9 px-3 rounded-lg border border-borde bg-superficie flex items-center">{contenido}</div>;
+  if (!editable) return <div className="h-9 px-3 rounded-lg border border-borde bg-superficie flex items-center" data-explain={GLOSARIO.tipoCambio} data-explain-title="Tipo de cambio">{contenido}</div>;
   return (
     <P.Root open={abierto} onOpenChange={(o) => { setAbierto(o); if (o) setValor(v ? String(v.valor) : ""); }}>
       <P.Trigger asChild>
-        <button className="h-9 px-3 rounded-lg border border-borde bg-superficie hover:bg-fondo flex items-center" title="Capturar el tipo de cambio de hoy">{contenido}</button>
+        <button className="h-9 px-3 rounded-lg border border-borde bg-superficie hover:bg-fondo flex items-center" title="Capturar el tipo de cambio de hoy" data-explain={GLOSARIO.tipoCambio} data-explain-title="Tipo de cambio">{contenido}</button>
       </P.Trigger>
       <P.Portal>
         <P.Content align="end" sideOffset={6} className="z-50 tarjeta shadow-xl p-4 w-72">

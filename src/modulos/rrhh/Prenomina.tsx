@@ -19,6 +19,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, fechaYHora, hoyISO, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { nombreMes, puntos } from "./componentes/objetivos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Semana { inicio: string; fin: string; pago: string; estado: "abierta" | "cerrada"; cerrada_en: string | null; cerrada_por: string | null; personas: number; neto: number | null }
 interface Concepto { clave: string; concepto: string; tipo: "percepcion" | "deduccion"; importe: number; nota: string | null; referencia: string | null; id?: string }
@@ -69,7 +70,7 @@ export default function Prenomina() {
       )}
     >
       <Pestanas value={vista} onValueChange={(v) => { const p = new URLSearchParams(params); if (v === "semana") p.delete("vista"); else p.set("vista", v); setParams(p, { replace: true }); }}>
-        <ListaPestanas opciones={[{ valor: "semana", texto: "Semana" }, { valor: "prestamos", texto: "Préstamos" }, { valor: "sueldos", texto: "Sueldos" }]} />
+        <ListaPestanas opciones={[{ valor: "semana", texto: "Semana", explica: GLOSARIO.semanaNomina }, { valor: "prestamos", texto: "Préstamos", explica: GLOSARIO.prestamoNomina }, { valor: "sueldos", texto: "Sueldos", explica: GLOSARIO.sueldoSemanal }]} />
         <ContenidoPestana value="semana" className="pt-4">
           {semanas.error ? <ErrorCarga error={semanas.error} /> : !semana ? <Cargando /> : <VistaSemana semana={semana} />}
         </ContenidoPestana>
@@ -110,7 +111,7 @@ function VistaSemana({ semana }: { semana: Semana }) {
       ),
     },
     {
-      clave: "dias_pagados", titulo: "Días", alinear: "der", sinBusqueda: true, valor: (r) => n(r.dias_pagados),
+      clave: "dias_pagados", titulo: "Días", explica: GLOSARIO.diasPagados, alinear: "der", sinBusqueda: true, valor: (r) => n(r.dias_pagados),
       celda: (r) => {
         const motivos = [n(r.faltas) && `${numero(r.faltas)} falta`, n(r.permisos_sin_goce) && `${numero(r.permisos_sin_goce)} sin goce`,
           n(r.incapacidad) && `${numero(r.incapacidad)} incapacidad`, n(r.dias_fuera) && `${numero(r.dias_fuera)} fuera`, n(r.retardo_horas) && `${numero(r.retardo_horas)} h retardo`].filter(Boolean);
@@ -119,33 +120,33 @@ function VistaSemana({ semana }: { semana: Semana }) {
     },
     { clave: "importe_dias", titulo: "Sueldo", alinear: "der", sinBusqueda: true, valor: (r) => n(r.importe_dias), celda: (r) => dinero(r.importe_dias) },
     {
-      clave: "horas_extra", titulo: "Horas extra", alinear: "der", sinBusqueda: true, valor: (r) => n(r.importe_dobles) + n(r.importe_triples),
+      clave: "horas_extra", titulo: "Horas extra", explica: GLOSARIO.horasDoblesTriples, alinear: "der", sinBusqueda: true, valor: (r) => n(r.importe_dobles) + n(r.importe_triples),
       celda: (r) => n(r.horas_extra) === 0 ? <span className="text-tenue">—</span> : (
         <span>{dinero(n(r.importe_dobles) + n(r.importe_triples))}
           <span className={cn("block text-[11px]", n(r.horas_triples) > 0 ? "text-aviso" : "text-tenue")}>{numero(r.horas_dobles)} dobles{n(r.horas_triples) > 0 && ` + ${numero(r.horas_triples)} ${n(r.horas_triples) === 1 ? "triple" : "triples"}`}</span></span>
       ),
     },
     // Prima, otros pagos y bono solo aparecen si alguien los tiene esa semana: la tabla cabe y "A pagar" siempre se ve.
-    { clave: "prima_vacacional", titulo: "Prima vac.", alinear: "der", sinBusqueda: true, oculta: !datos.some((r) => n(r.prima_vacacional)), valor: (r) => n(r.prima_vacacional), celda: (r) => n(r.prima_vacacional) ? dinero(r.prima_vacacional) : <span className="text-tenue">—</span> },
-    { clave: "percepciones", titulo: "Otros pagos", alinear: "der", sinBusqueda: true, oculta: !datos.some((r) => n(r.percepciones)), valor: (r) => n(r.percepciones), celda: (r) => n(r.percepciones) ? dinero(r.percepciones) : <span className="text-tenue">—</span> },
+    { clave: "prima_vacacional", titulo: "Prima vac.", explica: GLOSARIO.primaVacacional, alinear: "der", sinBusqueda: true, oculta: !datos.some((r) => n(r.prima_vacacional)), valor: (r) => n(r.prima_vacacional), celda: (r) => n(r.prima_vacacional) ? dinero(r.prima_vacacional) : <span className="text-tenue">—</span> },
+    { clave: "percepciones", titulo: "Otros pagos", explica: GLOSARIO.otrosPagosNomina, alinear: "der", sinBusqueda: true, oculta: !datos.some((r) => n(r.percepciones)), valor: (r) => n(r.percepciones), celda: (r) => n(r.percepciones) ? dinero(r.percepciones) : <span className="text-tenue">—</span> },
     {
-      clave: "bono", titulo: "Bono", alinear: "der", sinBusqueda: true, oculta: !datos.some((r) => r.bono_pct != null), valor: (r) => r.bono_monto ?? r.bono_pct,
+      clave: "bono", titulo: "Bono", explica: GLOSARIO.bonoObjetivos, alinear: "der", sinBusqueda: true, oculta: !datos.some((r) => r.bono_pct != null), valor: (r) => r.bono_monto ?? r.bono_pct,
       celda: (r) => r.bono_pct == null ? <span className="text-tenue">—</span> : (
         <span>{r.bono_monto != null ? dinero(r.bono_monto) : puntos(r.bono_pct)}
           {r.bono_aviso && <span className="block text-[11px] text-aviso whitespace-nowrap">falta la base</span>}</span>
       ),
     },
-    { clave: "deducciones", titulo: "Descuentos", alinear: "der", sinBusqueda: true, valor: (r) => n(r.total_deducciones), celda: (r) => n(r.total_deducciones) ? <span className="text-peligro">−{dinero(r.total_deducciones)}</span> : <span className="text-tenue">—</span> },
-    { clave: "neto", titulo: "A pagar", alinear: "der", sinBusqueda: true, valor: (r) => n(r.neto), celda: (r) => <b>{dinero(r.neto)}</b> },
+    { clave: "deducciones", titulo: "Descuentos", explica: GLOSARIO.descuentosNomina, alinear: "der", sinBusqueda: true, valor: (r) => n(r.total_deducciones), celda: (r) => n(r.total_deducciones) ? <span className="text-peligro">−{dinero(r.total_deducciones)}</span> : <span className="text-tenue">—</span> },
+    { clave: "neto", titulo: "A pagar", explica: GLOSARIO.aPagarNomina, alinear: "der", sinBusqueda: true, valor: (r) => n(r.neto), celda: (r) => <b>{dinero(r.neto)}</b> },
   ];
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        {cerrada
+        <span data-explain={GLOSARIO.cerrarSemana} data-explain-title="Estado de la semana">{cerrada
           ? <Insignia tono="ok"><Lock className="h-3 w-3" /> Cerrada {semana.cerrada_por && `por ${semana.cerrada_por}`} el {fechaYHora(semana.cerrada_en)}</Insignia>
           : terminada ? <Insignia tono="aviso">Lista para cerrar: terminó el jueves {fecha(semana.fin)}</Insignia>
-          : <Insignia tono="info">En curso: termina el jueves {fecha(semana.fin)}, se paga el {fecha(semana.pago)}</Insignia>}
+          : <Insignia tono="info">En curso: termina el jueves {fecha(semana.fin)}, se paga el {fecha(semana.pago)}</Insignia>}</span>
         <div className="ml-auto flex flex-wrap gap-2">
           <Boton variante="secundario" disabled={!datos.length} onClick={() => exportarCsv(semana, datos)}><Download className="h-4 w-4" /> Exportar CSV</Boton>
           {!cerrada && puede("nomina", 2) && <Boton variante="secundario" onClick={() => setDialogo("concepto")}><Plus className="h-4 w-4" /> Agregar concepto</Boton>}
@@ -156,11 +157,11 @@ function VistaSemana({ semana }: { semana: Semana }) {
       </div>
 
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
-        <Kpi titulo="Total a pagar" valor={dinero(total)} icono={Wallet} detalle={`${datos.length} personas · antes de lo fiscal`} />
-        <Kpi titulo="Horas extra" valor={`${numero(dobles + triples)} h`} icono={Clock} tono={conTriples ? "aviso" : "marca"}
+        <Kpi titulo="Total a pagar" valor={dinero(total)} icono={Wallet} explica={GLOSARIO.aPagarNomina} detalle={`${datos.length} personas · antes de lo fiscal`} />
+        <Kpi titulo="Horas extra" valor={`${numero(dobles + triples)} h`} icono={Clock} explica={GLOSARIO.horasDoblesTriples} tono={conTriples ? "aviso" : "marca"}
           detalle={conTriples ? `${numero(triples)} triples en ${conTriples} persona${conTriples > 1 ? "s" : ""} (más de 9 a la semana)` : `${numero(dobles)} dobles`} />
-        <Kpi titulo="Días sin goce" valor={numero(ausencias)} icono={CalendarX} tono={ausencias ? "aviso" : "neutro"} detalle="Faltas, permisos sin goce e incapacidad" />
-        <Kpi titulo="Otros pagos" valor={dinero(variables)} icono={HandCoins} tono="info" detalle="Servicios fuera, apoyos, gratificaciones" />
+        <Kpi titulo="Días sin goce" valor={numero(ausencias)} icono={CalendarX} explica={GLOSARIO.diasSinGoce} tono={ausencias ? "aviso" : "neutro"} detalle="Faltas, permisos sin goce e incapacidad" />
+        <Kpi titulo="Otros pagos" valor={dinero(variables)} icono={HandCoins} explica={GLOSARIO.otrosPagosNomina} tono="info" detalle="Servicios fuera, apoyos, gratificaciones" />
       </div>
 
       {(sinBase > 0 || sinSueldo > 0) && (
@@ -333,7 +334,7 @@ function Prestamos({ semanas, puedeCapturar }: { semanas: Semana[]; puedeCaptura
   return (
     <div className="space-y-3">
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
-        <Kpi titulo="Préstamos activos" valor={numero(activos.length)} icono={Banknote} detalle={`Saldo por cobrar ${dinero(activos.reduce((s, p) => s + n(p.saldo), 0))}`} />
+        <Kpi titulo="Préstamos activos" valor={numero(activos.length)} icono={Banknote} explica={GLOSARIO.prestamoNomina} detalle={`Saldo por cobrar ${dinero(activos.reduce((s, p) => s + n(p.saldo), 0))}`} />
       </div>
       <TablaDatos filas={prestamos.data} columnas={columnas} cargando={prestamos.isLoading} error={prestamos.error} claveFila={(p) => p.id}
         exportarComo="prestamos-nomina" placeholder="Buscar persona o motivo…"
@@ -406,9 +407,9 @@ function Sueldos({ puedeCapturar }: { puedeCapturar: boolean }) {
   const total = useMemo(() => datos.reduce((s, x) => s + n(x.sueldo_semanal), 0), [datos]);
   const columnas: Columna<Sueldo>[] = [
     { clave: "nombre", titulo: "Persona", celda: (s) => <div><p className="font-medium">{s.nombre}</p><p className="text-xs text-tenue">{[s.numero, s.puesto].filter(Boolean).join(" · ")}</p></div>, valor: (s) => `${s.nombre} ${s.puesto ?? ""}` },
-    { clave: "sueldo_semanal", titulo: "Sueldo semanal", alinear: "der", sinBusqueda: true, valor: (s) => s.sueldo_semanal, celda: (s) => s.sueldo_semanal == null ? <span className="text-xs text-peligro">sin sueldo</span> : <b>{dinero(s.sueldo_semanal)}</b> },
+    { clave: "sueldo_semanal", titulo: "Sueldo semanal", explica: GLOSARIO.sueldoSemanal, alinear: "der", sinBusqueda: true, valor: (s) => s.sueldo_semanal, celda: (s) => s.sueldo_semanal == null ? <span className="text-xs text-peligro">sin sueldo</span> : <b>{dinero(s.sueldo_semanal)}</b> },
     { clave: "dia", titulo: "Por día", alinear: "der", sinBusqueda: true, valor: (s) => n(s.sueldo_semanal) / 7, celda: (s) => s.sueldo_semanal == null ? "—" : dinero(n(s.sueldo_semanal) / 7) },
-    { clave: "desde", titulo: "Desde", valor: (s) => s.desde, celda: (s) => s.origen === "ficha" ? <Insignia tono="aviso">De la ficha</Insignia> : fecha(s.desde) },
+    { clave: "desde", titulo: "Desde", explica: GLOSARIO.sueldoDeLaFicha, valor: (s) => s.desde, celda: (s) => s.origen === "ficha" ? <Insignia tono="aviso">De la ficha</Insignia> : fecha(s.desde) },
     { clave: "cambios", titulo: "Cambios", alinear: "der", sinBusqueda: true, valor: (s) => s.historial.length, celda: (s) => <span className="text-tenue">{s.historial.length}</span> },
   ];
   return (

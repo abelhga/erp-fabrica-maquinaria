@@ -15,6 +15,7 @@ import { dinero, dineroCompacto, fecha, numero } from "@/lib/formato";
 import { ESTADO_PEDIDO, RANGOS, TipoCambioDia, enMoneda, tonoRango, type Rango } from "./componentes/comun";
 import { DetalleCobranza, type FilaCobranza } from "./componentes/CobranzaPedido";
 import { SaldosArranque } from "./componentes/SaldosArranque";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 const ICONO_RANGO = { "0-30": Clock, "31-60": Hourglass, "61-90": AlarmClock, "90+": AlarmClock } as const;
@@ -92,7 +93,7 @@ export default function Cobranza() {
     },
     { clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.saldo_mxn), celda: (f) => <b>{enMoneda(f.saldo, f.moneda)}</b> },
     {
-      clave: "dias", titulo: "Antigüedad", sinBusqueda: true, valor: (f) => f.dias,
+      clave: "dias", titulo: "Antigüedad", explica: GLOSARIO.antiguedadCobranza, sinBusqueda: true, valor: (f) => f.dias,
       celda: (f) => Number(f.saldo) > 0.009 ? <Insignia tono={tonoRango(f.rango)}>{f.dias} días</Insignia> : <Insignia tono="ok">Pagado</Insignia>,
     },
   ];
@@ -101,7 +102,7 @@ export default function Cobranza() {
     { clave: "nombre", titulo, celda: (g) => <div><p className="font-medium">{g.nombre}</p><p className="text-xs text-tenue">{g.detalle}</p></div> },
     { clave: "pedidos", titulo: "Pedidos", alinear: "der", sinBusqueda: true },
     ...RANGOS.map((r): Columna<Grupo> => ({
-      clave: r.valor, titulo: r.valor === "90+" ? "+90" : r.valor.replace("-", "–"), alinear: "der", sinBusqueda: true, valor: (g) => g.rangos[r.valor],
+      clave: r.valor, titulo: r.valor === "90+" ? "+90" : r.valor.replace("-", "–"), explica: GLOSARIO.antiguedadCobranza, alinear: "der", sinBusqueda: true, valor: (g) => g.rangos[r.valor],
       celda: (g) => g.rangos[r.valor] ? <span className={r.valor === "90+" ? "text-peligro" : r.valor === "61-90" ? "text-aviso" : ""}>{dinero(g.rangos[r.valor])}</span> : <span className="text-tenue">—</span>,
     })),
     { clave: "total", titulo: "Saldo total", alinear: "der", sinBusqueda: true, celda: (g) => <b>{dinero(g.total)}</b> },
@@ -112,12 +113,12 @@ export default function Cobranza() {
     <Pagina titulo="Cobranza" descripcion="Lo que nos deben los clientes, desde cuándo, y lo que se ha cobrado mes a mes." acciones={<TipoCambioDia />}>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <div className="sm:col-span-2 lg:col-span-1">
-          <Kpi titulo="Por cobrar" valor={dineroCompacto(total)} icono={Wallet} tono="marca"
+          <Kpi titulo="Por cobrar" valor={dineroCompacto(total)} icono={Wallet} tono="marca" explica={GLOSARIO.porCobrar}
             detalle={`${pendientes.length} pedidos · ${dineroCompacto(suma(vencido))} vencido según crédito`}
             alClic={() => { setRango("todos"); setConSaldo("saldo"); setVista("pedidos"); }} />
         </div>
         {RANGOS.map((r) => (
-          <Kpi key={r.valor} titulo={r.texto} valor={dineroCompacto(suma(porRango[r.valor]))} icono={ICONO_RANGO[r.valor]} tono={r.tono}
+          <Kpi key={r.valor} titulo={r.texto} valor={dineroCompacto(suma(porRango[r.valor]))} icono={ICONO_RANGO[r.valor]} tono={r.tono} explica={GLOSARIO.antiguedadCobranza}
             detalle={`${porRango[r.valor].length} ${porRango[r.valor].length === 1 ? "pedido" : "pedidos"} · ${total ? Math.round((suma(porRango[r.valor]) / total) * 100) : 0} %`}
             alClic={() => { setRango(r.valor); setConSaldo("saldo"); setVista("pedidos"); }} />
         ))}
@@ -125,7 +126,7 @@ export default function Cobranza() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Tarjeta className="lg:col-span-2 flex flex-col">
-          <EncabezadoTarjeta titulo="Cobrado por mes" descripcion="Cobros registrados, en pesos (los de dólares al tipo de cambio del pedido)"
+          <EncabezadoTarjeta titulo="Cobrado por mes" explica={GLOSARIO.cobradoPorMes} descripcion="Cobros registrados, en pesos (los de dólares al tipo de cambio del pedido)"
             acciones={<span className="text-sm text-tenue">Promedio: <b className="text-texto cifra">{dinero(promedio)}</b></span>} />
           <div className="flex-1 min-h-[240px] px-2 pb-3">
             <ResponsiveContainer>
@@ -166,7 +167,7 @@ export default function Cobranza() {
           { valor: "pedidos", texto: "Por pedido" },
           { valor: "clientes", texto: "Por cliente", cuenta: clientes.length },
           { valor: "vendedores", texto: "Por vendedor", cuenta: vendedores.length },
-          { valor: "arranque", texto: "Saldos de arranque (hoja)" },
+          { valor: "arranque", texto: "Saldos de arranque (hoja)", explica: GLOSARIO.saldoArranque },
         ]} />
         <ContenidoPestana value="pedidos" className="pt-4">
           <TablaDatos

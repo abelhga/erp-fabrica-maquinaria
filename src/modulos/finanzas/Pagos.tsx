@@ -19,6 +19,7 @@ import { dinero, dineroCompacto, fecha, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { METODOS, TipoCambioDia, iso, lunesDe, enMoneda, nombreMetodo, type Moneda } from "./componentes/comun";
 import { SaldosProveedoresHoja, type SaldoProveedorHoja } from "./componentes/SaldosProveedoresHoja";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface PorPagar {
   orden_compra_id: string; folio: string; proveedor_id: string; proveedor: string; fecha: string; vence_pago: string | null;
@@ -76,7 +77,7 @@ export default function Pagos() {
   const cuatroSemanas = columnasAgenda.slice(1).reduce((s, c) => s + suma(c.filas), 0);
 
   const columnas: Columna<PorPagar>[] = [
-    { clave: "vence_pago", titulo: "Vence", sinBusqueda: true, valor: (f) => f.dias_para_vencer ?? 99999, celda: (f) => <Vence f={f} /> },
+    { clave: "vence_pago", titulo: "Vence", explica: GLOSARIO.vencePago, sinBusqueda: true, valor: (f) => f.dias_para_vencer ?? 99999, celda: (f) => <Vence f={f} /> },
     { clave: "proveedor", titulo: "Proveedor", celda: (f) => <div className="min-w-[180px]"><p className="font-medium">{f.proveedor}</p><p className="text-xs text-tenue">{f.categoria ?? ""}{f.dias_credito ? ` · crédito ${f.dias_credito} días` : " · contado"}</p></div> },
     { clave: "folio", titulo: "Orden", celda: (f) => <span className="whitespace-nowrap">{f.folio}</span> },
     { clave: "factura_proveedor", titulo: "Factura", valor: (f) => f.factura_proveedor ?? "", celda: (f) => f.factura_proveedor ?? <span className="text-aviso text-xs">Sin factura</span> },
@@ -90,12 +91,12 @@ export default function Pagos() {
   return (
     <Pagina titulo="Pagos a proveedores" descripcion="Lo que debemos por material recibido: lo vencido primero y lo que viene en las próximas 4 semanas." acciones={<TipoCambioDia />}>
       <div className={cn("grid gap-3 sm:grid-cols-2", verHoja ? "xl:grid-cols-5" : "xl:grid-cols-4")}>
-        <Kpi titulo="Por pagar" valor={dineroCompacto(suma(todas))} icono={Wallet} tono="marca" detalle={`${todas.length} órdenes recibidas con saldo`} alClic={() => { setPestana("ordenes"); setVista("todas"); }} />
-        <Kpi titulo="Vencido" valor={dineroCompacto(suma(vencidas))} icono={AlertTriangle} tono={vencidas.length ? "peligro" : "ok"}
+        <Kpi titulo="Por pagar" valor={dineroCompacto(suma(todas))} icono={Wallet} tono="marca" explica={GLOSARIO.porPagar} detalle={`${todas.length} órdenes recibidas con saldo`} alClic={() => { setPestana("ordenes"); setVista("todas"); }} />
+        <Kpi titulo="Vencido" valor={dineroCompacto(suma(vencidas))} icono={AlertTriangle} explica={GLOSARIO.vencePago} tono={vencidas.length ? "peligro" : "ok"}
           detalle={vencidas.length ? `${vencidas.length} órdenes · la más vieja hace ${-Math.min(...vencidas.map((f) => f.dias_para_vencer!))} días` : "Nada vencido"} alClic={() => setVista("vencidas")} />
-        <Kpi titulo="Vence en 7 días" valor={dineroCompacto(suma(semana))} icono={CalendarDays} tono="aviso" detalle={`${semana.length} órdenes`} alClic={() => setVista("semana")} />
-        <Kpi titulo="Próximas 4 semanas" valor={dineroCompacto(cuatroSemanas)} icono={CalendarRange} tono="info" detalle="Sin contar lo vencido" />
-        {verHoja && <Kpi titulo="Saldo de la hoja" valor={dineroCompacto(debemosHoja.reduce((s, f) => s + Number(f.saldo), 0))} icono={FileSpreadsheet} tono="neutro"
+        <Kpi titulo="Vence en 7 días" valor={dineroCompacto(suma(semana))} icono={CalendarDays} explica={GLOSARIO.vencePago} tono="aviso" detalle={`${semana.length} órdenes`} alClic={() => setVista("semana")} />
+        <Kpi titulo="Próximas 4 semanas" valor={dineroCompacto(cuatroSemanas)} icono={CalendarRange} explica={GLOSARIO.agendaPagos} tono="info" detalle="Sin contar lo vencido" />
+        {verHoja && <Kpi titulo="Saldo de la hoja" valor={dineroCompacto(debemosHoja.reduce((s, f) => s + Number(f.saldo), 0))} icono={FileSpreadsheet} explica={GLOSARIO.saldosHojaProveedores} tono="neutro"
           detalle={`${debemosHoja.length} proveedores${sociosHoja.length ? ` · aparte ${dineroCompacto(sociosHoja.reduce((s, f) => s + Number(f.saldo), 0))} de socios y bancos` : ""}`}
           alClic={() => setPestana("hoja")} />}
       </div>
@@ -103,11 +104,11 @@ export default function Pagos() {
       <Pestanas value={pestana} onValueChange={(v) => setPestana(v as "ordenes" | "hoja")}>
         {verHoja && <ListaPestanas opciones={[
           { valor: "ordenes", texto: "Órdenes del ERP", cuenta: todas.length },
-          { valor: "hoja", texto: "Saldos de la hoja", cuenta: debemosHoja.length },
+          { valor: "hoja", texto: "Saldos de la hoja", cuenta: debemosHoja.length, explica: GLOSARIO.saldosHojaProveedores },
         ]} />}
         <ContenidoPestana value="ordenes" className="pt-4 space-y-4">
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Agenda de pagos" descripcion="Por fecha de vencimiento (fecha de recepción + días de crédito del proveedor)" />
+            <EncabezadoTarjeta titulo="Agenda de pagos" explica={GLOSARIO.agendaPagos} descripcion="Por fecha de vencimiento (fecha de recepción + días de crédito del proveedor)" />
             {datos.isLoading ? <Cargando filas={3} /> : (
               <div className="grid gap-3 px-4 pb-4 sm:grid-cols-2 lg:grid-cols-5">
                 {columnasAgenda.map((c) => (

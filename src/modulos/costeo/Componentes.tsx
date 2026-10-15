@@ -10,6 +10,7 @@ import { dinero, fecha, hace, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { COMPRADOS, NOMBRE_TIPO, esCostoViejo, useCatalogo, type ArticuloCatalogo } from "./componentes/comun";
 import { NuevoArticulo } from "./componentes/NuevoArticulo";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type FiltroComp = "todos" | "sin_costo" | "viejo" | "importados" | "con_existencia";
 
@@ -88,11 +89,11 @@ export default function Componentes() {
     },
     { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (a) => a.precio, celda: (a) => dinero(a.precio) },
     {
-      clave: "costo", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, clase: "whitespace-nowrap",
+      clave: "costo", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, clase: "whitespace-nowrap", explica: GLOSARIO.costoArticulo,
       valor: (a) => a.costo_total ?? null, celda: (a) => <CeldaCosto a={a} />,
     },
     {
-      clave: "costo_actualizado_en", titulo: "Fecha costo", sinBusqueda: true, oculta: !costos, clase: "whitespace-nowrap",
+      clave: "costo_actualizado_en", titulo: "Fecha costo", sinBusqueda: true, oculta: !costos, clase: "whitespace-nowrap", explica: GLOSARIO.costoViejo,
       valor: (a) => a.costo_actualizado_en ?? null,
       celda: (a) => !a.costo_actualizado_en ? <span className="text-tenue">—</span>
         : esCostoViejo(a.costo_actualizado_en)

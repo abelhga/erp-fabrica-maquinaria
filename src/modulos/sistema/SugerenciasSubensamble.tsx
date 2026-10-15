@@ -11,6 +11,7 @@ import { Dialogo } from "@/components/ui/dialogo";
 import { Insignia } from "@/components/ui/insignia";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Vacio, Cargando } from "@/components/ui/estados";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Sugerencia {
   id: number; estado: "pendiente" | "aplicada" | "descartada"; lineas: number; ahorro: number; nombre_sugerido: string | null;
@@ -47,6 +48,7 @@ export function SugerenciasSubensamble() {
   return (
     <Tarjeta>
       <EncabezadoTarjeta
+        explica={GLOSARIO.subensambleSugerido}
         titulo={<span className="inline-flex items-center gap-2"><Sparkles className="h-4 w-4 text-marca" /> Subensambles escondidos en las listas copiadas</span>}
         descripcion={pendientes.length
           ? `${pendientes.length} grupos de piezas se repiten idénticos en varios equipos. Aplicarlos todos ahorra ${numero(ahorro)} líneas de captura.`

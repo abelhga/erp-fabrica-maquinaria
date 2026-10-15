@@ -9,6 +9,7 @@ import { Registrar } from "./componentes/Registrar";
 import { Historial } from "./componentes/Historial";
 import { Ajustes } from "./componentes/Ajustes";
 import { Conteos } from "./componentes/Conteos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type Vista = "registrar" | "historial" | "ajustes" | "conteos";
 
@@ -18,7 +19,7 @@ export default function Movimientos() {
   const capturar = puede("inventario", 2);
   // La base enseña movimientos a almacén y a quien ve costos; al vendedor no.
   const verMovimientos = capturar || puede("costos", 1);
-  const opciones: { valor: Vista; texto: string; cuenta?: number }[] = [];
+  const opciones: { valor: Vista; texto: string; cuenta?: number; explica?: string }[] = [];
 
   const pendientes = useQuery({
     queryKey: ["ajustes_pendientes_cuenta"],
@@ -31,8 +32,8 @@ export default function Movimientos() {
 
   if (capturar) opciones.push({ valor: "registrar", texto: "Registrar" });
   if (verMovimientos) opciones.push({ valor: "historial", texto: "Historial" });
-  opciones.push({ valor: "ajustes", texto: "Ajustes", cuenta: pendientes.data || undefined });
-  opciones.push({ valor: "conteos", texto: "Conteos físicos" });
+  opciones.push({ valor: "ajustes", texto: "Ajustes", cuenta: pendientes.data || undefined, explica: GLOSARIO.ajusteInventario });
+  opciones.push({ valor: "conteos", texto: "Conteos físicos", explica: GLOSARIO.conteoFisico });
 
   const pedida = params.get("vista") as Vista | null;
   const vista: Vista = pedida && opciones.some((o) => o.valor === pedida) ? pedida : opciones[0].valor;

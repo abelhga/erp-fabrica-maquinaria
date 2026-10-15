@@ -1,2 +1,48 @@
+// Ingeniería y costeo. Las llaves de costo, utilidad y fórmula de precio son confidenciales:
+// solo se conectan a elementos que la pantalla dibuja para quien tiene "costos" (columnas con
+// `oculta: !costos`, pestaña Costo y precio, Márgenes, Precios vs ventas). Un vendedor ve
+// Equipos y Componentes, así que lo que esas pantallas muestran a todos usa las llaves sin dinero.
 export const COSTEO = {
+  // --- Lo que ve cualquiera que entra a ingeniería (sin costos) ---
+  listaMateriales: "La receta del artículo: cada componente, materia prima o subensamble que lleva y en qué cantidad. Producción surte cada orden con esta lista, así que lo que no está aquí no llega al taller.",
+  subensamble: "Un grupo de piezas que siempre van juntas (cabezal motriz, tambor de cola…) capturado una sola vez y usado en varios equipos. No se copia: si lo cambias, cambia en todos los equipos que lo usan.",
+  usadoEnListas: "En cuántas listas de materiales aparece directamente. Un subensamble en ninguna lista todavía no se usa en ningún equipo.",
+  lineasLista: "Cuántos renglones tiene su lista de materiales (un subensamble cuenta como un renglón). Cero quiere decir que ingeniería todavía no lo captura.",
+  parametroEquipo: "Una medida del equipo (largo_m, ancho…) de la que dependen algunas cantidades u horas: cantidad = fija + por parámetro × valor. Así la banda de 22 m es la de 20 m con otro largo.",
+  cantidadEfectiva: "Lo que de verdad lleva el equipo: la cantidad fija más lo que suma el parámetro, redondeada hacia arriba si está marcado, y con la merma. Pasa el mouse sobre la cifra para ver la cuenta.",
+  mermaLinea: "Lo que se pierde al cortar o armar. La cantidad se divide entre (1 − merma): 10 m con 5 % de merma piden 10.53 m.",
+  redondearArriba: "Si está marcado, la cantidad sube a piezas enteras (2.3 rodillos se vuelven 3). Sirve para lo que no se compra en fracciones.",
+  horasEtapa: "Horas hombre de cada etapa del taller para fabricar este artículo, sin contar las de sus subensambles (cada uno trae las suyas). Producción planea el taller con estas mismas horas.",
+  solicitudCambioLista: "Aviso que manda producción desde una orden cuando la lista de materiales no cuadra con lo que se fabrica en piso («los rodillos son de 14\"»). Ingeniería corrige la lista y la marca aplicada, o la descarta si no procede.",
+  medidaEspecial: "Equipo hecho a una medida fuera de la estándar. Se marca en su ficha y su precio de lista ya lo toma en cuenta.",
+  noSeVendeSuelto: "Artículo que solo se usa dentro de un equipo: no se cotiza por separado.",
+  duplicarConParametros: "Hace una copia del equipo con su lista, horas y parámetros, para otra medida. Los subensambles no se copian: la copia usa los mismos.",
+  planoEstado: "Vigente: la revisión con la que se fabrica. Por aprobar: un borrador que todavía no sustituye al vigente. Anteriores: revisiones que ya se reemplazaron.",
+  planoSinVigente: "Equipos con órdenes de producción abiertas que no tienen plano vigente ligado en el ERP: el taller trabaja con lo que encuentra en Drive.",
+  canalesEnLinea: "Precio sugerido con IVA para cada canal (Mercado Libre, sitio web…): parte del precio de lista y le suma la comisión del canal, la cuota fija y el envío. «Abajo del sugerido» avisa que una publicación está más barata que eso.",
+
+  // --- Solo para quien ve costos ---
+  costoArticulo: "Lo que nos cuesta. En lo que se compra, el último costo capturado (si está en dólares o euros, convertido a pesos con el tipo de cambio de hoy). En lo que se fabrica, el material de su lista más la mano de obra de sus horas.",
+  piezasSinCosto: "Componentes dentro de la lista, en cualquier nivel, que no tienen costo capturado. Cuentan como $0: el costo y el precio del equipo salen más bajos de lo real sin avisar.",
+  costoMasViejo: "La fecha del costo más antiguo entre las piezas del equipo. Si pasa de un año se marca en amarillo: el costo del equipo ya no es el de hoy.",
+  costoViejo: "Un costo capturado hace más de 6 meses. Ya no es confiable para cotizar: conviene confirmarlo con el proveedor.",
+  importeLinea: "Cantidad efectiva por el costo unitario de la pieza. La suma de la lista más la mano de obra propia da el costo del equipo.",
+  tarifaManoObra: "Costo por hora hombre de cada etapa del taller. Se multiplica por las horas de esa etapa en cada equipo; al cambiarla se recalculan costos y precios.",
+  formulaPrecio: "Cómo sale el precio de un equipo: al costo se le suman los recargos sobre costo (y el de medida especial, si aplica). Eso se divide entre lo que queda del precio después de apartar la utilidad (subida para cubrir el ISR) y los recargos sobre precio. Al final se redondea hacia arriba según la política: en equipos, a $100 abajo de $100,000 y a $1,000 arriba. Lo que se revende sale de costo ÷ 0.70.",
+  politicaPrecio: "La regla de precio de un tipo de equipo: utilidad, recargos, medida especial, redondeo y descuento máximo. Cada categoría con política propia la usa; lo que no tiene categoría usa la de por defecto.",
+  utilidadPolitica: "La utilidad que pide la política. En equipos es neta de ISR: lo que queda libre después del impuesto. En lo que se revende es un margen sobre el precio.",
+  utilidadNeta: "Lo que queda libre del precio de lista después de restar el costo con todos sus recargos y el ISR, como porcentaje del precio. Si sale abajo de lo que pide su política se marca en amarillo para que lo revises (precio fijo, utilidad propia…).",
+  precioEntreCosto: "Cuántos pesos de precio salen por cada peso de costo, antes del redondeo. Sirve para comparar equipos de un vistazo.",
+  isrCompensacion: "En los equipos la utilidad se pide neta: se divide entre (1 − ISR) para que, después de pagar el impuesto, quede libre la utilidad de la política. Cambiarlo mueve el precio de todo lo que compensa ISR.",
+  recargosCosto: "Porcentajes que se suman al costo antes de calcular el precio: mermas, luz, administración…",
+  recargosPrecio: "Porcentajes que se apartan del precio de venta: comisiones, garantía, mercadotecnia… Se cobran sobre el precio, no sobre el costo.",
+  redondeoPrecio: "El precio sin redondear se sube al siguiente múltiplo (por ejemplo $100 o $1,000, según el tramo). Por eso el precio de lista casi siempre es un poco más alto que la fórmula.",
+  descuentoMaximoPolitica: "Lo más que un vendedor puede bajar del precio de lista sin pedir autorización.",
+  precioFijo: "Precio capturado a mano: manda sobre la fórmula de su política y no se mueve cuando cambia el costo.",
+  simuladorPrecios: "Antes de guardar un cambio de utilidad, recargo o ISR, ves cuántos precios se mueven, cuánto en promedio y los diez que más cambian. Respeta precios fijos y utilidades propias, igual que el cálculo real.",
+  tipoCambioCosteo: "Pesos por dólar y por euro. Convierte a pesos los costos de lo importado: al capturar uno nuevo se recalculan esos costos y sus precios.",
+  historialCosteo: "Una foto del costo y del precio cada vez que cambian. La línea «a utilidad de hoy» dice qué precio habría tenido con la utilidad actual: si se separa del precio real, la diferencia vino de cambiar la utilidad, no el costo.",
+  confiabilidadCosto: "Lo que puede hacer que el costo esté mal: piezas sin costo (cuentan como $0) y costos de hace más de 6 meses. Corrígelos y el precio se recalcula solo.",
+  indiceCostoFamilia: "Cómo se movió el costo (y el precio de lista) de la familia, con 100 al inicio del periodo: 112 quiere decir 12 % más caro. Cada mes compara solo los equipos que ya existían el mes anterior, así un equipo nuevo en el catálogo no mueve el índice.",
+  relacionCostoVentas: "Qué tanto se mueven juntos el costo de la familia y lo vendido, por trimestre. Cerca de 1: suben juntos; cerca de −1: uno sube cuando el otro baja; cerca de 0: no hay relación. Es orientativa: no dice que una cosa cause la otra.",
 } satisfies Record<string, string>;

@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { fecha, hoyISO } from "@/lib/formato";
 import { SoloLectura } from "./Editables";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Tc { fecha: string; moneda: "USD" | "EUR"; valor: number; fuente: string | null }
 
@@ -43,7 +44,7 @@ export function ConfigTipoCambio() {
     <div className="grid gap-4 lg:grid-cols-[360px_1fr] items-start">
       <div className="space-y-4">
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Captura del día" descripcion="Con el más reciente se convierten los costos en dólares y los saldos de proveedores y clientes." />
+          <EncabezadoTarjeta titulo="Captura del día" explica={GLOSARIO.tipoCambio} descripcion="Con el más reciente se convierten los costos en dólares y los saldos de proveedores y clientes." />
           <form className="px-5 pb-5 space-y-4" onSubmit={(e: FormEvent) => { e.preventDefault(); guardar.mutate(undefined); }}>
             <fieldset disabled={!editable} className="space-y-4">
               <Campo etiqueta="Fecha"><Entrada type="date" value={valores.fecha} max={hoyISO()} onChange={(e) => setF({ ...valores, fecha: e.target.value })} /></Campo>

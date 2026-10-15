@@ -12,6 +12,7 @@ import { dineroCompacto, fecha, numero } from "@/lib/formato";
 import { todasLasFilas } from "@/modulos/almacen/componentes/comun";
 import { DialogoProveedor } from "./componentes/DialogoProveedor";
 import type { Moneda } from "./componentes/comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface FilaProveedor {
   id: string; nombre: string; razon_social: string | null; categoria: string | null; pais: string; es_importacion: boolean; moneda: Moneda;
@@ -59,14 +60,14 @@ export default function Proveedores() {
       celda: (p) => <>{p.es_importacion ? <Insignia tono="info"><Globe2 className="h-3 w-3" /> {p.pais}</Insignia> : <span className="text-sm">{p.pais}</span>}
         {p.moneda !== "MXN" && <span className="ml-1 text-xs text-tenue">{p.moneda}</span>}</>,
     },
-    { clave: "dias_credito", titulo: "Crédito", alinear: "der", sinBusqueda: true, clase: "px-2 whitespace-nowrap", celda: (p) => p.dias_credito ? `${p.dias_credito} d` : <span className="text-tenue">contado</span> },
-    { clave: "dias_entrega", titulo: "Entrega", alinear: "der", sinBusqueda: true, clase: "px-2 whitespace-nowrap", celda: (p) => p.dias_entrega != null ? `${p.dias_entrega} d háb.` : <span className="text-tenue">—</span> },
+    { clave: "dias_credito", titulo: "Crédito", alinear: "der", sinBusqueda: true, explica: GLOSARIO.creditoProveedor, clase: "px-2 whitespace-nowrap", celda: (p) => p.dias_credito ? `${p.dias_credito} d` : <span className="text-tenue">contado</span> },
+    { clave: "dias_entrega", titulo: "Entrega", alinear: "der", sinBusqueda: true, explica: GLOSARIO.entregaProveedor, clase: "px-2 whitespace-nowrap", celda: (p) => p.dias_entrega != null ? `${p.dias_entrega} d háb.` : <span className="text-tenue">—</span> },
     { clave: "articulos", titulo: "Artículos", alinear: "der", sinBusqueda: true, clase: "px-2", celda: (p) => p.articulos ? numero(p.articulos) : <span className="text-tenue/50">·</span> },
     {
-      clave: "oc_abiertas", titulo: "OC abiertas", alinear: "der", sinBusqueda: true, clase: "px-2 whitespace-nowrap",
+      clave: "oc_abiertas", titulo: "OC abiertas", alinear: "der", sinBusqueda: true, clase: "px-2 whitespace-nowrap", explica: GLOSARIO.ordenesAbiertasProveedor,
       celda: (p) => p.oc_abiertas ? <span>{p.oc_abiertas}{p.oc_atrasadas > 0 && <Insignia tono="peligro" className="ml-1">{p.oc_atrasadas} tarde</Insignia>}</span> : <span className="text-tenue/50">·</span>,
     },
-    { clave: "comprado_12m", titulo: "Comprado 12 m", alinear: "der", sinBusqueda: true, oculta: !verDinero, clase: "px-2 whitespace-nowrap", celda: (p) => p.comprado_12m ? dineroCompacto(p.comprado_12m) : <span className="text-tenue/50">·</span> },
+    { clave: "comprado_12m", titulo: "Comprado 12 m", alinear: "der", sinBusqueda: true, oculta: !verDinero, explica: GLOSARIO.compradoDoceMeses, clase: "px-2 whitespace-nowrap", celda: (p) => p.comprado_12m ? dineroCompacto(p.comprado_12m) : <span className="text-tenue/50">·</span> },
     { clave: "ultima_compra", titulo: "Última OC", clase: "whitespace-nowrap text-tenue text-xs px-2 hidden 2xl:table-cell", celda: (p) => p.ultima_compra ? fecha(p.ultima_compra) : "—" },
   ];
 

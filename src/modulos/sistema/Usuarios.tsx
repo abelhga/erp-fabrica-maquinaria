@@ -16,6 +16,7 @@ import { cn } from "@/lib/utilidades";
 import { ROLES } from "./componentes/comun";
 import { Invitaciones } from "./componentes/Invitaciones";
 import { MatrizPermisos } from "./componentes/MatrizPermisos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface UsuarioSistema {
   id: string; nombre: string; correo: string; puesto: string | null; iniciales: string | null; activo: boolean; roles: Rol[];
@@ -60,7 +61,7 @@ export default function Usuarios() {
       ),
     },
     {
-      clave: "roles", titulo: "Roles", valor: (u) => u.roles.map((r) => NOMBRE_ROL[r]).join(", "),
+      clave: "roles", titulo: "Roles", explica: GLOSARIO.rolUsuario, valor: (u) => u.roles.map((r) => NOMBRE_ROL[r]).join(", "),
       celda: (u) => u.roles.length ? (
         <div className="flex flex-wrap gap-1 max-w-[320px]">
           {u.roles.map((r) => <Insignia key={r} tono={r === "direccion" ? "peligro" : r === "admin" ? "info" : r === "pantalla" ? "neutro" : "marca"}>{NOMBRE_ROL[r]}</Insignia>)}
@@ -68,7 +69,7 @@ export default function Usuarios() {
       ) : <Insignia tono="aviso" punto>Espera rol</Insignia>,
     },
     {
-      clave: "activo", titulo: "Estado", valor: (u) => (u.activo ? "Activo" : "Desactivado"),
+      clave: "activo", titulo: "Estado", explica: GLOSARIO.cuentaActiva, valor: (u) => (u.activo ? "Activo" : "Desactivado"),
       celda: (u) => (
         <div className="flex flex-col items-start gap-1">
           {u.activo ? <Insignia tono="ok" punto>Activo</Insignia> : <Insignia>Desactivado</Insignia>}
@@ -81,7 +82,7 @@ export default function Usuarios() {
       celda: (u) => u.ultimo_acceso ? <span title={fechaYHora(u.ultimo_acceso)} className="whitespace-nowrap">{hace(u.ultimo_acceso)}</span> : <span className="text-tenue">Nunca</span>,
     },
     { clave: "metodo", titulo: "Entra con", valor: (u) => (u.metodo === "google" ? "Google" : "Contraseña"), celda: (u) => <span className="text-tenue">{u.metodo === "google" ? "Google" : "Contraseña"}</span> },
-    { clave: "empleado", titulo: "Empleado", valor: (u) => u.empleado ?? "", celda: (u) => u.empleado ?? <span className="text-tenue">—</span> },
+    { clave: "empleado", titulo: "Empleado", explica: GLOSARIO.ligaEmpleado, valor: (u) => u.empleado ?? "", celda: (u) => u.empleado ?? <span className="text-tenue">—</span> },
   ];
 
   return (
@@ -89,12 +90,12 @@ export default function Usuarios() {
       <Pestanas value={pestana} onValueChange={(v) => setParams(v === "usuarios" ? {} : { vista: v }, { replace: true })}>
         <ListaPestanas opciones={[
           { valor: "usuarios", texto: "Usuarios", cuenta: todos.length },
-          { valor: "invitaciones", texto: "Invitaciones y pantallas", cuenta: invitaciones.data ?? undefined },
-          { valor: "permisos", texto: "Permisos por rol" },
+          { valor: "invitaciones", texto: "Invitaciones y pantallas", cuenta: invitaciones.data ?? undefined, explica: GLOSARIO.invitacion },
+          { valor: "permisos", texto: "Permisos por rol", explica: GLOSARIO.permisosRolModulo },
         ]} />
         <ContenidoPestana value="usuarios" className="pt-4 space-y-3">
           {alerta.length > 0 && (
-            <button onClick={() => setVista("alerta")} className="w-full text-left rounded-lg border border-peligro/30 bg-peligro-suave px-3 py-2 text-sm text-peligro flex items-center gap-2">
+            <button onClick={() => setVista("alerta")} data-explain={GLOSARIO.bajaConAcceso} data-explain-title="Bajas con acceso" className="w-full text-left rounded-lg border border-peligro/30 bg-peligro-suave px-3 py-2 text-sm text-peligro flex items-center gap-2">
               <Power className="h-4 w-4 shrink-0" />
               {alerta.length === 1 ? `${alerta[0].nombre} ya no trabaja aquí y su cuenta sigue activa.` : `${alerta.length} personas dadas de baja en RRHH siguen con su cuenta activa.`} Desactívala.
             </button>

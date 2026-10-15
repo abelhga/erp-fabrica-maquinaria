@@ -23,6 +23,7 @@ import {
   AvisoSinBase, BarraPeso, ESTADOS_EVAL, FUENTES, PanelEvaluacion, REGLAS, SelectorMes, mesAnterior, mesDe, nombreMes,
   puntos, reglaCorta, useBonos, useEvaluaciones, type EstadoEval, type Evaluacion, type Fuente, type Indicador, type Regla,
 } from "./componentes/objetivos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Puesto { id: number; nombre: string; departamento_id: number | null; activo: boolean }
 interface Linea {
@@ -69,10 +70,10 @@ export default function Objetivos() {
     >
       <Pestanas value={vista} onValueChange={(v) => cambiar({ vista: v === "evaluaciones" ? null : v })}>
         <ListaPestanas opciones={[
-          { valor: "evaluaciones", texto: "Evaluaciones del mes" },
-          { valor: "plantillas", texto: "Plantillas por puesto" },
-          ...(esRrhh ? [{ valor: "personas", texto: "Personas y jefes" }] : []),
-          { valor: "indicadores", texto: "Indicadores" },
+          { valor: "evaluaciones", texto: "Evaluaciones del mes", explica: GLOSARIO.evaluacionMes },
+          { valor: "plantillas", texto: "Plantillas por puesto", explica: GLOSARIO.plantillaPuesto },
+          ...(esRrhh ? [{ valor: "personas", texto: "Personas y jefes", explica: GLOSARIO.jefeDirecto }] : []),
+          { valor: "indicadores", texto: "Indicadores", explica: GLOSARIO.fuenteIndicador },
         ]} />
         <ContenidoPestana value="evaluaciones" className="pt-4"><Evaluaciones mes={mes} ver={params.get("ver")} abrir={(id) => cambiar({ ver: id })} /></ContenidoPestana>
         <ContenidoPestana value="plantillas" className="pt-4"><Plantillas mes={mes} /></ContenidoPestana>
@@ -119,9 +120,9 @@ function Evaluaciones({ mes, ver, abrir }: { mes: string; ver: string | null; ab
         </div>
       ),
     },
-    { clave: "evaluador", titulo: "Jefe directo", valor: (e) => e.evaluador ?? "RRHH", celda: (e) => e.evaluador ?? <span className="text-tenue">Sin jefe (RRHH)</span> },
+    { clave: "evaluador", titulo: "Jefe directo", explica: GLOSARIO.jefeDirecto, valor: (e) => e.evaluador ?? "RRHH", celda: (e) => e.evaluador ?? <span className="text-tenue">Sin jefe (RRHH)</span> },
     {
-      clave: "estado", titulo: "Estado", valor: (e) => ESTADOS_EVAL[e.estado].texto,
+      clave: "estado", titulo: "Estado", explica: GLOSARIO.flujoEvaluacion, valor: (e) => ESTADOS_EVAL[e.estado].texto,
       celda: (e) => (
         <div className="flex flex-wrap gap-1">
           <Insignia tono={ESTADOS_EVAL[e.estado].tono}>{ESTADOS_EVAL[e.estado].texto}</Insignia>
@@ -131,11 +132,11 @@ function Evaluaciones({ mes, ver, abrir }: { mes: string; ver: string | null; ab
       ),
     },
     {
-      clave: "avance", titulo: "Calificados", alinear: "der", sinBusqueda: true, valor: (e) => e.indicadores - e.pendientes,
+      clave: "avance", titulo: "Calificados", explica: GLOSARIO.indicadoresCalificados, alinear: "der", sinBusqueda: true, valor: (e) => e.indicadores - e.pendientes,
       celda: (e) => <span className={e.pendientes ? "text-aviso" : "text-tenue"}>{e.indicadores - e.pendientes} de {e.indicadores}</span>,
     },
     {
-      clave: "total_final", titulo: "Resultado", alinear: "der", sinBusqueda: true, valor: (e) => Number(e.total_final ?? -1),
+      clave: "total_final", titulo: "Resultado", explica: GLOSARIO.resultadoObjetivos, alinear: "der", sinBusqueda: true, valor: (e) => Number(e.total_final ?? -1),
       celda: (e) => (
         <div className="w-32 ml-auto space-y-1">
           <p className="flex items-center justify-end gap-1">
@@ -148,7 +149,7 @@ function Evaluaciones({ mes, ver, abrir }: { mes: string; ver: string | null; ab
       ),
     },
     ...(conNomina ? [{
-      clave: "bono", titulo: "Bono", alinear: "der" as const, sinBusqueda: true, valor: (e: Evaluacion) => bono.get(e.id)?.monto ?? null,
+      clave: "bono", titulo: "Bono", explica: GLOSARIO.bonoObjetivos, alinear: "der" as const, sinBusqueda: true, valor: (e: Evaluacion) => bono.get(e.id)?.monto ?? null,
       celda: (e: Evaluacion) => {
         const b = bono.get(e.id);
         if (e.estado !== "aprobada") return <span className="text-tenue text-xs">al aprobar</span>;
@@ -161,11 +162,11 @@ function Evaluaciones({ mes, ver, abrir }: { mes: string; ver: string | null; ab
     <div className="space-y-4">
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
         <Kpi titulo="Personas evaluadas" valor={numero(todas.length)} icono={Users} detalle={nombreMes(mes)} />
-        <Kpi titulo="Por calificar" valor={numero(cuenta("borrador"))} icono={ClipboardCheck} tono={cuenta("borrador") ? "aviso" : "neutro"}
+        <Kpi titulo="Por calificar" valor={numero(cuenta("borrador"))} icono={ClipboardCheck} tono={cuenta("borrador") ? "aviso" : "neutro"} explica={GLOSARIO.flujoEvaluacion}
           detalle="Las califica su jefe directo" alClic={() => setEstado("borrador")} />
-        <Kpi titulo="Por revisar o aprobar" valor={numero(cuenta("calificada") + cuenta("revisada"))} icono={ListChecks} tono="info"
+        <Kpi titulo="Por revisar o aprobar" valor={numero(cuenta("calificada") + cuenta("revisada"))} icono={ListChecks} tono="info" explica={GLOSARIO.flujoEvaluacion}
           detalle={`${cuenta("calificada")} con RRHH · ${cuenta("revisada")} con dirección`} alClic={() => setEstado("calificada")} />
-        <Kpi titulo="Promedio aprobado" valor={promedio == null ? "—" : puntos(Math.round(promedio * 10) / 10)} icono={Target} tono="ok"
+        <Kpi titulo="Promedio aprobado" valor={promedio == null ? "—" : puntos(Math.round(promedio * 10) / 10)} icono={Target} tono="ok" explica={GLOSARIO.promedioAprobado}
           detalle={`${aprobadas.length} aprobadas · ${todas.filter((e) => e.llave_activada).length} con la llave activada`} />
       </div>
 
@@ -180,7 +181,7 @@ function Evaluaciones({ mes, ver, abrir }: { mes: string; ver: string | null; ab
               { valor: "todas", texto: "Todas", cuenta: todas.length },
               ...(["borrador", "calificada", "revisada", "aprobada"] as EstadoEval[]).map((s) => ({ valor: s, texto: ESTADOS_EVAL[s].texto, cuenta: cuenta(s) })),
             ]} />
-            {esRrhh && <Boton tamano="sm" variante="secundario" cargando={armar.isPending} onClick={() => armar.mutate(undefined)}
+            {esRrhh && <Boton tamano="sm" variante="secundario" cargando={armar.isPending} onClick={() => armar.mutate(undefined)} data-explain={GLOSARIO.armarMes}
               title="Crea el borrador de quien tenga puesto asignado y vuelve a medir los borradores"><CalendarPlus className="h-4 w-4" /> Armar y medir {nombreMes(mes)}</Boton>}
           </div>
         }
@@ -430,7 +431,7 @@ function Personas() {
   const columnas: Columna<Asignacion>[] = [
     { clave: "empleado", titulo: "Persona", valor: (a) => a.empleado?.nombre, celda: (a) => <span className="font-medium">{a.empleado?.nombre}</span> },
     { clave: "puesto", titulo: "Puesto con objetivos", valor: (a) => a.puesto?.nombre },
-    { clave: "jefe", titulo: "Jefe directo (califica)", valor: (a) => a.jefe?.nombre ?? "RRHH", celda: (a) => a.jefe?.nombre ?? <span className="text-tenue">RRHH</span> },
+    { clave: "jefe", titulo: "Jefe directo (califica)", explica: GLOSARIO.jefeDirecto, valor: (a) => a.jefe?.nombre ?? "RRHH", celda: (a) => a.jefe?.nombre ?? <span className="text-tenue">RRHH</span> },
     { clave: "desde", titulo: "Desde", valor: (a) => a.desde, celda: (a) => fecha(a.desde) },
     { clave: "hasta", titulo: "Hasta", valor: (a) => a.hasta, celda: (a) => (a.hasta ? fecha(a.hasta) : <Insignia tono="ok">Vigente</Insignia>) },
     {
@@ -515,9 +516,9 @@ function Indicadores() {
     { clave: "id", titulo: "#", alinear: "der", valor: (i) => i.id, celda: (i) => <span className="text-tenue cifra">{i.id}</span> },
     { clave: "nombre", titulo: "Indicador", celda: (i) => <div className="min-w-[220px]"><p className={cn("font-medium", !i.activo && "text-tenue line-through")}>{i.nombre}</p><p className="text-xs text-tenue">{i.descripcion}</p></div>, valor: (i) => `${i.nombre} ${i.descripcion}` },
     { clave: "area", titulo: "Área", valor: (i) => i.area },
-    { clave: "fuente", titulo: "De dónde sale", valor: (i) => FUENTES[i.fuente].texto, celda: (i) => <Insignia tono={FUENTES[i.fuente].tono}>{FUENTES[i.fuente].texto}</Insignia> },
+    { clave: "fuente", titulo: "De dónde sale", explica: GLOSARIO.fuenteIndicador, valor: (i) => FUENTES[i.fuente].texto, celda: (i) => <Insignia tono={FUENTES[i.fuente].tono}>{FUENTES[i.fuente].texto}</Insignia> },
     { clave: "unidad", titulo: "Unidad", valor: (i) => i.unidad },
-    { clave: "dato_faltante", titulo: "Para que se mida solo falta", valor: (i) => i.dato_faltante, clase: "max-w-[280px] text-xs text-tenue", celda: (i) => i.dato_faltante ?? "—" },
+    { clave: "dato_faltante", titulo: "Para que se mida solo falta", explica: GLOSARIO.datoFaltante, valor: (i) => i.dato_faltante, clase: "max-w-[280px] text-xs text-tenue", celda: (i) => i.dato_faltante ?? "—" },
   ];
   return (
     <TablaDatos filas={filas} columnas={columnas} cargando={cargando} claveFila={(i) => String(i.id)} exportarComo="indicadores-objetivos"
