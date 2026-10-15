@@ -18,7 +18,7 @@ import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Lateral } from "@/components/ui/dialogo";
 import { BuscadorArticulo } from "@/components/datos/BuscadorArticulo";
 import {
-  EDITABLES, ESTADO_COT, dineroEn, mensualidad, useAncho, usePlanesMeses, useTextosComerciales, venceEl, hoyMx,
+  EDITABLES, ESTADO_COT, dineroEn, folioCot, mensualidad, useAncho, usePlanesMeses, useTextosComerciales, venceEl, hoyMx,
   type Contacto, type Cotizacion, type Partida, type Moneda, haceCuanto,
 } from "./comun";
 import { CampoNumero, MenuAcciones, OpcionMenu, SelectorTexto, SeparadorMenu } from "./componentes/campos";
@@ -526,7 +526,8 @@ function Editor({ id }: { id: string }) {
         <Link to="/ventas/cotizaciones" className="p-1.5 -ml-1.5 rounded-lg hover:bg-fondo text-tenue" aria-label="Volver a cotizaciones"><ArrowLeft className="h-5 w-5" /></Link>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold tracking-tight cifra">{c.folio}</h1>
+            <h1 className="text-xl font-semibold tracking-tight cifra"
+              title={c.folio.startsWith("BORRADOR-") ? "El folio se asigna al agregar la primera partida: abrir y salir no gasta folios." : undefined}>{folioCot(c.folio)}</h1>
             {vendedor.data?.iniciales && <span className="rounded bg-texto/80 text-superficie text-[11px] font-bold px-1.5 py-0.5 tracking-wider">{vendedor.data.iniciales}</span>}
             <span data-explain={GLOSARIO.estadoCotizacion} data-explain-title={est.texto}><Insignia tono={est.tono} punto>{est.texto}</Insignia></span>
             {vencida && <span data-explain={GLOSARIO.vigenciaCotizacion}><Insignia tono="peligro">Vencida</Insignia></span>}

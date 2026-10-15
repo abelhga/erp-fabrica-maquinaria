@@ -37,16 +37,18 @@ begin
   get diagnostics v_n = row_count;
   assert v_n = 0, 'Juan pudo editar el cliente de Isaac';
 
-  -- Cotización de Isaac: folio automático, totales con IVA.
+  -- Cotización de Isaac: folio automático (provisional hasta la primera partida, ver 99), totales con IVA.
   perform pg_temp.como(v_isaac);
   insert into cotizaciones (cliente_id) values (v_cli_isaac) returning id into v_cot;
   select folio into v_txt from cotizaciones where id = v_cot;
-  assert v_txt ~ '^COT-\d{4}-\d{5}$', format('folio con formato inesperado: %s', v_txt);
+  assert v_txt ~ '^BORRADOR-', format('folio provisional con formato inesperado: %s', v_txt);
   insert into cotizacion_lineas (cotizacion_id, orden, articulo_id, titulo, cantidad, precio_unitario, precio_lista)
   values (v_cot, 1, v_banda, 'Banda cargadora', 1, 202000, 202000),
          (v_cot, 2, v_polea, 'Polea 8"', 4, 1050, 1050),
          (v_cot, 3, null, 'Flete a Querétaro', 1, 8500, null),
          (v_cot, 4, v_polea, 'Polea 8" (alternativa)', 10, 1050, 1050);
+  select folio into v_txt from cotizaciones where id = v_cot;
+  assert v_txt ~ '^COT-\d{4}-\d{5}$', format('folio con formato inesperado: %s', v_txt);
   update cotizacion_lineas set opcional = true where cotizacion_id = v_cot and orden = 4;
   -- 202,000 + 4,200 + 8,500 = 214,700 (la alternativa no suma) → con IVA 249,052
   select subtotal into v_num from cotizaciones where id = v_cot;

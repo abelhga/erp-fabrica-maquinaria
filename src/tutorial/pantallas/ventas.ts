@@ -21,7 +21,8 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     "Para la gerencia, “Por autorizar” es la cola de precios abajo del mínimo: primero las que el vendedor ya pidió, con su nota, cuántas partidas van bajo el mínimo y qué tanto abajo de lista. “Autorizar” deja al vendedor enviarla.",
   ],
   "/ventas/cotizaciones/nueva": [
-    "Al entrar aquí se crea una cotización con folio nuevo y con las condiciones de pago, entrega y notas que la gerencia dejó por defecto; en un momento se abre el editor.",
+    "Al entrar aquí se crea una cotización con las condiciones de pago, entrega y notas que la gerencia dejó por defecto; en un momento se abre el editor.",
+    "El folio se asigna cuando agregas la primera partida (o cuando la mandas a autorizar o la envías): si abres y sales sin capturar, no se gasta un folio y el borrador vacío se borra solo al día siguiente.",
     "Si llegas desde un cliente o una oportunidad, la cotización ya sale ligada a ellos y con el contacto principal del cliente.",
   ],
   "/ventas/cotizaciones/:id": [
