@@ -36,7 +36,7 @@ interface Tablero {
   costos_al_alza?: { id: string; nombre: string; costo_anterior: number; costo_nuevo: number; cambio: number; equipos: number }[];
   equipos_que_subieron?: { id: string; clave: string; nombre: string; precio: number; cambio: number }[];
   cobranza?: { erp: number; arranque: number; cobrado_mes: number; antiguedad: { d0_30: number; d31_60: number; d61_90: number; d90: number } };
-  por_pagar?: { total: number; vencido: number; arranque?: number; arranque_a_favor?: number };
+  por_pagar?: { total: number; vencido: number; arranque?: number; arranque_a_favor?: number; socios?: number; financiamiento?: number };
 }
 
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
@@ -357,6 +357,12 @@ export function TableroDireccion() {
                 <span className="text-tenue">Por pagar a proveedores</span>
                 <span className="cifra text-right">{dineroCompacto(d.por_pagar.total)}{d.por_pagar.vencido > 0 && <span className="text-peligro"> · {dineroCompacto(d.por_pagar.vencido)} vencido</span>}
                   {!!d.por_pagar.arranque && <span className="text-tenue"> · más {dineroCompacto(d.por_pagar.arranque)} de la hoja</span>}</span>
+              </div>
+            )}
+            {!!(d.por_pagar?.socios || d.por_pagar?.financiamiento) && (
+              <div className="px-5 pb-4 text-sm flex justify-between">
+                <span className="text-tenue">Préstamos de socios y créditos</span>
+                <span className="cifra">{dineroCompacto((d.por_pagar.socios ?? 0) + (d.por_pagar.financiamiento ?? 0))}</span>
               </div>
             )}
           </Tarjeta>

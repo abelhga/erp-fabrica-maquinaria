@@ -51,7 +51,9 @@ export default function Pagos() {
     enabled: verHoja,
     queryFn: () => q<SaldoProveedorHoja[]>(supabase.from("v_saldo_arranque_proveedores").select("*")),
   });
-  const debemosHoja = (hoja.data ?? []).filter((f) => Number(f.saldo) > 1);
+  // Solo proveedores: préstamos de socios y créditos van aparte (en la pestaña).
+  const debemosHoja = (hoja.data ?? []).filter((f) => Number(f.saldo) > 1 && f.tipo_acreedor === "proveedor");
+  const sociosHoja = (hoja.data ?? []).filter((f) => Number(f.saldo) > 1 && f.tipo_acreedor !== "proveedor");
   // Vencidas primero (la más vieja arriba), luego por fecha; las que no tienen fecha al final.
   const todas = [...(datos.data ?? [])].sort((a, b) => (a.dias_para_vencer ?? 1e9) - (b.dias_para_vencer ?? 1e9));
   const vencidas = todas.filter((f) => (f.dias_para_vencer ?? 1) < 0);
@@ -94,7 +96,8 @@ export default function Pagos() {
         <Kpi titulo="Vence en 7 días" valor={dineroCompacto(suma(semana))} icono={CalendarDays} tono="aviso" detalle={`${semana.length} órdenes`} alClic={() => setVista("semana")} />
         <Kpi titulo="Próximas 4 semanas" valor={dineroCompacto(cuatroSemanas)} icono={CalendarRange} tono="info" detalle="Sin contar lo vencido" />
         {verHoja && <Kpi titulo="Saldo de la hoja" valor={dineroCompacto(debemosHoja.reduce((s, f) => s + Number(f.saldo), 0))} icono={FileSpreadsheet} tono="neutro"
-          detalle={`${debemosHoja.length} proveedores · libro de compras`} alClic={() => setPestana("hoja")} />}
+          detalle={`${debemosHoja.length} proveedores${sociosHoja.length ? ` · aparte ${dineroCompacto(sociosHoja.reduce((s, f) => s + Number(f.saldo), 0))} de socios y bancos` : ""}`}
+          alClic={() => setPestana("hoja")} />}
       </div>
 
       <Pestanas value={pestana} onValueChange={(v) => setPestana(v as "ordenes" | "hoja")}>
