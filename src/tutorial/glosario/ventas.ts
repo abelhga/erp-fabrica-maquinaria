@@ -54,6 +54,7 @@ export const VENTAS = {
   actividad: "Llamadas, WhatsApp, correos, visitas y notas con el cliente. Una tarea lleva fecha y se queda arriba hasta que la marcas hecha; vencida sale en rojo. También cuenta como seguimiento para la vigencia de la cuenta.",
 
   // --- A quién llamar ---
+  enSeguimiento: "Clientes a los que alguien del equipo ya les escribió o llamó y falta su respuesta. Cada uno dice quién, cuándo, por dónde y qué sigue: llamar al día 3, último mensaje al día 10, luego esperar una semana. Lo ven todos los que venden.",
   enJuego: "Lo que vale buscarlo, más o menos: lo cotizado si tiene una cotización por vencer; lo que suele gastar por compra si ya le toca o hay que reactivarlo; en refacciones, el 5 % del equipo que compró (entre $10 mil y $150 mil).",
   motivoCotizacionPorVencer: "Tiene una cotización enviada o autorizada que vence en los próximos 7 días o venció hace 10 días o menos. Llamar antes de que se enfríe.",
   motivoLeToca: "Compra con ritmo (3 compras o más, cada 1 a 12 meses) y ya pasó su tiempo de siempre, pero no el doble. Es el momento de buscarlo.",

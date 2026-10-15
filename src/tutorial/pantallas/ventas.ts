@@ -5,6 +5,8 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     "Tu lista para arrancar el día: cada tarjeta dice por qué buscar a ese cliente y cuánto puede valer. La usan los vendedores; la gerencia ve la de todo el equipo.",
     "Las tarjetas de arriba filtran por motivo: cotización por vencer (rojo), ya le toca (ámbar), refacciones (azul) y reactivar (gris). Pasa el mouse por cada una para ver la regla. El buscador encuentra cliente, producto o vendedor.",
     "“Redactar mensaje” arma un WhatsApp o un correo con el historial del cliente (lo escribe Claude si está conectado; si no, sale una plantilla). Revísalo y ajústalo: enviarlo lo decides tú, con “Abrir en WhatsApp” o copiándolo.",
+    "Cuando vuelves de WhatsApp o del teléfono, la tarjeta pregunta “¿Sí le escribiste?”: un toque lo registra (con Deshacer) y el cliente pasa a “En seguimiento”, con el siguiente paso: llamar al día 3, último mensaje al día 10 y luego esperar una semana. Así nadie del equipo le vuelve a escribir sin saberlo.",
+    "En la tarjeta de un cliente en seguimiento, “¿Cómo terminó?” cierra el intento: si le interesa se crea la oportunidad; “no por ahora” o “no contesta” lo regresan a la lista en 90 días; “ya no compra” lo saca, con la razón. Tres intentos y una semana sin respuesta cuentan solos como “no contesta”.",
     "Solo salen tus clientes y los libres. No aparecen los que ya tienen una oportunidad abierta (ya estás en eso) ni los que tienen una cotización abierta de los últimos 45 días, salvo que esté por vencer.",
   ],
   "/ventas/oportunidades": [
