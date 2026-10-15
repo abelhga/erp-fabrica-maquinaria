@@ -391,7 +391,9 @@ begin
   end;
   perform pg_temp.como(v_rrhh);
   begin
-    perform cerrar_semana_nomina(v_viernes);
+    -- El viernes que viene: su semana (viernes a jueves) nunca ha terminado. Con el de esta
+    -- semana fallaba los jueves, porque el jueves ya se puede cerrar (es la regla).
+    perform cerrar_semana_nomina(v_viernes + 7);
     assert false, 'se cerró una semana que no ha terminado';
   exception when raise_exception then null;
   end;

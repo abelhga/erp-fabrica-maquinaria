@@ -14,7 +14,7 @@ import { useSesion } from "@/lib/sesion";
 import { dinero, fecha, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
-import { ESTADO_COT, dineroEn, todas, useAncho, type VCotizacion, haceCuanto } from "./comun";
+import { ESTADO_COT, dineroEn, folioCot, todas, useAncho, type VCotizacion, haceCuanto } from "./comun";
 
 const ABIERTAS = ["borrador", "por_autorizar", "autorizada", "enviada"];
 type Pestana = "abiertas" | "por_autorizar" | "enviadas" | "aceptadas" | "todas";
@@ -71,7 +71,7 @@ export default function Cotizaciones() {
       clave: "folio", titulo: "Folio", valor: (c) => c.folio,
       celda: (c) => (
         <span className="whitespace-nowrap">
-          <span className="font-medium cifra">{c.folio}</span>
+          <span className="font-medium cifra">{folioCot(c.folio)}</span>
           {c.iniciales && <span className="ml-1.5 text-[10px] font-bold text-tenue">{c.iniciales}</span>}
           {angosta && (
             <span className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-tenue">
@@ -183,7 +183,7 @@ function ColaAutorizacion({ filas, cargando, alAutorizar, autorizando }: {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs text-tenue">{c.vendedor} · {c.autorizacion_pedida_en ? `pidió autorización ${haceCuanto(c.autorizacion_pedida_en)}` : "todavía capturando"}</p>
-              <Link to={`/ventas/cotizaciones/${c.id}`} className="font-semibold hover:text-marca-texto">{c.folio} · {c.cliente ?? c.atencion ?? "Sin cliente"}</Link>
+              <Link to={`/ventas/cotizaciones/${c.id}`} className="font-semibold hover:text-marca-texto">{folioCot(c.folio)} · {c.cliente ?? c.atencion ?? "Sin cliente"}</Link>
               <p className="text-sm text-tenue truncate">{c.primera_partida}{c.partidas > 1 ? ` y ${c.partidas - 1} más` : ""}</p>
             </div>
             <div className="text-right shrink-0">
