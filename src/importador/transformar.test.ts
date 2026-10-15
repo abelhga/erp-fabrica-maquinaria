@@ -135,4 +135,21 @@ describe("BASE DE DATOS ACTUAL", async () => {
     const { movimientos } = libroVentas(filas);
     expect(movimientos.map((m) => [m.tipo, m.monto, m.factura, m.pedido])).toEqual([["Venta", 5646.88, "A 1731", null], ["Pago", 5646.88, "A 1731", null]]);
   });
+  it("lee el libro de compras y deja fuera las notas sin tipo ni monto", async () => {
+    const { libroCompras, adeudos2021 } = await import("./transformar");
+    const filas = [...Array(13).fill([]), ["", "FECHA", "Proveedor", "Tipo", "MONTO NETO", "CUENTA DE SALIDA", "Descripción", "N. Factura", "N. Orden/\nVale", "Compras", "Pagos", "Operación"],
+      ["", "12/10/26", "Grupo Aduanal del Pacifico", "Compra", "$457,258.72", "", "Honorarios\nPedimento 26 16 1821 6003381", "A 26736", "-", "$457,258.72", "", "$457,258.72"],
+      ["", "25/09/26", "Grupo Aduanal del Pacifico", "Pago", "$168,000.00", "BANORTE FISCAL", "", "A 26736", "-", "", "$168,000.00", "-$168,000.00"],
+      ["", "01/09/26", "Grupo Aduanal del Pacifico", "Reembolso Realizado", "$18,625.03", "SANTANDER FISCAL", "", "", "", "", "", ""],
+      ["", "12/10/26", "Grupo Aduanal del Pacifico", "", "", "", "Saldo a favor 32,269.68  PENDIENTE", "A 26736", "-"]];
+    const { movimientos, descartados } = libroCompras(filas);
+    expect(movimientos.map((m) => [m.fecha, m.tipo, m.monto, m.cuenta, m.factura, m.orden])).toEqual([
+      ["2026-10-12", "Compra", 457258.72, null, "A 26736", null], ["2026-09-25", "Pago", 168000, "BANORTE FISCAL", "A 26736", null],
+      ["2026-09-01", "Reembolso Realizado", 18625.03, "SANTANDER FISCAL", null, null]]);
+    expect(movimientos[0].llave_proveedor).toBe("grupo aduanal del pacifico");
+    expect(descartados).toBe(1);
+    const dir = [["adeudo", "Al agregar un nuevo proveedor…"], ["", "Nombre", "Tipo de Proveedor ", "TELÉFONO", "Adeudo fin de año 2021", "BALANCE"],
+      ["", "LME Agent SC", "Importaciones", "", "$12,500.00", "$0.00"], ["", "39F SA de CV", "", "", "$0.00", "$0.00"]];
+    expect(adeudos2021(dir)).toEqual([{ proveedor: "LME Agent SC", llave_proveedor: "lme agent sc", monto: 12500 }]);
+  });
 });

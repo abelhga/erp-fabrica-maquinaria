@@ -124,6 +124,9 @@ async function main() {
   const libro18 = T.libroVentas(await fuente("ventas_2018_2021"));
   const libro = [...libro18.movimientos.filter((m) => m.fecha < "2022-01-01"), ...libro22.movimientos.filter((m) => m.fecha >= "2022-01-01")];
   const libroDescartados = libro18.descartados + libro22.descartados;
+  // Libro de compras: 2022→hoy de BASE ACTUAL más el adeudo con que cada proveedor cerró 2021.
+  const compras = T.libroCompras(await fuente("compras"));
+  const adeudos21 = T.adeudos2021(await fuente("proveedores_actual"));
   const paneles = await Promise.all(Object.entries(config.vendedores as Record<string, { correo: string; panel: string; nombre: string }>).map(async ([clave, v]) => ({
     clave, ...v, clientes: T.clientesPanel(await fuente(`${v.panel}_clientes`)), ventas: T.ventasPanel(await fuente(`${v.panel}_ventas`)),
   })));
@@ -131,8 +134,9 @@ async function main() {
     leidos: { proveedores: provs.length, componentes: componentes.length, precios_historicos: precios.length, equipos: equipos.length,
       lineas_bom: bom.length, filas_inventario: inventario.length, movimientos_hoja: movimientos.length,
       clientes_paneles: paneles.reduce((s, p) => s + p.clientes.length, 0), ventas_paneles: paneles.reduce((s, p) => s + p.ventas.ventas.length, 0),
-      clientes_directorio: directorio.length, clientes_crm: unified.length, libro_ventas: libro.length },
-    descartados: { componentes_nombre_repetido: duplicados.length, precios_sin_fecha_o_costo: preciosDescartados, movimientos_incompletos: movDescartados, libro_incompletos: libroDescartados },
+      clientes_directorio: directorio.length, clientes_crm: unified.length, libro_ventas: libro.length,
+      libro_compras: compras.movimientos.length, adeudos_2021: adeudos21.length },
+    descartados: { componentes_nombre_repetido: duplicados.length, precios_sin_fecha_o_costo: preciosDescartados, movimientos_incompletos: movDescartados, libro_incompletos: libroDescartados, compras_incompletas: compras.descartados },
   });
   if (duplicados.length) avisos.push(`${duplicados.length} componentes con nombre repetido en ListaComponentes (se tomó el primero): ${duplicados.slice(0, 5).join("; ")}…`);
 
@@ -535,6 +539,29 @@ async function main() {
     const { rows } = await db.query(`select count(*) filter (where saldo > 1) deudores, round(sum(saldo) filter (where saldo > 1)) por_cobrar from v_saldo_arranque_clientes`);
     resumen.libro_ventas = libro.length;
     resumen.saldo_arranque = { clientes_con_saldo: Number(rows[0].deudores), por_cobrar: Number(rows[0].por_cobrar) };
+  });
+
+  // 13b. Libro de compras y pagos: saldo de arranque por proveedor (cuentas por pagar de la hoja).
+  await paso("Libro de compras y pagos", async () => {
+    await db.query(`truncate historial_compras_hoja`);
+    const filas = [
+      ...adeudos21.map((a) => ({ fecha: "2021-12-31", proveedor: a.proveedor, llave_proveedor: a.llave_proveedor, tipo: "Adeudo 2021", monto: a.monto,
+        cuenta: null, descripcion: "Adeudo fin de año 2021 (directorio de proveedores)", factura: null, orden: null, fila: null })),
+      ...compras.movimientos,
+    ];
+    // Se liga al catálogo por la llave del importador o por nombre; lo que no es proveedor
+    // del catálogo (nómina, IMSS, préstamos) se queda solo con su nombre.
+    await db.query(`
+      insert into historial_compras_hoja (fecha, proveedor_id, proveedor_nombre, proveedor_llave, tipo, monto, cuenta, descripcion, factura, orden, fila_origen)
+      select x.fecha::date, coalesce(p.id, (select q.id from proveedores q where lower(q.nombre) = lower(x.proveedor) order by q.activo desc, q.creado_en limit 1)),
+             x.proveedor, x.llave_proveedor, x.tipo, x.monto, x.cuenta, x.descripcion, x.factura, x.orden, x.fila
+      from jsonb_to_recordset($1) x(fecha text, proveedor text, llave_proveedor text, tipo text, monto numeric, cuenta text, descripcion text,
+           factura text, orden text, fila int)
+      left join proveedores p on p.legacy_id = 'PROV:' || x.llave_proveedor`, [json(filas)]);
+    const { rows } = await db.query(`select count(*) filter (where saldo > 1) acreedores, round(sum(saldo) filter (where saldo > 1)) por_pagar,
+      round(sum(saldo)) neto from v_saldo_arranque_proveedores`);
+    resumen.libro_compras = filas.length;
+    resumen.por_pagar_arranque = { proveedores_con_saldo: Number(rows[0].acreedores), por_pagar: Number(rows[0].por_pagar), neto_como_la_hoja: Number(rows[0].neto) };
   });
 
   // 14. Costo mensual hacia atrás de cada equipo (para "Precios vs ventas"). Tarda ~1 min.

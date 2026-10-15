@@ -94,6 +94,14 @@
     "ventas_2018_2021": [
       "1TtNqWOn1ooYDTlUpeDY-7ukRqhCdMr5p82nB_OjoJUU",
       "VENTAS!A1:T4000"
+    ],
+    "compras": [
+      "1bMPe8wRcFv66tap2k7qW6MOIDWDYMeng8Mii4ZwAdFs",
+      "COMPRAS!A1:L30000"
+    ],
+    "proveedores_actual": [
+      "1bMPe8wRcFv66tap2k7qW6MOIDWDYMeng8Mii4ZwAdFs",
+      "'Directorio Proveedores'!A1:Y1500"
     ]
   },
   "alias_vendedores": {
