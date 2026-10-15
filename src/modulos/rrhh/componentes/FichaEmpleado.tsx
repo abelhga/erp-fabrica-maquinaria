@@ -15,6 +15,7 @@ import {
   Avatar, ESTADOS, TIPOS, antiguedad, useCatalogosRrhh, type Empleado, type Incidencia, type Vacaciones,
 } from "./comun";
 import { NuevaIncidencia } from "./NuevaIncidencia";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Usuario { id: string; nombre: string; correo: string; activo: boolean }
 
@@ -63,7 +64,7 @@ function Contenido({ empleado: e, empleados, usuarios, alCrear }: {
   const opciones = [
     { valor: "general", texto: "Datos generales" },
     ...(e ? [{ valor: "vacaciones", texto: "Vacaciones e incidencias" }] : []),
-    ...(e && sensibles ? [{ valor: "sensibles", texto: <span className="inline-flex items-center gap-1"><LockKeyhole className="h-3.5 w-3.5" /> Datos sensibles</span> }] : []),
+    ...(e && sensibles ? [{ valor: "sensibles", explica: GLOSARIO.datosSensibles, texto: <span className="inline-flex items-center gap-1"><LockKeyhole className="h-3.5 w-3.5" /> Datos sensibles</span> }] : []),
   ];
   return (
     <div className="space-y-5">

@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, hoyISO } from "@/lib/formato";
 import { ESTADO_PEDIDO, METODOS, enMoneda, nombreMetodo, tonoRango, type Moneda, type Rango } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface FilaCobranza {
   pedido_id: string; folio: string; cliente_id: string; cliente: string; vendedor_id: string | null; vendedor: string | null;
@@ -56,8 +57,8 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
             <div className="rounded-xl border border-borde p-3"><p className="text-xs text-tenue">Saldo</p><p className="font-semibold cifra">{enMoneda(p.saldo, m)}</p></div>
           </div>
           <div className="text-sm space-y-1">
-            {p.saldo > 0 && <p>Antigüedad: <Insignia tono={tonoRango(p.rango)}>{p.dias} días</Insignia> <span className="text-tenue">desde {p.primera_factura ? `la factura del ${fecha(p.primera_factura)}` : `el pedido (aún sin factura)`}</span></p>}
-            <p className="text-tenue">Crédito del cliente: {p.dias_credito ? `${p.dias_credito} días · vence el ${fecha(p.vence)}` : "de contado"}{m !== "MXN" && ` · saldo ≈ ${dinero(p.saldo_mxn)} al tipo de cambio de hoy`}</p>
+            {p.saldo > 0 && <p data-explain={GLOSARIO.antiguedadCobranza} data-explain-title="Antigüedad">Antigüedad: <Insignia tono={tonoRango(p.rango)}>{p.dias} días</Insignia> <span className="text-tenue">desde {p.primera_factura ? `la factura del ${fecha(p.primera_factura)}` : `el pedido (aún sin factura)`}</span></p>}
+            <p className="text-tenue" data-explain={GLOSARIO.creditoCliente} data-explain-title="Crédito del cliente">Crédito del cliente: {p.dias_credito ? `${p.dias_credito} días · vence el ${fecha(p.vence)}` : "de contado"}{m !== "MXN" && ` · saldo ≈ ${dinero(p.saldo_mxn)} al tipo de cambio de hoy`}</p>
             {puede("ventas") && <Link to={`/ventas/pedidos/${p.pedido_id}`} className="inline-flex items-center gap-1 text-marca-texto"><ExternalLink className="h-3.5 w-3.5" /> Ver el pedido completo</Link>}
           </div>
 

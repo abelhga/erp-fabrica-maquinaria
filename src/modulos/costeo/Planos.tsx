@@ -14,6 +14,7 @@ import { q } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { fecha } from "@/lib/formato";
 import { cn, coincide } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const ESTADOS = { vigente: "Vigentes", borrador: "Por aprobar", obsoleto: "Anteriores" } as const;
 
@@ -51,7 +52,7 @@ export default function Planos() {
     <Pagina titulo="Planos" descripcion="Cada plano con su folio y su revisión vigente. El archivo sigue en Drive; aquí se sabe cuál es el bueno y con cuál se fabricó cada orden.">
       {puede("costeo", 2) && (sinPlano.data?.length ?? 0) > 0 && (
         <div className="tarjeta p-4 border-aviso/40">
-          <p className="font-semibold flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-aviso" />Se están fabricando sin plano vigente en el ERP</p>
+          <p className="font-semibold flex items-center gap-2" data-explain={GLOSARIO.planoSinVigente}><AlertTriangle className="h-4 w-4 text-aviso" />Se están fabricando sin plano vigente en el ERP</p>
           <p className="text-sm text-tenue mt-0.5">El taller trabaja con lo que encuentra en Drive. Liga el plano bueno desde la ficha del equipo (pestaña Planos).</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {sinPlano.data!.slice(0, 12).map((e) => (
@@ -66,7 +67,7 @@ export default function Planos() {
 
       <div className="flex flex-wrap items-center gap-2">
         {(Object.keys(ESTADOS) as (keyof typeof ESTADOS)[]).filter((e) => e === "vigente" || puede("costeo", 2)).map((e) => (
-          <button key={e} onClick={() => setEstado(e)}
+          <button key={e} onClick={() => setEstado(e)} data-explain={GLOSARIO.planoEstado}
             className={cn("h-9 px-3.5 rounded-full border text-sm inline-flex items-center gap-2", estado === e ? "bg-marca text-white border-marca" : "border-borde hover:border-marca/40")}>
             {ESTADOS[e]}<span className={cn("cifra text-xs", estado === e ? "text-white/80" : "text-tenue")}>{cuenta(e)}</span>
           </button>

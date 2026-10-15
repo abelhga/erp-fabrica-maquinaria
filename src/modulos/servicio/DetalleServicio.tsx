@@ -21,6 +21,7 @@ import { Materiales } from "./componentes/Materiales";
 import { Costos } from "./componentes/Costos";
 import { DialogoProgramar } from "./componentes/DialogoProgramar";
 import { PanelFirma } from "./componentes/Firma";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const PASOS = [
   { estado: "solicitada", titulo: "Pedido" },
@@ -116,7 +117,7 @@ export default function DetalleServicio() {
                 <Dato etiqueta="Equipo">{s.equipo ?? "—"}{s.numero_serie && <span className="block text-xs text-tenue cifra">Serie {s.numero_serie}</span>}</Dato>
                 <Dato etiqueta="Pedido">{s.pedido_folio ?? "—"}{s.op_folio && <span className="block text-xs text-tenue">{s.op_folio}</span>}</Dato>
                 {s.garantia_vence && (
-                  <Dato etiqueta="Garantía">
+                  <Dato etiqueta="Garantía" explica={GLOSARIO.garantiaVigente}>
                     <Insignia tono={s.en_garantia ? "ok" : "peligro"}>{s.en_garantia ? "Vigente" : "Vencida"}</Insignia>
                     <span className="block text-xs text-tenue mt-0.5">Entregado {fecha(s.equipo_entregado)} · hasta {fecha(s.garantia_vence)}</span>
                   </Dato>
@@ -132,7 +133,7 @@ export default function DetalleServicio() {
           </Tarjeta>
 
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Programación y cuadrilla"
+            <EncabezadoTarjeta titulo="Programación y cuadrilla" explica={GLOSARIO.horasServicio}
               descripcion={s.inicio ? `${periodo(s.inicio, s.fin)} · ${duracion(s.inicio, s.fin)}` : "Todavía sin fecha"} />
             <div className="px-5 pb-5">
               {s.cuadrilla.length === 0 ? (
@@ -159,7 +160,7 @@ export default function DetalleServicio() {
 
           {enPlanta && (
             <Tarjeta>
-              <EncabezadoTarjeta titulo="Recepción del equipo en planta" descripcion="Se recibe con fotos de cómo llega, antes de tocarlo." />
+              <EncabezadoTarjeta titulo="Recepción del equipo en planta" explica={GLOSARIO.recepcionEquipo} descripcion="Se recibe con fotos de cómo llega, antes de tocarlo." />
               <div className="px-5 pb-5 text-sm">
                 {s.recibido_en ? (
                   <p>Recibido {fechaYHora(s.recibido_en)} por {s.recibido_por_nombre}: <span className="text-tenue">{s.condicion_recepcion}</span></p>
@@ -171,14 +172,14 @@ export default function DetalleServicio() {
           )}
 
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Insumos" descripcion="Lo que lleva la cuadrilla: sale de almacén o se pide a compras." />
+            <EncabezadoTarjeta titulo="Insumos" explica={GLOSARIO.insumosServicio} descripcion="Lo que lleva la cuadrilla: sale de almacén o se pide a compras." />
             <div className="px-5 pb-5"><Materiales servicioId={s.id} abierto={abierto} /></div>
           </Tarjeta>
         </div>
 
         <div className="lg:col-span-2 space-y-4">
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Evidencia" descripcion={`${s.fotos} ${s.fotos === 1 ? "foto" : "fotos"} · no se borran`} />
+            <EncabezadoTarjeta titulo="Evidencia" explica={GLOSARIO.evidenciaServicio} descripcion={`${s.fotos} ${s.fotos === 1 ? "foto" : "fotos"} · no se borran`} />
             <div className="px-5 pb-5">
               <GaleriaEvidencias servicioId={s.id} carpeta={`servicios/${s.id}`} puedeSubir={abierto && p.pedir} momentos={momentos}
                                  momentoInicial={s.estado === "en_curso" ? "despues" : enPlanta && !s.recibido_en ? "recepcion" : "antes"} />

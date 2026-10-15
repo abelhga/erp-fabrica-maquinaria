@@ -100,6 +100,52 @@ npx tsc --noEmit -p tsconfig.json
 - Pensado para gente que viene de hojas de cálculo: captura rápida con teclado (Enter
   guarda, Tab avanza), nada de formularios eternos, y lo importante visible sin clics.
 
+## Modo tutorial: todo cambio visible lo revisa
+
+El botón del birrete en el encabezado prende el modo tutorial (por navegador, `localStorage`,
+como el tema; mismo diseño que el de polyforecast). Encendido, cada pantalla muestra arriba
+**para qué sirve y cómo se usa**, y lo marcado con "?" se explica al pasar el mouse o con el foco.
+Todo vive en `src/tutorial/`:
+
+- `pantallas/<sección>.ts`: el texto de cada pantalla, con la ruta de `App.tsx` como llave
+  (`"/ventas/pedidos/:id"`). `Pagina` lo encuentra sola; ninguna pantalla lo pide.
+  Una pantalla que no usa `Pagina` (el tablero de dirección, el editor de cotización) pone
+  su recuadro a mano: `<Explicacion>` con `PANTALLAS["/su/ruta"]`.
+- `glosario/<sección>.ts`: **una definición por concepto** ("disponible", "punto de reorden",
+  "anticipo"…), reutilizada donde aparezca para que diga lo mismo en todas las pantallas.
+- Se conecta declarando, no programando: `explica={GLOSARIO.x}` en `Kpi`, en una `Columna`
+  de `TablaDatos`, en una opción de `ListaPestanas` o en `EncabezadoTarjeta`; en cualquier
+  otro elemento, `data-explain={GLOSARIO.x}` (y `data-explain-title` si hace falta).
+  Lo que no reenvía atributos (`Insignia`) va envuelto en `<span data-explain>`. Nada
+  explicable puede ser un botón `disabled`: Chrome no le da el mouse ni el foco (por eso
+  `Kpi` sin clic es un `<div>`).
+  `CapaExplicacion` es la única que escucha eventos, y solo con el modo encendido.
+  `<Explicacion>` sirve para un recuadro dentro de una pantalla (una sección, un diálogo).
+
+**Regla para cada sesión: si tu cambio se ve o cambia lo que la gente entiende, toca el
+tutorial en el mismo commit.** Concretamente:
+
+- Pantalla nueva o ruta nueva → su texto en `pantallas/`. Si entra al menú sin texto,
+  `src/tutorial/tutorial.test.ts` falla (`npm test`).
+- Indicador, columna, estado, pestaña o filtro nuevo con jerga → su definición en el glosario
+  y `explica` donde se muestra. "Cliente" o "Fecha" no lo necesitan; "Disponible", "Por surtir"
+  o "Escalón" sí.
+- **Cambió una regla** (cómo se calcula una comisión, cuándo se reserva material, qué cuenta
+  para el stock mínimo, quién autoriza…) → busca su explicación (`grep -rn` la palabra en
+  `src/tutorial/`) y corrígela. Un tutorial que miente es peor que uno que no existe: nadie
+  lo vuelve a leer.
+- Quitaste una pantalla, columna o concepto → quita su texto o su llave.
+- Cambio sin efecto visible (SQL interno, refactor, rendimiento, estilo) → no aplica; dilo en
+  una línea en tu resumen ("tutorial: sin cambios, no cambia nada visible").
+
+Cómo se escribe: español de México llano, segunda persona, frases cortas, sin jerga técnica
+(nada de RLS, RPC, vista) ni nombres de archivo. Cada afirmación sale del código o del SQL, no
+de lo que "debería" pasar. Primero para qué sirve, luego cómo se usa, luego de dónde salen los
+números si importa. **Costos y márgenes siguen siendo de costos**: un texto que ve ventas no
+explica la fórmula de precio ni menciona utilidad (es texto, pero filtra igual).
+Para revisarlo: `TUTORIAL=1 node scripts/capturas.mjs <correo> <ruta>` toma la foto con el
+modo encendido, y `SOBRE="texto"` pasa el mouse por algo para ver su explicación.
+
 ## El negocio, en lo que más importa
 
 - **Precio de equipo** = costo × (1 + recargos sobre costo) [+ medida especial] ÷

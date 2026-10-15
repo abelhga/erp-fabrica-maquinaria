@@ -3,6 +3,7 @@ import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { cn } from "@/lib/utilidades";
 import { horas, lunesDe, useCarga, type CargaSemana } from "../datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const fmtSemana = new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "short" });
 const pct = (n: number) => `${Math.round(n * 100)} %`;
@@ -34,7 +35,7 @@ export function CargaSemanal({ semanas = 6, className }: { semanas?: number; cla
   return (
     <Tarjeta className={className}>
       <EncabezadoTarjeta
-        titulo="Carga del taller por semana"
+        titulo="Carga del taller por semana" explica={GLOSARIO.cargaSemanal}
         descripcion={`Producción más horas de cuadrilla en servicio, contra la capacidad de cada área. Servicios: ${horas(servicioTotal)} en ${semanas} semanas.`}
       />
       {carga.error ? <ErrorCarga error={carga.error} /> : carga.isLoading ? <Cargando filas={4} /> : conAlgo.length === 0 ? (
@@ -92,7 +93,7 @@ export function CargaSemanal({ semanas = 6, className }: { semanas?: number; cla
               </tbody>
             </table>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-tenue">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-tenue" data-explain={GLOSARIO.ocupacionArea} data-explain-title="Ocupación del área">
             <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-ok-suave border border-ok/30" />Con holgura (menos de 85 %)</span>
             <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-aviso-suave border border-aviso/30" />Justa (85 a 100 %)</span>
             <span className="inline-flex items-center gap-1.5"><AlertTriangle className="h-3 w-3 text-peligro" />Se pasa (más de 100 %)</span>

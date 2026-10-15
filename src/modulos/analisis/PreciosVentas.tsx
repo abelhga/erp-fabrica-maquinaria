@@ -11,6 +11,7 @@ import { SERIE, TooltipGrafica, ejeProps, Leyenda } from "@/components/graficas/
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { dinero, dineroCompacto, numero } from "@/lib/formato";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Punto { mes: string; indice_costo: number | null; indice_precio: number | null; equipos: number; ventas_importe: number; ventas_num: number }
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
@@ -78,18 +79,18 @@ export default function PreciosVentas() {
       {datos.error ? <ErrorCarga error={datos.error} /> : datos.isLoading ? <Cargando /> : (
         <>
           <div className="grid gap-3 sm:grid-cols-3">
-            <Kpi titulo="Costo hoy vs. inicio del periodo" icono={TrendingUp} tono={ultimo && Number(ultimo.indice_costo) > 100 ? "aviso" : "ok"}
+            <Kpi titulo="Costo hoy vs. inicio del periodo" icono={TrendingUp} explica={GLOSARIO.indiceCostoFamilia} tono={ultimo && Number(ultimo.indice_costo) > 100 ? "aviso" : "ok"}
               valor={ultimo ? `${Number(ultimo.indice_costo) >= 100 ? "+" : ""}${(Number(ultimo.indice_costo) - 100).toFixed(1)}%` : "—"}
               detalle={`Promedio encadenado de ${numero(ultimo?.equipos)} equipos`} />
             <Kpi titulo="Vendido en el periodo" icono={TrendingUp} tono="marca" valor={dineroCompacto(total)}
               detalle={`${numero((datos.data ?? []).reduce((s, p) => s + p.ventas_num, 0))} ventas de la familia`} />
-            <Kpi titulo="Relación costo ↔ ventas" icono={TrendingUp} tono="info"
+            <Kpi titulo="Relación costo ↔ ventas" icono={TrendingUp} tono="info" explica={GLOSARIO.relacionCostoVentas}
               valor={relacion.r == null ? "—" : relacion.r.toFixed(2)}
               detalle={relacion.r == null ? "Faltan datos para calcularla" : `${fuerza(relacion.r)} en ${relacion.trimestres} trimestres (orientativa: no es causa)`} />
           </div>
 
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Índice de costo y de precio" descripcion="Base 100 al inicio del periodo. El precio de lista se registra desde el arranque del ERP; antes la hoja no guardaba la utilidad aplicada." />
+            <EncabezadoTarjeta titulo="Índice de costo y de precio" explica={GLOSARIO.indiceCostoFamilia} descripcion="Base 100 al inicio del periodo. El precio de lista se registra desde el arranque del ERP; antes la hoja no guardaba la utilidad aplicada." />
             <div className="px-5"><Leyenda series={[{ nombre: "Costo", color: SERIE(1) }, { nombre: "Precio de lista", color: SERIE(2) }]} /></div>
             <div className="h-64 px-2 pb-3 pt-2">
               <ResponsiveContainer>

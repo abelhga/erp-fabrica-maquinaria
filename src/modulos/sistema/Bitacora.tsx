@@ -14,6 +14,7 @@ import { q } from "@/lib/consultas";
 import { fechaYHora, hace } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { TABLAS, etiquetaDeCambios, filasDiff, nombreColumna, nombreTabla, valorLegible, type Cambios } from "./componentes/diff";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Registro {
   id: number; tabla: string; registro_id: string; accion: "alta" | "cambio" | "baja"; cambios: Cambios; usuario_id: string | null; en: string;
@@ -71,8 +72,8 @@ export default function Bitacora() {
 
   const columnas: Columna<Registro>[] = [
     { clave: "en", titulo: "Cuándo", sinBusqueda: true, celda: (r) => <span className="whitespace-nowrap" title={hace(r.en)}>{fechaYHora(r.en)}</span> },
-    { clave: "usuario", titulo: "Quién", valor: (r) => r.usuario ?? "Sistema", celda: (r) => r.usuario ?? <span className="text-tenue">Sistema</span> },
-    { clave: "accion", titulo: "Acción", valor: (r) => ACCIONES[r.accion].texto, celda: (r) => <Insignia tono={ACCIONES[r.accion].tono}>{ACCIONES[r.accion].texto}</Insignia> },
+    { clave: "usuario", titulo: "Quién", explica: GLOSARIO.bitacoraSistema, valor: (r) => r.usuario ?? "Sistema", celda: (r) => r.usuario ?? <span className="text-tenue">Sistema</span> },
+    { clave: "accion", titulo: "Acción", explica: GLOSARIO.accionBitacora, valor: (r) => ACCIONES[r.accion].texto, celda: (r) => <Insignia tono={ACCIONES[r.accion].tono}>{ACCIONES[r.accion].texto}</Insignia> },
     { clave: "tabla", titulo: "Qué", valor: (r) => nombreTabla(r.tabla), celda: (r) => <span className="whitespace-nowrap">{nombreTabla(r.tabla)}</span> },
     {
       clave: "registro", titulo: "Registro", valor: (r) => r.etiqueta ?? etiquetaDeCambios(r.cambios) ?? r.registro_id,

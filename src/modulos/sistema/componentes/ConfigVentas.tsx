@@ -11,6 +11,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { dinero } from "@/lib/formato";
 import { CeldaCheck, CeldaTexto, SoloLectura } from "./Editables";
 import { TarjetaForm, useConfiguracion, useGuardarConfig } from "./ConfigEmpresa";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Texto { id: number; tipo: "pago" | "entrega" | "vigencia" | "nota"; texto: string; por_defecto: boolean; orden: number; activo: boolean }
 interface Plan { meses: number; etiqueta: string; tasa: number; activo: boolean }
@@ -64,7 +65,7 @@ function Cartera({ inicial, editable }: { inicial: Propiedad; editable: boolean 
   const cuenta = (estado: string, vendedor?: string) => (cartera.data ?? []).filter((c) => c.estado === estado && (vendedor === undefined || c.vendedor === vendedor)).length;
   const cambiaParametros = String(inicial.meses_venta ?? 12) !== f.meses || String(inicial.dias_seguimiento ?? 90) !== f.dias;
   return (
-    <TarjetaForm titulo="Cartera de clientes" editable={editable} quien="sistemas o dirección" guardando={guardar.isPending}
+    <TarjetaForm titulo="Cartera de clientes" explica={GLOSARIO.cartera} editable={editable} quien="sistemas o dirección" guardando={guardar.isPending}
       descripcion="Un cliente es del vendedor mientras le haya vendido en los últimos meses o le dé seguimiento. Vencido = queda libre; libre = es del primero que lo cotiza."
       pie={f.activa ? "Encendida: cada noche se liberan los vencidos y no se puede cotizar a un cliente vigente de otro." : "Apagada: solo se calcula y se muestra."}
       alGuardar={() => guardar.mutate({ clave: "propiedad_clientes", valor: { ...inicial, meses_venta: Number(f.meses), dias_seguimiento: Number(f.dias), activa: f.activa } })}>

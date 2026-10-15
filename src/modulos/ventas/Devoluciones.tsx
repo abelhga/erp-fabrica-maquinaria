@@ -10,6 +10,7 @@ import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos"
 import { useSesion } from "@/lib/sesion";
 import { fecha, hace } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 import { DetalleDevolucion } from "./devoluciones/DetalleDevolucion";
 import { DialogoAlta } from "./devoluciones/DialogoAlta";
 import { ESTADO_DEVOLUCION, TIPO_DEVOLUCION, faltan, useDevolucion, useDevoluciones, useEnviosEnVivo, type Devolucion } from "@/modulos/almacen/envios/datos";
@@ -58,16 +59,16 @@ export default function Devoluciones() {
   const cuenta = (v: Vista) => (lista.data ?? []).filter(filtros[v]).length;
 
   const columnas: Columna<Devolucion>[] = [
-    { clave: "folio", titulo: "Folio", valor: (d) => d.folio,
+    { clave: "folio", titulo: "Folio", explica: GLOSARIO.tipoDevolucion, valor: (d) => d.folio,
       celda: (d) => <span className="whitespace-nowrap"><b className="cifra">{d.folio}</b><span className="block text-xs text-tenue">{TIPO_DEVOLUCION[d.tipo].texto} · {hace(d.creado_en)}</span></span> },
     { clave: "venta", titulo: "Venta", valor: (d) => `${d.id_externo ?? ""} ${d.pedido_folio}`,
       celda: (d) => <span className="cifra whitespace-nowrap">{d.id_externo ? `#${d.id_externo}` : d.pedido_folio}<span className="block text-xs text-tenue">{CANAL[d.canal] ?? d.canal}</span></span> },
     { clave: "cliente", titulo: "Cliente", celda: (d) => <span className="block max-w-[150px] truncate">{d.cliente ?? "—"}</span> },
     { clave: "motivo", titulo: "Motivo", celda: (d) => <span className="block max-w-[210px] truncate" title={d.motivo}>{d.motivo}
       {d.codigo_autorizacion && <span className="block text-xs text-tenue cifra">código {d.codigo_autorizacion}</span>}</span> },
-    { clave: "vence", titulo: "Vence", valor: (d) => (d.abierta ? d.vence : null) ?? "", celda: (d) => <Vence d={d} /> },
+    { clave: "vence", titulo: "Vence", explica: GLOSARIO.venceDevolucion, valor: (d) => (d.abierta ? d.vence : null) ?? "", celda: (d) => <Vence d={d} /> },
     { clave: "responsable", titulo: "Lo lleva", celda: (d) => <span className="text-sm whitespace-nowrap">{d.responsable ?? "—"}</span> },
-    { clave: "estado", titulo: "Estado", valor: (d) => ESTADO_DEVOLUCION[d.estado].texto,
+    { clave: "estado", titulo: "Estado", explica: GLOSARIO.estadoDevolucion, valor: (d) => ESTADO_DEVOLUCION[d.estado].texto,
       celda: (d) => <Insignia tono={ESTADO_DEVOLUCION[d.estado].tono}>{ESTADO_DEVOLUCION[d.estado].texto}</Insignia> },
   ];
   const vacio = vista === "abiertas"

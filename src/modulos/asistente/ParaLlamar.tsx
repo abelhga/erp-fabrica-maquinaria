@@ -20,6 +20,7 @@ import { redactarMensaje } from "@/lib/asistente";
 import { dinero, dineroCompacto, fecha, hace, hoyISO, numero } from "@/lib/formato";
 import { cn, coincide } from "@/lib/utilidades";
 import { MenuAcciones, OpcionMenu } from "@/modulos/ventas/componentes/campos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Oportunidad {
   cliente_id: string; cliente: string; vendedor: string | null; motivo: Motivo; detalle: string;
@@ -37,6 +38,12 @@ interface Seguimiento {
 const CANAL: Record<Canal, string> = { whatsapp: "por WhatsApp", llamada: "por teléfono", correo: "por correo" };
 const SIGUIENTE = { llamar: "Toca llamar", ultimo_mensaje: "Toca el último mensaje", esperar: "Esperando respuesta" } as const;
 const INVALIDAR = [["oportunidades_sugeridas"], ["v_seguimiento_clientes"], ["oportunidades"]];
+
+/** La regla de cada motivo para el modo tutorial (la misma de oportunidades_sugeridas, con números). */
+const EXPLICA: Record<Motivo, string> = {
+  cotizacion: GLOSARIO.motivoCotizacionPorVencer, le_toca: GLOSARIO.motivoLeToca,
+  refacciones: GLOSARIO.motivoRefacciones, reactivar: GLOSARIO.motivoReactivar,
+};
 
 const MOTIVOS: Record<Motivo, { texto: string; tono: Tono; icono: typeof FileText; ayuda: string }> = {
   cotizacion: { texto: "Cotización por vencer", tono: "peligro", icono: FileText, ayuda: "Tiene una cotización enviada que vence en 7 días o venció hace poco." },
@@ -102,12 +109,12 @@ export default function ParaLlamar() {
               className={cn("tarjeta p-4 text-left transition hover:border-marca/40", filtro === "todas" && "ring-2 ring-marca/50 border-marca/50")}>
               <p className="text-sm text-tenue flex items-center gap-2"><PhoneCall className="h-4 w-4 text-marca" />Todas</p>
               <p className="text-2xl font-semibold cifra mt-1">{numero(pendientes.length)}</p>
-              <p className="text-xs text-tenue">{dineroCompacto(total)} en juego</p>
+              <p className="text-xs text-tenue" data-explain={GLOSARIO.enJuego}>{dineroCompacto(total)} en juego</p>
             </button>
             {(Object.keys(MOTIVOS) as Motivo[]).map((m) => {
               const M = MOTIVOS[m];
               return (
-                <button key={m} onClick={() => setFiltro(m)} title={M.ayuda}
+                <button key={m} onClick={() => setFiltro(m)} title={M.ayuda} data-explain={EXPLICA[m]} data-explain-title={M.texto}
                   className={cn("tarjeta p-4 text-left transition hover:border-marca/40", filtro === m && "ring-2 ring-marca/50 border-marca/50")}>
                   <p className="text-sm text-tenue flex items-center gap-2"><M.icono className="h-4 w-4" />{M.texto}</p>
                   <p className="text-2xl font-semibold cifra mt-1">{numero(conteo[m]?.n ?? 0)}</p>
@@ -116,9 +123,9 @@ export default function ParaLlamar() {
               );
             })}
             {registra && (
-              <button onClick={() => setFiltro("seguimiento")} title="Les escribiste o llamaste y falta su respuesta. Cadencia: WhatsApp, llamada al día 3 y último mensaje al día 10."
+              <button onClick={() => setFiltro("seguimiento")} data-explain={GLOSARIO.enSeguimiento} data-explain-title="En seguimiento" title="Les escribiste o llamaste y falta su respuesta. Cadencia: WhatsApp, llamada al día 3 y último mensaje al día 10."
                 className={cn("tarjeta p-4 text-left transition hover:border-marca/40", filtro === "seguimiento" && "ring-2 ring-marca/50 border-marca/50")}>
-                <p className="text-sm text-tenue flex items-center gap-2"><Hourglass className="h-4 w-4" />En seguimiento</p>
+                <p className="text-sm text-tenue flex items-center gap-2"><Hourglass className="h-4 w-4" /><span className="titulo-explicable">En seguimiento</span></p>
                 <p className="text-2xl font-semibold cifra mt-1">{numero(enSeguimiento.length)}</p>
                 <p className={cn("text-xs", tocanHoy ? "text-aviso font-medium" : "text-tenue")}>{tocanHoy ? `${tocanHoy} ${tocanHoy === 1 ? "toca" : "tocan"} hoy` : "Nada para hoy"}</p>
               </button>
@@ -147,7 +154,7 @@ export default function ParaLlamar() {
                       </div>
                       <div className="text-right shrink-0">
                         <Insignia tono={M.tono}><M.icono className="h-3 w-3" />{M.texto}</Insignia>
-                        <p className="text-sm font-semibold cifra mt-1">{dinero(o.valor_estimado)}</p>
+                        <p className="text-sm font-semibold cifra mt-1" data-explain={GLOSARIO.enJuego} data-explain-title="Valor estimado">{dinero(o.valor_estimado)}</p>
                       </div>
                     </div>
                     {s && <EstadoSeguimiento s={s} />}
@@ -157,7 +164,7 @@ export default function ParaLlamar() {
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-tenue">
                       {o.ultima_compra && <span>Última compra {fecha(o.ultima_compra)}</span>}
                       {o.compras != null && <span>{numero(o.compras)} {o.compras === 1 ? "compra" : "compras"} · {dineroCompacto(o.total_historico)} desde 2018</span>}
-                      {o.intervalo_tipico != null && <span>Ritmo ~{o.intervalo_tipico} días</span>}
+                      {o.intervalo_tipico != null && <span data-explain={GLOSARIO.ritmoCompra}>Ritmo ~{o.intervalo_tipico} días</span>}
                     </div>
                     {porConfirmar[o.cliente_id] ? (
                       <ConfirmarIntento o={o} canal={porConfirmar[o.cliente_id]}

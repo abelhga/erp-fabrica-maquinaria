@@ -15,8 +15,14 @@ import { DetalleEnvio } from "./envios/DetalleEnvio";
 import { Saldos } from "./envios/Saldos";
 import { DialogoConfigurar, DialogoEnvioFull, DialogoRecarga } from "./envios/Dialogos";
 import { estadoEnvio, useEnvio, useEnvios, useEnviosEnVivo, type Envio } from "./envios/datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type Pestana = "cotizar" | "empacar" | "hoy" | "camino" | "entregados";
+
+const EXPLICA: Record<Pestana, string> = {
+  cotizar: GLOSARIO.envioPorCotizar, empacar: GLOSARIO.envioPorEmpacar, hoy: GLOSARIO.envioHoySale,
+  camino: GLOSARIO.envioEnCamino, entregados: GLOSARIO.envioEntregados,
+};
 
 const PESTANAS: { valor: Pestana; texto: string; filtro: (e: Envio, hoy: string) => boolean; vacio: { titulo: string; texto: string } }[] = [
   { valor: "cotizar", texto: "Por cotizar y guía", filtro: (e) => e.falta_guia,
@@ -62,13 +68,13 @@ export default function Envios() {
       celda: (e) => <span className="block max-w-[190px]"><span className="block truncate">{e.cliente ?? (e.tipo === "a_full" ? "Full de Mercado Libre" : "—")}</span>
         <span className="block text-xs text-tenue cifra">{e.pedido_folio}{e.id_externo ? ` · #${e.id_externo}` : ""}</span></span> },
     { clave: "resumen", titulo: "Qué lleva", celda: (e) => <span className="block max-w-[200px] truncate text-sm" title={e.resumen ?? ""}>{e.resumen}</span> },
-    { clave: "bultos", titulo: "Bultos", alinear: "der", valor: (e) => e.peso_total ?? 0,
+    { clave: "bultos", titulo: "Bultos", alinear: "der", valor: (e) => e.peso_total ?? 0, explica: GLOSARIO.bultosEnvio,
       celda: (e) => e.bultos ? <span className="whitespace-nowrap">{e.bultos} · {numero(e.peso_total)} kg{e.sin_medidas > 0 && <span className="block text-[11px] text-aviso">{e.sin_medidas} sin medir</span>}</span> : "—" },
     { clave: "paqueteria", titulo: "Paquetería y guía", valor: (e) => `${e.paqueteria ?? ""} ${e.numero_guia ?? ""}`,
       celda: (e) => <span className="text-sm">{e.paqueteria ?? "—"}{e.numero_guia && <span className="block text-xs text-tenue cifra">{e.numero_guia}</span>}</span> },
-    { clave: "fecha_recoleccion", titulo: "Recolección", valor: (e) => e.fecha_recoleccion ?? "",
+    { clave: "fecha_recoleccion", titulo: "Recolección", valor: (e) => e.fecha_recoleccion ?? "", explica: GLOSARIO.recoleccion,
       celda: (e) => e.fecha_recoleccion ? <span className={cn(e.abierto && e.fecha_recoleccion <= hoy && "font-semibold text-aviso")}>{e.fecha_recoleccion === hoy ? "Hoy" : fecha(e.fecha_recoleccion)}</span> : "—" },
-    { clave: "estado", titulo: "Estado", valor: (e) => estadoEnvio(e).texto,
+    { clave: "estado", titulo: "Estado", valor: (e) => estadoEnvio(e).texto, explica: GLOSARIO.estadoEnvio,
       celda: (e) => <span className="flex flex-wrap gap-1"><Insignia tono={estadoEnvio(e).tono} punto>{estadoEnvio(e).texto}</Insignia>
         {e.fotos > 0 && <Insignia><Camera className="h-3 w-3" />{e.fotos}</Insignia>}</span> },
   ];
@@ -84,7 +90,7 @@ export default function Envios() {
       {verSaldo && <Saldos alRecargar={recarga ? (id) => { setPaqRecarga(id); setDlg("recarga"); } : undefined} />}
 
       <Pestanas value={pestana} onValueChange={(v) => cambiar({ pestana: v })}>
-        <ListaPestanas opciones={PESTANAS.map((p) => ({ valor: p.valor, texto: p.texto, cuenta: cuentas[p.valor] }))} />
+        <ListaPestanas opciones={PESTANAS.map((p) => ({ valor: p.valor, texto: p.texto, cuenta: cuentas[p.valor], explica: EXPLICA[p.valor] }))} />
         {PESTANAS.map((p) => {
           const filas = (envios.data ?? []).filter((e) => p.filtro(e, hoy));
           return (

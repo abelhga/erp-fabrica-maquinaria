@@ -12,6 +12,7 @@ import { dinero, fecha } from "@/lib/formato";
 import { DialogoCliente } from "./componentes/dialogos";
 import { haceCuanto, todas, type VCliente } from "./comun";
 import { DuenoCliente, type Cartera } from "./componentes/Cartera";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
  * Directorio único de clientes: todos los vendedores ven que la cuenta existe
@@ -68,16 +69,16 @@ export default function Clientes() {
     },
     { clave: "ciudad", titulo: "Ciudad", valor: (c) => [c.ciudad, c.estado].filter(Boolean).join(", ") || null },
     {
-      clave: "vendedor", titulo: "Vendedor dueño", valor: (c) => c.vendedor ?? "Libre",
+      clave: "vendedor", titulo: "Vendedor dueño", explica: GLOSARIO.cartera, valor: (c) => c.vendedor ?? "Libre",
       celda: (c) => <DuenoCliente cartera={porId.get(c.id)} vendedor={c.vendedor} mio={c.vendedor_id === perfil?.id} />,
     },
     {
-      clave: "ultima", titulo: "Última compra", valor: (c) => ultima(c) ?? "",
+      clave: "ultima", titulo: "Última compra", explica: GLOSARIO.ultimaCompra, valor: (c) => ultima(c) ?? "",
       celda: (c) => { const u = ultima(c); return u ? <span title={fecha(u)}>{haceCuanto(u)}</span> : <span className="text-tenue">—</span>; },
     },
-    { clave: "compras", titulo: "Compras 12 meses", alinear: "der", sinBusqueda: true, valor: (c) => Number(c.compras_12m), celda: (c) => Number(c.compras_12m) ? dinero(c.compras_12m) : <span className="text-tenue">—</span> },
+    { clave: "compras", titulo: "Compras 12 meses", explica: GLOSARIO.compras12m, alinear: "der", sinBusqueda: true, valor: (c) => Number(c.compras_12m), celda: (c) => Number(c.compras_12m) ? dinero(c.compras_12m) : <span className="text-tenue">—</span> },
     {
-      clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, valor: (c) => Number(c.saldo),
+      clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, explica: GLOSARIO.saldoPorCobrar, valor: (c) => Number(c.saldo),
       celda: (c) => Number(c.saldo) > 0.5 ? <span className="font-medium text-aviso">{dinero(c.saldo)}</span> : <span className="text-tenue">—</span>,
     },
   ];

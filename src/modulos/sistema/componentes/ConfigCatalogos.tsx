@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { numero } from "@/lib/formato";
 import { CeldaCheck, CeldaTexto, SoloLectura } from "./Editables";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Almacen { id: number; nombre: string; tipo: "fisico" | "mercadolibre"; disponible_para_planta: boolean; descripcion: string | null; activo: boolean }
 interface Etapa { id: number; nombre: string; orden: number; color: string; activa: boolean; capacidad_horas_semana: number }
@@ -31,7 +32,7 @@ export function ConfigAlmacenes() {
         {almacenes.isLoading ? <Cargando /> : (
           <div className="overflow-x-auto">
             <table className="tabla">
-              <thead><tr><th>Nombre</th><th>Tipo</th><th className="!text-center">Disponible para planta</th><th>Descripción</th><th className="!text-center">Activo</th></tr></thead>
+              <thead><tr><th>Nombre</th><th>Tipo</th><th className="!text-center" data-explain={GLOSARIO.almacenParaPlanta}>Disponible para planta</th><th>Descripción</th><th className="!text-center">Activo</th></tr></thead>
               <tbody>
                 {(almacenes.data ?? []).map((a) => (
                   <tr key={a.id} className={a.activo ? "" : "opacity-60"}>
@@ -86,7 +87,7 @@ export function ConfigTaller() {
         {etapas.isLoading ? <Cargando /> : (
           <div className="overflow-x-auto">
             <table className="tabla">
-              <thead><tr><th className="w-16">Color</th><th>Etapa</th><th className="w-24 !text-right">Orden</th><th className="w-36 !text-right">Capacidad h/semana</th><th className="w-20 !text-center">Activa</th></tr></thead>
+              <thead><tr><th className="w-16">Color</th><th>Etapa</th><th className="w-24 !text-right">Orden</th><th className="w-36 !text-right" data-explain={GLOSARIO.capacidadEtapa}>Capacidad h/semana</th><th className="w-20 !text-center">Activa</th></tr></thead>
               <tbody>
                 {(etapas.data ?? []).map((e) => (
                   <tr key={e.id} className={e.activa ? "" : "opacity-60"}>

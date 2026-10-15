@@ -26,6 +26,7 @@ import {
   type Alerta, type Debe, type Dinero, type Embarque, type Fase,
 } from "./componentes/comun";
 import { DialogoEmbarque } from "./componentes/DialogoEmbarque";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const COLUMNAS: { clave: string; fases: Fase[]; titulo: string; ayuda: string }[] = [
   { clave: "proveedor", fases: ["cotizando", "produccion", "listo"], titulo: "Con el proveedor", ayuda: "PI, anticipo, producción y saldo" },
@@ -78,24 +79,24 @@ export default function Embarques() {
         <ListaPestanas opciones={[
           { valor: "embarques", texto: "Embarques", cuenta: activos.length },
           ...(veDinero ? [{ valor: "dinero", texto: "Dinero" }] : []),
-          { valor: "tiempos", texto: "Tiempos por proveedor" },
+          { valor: "tiempos", texto: "Tiempos por proveedor", explica: GLOSARIO.tiempoProveedor },
         ]} />
 
         <ContenidoPestana value="embarques" className="space-y-5 pt-5">
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
-            <Kpi titulo="En curso" valor={numero(activos.length)} icono={Ship}
+            <Kpi titulo="En curso" valor={numero(activos.length)} icono={Ship} explica={GLOSARIO.faseEmbarque}
               detalle={`${activos.filter((e) => e.fase === "transito").length} en el mar · ${activos.filter((e) => e.fase === "puerto").length} en puerto`} />
-            <Kpi titulo="Riesgos hoy" valor={numero(riesgos)} icono={Siren} tono={riesgos ? "peligro" : "ok"}
+            <Kpi titulo="Riesgos hoy" valor={numero(riesgos)} icono={Siren} tono={riesgos ? "peligro" : "ok"} explica={GLOSARIO.alertaImportacion}
               detalle={`${(alertas.data ?? []).length} alertas en total`} />
             {veDinero ? (
               <>
                 <Kpi titulo="Por pagar a proveedores" valor={dinero(totales.porPagarUsd, "USD")} icono={DollarSign} tono="info"
-                  detalle={`≈ ${dinero(totales.porPagarMxn)} al tipo de cambio de hoy`} alClic={() => setPestana("dinero")} />
+                  detalle={`≈ ${dinero(totales.porPagarMxn)} al tipo de cambio de hoy`} alClic={() => setPestana("dinero")} explica={GLOSARIO.porPagarProveedores} />
                 <Kpi titulo="Por recuperar" valor={dinero(totales.recuperar)} icono={Undo2} tono={totales.recuperar ? "aviso" : "ok"}
-                  detalle="Saldos a favor y garantías de contenedor" alClic={() => setPestana("dinero")} />
+                  detalle="Saldos a favor y garantías de contenedor" alClic={() => setPestana("dinero")} explica={GLOSARIO.porRecuperar} />
               </>
             ) : (
-              <Kpi titulo="Llegan a planta en 14 días" valor={numero(llegan.length)} icono={CalendarClock} tono="info"
+              <Kpi titulo="Llegan a planta en 14 días" valor={numero(llegan.length)} icono={CalendarClock} tono="info" explica={GLOSARIO.llegadaPlanta}
                 detalle={llegan[0] ? `El primero: ${llegan[0].folio} hacia el ${fecha(llegan[0].llegada_planta_estimada)}` : "Nada en camino tan pronto"} />
             )}
           </div>
@@ -131,7 +132,7 @@ function Alertas({ alertas, cargando }: { alertas: Alerta[] | undefined; cargand
   const mostrar = todas ? alertas ?? [] : urgentes.slice(0, 6);
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Lo que no puede esperar" descripcion={veDinero ? "Documentos antes del arribo, días libres, pagos, cuentas de gastos y dinero por recuperar" : "Documentos antes del arribo, días libres y cambios de ETA"}
+      <EncabezadoTarjeta titulo="Lo que no puede esperar" explica={GLOSARIO.alertaImportacion} descripcion={veDinero ? "Documentos antes del arribo, días libres, pagos, cuentas de gastos y dinero por recuperar" : "Documentos antes del arribo, días libres y cambios de ETA"}
         acciones={(alertas?.length ?? 0) > mostrar.length || todas
           ? <Boton variante="fantasma" tamano="sm" onClick={() => setTodas(!todas)}>{todas ? "Solo lo urgente" : `Ver las ${alertas!.length}`}</Boton> : undefined} />
       {mostrar.length === 0 ? (
@@ -176,7 +177,7 @@ function Tubo({ embarques, alertas }: { embarques: Embarque[]; alertas: Alerta[]
             <section key={c.clave} className="rounded-xl bg-fondo/70 border border-borde p-2.5 space-y-2.5" aria-label={c.titulo}>
               <header className="px-1">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-sm">{c.titulo}</h3>
+                  <h3 className="font-semibold text-sm" data-explain={GLOSARIO.faseEmbarque} data-explain-title={c.titulo}>{c.titulo}</h3>
                   <span className="text-xs text-tenue cifra">{aqui.length}</span>
                 </div>
                 <p className="text-xs text-tenue">{c.ayuda}</p>
@@ -223,8 +224,8 @@ function TarjetaEmbarque({ e, enRiesgo }: { e: Embarque; enRiesgo: boolean }) {
         <p className="text-sm leading-snug line-clamp-2">{e.descripcion}</p>
         <p className="text-xs text-tenue truncate mt-0.5">{e.proveedores ?? "Sin orden de compra ligada"}</p>
       </div>
-      {e.fase === "puerto" && <DiasLibres usados={e.dias_en_puerto} libres={e.dias_libres_almacenaje} etiqueta="Días en puerto" />}
-      {conContenedor && <DiasLibres usados={e.dias_contenedor} libres={e.dias_libres_demoras} etiqueta="Contenedor" />}
+      {e.fase === "puerto" && <DiasLibres usados={e.dias_en_puerto} libres={e.dias_libres_almacenaje} etiqueta="Días en puerto" explica={GLOSARIO.diasLibres} />}
+      {conContenedor && <DiasLibres usados={e.dias_contenedor} libres={e.dias_libres_demoras} etiqueta="Contenedor" explica={GLOSARIO.demorasContenedor} />}
       <p className="text-xs text-tenue flex items-center gap-1.5">
         <CalendarClock className="h-3.5 w-3.5" />
         {e.en_planta ? `En planta desde el ${fecha(e.en_planta)}`
@@ -233,7 +234,7 @@ function TarjetaEmbarque({ e, enRiesgo }: { e: Embarque; enRiesgo: boolean }) {
           : "Sin ETA todavía"}
       </p>
       {e.siguiente_paso && (
-        <div className="rounded-lg bg-fondo px-2.5 py-2 space-y-1">
+        <div className="rounded-lg bg-fondo px-2.5 py-2 space-y-1" data-explain={GLOSARIO.siguientePaso} data-explain-title="Siguiente paso">
           <p className="text-xs font-medium flex items-start gap-1.5"><ArrowRight className="h-3.5 w-3.5 mt-px shrink-0 text-marca" />{e.siguiente_paso}</p>
           <InsigniaDebe debe={e.debe} />
         </div>
@@ -287,7 +288,7 @@ function Esperando({ embarques }: { embarques: Embarque[] }) {
 
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Lo que estamos esperando de otros" descripcion="Documentos pendientes por quién los debe, con la última vez que se pidieron" />
+      <EncabezadoTarjeta titulo="Lo que estamos esperando de otros" explica={GLOSARIO.quienDebe} descripcion="Documentos pendientes por quién los debe, con la última vez que se pidieron" />
       {docs.isLoading ? <Cargando filas={3} /> : grupos.length === 0 ? (
         <Vacio icono={Inbox} titulo="Nadie nos debe nada" texto="Los documentos que falten del proveedor, el agente o la naviera aparecen aquí con la fecha en que los pediste." className="py-8" />
       ) : (
@@ -372,10 +373,10 @@ function VistaDinero({ embarques, dinero: filas }: { embarques: Embarque[]; dine
     { clave: "desc", titulo: "Qué", valor: (f) => porEmbarque.get(f.embarque_id)?.descripcion, celda: (f) => <span className="block max-w-[240px] truncate">{porEmbarque.get(f.embarque_id)?.descripcion}</span> },
     { clave: "comprometido_usd", titulo: "Mercancía", alinear: "der", valor: (f) => Number(f.comprometido_usd), celda: (f) => dinero(f.comprometido_usd, "USD"), sinBusqueda: true },
     { clave: "pagado_usd", titulo: "Pagado", alinear: "der", valor: (f) => Number(f.pagado_usd), celda: (f) => dinero(f.pagado_usd, "USD"), sinBusqueda: true },
-    { clave: "tc_promedio", titulo: "TC real", alinear: "der", valor: (f) => f.tc_promedio, celda: (f) => f.tc_promedio ? numero(f.tc_promedio) : "—", sinBusqueda: true },
+    { clave: "tc_promedio", titulo: "TC real", alinear: "der", explica: GLOSARIO.tcReal, valor: (f) => f.tc_promedio, celda: (f) => f.tc_promedio ? numero(f.tc_promedio) : "—", sinBusqueda: true },
     { clave: "gastos", titulo: "Gastos e impuestos", alinear: "der", valor: (f) => Number(f.gastos_mxn) + Number(f.impuestos_mxn), celda: (f) => dinero(Number(f.gastos_mxn) + Number(f.impuestos_mxn)), sinBusqueda: true },
-    { clave: "iva", titulo: "IVA acreditable", alinear: "der", valor: (f) => Number(f.iva_acreditable_mxn), celda: (f) => dinero(f.iva_acreditable_mxn), sinBusqueda: true },
-    { clave: "por_recuperar_mxn", titulo: "Por recuperar", alinear: "der", valor: (f) => Number(f.por_recuperar_mxn), celda: (f) => dinero(f.por_recuperar_mxn), sinBusqueda: true },
+    { clave: "iva", titulo: "IVA acreditable", alinear: "der", explica: GLOSARIO.ivaAcreditable, valor: (f) => Number(f.iva_acreditable_mxn), celda: (f) => dinero(f.iva_acreditable_mxn), sinBusqueda: true },
+    { clave: "por_recuperar_mxn", titulo: "Por recuperar", alinear: "der", explica: GLOSARIO.porRecuperar, valor: (f) => Number(f.por_recuperar_mxn), celda: (f) => dinero(f.por_recuperar_mxn), sinBusqueda: true },
   ];
   const totalUsd = (porPagar.data ?? []).filter((f) => f.moneda === "USD").reduce((s, f) => s + Number(f.saldo), 0);
   const totalMxn = (porPagar.data ?? []).reduce((s, f) => s + Number(f.saldo_mxn), 0);
@@ -386,9 +387,9 @@ function VistaDinero({ embarques, dinero: filas }: { embarques: Embarque[]; dine
   return (
     <div className="space-y-5">
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
-        <Kpi titulo="Por pagar a proveedores" valor={dinero(totalUsd, "USD")} icono={DollarSign} tono="info" detalle={`≈ ${dinero(totalMxn)} al tipo de cambio de hoy. No hay cuenta en dólares: sale de pesos o por EBANX.`} />
+        <Kpi titulo="Por pagar a proveedores" valor={dinero(totalUsd, "USD")} icono={DollarSign} tono="info" explica={GLOSARIO.porPagarProveedores} detalle={`≈ ${dinero(totalMxn)} al tipo de cambio de hoy. No hay cuenta en dólares: sale de pesos o por EBANX.`} />
         <Kpi titulo="Programado en 30 días" valor={dinero(en30, "USD")} icono={CalendarClock} tono="marca" detalle="Pagos con fecha ya acordada" />
-        <Kpi titulo="Por recuperar" valor={dinero(recuperar)} icono={Undo2} tono={recuperar ? "aviso" : "ok"} detalle={`${saldos.data?.length ?? 0} saldos a favor o garantías`} />
+        <Kpi titulo="Por recuperar" valor={dinero(recuperar)} icono={Undo2} explica={GLOSARIO.porRecuperar} tono={recuperar ? "aviso" : "ok"} detalle={`${saldos.data?.length ?? 0} saldos a favor o garantías`} />
       </div>
       <section className="space-y-2">
         <h2 className="font-semibold">Pagos en dólares que vienen</h2>
@@ -431,9 +432,9 @@ function Tiempos() {
     { clave: "travesia", titulo: "Travesía", alinear: "der", celda: (f) => d(f.travesia) },
     { clave: "puerto_a_planta", titulo: "Puerto → planta", alinear: "der", celda: (f) => d(f.puerto_a_planta) },
     { clave: "dias_naturales", titulo: "Pedido → planta", alinear: "der", celda: (f) => <b>{d(f.dias_naturales)}</b> },
-    { clave: "dias_habiles", titulo: "Hábiles (reabasto)", alinear: "der", celda: (f) => (
+    { clave: "dias_habiles", titulo: "Hábiles (reabasto)", alinear: "der", explica: GLOSARIO.tiempoProveedor, celda: (f) => (
       <span title={f.dias_entrega_capturados ? `Capturado en el proveedor: ${f.dias_entrega_capturados}` : undefined}>{f.dias_habiles}</span>) },
-    { clave: "planta_a_cuenta_gastos", titulo: "Planta → CG", alinear: "der", celda: (f) => d(f.planta_a_cuenta_gastos) },
+    { clave: "planta_a_cuenta_gastos", titulo: "Planta → CG", alinear: "der", explica: GLOSARIO.cuentaGastos, celda: (f) => d(f.planta_a_cuenta_gastos) },
   ];
   const colEmb: Columna<TiempoEmbarque>[] = [
     { clave: "folio", titulo: "Embarque", celda: (f) => <Link className="font-medium hover:underline whitespace-nowrap" to={`/importaciones/${f.embarque_id}`}>{f.folio}</Link> },

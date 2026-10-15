@@ -18,6 +18,9 @@ import { dinero, dineroCompacto, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { ResumenIA } from "./ResumenIA";
 import { DondeVendemos } from "@/modulos/analisis/DondeVendemos";
+import { Explicacion } from "@/tutorial/Explicacion";
+import { PANTALLAS } from "@/tutorial/pantallas";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Tablero {
   generado: string;
@@ -56,18 +59,20 @@ function Delta({ v, invertido }: { v: number | null; invertido?: boolean }) {
 }
 
 /** Indicador principal: cifra grande, contexto, variación y (opcional) minigráfica. */
-function Indicador({ titulo, valor, detalle, delta, icono: Icono, serie, alClic, tono = "marca" }: {
+function Indicador({ titulo, valor, detalle, delta, icono: Icono, serie, alClic, tono = "marca", explica }: {
   titulo: string; valor: string; detalle?: React.ReactNode; delta?: React.ReactNode; icono: typeof TrendingUp;
-  serie?: { x: string; y: number }[]; alClic?: () => void; tono?: "marca" | "ok" | "aviso" | "peligro" | "info";
+  serie?: { x: string; y: number }[]; alClic?: () => void; tono?: "marca" | "ok" | "aviso" | "peligro" | "info"; explica?: string;
 }) {
   const color = { marca: "text-marca", ok: "text-ok", aviso: "text-aviso", peligro: "text-peligro", info: "text-info" }[tono];
   // Sin espacios ni acentos: un id así no se puede referenciar con url(#…) y el área salía negra.
   const idDegradado = "g-" + useId().replace(/[^a-zA-Z0-9-]/g, "");
+  // Sin clic es un <div>, como Kpi: un botón deshabilitado no recibe el mouse y el modo tutorial no lo explicaría.
+  const Caja = alClic ? "button" : "div";
   return (
-    <button onClick={alClic} disabled={!alClic}
+    <Caja onClick={alClic} data-explain={explica} data-explain-title={explica ? titulo : undefined}
       className="tarjeta text-left p-4 flex flex-col gap-2 hover:border-marca/40 hover:shadow-md transition group relative overflow-hidden">
       <div className="flex items-center gap-2 text-sm text-tenue">
-        <Icono className={cn("h-4 w-4", color)} />{titulo}
+        <Icono className={cn("h-4 w-4", color)} /><span className="titulo-explicable">{titulo}</span>
       </div>
       <div className="flex items-end gap-2">
         <span className="text-[28px] leading-none font-semibold tracking-tight cifra">{valor}</span>
@@ -88,7 +93,7 @@ function Indicador({ titulo, valor, detalle, delta, icono: Icono, serie, alClic,
           </ResponsiveContainer>
         </div>
       )}
-    </button>
+    </Caja>
   );
 }
 
@@ -97,7 +102,7 @@ function EnVivo({ desde }: { desde: string | undefined }) {
   useEffect(() => { const t = setInterval(() => forzar((x) => x + 1), 5000); return () => clearInterval(t); }, []);
   const s = desde ? Math.max(0, Math.round((Date.now() - new Date(desde).getTime()) / 1000)) : null;
   return (
-    <span className="inline-flex items-center gap-2 text-xs text-tenue">
+    <span className="inline-flex items-center gap-2 text-xs text-tenue" data-explain={GLOSARIO.enVivo}>
       <span className="relative flex h-2.5 w-2.5">
         <span className="absolute inline-flex h-full w-full rounded-full bg-ok opacity-60 animate-ping" />
         <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-ok" />
@@ -172,6 +177,9 @@ export function TableroDireccion() {
         <EnVivo desde={t.dataUpdatedAt ? new Date(t.dataUpdatedAt).toISOString() : d.generado} />
       </div>
 
+      {/* Dirección no pasa por Pagina: el texto del tutorial de "/" se pone aquí. */}
+      <Explicacion>{PANTALLAS["/"].map((p) => <p key={p}>{p}</p>)}</Explicacion>
+
       <ResumenIA />
 
       {/* Indicadores principales */}
@@ -179,23 +187,24 @@ export function TableroDireccion() {
         {v && (
           <Indicador titulo={`Ventas ${anio}`} valor={dineroCompacto(v.anio)} icono={TrendingUp} delta={<Delta v={yoy} />}
             detalle={`vs ${dineroCompacto(v.anio_anterior_misma_fecha)} a la misma fecha de ${anio - 1}`}
-            serie={(v.serie_12 ?? []).map((x) => ({ x: x.mes, y: Number(x.monto) }))} alClic={() => ir("/ventas/pedidos")} />
+            serie={(v.serie_12 ?? []).map((x) => ({ x: x.mes, y: Number(x.monto) }))} alClic={() => ir("/ventas/pedidos")} explica={GLOSARIO.ventasAnio} />
         )}
         {v && (
           <Indicador titulo="Cierre de año a este ritmo" valor={dineroCompacto(v.proyeccion_anio)} icono={Target}
             delta={<Delta v={cambio(v.proyeccion_anio, v.anio_anterior_total)} />} tono={v.proyeccion_anio >= v.anio_anterior_total ? "ok" : "aviso"}
-            detalle={`Con la estacionalidad de ${anio - 1}, que cerró en ${dineroCompacto(v.anio_anterior_total)}`} />
+            detalle={`Con la estacionalidad de ${anio - 1}, que cerró en ${dineroCompacto(v.anio_anterior_total)}`} explica={GLOSARIO.proyeccionCierre} />
         )}
         {d.cotizaciones && (
           <Indicador titulo="Cotizado vivo" valor={dineroCompacto(d.cotizaciones.monto_abierto)} icono={Flame} tono="info"
             detalle={<>{numero(d.cotizaciones.abiertas)} cotizaciones · cierre {d.cotizaciones.cierre_90d == null ? "—" : porcentaje(d.cotizaciones.cierre_90d, 0)} (90 d)
               {d.cotizaciones.por_autorizar > 0 && <> · <b className="text-aviso">{d.cotizaciones.por_autorizar} por autorizar</b></>}</>}
-            alClic={() => ir("/ventas/cotizaciones")} />
+            alClic={() => ir("/ventas/cotizaciones")} explica={GLOSARIO.cotizadoVivo} />
         )}
         {d.cobranza && (
           <Indicador titulo="Por cobrar" valor={dineroCompacto(porCobrar)} icono={Wallet} tono={aging && aging.d90 > 0 ? "aviso" : "marca"}
             detalle={<>Cobrado este mes {dineroCompacto(d.cobranza.cobrado_mes)}{aging && aging.d90 > 0 && <> · <b className="text-peligro">{dineroCompacto(aging.d90)} +90 d</b></>}</>}
-            alClic={() => ir("/finanzas/cobranza")} />
+            alClic={() => ir("/finanzas/cobranza")}
+            explica={`${GLOSARIO.porCobrar} Aquí se suma además el saldo que ya venía de la hoja el día del arranque.`} />
         )}
         {d.inventario && (
           <Indicador titulo="Inventario" valor={dineroCompacto(d.inventario.valor)} icono={Boxes} tono="marca"
@@ -249,7 +258,7 @@ export function TableroDireccion() {
         <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-4">
           {d.vendedores && (
             <Tarjeta>
-              <EncabezadoTarjeta titulo="Vendedores este mes" descripcion="Maquinaria contra su siguiente meta de bono" acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/ventas/comisiones")}>Comisiones</button>} />
+              <EncabezadoTarjeta titulo="Vendedores este mes" descripcion="Maquinaria contra su siguiente meta de bono" explica={GLOSARIO.bonoMeta} acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/ventas/comisiones")}>Comisiones</button>} />
               <div className="px-5 pb-5 space-y-4">
                 {d.vendedores.length === 0 ? <p className="text-sm text-tenue">Sin planes de comisión asignados.</p> :
                   d.vendedores.map((x) => (
@@ -266,7 +275,7 @@ export function TableroDireccion() {
           )}
           {d.embudo && (
             <Tarjeta>
-              <EncabezadoTarjeta titulo="Embudo comercial" descripcion="Oportunidades abiertas por etapa" acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/ventas/oportunidades")}>Tablero</button>} />
+              <EncabezadoTarjeta titulo="Embudo comercial" descripcion="Oportunidades abiertas por etapa" explica={GLOSARIO.embudo} acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/ventas/oportunidades")}>Tablero</button>} />
               <div className="px-5 pb-5 space-y-2">
                 {d.embudo.map((e, i) => (
                   <div key={e.etapa} className="flex items-center gap-3">
@@ -282,7 +291,7 @@ export function TableroDireccion() {
           )}
           {d.canales && (
             <Tarjeta>
-              <EncabezadoTarjeta titulo={`Mezcla por canal ${anio}`} descripcion="Pedidos sin IVA" />
+              <EncabezadoTarjeta titulo={`Mezcla por canal ${anio}`} descripcion="Pedidos sin IVA" explica={GLOSARIO.canalVenta} />
               <div className="px-5 pb-5 space-y-3">
                 {d.canales.length === 0 ? <p className="text-sm text-tenue">Sin pedidos este año.</p> :
                   d.canales.map((c, i) => (

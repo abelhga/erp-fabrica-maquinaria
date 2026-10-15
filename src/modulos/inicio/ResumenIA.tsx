@@ -13,6 +13,7 @@ import { pedirResumen, type Area, type Resumen, type Tono } from "@/lib/asistent
 import { hace } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { Insignia } from "@/components/ui/insignia";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const TONOS: Record<Tono, { icono: typeof Info; clase: string; texto: string }> = {
   riesgo: { icono: Siren, clase: "bg-peligro-suave text-peligro", texto: "Riesgo" },
@@ -67,7 +68,7 @@ export function ResumenIA({ area = "direccion" }: { area?: Area }) {
               <Sparkles className="h-[18px] w-[18px]" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-tenue uppercase tracking-wide">Lo que importa hoy</p>
+              <p className="text-xs font-medium text-tenue uppercase tracking-wide" data-explain={GLOSARIO.loQueImportaHoy}>Lo que importa hoy</p>
               {cargando
                 ? <div className="mt-1.5 h-5 w-80 max-w-full rounded bg-fondo animate-pulse" />
                 : <h2 className="text-lg font-semibold leading-snug text-balance">{datos.titular}</h2>}

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { GLOSARIO } from "@/tutorial/glosario";
 import * as P from "@radix-ui/react-popover";
 import { Check, Eye, Loader2, Undo2, UserRound } from "lucide-react";
 import { toast } from "sonner";
@@ -101,7 +102,7 @@ export function BotonVerComo() {
   const esDireccion = rolesReales.includes("direccion");
   if (vistaPrevia || !(esDireccion || rolesReales.includes("admin"))) return null;
   const boton = (
-    <button aria-label="Ver el ERP como otro rol o persona" title="Ver el ERP como otro rol o persona"
+    <button aria-label="Ver el ERP como otro rol o persona" title="Ver el ERP como otro rol o persona" data-explain={GLOSARIO.verComo}
       onClick={esDireccion ? undefined : () => setPersona(true)}
       className={cn("h-9 px-2 rounded-lg hover:bg-fondo inline-flex items-center gap-1.5 text-sm",
         viendoComo ? "text-aviso" : "text-tenue")}>

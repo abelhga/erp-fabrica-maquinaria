@@ -13,6 +13,7 @@ import { cn } from "@/lib/utilidades";
 import {
   BarraRanking, Cambio, Cifra, DIV, LeyendaEscala, TarjetaGrafica, VACIO, escalaCrecimiento, escalaCuantiles, usePeriodo, type Escala,
 } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface RegionMapa {
   cve: string; nombre: string; monto: number; monto_anterior: number; clientes: number; clientes_anterior: number;
@@ -107,12 +108,12 @@ export default function MapaVentas() {
   const columnas: Columna<RegionMapa>[] = [
     { clave: "nombre", titulo: enEstado ? "Municipio" : "Estado" },
     { clave: "monto", titulo: "Venta", alinear: "der", celda: (r) => dinero(r.monto), sinBusqueda: true },
-    { clave: "participacion", titulo: "Participación", alinear: "der", valor: (r) => r.participacion, celda: (r) => porcentaje(r.participacion), sinBusqueda: true },
-    { clave: "monto_anterior", titulo: "Periodo anterior", alinear: "der", celda: (r) => dinero(r.monto_anterior), sinBusqueda: true },
-    { clave: "cambio", titulo: "Cambio", alinear: "der", valor: (r) => r.cambio, celda: (r) => <Cambio v={r.cambio} nuevo={r.nuevo} />, sinBusqueda: true },
+    { clave: "participacion", titulo: "Participación", alinear: "der", explica: GLOSARIO.participacionVenta, valor: (r) => r.participacion, celda: (r) => porcentaje(r.participacion), sinBusqueda: true },
+    { clave: "monto_anterior", titulo: "Periodo anterior", alinear: "der", explica: GLOSARIO.periodoAnalisis, celda: (r) => dinero(r.monto_anterior), sinBusqueda: true },
+    { clave: "cambio", titulo: "Cambio", alinear: "der", explica: GLOSARIO.crecimientoVenta, valor: (r) => r.cambio, celda: (r) => <Cambio v={r.cambio} nuevo={r.nuevo} />, sinBusqueda: true },
     { clave: "clientes", titulo: "Clientes", alinear: "der", sinBusqueda: true },
     { clave: "operaciones", titulo: "Operaciones", alinear: "der", sinBusqueda: true },
-    { clave: "ticket", titulo: "Ticket promedio", alinear: "der", valor: (r) => r.ticket, celda: (r) => dinero(r.ticket), sinBusqueda: true },
+    { clave: "ticket", titulo: "Ticket promedio", alinear: "der", explica: GLOSARIO.ticketPromedio, valor: (r) => r.ticket, celda: (r) => dinero(r.ticket), sinBusqueda: true },
     { clave: "cve", titulo: "Clave INEGI", clase: "text-tenue" },
   ];
 
@@ -120,14 +121,14 @@ export default function MapaVentas() {
     <div className={cn("space-y-4 transition-opacity", datos.isFetching && datos.isPlaceholderData && "opacity-60")}>
       {/* Cifras de la vista */}
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
-        <Cifra titulo={enEstado ? `Venta en ${d.nombre}` : "Venta"} valor={dineroCompacto(d.total)}
+        <Cifra titulo={enEstado ? `Venta en ${d.nombre}` : "Venta"} explica={GLOSARIO.ventaAnalisis} valor={dineroCompacto(d.total)}
           detalle={<>{numero(d.clientes)} clientes · {numero(d.operaciones)} operaciones</>} />
-        <Cifra titulo="Crecimiento" valor={d.cambio == null ? "—" : `${d.cambio >= 0 ? "+" : "−"}${porcentaje(Math.abs(d.cambio), 0)}`}
+        <Cifra titulo="Crecimiento" explica={GLOSARIO.periodoAnalisis} valor={d.cambio == null ? "—" : `${d.cambio >= 0 ? "+" : "−"}${porcentaje(Math.abs(d.cambio), 0)}`}
           detalle={<>contra {dineroCompacto(d.total_anterior)} del {tramo(d.periodo.ant_desde, d.periodo.ant_hasta)}</>} />
-        <Cifra titulo={enEstado ? "Municipios con venta" : "Estados con venta"} valor={enEstado ? numero(d.regiones_con_venta) : `${d.regiones_con_venta} de 32`}
+        <Cifra titulo={enEstado ? "Municipios con venta" : "Estados con venta"} explica={GLOSARIO.ventaSinUbicar} valor={enEstado ? numero(d.regiones_con_venta) : `${d.regiones_con_venta} de 32`}
           detalle={enEstado && d.sin_municipio ? <>{dineroCompacto(d.sin_municipio.monto)} sin municipio</>
             : !enEstado && d.sin_ubicar ? <>{dineroCompacto(d.sin_ubicar.monto)} de clientes sin ubicar</> : "Todo lo vendido tiene región"} />
-        <Cifra titulo={`Peso de los 3 primeros ${unidad}`} valor={d.concentracion_top3 == null ? "—" : porcentaje(d.concentracion_top3, 0)}
+        <Cifra titulo={`Peso de los 3 primeros ${unidad}`} explica={GLOSARIO.concentracionTop3} valor={d.concentracion_top3 == null ? "—" : porcentaje(d.concentracion_top3, 0)}
           detalle={top3.map((r) => r.nombre).join(", ") || "—"} />
       </div>
 
@@ -179,6 +180,7 @@ export default function MapaVentas() {
 
         {/* Ranking de la vista */}
         <TarjetaGrafica titulo={`${enEstado ? "Municipios" : "Estados"} por ${METRICAS.find((m) => m.valor === metrica)!.texto.toLowerCase()}`}
+          explica={GLOSARIO.participacionVenta}
           descripcion={metrica === "cambio" ? "Del que más creció al que más cayó" : "Con su participación en la venta y el cambio contra el periodo anterior"}
           tabla={<TablaDatos filas={d.regiones} columnas={columnas} claveFila={(r) => r.cve} exportarComo={`ventas-por-${unidad}`} compacta limite={100}
                    alClicFila={enEstado ? undefined : (r) => abrir(r.cve)} />}>
@@ -212,7 +214,7 @@ export default function MapaVentas() {
         <section className="tarjeta min-w-0">
           <div className="flex flex-wrap items-start justify-between gap-3 px-5 pt-4 pb-2">
             <div>
-              <h3 className="font-semibold flex items-center gap-2"><Snowflake className="h-4 w-4 text-info" /> {enEstado ? "Municipios" : "Zonas"} que se enfriaron</h3>
+              <h3 className="font-semibold flex items-center gap-2" data-explain={GLOSARIO.zonasFrias}><Snowflake className="h-4 w-4 text-info" /> {enEstado ? "Municipios" : "Zonas"} que se enfriaron</h3>
               <p className="text-sm text-tenue mt-0.5">
                 Compraban en {tramo(d.periodo.ant_desde, d.periodo.ant_hasta)} y cayeron 30 % o más (o dejaron de comprar).
                 {perdidoTotal > 0 && <> Juntas son <b className="text-texto cifra">{dineroCompacto(perdidoTotal)}</b> menos.</>}
@@ -257,7 +259,7 @@ export default function MapaVentas() {
         {!enEstado && (
           <section className="tarjeta min-w-0">
             <div className="px-5 pt-4 pb-2">
-              <h3 className="font-semibold flex items-center gap-2"><Globe2 className="h-4 w-4 text-marca" /> Exportación</h3>
+              <h3 className="font-semibold flex items-center gap-2" data-explain={GLOSARIO.exportacionVenta}><Globe2 className="h-4 w-4 text-marca" /> Exportación</h3>
               <p className="text-sm text-tenue mt-0.5">Clientes fuera de México en {periodo.etiqueta} contra el periodo anterior. Cuentan en la venta total, pero no salen en el mapa.</p>
             </div>
             {d.extranjero.length === 0 ? (

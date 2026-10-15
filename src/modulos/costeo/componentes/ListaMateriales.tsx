@@ -19,6 +19,7 @@ import { CeldaCasilla, CeldaNumero, CeldaTexto } from "./Celdas";
 import { cant, esFabricado, rutaArticulo, type ArticuloCatalogo, type Parametro } from "./comun";
 import { claveArbol, llaveRuta, useArbol, useCostosDe, type CostoHijo, type LineaArbol } from "./datosLista";
 import { DialogoConvertir, DialogoGrupo, DialogoUsarExistente } from "./DialogosSubensamble";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type CambioLinea = Partial<Pick<LineaArbol, "cantidad" | "parametro" | "por_parametro" | "redondear_arriba" | "merma" | "notas" | "grupo">>;
 
@@ -231,11 +232,11 @@ export function ListaMateriales({ articulo, parametros }: { articulo: ArticuloCa
                     </span>
                   </th>
                   <th className="text-right w-20">Cantidad</th>
-                  {usaParametros && <th className="w-[200px]" title="Cantidad que se suma por cada unidad del parámetro (largo_m…)">Por parámetro</th>}
-                  <th className="w-10 text-center" title="Redondear hacia arriba a piezas enteras"><ArrowUpToLine className="h-3.5 w-3.5 inline" /></th>
-                  <th className="text-right w-16">Merma</th>
-                  <th className="text-right w-24">Efectiva</th>
-                  {costos && <th className="text-right w-32">Importe</th>}
+                  {usaParametros && <th className="w-[200px]" title="Cantidad que se suma por cada unidad del parámetro (largo_m…)" data-explain={GLOSARIO.parametroEquipo}>Por parámetro</th>}
+                  <th className="w-10 text-center" title="Redondear hacia arriba a piezas enteras" data-explain={GLOSARIO.redondearArriba}><ArrowUpToLine className="h-3.5 w-3.5 inline" /></th>
+                  <th className="text-right w-16" data-explain={GLOSARIO.mermaLinea}>Merma</th>
+                  <th className="text-right w-24" data-explain={GLOSARIO.cantidadEfectiva}>Efectiva</th>
+                  {costos && <th className="text-right w-32" data-explain={GLOSARIO.importeLinea}>Importe</th>}
                   {editar && <th className="w-20" />}
                 </tr>
               </thead>

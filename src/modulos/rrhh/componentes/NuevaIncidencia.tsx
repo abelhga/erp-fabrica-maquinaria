@@ -10,6 +10,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { fecha, hoyISO, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { TIPOS, useEmpleados, useVacaciones, type TipoIncidencia } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const UN_DIA: TipoIncidencia[] = ["retardo", "horas_extra"];
 
@@ -104,7 +105,7 @@ export function NuevaIncidencia({ abierto, alCambiar, empleadoId, inicioSugerido
           )}
         </div>
         {!unDia && (
-          <div className="rounded-lg bg-fondo border border-borde px-3 py-2 text-sm flex flex-wrap items-center gap-x-4 gap-y-1">
+          <div className="rounded-lg bg-fondo border border-borde px-3 py-2 text-sm flex flex-wrap items-center gap-x-4 gap-y-1" data-explain={GLOSARIO.diasHabiles} data-explain-title="Días hábiles">
             <span>
               <b className="cifra">{numero(dias)}</b> {f.tipo === "incapacidad" ? "días naturales (así los cuenta el IMSS)" : dias === 1 ? "día hábil" : "días hábiles"}
               {f.tipo !== "incapacidad" && naturales !== dias && !f.medio && <span className="text-tenue"> de {naturales} días de calendario</span>}

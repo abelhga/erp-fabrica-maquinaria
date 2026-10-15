@@ -21,6 +21,7 @@ import { DineroEmbarque } from "./componentes/DineroEmbarque";
 import { Costeo } from "./componentes/Costeo";
 import { DialogoEmbarque } from "./componentes/DialogoEmbarque";
 import { LeerDocumento } from "./componentes/LeerDocumento";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export default function DetalleEmbarque() {
   const { id } = useParams();
@@ -53,7 +54,7 @@ export default function DetalleEmbarque() {
       </>}
     >
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="tarjeta p-4 sm:col-span-2">
+        <div className="tarjeta p-4 sm:col-span-2" data-explain={GLOSARIO.siguientePaso} data-explain-title="Siguiente paso">
           <p className="text-xs text-tenue">Siguiente paso</p>
           {e.siguiente_paso ? (
             <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -67,7 +68,7 @@ export default function DetalleEmbarque() {
             </ul>
           )}
         </div>
-        <div className="tarjeta p-4 space-y-1">
+        <div className="tarjeta p-4 space-y-1" data-explain={GLOSARIO.llegadaPlanta} data-explain-title="Llegada">
           <p className="text-xs text-tenue flex items-center gap-1.5"><CalendarClock className="h-3.5 w-3.5" /> Llegada</p>
           <p className="font-semibold">{e.en_planta ? `En planta el ${fecha(e.en_planta)}` : e.arribo ? `En puerto desde el ${fecha(e.arribo)}` : e.eta ? `ETA ${fecha(e.eta)}` : "Sin ETA"}</p>
           <p className="text-xs text-tenue">
@@ -78,8 +79,8 @@ export default function DetalleEmbarque() {
         <div className="tarjeta p-4 space-y-2">
           {e.arribo ? (
             <>
-              <DiasLibres usados={e.dias_en_puerto} libres={e.dias_libres_almacenaje} etiqueta={e.despacho || e.en_planta ? "Estuvo en puerto" : "Días en puerto"} />
-              {conContenedor && !e.vacio && <DiasLibres usados={e.dias_contenedor} libres={e.dias_libres_demoras} etiqueta="Contenedor (demoras)" />}
+              <DiasLibres usados={e.dias_en_puerto} libres={e.dias_libres_almacenaje} etiqueta={e.despacho || e.en_planta ? "Estuvo en puerto" : "Días en puerto"} explica={GLOSARIO.diasLibres} />
+              {conContenedor && !e.vacio && <DiasLibres usados={e.dias_contenedor} libres={e.dias_libres_demoras} etiqueta="Contenedor (demoras)" explica={GLOSARIO.demorasContenedor} />}
             </>
           ) : (
             <>
@@ -92,14 +93,14 @@ export default function DetalleEmbarque() {
       </div>
 
       <dl className="tarjeta p-4 grid gap-x-6 gap-y-2 grid-cols-2 md:grid-cols-4 text-sm">
-        <Dato t="Modalidad" v={MODALIDADES[e.modalidad]} />
-        <Dato t="Incoterm" v={e.incoterm} />
+        <Dato t="Modalidad" v={MODALIDADES[e.modalidad]} explica={GLOSARIO.modalidad} />
+        <Dato t="Incoterm" v={e.incoterm} explica={GLOSARIO.incoterm} />
         <Dato t="Ruta" v={`${e.puerto_origen ?? "¿?"} → ${e.puerto_destino}`} />
         <Dato t="Importador" v={e.importador === "empresa" ? "La empresa" : "Persona física"} />
         <Dato t="Naviera" v={e.naviera} />
         <Dato t="Forwarder" v={e.forwarder} />
         <Dato t="Agente aduanal" v={[e.agente_aduanal, e.referencia_agente].filter(Boolean).join(" · ") || null} />
-        <Dato t="BL" v={e.bl} />
+        <Dato t="BL" v={e.bl} explica={GLOSARIO.bl} />
         <Dato t="Contenedores" v={e.contenedores} />
         <Dato t="Buque" v={[e.buque, e.viaje].filter(Boolean).join(" / ") || null} />
         <Dato t="Bultos y peso" v={e.bultos || e.peso_kg ? `${e.bultos ?? "—"} bultos · ${e.peso_kg ? numero(e.peso_kg) + " kg" : "—"}${e.volumen_m3 ? ` · ${numero(e.volumen_m3)} m³` : ""}` : null} />
@@ -127,6 +128,6 @@ export default function DetalleEmbarque() {
   );
 }
 
-function Dato({ t, v }: { t: string; v: string | null | undefined }) {
-  return <div className="min-w-0"><dt className="text-xs text-tenue">{t}</dt><dd className="truncate" title={v ?? undefined}>{v || "—"}</dd></div>;
+function Dato({ t, v, explica }: { t: string; v: string | null | undefined; explica?: string }) {
+  return <div className="min-w-0" data-explain={explica} data-explain-title={explica ? t : undefined}><dt className="text-xs text-tenue">{t}</dt><dd className="truncate" title={v ?? undefined}>{v || "—"}</dd></div>;
 }

@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { fechaYHora, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 import { CantidadConSigno, InsigniaMovimiento, nombreCorto, unidadEn, useAlmacenes, type TipoMovimiento } from "./comun";
 
 type Modo = "salida" | "devolucion" | "traspaso";
@@ -122,6 +123,7 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
                 ["salida", "Salida", ArrowUpFromLine], ["devolucion", "Devolución", ArrowDownToLine], ["traspaso", "Traspaso", ArrowLeftRight],
               ] as const).map(([v, t, I]) => (
                 <button key={v} type="button" role="radio" aria-checked={modo === v} onClick={() => { setModo(v); setMotivo(""); }}
+                  data-explain={v === "traspaso" ? GLOSARIO.traspaso : v === "devolucion" ? GLOSARIO.devolucionAlmacen : undefined}
                   className={cn("h-10 rounded-md text-sm font-medium inline-flex items-center justify-center gap-1.5 transition",
                     modo === v ? "bg-superficie shadow-sm text-marca-texto" : "text-tenue hover:text-texto")}>
                   <I className="h-4 w-4" />{t}
@@ -133,6 +135,7 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
               <div className="flex gap-2">
                 {([["salida_consumo", "Consumo (taller, EPP, plasma…)"], ["salida_venta", "Venta (mostrador, ML)"]] as const).map(([v, t]) => (
                   <button key={v} type="button" onClick={() => { setTipoSalida(v); setMotivo(""); }}
+                    data-explain={v === "salida_consumo" ? GLOSARIO.salidaConsumo : undefined}
                     className={cn("flex-1 rounded-lg border px-3 py-2 text-sm text-left transition",
                       tipoSalida === v ? "border-marca bg-marca-suave text-marca-texto font-medium" : "border-borde text-tenue hover:text-texto")}>
                     {t}

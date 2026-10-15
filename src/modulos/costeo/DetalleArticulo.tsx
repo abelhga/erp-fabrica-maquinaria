@@ -20,10 +20,11 @@ import { DondeSeUsa } from "./componentes/DondeSeUsa";
 import { DialogoDuplicar } from "./componentes/Duplicar";
 import { FichaComponente } from "./componentes/FichaComponente";
 import { EmpaqueArticulo } from "@/modulos/almacen/envios/EmpaqueArticulo";
+import { GLOSARIO } from "@/tutorial/glosario";
 
-function Cifra({ etiqueta, valor, detalle, tono }: { etiqueta: string; valor: ReactNode; detalle?: ReactNode; tono?: "ok" | "aviso" | "peligro" }) {
+function Cifra({ etiqueta, valor, detalle, tono, explica }: { etiqueta: string; valor: ReactNode; detalle?: ReactNode; tono?: "ok" | "aviso" | "peligro"; explica?: string }) {
   return (
-    <div className="min-w-0">
+    <div className="min-w-0" data-explain={explica} data-explain-title={explica ? etiqueta : undefined}>
       <p className="text-xs text-tenue">{etiqueta}</p>
       <p className={cn("text-xl font-semibold cifra leading-tight mt-0.5 truncate", tono === "aviso" && "text-aviso", tono === "peligro" && "text-peligro", tono === "ok" && "text-ok")}>{valor}</p>
       {detalle && <p className="text-xs text-tenue mt-0.5">{detalle}</p>}
@@ -71,21 +72,21 @@ function Encabezado({ a }: { a: ArticuloCatalogo }) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:border-l md:pl-6 border-borde">
         {costos ? (
           <>
-            <Cifra etiqueta="Costo" valor={dinero(a.costo_total)}
+            <Cifra etiqueta="Costo" valor={dinero(a.costo_total)} explica={GLOSARIO.costoArticulo}
               detalle={fab ? <>material {dinero(a.costo_material)} · mano de obra {dinero(a.costo_mano_obra)}</>
                 : a.moneda_costo && a.moneda_costo !== "MXN" ? `${a.moneda_costo} ${numero(a.costo_capturado)}` : a.costo_actualizado_en ? `al ${fecha(a.costo_actualizado_en)}` : undefined} />
-            <Cifra etiqueta="Utilidad neta" valor={neto == null ? "—" : pct(neto)}
+            <Cifra etiqueta="Utilidad neta" valor={neto == null ? "—" : pct(neto)} explica={GLOSARIO.utilidadNeta}
               tono={neto == null ? undefined : x && neto < x.utilidad - 0.005 ? "aviso" : undefined}
               detalle={x ? <>política {x.politica.nombre}: {pct(x.utilidad)}{x.politica.compensar_isr ? " después de ISR" : ""}</> : undefined} />
-            <Cifra etiqueta="Precio ÷ costo" valor={x?.factor ? `${(Math.round(x.factor * 100) / 100).toLocaleString("es-MX")}×` : "—"} detalle="antes del redondeo" />
-            {fab ? <Cifra etiqueta="Horas hombre" valor={numero(a.horas)} detalle="con las de sus subensambles" />
-              : <Cifra etiqueta="Existencia en planta" valor={`${numero(a.existencia ?? 0)}`} detalle={a.unidad} />}
+            <Cifra etiqueta="Precio ÷ costo" explica={GLOSARIO.precioEntreCosto} valor={x?.factor ? `${(Math.round(x.factor * 100) / 100).toLocaleString("es-MX")}×` : "—"} detalle="antes del redondeo" />
+            {fab ? <Cifra etiqueta="Horas hombre" valor={numero(a.horas)} detalle="con las de sus subensambles" explica={GLOSARIO.horasEtapa} />
+              : <Cifra etiqueta="Existencia en planta" valor={`${numero(a.existencia ?? 0)}`} detalle={a.unidad} explica={GLOSARIO.enPlanta} />}
           </>
         ) : (
           <>
-            {fab ? <Cifra etiqueta="Líneas de material" valor={numero(a.lineas_bom)} /> : <Cifra etiqueta="Existencia en planta" valor={numero(a.existencia ?? 0)} detalle={a.unidad} />}
+            {fab ? <Cifra etiqueta="Líneas de material" valor={numero(a.lineas_bom)} explica={GLOSARIO.lineasLista} /> : <Cifra etiqueta="Existencia en planta" valor={numero(a.existencia ?? 0)} detalle={a.unidad} explica={GLOSARIO.enPlanta} />}
             {!fab && <Cifra etiqueta="Tiempo de entrega" valor={a.tiempo_entrega_dias != null ? `${a.tiempo_entrega_dias} días` : "—"} />}
-            {a.usado_en > 0 && <Cifra etiqueta="Se usa en" valor={numero(a.usado_en)} detalle={a.usado_en === 1 ? "lista de materiales" : "listas de materiales"} />}
+            {a.usado_en > 0 && <Cifra etiqueta="Se usa en" explica={GLOSARIO.usadoEnListas} valor={numero(a.usado_en)} detalle={a.usado_en === 1 ? "lista de materiales" : "listas de materiales"} />}
           </>
         )}
       </div>
@@ -118,11 +119,11 @@ export default function DetalleArticulo() {
   const costos = puede("costos");
   const parametros = pars.data ?? [];
   const pestanas = fab ? [
-    { valor: "lista", texto: "Lista de materiales", cuenta: a.lineas_bom },
-    { valor: "parametros", texto: "Parámetros", cuenta: parametros.length || undefined },
-    { valor: "horas", texto: "Horas por etapa" },
-    ...(costos ? [{ valor: "costo", texto: "Costo y precio" }, { valor: "historial", texto: "Historial" }] : []),
-    ...(a.tipo === "subensamble" || a.usado_en > 0 ? [{ valor: "usos", texto: "Dónde se usa", cuenta: a.usado_en }] : []),
+    { valor: "lista", texto: "Lista de materiales", cuenta: a.lineas_bom, explica: GLOSARIO.listaMateriales },
+    { valor: "parametros", texto: "Parámetros", cuenta: parametros.length || undefined, explica: GLOSARIO.parametroEquipo },
+    { valor: "horas", texto: "Horas por etapa", explica: GLOSARIO.horasEtapa },
+    ...(costos ? [{ valor: "costo", texto: "Costo y precio", explica: GLOSARIO.formulaPrecio }, { valor: "historial", texto: "Historial", explica: GLOSARIO.historialCosteo }] : []),
+    ...(a.tipo === "subensamble" || a.usado_en > 0 ? [{ valor: "usos", texto: "Dónde se usa", cuenta: a.usado_en, explica: GLOSARIO.usadoEnListas }] : []),
     { valor: "planos", texto: "Planos" },
   ] : [];
   const pestana = pestanas.some((p) => p.valor === params.get("pestana")) ? params.get("pestana")! : "lista";
@@ -139,15 +140,15 @@ export default function DetalleArticulo() {
           <span className="cifra font-medium text-texto">{a.clave}</span>
           <Insignia tono={fab ? "marca" : "neutro"}>{NOMBRE_TIPO[a.tipo]}</Insignia>
           {a.categoria && <Insignia>{a.categoria}</Insignia>}
-          {a.medida_especial && <Insignia tono="info">medida especial</Insignia>}
+          {a.medida_especial && <span data-explain={GLOSARIO.medidaEspecial}><Insignia tono="info">medida especial</Insignia></span>}
           {a.es_importado && <Insignia tono="info">importado</Insignia>}
-          {!a.se_vende && <Insignia>no se vende suelto</Insignia>}
-          {costos && fab && (a.sin_costo ?? 0) > 0 && <Insignia tono="peligro" punto>{a.sin_costo} {a.sin_costo === 1 ? "pieza" : "piezas"} sin costo</Insignia>}
-          {costos && a.costo_mas_viejo && esCostoViejo(a.costo_mas_viejo) && fab && <Insignia tono="aviso" punto>costo más viejo: {fecha(a.costo_mas_viejo)}</Insignia>}
+          {!a.se_vende && <span data-explain={GLOSARIO.noSeVendeSuelto}><Insignia>no se vende suelto</Insignia></span>}
+          {costos && fab && (a.sin_costo ?? 0) > 0 && <span data-explain={GLOSARIO.piezasSinCosto}><Insignia tono="peligro" punto>{a.sin_costo} {a.sin_costo === 1 ? "pieza" : "piezas"} sin costo</Insignia></span>}
+          {costos && a.costo_mas_viejo && esCostoViejo(a.costo_mas_viejo) && fab && <span data-explain={GLOSARIO.costoViejo}><Insignia tono="aviso" punto>costo más viejo: {fecha(a.costo_mas_viejo)}</Insignia></span>}
         </span>
       }
       acciones={fab && puede("costeo", 2) && (
-        <Boton variante="secundario" onClick={() => setDuplicando(true)}><Copy className="h-4 w-4" /> Duplicar con otros parámetros</Boton>
+        <Boton variante="secundario" onClick={() => setDuplicando(true)} data-explain={GLOSARIO.duplicarConParametros}><Copy className="h-4 w-4" /> Duplicar con otros parámetros</Boton>
       )}
     >
       {state?.origen && state.origen !== a.id && <ComparacionCopia origen={state.origen} copia={a} />}

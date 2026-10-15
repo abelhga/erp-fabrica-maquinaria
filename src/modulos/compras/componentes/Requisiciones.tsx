@@ -14,6 +14,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { SelectorProveedor, useTiposCambio, type Moneda, type ProveedorBreve, hace } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface LineaReq {
   id: string; requisicion_id: string; folio: string; origen: "manual" | "reabasto" | "produccion"; necesaria_para: string | null;
@@ -109,7 +110,7 @@ export function Requisiciones() {
               {compra && <input type="checkbox" className="accent-[hsl(var(--marca))]" checked={todas} aria-label={`Elegir ${r.folio}`}
                 onChange={(e) => alternar(g.map((l) => l.id), e.target.checked)} />}
               <p className="font-semibold">{r.folio}</p>
-              <Insignia tono={O.tono}><O.icono className="h-3 w-3" /> {O.texto}</Insignia>
+              <span data-explain={GLOSARIO.origenRequisicion}><Insignia tono={O.tono}><O.icono className="h-3 w-3" /> {O.texto}</Insignia></span>
               {r.notas_requisicion && <p className="text-sm text-tenue truncate max-w-[420px]">{r.notas_requisicion}</p>}
               <p className="ml-auto text-xs text-tenue">
                 {r.solicitante ?? "—"} · {hace(r.creado_en)}

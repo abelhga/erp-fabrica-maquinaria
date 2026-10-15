@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion, useTiempoReal } from "@/lib/consultas";
 import { fecha, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type Tipo = "epp" | "limpieza" | "celular" | "vehiculo";
 type Momento = "" | "entrada" | "break1" | "break2";
@@ -103,7 +104,7 @@ export default function Checklist() {
       ) : (
         <>
           <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="text-tenue cifra">{marcados} de {visibles.length} marcados{fallas > 0 && <span className="text-peligro"> · {fallas} no {fallas === 1 ? "cumplió" : "cumplieron"}</span>}</span>
+            <span className="text-tenue cifra" data-explain={GLOSARIO.marcaChecklist} data-explain-title="Marcas del día">{marcados} de {visibles.length} marcados{fallas > 0 && <span className="text-peligro"> · {fallas} no {fallas === 1 ? "cumplió" : "cumplieron"}</span>}</span>
             {restantes.length > 0 && (
               <Boton variante="secundario" tamano="sm" cargando={todosCumplieron.isPending} onClick={() => todosCumplieron.mutate(undefined)}>
                 <Check className="h-4 w-4" /> Los {restantes.length} restantes cumplieron

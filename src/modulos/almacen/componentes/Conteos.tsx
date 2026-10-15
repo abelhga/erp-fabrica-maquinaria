@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, fechaYHora, numero } from "@/lib/formato";
 import { cn, coincide } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 import { CantidadConSigno, useAlmacenes } from "./comun";
 
 interface Conteo {
@@ -58,7 +59,7 @@ function Lista({ abrir }: { abrir: (id: string) => void }) {
     <div className="grid gap-5 lg:grid-cols-[minmax(0,360px)_1fr] items-start">
       {puede("inventario", 2) ? (
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Nuevo conteo" descripcion="Un almacén a la vez. Lo que no se capture no se ajusta." />
+          <EncabezadoTarjeta titulo="Nuevo conteo" descripcion="Un almacén a la vez. Lo que no se capture no se ajusta." explica={GLOSARIO.conteoFisico} />
           <form className="px-5 pb-5 space-y-3" onSubmit={(e) => { e.preventDefault(); if (almacen) crear.mutate(undefined); }}>
             <Seleccion value={almacen} onChange={(e) => setAlmacen(e.target.value)} aria-label="Almacén">
               <option value="">Elige el almacén…</option>

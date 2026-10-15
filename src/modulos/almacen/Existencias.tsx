@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 import { useTiempoReal } from "@/lib/consultas";
 import { dinero, dineroCompacto, fecha, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 import { nombreCorto, todasLasFilas, useAlmacenes } from "./componentes/comun";
 import { DetalleExistencia } from "./componentes/DetalleExistencia";
 
@@ -83,21 +84,22 @@ export default function Existencias() {
         </div>
       ),
     },
-    { clave: "en_planta", titulo: "En planta", alinear: "der", sinBusqueda: true, clase: "px-2", celda: (f) => numero(f.en_planta) },
+    { clave: "en_planta", titulo: "En planta", alinear: "der", sinBusqueda: true, clase: "px-2", explica: GLOSARIO.enPlanta, celda: (f) => numero(f.en_planta) },
     {
-      clave: "reservado", titulo: "Apartado", alinear: "der", sinBusqueda: true, clase: "px-2",
+      clave: "reservado", titulo: "Apartado", alinear: "der", sinBusqueda: true, clase: "px-2", explica: GLOSARIO.apartado,
       celda: (f) => f.reservado > 0 ? <span className="text-aviso">{numero(f.reservado)}</span> : <span className="text-tenue/50">·</span>,
     },
     {
-      clave: "en_transito", titulo: "Tránsito", alinear: "der", sinBusqueda: true, oculta: !verTransito, clase: "px-2",
+      clave: "en_transito", titulo: "Tránsito", alinear: "der", sinBusqueda: true, oculta: !verTransito, clase: "px-2", explica: GLOSARIO.enTransito,
       celda: (f) => f.en_transito > 0 ? <CeldaTransito f={f} /> : <span className="text-tenue/50">·</span>,
     },
     {
-      clave: "disponible", titulo: "Disponible", alinear: "der", sinBusqueda: true, clase: "px-2 border-r border-borde bg-marca-suave/30",
+      clave: "disponible", titulo: "Disponible", alinear: "der", sinBusqueda: true, clase: "px-2 border-r border-borde bg-marca-suave/30", explica: GLOSARIO.disponible,
       celda: (f) => <span className={cn("font-semibold", f.disponible < 0 ? "text-peligro" : f.disponible === 0 ? "text-tenue" : "")}>{numero(f.disponible)}</span>,
     },
     ...(almacenes.data ?? []).map<Columna<(typeof filas)[number]>>((a) => ({
       clave: `al-${a.id}`, titulo: nombreCorto(a.nombre), alinear: "der", sinBusqueda: true,
+      explica: a.disponible_para_planta ? GLOSARIO.columnaAlmacen : GLOSARIO.mlFull,
       clase: cn("px-2 text-tenue", almacenFiltro === a.nombre && "bg-marca-suave/50 text-texto", !a.disponible_para_planta && "border-l border-borde"),
       valor: (f) => delAlmacen(f, a.nombre),
       celda: (f) => {
@@ -133,11 +135,11 @@ export default function Existencias() {
             detalle="A costo vigente (sin IVA)" />
         ) : (
           <Kpi titulo="Piezas en planta" valor={numero(total((f) => Math.max(f.en_planta, 0)))} icono={Warehouse} tono="neutro"
-            detalle="Suma de todas las unidades" />
+            detalle="Suma de todas las unidades" explica={GLOSARIO.enPlanta} />
         )}
         <Kpi titulo="Apartado" valor={numero(filas.filter((f) => f.reservado > 0).length)} icono={PackageOpen} tono="aviso"
-          detalle="artículos con material reservado" alClic={() => setVista("apartados")} />
-        <Kpi titulo="En Mercado Libre Full" valor={numero(filas.filter((f) => f.en_mercadolibre > 0).length)} icono={Store} tono="info"
+          detalle="artículos con material reservado" alClic={() => setVista("apartados")} explica={GLOSARIO.apartado} />
+        <Kpi titulo="En Mercado Libre Full" valor={numero(filas.filter((f) => f.en_mercadolibre > 0).length)} icono={Store} tono="info" explica={GLOSARIO.mlFull}
           detalle={`${numero(total((f) => f.en_mercadolibre))} piezas que no cuentan para planta`} />
       </div>
 

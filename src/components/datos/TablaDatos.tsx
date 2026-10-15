@@ -14,6 +14,8 @@ export interface Columna<T> {
   oculta?: boolean;
   /** No entra en la búsqueda de texto (p.ej. importes). */
   sinBusqueda?: boolean;
+  /** Qué significa la columna, para el modo tutorial (casi siempre una entrada de `GLOSARIO`). */
+  explica?: string;
 }
 
 /**
@@ -103,6 +105,7 @@ export function TablaDatos<T>({
               <tr>
                 {visibles.map((c) => (
                   <th key={c.clave} className={cn(alinear(c), "cursor-pointer select-none whitespace-nowrap", c.clase)}
+                      data-explain={c.explica} data-explain-title={c.explica && typeof c.titulo === "string" ? c.titulo : undefined}
                       onClick={() => setOrden((o) => (o?.clave === c.clave ? (o.asc ? { clave: c.clave, asc: false } : null) : { clave: c.clave, asc: true }))}>
                     <span className="inline-flex items-center gap-1">
                       {c.titulo}

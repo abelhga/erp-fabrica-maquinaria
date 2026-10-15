@@ -16,6 +16,7 @@ import { dinero, dineroCompacto, fecha, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { Barra, CampoNumero } from "./componentes/campos";
 import { CANAL, hoyMx, type Canal } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface FilaComision {
   vendedor_id: string; vendedor: string; plan: string; venta_maquinaria: number; venta_refacciones: number; venta_otros: number;
@@ -106,7 +107,7 @@ export default function Comisiones() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-semibold cifra leading-tight">{dinero(f.total)}</p>
-                    {f.pagado_en ? <Insignia tono="ok"><BadgeCheck className="h-3 w-3" />Pagada {fecha(f.pagado_en)}</Insignia> : <Insignia tono="aviso">Pendiente de pago</Insignia>}
+                    <span className="inline-flex" data-explain={GLOSARIO.comisionPagada}>{f.pagado_en ? <Insignia tono="ok"><BadgeCheck className="h-3 w-3" />Pagada {fecha(f.pagado_en)}</Insignia> : <Insignia tono="aviso">Pendiente de pago</Insignia>}</span>
                   </div>
                 </div>
                 <div className="px-5 py-4 space-y-4 flex-1">
@@ -115,10 +116,10 @@ export default function Comisiones() {
                       <span className="text-tenue">Venta de maquinaria{plan?.otros_como_maquinaria ? " y otros" : ""}</span>
                       <span className="font-medium cifra">{dinero(baseMeta)}</span>
                     </div>
-                    <div className="flex justify-between text-sm"><span className="text-tenue">Comisión {porcentaje(Number(plan?.pct_maquinaria ?? 0.02), 0)}</span><span className="cifra">{dinero(f.comision)}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-tenue" data-explain={GLOSARIO.comision}>Comisión {porcentaje(Number(plan?.pct_maquinaria ?? 0.02), 0)}</span><span className="cifra">{dinero(f.comision)}</span></div>
                     <div className="mt-2">
                       <div className="flex justify-between text-xs mb-1">
-                        <span className="text-tenue">Bono de meta: <b className="text-texto cifra">{dinero(f.bono_meta)}</b></span>
+                        <span className="text-tenue" data-explain={GLOSARIO.bonoMeta}>Bono de meta: <b className="text-texto cifra">{dinero(f.bono_meta)}</b></span>
                         <span className="text-tenue cifra">{sig ? `meta ${dineroCompacto(sig)}` : "meta máxima"}</span>
                       </div>
                       <Barra valor={avanceMeta} tono={sig ? (avanceMeta >= 80 ? "aviso" : "marca") : "ok"} alto="h-2.5" />
@@ -129,7 +130,7 @@ export default function Comisiones() {
                   </section>
                   <section className="border-t border-borde pt-3">
                     <div className="flex justify-between text-sm"><span className="text-tenue">Venta de refacciones</span><span className="font-medium cifra">{dinero(f.venta_refacciones)}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-tenue">Bono de refacciones</span><span className="cifra">{dinero(f.bono_refacciones)}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-tenue" data-explain={GLOSARIO.bonoRefacciones}>Bono de refacciones</span><span className="cifra">{dinero(f.bono_refacciones)}</span></div>
                     {refSig && (
                       <>
                         <Barra className="mt-2" valor={((Number(f.venta_refacciones) - Number(refPiso)) / (Number(refSig.desde) - Number(refPiso))) * 100} tono="ok" />
@@ -139,7 +140,7 @@ export default function Comisiones() {
                   </section>
                   <section className="border-t border-borde pt-3 space-y-1">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-tenue">Ajustes y bonos extra</span>
+                      <span className="text-tenue" data-explain={GLOSARIO.ajusteComision}>Ajustes y bonos extra</span>
                       <span className="flex items-center gap-2">
                         <span className="cifra">{dinero(f.ajustes)}</span>
                         {puedeAjustar && <Boton variante="fantasma" tamano="sm" className="h-7 px-2" onClick={() => setAjustar(f)}><Plus className="h-3.5 w-3.5" />Ajuste</Boton>}
@@ -219,7 +220,7 @@ function ReglaPlan({ planes, escalones }: { planes: Plan[]; escalones: Escalon[]
   if (!planes.length) return null;
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo={<span className="inline-flex items-center gap-2"><Info className="h-4 w-4 text-marca" />Cómo se calcula</span>}
+      <EncabezadoTarjeta explica={GLOSARIO.comision} titulo={<span className="inline-flex items-center gap-2"><Info className="h-4 w-4 text-marca" />Cómo se calcula</span>}
         descripcion="Montos sin IVA. Con crédito compartido, a cada vendedor le cuenta su porcentaje del pedido." />
       <div className="px-5 pb-5 grid gap-x-10 gap-y-5 md:grid-cols-[repeat(auto-fit,minmax(320px,max-content))]">
         <div className="text-sm space-y-2 max-w-2xl md:col-span-full">
