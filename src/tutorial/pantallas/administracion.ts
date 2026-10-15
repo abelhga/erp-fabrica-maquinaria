@@ -47,6 +47,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
     "Aquí ves lo que debemos a proveedores por material ya recibido: lo vencido primero y lo que viene en las próximas 4 semanas. La usa finanzas para planear y registrar los pagos.",
     "La agenda acomoda los saldos por semana; dale clic a un proveedor, ahí o en la tabla, para ver la orden, la cuenta bancaria y los pagos anteriores, y registrar el pago. Los renglones vencidos se ven en rojo. Filtra vencidas o próximos 7 días; el CSV baja lo que ves.",
     "La fecha de pago es la recepción más los días de crédito del proveedor. Solo aparecen órdenes recibidas, completas o parciales, que tienen saldo, y el ERP no deja pagar de más.",
-    "«Saldos de la hoja» trae lo que se debía según el libro de compras de la hoja, aparte de las órdenes del ERP; los préstamos de socios y bancos van separados. Los saldos en dólares se convierten con el tipo de cambio de hoy.",
+    "Las órdenes en dólares se convierten a pesos con el tipo de cambio de hoy.",
+    "«Saldos de la hoja» trae lo que se debía según el libro de compras de la hoja, aparte de las órdenes del ERP; los préstamos de socios y créditos de banco van en su propio filtro. Abre un proveedor para ver sus movimientos y registrar un pago: el saldo baja al momento y no deja pagar de más. Si el mismo pago también se anotó en la hoja, no se descuenta dos veces.",
   ],
 };

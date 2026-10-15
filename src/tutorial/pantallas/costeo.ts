@@ -35,7 +35,7 @@ export const COSTEO: Record<string, AyudaPantalla> = {
   "/costeo/margenes": [
     "El panel de utilidad, antes la pestaña Reglas de Nuevo Costeo: de aquí sale el precio de lista de todo el catálogo. Lo consultan ingeniería y compras; solo dirección lo cambia.",
     "Cada tarjeta es una política de precio: utilidad, recargos sobre costo y sobre precio, medida especial, redondeo y descuento máximo. «Editar» abre el simulador: antes de guardar ves cuántos precios se mueven y cuáles más. Cada cambio queda en la bitácora con quién y cuándo.",
-    "El precio de un equipo es: costo × (1 + recargos sobre costo + medida especial) ÷ (1 − utilidad ÷ (1 − ISR) − recargos sobre precio), redondeado hacia arriba. Lo que se revende usa un margen sobre el precio sin compensar ISR: costo ÷ 0.70.",
+    "El precio de un equipo es: costo × (1 + recargos sobre costo + medida especial) ÷ (1 − utilidad ÷ (1 − ISR) − recargos sobre precio), redondeado hacia arriba. Lo que se revende usa el margen sobre precio de su política, sin compensar ISR: costo ÷ (1 − margen).",
     "El ISR de compensación, la mano de obra por etapa y el tipo de cambio también mueven precios: al cambiarlos se recalcula todo lo que depende de ellos. El tipo de cambio lo capturan compras o finanzas: escribe el valor y Enter.",
   ],
   "/costeo/precios-ventas": [
