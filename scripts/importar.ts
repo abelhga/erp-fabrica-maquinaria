@@ -128,6 +128,9 @@ async function main() {
   const compras = T.libroCompras(await fuente("compras"));
   const adeudos21 = T.adeudos2021(await fuente("proveedores_actual"));
   const caja = T.cajaChica(await fuente("cajachica"));
+  // Libro de seriales: una pestaña por familia.
+  const seriales = (await Promise.all(Object.keys(T.PESTANAS_SERIE).map(async (fam) => T.seriales(await fuente(`seriales_${fam}`), fam))))
+    .reduce((t, r) => ({ equipos: [...t.equipos, ...r.equipos], descartados: t.descartados + r.descartados }), { equipos: [] as T.EquipoSerie[], descartados: 0 });
   const paneles = await Promise.all(Object.entries(config.vendedores as Record<string, { correo: string; panel: string; nombre: string }>).map(async ([clave, v]) => ({
     clave, ...v, clientes: T.clientesPanel(await fuente(`${v.panel}_clientes`)), ventas: T.ventasPanel(await fuente(`${v.panel}_ventas`)),
   })));
@@ -587,6 +590,35 @@ async function main() {
       from jsonb_to_recordset($1) x(fecha text, concepto text, en_turno text, importe numeric, notas text, fila int)`, [json(filas)]);
     const { rows } = await db.query(`select coalesce(sum(importe), 0) saldo from caja_chica`);
     resumen.caja_chica = { movimientos: filas.length, saldo: Number(rows[0].saldo) };
+  });
+
+  // 13d. Números de serie de la hoja: la historia de cada equipo vendido, ligada al cliente
+  // por su llave o su nombre. El consecutivo de cada familia sigue donde se quedó la hoja.
+  await paso("Números de serie", async () => {
+    await db.query(`delete from equipos_historicos`);
+    const { rows: [r] } = await db.query(`
+      with x as (
+        select * from jsonb_to_recordset($1) x(numero_serie text, familia text, consecutivo int, tipo_equipo text, subcategoria text,
+          pedido_hoja text, fecha_pedido date, cliente_nombre text, llave_cliente text, contacto text, factura text,
+          entrega_acordada date, estado text, vendedor text, descripcion text, ubicacion text, fila int)
+      ), ins as (
+        insert into equipos_historicos (numero_serie, familia, consecutivo, tipo_equipo, subcategoria, pedido_hoja, fecha_pedido, cliente_id,
+          cliente_nombre, contacto, factura, entrega_acordada, estado, vendedor, descripcion, ubicacion, fila_origen)
+        select x.numero_serie, x.familia, x.consecutivo, x.tipo_equipo, x.subcategoria, x.pedido_hoja, x.fecha_pedido,
+          coalesce((select c.id from clientes c where c.legacy_ref = 'CLI:' || x.llave_cliente limit 1),
+                   (select c.id from clientes c where sin_acentos(lower(c.nombre)) = x.llave_cliente order by c.creado_en limit 1)),
+          x.cliente_nombre, x.contacto, x.factura, x.entrega_acordada, x.estado, x.vendedor, x.descripcion, x.ubicacion, x.fila
+        from x
+        on conflict (numero_serie) do nothing
+        returning cliente_id
+      )
+      select count(*) n, count(cliente_id) con_cliente from ins`, [json(seriales.equipos)]);
+    await db.query(`
+      update familias_serie f set ultimo = greatest(f.ultimo, m.maximo)
+      from (select familia, max(consecutivo) maximo from equipos_historicos group by familia) m where m.familia = f.clave`);
+    const repetidos = seriales.equipos.length - Number(r.n);
+    if (repetidos) avisos.push(`Números de serie: ${repetidos} repetidos en la hoja; entró el primero de cada uno.`);
+    resumen.numeros_serie = { equipos: Number(r.n), con_cliente: Number(r.con_cliente), descartados: seriales.descartados };
   });
 
   // 14. Costo mensual hacia atrás de cada equipo (para "Precios vs ventas"). Tarda ~1 min.

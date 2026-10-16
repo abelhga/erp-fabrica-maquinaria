@@ -90,6 +90,8 @@ export default function DetalleOrden() {
     ...inv, exito: (r) => (r ? "Faltantes enviados a compras como requisición" : "No había faltantes sin pedir"),
   });
   const liberar = useAccion(() => q(supabase.rpc("liberar_orden", { p_op: id })), { ...inv, exito: "Orden liberada al taller" });
+  // Una orden de equipo que nació sin serie (su equipo no tenía código): se asigna al capturarlo.
+  const asignarSerie = useAccion(() => q<string>(supabase.rpc("asignar_numero_serie", { p_orden: id })), { ...inv, invalidar: [CLAVE, ["numeros_serie"]], exito: (s) => `Número de serie ${s}` });
   const entregar = useAccion(() => q(supabase.rpc("entregar_orden", { p_op: id })), { ...inv, exito: "Orden entregada" });
   const avanzar = useAccion((a: { op: string; accion: string }) => q(supabase.rpc("avanzar_operacion", { p_operacion: a.op, p_accion: a.accion })), inv);
   const resolver = useAccion((a: { id: string; estado: string }) => q(supabase.rpc("responder_solicitud_cambio", { p_id: a.id, p_estado: a.estado })),
@@ -155,7 +157,16 @@ export default function DetalleOrden() {
       )}
 
       <Tarjeta className="grid gap-px bg-borde overflow-hidden sm:grid-cols-2 lg:grid-cols-5">
-        <Dato titulo="Número de serie" explica={GLOSARIO.numeroSerie}><span className="cifra">{o.numero_serie ?? <span className="text-tenue">Sin serie</span>}</span></Dato>
+        <Dato titulo="Número de serie" explica={GLOSARIO.numeroSerie}>
+          {o.numero_serie ? <span className="cifra">{o.numero_serie}</span> : (
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="text-tenue">Sin serie</span>
+              {puede("produccion", 2) && o.cantidad === 1 && o.estado !== "cancelada" && (
+                <Boton variante="secundario" className="h-7 text-xs" cargando={asignarSerie.isPending} onClick={() => asignarSerie.mutate(undefined)}>Asignar</Boton>
+              )}
+            </span>
+          )}
+        </Dato>
         <Dato titulo="Equipo">
           {puede("costeo") ? <Link to={`/costeo/equipos/${o.articulo_id}`} className="hover:text-marca-texto hover:underline">{o.articulo.clave}</Link> : o.articulo.clave}
         </Dato>
