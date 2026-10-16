@@ -428,6 +428,35 @@ export function libroCompras(v: Filas): { movimientos: MovimientoCompra[]; desca
   return { movimientos, descartados };
 }
 
+// Caja chica (pestaña CajaChica de BASE ACTUAL): un solo FLUJO con signo y el saldo corrido.
+export interface MovimientoCaja { fecha: string; concepto: string; en_turno: string | null; importe: number; notas: string | null; fila: number }
+export function cajaChica(v: Filas): { movimientos: MovimientoCaja[]; descartados: number } {
+  const fe = v.findIndex((f) => llave(f[1]) === "fecha" && f.some((x) => llave(x) === "flujo"));
+  if (fe < 0) throw new Error("No encontré el encabezado de CajaChica (FECHA | CONCEPTO | … | FLUJO)");
+  const c = columnas(v[fe], { fecha: /^fecha$/, concepto: /^concepto/, turno: /^en turno/, flujo: /^flujo$/, notas: /^notas/ });
+  const movimientos: MovimientoCaja[] = [];
+  let descartados = 0;
+  v.slice(fe + 1).forEach((f, i) => {
+    const fch = fecha(f[c.fecha]);
+    const importe = dinero(f[c.flujo]);
+    if (!fch || !importe) { if (celda(f, c.concepto) || importe) descartados++; return; }
+    const nulo = (x: string) => (x && x !== "-" ? x : null);
+    // Hay renglones sin concepto (la nota dice a qué fue): el concepto no puede ir vacío.
+    const concepto = celda(f, c.concepto) || celda(f, c.notas) || "(sin concepto en la hoja)";
+    movimientos.push({ fecha: fch, concepto, en_turno: nulo(celda(f, c.turno)), importe, notas: nulo(celda(f, c.notas)), fila: fe + i + 2 });
+  });
+  // La hoja muestra los montos sin centavos ("-$150") pero su "Saldo total" sí los trae:
+  // la diferencia entra como ajuste para que el saldo arranque igual que el de la hoja.
+  const total = v.slice(0, fe).flatMap((f) => (llave(f[1]).startsWith("saldo total") ? f.slice(2).map(dinero).filter((x): x is number => x != null) : []))[0];
+  const suma = movimientos.reduce((t, m) => t + m.importe, 0);
+  const dif = total == null ? 0 : Math.round((total - suma) * 100) / 100;
+  if (dif !== 0 && movimientos.length) {
+    movimientos.push({ fecha: movimientos[movimientos.length - 1].fecha, concepto: "Ajuste: centavos que la hoja no mostraba", en_turno: null,
+      importe: dif, notas: `Saldo total de la hoja ${total}`, fila: 0 });
+  }
+  return { movimientos, descartados };
+}
+
 /** "Adeudo fin de año 2021" del directorio de proveedores de BASE ACTUAL: el saldo con que arrancó el libro de 2022. */
 export function adeudos2021(v: Filas): { proveedor: string; llave_proveedor: string; monto: number }[] {
   const fe = v.findIndex((f) => f.some((x) => /^adeudo fin de ano 2021/.test(llave(x))));

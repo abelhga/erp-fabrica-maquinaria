@@ -38,7 +38,7 @@ begin
   select sum(saldo) filter (where saldo > 1) into v_esperado from v_saldo_arranque_proveedores where tipo_acreedor = 'proveedor';
   assert (t #>> '{por_pagar,arranque}')::numeric = v_esperado and v_esperado >= 2900, format('por pagar de la hoja: %s', t -> 'por_pagar');
   assert (t #>> '{por_pagar,arranque_a_favor}')::numeric >= 7000, format('a favor: %s', t -> 'por_pagar');
-  assert exists (select 1 from hallazgos('finanzas') h where h.titulo like '%por pagar a % proveedores según la hoja%'),
+  assert exists (select 1 from hallazgos('finanzas') h where h.titulo like '%por pagar a % proveedores%'),
     'el asistente no habla del saldo de la hoja';
 
   -- Nadie lo escribe desde la app: solo el importador (postgres).
@@ -57,8 +57,8 @@ begin
   t := tablero_direccion();
   assert coalesce((t #>> '{por_pagar,arranque}')::numeric, 0) = 0 and coalesce((t #>> '{por_pagar,arranque_a_favor}')::numeric, 0) = 0,
     format('compras vio el saldo de la hoja en el tablero: %s', t -> 'por_pagar');
-  assert not exists (select 1 from hallazgos('compras') h where h.titulo like '%según la hoja%'), 'compras vio el hallazgo de la hoja';
+  assert not exists (select 1 from hallazgos('compras') h where h.titulo like '%por pagar a % proveedores%'), 'compras vio el hallazgo de la hoja';
   perform pg_temp.como(v_ven);
   assert not exists (select 1 from historial_compras_hoja where proveedor_llave like 't96%'), 'ventas vio el libro de la hoja';
-  assert not exists (select 1 from hallazgos('direccion') h where h.titulo like '%según la hoja%'), 'ventas vio el hallazgo de la hoja';
+  assert not exists (select 1 from hallazgos('direccion') h where h.titulo like '%por pagar a % proveedores%'), 'ventas vio el hallazgo de la hoja';
 end $$;

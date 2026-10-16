@@ -1,10 +1,9 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, CalendarDays, CalendarRange, ExternalLink, FileSpreadsheet, Receipt, Wallet } from "lucide-react";
+import { AlertTriangle, CalendarDays, CalendarRange, ExternalLink, FilePlus2, Landmark, Receipt, Wallet } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
-import { Insignia } from "@/components/ui/insignia";
 import { Boton } from "@/components/ui/boton";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Campo, Entrada, Seleccion } from "@/components/ui/campo";
@@ -18,7 +17,9 @@ import { q, useAccion } from "@/lib/consultas";
 import { dinero, dineroCompacto, fecha, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { METODOS, TipoCambioDia, iso, lunesDe, enMoneda, nombreMetodo, type Moneda } from "./componentes/comun";
-import { SaldosProveedoresHoja, type SaldoProveedorHoja } from "./componentes/SaldosProveedoresHoja";
+import { diasPara, useCuentasProveedor, useFacturasPendientes, Vencimiento, type FacturaPendiente } from "./componentes/cuentas";
+import { CuentasProveedores, PanelProveedor } from "./componentes/CuentasProveedores";
+import { RegistrarCompra } from "./componentes/RegistrarCompra";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 interface PorPagar {
@@ -26,58 +27,83 @@ interface PorPagar {
   moneda: Moneda; total: number; pagado: number; saldo: number; factura_proveedor: string | null; dias_credito: number;
   categoria: string | null; datos_bancarios: string | null; saldo_mxn: number; dias_para_vencer: number | null; ultimo_pago: string | null;
 }
+/** Una factura pendiente con el nombre de su proveedor. */
+type Factura = FacturaPendiente & { nombre: string; dias: number };
+/** Lo que entra en la agenda: una orden del ERP o una factura de la cuenta de un proveedor. */
+interface Pendiente { grupo: string; proveedor: string; vence: string | null; dias: number | null; monto: number; abrir: () => void }
 
-function Vence({ f }: { f: PorPagar }) {
-  if (f.dias_para_vencer == null) return <Insignia tono="neutro">Sin fecha</Insignia>;
-  if (f.dias_para_vencer < 0) return <Insignia tono="peligro" punto>Vencida hace {-f.dias_para_vencer} {f.dias_para_vencer === -1 ? "día" : "días"}</Insignia>;
-  if (f.dias_para_vencer === 0) return <Insignia tono="aviso" punto>Vence hoy</Insignia>;
-  if (f.dias_para_vencer <= 7) return <Insignia tono="aviso">En {f.dias_para_vencer} {f.dias_para_vencer === 1 ? "día" : "días"}</Insignia>;
-  return <span className="text-tenue text-sm whitespace-nowrap">{fecha(f.vence_pago)}</span>;
-}
+type Pestana = "facturas" | "proveedores" | "ordenes";
 
 export default function Pagos() {
   const { puede } = useSesion();
-  // El libro de la hoja trae nómina y préstamos: solo quien lleva finanzas (la RLS es la que manda).
-  const verHoja = puede("finanzas", 2);
+  // La cuenta de proveedores trae nómina, impuestos y préstamos: solo quien lleva finanzas
+  // (compras ve las órdenes; la RLS es la que manda).
+  const verCuentas = puede("finanzas", 2);
   const [vista, setVista] = useState<"todas" | "vencidas" | "semana">("todas");
   const [abierta, setAbierta] = useState<PorPagar | null>(null);
-  const [pestana, setPestana] = useState<"ordenes" | "hoja">("ordenes");
+  const [llave, setLlave] = useState<string | null>(null);
+  const [compra, setCompra] = useState<{ abierto: boolean; proveedor: { id: string; nombre: string } | null }>({ abierto: false, proveedor: null });
+  const [pestanaElegida, setPestana] = useState<Pestana>("facturas");
+  const [vistaProveedores, setVistaProveedores] = useState<"debemos" | "socios">("debemos");
+  const pestana = verCuentas ? pestanaElegida : "ordenes";
+
   const datos = useQuery({
     queryKey: ["v_por_pagar"],
     queryFn: () => q<PorPagar[]>(supabase.from("v_por_pagar").select("*")),
   });
-  // Lo que se debe según la hoja (hasta que todo se compre y pague en el ERP).
-  const hoja = useQuery({
-    queryKey: ["v_saldo_arranque_proveedores"],
-    enabled: verHoja,
-    queryFn: () => q<SaldoProveedorHoja[]>(supabase.from("v_saldo_arranque_proveedores").select("*")),
-  });
-  // Solo proveedores: préstamos de socios y créditos van aparte (en la pestaña).
-  const debemosHoja = (hoja.data ?? []).filter((f) => Number(f.saldo) > 1 && f.tipo_acreedor === "proveedor");
-  const sociosHoja = (hoja.data ?? []).filter((f) => Number(f.saldo) > 1 && f.tipo_acreedor !== "proveedor");
-  // Vencidas primero (la más vieja arriba), luego por fecha; las que no tienen fecha al final.
-  const todas = [...(datos.data ?? [])].sort((a, b) => (a.dias_para_vencer ?? 1e9) - (b.dias_para_vencer ?? 1e9));
-  const vencidas = todas.filter((f) => (f.dias_para_vencer ?? 1) < 0);
-  const semana = todas.filter((f) => f.dias_para_vencer != null && f.dias_para_vencer >= 0 && f.dias_para_vencer <= 7);
-  const suma = (fs: PorPagar[]) => fs.reduce((s, f) => s + Number(f.saldo_mxn), 0);
-  const filas = vista === "vencidas" ? vencidas : vista === "semana" ? semana : todas;
+  const cuentas = useCuentasProveedor(verCuentas);
+  const pendientes = useFacturasPendientes(verCuentas);
+  const porLlave = useMemo(() => new Map((cuentas.data ?? []).map((c) => [c.proveedor_llave, c])), [cuentas.data]);
+  // Solo proveedores: lo que se debe a socios y bancos no entra a la agenda (va en su filtro).
+  const facturas: Factura[] = useMemo(() => (pendientes.data ?? [])
+    .filter((x) => (porLlave.get(x.proveedor_llave)?.tipo_acreedor ?? "proveedor") === "proveedor")
+    .map((x) => ({ ...x, nombre: porLlave.get(x.proveedor_llave)?.nombre ?? x.proveedor_llave, dias: diasPara(x.vence_el) ?? 0 })), [pendientes.data, porLlave]);
+  const socios = (cuentas.data ?? []).filter((c) => c.tipo_acreedor !== "proveedor" && Number(c.saldo) > 1);
 
-  // Agenda: lo vencido y las próximas 4 semanas, de lunes a domingo.
+  const ordenes = [...(datos.data ?? [])].sort((a, b) => (a.dias_para_vencer ?? 1e9) - (b.dias_para_vencer ?? 1e9));
+  const todo: Pendiente[] = [
+    ...ordenes.map((o) => ({ grupo: `oc:${o.proveedor_id}`, proveedor: o.proveedor, vence: o.vence_pago, dias: o.dias_para_vencer, monto: Number(o.saldo_mxn), abrir: () => setAbierta(o) })),
+    ...facturas.map((x) => ({ grupo: x.proveedor_llave, proveedor: x.nombre, vence: x.vence_el, dias: x.dias, monto: Number(x.restante), abrir: () => setLlave(x.proveedor_llave) })),
+  ];
+  const suma = (fs: { monto: number }[]) => fs.reduce((s, f) => s + f.monto, 0);
+  const vencido = todo.filter((f) => (f.dias ?? 1) < 0);
+  const semana = todo.filter((f) => f.dias != null && f.dias >= 0 && f.dias <= 7);
+  const proveedoresCon = (fs: Pendiente[]) => new Set(fs.map((f) => f.grupo)).size;
+
+  // Agenda: lo vencido y las próximas 4 semanas, de lunes a domingo, agrupado por proveedor.
   const lunes = lunesDe(new Date());
   const semanas = Array.from({ length: 4 }, (_, k) => {
     const ini = new Date(lunes); ini.setDate(ini.getDate() + 7 * k);
     const fin = new Date(ini); fin.setDate(fin.getDate() + 6);
     return { ini: iso(ini), fin: iso(fin), titulo: ["Esta semana", "La próxima", "En 2 semanas", "En 3 semanas"][k] };
   });
-  const enSemana = (s: { ini: string; fin: string }) => todas.filter((f) => f.vence_pago && f.vence_pago >= s.ini && f.vence_pago <= s.fin && (f.dias_para_vencer ?? 0) >= 0);
+  const enSemana = (s: { ini: string; fin: string }) => todo.filter((f) => f.vence && f.vence >= s.ini && f.vence <= s.fin && (f.dias ?? 0) >= 0);
   const columnasAgenda = [
-    { titulo: "Vencido", detalle: "Pagar ya", filas: vencidas, peligro: true },
+    { titulo: "Vencido", detalle: "Pagar ya", filas: vencido, peligro: true },
     ...semanas.map((s) => ({ titulo: s.titulo, detalle: `${fecha(s.ini).slice(0, 6)} – ${fecha(s.fin).slice(0, 6)}`, filas: enSemana(s), peligro: false })),
   ];
   const cuatroSemanas = columnasAgenda.slice(1).reduce((s, c) => s + suma(c.filas), 0);
+  const agrupar = (fs: Pendiente[]) => {
+    const m = new Map<string, { proveedor: string; monto: number; n: number; abrir: () => void }>();
+    for (const f of fs) {
+      const g = m.get(f.grupo) ?? { proveedor: f.proveedor, monto: 0, n: 0, abrir: f.abrir };
+      g.monto += f.monto; g.n += 1; m.set(f.grupo, g);
+    }
+    return [...m.entries()].map(([grupo, g]) => ({ grupo, ...g })).sort((a, b) => b.monto - a.monto);
+  };
+  const cargando = datos.isLoading || (verCuentas && (cuentas.isLoading || pendientes.isLoading));
 
-  const columnas: Columna<PorPagar>[] = [
-    { clave: "vence_pago", titulo: "Vence", explica: GLOSARIO.vencePago, sinBusqueda: true, valor: (f) => f.dias_para_vencer ?? 99999, celda: (f) => <Vence f={f} /> },
+  const filasOrdenes = vista === "vencidas" ? ordenes.filter((f) => (f.dias_para_vencer ?? 1) < 0)
+    : vista === "semana" ? ordenes.filter((f) => f.dias_para_vencer != null && f.dias_para_vencer >= 0 && f.dias_para_vencer <= 7) : ordenes;
+  const filasFacturas = vista === "vencidas" ? facturas.filter((f) => f.dias < 0) : vista === "semana" ? facturas.filter((f) => f.dias >= 0 && f.dias <= 7) : facturas;
+  const filtroVista = (lista: { dias: number | null }[]) => <Filtro valor={vista} alCambiar={setVista} opciones={[
+    { valor: "todas", texto: "Todas", cuenta: lista.length },
+    { valor: "vencidas", texto: "Vencidas", cuenta: lista.filter((f) => (f.dias ?? 1) < 0).length },
+    { valor: "semana", texto: "Próximos 7 días", cuenta: lista.filter((f) => f.dias != null && f.dias >= 0 && f.dias <= 7).length },
+  ]} />;
+
+  const columnasOrdenes: Columna<PorPagar>[] = [
+    { clave: "vence_pago", titulo: "Vence", explica: GLOSARIO.vencePago, sinBusqueda: true, valor: (f) => f.dias_para_vencer ?? 99999, celda: (f) => <Vencimiento vence={f.vence_pago} /> },
     { clave: "proveedor", titulo: "Proveedor", celda: (f) => <div className="min-w-[180px]"><p className="font-medium">{f.proveedor}</p><p className="text-xs text-tenue">{f.categoria ?? ""}{f.dias_credito ? ` · crédito ${f.dias_credito} días` : " · contado"}</p></div> },
     { clave: "folio", titulo: "Orden", celda: (f) => <span className="whitespace-nowrap">{f.folio}</span> },
     { clave: "factura_proveedor", titulo: "Factura", valor: (f) => f.factura_proveedor ?? "", celda: (f) => f.factura_proveedor ?? <span className="text-aviso text-xs">Sin factura</span> },
@@ -87,75 +113,104 @@ export default function Pagos() {
     { clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.saldo_mxn),
       celda: (f) => <div><b>{enMoneda(f.saldo, f.moneda)}</b>{f.moneda !== "MXN" && <p className="text-xs text-tenue">≈ {dinero(f.saldo_mxn)}</p>}</div> },
   ];
+  const columnasFacturas: Columna<Factura>[] = [
+    { clave: "vence_el", titulo: "Vence", explica: GLOSARIO.vencePago, sinBusqueda: true, valor: (f) => f.dias, celda: (f) => <Vencimiento vence={f.vence_el} /> },
+    { clave: "nombre", titulo: "Proveedor", clase: "min-w-[180px] max-w-[300px]", celda: (f) => <div><p className="font-medium break-words">{f.nombre}</p>{f.categoria && <p className="text-xs text-tenue">{f.categoria}</p>}</div> },
+    { clave: "factura", titulo: "Factura", clase: "max-w-[320px]", valor: (f) => `${f.factura ?? ""} ${f.descripcion ?? ""}`,
+      celda: (f) => <div>{f.factura ? <p>{f.factura}</p> : null}{f.descripcion && <p className="text-xs text-tenue line-clamp-2 break-words">{f.descripcion}</p>}{!f.factura && !f.descripcion && <span className="text-tenue">—</span>}</div> },
+    { clave: "fecha", titulo: "Fecha", sinBusqueda: true, celda: (f) => <span className="whitespace-nowrap text-tenue">{fecha(f.fecha)}</span> },
+    { clave: "monto", titulo: "Monto", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.monto), celda: (f) => dinero(f.monto) },
+    { clave: "restante", titulo: "Por pagar", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.restante), explica: GLOSARIO.facturasPendientes, celda: (f) => <b>{dinero(f.restante)}</b> },
+  ];
 
   return (
-    <Pagina titulo="Pagos a proveedores" descripcion="Lo que debemos por material recibido: lo vencido primero y lo que viene en las próximas 4 semanas." acciones={<TipoCambioDia />}>
-      <div className={cn("grid gap-3 sm:grid-cols-2", verHoja ? "xl:grid-cols-5" : "xl:grid-cols-4")}>
-        <Kpi titulo="Por pagar" valor={dineroCompacto(suma(todas))} icono={Wallet} tono="marca" explica={GLOSARIO.porPagar} detalle={`${todas.length} órdenes recibidas con saldo`} alClic={() => { setPestana("ordenes"); setVista("todas"); }} />
-        <Kpi titulo="Vencido" valor={dineroCompacto(suma(vencidas))} icono={AlertTriangle} explica={GLOSARIO.vencePago} tono={vencidas.length ? "peligro" : "ok"}
-          detalle={vencidas.length ? `${vencidas.length} órdenes · la más vieja hace ${-Math.min(...vencidas.map((f) => f.dias_para_vencer!))} días` : "Nada vencido"} alClic={() => setVista("vencidas")} />
-        <Kpi titulo="Vence en 7 días" valor={dineroCompacto(suma(semana))} icono={CalendarDays} explica={GLOSARIO.vencePago} tono="aviso" detalle={`${semana.length} órdenes`} alClic={() => setVista("semana")} />
+    <Pagina titulo="Pagos a proveedores" descripcion="Lo que debemos: lo vencido primero y lo que viene en las próximas 4 semanas."
+      acciones={<>
+        <TipoCambioDia />
+        {verCuentas && <Boton onClick={() => setCompra({ abierto: true, proveedor: null })}><FilePlus2 className="h-4 w-4" /> Registrar compra o gasto</Boton>}
+      </>}>
+      <div className={cn("grid gap-3 sm:grid-cols-2", verCuentas ? "xl:grid-cols-5" : "xl:grid-cols-4")}>
+        <Kpi titulo="Por pagar" valor={dineroCompacto(suma(todo))} icono={Wallet} tono="marca" explica={GLOSARIO.porPagar}
+          detalle={verCuentas ? `${proveedoresCon(todo)} proveedores` : `${ordenes.length} órdenes recibidas con saldo`} alClic={() => setVista("todas")} />
+        <Kpi titulo="Vencido" valor={dineroCompacto(suma(vencido))} icono={AlertTriangle} explica={GLOSARIO.vencePago} tono={vencido.length ? "peligro" : "ok"}
+          detalle={vencido.length ? `${proveedoresCon(vencido)} proveedores · lo más viejo hace ${-Math.min(...vencido.map((f) => f.dias!))} días` : "Nada vencido"} alClic={() => setVista("vencidas")} />
+        <Kpi titulo="Vence en 7 días" valor={dineroCompacto(suma(semana))} icono={CalendarDays} explica={GLOSARIO.vencePago} tono="aviso" detalle={`${proveedoresCon(semana)} proveedores`} alClic={() => setVista("semana")} />
         <Kpi titulo="Próximas 4 semanas" valor={dineroCompacto(cuatroSemanas)} icono={CalendarRange} explica={GLOSARIO.agendaPagos} tono="info" detalle="Sin contar lo vencido" />
-        {verHoja && <Kpi titulo="Saldo de la hoja" valor={dineroCompacto(debemosHoja.reduce((s, f) => s + Number(f.saldo), 0))} icono={FileSpreadsheet} explica={GLOSARIO.saldosHojaProveedores} tono="neutro"
-          detalle={`${debemosHoja.length} proveedores${sociosHoja.length ? ` · aparte ${dineroCompacto(sociosHoja.reduce((s, f) => s + Number(f.saldo), 0))} de socios y bancos` : ""}`}
-          alClic={() => setPestana("hoja")} />}
+        {verCuentas && <Kpi titulo="Socios y bancos" valor={dineroCompacto(socios.reduce((s, c) => s + Number(c.saldo), 0))} icono={Landmark} explica={GLOSARIO.sociosBancos} tono="neutro"
+          detalle="Aparte de proveedores" alClic={() => { setPestana("proveedores"); setVistaProveedores("socios"); }} />}
       </div>
 
-      <Pestanas value={pestana} onValueChange={(v) => setPestana(v as "ordenes" | "hoja")}>
-        {verHoja && <ListaPestanas opciones={[
-          { valor: "ordenes", texto: "Órdenes del ERP", cuenta: todas.length },
-          { valor: "hoja", texto: "Saldos de la hoja", cuenta: debemosHoja.length, explica: GLOSARIO.saldosHojaProveedores },
-        ]} />}
-        <ContenidoPestana value="ordenes" className="pt-4 space-y-4">
-          <Tarjeta>
-            <EncabezadoTarjeta titulo="Agenda de pagos" explica={GLOSARIO.agendaPagos} descripcion="Por fecha de vencimiento (fecha de recepción + días de crédito del proveedor)" />
-            {datos.isLoading ? <Cargando filas={3} /> : (
-              <div className="grid gap-3 px-4 pb-4 sm:grid-cols-2 lg:grid-cols-5">
-                {columnasAgenda.map((c) => (
-                  <div key={c.titulo} className={cn("rounded-xl border p-3 flex flex-col", c.peligro && c.filas.length ? "border-peligro/30 bg-peligro-suave/50" : "border-borde bg-fondo/50")}>
-                    <div className="flex items-baseline justify-between gap-2">
-                      <p className={cn("font-medium text-sm", c.peligro && c.filas.length && "text-peligro")}>{c.titulo}</p>
-                      <p className="text-xs text-tenue">{c.detalle}</p>
-                    </div>
-                    <p className="text-lg font-semibold cifra mt-1">{dinero(suma(c.filas))}</p>
-                    <ul className="mt-2 space-y-1 flex-1">
-                      {c.filas.length === 0 && <li className="text-xs text-tenue py-1">Nada que pagar</li>}
-                      {c.filas.slice(0, 5).map((f) => (
-                        <li key={f.orden_compra_id}>
-                          <button onClick={() => setAbierta(f)} className="w-full text-left rounded-md px-1.5 py-1 hover:bg-superficie flex justify-between gap-2 text-xs">
-                            <span className="truncate">{f.proveedor.replace(/^DEMO /, "")}<span className="text-tenue"> · {fecha(f.vence_pago).slice(0, 6)}</span></span>
-                            <span className="cifra shrink-0">{dineroCompacto(f.saldo_mxn)}</span>
-                          </button>
-                        </li>
-                      ))}
-                      {c.filas.length > 5 && <li className="text-xs text-tenue px-1.5">y {c.filas.length - 5} más</li>}
-                    </ul>
+      <Tarjeta>
+        <EncabezadoTarjeta titulo="Agenda de pagos" explica={GLOSARIO.agendaPagos} descripcion="Por fecha de vencimiento (fecha de la factura o de la recepción + días de crédito del proveedor)" />
+        {cargando ? <Cargando filas={3} /> : (
+          <div className="grid gap-3 px-4 pb-4 sm:grid-cols-2 lg:grid-cols-5">
+            {columnasAgenda.map((c) => {
+              const grupos = agrupar(c.filas);
+              return (
+                <div key={c.titulo} className={cn("rounded-xl border p-3 flex flex-col min-w-0", c.peligro && c.filas.length ? "border-peligro/30 bg-peligro-suave/50" : "border-borde bg-fondo/50")}>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className={cn("font-medium text-sm", c.peligro && c.filas.length && "text-peligro")}>{c.titulo}</p>
+                    <p className="text-xs text-tenue">{c.detalle}</p>
                   </div>
-                ))}
-              </div>
-            )}
-          </Tarjeta>
+                  <p className="text-lg font-semibold cifra mt-1">{dinero(suma(c.filas))}</p>
+                  <ul className="mt-2 space-y-1 flex-1">
+                    {grupos.length === 0 && <li className="text-xs text-tenue py-1">Nada que pagar</li>}
+                    {grupos.slice(0, 5).map((g) => (
+                      <li key={g.grupo}>
+                        <button onClick={g.abrir} className="w-full text-left rounded-md px-1.5 py-1 hover:bg-superficie flex justify-between gap-2 text-xs">
+                          <span className="truncate">{g.proveedor.replace(/^DEMO /, "")}{g.n > 1 && <span className="text-tenue"> · {g.n}</span>}</span>
+                          <span className="cifra shrink-0">{dineroCompacto(g.monto)}</span>
+                        </button>
+                      </li>
+                    ))}
+                    {grupos.length > 5 && <li className="text-xs text-tenue px-1.5">y {grupos.length - 5} proveedores más</li>}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Tarjeta>
 
+      <Pestanas value={pestana} onValueChange={(v) => setPestana(v as Pestana)}>
+        {verCuentas && <ListaPestanas opciones={[
+          { valor: "facturas", texto: "Facturas por pagar", cuenta: facturas.length, explica: GLOSARIO.facturasPendientes },
+          { valor: "proveedores", texto: "Por proveedor", cuenta: new Set(facturas.map((f) => f.proveedor_llave)).size, explica: GLOSARIO.saldoProveedor },
+          { valor: "ordenes", texto: "Órdenes de compra", cuenta: ordenes.length },
+        ]} />}
+        {verCuentas && <ContenidoPestana value="facturas" className="pt-4">
           <TablaDatos
-            filas={filas} columnas={columnas} cargando={datos.isLoading} error={datos.error}
-            claveFila={(f) => f.orden_compra_id} alClicFila={setAbierta} exportarComo="cuentas-por-pagar"
+            filas={filasFacturas} columnas={columnasFacturas} cargando={pendientes.isLoading || cuentas.isLoading} error={pendientes.error ?? cuentas.error}
+            claveFila={(f) => f.id} alClicFila={(f) => setLlave(f.proveedor_llave)} exportarComo="facturas-por-pagar"
+            placeholder="Buscar proveedor, factura o concepto…" claseFila={(f) => (f.dias < 0 ? "bg-peligro-suave/30" : undefined)}
+            filtros={filtroVista(facturas)}
+            pie={filasFacturas.length > 0 && <div className="flex justify-end gap-6 text-sm"><span className="text-tenue">Por pagar de lo que se ve:</span><b className="cifra">{dinero(filasFacturas.reduce((s, f) => s + Number(f.restante), 0))}</b></div>}
+            vacio={{ icono: Receipt, titulo: vista === "vencidas" ? "Nada vencido" : "No hay facturas por pagar", texto: "Registra cada factura con «Registrar compra o gasto» (sube el XML y se llena solo). Las que tienen saldo aparecen aquí con su vencimiento." }}
+          />
+        </ContenidoPestana>}
+        {verCuentas && <ContenidoPestana value="proveedores" className="pt-4">
+          <CuentasProveedores cuentas={cuentas.data ?? []} cargando={cuentas.isLoading} error={cuentas.error} alAbrir={setLlave} vistaInicial={vistaProveedores} />
+        </ContenidoPestana>}
+        <ContenidoPestana value="ordenes" className="pt-4">
+          <TablaDatos
+            filas={filasOrdenes} columnas={columnasOrdenes} cargando={datos.isLoading} error={datos.error}
+            claveFila={(f) => f.orden_compra_id} alClicFila={setAbierta} exportarComo="ordenes-por-pagar"
             placeholder="Buscar proveedor, orden o factura…"
             claseFila={(f) => ((f.dias_para_vencer ?? 1) < 0 ? "bg-peligro-suave/30" : undefined)}
-            filtros={<Filtro valor={vista} alCambiar={setVista} opciones={[
-              { valor: "todas", texto: "Todas", cuenta: todas.length },
-              { valor: "vencidas", texto: "Vencidas", cuenta: vencidas.length },
-              { valor: "semana", texto: "Próximos 7 días", cuenta: semana.length },
-            ]} />}
-            pie={filas.length > 0 && <div className="flex justify-end gap-6 text-sm"><span className="text-tenue">Saldo de lo que se ve:</span><b className="cifra">{dinero(suma(filas))}</b></div>}
-            vacio={{ icono: Receipt, titulo: vista === "vencidas" ? "Nada vencido" : "No debemos nada", texto: "Aquí aparecen las órdenes de compra recibidas (completas o parciales) que tienen saldo. Lo que se compró en la hoja está en «Saldos de la hoja»." }}
+            filtros={filtroVista(ordenes.map((o) => ({ dias: o.dias_para_vencer })))}
+            pie={filasOrdenes.length > 0 && <div className="flex justify-end gap-6 text-sm"><span className="text-tenue">Saldo de lo que se ve:</span><b className="cifra">{dinero(filasOrdenes.reduce((s, f) => s + Number(f.saldo_mxn), 0))}</b></div>}
+            vacio={{ icono: Receipt, titulo: vista === "vencidas" ? "Nada vencido" : "Ninguna orden por pagar", texto: "Aquí aparecen las órdenes de compra recibidas (completas o parciales) que tienen saldo." + (verCuentas ? " Lo que se compra sin orden está en «Facturas por pagar»." : "") }}
           />
         </ContenidoPestana>
-        {verHoja && <ContenidoPestana value="hoja" className="pt-4">
-          <SaldosProveedoresHoja />
-        </ContenidoPestana>}
       </Pestanas>
 
       <RegistrarPago orden={abierta} alCerrar={() => setAbierta(null)} />
+      {verCuentas && <>
+        {/* Del renglón vivo, no de una copia: al registrar un pago el saldo se actualiza aquí. */}
+        <PanelProveedor cuenta={llave ? porLlave.get(llave) ?? null : null} facturas={(pendientes.data ?? []).filter((x) => x.proveedor_llave === llave)}
+          alCerrar={() => setLlave(null)} alRegistrarCompra={(p) => setCompra({ abierto: true, proveedor: p })} />
+        <RegistrarCompra abierto={compra.abierto} proveedorInicial={compra.proveedor} alCerrar={() => setCompra({ abierto: false, proveedor: null })} />
+      </>}
     </Pagina>
   );
 }
@@ -187,7 +242,7 @@ function RegistrarPago({ orden: o, alCerrar }: { orden: PorPagar | null; alCerra
       </> : <Boton variante="secundario" onClick={alCerrar}>Cerrar</Boton>}>
       <div className="space-y-5">
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <Vence f={o} />
+          <Vencimiento vence={o.vence_pago} />
           {o.datos_bancarios && <span className="text-tenue">Cuenta: <span className="font-mono text-texto">{o.datos_bancarios}</span></span>}
           {puede("compras") && <Link to={`/compras/ordenes/${o.orden_compra_id}`} className="inline-flex items-center gap-1 text-marca-texto"><ExternalLink className="h-3.5 w-3.5" /> Ver la orden</Link>}
         </div>

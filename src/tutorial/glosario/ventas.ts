@@ -49,7 +49,7 @@ export const VENTAS = {
   clienteLibre: "Cliente sin vendedor dueño: cualquiera le puede cotizar o darle “Hacerlo mío”.",
   ultimaCompra: "Fecha del último pedido del cliente (o de la última venta en el libro de la hoja, si es más reciente). De clientes de otro vendedor no se muestra.",
   compras12m: "Suma sin IVA, en pesos, de los pedidos no cancelados del cliente en los últimos 365 días.",
-  saldoArranque: "Lo que el cliente ya debía en la hoja el día que arrancó el ERP. Se muestra aparte del saldo de los pedidos nuevos.",
+  saldoArranque: "Lo que el cliente ya debía en la hoja el día que arrancó el ERP, menos lo que ha pagado de eso desde entonces. Se muestra aparte del saldo de los pedidos nuevos.",
   comprasAnterioresErp: "Lo que el cliente compró y pagó según el libro de ventas de la hoja, antes del ERP. Solo lo ven el dueño, la gerencia y cobranza.",
   actividad: "Llamadas, WhatsApp, correos, visitas y notas con el cliente. Una tarea lleva fecha y se queda arriba hasta que la marcas hecha; vencida sale en rojo. También cuenta como seguimiento para la vigencia de la cuenta.",
 
