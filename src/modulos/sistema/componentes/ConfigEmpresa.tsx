@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus, Save, X } from "lucide-react";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Boton } from "@/components/ui/boton";
-import { Campo, Entrada } from "@/components/ui/campo";
+import { Campo, Entrada, Seleccion } from "@/components/ui/campo";
+import { recordarTemaEmpresa, type Tema } from "@/lib/tema";
 import { Cargando } from "@/components/ui/estados";
 import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
@@ -67,6 +68,7 @@ export function ConfigEmpresa() {
         <Comercial inicial={(c.empresa?.valor ?? {}) as Config} editable={editable} />
         <Iva inicial={Number(c.iva?.valor ?? 0.16)} editable={editable} actualizado={c.iva?.actualizado_en} />
         <Arranque inicial={String(c.fecha_arranque?.valor ?? "")} editable={editable} />
+        <Apariencia inicial={c.tema_por_defecto?.valor === "claro" ? "claro" : "oscuro"} editable={editable} />
       </div>
       <div className="lg:col-span-2">
         <Calendario inicial={(c.calendario_laboral?.valor ?? { dias: [1, 2, 3, 4, 5, 6], descansos_empresa: [] }) as { dias: number[]; descansos_empresa: string[] }} editable={editable} />
@@ -118,6 +120,24 @@ function Comercial({ inicial, editable }: { inicial: Config; editable: boolean }
         <Campo etiqueta="Sitio web"><Entrada value={f.sitio} onChange={(e) => setF({ ...f, sitio: e.target.value })} /></Campo>
         <Campo etiqueta="Dirección de la planta"><Entrada value={f.direccion} onChange={(e) => setF({ ...f, direccion: e.target.value })} /></Campo>
       </div>
+    </TarjetaForm>
+  );
+}
+
+/** El tema con el que abre el ERP quien no ha escogido uno con el botón de la luna/sol. */
+function Apariencia({ inicial, editable }: { inicial: Tema; editable: boolean }) {
+  const [v, setV] = useState<Tema>(inicial);
+  const guardar = useGuardarConfig("Tema guardado");
+  return (
+    <TarjetaForm titulo="Apariencia" explica={GLOSARIO.temaPorDefecto} editable={editable} quien="sistemas o dirección" guardando={guardar.isPending}
+      descripcion="Con qué tema abre el ERP. Quien ya escogió otro con el botón de la luna o el sol se queda con el suyo."
+      alGuardar={() => guardar.mutate({ clave: "tema_por_defecto", valor: v }, { onSuccess: () => recordarTemaEmpresa(v) })}>
+      <Campo etiqueta="Tema por omisión">
+        <Seleccion value={v} onChange={(e) => setV(e.target.value as Tema)} className="w-48">
+          <option value="oscuro">Oscuro</option>
+          <option value="claro">Claro</option>
+        </Seleccion>
+      </Campo>
     </TarjetaForm>
   );
 }
