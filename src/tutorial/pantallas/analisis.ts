@@ -28,6 +28,16 @@ export const ANALISIS: Record<string, AyudaPantalla> = {
     "Dirección captura la meta (acepta «32 M») y Enter guarda; el escenario calcula una meta creciendo un porcentaje sobre el año anterior y «Usar como meta» la copia. Con las flechas cambias de año.",
     "La meta de cada mes sale de lo que pesó ese mes en los últimos 3 años completos, y la de cada estado, de lo que pesó cada estado. «Cierre a este ritmo» proyecta el año con lo que se va arriba o abajo del anterior a la misma fecha, igual que el tablero de inicio.",
   ],
+  "/analisis/entregas": [
+    "Si cumplimos lo que prometemos. Arriba, cuántos pedidos con fecha compromiso en el periodo se entregaron a tiempo y con cuánto atraso los que no; abajo, por mes, por vendedor y por familia de equipo.",
+    "«Lo que viene» es lo más útil: cada orden del taller con la fecha a la que sale de verdad. En rojo las que ya no llegan a su fecha; dale clic para abrir el pedido. Bájala en CSV para revisarla con producción.",
+    "La fila va por fecha compromiso: cada orden sale cuando la etapa más cargada acaba lo prometido antes que ella más lo suyo, con la capacidad semanal de Configuración. Cambia cada día con lo que el taller termina y lo que entra.",
+  ],
+  "/analisis/capacidad": [
+    "Si prometemos más de lo que el taller saca. Todo va en semanas de la etapa más cargada (hoy suele ser pailería), para compararlo con el calendario.",
+    "La primera gráfica dice cuánto trabajo se prometió para cada mes contra las semanas que tiene el mes; «Ya vencido» es lo que debió salir y sigue en el taller. La segunda, lo que entra y sale del taller cada mes: si entra más, la fila crece.",
+    "«Se pone al día» es cuándo acabaría el taller todo lo que tiene si no entrara nada más. Para acortar la fila hay que sacar más (gente, horas extra, maquila) o prometer con la fecha realista que da el cotizador.",
+  ],
   "/analisis/ubicaciones": [
     "Las ciudades y estados escritos a mano en las fichas de clientes que no se reconocieron. Mientras no se ubiquen, su venta no sale en el mapa.",
     "Los filtros separan lo que hay que resolver, lo que hay que confirmar y lo que falta capturar en la ficha del cliente. Dirección elige el municipio correcto (o confirma el sugerido con ✓) y se aplica a todos los clientes que lo escribieron igual; «No se puede» lo saca de la lista (por ejemplo «Varios»).",

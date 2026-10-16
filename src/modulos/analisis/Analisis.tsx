@@ -12,6 +12,8 @@ const ClientesAnalisis = lazy(() => import("./ClientesAnalisis"));
 const ProductoRegion = lazy(() => import("./ProductoRegion"));
 const Planeacion = lazy(() => import("./Planeacion"));
 const Ubicaciones = lazy(() => import("./Ubicaciones"));
+const Entregas = lazy(() => import("./Entregas"));
+const Capacidad = lazy(() => import("./Capacidad"));
 
 // Una sola ruta /analisis/* con sus pestañas: el periodo elegido (en la URL) se queda al
 // cambiar de vista, y cada vista tiene su liga para mandarla o regresar a ella.
@@ -21,6 +23,8 @@ const PESTANAS = [
   { ruta: "/analisis/clientes", texto: "Clientes", periodo: true },
   { ruta: "/analisis/producto", texto: "Producto × región", periodo: true },
   { ruta: "/analisis/planeacion", texto: "Planeación", periodo: false },
+  { ruta: "/analisis/entregas", texto: "Entregas", periodo: true },
+  { ruta: "/analisis/capacidad", texto: "Capacidad del taller", periodo: false },
   { ruta: "/analisis/ubicaciones", texto: "Ubicaciones por revisar", periodo: false },
 ];
 
@@ -30,6 +34,8 @@ const DESCRIPCION: Record<string, string> = {
   "/analisis/clientes": "Cuánto depende la venta de pocos clientes, quién regresa y a quién se está perdiendo.",
   "/analisis/producto": "Qué familia de producto se vende en cada región.",
   "/analisis/planeacion": "La meta del año repartida con la estacionalidad real, contra lo vendido.",
+  "/analisis/entregas": "Si cumplimos lo que prometemos: entregas a tiempo y lo que ya no va a salir a tiempo con la fila del taller.",
+  "/analisis/capacidad": "Si prometemos más de lo que el taller saca: lo prometido para cada mes contra lo que cabe.",
   "/analisis/ubicaciones": "Ciudades escritas a mano que no se reconocieron: corregirlas una vez afina el mapa para siempre.",
 };
 
@@ -40,7 +46,7 @@ export default function Analisis() {
   const busqueda = params.toString() ? `?${params.toString()}` : "";
 
   return (
-    <Pagina titulo="Análisis de ventas" descripcion={DESCRIPCION[actual.ruta]} ancho="max-w-[1500px]">
+    <Pagina titulo="Análisis" descripcion={DESCRIPCION[actual.ruta]} ancho="max-w-[1500px]">
       <nav className="flex gap-1 border-b border-borde overflow-x-auto -mt-1" aria-label="Vistas del análisis">
         {PESTANAS.map((p) => (
           <NavLink key={p.ruta} to={p.ruta + busqueda} end={p.fin}
@@ -60,6 +66,8 @@ export default function Analisis() {
           <Route path="clientes" element={<ClientesAnalisis />} />
           <Route path="producto" element={<ProductoRegion />} />
           <Route path="planeacion" element={<Planeacion />} />
+          <Route path="entregas" element={<Entregas />} />
+          <Route path="capacidad" element={<Capacidad />} />
           <Route path="ubicaciones" element={<Ubicaciones />} />
           <Route path="*" element={<MapaVentas />} />
         </Routes>
