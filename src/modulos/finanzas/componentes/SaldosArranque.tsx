@@ -14,12 +14,24 @@ import { dinero, fecha, hace, hoyISO } from "@/lib/formato";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { todasLasFilas } from "@/modulos/almacen/componentes/comun";
 import { SelectorCuenta, useCuentasDinero } from "./cuentas";
+import type { Rango } from "./comun";
 
 interface SaldoArranque {
   cliente_id: string; nombre: string; vendedor_id: string | null; vendido: number | null; pagado: number | null;
   saldo: number; ultima_venta: string | null; ultimo_pago: string | null; cobrado_erp: number;
 }
-const INVALIDAR = [["v_saldo_arranque_clientes"], ["v_cobros_saldo_hoja"], ["tablero_direccion"], ["v_cobranza"]];
+const INVALIDAR = [["v_saldo_arranque_clientes"], ["v_cobros_saldo_hoja"], ["tablero_direccion"], ["v_cobranza"], ["saldo_arranque_antiguedad"]];
+
+export interface SaldoHoja { total: number; clientes: number; rangos: Record<Rango, number> }
+/**
+ * Lo que los clientes ya debían en la hoja, con su antigüedad. Mientras los pedidos sean de
+ * la hoja, ahí está casi todo lo que nos deben: sin sumarlo, "por cobrar" decía $0.
+ * La base filtra por permisos: un vendedor recibe solo lo de sus clientes.
+ */
+export const useSaldoHoja = (activo = true) => useQuery({
+  queryKey: ["saldo_arranque_antiguedad"], enabled: activo,
+  queryFn: () => q<SaldoHoja>(supabase.rpc("saldo_arranque_antiguedad")),
+});
 
 /**
  * Saldos por cliente según el libro de ventas de la hoja (ventas − pagos − notas de crédito)
@@ -65,7 +77,7 @@ export function SaldosArranque() {
       <div className="rounded-lg border border-borde bg-fondo px-3 py-2 text-sm flex flex-wrap items-center gap-x-4 gap-y-1">
         <FileSpreadsheet className="h-4 w-4 text-tenue" />
         <span>Saldos del libro de ventas de la hoja (ventas menos pagos, con IVA){arranque.data?.valor ? ` hasta el arranque del ERP, ${fecha(String(arranque.data.valor))}` : ""}.</span>
-        <span className="text-tenue">No se suman a los saldos de pedidos del ERP para no contarlos dos veces.</span>
+        <span className="text-tenue">Los pedidos que vienen de la hoja se cobran contra este saldo, no aparte, para no contarlos dos veces.</span>
         <b className="ml-auto cifra">{conSaldo.length} clientes · {dinero(total)}</b>
       </div>
       <TablaDatos filas={filas} columnas={columnas} cargando={datos.isLoading} error={datos.error} claveFila={(f) => f.cliente_id}

@@ -15,7 +15,7 @@ export const GENERAL = {
   ventasDelMes: "Pedidos no cancelados con fecha de este mes, sin IVA y en pesos. La flecha compara contra el mismo tramo del mes pasado (del día 1 al día de hoy), no contra el mes completo.",
   cotizacionesVivas: "Cotizaciones abiertas (de borrador a enviada) que todavía no vencen. El monto es lo ya enviado y vigente, sin IVA. El cierre es qué parte de las cotizaciones de los últimos 90 días que ya se cerraron se ganó.",
   tasaCierre: "De las cotizaciones emitidas en los últimos 90 días que ya se cerraron (aceptadas, rechazadas o vencidas), qué porcentaje se aceptó. Más alto es mejor.",
-  porCobrar: "Lo que los clientes deben de sus pedidos: total con IVA menos los cobros registrados, en pesos.",
+  porCobrar: "Lo que los clientes nos deben, en pesos: lo de sus pedidos (total con IVA menos los cobros registrados) más lo que ya debían en la hoja el día que arrancó el ERP, menos lo que han pagado de eso.",
   ventasAnio: "Lo vendido en el año, con IVA y en pesos. Antes del arranque del ERP sale del libro de ventas de la hoja; después, de los pedidos. La flecha compara contra el mismo tramo del año pasado.",
   proyeccionCierre: "Cuánto cerraría el año si seguimos al mismo ritmo, con la estacionalidad del año pasado: si vamos 20 % arriba a la misma fecha, cierra 20 % arriba de lo que cerró el año pasado.",
   cotizadoVivo: "Total con IVA, en pesos, de las cotizaciones enviadas o autorizadas que siguen vigentes: lo que está en la calle esperando respuesta. Abajo, el cierre de 90 días y las que esperan autorización de precio.",

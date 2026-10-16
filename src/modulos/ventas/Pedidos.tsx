@@ -15,6 +15,7 @@ import { useSesion } from "@/lib/sesion";
 import { dinero, fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { useSaldoHoja } from "@/modulos/finanzas/componentes/SaldosArranque";
 import { Barra } from "./componentes/campos";
 import { DialogoCliente, ElegirCliente } from "./componentes/dialogos";
 import { CANAL, ESTADO_PEDIDO, dineroEn, todas, useAncho, type Canal, type VPedido } from "./comun";
@@ -29,6 +30,7 @@ const ABIERTOS = ["confirmado", "en_produccion", "listo"];
  */
 export default function Pedidos() {
   const { puede } = useSesion();
+  const hoja = useSaldoHoja();
   const ir = useNavigate();
   const [vista, setVista] = useState<Vista>("abiertos");
   const [canal, setCanal] = useState<"todos" | Canal>("todos");
@@ -149,7 +151,9 @@ export default function Pedidos() {
           </div>
         }
         vacio={{ icono: ShoppingCart, titulo: "Sin pedidos aquí", texto: "Los pedidos salen de “Convertir a pedido” en una cotización, o captura uno de Mercado Libre con su número de venta." }}
-        pie={filas.length > 0 && <p className="text-sm text-tenue text-right">Total <b className="text-texto cifra">{dinero(totalMxn)}</b> · por cobrar <b className="text-aviso cifra">{dinero(saldoMxn)}</b> (en pesos)</p>}
+        pie={filas.length > 0 && <p className="text-sm text-tenue text-right">Total <b className="text-texto cifra">{dinero(totalMxn)}</b> · por cobrar <b className="text-aviso cifra">{dinero(saldoMxn)}</b> (en pesos)
+          {/* Los pedidos de la hoja se cobran contra el saldo de arranque: sin esto el pie decía $0. */}
+          {Number(hoja.data?.total) > 0 && <span data-explain={GLOSARIO.saldoArranque}> · más <b className="text-aviso cifra">{dinero(hoja.data!.total)}</b> que ya se debía en la hoja</span>}</p>}
       />
       <DialogoPedido abierto={alta} alCambiar={setAlta} alCrear={(id) => ir(`/ventas/pedidos/${id}`)} />
     </Pagina>
