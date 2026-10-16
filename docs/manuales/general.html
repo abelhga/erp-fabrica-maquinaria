@@ -327,6 +327,7 @@ tr.yo td { background: var(--marca-suave); }
       <div class="tarjeta herr"><h3>Tu semana</h3><p>El lunes temprano llega el resumen: lo que pasó contra la semana anterior y la agenda (entregas, órdenes comprometidas, lo que llega, servicios).</p></div>
       <div class="tarjeta herr"><h3>Las tablas</h3><p>Todas buscan sin acentos, ordenan al tocar el encabezado y exportan a CSV. Enter guarda y Tab avanza, como en la hoja.</p></div>
       <div class="tarjeta herr"><h3>Ver como (dirección)</h3><p>El botón del ojo: recorre el ERP con los permisos de otro rol («Viendo como …», <span class="btn-ui">Volver a mi vista</span>). Lo que guardes es real y a tu nombre. «Una persona en particular…» abre su sesión solo para ver.</p></div>
+      <div class="tarjeta herr"><h3>Modo tutorial</h3><p>El botón del birrete, arriba entre el ojo y la campana: «Encender modo tutorial». Cada pantalla dice para qué sirve y lo marcado con <b>?</b> se explica al pasar el mouse («¿Qué es?»). Solo lo ves tú, en ese navegador.</p></div>
       <div class="tarjeta herr"><h3>Modo oscuro y celular</h3><p>Todas las pantallas funcionan en celular y en modo oscuro. La terminal de piso está pensada para tablet y la TV del taller para pantalla grande.</p></div>
     </div>
   </section>
@@ -340,10 +341,10 @@ tr.yo td { background: var(--marca-suave); }
     <div class="reglas">
       <div class="tarjeta regla"><h3>Ventas nunca ve costos ni márgenes</h3><p>Ni en pantalla ni preguntándole al asistente. Ve precio de lista, mínimo, existencia y plazo.</p></div>
       <div class="tarjeta regla"><h3>Bajo el mínimo, autoriza la gerencia</h3><p>Una partida con precio menor a lista × (1 − descuento máximo, 10 % si no se definió) manda la cotización a «Por autorizar». Sin autorización no se envía ni se convierte.</p></div>
-      <div class="tarjeta regla"><h3>Los movimientos no se editan ni se borran</h3><p>Un error se corrige con un ajuste que autoriza otra persona. Todo queda en la bitácora.</p></div>
+      <div class="tarjeta regla"><h3>Los movimientos de inventario no se editan ni se borran</h3><p>Un error se corrige con un ajuste que autoriza otra persona. Todo queda en la bitácora.</p></div>
       <div class="tarjeta regla"><h3>Lo apartado es de su orden</h3><p>«Apartar material» reserva lo libre de los almacenes de planta. «Surtir» no deja sacar material apartado para otra orden.</p></div>
       <div class="tarjeta regla"><h3>Una cotización enviada ya no se toca</h3><p>Para cambiarla, «Nueva versión» (mismo folio con -v2). Para otro cliente, «Duplicar con folio nuevo».</p></div>
-      <div class="tarjeta regla"><h3>No se cobra de más</h3><p>La base rechaza un cobro mayor al saldo o a un pedido cancelado, y un pago a proveedor mayor a lo que se debe.</p></div>
+      <div class="tarjeta regla"><h3>No se cobra de más</h3><p>La base rechaza un cobro mayor al saldo o a un pedido cancelado, y un pago mayor a lo que se debe de una orden de compra. A un proveedor solo se le paga de más si se marca como anticipo: lo que sobra queda a nuestro favor.</p></div>
     </div>
   </section>
 
@@ -377,7 +378,8 @@ tr.yo td { background: var(--marca-suave); }
 
   var ROLES = [
     { k: "ventas", n: "Vendedor", dia: [
-      "Abre " + R("/ventas/para-llamar") + ": clientes con motivo (cotización por vencer, ya le toca, refacciones, reactivar). " + B("Redactar mensaje") + " y " + B("Abrir en WhatsApp") + ".",
+      "Abre " + R("/ventas/para-llamar") + ": clientes con motivo (cotización por vencer, ya le toca, refacciones, reactivar). " + B("Redactar mensaje") + " y " + B("Abrir en WhatsApp") + "; al regresar confirma " + B("Sí, le escribí") + ".",
+      "Atiende tu «En seguimiento»: lo que toca hoy (llamada al día 3, último mensaje al día 10) y cierra con " + B("¿Cómo terminó?") + ".",
       "Mueve tus oportunidades en el tablero de " + R("/ventas/oportunidades") + ".",
       "Cotiza: " + B("Nueva cotización") + ", busca la partida y Enter. Se guarda sola.",
       "Revisa la campana: precio listo de compras, cotización autorizada, «Terminado» de tus equipos, pago de tu cliente.",
@@ -424,7 +426,9 @@ tr.yo td { background: var(--marca-suave); }
     ], estaciones: [7] },
     { k: "finanzas", n: "Finanzas", dia: [
       R("/finanzas/cobranza") + ": antigüedad por pedido, cliente y vendedor. " + B("Registrar cobro") + " y " + B("Registrar factura") + ".",
-      R("/finanzas/pagos") + ": órdenes recibidas con saldo y su vencimiento. " + B("Registrar pago") + ".",
+      "Cada factura o gasto que llega: " + B("Registrar compra o gasto") + " con su XML.",
+      R("/finanzas/pagos") + ": lo vencido primero y lo de las próximas 4 semanas. Abre al proveedor y " + B("Registrar pago") + ".",
+      "Caja chica: " + B("Anotar") + " cada gasto y hacer el " + B("Arqueo") + ".",
       "Fin de mes: " + B("Marcar pagada") + " en Comisiones (guarda la foto del cálculo).",
       "Dinero de importaciones en dólares, si te toca."
     ], estaciones: [9] },
@@ -441,6 +445,8 @@ tr.yo td { background: var(--marca-suave); }
     { n: "Encontrar al cliente", quien: ["ventas", "gerente_ventas"], ruta: "/ventas/para-llamar · /ventas/oportunidades",
       pasos: [
         "En " + R("/ventas/para-llamar") + " el ERP te propone a quién llamar y por qué. " + B("Redactar mensaje") + " escribe el WhatsApp con el historial del cliente.",
+        "Al volver de WhatsApp o de la llamada, la tarjeta pregunta «¿Sí le escribiste?»: " + B("Sí, le escribí") + " / " + B("Sí, le llamé") + " lo registra (se puede deshacer 15 minutos). El cliente pasa a «En seguimiento»: WhatsApp, llamada al día 3 y último mensaje al día 10.",
+        "Ciérralo con " + B("¿Cómo terminó?") + ": «Le interesa · crear oportunidad», «No por ahora» o «No contesta» (vuelve en 90 días) o «Ya no compra». Tres intentos y 7 días sin respuesta cuentan solos como «no contesta».",
         "En Oportunidades: " + B("Nueva oportunidad") + " → " + B("Registrar") + ". Arrástrala en el tablero: prospecto → contactado → cotizado → negociación.",
         "Si se pierde, la base pide el motivo («Anota por qué se perdió…»).",
         "Desde el panel de la oportunidad: " + B("Nueva cotización") + "."
@@ -450,13 +456,13 @@ tr.yo td { background: var(--marca-suave); }
       ojo: "Clientes con privacidad entre vendedores: cada quien ve su cartera." },
     { n: "Cotizar", quien: ["ventas"], ruta: "/ventas/cotizaciones",
       pasos: [
-        B("Nueva cotización") + ": toma folio, condiciones de pago y entrega y el contacto principal del cliente.",
+        B("Nueva cotización") + ": toma las condiciones de pago y entrega y el contacto principal del cliente. Nace «Sin folio todavía».",
         "Escribe en «Agregar partida: escribe equipo, componente o clave y Enter…». Pone el precio de lista en la moneda de la cotización.",
         B("Partida libre") + " para flete, instalación o servicio. En el menú de cada partida: " + B("Ver ficha de venta") + ", " + B("Pedir precio a compras") + ", " + B("Duplicar partida") + ".",
         "Ajusta moneda, tipo de cambio, «Precios con IVA incluido», vigencia, meses con tarjeta y descuento general.",
         "No hay botón de guardar: se guarda sola («Guardado 10:42»)."
       ],
-      solo: ["Folio automático COT-2026-00148.", "Cada partida sabe su precio mínimo; si bajas de ahí, la cotización pasa sola a «Por autorizar»."],
+      solo: ["El folio COT-2026-00148 se asigna al agregar la primera partida (o al pedir autorización o enviarla). Abrir y salir no gasta folio; el borrador vacío se borra solo al día siguiente.","Cada partida sabe su precio mínimo; si bajas de ahí, la cotización pasa sola a «Por autorizar»."],
       ej: [["Cotización", "COT-2026-00148", "Borrador", ""]],
       ojo: "La ficha de venta muestra precio mínimo, existencia, envío gratis, mensualidades, precio en Mercado Libre y fichas técnicas vigentes." },
     { n: "Autorizar precio", quien: ["gerente_ventas", "direccion"], ruta: "/ventas/cotizaciones → Por autorizar", condicional: true,
@@ -604,7 +610,7 @@ tr.yo td { background: var(--marca-suave); }
     ["almacen", "Almacén", "Inventario, producción, envíos, servicio", "Qué llega en importaciones", "Costos y dinero"],
     ["gerente_produccion", "Gerencia de producción", "Producción, servicio, inventario", "Qué llega en importaciones", "Costos"],
     ["produccion", "Taller", "Terminal de piso, fallas, resguardos", "", "Todo lo demás"],
-    ["finanzas", "Finanzas", "Cobranza, pagos, comisiones pagadas", "Costos", "Edición de costeo"],
+    ["finanzas", "Finanzas", "Cobranza, compras y gastos con XML, cuentas de proveedores, préstamos de socios, caja chica, comisiones pagadas", "Costos", "Edición de costeo"],
     ["direccion", "Dirección", "Todo (nivel 3 en todo módulo)", "", "—"]
   ];
 
