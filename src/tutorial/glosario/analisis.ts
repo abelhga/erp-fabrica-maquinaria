@@ -27,4 +27,11 @@ export const ANALISIS = {
   metaPorEstado: "La sugerida reparte la meta del año con lo que pesó cada estado en los últimos 3 años. Dirección puede poner otra; vacía regresa a la sugerida.",
   motivoUbicacion: "Por resolver: el estado o la ciudad no se reconocieron. Por confirmar: se ligó por parecido o a una ciudad de otro estado. Falta el dato en la ficha: no hay ciudad escrita y se arregla en el cliente. Por aproximación: el nombre corto o largo de un solo municipio.",
   correccionUbicacion: "Corregir una combinación de estado y ciudad escritos ubica a todos los clientes que la escribieron igual, también a los que se den de alta después. Se puede deshacer en «Corregidas por dirección».",
+  // --- Entregas y capacidad del taller ---
+  aTiempo: "Pedidos con fecha compromiso en el periodo que se entregaron ese día o antes. Se juzga lo entregado y lo que ya venció sin entregarse; lo que todavía puede llegar a tiempo no cuenta aún.",
+  diasAtraso: "En promedio, cuántos días después de lo prometido se entregaron los que llegaron tarde (los vencidos sin entregar cuentan hasta hoy).",
+  promesaEnRiesgo: "Una orden abierta que, con la fila del taller, sale después de su fecha compromiso. La fila va por fecha compromiso: cada orden sale cuando la etapa más cargada acaba lo prometido antes que ella y lo suyo. Avisar al cliente a tiempo o mover prioridades.",
+  prometidoVsCapacidad: "Barra: el trabajo de las órdenes que se prometieron para ese mes, en semanas de la etapa más cargada. Línea: las semanas que tiene el mes. Si la barra pasa la línea, ese mes ya se prometió más de lo que cabe.",
+  entraSaleTaller: "Entra: el trabajo de las órdenes nuevas del mes. Sale: lo que el taller marcó terminado. Si entra más de lo que sale, la fila crece y las fechas se alargan para todos.",
+  alDiaTaller: "El día en que el taller acabaría todo lo que tiene en fila si no entrara ningún pedido más, trabajando a su capacidad de hoy.",
 } satisfies Record<string, string>;
