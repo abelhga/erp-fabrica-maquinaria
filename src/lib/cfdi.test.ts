@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { folioCfdi, leerCfdi } from "./cfdi";
+import { folioCfdi, leerCfdi, metodoDeFormaPago } from "./cfdi";
 
 const XML = `<?xml version="1.0" encoding="UTF-8"?>
 <cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Serie="A" Folio="3354" Fecha="2026-10-08T15:37:11"
@@ -28,5 +28,24 @@ describe("CFDI", () => {
   });
   it("avisa si el archivo no es una factura", () => {
     expect(() => leerCfdi("<html><body>hola</body></html>")).toThrow(/no es una factura/);
+  });
+  it("lee los pagos de un complemento y las facturas que liquida", () => {
+    const xml = `<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Serie="P" Folio="88" Fecha="2026-10-12T10:00:00" SubTotal="0" Moneda="XXX" Total="0" TipoDeComprobante="P">
+  <cfdi:Emisor Rfc="MHG160202UX1" Nombre="MAQUINAS Y HERRAMIENTAS GAMEX"/><cfdi:Receptor Rfc="GDN010101AA1" Nombre="GRANOS DEL NORTE"/>
+  <cfdi:Complemento><pago20:Pagos Version="2.0"><pago20:Totales MontoTotalPagos="15000.00"/>
+    <pago20:Pago FechaPago="2026-10-10T12:00:00" FormaDePagoP="03" MonedaP="MXN" Monto="15000.00">
+      <pago20:DoctoRelacionado IdDocumento="aaaaaaaa-1111-2222-3333-444444444444" Serie="A" Folio="3301" MonedaDR="MXN" NumParcialidad="2" ImpSaldoAnt="20000" ImpPagado="10000.00" ImpSaldoInsoluto="10000.00"/>
+      <pago20:DoctoRelacionado IdDocumento="bbbbbbbb-1111-2222-3333-444444444444" Serie="A" Folio="3302" MonedaDR="MXN" NumParcialidad="1" ImpSaldoAnt="5000" ImpPagado="5000.00" ImpSaldoInsoluto="0"/>
+    </pago20:Pago></pago20:Pagos>
+  <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" UUID="cccccccc-1111-2222-3333-444444444444"/></cfdi:Complemento>
+</cfdi:Comprobante>`;
+    const c = leerCfdi(xml);
+    expect(c.tipo).toBe("P");
+    expect(c.pagos).toHaveLength(1);
+    expect(c.pagos[0]).toMatchObject({ fecha: "2026-10-10", formaPago: "03", monto: 15000 });
+    expect(c.pagos[0].doctos.map((d) => [d.uuid, d.pagado, d.parcialidad])).toEqual([
+      ["AAAAAAAA-1111-2222-3333-444444444444", 10000, 2], ["BBBBBBBB-1111-2222-3333-444444444444", 5000, 1]]);
+    expect(metodoDeFormaPago("03")).toBe("transferencia");
+    expect(leerCfdi(XML).pagos).toEqual([]);
   });
 });

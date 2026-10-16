@@ -64,6 +64,7 @@ export const ADMINISTRACION = {
   puePpd: "Lo que dice la factura sobre cómo se paga. PUE (pago en una sola exhibición) = de contado: ya se pagó o se paga ese día. PPD (pago en parcialidades o diferido) = a crédito: se paga después.",
   tambienEnHoja: "La hoja trae un movimiento igual (mismo proveedor o cliente, mismo monto, con una semana de diferencia o menos). Mientras se usen las dos, se cuenta una sola vez.",
   cuentaDinero: "De dónde sale o a dónde entra el dinero: Santander fiscal, Banorte fiscal, no fiscal, Mercado Pago o caja chica. Las mismas cuentas de la hoja.",
+  complementoPago: "El XML que timbramos cuando un cliente a crédito (factura PPD) nos paga. Dice qué facturas paga y cuánto de cada una; al subirlo, cada pago se registra como cobro en el pedido de su factura. Si la factura no está registrada en el ERP, se avisa y no se registra.",
   cobroSaldoHoja: "Un pago de un cliente a lo que debía en la hoja (antes de que sus pedidos se capturaran aquí). Baja su saldo al momento; no deja cobrar más de lo que debe.",
   saldoCaja: "El efectivo que debería haber en caja chica: todas las entradas menos todas las salidas, desde que empezó la hoja. Si el conteo no cuadra, el arqueo lo corrige.",
   arqueo: "Contar el efectivo de la caja y compararlo con lo que dice el sistema. La diferencia (sobrante o faltante) queda registrada como un movimiento, con quién lo contó.",

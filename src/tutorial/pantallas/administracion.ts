@@ -41,6 +41,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
     "Aquí ves lo que nos deben los clientes por sus pedidos, desde cuándo, y lo que se ha cobrado mes a mes. La usa finanzas para saber a quién llamar primero y para registrar cobros y facturas.",
     "Los indicadores de arriba parten el saldo por antigüedad; dale clic a uno para filtrar la tabla. «Los más atrasados» es por dónde empezar a llamar. Dale clic a un pedido para ver sus cobros y facturas y registrar uno nuevo; un cobro negativo es una devolución al cliente.",
     "Las pestañas agrupan por cliente o por vendedor (clic en un renglón para ver sus pedidos) y «Saldos de arranque» trae lo que se debía en la hoja antes del ERP, aparte para no contarlo dos veces; dale clic a un cliente para ver sus movimientos y registrar lo que pague de ese saldo. Los filtros separan lo que tiene saldo y lo que falta facturar; el CSV baja lo que ves.",
+    "Las facturas y los cobros se pueden registrar subiendo su XML: en el pedido, «Registrar factura» lee la factura que timbramos (folio, UUID, fecha y total) y revisa que sea de ese cliente; «Subir complementos de pago», arriba, registra cada pago en el pedido de su factura, aunque subas muchos a la vez, y no duplica lo que ya estaba.",
     "La antigüedad corre desde la primera factura, o desde el pedido si aún no se factura. Los saldos en dólares se pasan a pesos con el tipo de cambio de hoy, que se ve arriba (finanzas y compras lo pueden capturar ahí).",
   ],
   "/finanzas/pagos": [
