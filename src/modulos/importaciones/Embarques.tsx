@@ -66,7 +66,7 @@ export default function Embarques() {
       recuperar: s.recuperar + Number(d.por_recuperar_mxn),
     }), { porPagarUsd: 0, porPagarMxn: 0, recuperar: 0 });
   }, [dineroQ.data, lista]);
-  const llegan = activos.filter((e) => e.llegada_planta_estimada && !e.en_planta
+  const llegan = activos.filter((e) => e.llegada_planta_estimada && !e.en_planta && e.fase !== "planta"
     && (new Date(e.llegada_planta_estimada + "T12:00:00").getTime() - Date.now()) / 86_400_000 <= 14);
 
   return (
@@ -229,6 +229,7 @@ function TarjetaEmbarque({ e, enRiesgo }: { e: Embarque; enRiesgo: boolean }) {
       <p className="text-xs text-tenue flex items-center gap-1.5">
         <CalendarClock className="h-3.5 w-3.5" />
         {e.en_planta ? `En planta desde el ${fecha(e.en_planta)}`
+          : e.fase === "planta" ? "Ya está en planta; falta anotar el día que llegó"
           : e.arribo ? `Llegó el ${fecha(e.arribo)} · a planta hacia el ${fecha(e.llegada_planta_estimada)}`
           : e.eta ? `ETA ${fecha(e.eta)}${e.cambios_eta ? ` (cambió ${e.cambios_eta} ${e.cambios_eta === 1 ? "vez" : "veces"})` : ""}`
           : "Sin ETA todavía"}

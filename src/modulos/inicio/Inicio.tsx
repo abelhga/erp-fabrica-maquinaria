@@ -19,6 +19,7 @@ import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { dinero, dineroCompacto, fecha, numero, porcentaje } from "@/lib/formato";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { useSaldoHoja } from "@/modulos/finanzas/componentes/SaldosArranque";
 
 interface Indicadores {
   ventas?: { mes: number; mes_anterior: number; anio: number; pedidos_mes: number };
@@ -67,6 +68,7 @@ function InicioPorArea() {
   const area = areaDeRoles(tieneRol, puede);
   const ir = useNavigate();
   const ind = useQuery({ queryKey: ["indicadores"], queryFn: () => q<Indicadores>(supabase.rpc("indicadores")) });
+  const hoja = useSaldoHoja(!!ind.data?.cobranza);
   const ventas = useQuery({
     queryKey: ["ventas_por_mes", 12],
     enabled: puede("ventas"),
@@ -129,8 +131,9 @@ function InicioPorArea() {
                 alClic={() => ir("/ventas/cotizaciones")} explica={GLOSARIO.cotizacionesVivas} />
             )}
             {i.cobranza && (
-              <Kpi titulo="Por cobrar" valor={dineroCompacto(i.cobranza.por_cobrar)} icono={Wallet} tono="aviso"
-                detalle={`${i.cobranza.pedidos_con_saldo} pedidos con saldo`} alClic={puede("finanzas") ? () => ir("/finanzas/cobranza") : undefined}
+              <Kpi titulo="Por cobrar" valor={dineroCompacto(i.cobranza.por_cobrar + (hoja.data?.total ?? 0))} icono={Wallet} tono="aviso"
+                detalle={hoja.data?.total ? `${dineroCompacto(hoja.data.total)} de la hoja (${hoja.data.clientes} clientes)${i.cobranza.pedidos_con_saldo ? ` · ${i.cobranza.pedidos_con_saldo} pedidos del ERP` : ""}` : `${i.cobranza.pedidos_con_saldo} pedidos con saldo`}
+                alClic={puede("finanzas") ? () => ir("/finanzas/cobranza") : undefined}
                 explica={GLOSARIO.porCobrar} />
             )}
             {i.produccion && (

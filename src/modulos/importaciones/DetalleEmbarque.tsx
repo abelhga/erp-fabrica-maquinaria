@@ -70,9 +70,10 @@ export default function DetalleEmbarque() {
         </div>
         <div className="tarjeta p-4 space-y-1" data-explain={GLOSARIO.llegadaPlanta} data-explain-title="Llegada">
           <p className="text-xs text-tenue flex items-center gap-1.5"><CalendarClock className="h-3.5 w-3.5" /> Llegada</p>
-          <p className="font-semibold">{e.en_planta ? `En planta el ${fecha(e.en_planta)}` : e.arribo ? `En puerto desde el ${fecha(e.arribo)}` : e.eta ? `ETA ${fecha(e.eta)}` : "Sin ETA"}</p>
+          <p className="font-semibold">{e.en_planta ? `En planta el ${fecha(e.en_planta)}` : e.fase === "planta" ? "Ya está en planta" : e.arribo ? `En puerto desde el ${fecha(e.arribo)}` : e.eta ? `ETA ${fecha(e.eta)}` : "Sin ETA"}</p>
           <p className="text-xs text-tenue">
-            {!e.en_planta && e.llegada_planta_estimada ? `A planta hacia el ${fecha(e.llegada_planta_estimada)}` : ""}
+            {e.fase === "planta" && !e.en_planta ? "Falta anotar el día que llegó (el vacío o la cuenta de gastos ya lo prueban)"
+              : !e.en_planta && e.llegada_planta_estimada ? `A planta hacia el ${fecha(e.llegada_planta_estimada)}` : ""}
             {e.eta_original && e.eta && e.eta_original !== e.eta ? ` · ETA original ${fecha(e.eta_original)}` : ""}
           </p>
         </div>
