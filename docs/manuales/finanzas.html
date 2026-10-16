@@ -219,6 +219,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
     <div class="quienes">
       <span class="insignia t-marca">Para: Finanzas (captura)</span>
       <span class="insignia">Dirección: todo</span>
+      <span class="insignia">Gerencia administrativa: lo mismo, sin comisiones de otros</span>
       <span class="insignia">Compras y gerencia de ventas: solo ven órdenes de compra y cobranza</span>
     </div>
   </header>
@@ -255,7 +256,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
       <a class="tarjeta lugar" href="#caja"><span class="dir caja">$ EFECTIVO</span><h3>Caja chica</h3><p>Cada gasto y reposición en efectivo, con su saldo después de cada uno, y el arqueo.</p><span class="ruta">/finanzas/caja-chica</span></a>
       <a class="tarjeta lugar" href="#otros"><span class="dir usd">US$ DÓLARES</span><h3>Importaciones · Dinero</h3><p>Pagos al extranjero con su tipo de cambio real, y saldos a favor y garantías por recuperar.</p><span class="ruta">/importaciones/dinero</span></a>
     </div>
-    <div class="nota"><b class="m">✓</b><p><b>El tipo de cambio del día</b> se captura arriba a la derecha de Cobranza y de Pagos («Dólar: $X hoy»; en ámbar si no es de hoy). «El del DOF o el de tu banco. Mueve los saldos en dólares y los costos importados.» Lo pueden capturar finanzas y compras.</p></div>
+    <div class="nota"><b class="m">✓</b><p><b>El tipo de cambio del día</b> llega solo: el dólar del Diario Oficial cada día hábil (el euro, del Banco Central Europeo). Arriba a la derecha de Cobranza y de Pagos dice «Dólar: $X hoy · DOF»; se pone en ámbar si tiene más de 3 días. «Captúralo aquí solo si necesitas otro (el de tu banco): pesa sobre el del DOF de hoy y también mueve los costos importados.» Lo pueden capturar finanzas, gerencia administrativa y compras.</p></div>
   </section>
 
   <!-- RUTINA -->
@@ -284,8 +285,9 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
             <li><b>Monto (MXN)</b>: debajo te dice «Queda un saldo de…» o «Liquida el pedido». Un monto negativo es devolución al cliente.</li>
             <li><b>Fecha en que entró</b> (no acepta fechas futuras), <b>Método</b> (Transferencia, Efectivo, Tarjeta, Cheque, Mercado Pago, Otro), <b>Referencia</b> (SPEI, número de cheque…) y en <b>Notas</b> la cuenta donde entró y si es anticipo o liquidación.</li>
             <li>Listo: «Cobro registrado en PED-…». El vendedor recibe el aviso «Pago de {cliente}».</li>
+            <li><b>Si el cliente pagó una factura a crédito</b>, no captures el cobro a mano: sube el complemento de pago (ver abajo).</li>
           </ol>
-          <div class="nota"><b class="m">✓</b><p>El anticipo no es un campo aparte: es un cobro más. Lo mismo se puede hacer desde la página del pedido (tarjetas «Facturas» y «Cobros»). Un cobro mal capturado se borra desde el pedido con el bote de basura.</p></div>
+          <div class="nota"><b class="m">✓</b><p>El anticipo no es un campo aparte: es un cobro más. La captura a mano también se puede hacer desde la página del pedido (tarjetas «Facturas» y «Cobros»); subir XML solo se puede en Cobranza. Un cobro mal capturado se borra desde el pedido con el bote de basura.</p></div>
         </div>
       </details>
       <details class="fase">
@@ -293,9 +295,22 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
         <div class="cuerpo">
           <ol>
             <li>En el panel del pedido, sección «Facturas» → <span class="btn-ui">Registrar factura</span>.</li>
-            <li><b>Folio</b> (A 3350), <b>Fecha</b>, <b>Total con IVA (MXN)</b>: viene lleno con lo que falta facturar; para un anticipo pon solo el importe facturado.</li>
-            <li><b>UUID del SAT (opcional)</b>: el folio fiscal del XML, 36 caracteres 8-4-4-4-12. Se puede poner después; mientras tanto la factura dice «Sin UUID del SAT».</li>
+            <li>«Sube el XML de la factura»: se llenan folio, UUID, fecha y total, y en Notas queda «A crédito (PPD)» o «De contado (PUE)». Revisa y da <span class="btn-ui">Registrar factura</span>.</li>
+            <li>El ERP la rechaza si es un complemento de pago, una nota de crédito, si la emitió otro RFC o si ya estaba registrada. Te avisa (sin bloquear) si es para un RFC distinto al del cliente o si está en dólares y el pedido en pesos.</li>
+            <li>Sin XML: <b>Folio</b> (A 3350), <b>Fecha</b>, <b>Total con IVA (MXN)</b> (viene lleno con lo que falta facturar) y <b>UUID del SAT (opcional)</b>, que se puede poner después; mientras tanto dice «Sin UUID del SAT».</li>
           </ol>
+        </div>
+      </details>
+      <details class="fase">
+        <summary><div><h3>Subir complementos de pago</h3><p>Los cobros de facturas a crédito, sin capturarlos uno por uno.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>Botón <span class="btn-ui">Subir complementos de pago</span> arriba en Cobranza (o <span class="btn-ui">Complemento</span> junto a «Registrar cobro»).</li>
+            <li>«Elige los XML»: puedes elegir varios, la carpeta del mes completa. Se registran en cuanto los eliges; si alguno ya se había subido, no se duplica.</li>
+            <li>Cada pago va al pedido de la factura que paga, con la fecha y el monto del complemento y la referencia «Complemento {folio}».</li>
+            <li>Revisa la insignia de cada factura: «Cobro registrado», «Ya estaba», «Factura no registrada» (regístrala en su pedido con su XML y vuelve a subir el complemento), «Sin importe» o «Rechazado» con el motivo.</li>
+          </ol>
+          <div class="nota"><b class="m">✓</b><p>Por eso conviene subir primero el XML de cada factura: el complemento busca la factura por su folio fiscal.</p></div>
         </div>
       </details>
       <details class="fase">
@@ -444,7 +459,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
     <header>
       <span class="etiqueta">Práctica · <span class="ruta">/finanzas/caja-chica</span></span>
       <h2>Caja chica</h2>
-      <p class="lectura tenue">«El efectivo de la oficina: cada entrada y salida con su saldo, y el arqueo cuando se cuenta.» El saldo debe estar entre $500 y $4,500: abajo toca reponer, arriba llévalo al banco. Una reposición es solo una entrada.</p>
+      <p class="lectura tenue">«El efectivo de la oficina: cada entrada y salida con su saldo, y el arqueo cuando se cuenta.» El saldo debe estar entre $1,000 y $5,000: abajo toca reponer, arriba llévalo al banco. Una reposición es solo una entrada.</p>
     </header>
     <div class="tarjeta practica">
       <div>
@@ -480,7 +495,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
     <div class="dos">
       <div class="tarjeta" style="padding:16px; display:grid; gap:8px;">
         <h3>Comisiones · <span class="ruta">/ventas/comisiones</span></h3>
-        <p style="font-size:14px;">Se calculan solas de los pedidos. Cada vendedor dice «Pendiente de pago» o «Pagada {fecha}». Al pagar: <span class="btn-ui">Marcar pagada</span> con fecha y referencia (SPEI, nómina…). «Se guarda una foto del cálculo para que no cambie si después se mueve un pedido.» Si los pedidos cambian después, la diferencia va como ajuste del mes siguiente. Los ajustes los agrega la gerencia o dirección, no finanzas.</p>
+        <p style="font-size:14px;">Se calculan solas de los pedidos. Cada vendedor dice «Pendiente de pago» o «Pagada {fecha}». Al pagar, finanzas da <span class="btn-ui">Marcar pagada</span> con fecha y referencia (SPEI, nómina…). «Se guarda una foto del cálculo para que no cambie si después se mueve un pedido.» Si los pedidos cambian después, la diferencia va como ajuste del mes siguiente. Los ajustes los agrega la gerencia o dirección, no finanzas. La gerencia administrativa ve solo su propia comisión.</p>
       </div>
       <div class="tarjeta" style="padding:16px; display:grid; gap:8px;">
         <h3>Importaciones · pestaña Dinero</h3>
@@ -498,8 +513,8 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
     <div class="tarjeta" style="padding:16px; display:grid; gap:8px;">
       <h3>Lo que te avisa el ERP</h3>
       <ul style="margin:0; padding-left:18px; display:grid; gap:6px; font-size:14px;">
-        <li><b>En Inicio:</b> «Por cobrar» y «Por pagar a proveedores» (con lo vencido), y el resumen de tu área: «$X con más de 90 días sin cobrar», «$X por pagar a N proveedores ($Y vencido)», «Caja chica en $X: abajo del mínimo de $500».</li>
-        <li><b>En la campana:</b> «Saldo bajo en {paquetería}» y el resumen del lunes, «Tu semana en Hegamex».</li>
+        <li><b>En Inicio:</b> «Por cobrar» y «Por pagar a proveedores» (con lo vencido), y el resumen de tu área: «$X con más de 90 días sin cobrar», «$X por pagar a N proveedores ($Y vencido)», «Caja chica en $X: abajo del mínimo de $1,000».</li>
+        <li><b>En la campana:</b> «Saldo bajo en {paquetería}» (a finanzas y a gerencia administrativa) y el resumen del lunes, «Tu semana en Hegamex».</li>
         <li>Registrar cobros, pagos, compras o caja chica no le manda aviso a nadie, salvo el cobro a un pedido, que le avisa a su vendedor «Pago de {cliente}».</li>
       </ul>
     </div>
@@ -531,7 +546,8 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
       <table>
         <thead><tr><th>Rol</th><th>Cobranza</th><th>Pagos a proveedores</th><th>Caja chica</th><th>Comisiones</th></tr></thead>
         <tbody>
-          <tr><td><b>Finanzas</b></td><td>Registra cobros y facturas</td><td>Todo: compras con XML, pagos, cuentas, socios y bancos</td><td>Anota y hace arqueo</td><td>Marca pagadas</td></tr>
+          <tr><td><b>Finanzas</b></td><td>Registra cobros, facturas y complementos</td><td>Todo: compras con XML, pagos, cuentas, socios y bancos</td><td>Anota y hace arqueo</td><td>Ve todas y marca pagadas</td></tr>
+          <tr><td><b>Gerencia administrativa</b></td><td>Igual que finanzas</td><td>Igual que finanzas</td><td>Anota y hace arqueo</td><td>Ve solo la suya; no marca pagadas</td></tr>
           <tr><td><b>Dirección</b></td><td>Todo</td><td>Todo</td><td>Todo</td><td>Ajustes y todo</td></tr>
           <tr><td><b>Compras</b></td><td>Ve</td><td>Solo «Órdenes de compra»</td><td>—</td><td>—</td></tr>
           <tr><td><b>Gerencia de ventas</b></td><td>Ve</td><td>Solo «Órdenes de compra»</td><td>—</td><td>Ajustes</td></tr>
@@ -560,7 +576,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
   // ---------- Rutina ----------
   var RUTINA = [
     ["Cada día", "dia", [
-      "Capturar el tipo de cambio del día en Cobranza o Pagos.",
+      "Revisar que el dólar sea de hoy (DOF); captúralo solo si usas otro.",
       "Registrar cada cobro que entró (pedido o saldo de la hoja).",
       "Subir los XML que llegaron con «Registrar compra o gasto».",
       "Registrar los pagos que salieron, cada uno desde la cuenta del proveedor.",
@@ -569,12 +585,12 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
     ["Cada semana", "semana", [
       "Revisar la agenda de pagos: lo vencido y esta semana.",
       "Llamar a «Los más atrasados» en Cobranza o pasárselos al vendedor.",
-      "Registrar facturas pendientes con su UUID.",
-      "Arqueo de caja chica y reposición si está abajo de $500.",
+      "Subir el XML de las facturas emitidas y los complementos de pago.",
+      "Arqueo de caja chica y reposición si está abajo de $1,000.",
       "Revisar pagos en dólares que vienen (Importaciones · Dinero)."
     ]],
     ["Cada mes", "mes", [
-      "Marcar pagadas las comisiones del mes.",
+      "Marcar pagadas las comisiones del mes (solo finanzas).",
       "Revisar «A nuestro favor»: anticipos y notas de crédito por aplicar.",
       "Revisar «Socios y bancos».",
       "Revisar «Dinero por recuperar» de importaciones (saldos a favor y garantías).",
@@ -629,7 +645,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
       campos: [["Monto de la nota (con IVA)", "$1,200.00"], ["Proveedor", "Por su RFC"]],
       boton: "Registrar nota de crédito", toast: ["Nota de crédito registrada", ""], despues: "Resta del saldo del proveedor. Si queda negativo, aparece en «A nuestro favor»." },
     { t: "Complemento de pago", s: "CFDI tipo P", rechazo: "Es un complemento de pago, no una compra: registra el pago en la cuenta del proveedor." },
-    { t: "Factura que emitimos nosotros", s: "El emisor es Hegamex", rechazo: "La emitimos nosotros: es una venta, va en Cobranza." },
+    { t: "Factura que emitimos nosotros", s: "El emisor es Hegamex", rechazo: "La emitimos nosotros: es una venta, va en Cobranza.", nota: "Va en Cobranza: abre el pedido y en «Facturas» usa «Registrar factura» con su XML." },
     { t: "Factura a nombre de otro RFC", s: "El receptor no es la empresa", rechazo: "Es para otro RFC (X), no para la empresa." },
     { t: "Recibo de nómina", s: "CFDI tipo N", rechazo: "Es un recibo de nómina, no una compra." },
     { t: "Factura que ya subiste", s: "Mismo folio fiscal (UUID)", rechazo: "Ya está registrada (factura del {fecha}).", nota: "La base tampoco deja guardarla dos veces: «Esa factura (folio fiscal …) ya está registrada»." },
@@ -697,7 +713,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
   var pintarCaja = function () {
     var s = saldoCaja(), run = 0;
     $("c-saldo").textContent = mx.format(s);
-    $("c-estado").innerHTML = s < 500 ? '<span class="insignia t-peligro punto">Abajo del mínimo ($500): toca reponer</span>' : s > 4500 ? '<span class="insignia t-aviso punto">Arriba del máximo ($4,500): llévalo al banco</span>' : '<span class="insignia t-ok punto">Entre $500 y $4,500</span>';
+    $("c-estado").innerHTML = s < 1000 ? '<span class="insignia t-peligro punto">Abajo del mínimo ($1,000): toca reponer</span>' : s > 5000 ? '<span class="insignia t-aviso punto">Arriba del máximo ($5,000): llévalo al banco</span>' : '<span class="insignia t-ok punto">Entre $1,000 y $5,000</span>';
     $("c-tabla").innerHTML = caja.map(function (m) {
       run += m[1];
       var arq = m[0].indexOf("Arqueo") === 0;
@@ -754,6 +770,11 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
     ["Solo finanzas registra compras y pagos a proveedores", "Tu usuario no tiene finanzas nivel 2. Pídeselo a sistemas."],
     ["Solo finanzas lleva la caja chica", "Igual: la caja chica pide finanzas nivel 2."],
     ["Escribe el concepto", "En caja chica cada movimiento lleva qué fue."],
+    ["Es un complemento de pago: súbelo con el botón Complemento, en Cobros.", "Subiste un complemento donde va una factura. Usa «Subir complementos de pago»."],
+    ["Es una factura, no un complemento: súbela en el pedido (Registrar factura).", "Al revés: es la factura. Súbela en el panel del pedido."],
+    ["Esa factura ya está registrada (%).", "Ese XML de venta ya se subió a un pedido."],
+    ["No trae folio fiscal (¿está timbrado?).", "El complemento no está timbrado. Pide el XML timbrado."],
+    ["Solo finanzas registra cobros", "Tu usuario no tiene permiso de capturar en finanzas."],
     ["Esa comisión ya está marcada como pagada", "Ya se pagó. Si el cálculo cambió después, la diferencia va como ajuste del mes siguiente."],
     ["Un cargo o corrección (monto negativo) lleva su explicación", "En recargas de paquetería, escribe por qué es negativo."]
   ];

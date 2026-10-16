@@ -328,7 +328,7 @@ tr.yo td { background: var(--marca-suave); }
       <div class="tarjeta herr"><h3>Las tablas</h3><p>Todas buscan sin acentos, ordenan al tocar el encabezado y exportan a CSV. Enter guarda y Tab avanza, como en la hoja.</p></div>
       <div class="tarjeta herr"><h3>Ver como (dirección)</h3><p>El botón del ojo: recorre el ERP con los permisos de otro rol («Viendo como …», <span class="btn-ui">Volver a mi vista</span>). Lo que guardes es real y a tu nombre. «Una persona en particular…» abre su sesión solo para ver.</p></div>
       <div class="tarjeta herr"><h3>Modo tutorial</h3><p>El botón del birrete, arriba entre el ojo y la campana: «Encender modo tutorial». Cada pantalla dice para qué sirve y lo marcado con <b>?</b> se explica al pasar el mouse («¿Qué es?»). Solo lo ves tú, en ese navegador.</p></div>
-      <div class="tarjeta herr"><h3>Modo oscuro y celular</h3><p>Todas las pantallas funcionan en celular y en modo oscuro. La terminal de piso está pensada para tablet y la TV del taller para pantalla grande.</p></div>
+      <div class="tarjeta herr"><h3>Modo oscuro y celular</h3><p>El ERP abre en modo oscuro (la empresa lo escoge en Configuración → Apariencia) y cada quien cambia con el botón de la luna o el sol. Todas las pantallas funcionan en celular. La terminal de piso está pensada para tablet y la TV del taller para pantalla grande.</p></div>
     </div>
   </section>
 
@@ -432,6 +432,11 @@ tr.yo td { background: var(--marca-suave); }
       "Fin de mes: " + B("Marcar pagada") + " en Comisiones (guarda la foto del cálculo).",
       "Dinero de importaciones en dólares, si te toca."
     ], estaciones: [9] },
+    { k: "administracion", n: "Gerencia administrativa", dia: [
+      "Lo mismo que finanzas: cobros, facturas con su XML, complementos de pago, compras y gastos, pagos y caja chica.",
+      "Si además vendes: tus pedidos de Mercado Libre, web o mostrador con " + B("Pedido sin cotización") + ".",
+      "Ves todos los pedidos y la cobranza, pero solo tu propia comisión; marcarlas pagadas es de finanzas."
+    ], estaciones: [4, 8, 9] },
     { k: "direccion", n: "Dirección", dia: [
       "Centro de mando en Inicio: ventas contra años anteriores, proyección, taller, inventario, cobranza.",
       "Autoriza precios bajo el mínimo cuando haga falta.",
@@ -478,7 +483,7 @@ tr.yo td { background: var(--marca-suave); }
       pasos: [
         B("Enviar") + " → «Abrir PDF», «Enviar por WhatsApp» o «Solo marcar enviada».",
         "¿El cliente pide cambios? Menú «Más acciones» → " + B("Nueva versión") + " (COT-2026-00148-v2).",
-        "Cuando acepta: " + B("Convertir a pedido") + ". Elige la «Fecha compromiso de entrega» y las partidas, y da " + B("Crear pedido por $X") + ".",
+        "Cuando acepta: " + B("Convertir a pedido") + ". La «Fecha compromiso de entrega» viene con la fecha realista según la fila del taller (si pones una antes, te avisa que nacería atrasado); elige las partidas y da " + B("Crear pedido por $X") + ".",
         "Si no se dio: " + B("Marcar rechazada…") + " con motivo."
       ],
       solo: ["Crea PED-2026-00093 en «Confirmado», copia las partidas repartiendo el descuento y quitando el IVA si venía incluido.", "Marca la cotización «Aceptada» y la oportunidad «Ganada».", "Avisa «Pedido nuevo» a gerencia de producción y almacén."],
@@ -523,16 +528,16 @@ tr.yo td { background: var(--marca-suave); }
       pasos: [
         "Vendedor: " + B("Pedir envío") + " en la tarjeta «Envío» del pedido.",
         "Almacén: " + B("Cotizar") + " → " + B("Registrar guía") + ".",
-        "Empacar en tres pasos: fotos, «Check list de salida» y «Número de serie» → " + B("Marcar empacado") + ".",
+        "Empacar en tres pasos: fotos, «Check list de salida» y «Número de serie» (el de la placa, que el ERP le asignó a su orden) → " + B("Marcar empacado") + ".",
         B("Ya salió") + " → " + B("Marcar entregado") + ". Si recoge el cliente, el último paso es «Se lo llevaron».",
         "Sin envío: " + B("Entregar") + " en el pedido."
       ],
       solo: ["Al salir, da la salida de inventario y marca «Entregada» la orden de producción.", "Cuando se entrega todo, el pedido pasa a «Entregado».", "La garantía (12 meses) cuenta desde la entrega."],
       ej: [["Envío", "ENV-2026-00184", "En camino", "t-marca"], ["Pedido", "PED-2026-00093", "Entregado", "t-ok"]],
       ojo: "Pestañas de Envíos: «Por cotizar y guía», «Por empacar», «Hoy salen o recogen», «En camino», «Entregados»." },
-    { n: "Cobrar y comisiones", quien: ["finanzas", "ventas"], ruta: "/finanzas/cobranza · /ventas/comisiones",
+    { n: "Cobrar y comisiones", quien: ["finanzas", "administracion", "ventas"], ruta: "/finanzas/cobranza · /ventas/comisiones",
       pasos: [
-        "Finanzas: en el pedido o en " + R("/finanzas/cobranza") + ", " + B("Registrar factura") + " y " + B("Registrar cobro") + " (transferencia, efectivo, tarjeta, cheque, Mercado Pago…).",
+        "Finanzas: en " + R("/finanzas/cobranza") + ", " + B("Registrar factura") + " subiendo su XML, y " + B("Subir complementos de pago") + " para lo que pagan las facturas a crédito. A mano, " + B("Registrar cobro") + " (transferencia, efectivo, tarjeta, cheque, Mercado Pago…).",
         "El anticipo es un cobro más: «50% anticipo, 50% al aviso de la entrega» vive en las condiciones de pago.",
         "Antigüedad de saldos por pedido, cliente y vendedor: 0–30, 31–60, 61–90 y más de 90 días.",
         "Comisiones: se calculan solas de los pedidos. Finanzas da " + B("Marcar pagada") + " al pagarlas."
@@ -611,6 +616,7 @@ tr.yo td { background: var(--marca-suave); }
     ["gerente_produccion", "Gerencia de producción", "Producción, servicio, inventario", "Qué llega en importaciones", "Costos"],
     ["produccion", "Taller", "Terminal de piso, fallas, resguardos", "", "Todo lo demás"],
     ["finanzas", "Finanzas", "Cobranza, compras y gastos con XML, cuentas de proveedores, préstamos de socios, caja chica, comisiones pagadas", "Costos", "Edición de costeo"],
+    ["administracion", "Gerencia administrativa", "Lo mismo que finanzas: cobranza, compras y gastos con XML, cuentas de proveedores, caja chica", "Costos", "Comisiones de otros vendedores"],
     ["direccion", "Dirección", "Todo (nivel 3 en todo módulo)", "", "—"]
   ];
 

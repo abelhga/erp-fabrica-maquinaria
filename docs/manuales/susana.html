@@ -1,0 +1,872 @@
+<title>Susana en el ERP Hegamex</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: un manual personal en una columna. Arriba, la hoja y el ERP lado a lado con
+   renglones que "viajan" de una al otro; luego tarjetas que se voltean (antes/ahora),
+   el viaje animado de una venta y cuatro prácticas. Tokens del ERP; la hoja de cálculo
+   usa un verde de Sheets propio para que se distinga de inmediato qué es "antes". */
+:root {
+  --fondo: hsl(220 20% 97%);
+  --superficie: hsl(0 0% 100%);
+  --borde: hsl(220 14% 89%);
+  --texto: hsl(222 30% 14%);
+  --tenue: hsl(220 9% 46%);
+  --marca: hsl(214 100% 52%);
+  --marca-suave: hsl(214 100% 96%);
+  --marca-texto: hsl(214 90% 40%);
+  --ok: hsl(152 60% 36%);
+  --ok-suave: hsl(150 60% 95%);
+  --aviso: hsl(35 92% 40%);
+  --aviso-suave: hsl(45 100% 94%);
+  --peligro: hsl(0 72% 48%);
+  --peligro-suave: hsl(0 85% 96%);
+  --info: hsl(262 60% 52%);
+  --info-suave: hsl(262 80% 97%);
+  --hoja: hsl(142 45% 32%);
+  --hoja-suave: hsl(140 35% 95%);
+  --hoja-linea: hsl(140 12% 84%);
+  --sombra: 0 1px 2px hsl(222 40% 20% / .05), 0 2px 6px hsl(222 40% 20% / .06);
+  --f-texto: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fondo: hsl(222 25% 8%); --superficie: hsl(222 22% 12%); --borde: hsl(220 15% 22%);
+    --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 64%);
+    --marca: hsl(214 100% 62%); --marca-suave: hsl(214 60% 18%); --marca-texto: hsl(214 100% 74%);
+    --ok: hsl(152 55% 50%); --ok-suave: hsl(152 40% 15%);
+    --aviso: hsl(38 92% 58%); --aviso-suave: hsl(38 50% 15%);
+    --peligro: hsl(0 75% 64%); --peligro-suave: hsl(0 45% 17%);
+    --info: hsl(262 70% 74%); --info-suave: hsl(262 35% 18%);
+    --hoja: hsl(142 45% 58%); --hoja-suave: hsl(142 25% 13%); --hoja-linea: hsl(142 10% 24%);
+    --sombra: 0 1px 2px hsl(0 0% 0% / .3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fondo: hsl(222 25% 8%); --superficie: hsl(222 22% 12%); --borde: hsl(220 15% 22%);
+  --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 64%);
+  --marca: hsl(214 100% 62%); --marca-suave: hsl(214 60% 18%); --marca-texto: hsl(214 100% 74%);
+  --ok: hsl(152 55% 50%); --ok-suave: hsl(152 40% 15%);
+  --aviso: hsl(38 92% 58%); --aviso-suave: hsl(38 50% 15%);
+  --peligro: hsl(0 75% 64%); --peligro-suave: hsl(0 45% 17%);
+  --info: hsl(262 70% 74%); --info-suave: hsl(262 35% 18%);
+  --hoja: hsl(142 45% 58%); --hoja-suave: hsl(142 25% 13%); --hoja-linea: hsl(142 10% 24%);
+  --sombra: 0 1px 2px hsl(0 0% 0% / .3);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--fondo); color: var(--texto); font-family: var(--f-texto); font-size: 15px; line-height: 1.6; }
+.envoltura { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(30px, 4.4vw, 44px); font-weight: 700; letter-spacing: -0.025em; }
+h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 16px; font-weight: 600; }
+p { margin: 0; }
+a { color: var(--marca-texto); }
+.ruta { font-family: var(--f-mono); font-size: 0.82em; background: var(--marca-suave); color: var(--marca-texto); padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+.cifra { font-variant-numeric: tabular-nums; }
+.tenue { color: var(--tenue); }
+.etiqueta { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--tenue); }
+.lectura { max-width: 68ch; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; border-radius: 6px; }
+.btn-ui { display: inline-block; font-size: 12.5px; font-weight: 600; padding: 0 7px; border-radius: 6px; border: 1px solid var(--borde); background: var(--fondo); white-space: nowrap; line-height: 1.6; }
+.insignia { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 999px; white-space: nowrap; background: var(--fondo); color: var(--tenue); border: 1px solid var(--borde); }
+.insignia.punto::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.t-info { background: var(--info-suave); color: var(--info); border-color: transparent; }
+.t-marca { background: var(--marca-suave); color: var(--marca-texto); border-color: transparent; }
+.t-aviso { background: var(--aviso-suave); color: var(--aviso); border-color: transparent; }
+.t-ok { background: var(--ok-suave); color: var(--ok); border-color: transparent; }
+.t-peligro { background: var(--peligro-suave); color: var(--peligro); border-color: transparent; }
+.t-hoja { background: var(--hoja-suave); color: var(--hoja); border-color: transparent; }
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; box-shadow: var(--sombra); }
+.nota { display: grid; grid-template-columns: auto 1fr; gap: 10px; font-size: 13.5px; padding: 10px 12px; border-radius: 10px; background: var(--marca-suave); }
+.nota.ojo { background: var(--aviso-suave); }
+.nota b.m { color: var(--marca-texto); } .nota.ojo b.m { color: var(--aviso); }
+.boton { display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; background: var(--marca); color: hsl(0 0% 100%); font-size: 13.5px; font-weight: 600; padding: 7px 14px; border-radius: 8px; cursor: pointer; white-space: nowrap; transition: transform .15s ease, filter .15s; }
+.boton:hover { filter: brightness(1.07); }
+.boton:active { transform: scale(.97); }
+.boton.sec { background: var(--superficie); color: var(--texto); border-color: var(--borde); font-weight: 500; }
+.boton:disabled { opacity: .45; cursor: not-allowed; }
+.campo { display: grid; gap: 4px; font-size: 12.5px; color: var(--tenue); }
+select, input[type="number"], input[type="text"] { background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; padding: 6px 10px; font-size: 14px; min-width: 0; width: 100%; max-width: 100%; }
+
+/* Encabezado con la hoja y el ERP */
+.cabecera { padding-block: 40px 20px; display: grid; gap: 22px; }
+.cabecera .lectura { font-size: 17px; color: var(--tenue); }
+.escena { display: grid; grid-template-columns: minmax(0, 1fr) 70px minmax(0, 1fr); align-items: stretch; gap: 0; }
+.hoja { background: var(--superficie); border: 1px solid var(--hoja-linea); border-radius: 12px; overflow: hidden; font-size: 12px; box-shadow: var(--sombra); min-width: 0; }
+.hoja .pestanas-hoja { display: flex; gap: 2px; background: var(--hoja-suave); border-bottom: 1px solid var(--hoja-linea); padding: 6px 6px 0; overflow: hidden; }
+.hoja .pestanas-hoja span { padding: 4px 10px; border-radius: 6px 6px 0 0; color: var(--tenue); font-weight: 500; white-space: nowrap; }
+.hoja .pestanas-hoja span.act { background: var(--superficie); color: var(--hoja); }
+.hoja table { width: 100%; border-collapse: collapse; font-family: var(--f-mono); font-size: 11px; table-layout: fixed; }
+.hoja td { border: 1px solid var(--hoja-linea); padding: 4px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hoja tr.cab td { background: var(--hoja-suave); color: var(--tenue); font-weight: 500; }
+.hoja tr.viva td { animation: brilla 3.6s ease-in-out infinite; }
+.hoja tr.viva:nth-of-type(3) td { animation-delay: 1.2s; } .hoja tr.viva:nth-of-type(4) td { animation-delay: 2.4s; }
+@keyframes brilla { 0%, 70%, 100% { background: transparent; } 20% { background: var(--hoja-suave); } }
+.cursor { display: inline-block; width: 1px; height: 11px; background: var(--hoja); vertical-align: -1px; animation: parpadea 1s steps(1) infinite; }
+@keyframes parpadea { 50% { opacity: 0; } }
+.puente { position: relative; display: grid; place-items: center; }
+.puente .linea { position: absolute; left: 6px; right: 6px; top: 50%; height: 2px; background: repeating-linear-gradient(90deg, var(--borde) 0 6px, transparent 6px 11px); }
+.puente .bolita { position: absolute; top: calc(50% - 6px); left: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--marca); box-shadow: 0 0 0 4px var(--marca-suave); animation: viaja 2.4s cubic-bezier(.5, 0, .3, 1) infinite; }
+.puente .bolita:nth-child(3) { animation-delay: .8s; background: var(--ok); box-shadow: 0 0 0 4px var(--ok-suave); }
+.puente .bolita:nth-child(4) { animation-delay: 1.6s; background: var(--aviso); box-shadow: 0 0 0 4px var(--aviso-suave); }
+@keyframes viaja { 0% { left: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { left: calc(100% - 12px); opacity: 0; } }
+.erp { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 12px; display: grid; gap: 8px; box-shadow: var(--sombra); min-width: 0; align-content: start; }
+.erp .barra-erp { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--tenue); }
+.erp .mod { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 8px; border-radius: 9px; border: 1px solid var(--borde); font-size: 13px; animation: late 3.6s ease-in-out infinite; }
+.erp .mod:nth-child(3) { animation-delay: 1.2s; } .erp .mod:nth-child(4) { animation-delay: 2.4s; } .erp .mod:nth-child(5) { animation-delay: 3s; }
+@keyframes late { 0%, 60%, 100% { border-color: var(--borde); transform: none; } 25% { border-color: var(--marca); transform: translateX(3px); } }
+.erp .ico { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+.erp .mod span.tenue { font-size: 11.5px; }
+
+.indice { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--fondo) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--borde); margin-bottom: 16px; }
+.indice nav { display: flex; gap: 4px; overflow-x: auto; padding-block: 8px; scrollbar-width: none; }
+.indice a { flex: none; text-decoration: none; color: var(--tenue); font-size: 13.5px; font-weight: 500; padding: 6px 12px; border-radius: 999px; }
+.indice a:hover { color: var(--texto); background: var(--superficie); }
+.indice a.activo { color: var(--marca-texto); background: var(--marca-suave); }
+section.bloque { display: grid; gap: 18px; padding-block: 28px; scroll-margin-top: 64px; }
+section.bloque > header { display: grid; gap: 6px; }
+section.bloque > * { min-width: 0; }
+
+/* Tarjetas que se voltean */
+.interruptor { display: inline-flex; background: var(--superficie); border: 1px solid var(--borde); border-radius: 999px; padding: 3px; position: relative; justify-self: start; }
+.interruptor button { position: relative; z-index: 1; border: 0; background: transparent; padding: 6px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600; cursor: pointer; color: var(--tenue); transition: color .25s; }
+.interruptor button[aria-pressed="true"] { color: hsl(0 0% 100%); }
+.interruptor .pildora { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 999px; background: var(--hoja); transition: transform .35s cubic-bezier(.3, .8, .3, 1), background .35s; }
+.interruptor.ahora .pildora { transform: translateX(100%); background: var(--marca); }
+.volteos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.volteo { perspective: 1400px; min-width: 0; }
+.volteo .giro { display: grid; transition: transform .7s cubic-bezier(.3, .7, .2, 1); transform-style: preserve-3d; }
+.volteo.ahora .giro { transform: rotateY(180deg); }
+.cara { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 14px; padding: 18px; display: grid; gap: 10px; align-content: start; border: 1px solid var(--borde); box-shadow: var(--sombra); cursor: pointer; min-width: 0; }
+.cara.antes { background: var(--hoja-suave); border-color: var(--hoja-linea); }
+.cara.despues { background: var(--superficie); transform: rotateY(180deg); }
+.cara .cab { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.cara h3 { font-size: 18px; }
+.cara ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; font-size: 14px; }
+.cara .fila-hoja { font-family: var(--f-mono); font-size: 11px; background: var(--superficie); border: 1px solid var(--hoja-linea); border-radius: 6px; padding: 6px 8px; overflow-x: auto; white-space: nowrap; color: var(--tenue); }
+.cara .voltear { font-size: 12px; color: var(--tenue); justify-self: end; }
+.cara .ruta { justify-self: start; }
+
+/* Viaje de una venta */
+.viaje { overflow: hidden; }
+.pista { position: relative; padding: 26px 24px 8px; }
+.pista .riel { position: absolute; left: 40px; right: 40px; top: 41px; height: 3px; background: var(--borde); border-radius: 3px; }
+.pista .avance { position: absolute; left: 40px; top: 41px; height: 3px; background: var(--marca); border-radius: 3px; transition: width .7s cubic-bezier(.4, 0, .2, 1); }
+.paradas { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.parada { display: grid; justify-items: center; gap: 8px; text-align: center; border: 0; background: transparent; cursor: pointer; padding: 0 2px; }
+.parada .punto { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--borde); background: var(--superficie); display: grid; place-items: center; font-size: 12px; font-weight: 600; color: var(--tenue); transition: all .35s; font-variant-numeric: tabular-nums; }
+.parada.hecha .punto { background: var(--marca); border-color: var(--marca); color: hsl(0 0% 100%); }
+.parada.actual .punto { transform: scale(1.18); box-shadow: 0 0 0 6px var(--marca-suave); border-color: var(--marca); color: var(--marca-texto); background: var(--superficie); }
+.parada .txt { font-size: 12.5px; font-weight: 500; line-height: 1.25; color: var(--tenue); }
+.parada.actual .txt, .parada.hecha .txt { color: var(--texto); }
+.escenario { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); border-top: 1px solid var(--borde); }
+.escenario > div { padding: 20px; min-width: 0; display: grid; gap: 12px; align-content: start; }
+.escenario .lado { border-left: 1px solid var(--borde); background: color-mix(in srgb, var(--fondo) 55%, var(--superficie)); }
+.pantalla { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 14px; display: grid; gap: 10px; font-size: 13.5px; min-height: 200px; align-content: start; }
+.pantalla.entra { animation: desliza .45s cubic-bezier(.2, .8, .2, 1); }
+@keyframes desliza { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+.pantalla .tit { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center; font-weight: 600; }
+.pantalla .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
+.pantalla .kv span { color: var(--tenue); }
+.pantalla .kv b { font-weight: 500; overflow-wrap: anywhere; }
+.estado-ped { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.estado-ped .insignia { transition: all .3s; }
+.estado-ped .insignia.on { background: var(--marca); color: hsl(0 0% 100%); border-color: transparent; animation: late-ins .5s ease; }
+@keyframes late-ins { 0% { transform: scale(.8); } 60% { transform: scale(1.08); } 100% { transform: none; } }
+.controles { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.reloj { height: 3px; background: var(--borde); border-radius: 3px; overflow: hidden; }
+.reloj i { display: block; height: 100%; width: 0; background: var(--marca); }
+.reloj.corre i { animation: llena linear forwards; }
+@keyframes llena { to { width: 100%; } }
+
+/* Prácticas */
+.pestanas { display: flex; gap: 4px; flex-wrap: wrap; padding: 12px 12px 0; border-bottom: 1px solid var(--borde); }
+.pestana { border: 0; background: transparent; padding: 8px 14px; border-radius: 8px 8px 0 0; font-size: 14px; font-weight: 600; color: var(--tenue); cursor: pointer; position: relative; }
+.pestana[aria-selected="true"] { color: var(--marca-texto); }
+.pestana[aria-selected="true"]::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 3px; border-radius: 3px; background: var(--marca); animation: subrayado .3s ease; }
+@keyframes subrayado { from { transform: scaleX(0); } to { transform: none; } }
+.practica { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); }
+.practica > div { padding: 20px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.practica .lado { border-left: 1px solid var(--borde); background: color-mix(in srgb, var(--fondo) 55%, var(--superficie)); }
+.panel-p[hidden] { display: none !important; }
+.panel-p { animation: aparece .35s ease; }
+@keyframes aparece { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.renglones { display: grid; gap: 6px; }
+.renglon { display: grid; grid-template-columns: minmax(0, 1fr) 64px 96px 96px; gap: 8px; align-items: center; font-size: 13px; padding: 7px 10px; border: 1px solid var(--borde); border-radius: 9px; background: var(--superficie); animation: entra-renglon .4s cubic-bezier(.2, .8, .2, 1); }
+.renglon.mal { border-color: var(--peligro); }
+.renglon input { padding: 3px 6px; font-size: 13px; text-align: right; }
+@keyframes entra-renglon { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: none; } }
+.totales { display: grid; grid-template-columns: auto auto; justify-content: end; gap: 2px 18px; font-size: 14px; }
+.totales b { font-variant-numeric: tabular-nums; text-align: right; }
+.totales .grande { font-size: 20px; }
+.toast { font-size: 13.5px; padding: 8px 12px; border-radius: 8px; background: var(--ok-suave); color: var(--ok); font-weight: 500; justify-self: start; animation: aparece .3s ease; }
+.toast.mal { background: var(--peligro-suave); color: var(--peligro); }
+.folio-grande { font-family: var(--f-mono); font-size: 22px; font-weight: 600; letter-spacing: .02em; }
+.folio-grande.nace { animation: nace .6s cubic-bezier(.2, .9, .3, 1.3); }
+@keyframes nace { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--borde); background: var(--superficie); border-radius: 999px; padding: 5px 12px; font-size: 13px; cursor: pointer; }
+.chip:hover { border-color: var(--marca); }
+.archivo { border: 2px dashed var(--borde); border-radius: 12px; padding: 18px; text-align: center; display: grid; gap: 6px; justify-items: center; font-size: 13.5px; transition: border-color .2s, background .2s; }
+.archivo.leyendo { border-color: var(--marca); background: var(--marca-suave); }
+.campos-xml { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; }
+.campos-xml div { display: grid; gap: 2px; min-width: 0; }
+.campos-xml span { font-size: 12px; color: var(--tenue); }
+.campos-xml b { font-weight: 500; min-height: 1.5em; border-bottom: 1px dashed var(--borde); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.campos-xml b.lleno { border-bottom-color: transparent; animation: llena-campo .5s ease; }
+@keyframes llena-campo { 0% { background: var(--marca-suave); } 100% { background: transparent; } }
+.estatus { display: grid; gap: 6px; }
+.estatus div { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; padding: 7px 10px; border: 1px solid var(--borde); border-radius: 9px; background: var(--superficie); animation: entra-renglon .4s ease; }
+.medidor { display: grid; gap: 4px; }
+.medidor .riel { height: 10px; border-radius: 99px; background: var(--fondo); overflow: hidden; border: 1px solid var(--borde); }
+.medidor .riel i { display: block; height: 100%; background: var(--aviso); border-radius: 99px; transition: width .9s cubic-bezier(.4, 0, .2, 1), background .4s; }
+.agenda-mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.agenda-mini .col { background: var(--fondo); border: 1px solid var(--borde); border-radius: 10px; padding: 8px; display: grid; gap: 6px; align-content: start; min-height: 120px; font-size: 12.5px; min-width: 0; }
+.agenda-mini .col b { font-size: 12.5px; }
+.agenda-mini .item { background: var(--superficie); border: 1px solid var(--borde); border-radius: 7px; padding: 5px 7px; display: flex; justify-content: space-between; gap: 6px; }
+.agenda-mini .item span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agenda-mini .item.nuevo { border-color: var(--marca); animation: cae .7s cubic-bezier(.2, .9, .3, 1.2); }
+@keyframes cae { 0% { opacity: 0; transform: translateY(-30px) scale(.9); } 100% { opacity: 1; transform: none; } }
+.saldo-grande { font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.segmento { display: inline-flex; border: 1px solid var(--borde); border-radius: 8px; overflow: hidden; justify-self: start; }
+.segmento button { border: 0; background: var(--superficie); padding: 6px 14px; font-size: 13px; cursor: pointer; }
+.segmento button[aria-pressed="true"] { background: var(--marca); color: hsl(0 0% 100%); }
+.tabla-env { overflow-x: auto; }
+table.t { border-collapse: collapse; width: 100%; font-size: 13px; }
+table.t th { text-align: left; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--borde); white-space: nowrap; }
+table.t td { padding: 7px 10px; border-bottom: 1px solid var(--borde); }
+table.t tr.nuevo td { animation: llena-campo 1s ease; }
+.der { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Ya no haces */
+.yano { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.yano div { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 14px; display: grid; grid-template-columns: 26px 1fr; gap: 10px; font-size: 14px; }
+.yano .x { width: 26px; height: 26px; border-radius: 50%; background: var(--ok-suave); color: var(--ok); display: grid; place-items: center; font-weight: 700; }
+.yano.mostrar div { animation: aparece .5s ease both; }
+.yano p b { display: block; }
+
+/* Menú y rutina */
+.dos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.menu-lista { padding: 16px; display: grid; gap: 10px; align-content: start; }
+.menu-lista ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+.rutina { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.cada { padding: 16px; display: grid; gap: 10px; align-content: start; }
+.cada label { display: grid; grid-template-columns: 18px 1fr; gap: 10px; font-size: 14px; cursor: pointer; align-items: start; }
+.cada input { accent-color: var(--ok); width: 16px; height: 16px; margin-top: 3px; }
+.cada label.hecho span { color: var(--tenue); text-decoration: line-through; }
+.progreso { height: 5px; border-radius: 99px; background: var(--fondo); overflow: hidden; }
+.progreso i { display: block; height: 100%; background: var(--ok); transition: width .3s; }
+details.faq { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; }
+details.faq summary { cursor: pointer; padding: 14px 18px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 10px; }
+details.faq summary::-webkit-details-marker { display: none; }
+details.faq summary::after { content: "+"; color: var(--tenue); font-weight: 400; transition: transform .2s; }
+details.faq[open] summary::after { transform: rotate(45deg); }
+details.faq p { padding: 0 18px 16px; font-size: 14px; color: var(--tenue); }
+.faqs { display: grid; gap: 8px; }
+.pie { border-top: 1px solid var(--borde); margin-top: 24px; padding-top: 18px; font-size: 13px; color: var(--tenue); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+
+@media (max-width: 900px) {
+  .escena { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .puente { height: 40px; }
+  .puente .linea { left: 50%; right: auto; top: 0; bottom: 0; width: 2px; height: auto; background: repeating-linear-gradient(180deg, var(--borde) 0 6px, transparent 6px 11px); }
+  .puente .bolita { left: calc(50% - 6px); animation-name: baja; }
+  @keyframes baja { 0% { top: 0; opacity: 0; } 15%, 85% { opacity: 1; } 100% { top: calc(100% - 12px); opacity: 0; } }
+  .escenario, .practica { grid-template-columns: minmax(0, 1fr); }
+  .escenario .lado, .practica .lado { border-left: 0; border-top: 1px solid var(--borde); }
+  .yano { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  .volteos, .dos, .rutina, .yano { grid-template-columns: minmax(0, 1fr); }
+  .agenda-mini { grid-template-columns: minmax(0, 1fr); }
+  .agenda-mini .col { min-height: 0; }
+  .paradas { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
+  .pista .riel, .pista .avance { display: none; }
+  .renglon { grid-template-columns: minmax(0, 1fr) 54px 84px; }
+  .renglon .imp { display: none; }
+  .campos-xml { grid-template-columns: minmax(0, 1fr); }
+  .practica > div, .escenario > div { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .puente .bolita { display: none; }
+}
+</style>
+
+<div class="envoltura">
+  <header class="cabecera">
+    <span class="etiqueta">ERP Hegamex · Manual de Susana Rizo · Gerencia administrativa y ventas en línea</span>
+    <h1>Susana, tu trabajo ya no vive en la hoja</h1>
+    <p class="lectura">Antes anotabas ingresos y egresos en la base de datos, llevabas la caja chica en su hoja y hacías los pedidos a mano. Ahora cada cosa tiene su pantalla en el ERP: tú capturas lo mínimo, el sistema hace las sumas, los saldos y los vencimientos, y todos ven lo mismo al instante.</p>
+    <div class="escena" aria-label="De la hoja al ERP">
+      <div class="hoja">
+        <div class="pestanas-hoja"><span class="act">VENTAS</span><span>COMPRAS</span><span>CajaChica</span><span>Registro Ventas</span></div>
+        <table>
+          <tr class="cab"><td>Fecha</td><td>Cliente</td><td>Tipo</td><td>Monto neto</td><td>Cuenta</td></tr>
+          <tr class="viva"><td>14/10/2026</td><td>Granja San José</td><td>Venta</td><td>18,560</td><td>SANTANDER FISCAL</td></tr>
+          <tr class="viva"><td>15/10/2026</td><td>granja san jose</td><td>Pago</td><td>9,280</td><td>BANORTE FISCAL</td></tr>
+          <tr class="viva"><td>15/10/2026</td><td>Garrafones</td><td>-150</td><td></td><td>saldo: ¿?</td></tr>
+          <tr><td>16/10/2026</td><td>Cosedora N600A <span class="cursor"></span></td><td></td><td></td><td></td></tr>
+        </table>
+      </div>
+      <div class="puente" aria-hidden="true"><span class="linea"></span><span class="bolita"></span><span class="bolita"></span><span class="bolita"></span></div>
+      <div class="erp">
+        <div class="barra-erp"><span>ERP Hegamex</span><span>Susana · Gerencia administrativa</span></div>
+        <div class="mod"><span class="ico t-marca">PED</span><span><b>Pedidos</b><br><span class="tenue">Pedido sin cotización · canal ML</span></span><span class="insignia t-info">Confirmado</span></div>
+        <div class="mod"><span class="ico t-ok">+$</span><span><b>Cobranza</b><br><span class="tenue">Factura y cobros desde el XML</span></span><span class="insignia t-ok">Saldo $0</span></div>
+        <div class="mod"><span class="ico t-peligro">−$</span><span><b>Pagos a proveedores</b><br><span class="tenue">Compra o gasto desde el XML</span></span><span class="insignia t-aviso">Vence en 4 días</span></div>
+        <div class="mod"><span class="ico t-aviso">$</span><span><b>Caja chica</b><br><span class="tenue">Saldo corrido y arqueo</span></span><span class="insignia t-ok">$2,340</span></div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<div class="indice">
+  <div class="envoltura" style="padding-block: 0;">
+    <nav id="indice" aria-label="Secciones">
+      <a href="#cambia">Qué cambia</a>
+      <a href="#viaje">El viaje de una venta</a>
+      <a href="#practica">Practica</a>
+      <a href="#yano">Lo que ya no haces</a>
+      <a href="#tuyo">Lo que ves</a>
+      <a href="#rutina">Tu semana</a>
+      <a href="#dudas">¿Y si…?</a>
+    </nav>
+  </div>
+</div>
+
+<main class="envoltura">
+
+  <!-- QUÉ CAMBIA -->
+  <section class="bloque" id="cambia">
+    <header>
+      <span class="etiqueta">Tus cuatro tareas</span>
+      <h2>Qué cambia</h2>
+      <p class="lectura tenue">Cambia el interruptor o toca una tarjeta para voltearla.</p>
+    </header>
+    <div class="interruptor" id="interruptor" role="group" aria-label="Antes o ahora">
+      <span class="pildora" aria-hidden="true"></span>
+      <button type="button" data-modo="antes" aria-pressed="true">Antes, en la hoja</button>
+      <button type="button" data-modo="ahora" aria-pressed="false">Ahora, en el ERP</button>
+    </div>
+    <div class="volteos" id="volteos"></div>
+  </section>
+
+  <!-- VIAJE -->
+  <section class="bloque" id="viaje">
+    <header>
+      <span class="etiqueta">De punta a punta</span>
+      <h2>El viaje de una venta de Mercado Libre</h2>
+      <p class="lectura tenue">Una venta de 2 cosedoras N600A por Mercado Libre, de que la capturas a que queda cobrada. Dale play o toca cada parada. Folios y cifras de ejemplo.</p>
+    </header>
+    <div class="tarjeta viaje">
+      <div class="pista">
+        <span class="riel"></span><span class="avance" id="v-avance"></span>
+        <div class="paradas" id="v-paradas"></div>
+      </div>
+      <div class="escenario">
+        <div>
+          <div class="controles">
+            <button type="button" class="boton" id="v-play">▶ Reproducir</button>
+            <button type="button" class="boton sec" id="v-ant">← Anterior</button>
+            <button type="button" class="boton sec" id="v-sig">Siguiente →</button>
+          </div>
+          <div class="reloj" id="v-reloj"><i></i></div>
+          <div id="v-texto" style="display:grid; gap:10px;"></div>
+        </div>
+        <div class="lado">
+          <span class="etiqueta">Así se ve en el ERP</span>
+          <div class="pantalla" id="v-pantalla"></div>
+          <div class="estado-ped" id="v-estado"></div>
+        </div>
+      </div>
+    </div>
+    <div class="nota"><b class="m">✓</b><p><b>¿Y una venta de equipo?</b> Esa empieza como cotización: <span class="btn-ui">Nueva cotización</span>, partidas, <span class="btn-ui">Enviar</span> y, cuando acepta, <span class="btn-ui">Convertir a pedido</span>. El pedido nace con la fecha realista según la fila del taller («Con el taller como está hoy, lo realista es el…») y producción lo ve al instante. El resto del viaje (envío, factura, cobro) es igual.</p></div>
+  </section>
+
+  <!-- PRÁCTICA -->
+  <section class="bloque" id="practica">
+    <header>
+      <span class="etiqueta">No se guarda nada</span>
+      <h2>Practica</h2>
+      <p class="lectura tenue">Cuatro ejercicios que se comportan como las pantallas reales, con sus mismas reglas y mensajes.</p>
+    </header>
+    <div class="tarjeta">
+      <div class="pestanas" role="tablist" aria-label="Práctica" id="p-pestanas">
+        <button type="button" role="tab" class="pestana" data-p="pedido" aria-selected="true">Un pedido</button>
+        <button type="button" role="tab" class="pestana" data-p="ingreso" aria-selected="false">Un ingreso</button>
+        <button type="button" role="tab" class="pestana" data-p="egreso" aria-selected="false">Un egreso</button>
+        <button type="button" role="tab" class="pestana" data-p="caja" aria-selected="false">Caja chica</button>
+      </div>
+
+      <!-- Pedido -->
+      <div class="panel-p practica" id="pp-pedido">
+        <div>
+          <h3>Pedido sin cotización</h3>
+          <p class="tenue" style="font-size:13.5px">«Para ventas de Mercado Libre, sitio web o mostrador. Las partidas se agregan en el siguiente paso.»</p>
+          <label class="campo">Cliente<select id="pe-cliente"><option value="">Nombre, razón social o RFC…</option><option>Compradores Mercado Libre</option><option>Granja San José</option><option>Molinos del Bajío</option></select></label>
+          <label class="campo">Canal<select id="pe-canal"><option>Mercado Libre</option><option>Directo</option><option>Sitio web</option><option>Mostrador</option><option>Distribuidor</option><option>Amazon</option></select></label>
+          <label class="campo"><span id="pe-num-et">Número de venta ML</span><input type="text" id="pe-num" placeholder="2000009812345671"></label>
+          <p class="tenue" style="font-size:12px">No se puede repetir dentro del mismo canal. Prueba con 2000009812345671, que ya existe.</p>
+          <button type="button" class="boton" id="pe-crear" disabled>Crear y agregar partidas</button>
+          <div id="pe-msg"></div>
+        </div>
+        <div class="lado">
+          <div style="display:flex; justify-content:space-between; gap:8px; align-items:baseline; flex-wrap:wrap"><span class="folio-grande" id="pe-folio">PED-…</span><span id="pe-estado"></span></div>
+          <div id="pe-partidas-zona" hidden style="display:grid; gap:10px;">
+            <span class="etiqueta">Agregar partida desde el catálogo…</span>
+            <div class="chips" id="pe-chips"></div>
+            <div class="renglones" id="pe-renglones"></div>
+            <p class="tenue" style="font-size:12px">«Cantidad y precio se guardan al salir del campo (Enter o Tab). Precios sin IVA.» Baja un precio para ver qué pasa.</p>
+            <div class="totales" id="pe-totales"></div>
+          </div>
+          <p class="tenue" id="pe-espera" style="font-size:13.5px">Elige cliente y da «Crear y agregar partidas»: el folio nace al guardar.</p>
+        </div>
+      </div>
+
+      <!-- Ingreso -->
+      <div class="panel-p practica" id="pp-ingreso" hidden>
+        <div>
+          <h3>Factura y cobro sin teclear</h3>
+          <p class="tenue" style="font-size:13.5px">En <span class="ruta">/finanzas/cobranza</span>, abre el pedido → «Registrar factura» → «Sube el XML de la factura».</p>
+          <div class="archivo" id="in-zona"><b>Sube el XML de la factura</b><span class="tenue">Se llenan folio, UUID, fecha y total.</span><button type="button" class="boton" id="in-xml">Soltar XML de ejemplo</button></div>
+          <div class="campos-xml" id="in-campos"></div>
+          <div id="in-factura-ok"></div>
+          <div style="border-top:1px solid var(--borde); padding-top:12px; display:grid; gap:10px;">
+            <h3>Subir complementos de pago</h3>
+            <p class="tenue" style="font-size:13.5px">El cliente pagó la factura a crédito en dos partes. Sube la carpeta del mes: cada pago va solo al pedido de su factura.</p>
+            <button type="button" class="boton sec" id="in-comp" disabled>Elegir los XML (3 archivos)</button>
+          </div>
+        </div>
+        <div class="lado">
+          <span class="etiqueta">PED-2026-00412 · Granja San José</span>
+          <div class="medidor"><div style="display:flex; justify-content:space-between; font-size:13px"><span>Saldo del pedido</span><b class="cifra" id="in-saldo">$18,560.00</b></div><div class="riel"><i id="in-barra" style="width:100%"></i></div></div>
+          <div class="estatus" id="in-estatus"></div>
+          <div id="in-toast"></div>
+          <div class="nota"><b class="m">✓</b><p>Si te equivocas de archivo, el ERP te lo dice: «Es un complemento de pago: súbelo con el botón Complemento, en Cobros.» o «Esa factura ya está registrada». El mismo XML subido dos veces no duplica el cobro.</p></div>
+          <button type="button" class="boton sec" id="in-reiniciar" style="justify-self:start">Empezar de nuevo</button>
+        </div>
+      </div>
+
+      <!-- Egreso -->
+      <div class="panel-p practica" id="pp-egreso" hidden>
+        <div>
+          <h3>Una compra o gasto</h3>
+          <p class="tenue" style="font-size:13.5px">En <span class="ruta">/finanzas/pagos</span> → «Registrar compra o gasto». Lo que antes era un renglón «Compra» en COMPRAS.</p>
+          <div class="chips" id="eg-chips"></div>
+          <div class="archivo" id="eg-zona"><b>Sube el XML de la factura</b><span class="tenue">Elige arriba qué factura llegó.</span></div>
+          <div class="campos-xml" id="eg-campos"></div>
+          <button type="button" class="boton" id="eg-registrar" disabled>Registrar compra</button>
+          <div id="eg-toast"></div>
+        </div>
+        <div class="lado">
+          <span class="etiqueta">Agenda de pagos</span>
+          <div class="agenda-mini" id="eg-agenda"></div>
+          <p class="tenue" style="font-size:13px">Vence = fecha de la factura + días de crédito del proveedor. Lo de contado no entra a la agenda: se registra compra y pago juntos.</p>
+        </div>
+      </div>
+
+      <!-- Caja chica -->
+      <div class="panel-p practica" id="pp-caja" hidden>
+        <div>
+          <h3>Caja chica</h3>
+          <p class="tenue" style="font-size:13.5px">En <span class="ruta">/finanzas/caja-chica</span>. Ya no hay columna de saldo que se rompa: el ERP lo calcula.</p>
+          <div class="segmento" role="group" aria-label="Tipo"><button type="button" id="cc-sale" aria-pressed="true">Sale</button><button type="button" id="cc-entra" aria-pressed="false">Entra</button></div>
+          <label class="campo">Concepto<input type="text" id="cc-concepto" placeholder="Garrafones de agua, papelería…"></label>
+          <label class="campo">Monto<input type="number" id="cc-monto" min="0" placeholder="0"></label>
+          <button type="button" class="boton" id="cc-anotar" style="justify-self:start">Anotar</button>
+          <div style="border-top:1px solid var(--borde); padding-top:12px; display:grid; gap:8px;">
+            <label class="campo">Arqueo: efectivo contado<input type="number" id="cc-contado" min="0"></label>
+            <p class="tenue" id="cc-dice" style="font-size:13px"></p>
+            <button type="button" class="boton sec" id="cc-arqueo" style="justify-self:start">Registrar arqueo</button>
+          </div>
+        </div>
+        <div class="lado">
+          <span class="etiqueta">Saldo</span>
+          <span class="saldo-grande" id="cc-saldo">$0</span>
+          <span id="cc-estado"></span>
+          <div id="cc-toast"></div>
+          <div class="tabla-env tarjeta" style="box-shadow:none"><table class="t"><thead><tr><th>Concepto</th><th class="der">Entra</th><th class="der">Sale</th><th class="der">Saldo</th></tr></thead><tbody id="cc-tabla"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- YA NO -->
+  <section class="bloque" id="yano">
+    <header>
+      <span class="etiqueta">Lo hace el sistema</span>
+      <h2>Lo que ya no haces</h2>
+    </header>
+    <div class="yano" id="yano-lista">
+      <div><span class="x">✓</span><p><b>Escribir el nombre del cliente</b><span class="tenue">Lo eliges de la lista. «granja san jose» y «Granja San José» ya no son dos clientes.</span></p></div>
+      <div><span class="x">✓</span><p><b>Llevar el saldo a mano</b><span class="tenue">Cobranza, cada proveedor y la caja chica llevan su saldo solos, con centavos.</span></p></div>
+      <div><span class="x">✓</span><p><b>Teclear folio, UUID y total</b><span class="tenue">Sale del XML, de compras y de ventas. Y los complementos de pago registran el cobro.</span></p></div>
+      <div><span class="x">✓</span><p><b>Calcular cuándo vence</b><span class="tenue">Fecha de factura + días de crédito, del cliente o del proveedor.</span></p></div>
+      <div><span class="x">✓</span><p><b>Capturar el tipo de cambio</b><span class="tenue">El dólar llega solo del Diario Oficial cada día hábil. Lo capturas solo si usas otro.</span></p></div>
+      <div><span class="x">✓</span><p><b>Separar el préstamo del socio</b><span class="tenue">Préstamos de socios y créditos van aparte de proveedores. La hoja decía que debíamos $4.9 M a proveedores; eran $2.3 M.</span></p></div>
+      <div><span class="x">✓</span><p><b>Una fila por partida</b><span class="tenue">El pedido tiene partidas, total, IVA, cobros y facturas juntos. Ya no se arma en «Registro Ventas».</span></p></div>
+      <div><span class="x">✓</span><p><b>Anotar el cobro en las notas</b><span class="tenue">Cada cobro es un registro con fecha, monto, forma de pago y referencia. El vendedor recibe el aviso.</span></p></div>
+      <div><span class="x">✓</span><p><b>Avisarle a almacén</b><span class="tenue">«Pedir envío» y almacén lo ve, lo empaca con fotos y su guía queda en el pedido.</span></p></div>
+    </div>
+  </section>
+
+  <!-- LO QUE VES -->
+  <section class="bloque" id="tuyo">
+    <header>
+      <span class="etiqueta">Gerencia administrativa + ventas</span>
+      <h2>Lo que ves y lo que no</h2>
+    </header>
+    <div class="dos">
+      <div class="tarjeta menu-lista">
+        <h3>Tu menú</h3>
+        <ul>
+          <li><b>Administración:</b> Cobranza, Pagos a proveedores, Caja chica, Prenómina (ver).</li>
+          <li><b>Ventas:</b> A quién llamar hoy, Oportunidades, Cotizaciones, Solicitudes de precio, Pedidos, Clientes, Comisiones, Devoluciones y reclamos.</li>
+          <li><b>Almacén:</b> Existencias, Entradas y salidas, Reabasto, Envíos (con «Recarga» de paquetería).</li>
+          <li><b>También ves:</b> Órdenes de compra y Proveedores, Embarques de importación, Producción (avance, números de serie), Servicios.</li>
+          <li><b>Siempre:</b> Inicio, Pendientes, Tu semana y el asistente (Ctrl+J).</li>
+        </ul>
+      </div>
+      <div class="tarjeta menu-lista">
+        <h3>Lo que cambia con tu rol</h3>
+        <ul>
+          <li>Ves <b>todos</b> los pedidos y toda la cobranza, también los de Isaac y Juan Manuel, para poder cobrar.</li>
+          <li>En Comisiones ves <b>solo la tuya</b>. Marcarlas pagadas es de finanzas.</li>
+          <li>Las partidas solo las cambias en <b>tus</b> pedidos. Un precio abajo del mínimo lo captura la gerencia.</li>
+          <li>«A quién llamar hoy» te muestra tus clientes y los libres, como a cualquier vendedora.</li>
+          <li>Te llegan avisos de tus pedidos (pago de tu cliente, terminado, envío empacado y entregado) y el de «Saldo bajo» de paquetería.</li>
+          <li>No ves márgenes ni costos de equipos, ni Sistema.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- RUTINA -->
+  <section class="bloque" id="rutina">
+    <header>
+      <span class="etiqueta">Palomea; se guarda en este navegador</span>
+      <h2>Tu semana</h2>
+    </header>
+    <div class="rutina" id="rutina-lista"></div>
+  </section>
+
+  <!-- DUDAS -->
+  <section class="bloque" id="dudas">
+    <header>
+      <span class="etiqueta">Lo que vas a preguntar</span>
+      <h2>¿Y si…?</h2>
+    </header>
+    <div class="faqs">
+      <details class="faq"><summary>¿Sigo anotando en la hoja?</summary><p>Desde el día en que Finanzas arranca en el ERP, compras, pagos y caja chica se capturan solo aquí y la hoja deja de traerlos. Mientras convivan, si algo quedó en los dos lados el ERP no lo cuenta dos veces: lo marca «También en la hoja» (mismo cliente o proveedor, mismo tipo y monto, ±7 días).</p></details>
+      <details class="faq"><summary>¿Qué pasó con lo que me debían los clientes en la hoja?</summary><p>Quedó como saldo de arranque por cliente: Cobranza → «Saldos de arranque (hoja)». Ahí registras lo que paguen («Registrar cobro», «Entró a la cuenta»). No se suma a los pedidos del ERP para no contarlo dos veces.</p></details>
+      <details class="faq"><summary>¿Y los pedidos que siguen en el taller desde antes?</summary><p>Ya están en el ERP con la etiqueta «de la hoja»: su avance, su entrega y sus números de serie se llevan aquí. El cobro sigue en el saldo de arranque del cliente, no en el pedido, y no generan otra comisión.</p></details>
+      <details class="faq"><summary>Capturé un cobro o un gasto mal. ¿Cómo lo corrijo?</summary><p>Lo que capturaste en el ERP se borra con el bote de basura y queda en la bitácora; luego lo capturas bien. Lo que vino de la hoja no se borra.</p></details>
+      <details class="faq"><summary>¿Un cobro de Mercado Libre?</summary><p>En el pedido o en Cobranza: «Registrar cobro» con forma de pago Mercado Pago y la referencia de la liquidación. Si el comprador pidió factura, súbela con su XML en Cobranza.</p></details>
+      <details class="faq"><summary>El ERP no me deja guardar.</summary><p>Lee el mensaje: dice qué falta. Los más comunes: «quedaría pagado de más» (el cobro es de otro pedido), «La fecha no puede ser futura», «Di de qué cuenta salió el pago», «queda abajo del precio mínimo: ese precio lo captura la gerencia». La lista completa con qué hacer está en el <a href="https://claude.ai/artifact/UzrNvDHUUs6zPB24CPivdU#mensajes">Manual de Finanzas</a>.</p></details>
+      <details class="faq"><summary>¿Dónde veo la explicación de cada pantalla?</summary><p>Prende el modo tutorial con el birrete de arriba: cada pantalla dice para qué sirve y lo marcado con ? se explica al pasar el mouse.</p></details>
+    </div>
+  </section>
+
+  <footer class="pie">
+    <span>Manual de Susana · ERP Hegamex · octubre 2026</span>
+    <span>Más detalle: <a href="https://claude.ai/artifact/UzrNvDHUUs6zPB24CPivdU">Manual de Finanzas</a> · <a href="https://claude.ai/artifact/QmgwqhqZRrr2cCT999aDrg">Manual del ERP</a></span>
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var B = function (t) { return '<span class="btn-ui">' + t + "</span>"; };
+  var mx = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 2 });
+  var quieto = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var leer = function (k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
+  var guardar = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } };
+  // Cuenta animada de un número a otro: la cifra "corre" como en un tablero.
+  var cuenta = function (el, desde, hasta, fmt, ms) {
+    if (quieto) { el.textContent = fmt(hasta); return; }
+    var t0 = null, dur = ms || 700;
+    var paso = function (t) { if (!t0) t0 = t; var k = Math.min(1, (t - t0) / dur); k = 1 - Math.pow(1 - k, 3); el.textContent = fmt(desde + (hasta - desde) * k); if (k < 1) requestAnimationFrame(paso); };
+    requestAnimationFrame(paso);
+  };
+
+  // ---------- Qué cambia ----------
+  var TAREAS = [
+    { t: "Ingresos", antesT: "Pestaña VENTAS de la base de datos", antes: ["Un renglón por Venta, Pago o Reembolso, ligado por el nombre del cliente escrito a mano.", "Folio, monto neto y cuenta tecleados; el IVA dependía de si hubo factura.", "El saldo del cliente salía de sumar sus renglones."],
+      fila: "14/10 · granja san jose · Pago · 9,280 · BANORTE FISCAL · A 3350",
+      ruta: "/finanzas/cobranza", ahora: ["Cada pedido tiene su factura y sus cobros. " + B("Registrar factura") + " con el XML llena folio, UUID, fecha y total.", B("Subir complementos de pago") + ": cada pago a crédito se registra solo en el pedido de su factura.", "Antigüedad y vencimiento por pedido, cliente y vendedor; «Los más atrasados» te dice a quién llamar."] },
+    { t: "Egresos", antesT: "Pestaña COMPRAS", antes: ["Unas 175 compras al mes: material, nómina, IMSS, impuestos, renta, fletes, mezclados.", "Compra, Pago y Reembolso en el mismo libro; el préstamo del socio contaba como proveedor.", "Nadie sabía qué vencía esta semana."],
+      fila: "15/10 · Pinturas del Centro · Compra · 8,120 · F 2231",
+      ruta: "/finanzas/pagos", ahora: [B("Registrar compra o gasto") + ": subes el XML y se llena solo (proveedor por su RFC). Puedes subir varios.", "Agenda de pagos por semana; abres al proveedor y " + B("Registrar pago") + " con la cuenta de salida.", "Socios y bancos aparte; pagar de más solo como anticipo."] },
+    { t: "Caja chica", antesT: "Archivo CajaChica", antes: ["Un solo flujo con signo y una columna de saldo que se rompía al insertar un renglón.", "Montos sin centavos («-$150») y «en turno» como texto libre.", "El arqueo no quedaba registrado."],
+      fila: "15/10 · Garrafones · Susy · -150 · saldo ¿?",
+      ruta: "/finanzas/caja-chica", ahora: ["Elige «Sale» o «Entra», concepto, monto y Enter: " + B("Anotar") + ".", "Saldo corrido con centavos y aviso si baja de $1,000 o pasa de $5,000.", B("Arqueo") + ": escribes lo contado y el faltante o sobrante queda con tu nombre."] },
+    { t: "Pedidos", antesT: "«Registro Ventas» de tu panel", antes: ["Una fila por partida, no por pedido; el cliente escrito a mano.", "«N. Pedido (si aplica)», factura «S/F», el cobro y la forma de pago en notas.", "Almacén y el taller se enteraban por WhatsApp."],
+      fila: "16/10 · Cosedora N600A · 2 · ML · N. Pedido: - · S/F",
+      ruta: "/ventas/pedidos", ahora: [B("Pedido sin cotización") + " con canal (Mercado Libre por omisión) y su número de venta ML, que no se repite.", "Partidas del catálogo al precio de lista; total, IVA, cobros y facturas en el mismo pedido.", "Folio PED solo, aviso a producción y almacén, y " + B("Pedir envío") + " cuando esté listo."] }
+  ];
+  $("volteos").innerHTML = TAREAS.map(function (x, i) {
+    return '<div class="volteo" data-i="' + i + '"><div class="giro">' +
+      '<div class="cara antes" tabindex="0" role="button" aria-label="' + x.t + ': ver ahora"><div class="cab"><h3>' + x.t + '</h3><span class="insignia t-hoja">Antes</span></div><span class="tenue" style="font-size:13px">' + x.antesT + '</span><div class="fila-hoja">' + esc(x.fila) + "</div><ul>" + x.antes.map(function (a) { return "<li>" + a + "</li>"; }).join("") + '</ul><span class="voltear">Toca para ver ahora ↻</span></div>' +
+      '<div class="cara despues" tabindex="0" role="button" aria-label="' + x.t + ': ver antes"><div class="cab"><h3>' + x.t + '</h3><span class="insignia t-marca">Ahora</span></div><span class="ruta">' + x.ruta + "</span><ul>" + x.ahora.map(function (a) { return "<li>" + a + "</li>"; }).join("") + '</ul><span class="voltear">Toca para ver antes ↻</span></div>' +
+      "</div></div>";
+  }).join("");
+  var tarjetas = Array.prototype.slice.call(document.querySelectorAll(".volteo"));
+  var ponModo = function (modo) {
+    $("interruptor").classList.toggle("ahora", modo === "ahora");
+    $("interruptor").querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-modo") === modo); });
+    tarjetas.forEach(function (t, i) { setTimeout(function () { t.classList.toggle("ahora", modo === "ahora"); }, quieto ? 0 : i * 120); });
+  };
+  $("interruptor").addEventListener("click", function (ev) { var b = ev.target.closest("[data-modo]"); if (b) ponModo(b.getAttribute("data-modo")); });
+  var voltea = function (ev) { var v = ev.target.closest(".volteo"); if (v) v.classList.toggle("ahora"); };
+  $("volteos").addEventListener("click", voltea);
+  $("volteos").addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); voltea(ev); } });
+
+  // ---------- El viaje ----------
+  var ESTADOS = ["Confirmado", "En producción", "Listo para entregar", "Entregado"];
+  var VIAJE = [
+    { n: "Capturas el pedido", est: 0,
+      txt: ["Pedidos → " + B("Pedido sin cotización") + ". Cliente, canal Mercado Libre y el número de venta ML.", B("Crear y agregar partidas") + ": nace el folio y el ERP avisa «Pedido nuevo» a producción y almacén."],
+      pant: '<div class="tit"><span>PED-2026-00412</span><span class="insignia">Mercado Libre</span></div><div class="kv"><span>Cliente</span><b>Compradores Mercado Libre</b><span>Número de venta ML</span><b>#2000009812345890</b><span>Vendedora</span><b>Susana Rizo</b></div>' },
+    { n: "Agregas las partidas", est: 0,
+      txt: ["En el pedido, «Agregar partida desde el catálogo…»: escribe y Enter. Entra al precio de lista.", "Cantidad y precio se guardan al salir del campo. Si bajas del mínimo: «ese precio lo captura la gerencia»."],
+      pant: '<div class="tit"><span>Partidas</span></div><div class="kv"><span>2 × Cosedora N600A</span><b>$16,000.00</b><span>IVA 16%</span><b>$2,560.00</b><span>Total</span><b id="v-total">$18,560.00</b></div>' },
+    { n: "Pides el envío", est: 0,
+      txt: ["Tarjeta «Envío» → " + B("Pedir envío") + ". Para Mercado Libre: «Lo surte Full (ML)» si sale de la bodega de Full, o paquetería «Mercado Envíos».", "«Envío pedido: almacén ya lo ve». Tú ya no le escribes a nadie. Como son piezas de almacén, el pedido sigue «Confirmado»: no pasa por el taller."],
+      pant: '<div class="tit"><span>Pedir envío de PED-2026-00412</span></div><div class="kv"><span>Tipo</span><b>Paquetería</b><span>Paquetería</span><b>Mercado Envíos</b><span>Qué va</span><b>2 × Cosedora N600A</b></div><span class="insignia t-info punto" style="justify-self:start">Por cotizar</span>' },
+    { n: "Almacén empaca", est: 0,
+      txt: ["Almacén registra la guía y empaca en tres pasos: fotos, check list de salida y número de serie.", "Te llega el aviso de empacado y luego de «Ya salió»."],
+      pant: '<div class="tit"><span>ENV-2026-00231</span><span class="insignia t-marca punto">En camino</span></div><div class="kv"><span>Fotos</span><b>4 de salida</b><span>Check list</span><b>Completo</b><span>Guía</span><b>Mercado Envíos · 4400…</b></div>' },
+    { n: "Se entrega", est: 3,
+      txt: ["Cuando el envío se marca entregado, el pedido pasa solo a «Entregado».", "La garantía empieza a contar desde aquí."],
+      pant: '<div class="tit"><span>PED-2026-00412</span><span class="insignia t-ok punto">Entregado</span></div><div class="kv"><span>Envío</span><b>Entregado 18 oct</b><span>Saldo</span><b>$18,560.00</b></div>' },
+    { n: "Cobras y facturas", est: 3,
+      txt: ["Cobranza → el pedido → " + B("Registrar cobro") + " con Mercado Pago, o sube el complemento si fue a crédito.", "Si pidió factura: «Registrar factura» con su XML. Saldo $0 y el pedido sale de «Por cobrar»."],
+      pant: '<div class="tit"><span>Cobros · PED-2026-00412</span></div><div class="kv"><span>Mercado Pago</span><b>$18,560.00</b><span>Factura</span><b>A 3412 · con UUID</b><span>Saldo</span><b style="color:var(--ok)">$0.00</b></div><span class="toast" style="justify-self:start">Cobro registrado en PED-2026-00412</span>' }
+  ];
+  var vi = 0, vTimer = null, vPlay = false;
+  $("v-paradas").innerHTML = VIAJE.map(function (p, i) { return '<button type="button" class="parada" data-v="' + i + '"><span class="punto">' + (i + 1) + '</span><span class="txt">' + p.n + "</span></button>"; }).join("");
+  var pintarViaje = function (animar) {
+    document.querySelectorAll(".parada").forEach(function (b, i) { b.classList.toggle("hecha", i < vi); b.classList.toggle("actual", i === vi); });
+    $("v-avance").style.width = "calc((100% - 80px) * " + (vi / (VIAJE.length - 1)) + ")";
+    var p = VIAJE[vi];
+    $("v-texto").innerHTML = '<h3 style="font-size:19px">' + (vi + 1) + ". " + p.n + "</h3>" + p.txt.map(function (t) { return '<p style="font-size:14.5px">' + t + "</p>"; }).join("");
+    var pan = $("v-pantalla"); pan.classList.remove("entra"); pan.innerHTML = p.pant; if (animar && !quieto) { void pan.offsetWidth; pan.classList.add("entra"); }
+    $("v-estado").innerHTML = '<span class="tenue" style="font-size:12.5px">Pedido:</span>' + ESTADOS.map(function (e, i) { return '<span class="insignia' + (i === p.est ? " on" : "") + '">' + e + "</span>"; }).join("");
+    if (vi === 1 && animar) { var tot = $("v-total"); if (tot) cuenta(tot, 0, 18560, function (v) { return mx.format(v); }, 900); }
+    $("v-ant").disabled = vi === 0; $("v-sig").disabled = vi === VIAJE.length - 1;
+  };
+  var reloj = function (on) {
+    var r = $("v-reloj"); r.classList.remove("corre"); void r.offsetWidth;
+    if (on && !quieto) { r.querySelector("i").style.animationDuration = "4.2s"; r.classList.add("corre"); }
+  };
+  var detener = function () { vPlay = false; clearTimeout(vTimer); $("v-play").textContent = "▶ Reproducir"; reloj(false); };
+  var avanzar = function () {
+    if (vi >= VIAJE.length - 1) { detener(); return; }
+    vi++; pintarViaje(true); reloj(true); vTimer = setTimeout(avanzar, 4200);
+  };
+  $("v-play").addEventListener("click", function () {
+    if (vPlay) { detener(); return; }
+    vPlay = true; $("v-play").textContent = "❚❚ Pausa";
+    if (vi >= VIAJE.length - 1) { vi = 0; pintarViaje(true); }
+    reloj(true); vTimer = setTimeout(avanzar, 4200);
+  });
+  $("v-ant").addEventListener("click", function () { detener(); vi = Math.max(0, vi - 1); pintarViaje(true); });
+  $("v-sig").addEventListener("click", function () { detener(); vi = Math.min(VIAJE.length - 1, vi + 1); pintarViaje(true); });
+  $("v-paradas").addEventListener("click", function (ev) { var b = ev.target.closest("[data-v]"); if (!b) return; detener(); vi = Number(b.getAttribute("data-v")); pintarViaje(true); });
+  pintarViaje(false);
+
+  // ---------- Pestañas de práctica ----------
+  $("p-pestanas").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-p]"); if (!b) return;
+    var k = b.getAttribute("data-p");
+    document.querySelectorAll("#p-pestanas .pestana").forEach(function (x) { x.setAttribute("aria-selected", x === b); });
+    ["pedido", "ingreso", "egreso", "caja"].forEach(function (n) { $("pp-" + n).hidden = n !== k; });
+  });
+
+  // ---------- Práctica: pedido ----------
+  var CAT = [["Cosedora N600A", 8000], ["Cabezal F900A", 14500], ["Polea motriz 12\"", 3950], ["Flete", 1200]];
+  var pe = { creado: false, lineas: [] };
+  var peValida = function () { $("pe-crear").disabled = !$("pe-cliente").value || pe.creado; };
+  $("pe-cliente").addEventListener("change", peValida);
+  $("pe-canal").addEventListener("change", function () { var ml = $("pe-canal").value === "Mercado Libre"; $("pe-num-et").textContent = ml ? "Número de venta ML" : "Número externo"; $("pe-num").placeholder = ml ? "2000009812345671" : "WEB-10472"; });
+  $("pe-crear").addEventListener("click", function () {
+    var n = $("pe-num").value.trim();
+    if (n === "2000009812345671" && $("pe-canal").value === "Mercado Libre") { $("pe-msg").innerHTML = '<span class="toast mal">Ya existe un pedido de Mercado Libre con el número 2000009812345671.</span>'; return; }
+    pe.creado = true; peValida();
+    $("pe-msg").innerHTML = '<span class="toast">Pedido creado: «Pedido nuevo» avisado a producción y almacén</span>';
+    var f = $("pe-folio"); f.textContent = "PED-2026-00412"; f.classList.remove("nace"); void f.offsetWidth; f.classList.add("nace");
+    $("pe-estado").innerHTML = '<span class="insignia t-info punto">Confirmado</span>';
+    $("pe-espera").hidden = true; $("pe-partidas-zona").hidden = false;
+    $("pe-chips").innerHTML = CAT.map(function (c, i) { return '<button type="button" class="chip" data-c="' + i + '">' + esc(c[0]) + " ↵</button>"; }).join("");
+    peTotales(0);
+  });
+  var peSub = function () { return pe.lineas.reduce(function (t, l) { return t + l.q * l.p; }, 0); };
+  var peTotales = function (antes) {
+    var s = peSub();
+    $("pe-totales").innerHTML = '<span>Subtotal</span><b id="pe-s"></b><span>IVA 16%</span><b id="pe-i"></b><span>Total</span><b class="grande" id="pe-t"></b>';
+    cuenta($("pe-s"), antes, s, function (v) { return mx.format(v); }); cuenta($("pe-i"), antes * 0.16, s * 0.16, function (v) { return mx.format(v); }); cuenta($("pe-t"), antes * 1.16, s * 1.16, function (v) { return mx.format(v); });
+  };
+  var pePintar = function () {
+    $("pe-renglones").innerHTML = pe.lineas.map(function (l, i) {
+      var bajo = l.p < CAT[l.c][1] * 0.9 - 0.005;
+      return '<div class="renglon' + (bajo ? " mal" : "") + '"><span>' + esc(CAT[l.c][0]) + (bajo ? '<br><span style="color:var(--peligro);font-size:12px">“' + esc(CAT[l.c][0]) + '” queda abajo del precio mínimo: ese precio lo captura la gerencia</span>' : "") + '</span><input type="number" min="1" value="' + l.q + '" data-q="' + i + '" aria-label="Cantidad"><input type="number" min="0" value="' + l.p + '" data-pr="' + i + '" aria-label="Precio"><b class="der imp">' + mx.format(l.q * l.p) + "</b></div>";
+    }).join("") || '<p class="tenue" style="font-size:13px">Sin partidas: agrégalas con el buscador.</p>';
+  };
+  $("pe-chips").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-c]"); if (!b) return; var antes = peSub();
+    var c = Number(b.getAttribute("data-c")), ya = pe.lineas.filter(function (l) { return l.c === c; })[0];
+    if (ya) ya.q++; else pe.lineas.push({ c: c, q: 1, p: CAT[c][1] });
+    pePintar(); peTotales(antes);
+  });
+  $("pe-renglones").addEventListener("change", function (ev) {
+    var antes = peSub(), q = ev.target.getAttribute("data-q"), pr = ev.target.getAttribute("data-pr");
+    if (q !== null) pe.lineas[Number(q)].q = Math.max(1, Number(ev.target.value) || 1);
+    if (pr !== null) pe.lineas[Number(pr)].p = Math.max(0, Number(ev.target.value) || 0);
+    pePintar(); peTotales(antes);
+  });
+  pePintar();
+
+  // ---------- Práctica: ingreso ----------
+  var IN_CAMPOS = [["Folio", "A 3412"], ["UUID del SAT", "6F2C8A1E-4B7D-4C3A-9E21-7D5B0A3C9F14"], ["Fecha", "16 oct 2026"], ["Total con IVA", "$18,560.00"], ["Notas", "A crédito (PPD)"]];
+  var inEst = { saldo: 18560 };
+  var inPintarCampos = function (n) { $("in-campos").innerHTML = IN_CAMPOS.map(function (c, i) { return "<div><span>" + c[0] + '</span><b class="' + (i < n ? "lleno" : "") + '">' + (i < n ? esc(c[1]) : "") + "</b></div>"; }).join(""); };
+  var inSaldo = function (nuevo) {
+    var el = $("in-saldo"), viejo = inEst.saldo; inEst.saldo = nuevo;
+    cuenta(el, viejo, nuevo, function (v) { return mx.format(v); }, 900);
+    var b = $("in-barra"); b.style.width = (nuevo / 18560 * 100) + "%"; b.style.background = nuevo <= 0.5 ? "var(--ok)" : "var(--aviso)";
+  };
+  var inReiniciar = function () {
+    inPintarCampos(0); $("in-factura-ok").innerHTML = ""; $("in-estatus").innerHTML = ""; $("in-toast").innerHTML = "";
+    $("in-xml").disabled = false; $("in-comp").disabled = true; $("in-zona").classList.remove("leyendo");
+    inEst.saldo = 18560; $("in-saldo").textContent = mx.format(18560); $("in-barra").style.width = "100%"; $("in-barra").style.background = "var(--aviso)";
+  };
+  $("in-xml").addEventListener("click", function () {
+    $("in-xml").disabled = true; $("in-zona").classList.add("leyendo");
+    var i = 0, sig = function () { i++; inPintarCampos(i); if (i < IN_CAMPOS.length) setTimeout(sig, quieto ? 0 : 320); else { $("in-zona").classList.remove("leyendo"); $("in-factura-ok").innerHTML = '<span class="toast">Factura A 3412 registrada</span>'; $("in-comp").disabled = false; } };
+    setTimeout(sig, quieto ? 0 : 250);
+  });
+  $("in-comp").addEventListener("click", function () {
+    $("in-comp").disabled = true; $("in-estatus").innerHTML = ""; $("in-toast").innerHTML = "";
+    var R = [["Complemento P 118 · Factura A 3412, parcialidad 1", "Cobro registrado", "t-ok", 9280], ["Complemento P 121 · Factura A 3412, parcialidad 2", "Cobro registrado", "t-ok", 9280], ["Complemento P 097 · Factura A 3298", "Factura no registrada", "t-aviso", 0]];
+    R.forEach(function (r, k) {
+      setTimeout(function () {
+        var d = document.createElement("div"); d.innerHTML = "<span>" + esc(r[0]) + '</span><span class="insignia ' + r[2] + '">' + r[1] + "</span>"; $("in-estatus").appendChild(d);
+        if (r[3]) inSaldo(inEst.saldo - r[3]);
+        if (k === R.length - 1) $("in-toast").innerHTML = '<span class="toast">2 cobros registrados</span><p class="tenue" style="font-size:13px;margin-top:6px">«Factura no registrada»: regístrala en su pedido (con su XML) y vuelve a subir este complemento.</p>';
+      }, quieto ? 0 : 600 * (k + 1));
+    });
+  });
+  $("in-reiniciar").addEventListener("click", inReiniciar);
+  inReiniciar();
+
+  // ---------- Práctica: egreso ----------
+  var EG = [
+    { n: "Lámina a crédito (PPD)", campos: [["Proveedor", "Aceros y Lámina del Centro (por su RFC)"], ["Factura", "B 7781"], ["Total (con IVA)", "$31,320.00"], ["Vence el", "fecha + 30 días de crédito"]], boton: "Registrar compra", toast: "Compra registrada", col: 2, monto: "$31,320", prov: "Aceros y Lámina" },
+    { n: "Flete de contado (PUE)", campos: [["Proveedor", "Fletes Rápidos (por su RFC)"], ["Factura", "F 2231"], ["Total (con IVA)", "$4,640.00"], ["Ya se pagó (de contado)", "Sale de: Santander fiscal"]], boton: "Registrar compra y pago", toast: "Compra y pago registrados", col: -1 },
+    { n: "Luz (CFE)", campos: [["Proveedor", "CFE (por su RFC)"], ["Factura", "Recibo octubre"], ["Total (con IVA)", "$6,480.00"], ["Vence el", "fecha + 7 días"]], boton: "Registrar compra", toast: "Compra registrada", col: 0, monto: "$6,480", prov: "CFE" },
+    { n: "Factura de una venta nuestra", rechazo: "La emitimos nosotros: es una venta, va en Cobranza." }
+  ];
+  var egCols = [["Esta semana", [["Pintura industrial", "$8,120"]]], ["La próxima", [["Motorreductores", "$42,300"]]], ["En 2 semanas", [["Tornillería", "$4,870"]]]];
+  var egSel = null, egNuevo = null;
+  var egAgenda = function () {
+    $("eg-agenda").innerHTML = egCols.map(function (c) { return '<div class="col"><b>' + c[0] + "</b>" + c[1].map(function (it) { return '<div class="item' + (it === egNuevo ? " nuevo" : "") + '"><span>' + esc(it[0]) + '</span><span class="cifra">' + it[1] + "</span></div>"; }).join("") + "</div>"; }).join("");
+  };
+  $("eg-chips").innerHTML = EG.map(function (e, i) { return '<button type="button" class="chip" data-e="' + i + '">' + esc(e.n) + "</button>"; }).join("");
+  $("eg-chips").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-e]"); if (!b) return; egSel = Number(b.getAttribute("data-e")); var e = EG[egSel];
+    $("eg-toast").innerHTML = ""; $("eg-campos").innerHTML = ""; $("eg-registrar").disabled = true;
+    if (e.rechazo) { $("eg-zona").classList.remove("leyendo"); $("eg-campos").innerHTML = '<div class="nota ojo" style="grid-column:1/-1"><b class="m">!</b><p>«' + esc(e.rechazo) + "» Esa va en Cobranza, en su pedido, con «Registrar factura».</p></div>"; return; }
+    $("eg-zona").classList.add("leyendo");
+    var i = 0, sig = function () {
+      i++; $("eg-campos").innerHTML = e.campos.map(function (c, k) { return "<div><span>" + c[0] + '</span><b class="' + (k < i ? "lleno" : "") + '">' + (k < i ? esc(c[1]) : "") + "</b></div>"; }).join("");
+      if (i < e.campos.length) setTimeout(sig, quieto ? 0 : 300); else { $("eg-zona").classList.remove("leyendo"); $("eg-registrar").disabled = false; $("eg-registrar").textContent = e.boton; }
+    };
+    setTimeout(sig, quieto ? 0 : 200);
+  });
+  $("eg-registrar").addEventListener("click", function () {
+    var e = EG[egSel]; if (!e) return; $("eg-registrar").disabled = true;
+    $("eg-toast").innerHTML = '<span class="toast">' + esc(e.toast) + "</span>" + (e.col < 0 ? '<p class="tenue" style="font-size:13px;margin-top:6px">De contado: no queda nada por pagar, no entra a la agenda.</p>' : "");
+    if (e.col >= 0) { egNuevo = [e.prov, e.monto]; egCols[e.col][1].unshift(egNuevo); egAgenda(); }
+  });
+  egAgenda();
+
+  // ---------- Práctica: caja chica ----------
+  var INICIAL = [["Saldo anterior", 2850], ["Garrafones de agua", -180], ["Papelería", -330]];
+  var caja = leer("hegamex-manual-susana-caja") || INICIAL.slice(), tipo = "sale", ultimo = -1, saldoMostrado = null;
+  var saldo = function () { return caja.reduce(function (t, m) { return t + m[1]; }, 0); };
+  var pintarCaja = function (toast) {
+    var s = saldo(), run = 0;
+    cuenta($("cc-saldo"), saldoMostrado === null ? s : saldoMostrado, s, function (v) { return mx.format(v); }, 650); saldoMostrado = s;
+    $("cc-estado").innerHTML = s < 1000 ? '<span class="insignia t-peligro punto">Abajo del mínimo ($1,000): toca reponer</span>' : s > 5000 ? '<span class="insignia t-aviso punto">Arriba del máximo ($5,000): llévalo al banco</span>' : '<span class="insignia t-ok punto">Entre $1,000 y $5,000</span>';
+    $("cc-tabla").innerHTML = caja.map(function (m, i) { run += m[1]; return '<tr class="' + (i === ultimo ? "nuevo" : "") + '"><td>' + esc(m[0]) + '</td><td class="der">' + (m[1] > 0 ? mx.format(m[1]) : "") + '</td><td class="der">' + (m[1] < 0 ? mx.format(-m[1]) : "") + '</td><td class="der">' + mx.format(run) + "</td></tr>"; }).reverse().join("");
+    var c = $("cc-contado").value; if (c === "") $("cc-dice").textContent = "El sistema dice " + mx.format(s) + "."; else { var d = Number(c) - s; $("cc-dice").textContent = Math.abs(d) < 0.005 ? "Cuadra exacto." : d < 0 ? "Faltan " + mx.format(-d) + "." : "Sobran " + mx.format(d) + "."; }
+    $("cc-toast").innerHTML = toast ? '<span class="toast' + (toast[0] ? "" : " mal") + '">' + esc(toast[1]) + "</span>" : "";
+    guardar("hegamex-manual-susana-caja", caja);
+  };
+  var ccTipo = function (t) { tipo = t; $("cc-sale").setAttribute("aria-pressed", t === "sale"); $("cc-entra").setAttribute("aria-pressed", t === "entra"); $("cc-concepto").placeholder = t === "sale" ? "Garrafones de agua, papelería…" : "Reposición de caja"; };
+  $("cc-sale").addEventListener("click", function () { ccTipo("sale"); });
+  $("cc-entra").addEventListener("click", function () { ccTipo("entra"); });
+  var anotar = function () {
+    var c = $("cc-concepto").value.trim(), m = Number($("cc-monto").value) || 0;
+    if (m <= 0) return pintarCaja([false, "El monto tiene que ser mayor a cero"]);
+    if (!c) return pintarCaja([false, "Escribe el concepto"]);
+    caja.push([c, tipo === "sale" ? -m : m]); ultimo = caja.length - 1;
+    $("cc-concepto").value = ""; $("cc-monto").value = ""; $("cc-concepto").focus();
+    pintarCaja([true, tipo === "sale" ? "Gasto anotado" : "Entrada anotada"]);
+  };
+  $("cc-anotar").addEventListener("click", anotar);
+  ["cc-concepto", "cc-monto"].forEach(function (id) { $(id).addEventListener("keydown", function (ev) { if (ev.key === "Enter") { ev.preventDefault(); anotar(); } }); });
+  $("cc-contado").addEventListener("input", function () { pintarCaja(null); });
+  $("cc-arqueo").addEventListener("click", function () {
+    if ($("cc-contado").value === "") return pintarCaja([false, "Escribe cuánto efectivo contaste"]);
+    var d = Number($("cc-contado").value) - saldo(); $("cc-contado").value = "";
+    if (Math.abs(d) < 0.005) return pintarCaja([true, "Cuadra: arqueo sin diferencia"]);
+    caja.push([d < 0 ? "Arqueo: faltante" : "Arqueo: sobrante", d]); ultimo = caja.length - 1;
+    pintarCaja([true, "Arqueo registrado: " + (d < 0 ? "faltante" : "sobrante") + " de " + mx.format(Math.abs(d))]);
+  });
+  pintarCaja(null);
+
+  // ---------- Rutina ----------
+  var RUTINA = [
+    ["Cada día", "d", ["Capturar los pedidos de Mercado Libre, web y mostrador con «Pedido sin cotización».", "Pedir el envío de lo que ya está listo.", "Registrar los cobros que entraron (y los de saldos de la hoja).", "Subir los XML de compras y gastos que llegaron.", "Anotar la caja chica."]],
+    ["Cada semana", "s", ["Revisar la agenda de pagos y registrar lo que se pagó.", "Subir los XML de facturas emitidas y los complementos de pago.", "«Los más atrasados» en Cobranza: llamar o avisar al vendedor.", "Arqueo de caja chica; reponer si bajó de $1,000.", "Revisar «A quién llamar hoy» para tus clientes."]]
+  ];
+  var hechos = leer("hegamex-manual-susana-rutina") || {};
+  var pintarRutina = function () {
+    $("rutina-lista").innerHTML = RUTINA.map(function (g) {
+      var n = g[2].filter(function (_, i) { return hechos[g[1] + i]; }).length;
+      return '<div class="tarjeta cada"><div style="display:flex;justify-content:space-between;align-items:baseline"><h3>' + g[0] + '</h3><span class="tenue cifra" style="font-size:13px">' + n + " de " + g[2].length + '</span></div><div class="progreso"><i style="width:' + (n / g[2].length * 100) + '%"></i></div>' +
+        g[2].map(function (t, i) { var k = g[1] + i; return '<label class="' + (hechos[k] ? "hecho" : "") + '"><input type="checkbox" data-k="' + k + '"' + (hechos[k] ? " checked" : "") + "><span>" + esc(t) + "</span></label>"; }).join("") + "</div>";
+    }).join("");
+  };
+  $("rutina-lista").addEventListener("change", function (ev) { var k = ev.target.getAttribute("data-k"); if (!k) return; hechos[k] = ev.target.checked; guardar("hegamex-manual-susana-rutina", hechos); pintarRutina(); });
+  pintarRutina();
+
+  // ---------- Movimiento al llegar a cada sección ----------
+  if ("IntersectionObserver" in window && !quieto) {
+    var visto = {};
+    var obs = new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var id = en.target.id;
+        document.querySelectorAll("#indice a").forEach(function (a) { a.classList.toggle("activo", a.getAttribute("href") === "#" + id); });
+        if (visto[id]) return; visto[id] = true;
+        // Las tarjetas se voltean solas una vez para enseñar que se puede; luego regresan.
+        if (id === "cambia") { setTimeout(function () { ponModo("ahora"); }, 600); setTimeout(function () { ponModo("antes"); }, 3600); }
+        if (id === "yano") { var l = $("yano-lista"); l.querySelectorAll("div").forEach(function (d, i) { d.style.animationDelay = (i * 80) + "ms"; }); l.classList.add("mostrar"); }
+      });
+    }, { rootMargin: "-35% 0px -55% 0px" });
+    document.querySelectorAll("section.bloque").forEach(function (s) { obs.observe(s); });
+  }
+})();
+</script>
