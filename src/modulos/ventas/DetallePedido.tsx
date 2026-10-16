@@ -105,7 +105,7 @@ export default function DetallePedido() {
   return (
     <Pagina ancho="max-w-[1400px]"
       titulo={<span className="inline-flex flex-wrap items-center gap-2"><span className="cifra">{p.folio}</span><Insignia tono={ESTADO_PEDIDO[p.estado].tono} punto>{ESTADO_PEDIDO[p.estado].texto}</Insignia>
-        {r?.atrasado && <span data-explain={GLOSARIO.pedidoAtrasado}><Insignia tono="peligro">atrasado</Insignia></span>}{p.historico && <span data-explain={GLOSARIO.pedidoHistorico}><Insignia>histórico (paneles)</Insignia></span>}</span>}
+        {r?.atrasado && <span data-explain={GLOSARIO.pedidoAtrasado}><Insignia tono="peligro">atrasado</Insignia></span>}{p.historico && <span data-explain={GLOSARIO.pedidoHistorico}><Insignia>de la hoja</Insignia></span>}</span>}
       descripcion={<span>
         <Link to={`/ventas/clientes/${p.cliente_id}`} className="text-marca-texto hover:underline">{cliente.data?.nombre ?? "…"}</Link>
         {" · "}{CANAL[p.canal]}{p.id_externo ? ` #${p.id_externo}` : ""}
@@ -115,8 +115,8 @@ export default function DetallePedido() {
           : <> · de cotización</>)}
         {vendedor.data && <> · {vendedor.data.nombre}</>}
       </span>}
-      acciones={!p.historico && <>
-        {puede("produccion", 2) && ["confirmado", "en_produccion"].includes(p.estado) && (
+      acciones={(!p.historico || abierto) && <>
+        {!p.historico && puede("produccion", 2) && ["confirmado", "en_produccion"].includes(p.estado) && (
           <Boton variante="secundario" onClick={() => producir.mutate(undefined)} cargando={producir.isPending}><Factory className="h-4 w-4" />Mandar a producción</Boton>
         )}
         {puedeCambiar && ["confirmado", "en_produccion"].includes(p.estado) && (
@@ -133,7 +133,9 @@ export default function DetallePedido() {
       </>}>
 
       {p.estado === "cancelado" && <p className="rounded-xl border border-peligro/30 bg-peligro-suave px-4 py-3 text-sm text-peligro">Cancelado: {p.motivo_cancelacion}</p>}
-      {p.historico && <p className="rounded-xl border border-borde bg-fondo px-4 py-3 text-sm text-tenue">Venta importada de los paneles de ventas (hojas). Cuenta para el historial y las comisiones, pero no es una cuenta por cobrar del ERP.</p>}
+      {p.historico && <p className="rounded-xl border border-borde bg-fondo px-4 py-3 text-sm text-tenue">{abierto
+        ? "Pedido que venía de la hoja y sigue en el taller: su avance, su entrega y sus números de serie se llevan aquí. El cobro sigue en el saldo de arranque del cliente (Cobranza → Saldos de arranque), no en este pedido."
+        : "Venta importada de las hojas. Cuenta para el historial y las comisiones, pero no es una cuenta por cobrar del ERP."}</p>}
 
       {/* Línea de tiempo */}
       {p.estado !== "cancelado" && (

@@ -41,7 +41,7 @@ export default function Pedidos() {
     queryKey: ["v_pedidos"],
     queryFn: () => todas<VPedido & { historico: boolean }>((a, b) => supabase.from("v_pedidos").select("*").order("fecha", { ascending: false }).order("folio", { ascending: false }).range(a, b)),
   });
-  const base = useMemo(() => (lista.data ?? []).filter((p) => (historicos || !p.historico) && (canal === "todos" || p.canal === canal)), [lista.data, historicos, canal]);
+  const base = useMemo(() => (lista.data ?? []).filter((p) => (historicos || !p.historico || !["entregado", "cancelado"].includes(p.estado)) && (canal === "todos" || p.canal === canal)), [lista.data, historicos, canal]);
   const filas = useMemo(() => base.filter((p) =>
     vista === "abiertos" ? ABIERTOS.includes(p.estado) : vista === "entregados" ? p.estado === "entregado" : vista === "cancelados" ? p.estado === "cancelado" : true), [base, vista]);
   const cuenta = (f: (p: VPedido) => boolean) => base.filter(f).length;
@@ -53,7 +53,7 @@ export default function Pedidos() {
       celda: (p) => (
         <div className="whitespace-nowrap">
           <p className="font-medium cifra">{p.folio}</p>
-          <p className="text-[11px] text-tenue">{p.id_externo ? `#${p.id_externo}` : p.cotizacion_folio ?? (p.historico ? "histórico" : "")}</p>
+          <p className="text-[11px] text-tenue">{p.id_externo ? `#${p.id_externo}` : p.cotizacion_folio ?? (p.historico ? "de la hoja" : "")}</p>
           {angosta && (
             <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-tenue">
               {fecha(p.fecha)}
@@ -111,7 +111,7 @@ export default function Pedidos() {
     { clave: "total", titulo: "Total", oculta: angosta, alinear: "der", sinBusqueda: true, valor: (p) => Number(p.total), celda: (p) => <span className="font-medium whitespace-nowrap">{dineroEn(Number(p.total), p.moneda)}</span> },
     {
       clave: "saldo", titulo: "Saldo", oculta: angosta, alinear: "der", sinBusqueda: true, explica: GLOSARIO.saldoPorCobrar, valor: (p) => Number(p.saldo),
-      celda: (p) => p.historico ? <span className="text-tenue text-xs">histórico</span> : (
+      celda: (p) => p.historico ? <span className="text-tenue text-xs">en saldo de arranque</span> : (
         <div className="whitespace-nowrap">
           {Number(p.saldo) > 0.5 ? <p className="font-medium text-aviso">{dineroEn(Number(p.saldo), p.moneda)}</p> : <p className="text-ok text-xs font-medium">pagado</p>}
           {Number(p.cobrado) > 0 && Number(p.saldo) > 0.5 && <p className="text-[11px] text-tenue">cobrado {dineroEn(Number(p.cobrado), p.moneda)}</p>}
