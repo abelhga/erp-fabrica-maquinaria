@@ -211,7 +211,7 @@ export function TableroDireccion() {
           <Indicador titulo="Por cobrar" valor={dineroCompacto(porCobrar)} icono={Wallet} tono={aging && aging.d90 > 0 ? "aviso" : "marca"}
             detalle={<>Cobrado este mes {dineroCompacto(d.cobranza.cobrado_mes)}{aging && aging.d90 > 0 && <> · <b className="text-peligro">{dineroCompacto(aging.d90)} +90 d</b></>}</>}
             alClic={() => ir("/finanzas/cobranza")}
-            explica={`${GLOSARIO.porCobrar} Aquí se suma además el saldo que ya venía de la hoja el día del arranque.`} />
+            explica={GLOSARIO.porCobrar} />
         )}
         {d.inventario && (
           <Indicador titulo="Inventario" valor={dineroCompacto(d.inventario.valor)} icono={Boxes} tono="marca"

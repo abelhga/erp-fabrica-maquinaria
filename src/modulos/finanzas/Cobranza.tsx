@@ -14,7 +14,7 @@ import { q } from "@/lib/consultas";
 import { dinero, dineroCompacto, fecha, numero } from "@/lib/formato";
 import { ESTADO_PEDIDO, RANGOS, TipoCambioDia, enMoneda, tonoRango, type Rango } from "./componentes/comun";
 import { DetalleCobranza, type FilaCobranza } from "./componentes/CobranzaPedido";
-import { SaldosArranque } from "./componentes/SaldosArranque";
+import { SaldosArranque, useSaldoHoja } from "./componentes/SaldosArranque";
 import { SubirComplementos } from "./componentes/SubirComplementos";
 import { Boton } from "@/components/ui/boton";
 import { useSesion } from "@/lib/sesion";
@@ -37,7 +37,7 @@ function agrupar(filas: FilaCobranza[], clave: (f: FilaCobranza) => string, nomb
 }
 
 export default function Cobranza() {
-  const [vista, setVista] = useState("pedidos");
+  const [vistaElegida, setVista] = useState<string | null>(null);
   const { puede } = useSesion();
   const [complementos, setComplementos] = useState(false);
   const [rango, setRango] = useState<Rango | "todos">("todos");
@@ -54,11 +54,20 @@ export default function Cobranza() {
     queryFn: () => q<{ mes: string; cobrado: number; facturado: number; cobros: number }[]>(supabase.rpc("cobranza_por_mes", { p_meses: 12 })),
   });
 
+  const hoja = useSaldoHoja();
   const todas = datos.data ?? [];
   const pendientes = todas.filter((f) => Number(f.saldo) > 0.009);
   const total = pendientes.reduce((s, f) => s + Number(f.saldo_mxn), 0);
   const porRango = Object.fromEntries(RANGOS.map((r) => [r.valor, pendientes.filter((f) => f.rango === r.valor)])) as Record<Rango, FilaCobranza[]>;
   const suma = (fs: FilaCobranza[]) => fs.reduce((s, f) => s + Number(f.saldo_mxn), 0);
+  // Lo de la hoja va en el total y en cada antigüedad: casi todo lo que nos deben viene de ahí.
+  const deHoja = Number(hoja.data?.total ?? 0);
+  const totalTodo = total + deHoja;
+  const enRango = (r: Rango) => suma(porRango[r]) + Number(hoja.data?.rangos[r] ?? 0);
+  // Si todo lo que se debe es de la hoja, abrir en esa pestaña y no en una tabla vacía.
+  const vista = vistaElegida ?? (datos.data && pendientes.length === 0 && deHoja > 0 ? "arranque" : "pedidos");
+  const detalleRango = (r: Rango) => [porRango[r].length ? `${porRango[r].length} ${porRango[r].length === 1 ? "pedido" : "pedidos"}` : "",
+    hoja.data?.rangos[r] ? `${dineroCompacto(hoja.data.rangos[r])} de la hoja` : "", `${totalTodo ? Math.round((enRango(r) / totalTodo) * 100) : 0} %`].filter(Boolean).join(" · ");
   const vencido = pendientes.filter((f) => f.vence < new Date().toLocaleDateString("en-CA") && f.estado !== "en_produccion" && f.estado !== "confirmado");
 
   const filas = (conSaldo === "todos" ? todas : conSaldo === "sin_factura" ? todas.filter((f) => !f.facturado && f.estado !== "cancelado") : pendientes)
@@ -115,7 +124,7 @@ export default function Cobranza() {
   ];
 
   return (
-    <Pagina titulo="Cobranza" descripcion="Lo que nos deben los clientes, desde cuándo, y lo que se ha cobrado mes a mes."
+    <Pagina titulo="Cobranza" descripcion="Lo que nos deben los clientes (pedidos y lo que ya se debía en la hoja), desde cuándo, y lo que se ha cobrado mes a mes."
       acciones={<>
         <TipoCambioDia />
         {puede("finanzas", 2) && <Boton variante="secundario" onClick={() => setComplementos(true)}><Upload className="h-4 w-4" /> Subir complementos de pago</Boton>}
@@ -123,20 +132,21 @@ export default function Cobranza() {
       <SubirComplementos abierto={complementos} alCambiar={setComplementos} />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <div className="sm:col-span-2 lg:col-span-1">
-          <Kpi titulo="Por cobrar" valor={dineroCompacto(total)} icono={Wallet} tono="marca" explica={GLOSARIO.porCobrar}
-            detalle={`${pendientes.length} pedidos · ${dineroCompacto(suma(vencido))} vencido según crédito`}
-            alClic={() => { setRango("todos"); setConSaldo("saldo"); setVista("pedidos"); }} />
+          <Kpi titulo="Por cobrar" valor={dineroCompacto(totalTodo)} icono={Wallet} tono="marca" explica={GLOSARIO.porCobrar}
+            detalle={deHoja ? [`${dineroCompacto(deHoja)} de la hoja (${hoja.data?.clientes} clientes)`, pendientes.length ? `${dineroCompacto(total)} de ${pendientes.length} pedidos` : ""].filter(Boolean).join(" · ")
+              : `${pendientes.length} pedidos · ${dineroCompacto(suma(vencido))} vencido según crédito`}
+            alClic={() => { setRango("todos"); setConSaldo("saldo"); setVista(total || !deHoja ? "pedidos" : "arranque"); }} />
         </div>
         {RANGOS.map((r) => (
-          <Kpi key={r.valor} titulo={r.texto} valor={dineroCompacto(suma(porRango[r.valor]))} icono={ICONO_RANGO[r.valor]} tono={r.tono} explica={GLOSARIO.antiguedadCobranza}
-            detalle={`${porRango[r.valor].length} ${porRango[r.valor].length === 1 ? "pedido" : "pedidos"} · ${total ? Math.round((suma(porRango[r.valor]) / total) * 100) : 0} %`}
-            alClic={() => { setRango(r.valor); setConSaldo("saldo"); setVista("pedidos"); }} />
+          <Kpi key={r.valor} titulo={r.texto} valor={dineroCompacto(enRango(r.valor))} icono={ICONO_RANGO[r.valor]} tono={r.tono} explica={GLOSARIO.antiguedadCobranza}
+            detalle={detalleRango(r.valor)}
+            alClic={() => { setRango(r.valor); setConSaldo("saldo"); setVista(porRango[r.valor].length || !deHoja ? "pedidos" : "arranque"); }} />
         ))}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Tarjeta className="lg:col-span-2 flex flex-col">
-          <EncabezadoTarjeta titulo="Cobrado por mes" explica={GLOSARIO.cobradoPorMes} descripcion="Cobros registrados, en pesos (los de dólares al tipo de cambio del pedido)"
+          <EncabezadoTarjeta titulo="Cobrado por mes" explica={GLOSARIO.cobradoPorMes} descripcion="Cobros registrados y pagos de la hoja, en pesos (los de dólares al tipo de cambio del pedido)"
             acciones={<span className="text-sm text-tenue">Promedio: <b className="text-texto cifra">{dinero(promedio)}</b></span>} />
           <div className="flex-1 min-h-[240px] px-2 pb-3">
             <ResponsiveContainer>
@@ -153,7 +163,10 @@ export default function Cobranza() {
         <Tarjeta>
           <EncabezadoTarjeta titulo="Los más atrasados" descripcion="Por dónde empezar a llamar" />
           <ul className="px-3 pb-3 space-y-1">
-            {masViejos.length === 0 && <li className="px-2 py-6 text-sm text-tenue text-center">Nadie nos debe. Todo cobrado.</li>}
+            {masViejos.length === 0 && (deHoja > 0
+              ? <li className="px-2 py-6 text-sm text-tenue text-center">Ningún pedido del ERP debe todavía. Lo que se debe viene de la hoja:{" "}
+                  <button type="button" className="text-marca-texto hover:underline" onClick={() => setVista("arranque")}>ver los saldos de arranque</button>.</li>
+              : <li className="px-2 py-6 text-sm text-tenue text-center">Nadie nos debe. Todo cobrado.</li>)}
             {masViejos.map((f) => (
               <li key={f.pedido_id}>
                 <button onClick={() => setAbierto(f.pedido_id)} className="w-full flex items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-fondo">

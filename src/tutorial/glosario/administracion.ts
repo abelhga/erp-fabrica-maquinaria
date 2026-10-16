@@ -51,9 +51,9 @@ export const ADMINISTRACION = {
   sueldoDeLaFicha: "Esta persona no tiene sueldo registrado en nómina: se usa el salario diario de su ficha de Personal × 7. Registra su sueldo para que deje de depender de la ficha.",
 
   // --- Cobranza y pagos ---
-  antiguedadCobranza: "Días desde la primera factura del pedido o, si aún no se factura, desde la fecha del pedido. Se agrupa en 0 a 30, 31 a 60, 61 a 90 y más de 90 días; pasando 90 se pinta en rojo.",
+  antiguedadCobranza: "Días desde la primera factura del pedido o, si aún no se factura, desde la fecha del pedido. Lo que se debía en la hoja cuenta desde la venta: los pagos van tapando las ventas más viejas, así que lo que falta es lo más reciente. Se agrupa en 0 a 30, 31 a 60, 61 a 90 y más de 90 días; pasando 90 se pinta en rojo.",
   creditoCliente: "Los días de crédito del cliente. La fecha de pago es la primera factura (o el pedido) más esos días; sin crédito, es de contado.",
-  cobradoPorMes: "Los cobros registrados cada mes, en pesos. Los de pedidos en dólares se convierten al tipo de cambio del pedido, no al de hoy.",
+  cobradoPorMes: "Los cobros registrados cada mes, en pesos, con los pagos que trae la hoja y lo que se ha cobrado aquí de los saldos de la hoja. Los de pedidos en dólares se convierten al tipo de cambio del pedido, no al de hoy.",
   porPagar: "Lo que debemos a proveedores, en pesos: las facturas que siguen sin pagar (las de la hoja y las registradas aquí) y las órdenes de compra recibidas con saldo. Si no llevas finanzas, solo ves las órdenes.",
   vencePago: "La fecha en que hay que pagar: la fecha de la factura (o la recepción, en una orden de compra) más los días de crédito del proveedor. Lo que traía de 2021 cuenta como vencido. Rojo = vencida; amarillo = vence en 7 días o menos.",
   agendaPagos: "Lo que hay que pagar acomodado por semana, de lunes a domingo: primero lo vencido y luego las próximas 4 semanas, sumado por proveedor. Clic en un proveedor para ver sus facturas y registrar el pago.",

@@ -64,6 +64,8 @@ export default function DetalleCliente() {
   });
 
   const c = cli.data;
+  const deHoja = Number(arranque.data?.saldo ?? 0);
+  const saldoTotal = Number(resumen.data?.saldo ?? 0) + Math.max(deHoja, 0);
   const mio = c?.vendedor_id === perfil?.id;
   const puedeEditar = !!c && puede("ventas", 2) && (!c.vendedor_id || mio || esGerente);
   const contactosVisibles = !!c && (!c.vendedor_id || mio || esGerente || puede("finanzas", 1));
@@ -94,9 +96,12 @@ export default function DetalleCliente() {
         {puede("ventas", 2) && <Boton onClick={() => ir(`/ventas/cotizaciones/nueva?cliente=${c.id}`)}><FilePlus className="h-4 w-4" />Nueva cotización</Boton>}
       </>}>
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
-        <Kpi titulo="Saldo por cobrar" icono={History} tono={Number(resumen.data?.saldo ?? 0) > 0.5 ? "aviso" : "ok"}
-          valor={contactosVisibles || Number(resumen.data?.saldo) ? corto(resumen.data?.saldo ?? 0) : "Privado"}
-          detalle={arranque.data?.saldo ? <span data-explain={GLOSARIO.saldoArranque}>+ {dinero(arranque.data.saldo)} de arranque (hoja)</span> : "Pedidos del ERP"} explica={GLOSARIO.saldoPorCobrar} />
+        {/* Lo que debía en la hoja va sumado: con los pedidos de hoy (todos de la hoja) el
+            número grande decía $0 aunque el cliente debiera. Un saldo a favor no resta. */}
+        <Kpi titulo="Saldo por cobrar" icono={History} tono={saldoTotal > 0.5 ? "aviso" : "ok"}
+          valor={contactosVisibles || saldoTotal ? corto(saldoTotal) : "Privado"}
+          detalle={deHoja > 0.5 ? <span data-explain={GLOSARIO.saldoArranque}>{Number(resumen.data?.saldo ?? 0) > 0.5 ? `${dinero(deHoja)} de la hoja` : "Todo de la hoja"}</span>
+            : deHoja < -0.5 ? <span data-explain={GLOSARIO.saldoArranque}>{dinero(-deHoja)} a su favor en la hoja</span> : "Pedidos del ERP"} explica={GLOSARIO.saldoPorCobrar} />
         {/* Del cliente de otro vendedor solo se sabe de quién es y hasta cuándo (la regla de cartera); lo que compra es suyo. */}
         <Kpi titulo="Compras 12 meses" icono={History} tono="marca" valor={contactosVisibles ? corto(resumen.data?.compras_12m ?? 0) : "Privado"} detalle="Sin IVA, pedidos del ERP" explica={GLOSARIO.compras12m} />
         <Kpi titulo="Última compra" icono={History} tono="neutro"
