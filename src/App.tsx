@@ -69,6 +69,7 @@ const SolicitudesPrecio = p(() => import("./modulos/compras/Solicitudes"));
 const MisSolicitudesPrecio = p(() => import("./modulos/ventas/solicitudes/MisSolicitudes"));
 const Envios = p(() => import("./modulos/almacen/Envios"));
 const Devoluciones = p(() => import("./modulos/ventas/Devoluciones"));
+const MercadoLibre = p(() => import("./modulos/ventas/MercadoLibre"));
 const Analisis = p(() => import("./modulos/analisis/Analisis"));
 
 function Cargando() {
@@ -150,6 +151,7 @@ export function App() {
           <Route path="almacen/reabasto" element={<Con m="inventario"><Reabasto /></Con>} />
           <Route path="almacen/envios" element={<Con m="envios"><Envios /></Con>} />
           <Route path="ventas/devoluciones" element={<Con m="envios"><Devoluciones /></Con>} />
+          <Route path="ventas/mercadolibre" element={<Con m="ventas"><MercadoLibre /></Con>} />
           <Route path="produccion/gerencia" element={<Con m="produccion"><Gerencia /></Con>} />
           <Route path="produccion/ordenes" element={<Con m="produccion"><OrdenesProduccion /></Con>} />
           <Route path="produccion/ordenes/:id" element={<Con m="produccion"><DetalleOrden /></Con>} />

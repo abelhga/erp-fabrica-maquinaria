@@ -6,6 +6,7 @@ import { ConfigEmpresa } from "./componentes/ConfigEmpresa";
 import { ConfigVentas } from "./componentes/ConfigVentas";
 import { ConfigAlmacenes, ConfigTaller } from "./componentes/ConfigCatalogos";
 import { ConfigTipoCambio } from "./componentes/ConfigTipoCambio";
+import { ConfigIntegraciones } from "./componentes/ConfigIntegraciones";
 
 const PESTANAS = [
   { valor: "empresa", texto: "Empresa" },
@@ -13,6 +14,7 @@ const PESTANAS = [
   { valor: "almacenes", texto: "Almacenes" },
   { valor: "taller", texto: "Taller" },
   { valor: "tipo-cambio", texto: "Tipos de cambio" },
+  { valor: "integraciones", texto: "Integraciones" },
 ];
 
 export default function Configuracion() {
@@ -28,6 +30,7 @@ export default function Configuracion() {
         <ContenidoPestana value="almacenes" className="pt-4"><ConfigAlmacenes /></ContenidoPestana>
         <ContenidoPestana value="taller" className="pt-4"><ConfigTaller /></ContenidoPestana>
         <ContenidoPestana value="tipo-cambio" className="pt-4"><ConfigTipoCambio /></ContenidoPestana>
+        <ContenidoPestana value="integraciones" className="pt-4"><ConfigIntegraciones /></ContenidoPestana>
       </Pestanas>
     </Pagina>
   );
