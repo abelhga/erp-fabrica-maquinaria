@@ -35,7 +35,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     "Los pedidos de todos los canales en una sola lista. Ventas, producción y cobranza la usan para saber en qué va cada uno sin preguntar por WhatsApp.",
     "Filtra por abiertos, entregados o cancelados y por canal. Los renglones en rojo están atrasados: pasó su fecha compromiso. “Producción” muestra el avance del taller y “Saldo” lo que falta por cobrar (dice “pagado” en verde si ya se cobró todo). Clic en un renglón abre el pedido.",
     "“Pedido sin cotización” es para ventas de Mercado Libre, sitio web o mostrador: eliges cliente, canal y número de venta, y en el siguiente paso agregas las partidas con su precio de lista. Abajo ves el total y lo por cobrar de lo filtrado, en pesos.",
-    "Los pedidos importados de los paneles de ventas de las hojas no salen de entrada; actívalos con “Incluir históricos de los paneles”.",
+    "Los pedidos ya entregados que vienen de las hojas no salen de entrada; actívalos con “Incluir históricos de los paneles”. Los de la hoja que siguen en el taller sí salen siempre, con «en saldo de arranque» en la columna de saldo: su cobro se lleva en el saldo de arranque del cliente.",
   ],
   "/ventas/pedidos/:id": [
     "Todo lo de un pedido en una página: partidas, avance de producción, envío, facturas, cobros y a quién le cuenta la venta. La línea de arriba marca por dónde va: confirmado, en producción, listo y entregado.",

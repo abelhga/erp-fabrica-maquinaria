@@ -33,7 +33,7 @@ export const VENTAS = {
   avancePedido: "Qué tanto lleva producción con este pedido: el promedio de sus órdenes de taller, donde cada orden avanza según las horas de trabajo ya terminadas. Una orden terminada cuenta 100 %.",
   canalVenta: "Por dónde entró la venta: Directo (vendedores), Mercado Libre, Sitio web, Mostrador, Distribuidor o Amazon.",
   numeroVentaExterno: "El número de venta de Mercado Libre (o del sitio web). No se puede repetir dentro del mismo canal, así nadie captura dos veces la misma venta.",
-  pedidoHistorico: "Venta importada de los paneles de ventas de las hojas. Cuenta para el historial y para las comisiones, pero no es una cuenta por cobrar del ERP.",
+  pedidoHistorico: "Pedido que viene de las hojas. Cuenta para el historial y para las comisiones de su mes, pero no es una cuenta por cobrar del ERP: lo que el cliente debe está en su saldo de arranque. Si sigue en el taller, su avance y su entrega se llevan aquí como cualquier otro.",
   lineaVenta: "Maquinaria, Refacciones u Otros (fletes, servicios, instalaciones). La pone el catálogo en cada partida y de ella depende cómo cuenta para la comisión; solo la gerencia la puede cambiar.",
   creditoCompartido: "Cuando varios vendedores cierran una venta, la gerencia reparte el crédito en porcentajes que suman 100 %. A cada uno le cuenta para su comisión y sus metas solo su parte del pedido.",
 
