@@ -1,0 +1,778 @@
+<title>Manual de Finanzas Hegamex</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: lectura en una columna con índice fijo. Tres herramientas de práctica
+   (qué hacer con un XML, cómo se aplica un pago, caja chica) rompen a tarjetas de dos
+   columnas: captura a la izquierda, lo que haría el ERP a la derecha.
+   Mismos tokens que el ERP para que el manual se vea como la pantalla. */
+:root {
+  --fondo: hsl(220 20% 97%);
+  --superficie: hsl(0 0% 100%);
+  --borde: hsl(220 14% 89%);
+  --texto: hsl(222 30% 14%);
+  --tenue: hsl(220 9% 46%);
+  --marca: hsl(214 100% 52%);
+  --marca-suave: hsl(214 100% 96%);
+  --marca-texto: hsl(214 90% 40%);
+  --ok: hsl(152 60% 36%);
+  --ok-suave: hsl(150 60% 95%);
+  --aviso: hsl(35 92% 40%);
+  --aviso-suave: hsl(45 100% 94%);
+  --peligro: hsl(0 72% 48%);
+  --peligro-suave: hsl(0 85% 96%);
+  --info: hsl(262 60% 52%);
+  --info-suave: hsl(262 80% 97%);
+  --sombra: 0 1px 2px hsl(222 40% 20% / .05), 0 2px 6px hsl(222 40% 20% / .06);
+  --f-texto: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fondo: hsl(222 25% 8%); --superficie: hsl(222 22% 12%); --borde: hsl(220 15% 22%);
+    --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 64%);
+    --marca: hsl(214 100% 62%); --marca-suave: hsl(214 60% 18%); --marca-texto: hsl(214 100% 74%);
+    --ok: hsl(152 55% 50%); --ok-suave: hsl(152 40% 15%);
+    --aviso: hsl(38 92% 58%); --aviso-suave: hsl(38 50% 15%);
+    --peligro: hsl(0 75% 64%); --peligro-suave: hsl(0 45% 17%);
+    --info: hsl(262 70% 74%); --info-suave: hsl(262 35% 18%);
+    --sombra: 0 1px 2px hsl(0 0% 0% / .3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fondo: hsl(222 25% 8%); --superficie: hsl(222 22% 12%); --borde: hsl(220 15% 22%);
+  --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 64%);
+  --marca: hsl(214 100% 62%); --marca-suave: hsl(214 60% 18%); --marca-texto: hsl(214 100% 74%);
+  --ok: hsl(152 55% 50%); --ok-suave: hsl(152 40% 15%);
+  --aviso: hsl(38 92% 58%); --aviso-suave: hsl(38 50% 15%);
+  --peligro: hsl(0 75% 64%); --peligro-suave: hsl(0 45% 17%);
+  --info: hsl(262 70% 74%); --info-suave: hsl(262 35% 18%);
+  --sombra: 0 1px 2px hsl(0 0% 0% / .3);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--fondo); color: var(--texto); font-family: var(--f-texto); font-size: 15px; line-height: 1.6; }
+.envoltura { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 16px; font-weight: 600; }
+p { margin: 0; }
+a { color: var(--marca-texto); }
+code, .ruta { font-family: var(--f-mono); font-size: 0.85em; background: var(--marca-suave); color: var(--marca-texto); padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+.cifra { font-variant-numeric: tabular-nums; }
+.tenue { color: var(--tenue); }
+.etiqueta { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--tenue); }
+.lectura { max-width: 68ch; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; border-radius: 6px; }
+
+.cabecera { padding-block: 40px 28px; display: grid; gap: 14px; }
+.cabecera .lectura { font-size: 17px; color: var(--tenue); }
+.quienes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.quienes .insignia { white-space: normal; }
+
+.indice { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--fondo) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--borde); margin-bottom: 20px; }
+.indice nav { display: flex; gap: 4px; overflow-x: auto; padding-block: 8px; scrollbar-width: none; }
+.indice a { flex: none; text-decoration: none; color: var(--tenue); font-size: 13.5px; font-weight: 500; padding: 6px 12px; border-radius: 999px; }
+.indice a:hover { color: var(--texto); background: var(--superficie); }
+.indice a.activo { color: var(--marca-texto); background: var(--marca-suave); }
+
+section.bloque { display: grid; gap: 18px; padding-block: 28px; scroll-margin-top: 64px; }
+section.bloque > header { display: grid; gap: 6px; }
+section.bloque > * { min-width: 0; }
+select { max-width: 100%; }
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; box-shadow: var(--sombra); }
+
+.insignia { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 999px; white-space: nowrap; background: var(--fondo); color: var(--tenue); border: 1px solid var(--borde); }
+.insignia.punto::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.t-info { background: var(--info-suave); color: var(--info); border-color: transparent; }
+.t-marca { background: var(--marca-suave); color: var(--marca-texto); border-color: transparent; }
+.t-aviso { background: var(--aviso-suave); color: var(--aviso); border-color: transparent; }
+.t-ok { background: var(--ok-suave); color: var(--ok); border-color: transparent; }
+.t-peligro { background: var(--peligro-suave); color: var(--peligro); border-color: transparent; }
+.btn-ui { display: inline-block; font-size: 12.5px; font-weight: 600; padding: 0 7px; border-radius: 6px; border: 1px solid var(--borde); background: var(--fondo); white-space: nowrap; line-height: 1.6; }
+.nota { display: grid; grid-template-columns: auto 1fr; gap: 10px; font-size: 13.5px; padding: 10px 12px; border-radius: 10px; background: var(--marca-suave); }
+.nota.ojo { background: var(--aviso-suave); }
+.nota.mal { background: var(--peligro-suave); }
+.nota b.m { color: var(--marca-texto); }
+.nota.ojo b.m { color: var(--aviso); }
+.nota.mal b.m { color: var(--peligro); }
+
+/* Mapa del dinero */
+.mapa { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.lugar { padding: 16px; display: grid; gap: 8px; align-content: start; text-decoration: none; color: inherit; }
+.lugar:hover { border-color: var(--marca); }
+.lugar .dir { font-family: var(--f-mono); font-size: 12px; font-weight: 500; }
+.lugar .dir.entra { color: var(--ok); } .lugar .dir.sale { color: var(--peligro); } .lugar .dir.caja { color: var(--aviso); } .lugar .dir.usd { color: var(--info); }
+.lugar p { font-size: 14px; color: var(--tenue); }
+
+/* Rutina */
+.rutina { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.cada { padding: 16px; display: grid; gap: 10px; align-content: start; }
+.cada label { display: grid; grid-template-columns: 18px 1fr; gap: 10px; font-size: 14px; cursor: pointer; align-items: start; }
+.cada input { accent-color: var(--ok); width: 16px; height: 16px; margin-top: 3px; }
+.cada label.hecho span { color: var(--tenue); text-decoration: line-through; }
+.progreso { height: 5px; border-radius: 99px; background: var(--fondo); overflow: hidden; }
+.progreso i { display: block; height: 100%; background: var(--ok); transition: width .2s; }
+
+/* Pasos */
+.fases { display: grid; gap: 10px; }
+details.fase { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; }
+details.fase summary { list-style: none; cursor: pointer; padding: 14px 18px; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; }
+details.fase summary::-webkit-details-marker { display: none; }
+details.fase summary .flecha { color: var(--tenue); transition: transform .2s; }
+details.fase[open] summary .flecha { transform: rotate(90deg); }
+details.fase summary p { font-size: 13px; color: var(--tenue); }
+.cuerpo { padding: 16px 18px 18px; display: grid; gap: 14px; border-top: 1px solid var(--borde); }
+.cuerpo ol, .cuerpo ul { margin: 0; padding-left: 20px; display: grid; gap: 7px; }
+.dos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+
+/* Herramientas de práctica */
+.practica { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); overflow: hidden; }
+.practica > div { padding: 20px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.practica .lado { border-left: 1px solid var(--borde); background: color-mix(in srgb, var(--fondo) 55%, var(--superficie)); }
+.opciones { display: grid; gap: 6px; }
+.opcion { text-align: left; border: 1px solid var(--borde); background: var(--superficie); border-radius: 10px; padding: 9px 12px; cursor: pointer; display: grid; gap: 1px; font-size: 14px; }
+.opcion span { font-size: 12.5px; color: var(--tenue); }
+.opcion:hover { border-color: var(--marca); }
+.opcion[aria-pressed="true"] { border-color: var(--marca); background: var(--marca-suave); }
+.opcion[aria-pressed="true"] b { color: var(--marca-texto); }
+.dialogo { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 14px; display: grid; gap: 10px; font-size: 14px; }
+.dialogo .titulo { font-weight: 600; }
+.campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; }
+.campos div { display: grid; gap: 1px; min-width: 0; }
+.campos span { font-size: 12px; color: var(--tenue); }
+.campos b { font-weight: 500; overflow-wrap: anywhere; }
+.boton { display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; background: var(--marca); color: hsl(0 0% 100%); font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; justify-self: start; }
+.boton.sec { background: var(--superficie); color: var(--texto); border-color: var(--borde); font-weight: 500; }
+.boton:disabled { opacity: .45; cursor: not-allowed; }
+.campo { display: grid; gap: 4px; font-size: 12.5px; color: var(--tenue); }
+select, input[type="number"], input[type="text"] { background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; padding: 6px 10px; font-size: 14px; min-width: 0; width: 100%; }
+input[type="number"] { font-variant-numeric: tabular-nums; }
+.fila-campos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: end; }
+.check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.check input { accent-color: var(--marca); width: 16px; height: 16px; margin-top: 3px; }
+.rapidos { display: flex; gap: 6px; flex-wrap: wrap; }
+.toast { font-size: 13.5px; padding: 8px 12px; border-radius: 8px; background: var(--ok-suave); color: var(--ok); font-weight: 500; justify-self: start; }
+.toast.mal { background: var(--peligro-suave); color: var(--peligro); }
+.segmento { display: inline-flex; border: 1px solid var(--borde); border-radius: 8px; overflow: hidden; }
+.segmento button { border: 0; background: var(--superficie); padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.segmento button[aria-pressed="true"] { background: var(--marca); color: hsl(0 0% 100%); }
+.saldo-grande { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+/* Tablas */
+.tabla-env { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th { text-align: left; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--borde); white-space: nowrap; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.kpi { background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; min-width: 0; }
+.kpi span { font-size: 12px; color: var(--tenue); }
+.kpi b { font-size: 17px; font-variant-numeric: tabular-nums; }
+.agenda { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.semana { background: color-mix(in srgb, var(--fondo) 70%, var(--superficie)); border: 1px solid var(--borde); border-radius: 10px; padding: 10px; display: grid; gap: 6px; align-content: start; font-size: 13px; min-width: 0; }
+.semana header b { display: block; font-size: 13.5px; }
+.semana header span { font-size: 11.5px; color: var(--tenue); }
+.semana.vencido { border-color: color-mix(in srgb, var(--peligro) 45%, transparent); }
+.semana .linea { display: flex; justify-content: space-between; gap: 6px; }
+.semana .linea span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.semana .total { border-top: 1px solid var(--borde); padding-top: 6px; font-weight: 600; display: flex; justify-content: space-between; }
+
+/* Mensajes */
+.buscador { padding: 14px 16px 6px; }
+.msg { font-family: var(--f-mono); font-size: 12.5px; }
+.reglas td:first-child { width: 42%; }
+
+.pie { border-top: 1px solid var(--borde); margin-top: 24px; padding-top: 18px; font-size: 13px; color: var(--tenue); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+
+@media (max-width: 960px) {
+  .mapa { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .practica { grid-template-columns: minmax(0, 1fr); }
+  .practica .lado { border-left: 0; border-top: 1px solid var(--borde); }
+  .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .agenda { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .rutina, .dos { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 620px) {
+  .mapa, .campos { grid-template-columns: minmax(0, 1fr); }
+  .kpis, .agenda { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fila-campos { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .practica > div { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="envoltura">
+  <header class="cabecera">
+    <span class="etiqueta">ERP Hegamex · Manual de uso</span>
+    <h1>Finanzas: lo que entra, lo que sale y lo que hay en caja</h1>
+    <p class="lectura">Desde el arranque de Finanzas en el ERP, las compras, los pagos y la caja chica ya no se capturan en la hoja. Este manual explica dónde vive cada peso, qué hacer cada día y qué te contesta el sistema cuando algo no cuadra. Las tres herramientas de práctica se comportan como la pantalla real y no guardan nada.</p>
+    <div class="quienes">
+      <span class="insignia t-marca">Para: Finanzas (captura)</span>
+      <span class="insignia">Dirección: todo</span>
+      <span class="insignia">Compras y gerencia de ventas: solo ven órdenes de compra y cobranza</span>
+    </div>
+  </header>
+</div>
+
+<div class="indice">
+  <div class="envoltura" style="padding-block: 0;">
+    <nav id="indice" aria-label="Secciones">
+      <a href="#mapa">Dónde vive el dinero</a>
+      <a href="#rutina">Tu rutina</a>
+      <a href="#cobranza">Cobranza</a>
+      <a href="#pagos">Pagos a proveedores</a>
+      <a href="#xml">¿Qué hago con este XML?</a>
+      <a href="#aplicar">Cómo se aplica un pago</a>
+      <a href="#caja">Caja chica</a>
+      <a href="#otros">Comisiones y más</a>
+      <a href="#mensajes">Si el sistema dice…</a>
+      <a href="#permisos">Quién ve qué</a>
+    </nav>
+  </div>
+</div>
+
+<main class="envoltura">
+
+  <!-- MAPA -->
+  <section class="bloque" id="mapa">
+    <header>
+      <span class="etiqueta">Menú → Administración</span>
+      <h2>Dónde vive cada peso</h2>
+    </header>
+    <div class="mapa">
+      <a class="tarjeta lugar" href="#cobranza"><span class="dir entra">+ ENTRA</span><h3>Cobranza</h3><p>Lo que nos deben los clientes por pedido, con antigüedad, y los saldos que venían de la hoja.</p><span class="ruta">/finanzas/cobranza</span></a>
+      <a class="tarjeta lugar" href="#pagos"><span class="dir sale">− SALE</span><h3>Pagos a proveedores</h3><p>Facturas por pagar, cuenta de cada proveedor, préstamos de socios y bancos aparte, y órdenes de compra.</p><span class="ruta">/finanzas/pagos</span></a>
+      <a class="tarjeta lugar" href="#caja"><span class="dir caja">$ EFECTIVO</span><h3>Caja chica</h3><p>Cada gasto y reposición en efectivo, con su saldo después de cada uno, y el arqueo.</p><span class="ruta">/finanzas/caja-chica</span></a>
+      <a class="tarjeta lugar" href="#otros"><span class="dir usd">US$ DÓLARES</span><h3>Importaciones · Dinero</h3><p>Pagos al extranjero con su tipo de cambio real, y saldos a favor y garantías por recuperar.</p><span class="ruta">/importaciones/dinero</span></a>
+    </div>
+    <div class="nota"><b class="m">✓</b><p><b>El tipo de cambio del día</b> se captura arriba a la derecha de Cobranza y de Pagos («Dólar: $X hoy»; en ámbar si no es de hoy). «El del DOF o el de tu banco. Mueve los saldos en dólares y los costos importados.» Lo pueden capturar finanzas y compras.</p></div>
+  </section>
+
+  <!-- RUTINA -->
+  <section class="bloque" id="rutina">
+    <header>
+      <span class="etiqueta">Palomea conforme avanzas; se guarda solo en este navegador</span>
+      <h2>Tu rutina</h2>
+    </header>
+    <div class="rutina" id="rutina-lista"></div>
+  </section>
+
+  <!-- COBRANZA -->
+  <section class="bloque" id="cobranza">
+    <header>
+      <span class="etiqueta">Lo que nos deben</span>
+      <h2>Cobranza</h2>
+      <p class="lectura tenue">«Lo que nos deben los clientes, desde cuándo, y lo que se ha cobrado mes a mes.» Arriba, «Por cobrar» y un indicador por rango de antigüedad; al darles clic filtran la tabla. «Los más atrasados» te dice por dónde empezar a llamar.</p>
+    </header>
+    <div class="fases">
+      <details class="fase" open>
+        <summary><div><h3>Registrar un cobro</h3><p>Cada vez que entra dinero de un cliente.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>Pestaña <span class="btn-ui">Por pedido</span>: busca por pedido, cliente, vendedor o factura y da clic en el pedido.</li>
+            <li>En el panel, sección «Cobros» → <span class="btn-ui">Registrar cobro</span>.</li>
+            <li><b>Monto (MXN)</b>: debajo te dice «Queda un saldo de…» o «Liquida el pedido». Un monto negativo es devolución al cliente.</li>
+            <li><b>Fecha en que entró</b> (no acepta fechas futuras), <b>Método</b> (Transferencia, Efectivo, Tarjeta, Cheque, Mercado Pago, Otro), <b>Referencia</b> (SPEI, número de cheque…) y en <b>Notas</b> la cuenta donde entró y si es anticipo o liquidación.</li>
+            <li>Listo: «Cobro registrado en PED-…». El vendedor recibe el aviso «Pago de {cliente}».</li>
+          </ol>
+          <div class="nota"><b class="m">✓</b><p>El anticipo no es un campo aparte: es un cobro más. Lo mismo se puede hacer desde la página del pedido (tarjetas «Facturas» y «Cobros»). Un cobro mal capturado se borra desde el pedido con el bote de basura.</p></div>
+        </div>
+      </details>
+      <details class="fase">
+        <summary><div><h3>Registrar una factura</h3><p>De ahí empieza a contar la antigüedad.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>En el panel del pedido, sección «Facturas» → <span class="btn-ui">Registrar factura</span>.</li>
+            <li><b>Folio</b> (A 3350), <b>Fecha</b>, <b>Total con IVA (MXN)</b>: viene lleno con lo que falta facturar; para un anticipo pon solo el importe facturado.</li>
+            <li><b>UUID del SAT (opcional)</b>: el folio fiscal del XML, 36 caracteres 8-4-4-4-12. Se puede poner después; mientras tanto la factura dice «Sin UUID del SAT».</li>
+          </ol>
+        </div>
+      </details>
+      <details class="fase">
+        <summary><div><h3>Por cliente, por vendedor y saldos de la hoja</h3><p>Las otras pestañas.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ul>
+            <li><span class="btn-ui">Por cliente</span> y <span class="btn-ui">Por vendedor</span>: saldo por rango (0–30, 31–60, 61–90, +90) y el más antiguo. Al dar clic en un renglón filtras «Por pedido».</li>
+            <li><span class="btn-ui">Saldos de arranque (hoja)</span>: lo que cada cliente debía según el libro de ventas de la hoja hasta el arranque del ERP. No se suma a los saldos de pedidos para no contarlo dos veces.</li>
+            <li>Para cobrar un saldo de la hoja: clic en el cliente → «Registrar cobro» con <b>Monto (con IVA)</b> (botón «Todo»), <b>Entró a la cuenta</b>, <b>Fecha</b> y <b>Referencia</b>. No deja cobrar más que el saldo.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+
+    <div class="tarjeta practica">
+      <div>
+        <h3>¿En qué rango cae y cuándo vence?</h3>
+        <p class="tenue" style="font-size:14px;">La antigüedad cuenta desde la primera factura (o desde el pedido si aún no se factura). El vencimiento es esa fecha más los días de crédito del cliente.</p>
+        <div class="fila-campos">
+          <label class="campo">Días desde la factura<input type="number" id="a-dias" value="47" min="0"></label>
+          <label class="campo">Crédito del cliente (días)<input type="number" id="a-credito" value="30" min="0"></label>
+          <label class="campo">¿Facturado?<select id="a-fact"><option value="1">Sí</option><option value="0">Todavía no</option></select></label>
+        </div>
+      </div>
+      <div class="lado" id="a-res" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- PAGOS -->
+  <section class="bloque" id="pagos">
+    <header>
+      <span class="etiqueta">Lo que debemos</span>
+      <h2>Pagos a proveedores</h2>
+      <p class="lectura tenue">«Lo que debemos: lo vencido primero y lo que viene en las próximas 4 semanas.» Aquí se registra cada compra o gasto (con su XML) y cada pago. Cifras de ejemplo.</p>
+    </header>
+    <div class="tarjeta" style="padding:16px; display:grid; gap:14px;">
+      <div class="kpis">
+        <div class="kpi"><span>Por pagar</span><b>$ 412,380</b><span>23 proveedores</span></div>
+        <div class="kpi"><span>Vencido</span><b style="color:var(--peligro)">$ 58,900</b><span>4 proveedores · lo más viejo hace 41 días</span></div>
+        <div class="kpi"><span>Vence en 7 días</span><b>$ 36,120</b></div>
+        <div class="kpi"><span>Próximas 4 semanas</span><b>$ 171,450</b><span>Sin contar lo vencido</span></div>
+        <div class="kpi"><span>Socios y bancos</span><b>$ 2,600,000</b><span>Aparte de proveedores</span></div>
+      </div>
+      <div>
+        <h3 style="margin-bottom:4px;">Agenda de pagos</h3>
+        <p class="tenue" style="font-size:13px; margin-bottom:10px;">Por fecha de vencimiento (fecha de la factura o de la recepción + días de crédito del proveedor). Semanas de lunes a domingo. Socios y bancos no entran.</p>
+        <div class="agenda">
+          <div class="semana vencido"><header><b>Vencido</b><span>Pagar ya</span></header><div class="linea"><span>Lámina y perfiles</span><span class="cifra">$31,200</span></div><div class="linea"><span>Fletes del norte</span><span class="cifra">$14,500</span></div><div class="linea"><span>Rodamientos</span><span class="cifra">$13,200</span></div><div class="total"><span>Total</span><span class="cifra">$58,900</span></div></div>
+          <div class="semana"><header><b>Esta semana</b><span>13–19 oct</span></header><div class="linea"><span>Pintura industrial</span><span class="cifra">$8,120</span></div><div class="linea"><span>CFE</span><span class="cifra">$6,480</span></div><div class="total"><span>Total</span><span class="cifra">$14,600</span></div></div>
+          <div class="semana"><header><b>La próxima</b><span>20–26 oct</span></header><div class="linea"><span>Lámina y perfiles</span><span class="cifra">$15,600</span></div><div class="linea"><span>Motorreductores</span><span class="cifra">$42,300</span></div><div class="total"><span>Total</span><span class="cifra">$57,900</span></div></div>
+          <div class="semana"><header><b>En 2 semanas</b><span>27 oct–2 nov</span></header><div class="linea"><span>Tornillería</span><span class="cifra">$4,870</span></div><div class="total"><span>Total</span><span class="cifra">$4,870</span></div></div>
+          <div class="semana"><header><b>En 3 semanas</b><span>3–9 nov</span></header><p class="tenue">Nada que pagar</p></div>
+        </div>
+      </div>
+      <p class="tenue" style="font-size:12.5px;">Ejemplo ilustrativo: proveedores y cifras inventados. Da clic en un proveedor de la agenda para abrir su cuenta.</p>
+    </div>
+
+    <div class="fases">
+      <details class="fase" open>
+        <summary><div><h3>Registrar una compra o gasto</h3><p>Material, servicios, fletes, luz: todo lo que se le debe (o ya se le pagó) a un proveedor.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>Botón <span class="btn-ui">Registrar compra o gasto</span> → «Sube el XML de la factura». Puedes elegir varios a la vez; pasas de una a otra con «Factura N de M» o <span class="btn-ui">Saltar</span>.</li>
+            <li>Se llena solo: proveedor por su RFC, folio («Serie Folio»), fecha, total con IVA y concepto. Si viene en dólares, el total se pasa a pesos con el tipo de cambio de la factura.</li>
+            <li>Revisa <b>Categoría</b> (Material, Fletes, Luz, Nómina… la del proveedor si la dejas igual), <b>Concepto</b> y <b>Vence el</b> (fecha de la factura más los días de crédito del proveedor).</li>
+            <li>Si es de contado (PUE) viene marcado <b>Ya se pagó (de contado)</b>: elige la cuenta de donde salió.</li>
+            <li><span class="btn-ui">Registrar compra</span> o <span class="btn-ui">Registrar compra y pago</span>.</li>
+          </ol>
+          <div class="nota"><b class="m">✓</b><p>Sin XML también se puede: captura a mano abajo de la zona para soltar archivos. Prueba qué pasa con cada tipo de XML en <a href="#xml">¿Qué hago con este XML?</a></p></div>
+        </div>
+      </details>
+      <details class="fase">
+        <summary><div><h3>Pagarle a un proveedor</h3><p>Desde su cuenta.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>Abre al proveedor desde la agenda o desde <span class="btn-ui">Por proveedor</span>. Arriba ves «Saldo», «Vencido» y su crédito («Crédito N días» o «De contado»).</li>
+            <li><span class="btn-ui">Registrar pago</span>: <b>Monto (con IVA)</b> con los botones <span class="btn-ui">Lo vencido</span> y <span class="btn-ui">Todo</span>.</li>
+            <li><b>Factura que paga</b>: elige una o deja «Las que vencen primero».</li>
+            <li><b>Sale de la cuenta</b> (obligatoria: Santander fiscal, Banorte fiscal, No fiscal, Nota de crédito, Mercado Pago, Caja chica), <b>Fecha</b> y <b>Referencia</b>. Debajo aparece la cuenta bancaria del proveedor.</li>
+          </ol>
+          <div class="nota ojo"><b class="m">!</b><p>Pagar de más solo se puede marcando «Es un anticipo: lo que sobra queda a nuestro favor». Prueba la regla en <a href="#aplicar">Cómo se aplica un pago</a>.</p></div>
+        </div>
+      </details>
+      <details class="fase">
+        <summary><div><h3>Las tres pestañas</h3><p>Facturas por pagar · Por proveedor · Órdenes de compra</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ul>
+            <li><span class="btn-ui">Facturas por pagar</span>: cada factura con saldo y su vencimiento («Vencida hace N días», «Vence hoy», «En N días»). Filtros «Todas», «Vencidas», «Próximos 7 días».</li>
+            <li><span class="btn-ui">Por proveedor</span>: lo que se le debe a cada uno. Filtros «Les debemos», «Socios y bancos» (préstamos de socios y créditos bancarios, aparte para no mezclarlos con proveedores), «A nuestro favor» (saldos negativos: anticipos y notas de crédito) y «Todos».</li>
+            <li><span class="btn-ui">Órdenes de compra</span>: las órdenes recibidas con saldo. Se pagan desde la orden (diálogo «Registrar pago» con «Pagos anteriores»). Su vencimiento es la fecha de la primera recepción más los días de crédito.</li>
+          </ul>
+          <div class="nota ojo"><b class="m">!</b><p>Una compra registrada con XML no se liga a ninguna orden de compra. Si la misma compra ya tiene orden de compra recibida, págala desde «Órdenes de compra» y no registres su XML como compra aparte, o se contará dos veces.</p></div>
+        </div>
+      </details>
+      <details class="fase">
+        <summary><div><h3>Días de crédito de un proveedor</h3><p>El lápiz junto a «Crédito N días».</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ul>
+            <li>Escribe los días (0 a 365) y <span class="btn-ui">Guardar</span>: «Días de crédito guardados».</li>
+            <li>Las facturas que vienen de la hoja recalculan su vencimiento con los días nuevos. Las compras registradas en el ERP conservan el vencimiento con que se guardaron.</li>
+            <li>Lo que se debía al arrancar 2022 («Adeudo 2021») cuenta como vencido.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- XML -->
+  <section class="bloque" id="xml">
+    <header>
+      <span class="etiqueta">Práctica · Registrar compra o gasto</span>
+      <h2>¿Qué hago con este XML?</h2>
+      <p class="lectura tenue">Elige qué te llegó y mira qué hace el ERP al subirlo.</p>
+    </header>
+    <div class="tarjeta practica">
+      <div><div class="opciones" id="x-opciones" role="group" aria-label="Tipo de XML"></div></div>
+      <div class="lado" id="x-res" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- APLICAR -->
+  <section class="bloque" id="aplicar">
+    <header>
+      <span class="etiqueta">Práctica · Registrar pago</span>
+      <h2>Cómo se aplica un pago</h2>
+      <p class="lectura tenue">Si eliges una factura, el pago va a esa factura. Si no eliges, se aplica a las que vencen primero, como se paga en la práctica. Proveedor y cifras de ejemplo.</p>
+    </header>
+    <div class="tarjeta practica">
+      <div>
+        <div class="dialogo" style="background:transparent; border:0; padding:0;">
+          <span class="titulo">Lámina y perfiles (ejemplo) · Crédito 30 días</span>
+        </div>
+        <label class="campo">Monto (con IVA)<input type="number" id="p-monto" value="20000" min="0" step="100"></label>
+        <div class="rapidos"><button type="button" class="boton sec" id="p-vencido">Lo vencido</button><button type="button" class="boton sec" id="p-todo">Todo</button></div>
+        <label class="campo">Factura que paga<select id="p-factura"></select></label>
+        <label class="check"><input type="checkbox" id="p-anticipo"> <span>Es un anticipo: lo que sobra queda a nuestro favor</span></label>
+        <label class="campo">Sale de la cuenta<select id="p-cuenta"><option value="">Elegir cuenta…</option><option>Santander fiscal</option><option>Banorte fiscal</option><option>No fiscal</option><option>Nota de crédito</option><option>Mercado Pago</option><option>Caja chica</option></select></label>
+        <button type="button" class="boton" id="p-registrar">Registrar pago</button>
+      </div>
+      <div class="lado" id="p-res" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- CAJA -->
+  <section class="bloque" id="caja">
+    <header>
+      <span class="etiqueta">Práctica · <span class="ruta">/finanzas/caja-chica</span></span>
+      <h2>Caja chica</h2>
+      <p class="lectura tenue">«El efectivo de la oficina: cada entrada y salida con su saldo, y el arqueo cuando se cuenta.» El saldo debe estar entre $500 y $4,500: abajo toca reponer, arriba llévalo al banco. Una reposición es solo una entrada.</p>
+    </header>
+    <div class="tarjeta practica">
+      <div>
+        <div class="segmento" role="group" aria-label="Tipo"><button type="button" id="c-sale" aria-pressed="true">Sale</button><button type="button" id="c-entra" aria-pressed="false">Entra</button></div>
+        <label class="campo">Concepto<input type="text" id="c-concepto" placeholder="Garrafones de agua, papelería…"></label>
+        <label class="campo">Monto<input type="number" id="c-monto" placeholder="0" min="0"></label>
+        <button type="button" class="boton" id="c-anotar">Anotar</button>
+        <p class="tenue" style="font-size:12.5px;">Enter guarda, como en la pantalla.</p>
+        <div style="border-top:1px solid var(--borde); padding-top:14px; display:grid; gap:10px;">
+          <h3>Arqueo de caja chica</h3>
+          <label class="campo">Efectivo contado<input type="number" id="c-contado" min="0"></label>
+          <p class="tenue" id="c-dice" style="font-size:13px;"></p>
+          <button type="button" class="boton sec" id="c-arqueo">Registrar arqueo</button>
+        </div>
+      </div>
+      <div class="lado">
+        <div style="display:grid; gap:4px;"><span class="etiqueta">Saldo</span><span class="saldo-grande" id="c-saldo"></span><span id="c-estado"></span></div>
+        <div id="c-toast"></div>
+        <div class="tabla-env tarjeta" style="box-shadow:none;">
+          <table><thead><tr><th>Concepto</th><th class="der">Entra</th><th class="der">Sale</th><th class="der">Saldo</th></tr></thead><tbody id="c-tabla"></tbody></table>
+        </div>
+        <button type="button" class="boton sec" id="c-reiniciar">Empezar de nuevo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- OTROS -->
+  <section class="bloque" id="otros">
+    <header>
+      <span class="etiqueta">Fuera de Administración</span>
+      <h2>Comisiones, dólares, paquetería y nómina</h2>
+    </header>
+    <div class="dos">
+      <div class="tarjeta" style="padding:16px; display:grid; gap:8px;">
+        <h3>Comisiones · <span class="ruta">/ventas/comisiones</span></h3>
+        <p style="font-size:14px;">Se calculan solas de los pedidos. Cada vendedor dice «Pendiente de pago» o «Pagada {fecha}». Al pagar: <span class="btn-ui">Marcar pagada</span> con fecha y referencia (SPEI, nómina…). «Se guarda una foto del cálculo para que no cambie si después se mueve un pedido.» Si los pedidos cambian después, la diferencia va como ajuste del mes siguiente. Los ajustes los agrega la gerencia o dirección, no finanzas.</p>
+      </div>
+      <div class="tarjeta" style="padding:16px; display:grid; gap:8px;">
+        <h3>Importaciones · pestaña Dinero</h3>
+        <p style="font-size:14px;">«Pagos en dólares que vienen», «Dinero por recuperar» y el resumen por embarque. En un embarque puedes registrar <span class="btn-ui">Pago</span> al proveedor (con «Pesos que salieron» se calcula el tipo de cambio real), anotar un <span class="btn-ui">Saldo</span> por recuperar y marcarlo <span class="btn-ui">Recuperado</span>. No hay cuenta en dólares: sale de pesos o por EBANX. Más en el <a href="https://claude.ai/artifact/JE9GJshYh1zd6DNMzDFDuZ">Manual de Importaciones</a>.</p>
+      </div>
+      <div class="tarjeta" style="padding:16px; display:grid; gap:8px;">
+        <h3>Recargas de paquetería · Envíos</h3>
+        <p style="font-size:14px;">Cuando llega el aviso «Saldo bajo en {paquetería}», registra la recarga con <span class="btn-ui">Recarga</span> en <span class="ruta">/almacen/envios</span>. Un cargo o corrección (monto negativo) lleva su explicación.</p>
+      </div>
+      <div class="tarjeta" style="padding:16px; display:grid; gap:8px;">
+        <h3>Prenómina · <span class="ruta">/rrhh/prenomina</span></h3>
+        <p style="font-size:14px;">Finanzas la ve y la puede bajar con <span class="btn-ui">Exportar CSV</span> para pagar. Agregar conceptos, sueldos, préstamos y cerrar la semana es de recursos humanos.</p>
+      </div>
+    </div>
+    <div class="tarjeta" style="padding:16px; display:grid; gap:8px;">
+      <h3>Lo que te avisa el ERP</h3>
+      <ul style="margin:0; padding-left:18px; display:grid; gap:6px; font-size:14px;">
+        <li><b>En Inicio:</b> «Por cobrar» y «Por pagar a proveedores» (con lo vencido), y el resumen de tu área: «$X con más de 90 días sin cobrar», «$X por pagar a N proveedores ($Y vencido)», «Caja chica en $X: abajo del mínimo de $500».</li>
+        <li><b>En la campana:</b> «Saldo bajo en {paquetería}» y el resumen del lunes, «Tu semana en Hegamex».</li>
+        <li>Registrar cobros, pagos, compras o caja chica no le manda aviso a nadie, salvo el cobro a un pedido, que le avisa a su vendedor «Pago de {cliente}».</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- MENSAJES -->
+  <section class="bloque" id="mensajes">
+    <header>
+      <span class="etiqueta">La base revisa cada captura</span>
+      <h2>Si el sistema dice…</h2>
+      <p class="lectura tenue">Los mensajes que te puedes encontrar, qué significan y qué hacer. Escribe una palabra para buscar.</p>
+    </header>
+    <div class="tarjeta">
+      <div class="buscador"><input type="text" id="m-buscar" placeholder="Buscar: pagado de más, futura, UUID, anticipo…" aria-label="Buscar mensaje"></div>
+      <div class="tabla-env">
+        <table class="reglas"><thead><tr><th>Mensaje</th><th>Qué significa y qué hacer</th></tr></thead><tbody id="m-tabla"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERMISOS -->
+  <section class="bloque" id="permisos">
+    <header>
+      <span class="etiqueta">Nivel 1 ve · 2 captura · 3 administra</span>
+      <h2>Quién ve qué</h2>
+      <p class="lectura tenue">El dinero de proveedores, la caja chica y los saldos de la hoja piden finanzas nivel 2. Quien solo tiene nivel 1 ve en Pagos únicamente las órdenes de compra.</p>
+    </header>
+    <div class="tarjeta tabla-env">
+      <table>
+        <thead><tr><th>Rol</th><th>Cobranza</th><th>Pagos a proveedores</th><th>Caja chica</th><th>Comisiones</th></tr></thead>
+        <tbody>
+          <tr><td><b>Finanzas</b></td><td>Registra cobros y facturas</td><td>Todo: compras con XML, pagos, cuentas, socios y bancos</td><td>Anota y hace arqueo</td><td>Marca pagadas</td></tr>
+          <tr><td><b>Dirección</b></td><td>Todo</td><td>Todo</td><td>Todo</td><td>Ajustes y todo</td></tr>
+          <tr><td><b>Compras</b></td><td>Ve</td><td>Solo «Órdenes de compra»</td><td>—</td><td>—</td></tr>
+          <tr><td><b>Gerencia de ventas</b></td><td>Ve</td><td>Solo «Órdenes de compra»</td><td>—</td><td>Ajustes</td></tr>
+          <tr><td><b>Vendedor</b></td><td>Ve los cobros de sus clientes en el pedido</td><td>—</td><td>—</td><td>Ve la suya</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="pie">
+    <span>Manual de Finanzas · ERP Hegamex · octubre 2026</span>
+    <span>Ver también: <a href="https://claude.ai/artifact/QmgwqhqZRrr2cCT999aDrg">Manual del ERP Hegamex</a> · <a href="https://claude.ai/artifact/JE9GJshYh1zd6DNMzDFDuZ">Manual de Importaciones</a></span>
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var B = function (t) { return '<span class="btn-ui">' + t + "</span>"; };
+  var mx = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 2 });
+  var guardar = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } };
+  var leer = function (k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
+
+  // ---------- Rutina ----------
+  var RUTINA = [
+    ["Cada día", "dia", [
+      "Capturar el tipo de cambio del día en Cobranza o Pagos.",
+      "Registrar cada cobro que entró (pedido o saldo de la hoja).",
+      "Subir los XML que llegaron con «Registrar compra o gasto».",
+      "Registrar los pagos que salieron, cada uno desde la cuenta del proveedor.",
+      "Anotar los gastos de caja chica."
+    ]],
+    ["Cada semana", "semana", [
+      "Revisar la agenda de pagos: lo vencido y esta semana.",
+      "Llamar a «Los más atrasados» en Cobranza o pasárselos al vendedor.",
+      "Registrar facturas pendientes con su UUID.",
+      "Arqueo de caja chica y reposición si está abajo de $500.",
+      "Revisar pagos en dólares que vienen (Importaciones · Dinero)."
+    ]],
+    ["Cada mes", "mes", [
+      "Marcar pagadas las comisiones del mes.",
+      "Revisar «A nuestro favor»: anticipos y notas de crédito por aplicar.",
+      "Revisar «Socios y bancos».",
+      "Revisar «Dinero por recuperar» de importaciones (saldos a favor y garantías).",
+      "Bajar la prenómina en CSV cuando toque pagar."
+    ]]
+  ];
+  var hechos = leer("hegamex-manual-fin-rutina") || {};
+  var pintarRutina = function () {
+    $("rutina-lista").innerHTML = RUTINA.map(function (g) {
+      var n = g[2].filter(function (_, i) { return hechos[g[1] + i]; }).length;
+      return '<div class="tarjeta cada"><div style="display:flex;justify-content:space-between;align-items:baseline"><h3>' + g[0] + '</h3><span class="tenue cifra" style="font-size:13px">' + n + " de " + g[2].length + '</span></div><div class="progreso"><i style="width:' + (n / g[2].length * 100) + '%"></i></div>' +
+        g[2].map(function (t, i) { var k = g[1] + i; return '<label class="' + (hechos[k] ? "hecho" : "") + '"><input type="checkbox" data-k="' + k + '"' + (hechos[k] ? " checked" : "") + "><span>" + esc(t) + "</span></label>"; }).join("") + "</div>";
+    }).join("");
+  };
+  $("rutina-lista").addEventListener("change", function (ev) {
+    var k = ev.target.getAttribute("data-k"); if (!k) return;
+    hechos[k] = ev.target.checked; guardar("hegamex-manual-fin-rutina", hechos); pintarRutina();
+  });
+  pintarRutina();
+
+  // ---------- Antigüedad ----------
+  var antig = function () {
+    var d = Math.max(0, Number($("a-dias").value) || 0), c = Math.max(0, Number($("a-credito").value) || 0), f = $("a-fact").value === "1";
+    var rango = d <= 30 ? "0 a 30 días" : d <= 60 ? "31 a 60 días" : d <= 90 ? "61 a 90 días" : "Más de 90 días";
+    var tono = d <= 30 ? "t-ok" : d <= 60 ? "t-aviso" : "t-peligro";
+    var falta = c - d, vencido = falta < 0;
+    $("a-res").innerHTML = '<div style="display:grid;gap:4px"><span class="etiqueta">Rango</span><span><span class="insignia punto ' + tono + '">' + rango + "</span></span></div>" +
+      '<div style="display:grid;gap:4px"><span class="etiqueta">Vencimiento</span><b>' + (c === 0 ? "De contado: venció el mismo día" : vencido ? "Vencido hace " + (-falta) + " días" : falta === 0 ? "Vence hoy" : "Vence en " + falta + " días") + "</b></div>" +
+      '<p class="tenue" style="font-size:13.5px">«Antigüedad: ' + d + " días " + (f ? "desde la factura" : "desde el pedido (aún sin factura)") + "». " +
+      (f ? "" : "Mientras no se facture, cuenta desde la fecha del pedido. ") +
+      "Los pedidos en «Confirmado» o «En taller» no cuentan como vencidos en el indicador «Por cobrar».</p>";
+  };
+  ["a-dias", "a-credito", "a-fact"].forEach(function (id) { $(id).addEventListener("input", antig); });
+  antig();
+
+  // ---------- XML ----------
+  var XML = [
+    { t: "Factura de material a crédito", s: "PPD · proveedor ya dado de alta", insignia: ["A crédito (PPD)", "t-info"],
+      campos: [["Proveedor", "Encontrado por su RFC"], ["Factura (serie y folio)", "A 3354"], ["Total (con IVA)", "$18,560.00"], ["Vence el", "Fecha + días de crédito"]],
+      boton: "Registrar compra", toast: ["Compra registrada", ""], despues: "Aparece en «Facturas por pagar», en la agenda de su semana y en la cuenta del proveedor." },
+    { t: "Factura de contado", s: "PUE · ya se pagó", insignia: ["De contado (PUE)", "t-ok"],
+      campos: [["Ya se pagó (de contado)", "Marcado solo"], ["Sale de la cuenta", "Elige una"], ["Total (con IVA)", "$2,310.00"], ["Vence el", "No aplica"]],
+      boton: "Registrar compra y pago", toast: ["Compra y pago registrados", ""], despues: "Se guardan la compra y su pago («Pago de contado de A 3354»). No queda nada por pagar." },
+    { t: "Factura en dólares", s: "Moneda USD con tipo de cambio", insignia: ["A crédito (PPD)", "t-info"],
+      campos: [["Total (con IVA)", "Total × TipoCambio de la factura"], ["Concepto", "«USD 1234.00 a 19.5 …» y los conceptos"], ["Proveedor", "Por su RFC"], ["Vence el", "Fecha + días de crédito"]],
+      boton: "Registrar compra", toast: ["Compra registrada", ""], despues: "Se registra en pesos con el tipo de cambio que trae la factura. Revísalo si el pago saldrá a otro tipo de cambio." },
+    { t: "Proveedor que no existe", s: "Su RFC no está en el ERP", insignia: ["A crédito (PPD)", "t-info"],
+      aviso: "Ningún proveedor tiene el RFC XAXX010101000.", accion: "Dar de alta a «Nombre del emisor»",
+      campos: [["Proveedor", "Se da de alta ahí mismo con su RFC"], ["Total (con IVA)", "Del XML"]],
+      boton: "Registrar compra", toast: ["Compra registrada", ""], despues: "Si ya existía uno con ese RFC, lo reutiliza en vez de duplicarlo. Si hay varios con el mismo RFC te pide elegir." },
+    { t: "Nota de crédito", s: "CFDI tipo E (egreso)", insignia: ["Nota de crédito", "t-marca"],
+      campos: [["Monto de la nota (con IVA)", "$1,200.00"], ["Proveedor", "Por su RFC"]],
+      boton: "Registrar nota de crédito", toast: ["Nota de crédito registrada", ""], despues: "Resta del saldo del proveedor. Si queda negativo, aparece en «A nuestro favor»." },
+    { t: "Complemento de pago", s: "CFDI tipo P", rechazo: "Es un complemento de pago, no una compra: registra el pago en la cuenta del proveedor." },
+    { t: "Factura que emitimos nosotros", s: "El emisor es Hegamex", rechazo: "La emitimos nosotros: es una venta, va en Cobranza." },
+    { t: "Factura a nombre de otro RFC", s: "El receptor no es la empresa", rechazo: "Es para otro RFC (X), no para la empresa." },
+    { t: "Recibo de nómina", s: "CFDI tipo N", rechazo: "Es un recibo de nómina, no una compra." },
+    { t: "Factura que ya subiste", s: "Mismo folio fiscal (UUID)", rechazo: "Ya está registrada (factura del {fecha}).", nota: "La base tampoco deja guardarla dos veces: «Esa factura (folio fiscal …) ya está registrada»." },
+    { t: "Un PDF u otro archivo", s: "No es CFDI", rechazo: "Este archivo no es una factura electrónica (CFDI): no trae el comprobante del SAT.", nota: "Sin XML, captura la compra a mano abajo de la zona para soltar archivos." }
+  ];
+  var xSel = 0;
+  var pintarXml = function () {
+    $("x-opciones").innerHTML = XML.map(function (x, i) { return '<button type="button" class="opcion" data-x="' + i + '" aria-pressed="' + (i === xSel) + '"><b>' + esc(x.t) + "</b><span>" + esc(x.s) + "</span></button>"; }).join("");
+    var x = XML[xSel], h = '<span class="etiqueta">Lo que ves al subirlo</span>';
+    if (x.rechazo) {
+      h += '<div class="nota ojo"><b class="m">!</b><p>«' + esc(x.rechazo) + "»</p></div><p style=\"font-size:14px\">No se registra como compra.</p>" + (x.nota ? '<p class="tenue" style="font-size:13.5px">' + esc(x.nota) + "</p>" : "");
+    } else {
+      h += '<div class="dialogo"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="titulo">' + (x.boton === "Registrar nota de crédito" ? "Registrar nota de crédito" : "Registrar compra o gasto") + '</span><span class="insignia ' + x.insignia[1] + '">' + x.insignia[0] + "</span></div>" +
+        (x.aviso ? '<div class="nota ojo"><b class="m">!</b><p>«' + esc(x.aviso) + "» " + B(esc(x.accion)) + "</p></div>" : "") +
+        '<div class="campos">' + x.campos.map(function (c) { return "<div><span>" + esc(c[0]) + "</span><b>" + esc(c[1]) + "</b></div>"; }).join("") + "</div>" +
+        '<span class="boton" style="cursor:default">' + esc(x.boton) + "</span></div>" +
+        '<span class="toast">' + esc(x.toast[0]) + "</span><p style=\"font-size:14px\">" + esc(x.despues) + "</p>";
+    }
+    $("x-res").innerHTML = h;
+  };
+  $("x-opciones").addEventListener("click", function (ev) { var b = ev.target.closest("[data-x]"); if (!b) return; xSel = Number(b.getAttribute("data-x")); pintarXml(); });
+  pintarXml();
+
+  // ---------- Aplicar pago ----------
+  var FACT = [["A 3350", 12400, -5], ["A 3361", 8120, 4], ["A 3377", 15600, 18]];
+  var saldoTotal = FACT.reduce(function (t, f) { return t + f[1]; }, 0);
+  var vencido = FACT.filter(function (f) { return f[2] < 0; }).reduce(function (t, f) { return t + f[1]; }, 0);
+  var vence = function (d) { return d < 0 ? "Vencida hace " + (-d) + " días" : d === 0 ? "Vence hoy" : "En " + d + " días"; };
+  $("p-factura").innerHTML = '<option value="">Las que vencen primero</option>' + FACT.map(function (f, i) { return '<option value="' + i + '">' + f[0] + " · " + mx.format(f[1]) + " · " + vence(f[2]).toLowerCase() + "</option>"; }).join("");
+  var pResultado = null;
+  var aplicar = function () {
+    var monto = Math.max(0, Number($("p-monto").value) || 0), sel = $("p-factura").value, anticipo = $("p-anticipo").checked;
+    var resto = monto, ap = FACT.map(function () { return 0; });
+    var orden = [0, 1, 2];
+    if (sel !== "") { orden = [Number(sel)].concat(orden.filter(function (i) { return i !== Number(sel); })); }
+    orden.forEach(function (i) { var x = Math.min(resto, FACT[i][1]); ap[i] = x; resto -= x; });
+    var ayuda = monto > saldoTotal + 0.5 ? "Es más de lo que se le debe (" + mx.format(saldoTotal) + ")." : Math.abs(monto - saldoTotal) <= 0.5 ? "Liquida la cuenta" : "Queda un saldo de " + mx.format(saldoTotal - monto);
+    var h = '<div style="display:grid;gap:2px"><span class="etiqueta">Saldo ' + mx.format(saldoTotal) + " · Vencido " + mx.format(vencido) + '</span><span class="tenue" style="font-size:13px">' + esc(ayuda) + "</span></div>" +
+      '<div class="tabla-env tarjeta" style="box-shadow:none"><table><thead><tr><th>Factura</th><th>Vence</th><th class="der">Debe</th><th class="der">Se aplica</th><th class="der">Queda</th></tr></thead><tbody>' +
+      FACT.map(function (f, i) { return "<tr><td>" + f[0] + '</td><td><span class="insignia ' + (f[2] < 0 ? "t-peligro" : f[2] <= 7 ? "t-aviso" : "") + '">' + vence(f[2]) + '</span></td><td class="der">' + mx.format(f[1]) + '</td><td class="der"><b>' + (ap[i] ? mx.format(ap[i]) : "—") + '</b></td><td class="der">' + mx.format(f[1] - ap[i]) + "</td></tr>"; }).join("") +
+      "</tbody></table></div>";
+    if (resto > 0.5) h += '<p style="font-size:14px">' + (anticipo ? "Sobran <b>" + mx.format(resto) + "</b>: quedan a nuestro favor y el proveedor aparece en «A nuestro favor»." : "Sobran <b>" + mx.format(resto) + "</b>. Sin marcar anticipo, la base no lo acepta.") + "</p>";
+    if (pResultado) h += '<span class="toast' + (pResultado[0] ? "" : " mal") + '">' + esc(pResultado[1]) + "</span>";
+    $("p-res").innerHTML = h;
+  };
+  var limpiarRes = function () { pResultado = null; aplicar(); };
+  ["p-monto", "p-factura", "p-anticipo", "p-cuenta"].forEach(function (id) { $(id).addEventListener("input", limpiarRes); $(id).addEventListener("change", limpiarRes); });
+  $("p-vencido").addEventListener("click", function () { $("p-monto").value = vencido; limpiarRes(); });
+  $("p-todo").addEventListener("click", function () { $("p-monto").value = saldoTotal; limpiarRes(); });
+  $("p-registrar").addEventListener("click", function () {
+    var monto = Number($("p-monto").value) || 0;
+    if (monto <= 0) pResultado = [false, "El monto tiene que ser mayor a cero"];
+    else if (!$("p-cuenta").value) pResultado = [false, "Di de qué cuenta salió el pago"];
+    else if (monto > saldoTotal + 0.5 && !$("p-anticipo").checked) pResultado = [false, "El pago (" + mx.format(monto) + ") es mayor que lo que se le debe (" + mx.format(saldoTotal) + "): si es un anticipo, márcalo como anticipo"];
+    else pResultado = [true, "Pago registrado (en la práctica, no se guardó nada)"];
+    aplicar();
+  });
+  aplicar();
+
+  // ---------- Caja chica ----------
+  var INICIAL = [["Saldo anterior", 1850], ["Garrafones de agua", -180], ["Papelería", -245]];
+  var caja = leer("hegamex-manual-fin-caja") || INICIAL.slice();
+  var tipo = "sale", cToast = null;
+  var saldoCaja = function () { return caja.reduce(function (t, m) { return t + m[1]; }, 0); };
+  var pintarCaja = function () {
+    var s = saldoCaja(), run = 0;
+    $("c-saldo").textContent = mx.format(s);
+    $("c-estado").innerHTML = s < 500 ? '<span class="insignia t-peligro punto">Abajo del mínimo ($500): toca reponer</span>' : s > 4500 ? '<span class="insignia t-aviso punto">Arriba del máximo ($4,500): llévalo al banco</span>' : '<span class="insignia t-ok punto">Entre $500 y $4,500</span>';
+    $("c-tabla").innerHTML = caja.map(function (m) {
+      run += m[1];
+      var arq = m[0].indexOf("Arqueo") === 0;
+      return "<tr><td>" + esc(m[0]) + (arq ? ' <span class="insignia t-info">Arqueo</span>' : "") + '</td><td class="der">' + (m[1] > 0 ? mx.format(m[1]) : "") + '</td><td class="der">' + (m[1] < 0 ? mx.format(-m[1]) : "") + '</td><td class="der">' + mx.format(run) + "</td></tr>";
+    }).reverse().join("");
+    var cont = $("c-contado").value;
+    if (cont === "") $("c-dice").textContent = "El sistema dice " + mx.format(s) + ".";
+    else { var d = Number(cont) - s; $("c-dice").textContent = Math.abs(d) < 0.005 ? "Cuadra exacto." : d < 0 ? "Faltan " + mx.format(-d) + "." : "Sobran " + mx.format(d) + "."; }
+    $("c-toast").innerHTML = cToast ? '<span class="toast' + (cToast[0] ? "" : " mal") + '">' + esc(cToast[1]) + "</span>" : "";
+    guardar("hegamex-manual-fin-caja", caja);
+  };
+  var ponTipo = function (t) {
+    tipo = t; $("c-sale").setAttribute("aria-pressed", t === "sale"); $("c-entra").setAttribute("aria-pressed", t === "entra");
+    $("c-concepto").placeholder = t === "sale" ? "Garrafones de agua, papelería…" : "Reposición de caja";
+  };
+  $("c-sale").addEventListener("click", function () { ponTipo("sale"); });
+  $("c-entra").addEventListener("click", function () { ponTipo("entra"); });
+  var anotar = function () {
+    var c = $("c-concepto").value.trim(), m = Number($("c-monto").value) || 0;
+    if (m <= 0) cToast = [false, "El monto tiene que ser mayor a cero"];
+    else if (!c) cToast = [false, "Escribe el concepto"];
+    else { caja.push([c, tipo === "sale" ? -m : m]); cToast = [true, tipo === "sale" ? "Gasto anotado" : "Entrada anotada"]; $("c-concepto").value = ""; $("c-monto").value = ""; $("c-concepto").focus(); }
+    pintarCaja();
+  };
+  $("c-anotar").addEventListener("click", anotar);
+  ["c-concepto", "c-monto"].forEach(function (id) { $(id).addEventListener("keydown", function (ev) { if (ev.key === "Enter") { ev.preventDefault(); anotar(); } }); });
+  $("c-contado").addEventListener("input", function () { cToast = null; pintarCaja(); });
+  $("c-arqueo").addEventListener("click", function () {
+    if ($("c-contado").value === "") { cToast = [false, "Escribe cuánto efectivo contaste"]; pintarCaja(); return; }
+    var d = Number($("c-contado").value) - saldoCaja();
+    if (Math.abs(d) < 0.005) cToast = [true, "Cuadra: arqueo sin diferencia"];
+    else { caja.push([d < 0 ? "Arqueo: faltante" : "Arqueo: sobrante", d]); cToast = [true, "Arqueo registrado: " + (d < 0 ? "faltante" : "sobrante") + " de " + mx.format(Math.abs(d))]; }
+    $("c-contado").value = ""; pintarCaja();
+  });
+  $("c-reiniciar").addEventListener("click", function () { caja = INICIAL.slice(); cToast = null; pintarCaja(); });
+  pintarCaja();
+
+  // ---------- Mensajes ----------
+  var MSG = [
+    ["Con este cobro el pedido % quedaría pagado de más: total %, cobrado %. ¿Es de otro pedido?", "El cobro pasa del total del pedido por más de $1. Revisa si el dinero es de otro pedido del mismo cliente o si un cobro ya estaba capturado."],
+    ["El pedido % está cancelado: no se le registran cobros", "Si el cliente pagó algo de un pedido cancelado, regístralo en el pedido que lo sustituye. Una devolución (monto negativo) sí se acepta."],
+    ["El cobro (%) es mayor que el saldo (%)", "Cobro a un saldo de la hoja mayor a lo que debía el cliente. Revisa si parte es de un pedido del ERP."],
+    ["Ese cliente no tiene saldo en la hoja", "Ya está pagado lo que venía de la hoja: el cobro va a un pedido del ERP."],
+    ["El UUID del SAT son 36 caracteres en grupos 8-4-4-4-12 (números y letras A–F)", "Copia el folio fiscal completo del XML, con guiones. Si no lo tienes, déjalo vacío y ponlo después."],
+    ["La factura necesita folio", "Escribe el folio de la factura (por ejemplo A 3350)."],
+    ["El pago (%) es mayor que lo que se le debe (%): si es un anticipo, márcalo como anticipo", "Marca «Es un anticipo: lo que sobra queda a nuestro favor» o baja el monto."],
+    ["Di de qué cuenta salió el pago", "Elige la cuenta en «Sale de la cuenta» (o «Entró a la cuenta» en un cobro)."],
+    ["Esa factura (folio fiscal %) ya está registrada", "Ese XML ya se subió. Búscala en la cuenta del proveedor."],
+    ["Con este pago la orden % quedaría pagada de más: total %, pagado %", "Pago a una orden de compra mayor a su saldo. Revisa «Pagos anteriores» en el diálogo."],
+    ["La orden % está en %: no se le registran pagos", "La orden está en borrador o cancelada. Pide a compras que la envíe o revisa si es otra orden."],
+    ["La fecha no puede ser futura", "Cobros, pagos, compras y caja chica llevan la fecha en que pasó, hoy o antes."],
+    ["El monto tiene que ser mayor a cero", "Escribe el monto. Para una devolución de cliente usa monto negativo en el cobro del pedido."],
+    ["Los días de crédito van de 0 a 365", "Escribe 0 para contado."],
+    ["Solo finanzas registra compras y pagos a proveedores", "Tu usuario no tiene finanzas nivel 2. Pídeselo a sistemas."],
+    ["Solo finanzas lleva la caja chica", "Igual: la caja chica pide finanzas nivel 2."],
+    ["Escribe el concepto", "En caja chica cada movimiento lleva qué fue."],
+    ["Esa comisión ya está marcada como pagada", "Ya se pagó. Si el cálculo cambió después, la diferencia va como ajuste del mes siguiente."],
+    ["Un cargo o corrección (monto negativo) lleva su explicación", "En recargas de paquetería, escribe por qué es negativo."]
+  ];
+  var pintarMsg = function () {
+    var qn = function (s) { return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); };
+    var q = qn($("m-buscar").value.trim());
+    var filas = MSG.filter(function (m) { return !q || qn(m[0] + " " + m[1]).indexOf(q) >= 0; });
+    $("m-tabla").innerHTML = filas.length ? filas.map(function (m) { return '<tr><td class="msg">«' + esc(m[0]).replace(/%/g, "…") + "»</td><td>" + esc(m[1]) + "</td></tr>"; }).join("") : '<tr><td colspan="2" class="tenue">Ningún mensaje con esa palabra.</td></tr>';
+  };
+  $("m-buscar").addEventListener("input", pintarMsg);
+  pintarMsg();
+
+  // ---------- Índice ----------
+  var enlaces = Array.prototype.slice.call(document.querySelectorAll("#indice a"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (en) { if (en.isIntersecting) enlaces.forEach(function (a) { a.classList.toggle("activo", a.getAttribute("href") === "#" + en.target.id); }); });
+    }, { rootMargin: "-30% 0px -60% 0px" });
+    document.querySelectorAll("section.bloque").forEach(function (sec) { obs.observe(sec); });
+  }
+})();
+</script>
