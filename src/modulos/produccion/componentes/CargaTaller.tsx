@@ -24,6 +24,8 @@ export function CargaTaller({ className }: { className?: string }) {
   const sinCarga = filas.filter((f) => Number(f.horas_pendientes) + Number(f.horas_planeadas) === 0);
   const maximo = Math.max(4, Math.ceil(Math.max(0, ...conCarga.map((f) => f.semTaller + f.semPlan))));
   const cuello = conCarga.reduce<(typeof conCarga)[number] | null>((m, f) => (!m || f.semTaller > m.semTaller ? f : m), null);
+  // Lo que espera un pedido nuevo: todo lo liberado y lo planeado de la etapa más cargada.
+  const fila = conCarga.reduce<{ nombre: string; semanas: number } | null>((m, f) => (!m || f.semTaller + f.semPlan > m.semanas ? { nombre: f.nombre, semanas: f.semTaller + f.semPlan } : m), null);
   const marcas = Array.from({ length: maximo + 1 }, (_, i) => i).filter((i) => maximo <= 8 || i % 2 === 0);
 
   return (
@@ -50,6 +52,11 @@ export function CargaTaller({ className }: { className?: string }) {
               <FilaCarga key={f.etapa_id} f={f} maximo={maximo} marcas={marcas} esCuello={cuello?.etapa_id === f.etapa_id && f.semTaller > 1} />
             ))}
           </div>
+          {fila && fila.semanas >= 1 && (
+            <p className="text-sm mt-3" data-explain={GLOSARIO.filaTaller} data-explain-title="Fila del taller">
+              Un equipo que se venda hoy espera unas <b className="cifra">{sem(fila.semanas)} semanas</b> a que {fila.nombre.toLowerCase()} acabe lo que ya tiene. Ventas ve esa fecha al cotizar.
+            </p>
+          )}
           {sinCarga.length > 0 && <p className="text-xs text-tenue mt-3">Sin horas pendientes: {sinCarga.map((f) => f.nombre).join(", ")}.</p>}
         </div>
       )}

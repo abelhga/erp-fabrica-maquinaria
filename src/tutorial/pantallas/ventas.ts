@@ -30,6 +30,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     "Agrega partidas escribiendo parte del nombre o la clave y Enter: precio de lista, descripción y foto se llenan solos. Para fletes, instalación o servicios usa “Partida libre”; si algo no tiene precio, “Pedir precio a compras” y aquí ves cuando contestan. Clic en una partida muestra su ficha de venta: precio mínimo, existencia y entrega.",
     "Si un precio queda abajo del mínimo, la partida se marca en rojo y la cotización pasa a “Por autorizar”: pide la autorización a la gerencia antes de enviarla. Ya enviada no se edita; para cambiarla saca una nueva versión.",
     "El botón principal cambia según el estado: Enviar (por WhatsApp o PDF; la deja como enviada), Convertir a pedido (eliges partidas y fecha compromiso) o Nueva versión. En el menú “···” están imprimir, duplicar y marcar rechazada con su motivo.",
+    "Abajo de “Tiempo de entrega” ves cuándo sale de verdad con el taller como está hoy: lo que tarda el equipo o lo que tarda la fila del taller, lo que sea más tarde. Con “Usar” lo pones en la cotización; si prometes menos días, se pone en amarillo. Al convertir a pedido, la fecha compromiso ya viene con esa fecha.",
   ],
   "/ventas/pedidos": [
     "Los pedidos de todos los canales en una sola lista. Ventas, producción y cobranza la usan para saber en qué va cada uno sin preguntar por WhatsApp.",

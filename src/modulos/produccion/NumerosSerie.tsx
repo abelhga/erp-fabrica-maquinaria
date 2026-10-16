@@ -24,7 +24,7 @@ interface Equipo {
   factura: string | null; vendedor: string | null; entrega: string | null; ubicacion: string | null; contacto: string | null;
 }
 interface Familia { clave: string; nombre: string; prefijo: string | null; ultimo: number; orden: number }
-interface EquipoCatalogo { id: string; clave: string; nombre: string; familia: string | null; familia_serie: string | null; codigo_serie: string | null }
+interface EquipoCatalogo { id: string; clave: string; nombre: string; familia: string | null; familia_serie: string | null; codigo_serie: string | null; dias_fabricacion: number | null }
 
 const ESTADO: Record<Estado, { texto: string; tono: Tono }> = {
   espera: { texto: "En espera", tono: "neutro" }, proceso: { texto: "En proceso", tono: "marca" }, terminado: { texto: "Terminado", tono: "aviso" },
@@ -86,7 +86,7 @@ export default function NumerosSerie() {
       <Pestanas value={pestana} onValueChange={(v) => setPestana(v as "equipos" | "codigos")}>
         <ListaPestanas opciones={[
           { valor: "equipos", texto: "Equipos", cuenta: todos.length },
-          { valor: "codigos", texto: "Códigos por equipo", explica: GLOSARIO.codigoSerie },
+          { valor: "codigos", texto: "Códigos y tiempos por equipo", explica: GLOSARIO.codigoSerie },
         ]} />
         <ContenidoPestana value="equipos" className="pt-4">
           <TablaDatos filas={filas} columnas={columnas} cargando={datos.isLoading} error={datos.error} claveFila={(e) => e.numero_serie}
@@ -168,7 +168,7 @@ function CodigosPorEquipo({ familias, editable }: { familias: Familia[]; editabl
   const [vista, setVista] = useState<"sin" | "todos">("sin");
   const datos = useQuery({
     queryKey: [...CLAVE, "codigos"],
-    queryFn: () => todasLasFilas<EquipoCatalogo>((d, h) => supabase.from("articulos").select("id, clave, nombre, familia, familia_serie, codigo_serie")
+    queryFn: () => todasLasFilas<EquipoCatalogo>((d, h) => supabase.from("articulos").select("id, clave, nombre, familia, familia_serie, codigo_serie, dias_fabricacion")
       .eq("tipo", "equipo").eq("activo", true).order("clave").range(d, h)),
   });
   const todos = datos.data ?? [];
@@ -179,12 +179,31 @@ function CodigosPorEquipo({ familias, editable }: { familias: Familia[]; editabl
     { clave: "nombre", titulo: "Equipo", clase: "min-w-[240px] max-w-[420px]", celda: (a) => <span className="line-clamp-2 break-words">{a.nombre}</span> },
     { clave: "codigo_serie", titulo: "Familia y código", sinBusqueda: true, explica: GLOSARIO.codigoSerie, valor: (a) => a.codigo_serie ?? "",
       celda: (a) => <EditorCodigo articulo={a} familias={familias} editable={editable} /> },
+    { clave: "dias_fabricacion", titulo: "Días de fabricación", alinear: "der", sinBusqueda: true, explica: GLOSARIO.diasFabricacion,
+      valor: (a) => a.dias_fabricacion ?? -1, celda: (a) => <EditorDias articulo={a} editable={editable} /> },
   ];
   return (
     <TablaDatos filas={filas} columnas={columnas} cargando={datos.isLoading} error={datos.error} claveFila={(a) => a.id}
       exportarComo="codigos-de-serie" placeholder="Buscar equipo o clave…"
       filtros={<Filtro valor={vista} alCambiar={setVista} opciones={[{ valor: "sin", texto: "Sin código", cuenta: sin.length }, { valor: "todos", texto: "Todos", cuenta: todos.length }]} />}
       vacio={{ icono: Hash, titulo: vista === "sin" ? "Todos los equipos tienen código" : "Sin equipos", texto: "Cada equipo del catálogo necesita su código (por ejemplo TB20090275E para una banda de 20\" × 9 m, 2 HP, caja 75) para que su orden de producción saque número de serie sola." }} />
+  );
+}
+
+function EditorDias({ articulo: a, editable }: { articulo: EquipoCatalogo; editable: boolean }) {
+  const [dias, setDias] = useState(a.dias_fabricacion != null ? String(a.dias_fabricacion) : "");
+  useEffect(() => { setDias(a.dias_fabricacion != null ? String(a.dias_fabricacion) : ""); }, [a.dias_fabricacion]);
+  const guardar = useAccion(() => q(supabase.rpc("fijar_dias_fabricacion", { p_articulo: a.id, p_dias: dias ? Number(dias) : null })), {
+    exito: "Días de fabricación guardados", invalidar: [CLAVE, ["estimar_entrega"]],
+  });
+  if (!editable) return a.dias_fabricacion != null ? <span className="cifra">{a.dias_fabricacion} días</span> : <span className="text-xs text-tenue">Sin dato</span>;
+  const cambio = dias !== (a.dias_fabricacion != null ? String(a.dias_fabricacion) : "");
+  return (
+    <form className="flex items-center justify-end gap-2" onSubmit={(e) => { e.preventDefault(); if (cambio) guardar.mutate(undefined); }}>
+      <Entrada type="number" min={1} max={365} value={dias} onChange={(e) => setDias(e.target.value)} className="h-8 w-20 cifra text-right"
+        aria-label="Días hábiles de fabricación" placeholder="—" />
+      {cambio && <Boton type="submit" className="h-8" cargando={guardar.isPending}>Guardar</Boton>}
+    </form>
   );
 }
 

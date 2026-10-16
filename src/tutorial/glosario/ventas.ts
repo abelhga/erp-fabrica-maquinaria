@@ -28,6 +28,7 @@ export const VENTAS = {
   // --- Pedidos ---
   estadoPedido: "Confirmado → En producción → Listo para entregar → Entregado. Cancelado lleva su motivo y deja de contar para comisiones y cobranza.",
   pedidoAtrasado: "La fecha compromiso ya pasó y el pedido todavía no se entrega.",
+  entregaRealista: "Cuándo sale de verdad lo que vas a vender: lo que tarda el equipo, o lo que tarda el taller en acabar todo lo que ya tiene antes que este pedido, lo que sea más tarde. Cambia todos los días con lo que entra y sale del taller. Si prometes menos, el pedido nace atrasado.",
   fechaCompromisoPedido: "El día que se le prometió la entrega al cliente. Con ella se marca el pedido como atrasado y sale en la agenda de la semana.",
   saldoPorCobrar: "Lo que falta por cobrar: total con IVA menos los cobros registrados. Los pedidos cancelados y los históricos de los paneles no tienen saldo. Los cobros los registra finanzas.",
   avancePedido: "Qué tanto lleva producción con este pedido: el promedio de sus órdenes de taller, donde cada orden avanza según las horas de trabajo ya terminadas. Una orden terminada cuenta 100 %.",
