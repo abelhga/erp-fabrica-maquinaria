@@ -40,14 +40,20 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
   "/finanzas/cobranza": [
     "Aquí ves lo que nos deben los clientes por sus pedidos, desde cuándo, y lo que se ha cobrado mes a mes. La usa finanzas para saber a quién llamar primero y para registrar cobros y facturas.",
     "Los indicadores de arriba parten el saldo por antigüedad; dale clic a uno para filtrar la tabla. «Los más atrasados» es por dónde empezar a llamar. Dale clic a un pedido para ver sus cobros y facturas y registrar uno nuevo; un cobro negativo es una devolución al cliente.",
-    "Las pestañas agrupan por cliente o por vendedor (clic en un renglón para ver sus pedidos) y «Saldos de arranque» trae lo que se debía en la hoja antes del ERP, aparte para no contarlo dos veces. Los filtros separan lo que tiene saldo y lo que falta facturar; el CSV baja lo que ves.",
+    "Las pestañas agrupan por cliente o por vendedor (clic en un renglón para ver sus pedidos) y «Saldos de arranque» trae lo que se debía en la hoja antes del ERP, aparte para no contarlo dos veces; dale clic a un cliente para ver sus movimientos y registrar lo que pague de ese saldo. Los filtros separan lo que tiene saldo y lo que falta facturar; el CSV baja lo que ves.",
     "La antigüedad corre desde la primera factura, o desde el pedido si aún no se factura. Los saldos en dólares se pasan a pesos con el tipo de cambio de hoy, que se ve arriba (finanzas y compras lo pueden capturar ahí).",
   ],
   "/finanzas/pagos": [
-    "Aquí ves lo que debemos a proveedores por material ya recibido: lo vencido primero y lo que viene en las próximas 4 semanas. La usa finanzas para planear y registrar los pagos.",
-    "La agenda acomoda los saldos por semana; dale clic a un proveedor, ahí o en la tabla, para ver la orden, la cuenta bancaria y los pagos anteriores, y registrar el pago. Los renglones vencidos se ven en rojo. Filtra vencidas o próximos 7 días; el CSV baja lo que ves.",
-    "La fecha de pago es la recepción más los días de crédito del proveedor. Solo aparecen órdenes recibidas, completas o parciales, que tienen saldo, y el ERP no deja pagar de más.",
-    "Las órdenes en dólares se convierten a pesos con el tipo de cambio de hoy.",
-    "«Saldos de la hoja» trae lo que se debía según el libro de compras de la hoja, aparte de las órdenes del ERP; los préstamos de socios y créditos de banco van en su propio filtro. Abre un proveedor para ver sus movimientos y registrar un pago: el saldo baja al momento y no deja pagar de más. Si el mismo pago también se anotó en la hoja, no se descuenta dos veces.",
+    "Aquí ves lo que debemos a proveedores y cuándo vence cada cosa: lo vencido primero y lo que viene en las próximas 4 semanas. La usa finanzas para planear los pagos y para registrar cada compra, gasto y pago; compras ve solo las órdenes de compra.",
+    "Cada factura que llega (material, flete, luz, servicio) se registra con «Registrar compra o gasto»: sube el XML y se llena solo (proveedor por su RFC, folio, total y fecha); puedes subir varios a la vez. Si la factura dice que es de contado, marca «Ya se pagó» y elige la cuenta. Si el proveedor no existe, se da de alta ahí mismo con su RFC.",
+    "La agenda suma por proveedor lo que vence cada semana; dale clic a uno para abrir su cuenta: sus facturas pendientes, todos sus movimientos (los de la hoja y los de aquí) y el botón para registrar un pago. Al pagar puedes elegir qué factura liquidas; si no eliges, el pago va a las que vencen primero. Pagar de más solo se puede como anticipo.",
+    "«Facturas por pagar» es la lista de facturas con saldo; «Por proveedor», lo que se le debe a cada uno (ahí están aparte los préstamos de socios y los créditos del banco, y lo que tenemos a favor); «Órdenes de compra», las órdenes recibidas con saldo, que se pagan desde la orden.",
+    "Cada factura vence en su fecha más los días de crédito del proveedor; cámbialos en su cuenta si no están bien y todas sus fechas se recorren. Lo que venía de 2021 cuenta como vencido. Si un pago o compra también se anotó en la hoja, no se cuenta dos veces. Las órdenes en dólares se pasan a pesos con el tipo de cambio de hoy.",
+  ],
+  "/finanzas/caja-chica": [
+    "Aquí se lleva el efectivo de la oficina: cada gasto y cada reposición, con el saldo después de cada uno. La usa finanzas.",
+    "Para anotar, elige «Sale» o «Entra», escribe el concepto y el monto y dale Enter. Un movimiento mal capturado se borra con el bote de basura; lo que vino de la hoja no se borra.",
+    "Cuando cuentes el efectivo, usa «Arqueo»: escribe cuánto hay y, si no cuadra con el saldo, la diferencia queda anotada como sobrante o faltante con tu nombre.",
+    "El saldo es la suma de todo lo que ha entrado menos lo que ha salido desde que empezó la hoja. Se pinta en rojo abajo del mínimo (toca reponer) y en amarillo arriba del máximo (sobra efectivo).",
   ],
 };

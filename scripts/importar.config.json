@@ -102,6 +102,10 @@
     "proveedores_actual": [
       "1bMPe8wRcFv66tap2k7qW6MOIDWDYMeng8Mii4ZwAdFs",
       "'Directorio Proveedores'!A1:Y1500"
+    ],
+    "cajachica": [
+      "1bMPe8wRcFv66tap2k7qW6MOIDWDYMeng8Mii4ZwAdFs",
+      "CajaChica!A1:H6000"
     ]
   },
   "tipos_acreedor": {

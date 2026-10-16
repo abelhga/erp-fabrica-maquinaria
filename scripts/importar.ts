@@ -127,6 +127,7 @@ async function main() {
   // Libro de compras: 2022→hoy de BASE ACTUAL más el adeudo con que cada proveedor cerró 2021.
   const compras = T.libroCompras(await fuente("compras"));
   const adeudos21 = T.adeudos2021(await fuente("proveedores_actual"));
+  const caja = T.cajaChica(await fuente("cajachica"));
   const paneles = await Promise.all(Object.entries(config.vendedores as Record<string, { correo: string; panel: string; nombre: string }>).map(async ([clave, v]) => ({
     clave, ...v, clientes: T.clientesPanel(await fuente(`${v.panel}_clientes`)), ventas: T.ventasPanel(await fuente(`${v.panel}_ventas`)),
   })));
@@ -135,7 +136,7 @@ async function main() {
       lineas_bom: bom.length, filas_inventario: inventario.length, movimientos_hoja: movimientos.length,
       clientes_paneles: paneles.reduce((s, p) => s + p.clientes.length, 0), ventas_paneles: paneles.reduce((s, p) => s + p.ventas.ventas.length, 0),
       clientes_directorio: directorio.length, clientes_crm: unified.length, libro_ventas: libro.length,
-      libro_compras: compras.movimientos.length, adeudos_2021: adeudos21.length },
+      libro_compras: compras.movimientos.length, adeudos_2021: adeudos21.length, caja_chica: caja.movimientos.length },
     descartados: { componentes_nombre_repetido: duplicados.length, precios_sin_fecha_o_costo: preciosDescartados, movimientos_incompletos: movDescartados, libro_incompletos: libroDescartados, compras_incompletas: compras.descartados },
   });
   if (duplicados.length) avisos.push(`${duplicados.length} componentes con nombre repetido en ListaComponentes (se tomó el primero): ${duplicados.slice(0, 5).join("; ")}…`);
@@ -549,13 +550,18 @@ async function main() {
   });
 
   // 13b. Libro de compras y pagos: saldo de arranque por proveedor (cuentas por pagar de la hoja).
+  // Desde que Finanzas trabaja en el ERP, lo nuevo vive aquí: de la hoja solo entra lo anterior.
+  const { rows: [arr] } = await db.query(`select (valor #>> '{}')::date::text f from configuracion where clave = 'fecha_arranque_finanzas'`);
+  const corteFinanzas: string | null = arr?.f ?? null;
+  const antesDelCorte = (f: string) => !corteFinanzas || f < corteFinanzas;
   await paso("Libro de compras y pagos", async () => {
     await db.query(`truncate historial_compras_hoja`);
     const filas = [
       ...adeudos21.map((a) => ({ fecha: "2021-12-31", proveedor: a.proveedor, llave_proveedor: a.llave_proveedor, tipo: "Adeudo 2021", monto: a.monto,
         cuenta: null, descripcion: "Adeudo fin de año 2021 (directorio de proveedores)", factura: null, orden: null, fila: null })),
-      ...compras.movimientos,
+      ...compras.movimientos.filter((m) => antesDelCorte(m.fecha)),
     ];
+    if (corteFinanzas) avisos.push(`Finanzas arrancó el ${corteFinanzas}: ${compras.movimientos.length - (filas.length - adeudos21.length)} renglones de COMPRAS posteriores no se importaron (van en el ERP).`);
     // Se liga al catálogo por la llave del importador o por nombre; lo que no es proveedor
     // del catálogo (nómina, IMSS, préstamos) se queda solo con su nombre.
     await db.query(`
@@ -569,6 +575,18 @@ async function main() {
       round(sum(saldo)) neto from v_saldo_arranque_proveedores`);
     resumen.libro_compras = filas.length;
     resumen.por_pagar_arranque = { proveedores_con_saldo: Number(rows[0].acreedores), por_pagar: Number(rows[0].por_pagar), neto_como_la_hoja: Number(rows[0].neto) };
+  });
+
+  // 13c. Caja chica de la hoja: su historia, para que el saldo del ERP siga donde se quedó.
+  await paso("Caja chica", async () => {
+    await db.query(`delete from caja_chica where origen = 'hoja'`);
+    const filas = caja.movimientos.filter((m) => antesDelCorte(m.fecha));
+    await db.query(`
+      insert into caja_chica (fecha, tipo, importe, concepto, en_turno, notas, origen, fila_origen)
+      select x.fecha::date, case when x.importe > 0 then 'entrada' else 'salida' end, x.importe, x.concepto, x.en_turno, x.notas, 'hoja', x.fila
+      from jsonb_to_recordset($1) x(fecha text, concepto text, en_turno text, importe numeric, notas text, fila int)`, [json(filas)]);
+    const { rows } = await db.query(`select coalesce(sum(importe), 0) saldo from caja_chica`);
+    resumen.caja_chica = { movimientos: filas.length, saldo: Number(rows[0].saldo) };
   });
 
   // 14. Costo mensual hacia atrás de cada equipo (para "Precios vs ventas"). Tarda ~1 min.

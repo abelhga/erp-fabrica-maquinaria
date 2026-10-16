@@ -5,7 +5,7 @@ import {
   Ship,
   type LucideIcon,
 } from "lucide-react";
-import { Award, Banknote, ListChecks, Target } from "lucide-react";
+import { Award, Banknote, Coins, ListChecks, Target } from "lucide-react";
 import { AlertTriangle, CalendarDays, CalendarRange, Hand, Wrench } from "lucide-react";
 import { MessageSquareQuote, PackageCheck, Undo2 } from "lucide-react";
 import { Map as MapaIcono } from "lucide-react";
@@ -103,6 +103,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/rrhh/mi-desempeno", texto: "Mi desempeño", icono: Award, modulo: "mi_desempeno" },
       { ruta: "/finanzas/cobranza", texto: "Cobranza", icono: Wallet, modulo: "finanzas" },
       { ruta: "/finanzas/pagos", texto: "Pagos a proveedores", icono: Receipt, modulo: "finanzas" },
+      { ruta: "/finanzas/caja-chica", texto: "Caja chica", icono: Coins, modulo: "finanzas", nivel: 2 },
     ],
   },
   {
