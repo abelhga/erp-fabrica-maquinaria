@@ -33,6 +33,8 @@ const COLUMNAS: Record<string, string> = {
   dias_credito: "Días de crédito", numero: "Número", contacto_emergencia: "Contacto de emergencia", fecha_compromiso: "Fecha compromiso",
   factura_proveedor: "Factura del proveedor", fuente: "Fuente", canal: "Canal", iniciales: "Iniciales", costo_hora: "Costo por hora",
   fecha_entrega: "Fecha de entrega", condiciones_pago: "Condiciones de pago", motivo_cancelacion: "Motivo de cancelación",
+  datos_bancarios: "Datos bancarios", regimen_fiscal: "Régimen fiscal", cp_fiscal: "CP fiscal", dias_entrega: "Días de entrega",
+  contacto: "Contacto", categoria: "Categoría", es_importacion: "Es importación", imagen_url: "Imagen",
 };
 export function nombreColumna(c: string): string {
   if (COLUMNAS[c]) return COLUMNAS[c];

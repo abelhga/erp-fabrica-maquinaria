@@ -947,7 +947,8 @@ const IMPORTACION = { modulos: ["importaciones"], mensaje: "Leer documentos de i
 const PERMISO_DOCUMENTO: Record<TipoDocumento, { modulos: string[]; mensaje: string }> = {
   proforma: IMPORTACION, factura: IMPORTACION, lista_empaque: IMPORTACION, bl: IMPORTACION, pedimento: IMPORTACION, cuenta_gastos: IMPORTACION,
   cotizacion_proveedor: { modulos: ["compras"], mensaje: "Leer cotizaciones de proveedores es de compras." },
-  constancia_fiscal: { modulos: ["ventas", "compras"], mensaje: "Leer constancias fiscales es de quien da de alta clientes o proveedores." },
+  // Finanzas también: lleva lo contable con los contadores y pone al día los datos fiscales del proveedor.
+  constancia_fiscal: { modulos: ["ventas", "compras", "finanzas"], mensaje: "Leer constancias fiscales es de quien da de alta clientes o proveedores, o lleva sus datos fiscales." },
 };
 
 /** Revisa que lo que devolvió Claude cumpla el esquema antes de mostrarlo. Devuelve los errores. */
