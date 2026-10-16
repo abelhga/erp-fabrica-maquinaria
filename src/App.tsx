@@ -123,8 +123,8 @@ export function App() {
           <Route path="costeo/equipos" element={<Con m="costeo"><Equipos /></Con>} />
           <Route path="costeo/equipos/:id" element={<Con m="costeo"><DetalleArticulo /></Con>} />
           <Route path="costeo/planos" element={<Con m="costeo"><Planos /></Con>} />
-          <Route path="costeo/margenes" element={<Con m="costos" n={2}><Margenes /></Con>} />
-          <Route path="costeo/precios-ventas" element={<Con m="costos"><PreciosVentas /></Con>} />
+          <Route path="costeo/margenes" element={<Con m="margenes"><Margenes /></Con>} />
+          <Route path="costeo/precios-ventas" element={<Con m="margenes"><PreciosVentas /></Con>} />
           <Route path="pendientes" element={<Pendientes />} />
           <Route path="semana" element={<Con m="asistente"><Semana /></Con>} />
           <Route path="ventas/para-llamar" element={<Con m="ventas"><ParaLlamar /></Con>} />

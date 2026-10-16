@@ -26,12 +26,12 @@ export interface Desglose {
   utilidad_bruta: number | null; utilidad_neta: number | null; pct_neto: number | null;
 }
 
-/** Desglose del precio calculado por la base (desglose_precio). Sin permiso de costos ni se pide. */
+/** Desglose del precio calculado por la base (desglose_precio): utilidad, recargos e ISR. Sin permiso de márgenes ni se pide. */
 export function useDesglose(id: string | undefined) {
   const { puede } = useSesion();
   return useQuery({
     queryKey: ["costeo", "desglose", id],
-    enabled: !!id && puede("costos"),
+    enabled: !!id && puede("margenes"),
     queryFn: () => q<Desglose | null>(supabase.rpc("desglose_precio", { p_articulo: id })),
   });
 }
@@ -92,6 +92,7 @@ export function FormulaEnPalabras({ d }: { d: Desglose }) {
 
 /** Pestaña "Costo y precio": de dónde sale cada peso del precio de lista. */
 export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
+  const { puede } = useSesion();
   const d = useDesglose(articulo.id);
   const fab = esFabricado(articulo.tipo);
   const arbol = useArbol(fab ? articulo.id : undefined);
@@ -115,6 +116,58 @@ export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
     };
   }, [arbol.data, costos.data]);
 
+  const confiabilidad = fab && (
+        <Tarjeta className="lg:col-span-5">
+          <EncabezadoTarjeta titulo="Confiabilidad del costo" explica={GLOSARIO.confiabilidadCosto}
+            descripcion="Piezas sin costo cuentan como $0 y bajan el precio sin avisar; un costo de hace meses ya no es el de hoy." />
+          <div className="px-5 pb-5 grid gap-5 md:grid-cols-2">
+            <div>
+              <p className="etiqueta mb-2 flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5 text-peligro" /> Sin costo ({hojas.sin.length})</p>
+              {hojas.sin.length === 0
+                ? <p className="text-sm text-tenue flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-ok" /> Todas las piezas tienen costo.</p>
+                : <ul className="space-y-1">{hojas.sin.map((h) => (
+                    <li key={h.id} className="text-sm rounded-md bg-peligro-suave px-2.5 py-1.5 flex items-center gap-2">
+                      <Link to={rutaArticulo(h)} className="hover:underline min-w-0 flex-1 truncate"><span className="cifra text-tenue">{h.clave}</span> {h.nombre}</Link>
+                      {h.donde && <span className="text-xs text-tenue shrink-0">en {h.donde}</span>}
+                    </li>))}
+                  </ul>}
+            </div>
+            <div>
+              <p className="etiqueta mb-2 flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-aviso" /> Costos de más de 6 meses</p>
+              {hojas.viejos.length === 0
+                ? <p className="text-sm text-tenue flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-ok" /> Ningún costo tiene más de 6 meses.</p>
+                : <ul className="space-y-1">{hojas.viejos.map((h) => (
+                    <li key={h.id} className="text-sm flex items-center gap-2">
+                      <Link to={rutaArticulo(h)} className="hover:underline min-w-0 flex-1 truncate"><span className="cifra text-tenue">{h.clave}</span> {h.nombre}</Link>
+                      <Insignia tono="aviso">{fecha(h.fecha)} · {hace(h.fecha)}</Insignia>
+                    </li>))}
+                  </ul>}
+            </div>
+          </div>
+        </Tarjeta>
+  );
+
+  // Sin permiso de márgenes (compras, importaciones): el costo y el precio de lista, sin la
+  // fórmula que los une. La confiabilidad del costo sí, que es justo lo que compras corrige.
+  if (!puede("margenes")) {
+    return (
+      <div className="grid gap-4 lg:grid-cols-5">
+        <Tarjeta className="lg:col-span-3">
+          <EncabezadoTarjeta titulo="Costo" explica={GLOSARIO.costoArticulo} />
+          <div className="px-5 pb-5 text-sm">
+            {fab && <Renglon etiqueta="Material" detalle="Lista de materiales, incluidos sus subensambles" valor={dinero(articulo.costo_material)} />}
+            {fab && <Renglon signo="+" etiqueta="Mano de obra" detalle={`${numero(articulo.horas)} h a la tarifa de cada etapa`} valor={dinero(articulo.costo_mano_obra)} />}
+            <Renglon signo={fab ? "=" : undefined} fuerte={fab} etiqueta="Costo" valor={dinero(articulo.costo_total)} />
+            <div className="flex items-baseline gap-3 mt-3 rounded-lg bg-marca-suave px-3 py-3">
+              <span className="flex-1 font-semibold text-marca-texto">Precio de lista sin IVA</span>
+              <span className="text-2xl font-semibold cifra">{dinero(articulo.precio)}</span>
+            </div>
+          </div>
+        </Tarjeta>
+        {confiabilidad}
+      </div>
+    );
+  }
   if (d.isLoading) return <Cargando filas={8} />;
   if (d.error) return <ErrorCarga error={d.error} />;
   const x = d.data;
@@ -174,36 +227,7 @@ export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
         )}
       </div>
 
-      {fab && (
-        <Tarjeta className="lg:col-span-5">
-          <EncabezadoTarjeta titulo="Confiabilidad del costo" explica={GLOSARIO.confiabilidadCosto}
-            descripcion="Piezas sin costo cuentan como $0 y bajan el precio sin avisar; un costo de hace meses ya no es el de hoy." />
-          <div className="px-5 pb-5 grid gap-5 md:grid-cols-2">
-            <div>
-              <p className="etiqueta mb-2 flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5 text-peligro" /> Sin costo ({hojas.sin.length})</p>
-              {hojas.sin.length === 0
-                ? <p className="text-sm text-tenue flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-ok" /> Todas las piezas tienen costo.</p>
-                : <ul className="space-y-1">{hojas.sin.map((h) => (
-                    <li key={h.id} className="text-sm rounded-md bg-peligro-suave px-2.5 py-1.5 flex items-center gap-2">
-                      <Link to={rutaArticulo(h)} className="hover:underline min-w-0 flex-1 truncate"><span className="cifra text-tenue">{h.clave}</span> {h.nombre}</Link>
-                      {h.donde && <span className="text-xs text-tenue shrink-0">en {h.donde}</span>}
-                    </li>))}
-                  </ul>}
-            </div>
-            <div>
-              <p className="etiqueta mb-2 flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-aviso" /> Costos de más de 6 meses</p>
-              {hojas.viejos.length === 0
-                ? <p className="text-sm text-tenue flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-ok" /> Ningún costo tiene más de 6 meses.</p>
-                : <ul className="space-y-1">{hojas.viejos.map((h) => (
-                    <li key={h.id} className="text-sm flex items-center gap-2">
-                      <Link to={rutaArticulo(h)} className="hover:underline min-w-0 flex-1 truncate"><span className="cifra text-tenue">{h.clave}</span> {h.nombre}</Link>
-                      <Insignia tono="aviso">{fecha(h.fecha)} · {hace(h.fecha)}</Insignia>
-                    </li>))}
-                  </ul>}
-            </div>
-          </div>
-        </Tarjeta>
-      )}
+      {confiabilidad}
     </div>
   );
 }

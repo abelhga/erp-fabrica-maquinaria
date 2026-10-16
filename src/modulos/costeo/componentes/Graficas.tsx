@@ -64,7 +64,7 @@ function TooltipCosteo({ active, payload }: { active?: boolean; payload?: { payl
  * Lo reconstruido hacia atrás va punteado y solo se muestra antes de la primera
  * foto real: cuando hay foto, la estimación sobra.
  */
-export function GraficaCosteo({ puntos }: { puntos: PuntoCosteo[] }) {
+export function GraficaCosteo({ puntos, conMargenes = true }: { puntos: PuntoCosteo[]; conMargenes?: boolean }) {
   const [rango, setRango] = useState<Rango>("todo");
   const [verTabla, setVerTabla] = useState(false);
 
@@ -110,10 +110,11 @@ export function GraficaCosteo({ puntos }: { puntos: PuntoCosteo[] }) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* "A utilidad de hoy" separa cuánto vino de cambiar la utilidad: es de márgenes. */}
         <Leyenda series={[
           { nombre: "Costo", color: SERIE(1) },
           { nombre: "Precio de lista real", color: SERIE(2) },
-          { nombre: "Precio a utilidad de hoy", color: SERIE(3) },
+          ...(conMargenes ? [{ nombre: "Precio a utilidad de hoy", color: SERIE(3) }] : []),
         ]} />
         <div className="flex items-center gap-3">
           <Filtro opciones={RANGOS} valor={rango} alCambiar={setRango} />
@@ -126,7 +127,7 @@ export function GraficaCosteo({ puntos }: { puntos: PuntoCosteo[] }) {
       {resumen && (
         <p className="text-sm text-tenue">
           Desde {fecha(new Date(resumen.desde))} el costo cambió <b className="text-texto cifra">{signo(resumen.costo)}</b>.
-          {!resumen.r && resumen.primeraReal != null && (
+          {conMargenes && !resumen.r && resumen.primeraReal != null && (
             <> El precio de lista real se guarda desde {fecha(new Date(resumen.primeraReal))}; con unos meses de fotos aquí se verá cuánto de su alza vino de la utilidad y cuánto de los costos.</>
           )}
           {resumen.r && (
@@ -144,15 +145,15 @@ export function GraficaCosteo({ puntos }: { puntos: PuntoCosteo[] }) {
         <div className="overflow-x-auto max-h-[360px] border border-borde rounded-lg">
           <table className="tabla">
             <thead><tr><th>Fecha</th><th className="text-right">Costo</th><th className="text-right">Precio real</th>
-              <th className="text-right">A utilidad de hoy</th><th className="text-right">Utilidad</th><th></th></tr></thead>
+              {conMargenes && <><th className="text-right">A utilidad de hoy</th><th className="text-right">Utilidad</th></>}<th></th></tr></thead>
             <tbody>
               {[...filas].reverse().map((f) => (
                 <tr key={f.t}>
                   <td>{fecha(new Date(f.t))}</td>
                   <td className="text-right cifra">{dinero(f.costo ?? f.costoEst)}</td>
                   <td className="text-right cifra">{dinero(f.real)}</td>
-                  <td className="text-right cifra">{dinero(f.constante ?? f.constanteEst)}</td>
-                  <td className="text-right cifra">{f.utilidad == null ? "—" : porcentaje(f.utilidad, 0)}</td>
+                  {conMargenes && <><td className="text-right cifra">{dinero(f.constante ?? f.constanteEst)}</td>
+                  <td className="text-right cifra">{f.utilidad == null ? "—" : porcentaje(f.utilidad, 0)}</td></>}
                   <td className="text-xs text-tenue">{f.estimado ? "estimado" : ""}</td>
                 </tr>
               ))}

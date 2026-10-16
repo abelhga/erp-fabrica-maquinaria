@@ -21,15 +21,12 @@ export function Historial({ id }: { id: string }) {
   const serie = useQuery({
     queryKey: ["costeo", "serie", id],
     queryFn: async () => {
-      const [s, h] = await Promise.all([
-        q<PuntoCosteo[]>(supabase.rpc("serie_costeo", { p_articulo: id })),
-        q<{ en: string; utilidad: number | null }[]>(supabase.from("historial_costeo").select("en, utilidad").eq("articulo_id", id)),
-      ]);
-      const util = new Map(h.map((x) => [new Date(x.en).getTime(), x.utilidad]));
+      // La utilidad y el precio "a utilidad de hoy" llegan vacíos sin permiso de márgenes (la base decide).
+      const s = await q<PuntoCosteo[]>(supabase.rpc("serie_costeo", { p_articulo: id }));
       return s.map((p) => ({
         ...p, costo: p.costo == null ? null : Number(p.costo), precio_real: p.precio_real == null ? null : Number(p.precio_real),
         precio_constante: p.precio_constante == null ? null : Number(p.precio_constante),
-        utilidad: util.get(new Date(p.en).getTime()) ?? null,
+        utilidad: p.utilidad == null ? null : Number(p.utilidad),
       }));
     },
   });
@@ -54,12 +51,13 @@ export function Historial({ id }: { id: string }) {
     <div className="space-y-4">
       <Tarjeta>
         <EncabezadoTarjeta titulo="Costo y precio en el tiempo" explica={GLOSARIO.historialCosteo}
-          descripcion="Costo de fabricarlo, precio de lista que regía y el que habría tenido con la utilidad de hoy: si las dos líneas de precio se separan, la diferencia vino de cambiar la utilidad." />
+          descripcion={puede("margenes") ? "Costo de fabricarlo, precio de lista que regía y el que habría tenido con la utilidad de hoy: si las dos líneas de precio se separan, la diferencia vino de cambiar la utilidad."
+            : "Costo de fabricarlo y precio de lista que regía en cada momento."} />
         <div className="px-5 pb-5">
           {puntos.filter((p) => (p.costo ?? 0) > 0).length < 2 ? (
             <Vacio icono={IconoGrafica} titulo="Todavía no hay historia suficiente"
               texto="Cada vez que cambia el costo o el precio queda una foto. Con el historial de costos de compras se puede reconstruir hacia atrás (Sistema → Importar)." />
-          ) : <GraficaCosteo puntos={puntos} />}
+          ) : <GraficaCosteo puntos={puntos} conMargenes={puede("margenes")} />}
         </div>
       </Tarjeta>
       {puede("ventas") && (

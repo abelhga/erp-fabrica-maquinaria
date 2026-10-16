@@ -1,6 +1,6 @@
-// Ingeniería y costeo. Las llaves de costo, utilidad y fórmula de precio son confidenciales:
-// solo se conectan a elementos que la pantalla dibuja para quien tiene "costos" (columnas con
-// `oculta: !costos`, pestaña Costo y precio, Márgenes, Precios vs ventas). Un vendedor ve
+// Ingeniería y costeo. Las llaves de costo son de quien tiene "costos" (columnas con `oculta: !costos`);
+// las de utilidad y fórmula de precio, solo de quien tiene "márgenes" (pestaña Costo y precio,
+// Márgenes, Precios vs ventas, las cifras de utilidad de la ficha): compras ve costos y no márgenes. Un vendedor ve
 // Equipos y Componentes, así que lo que esas pantallas muestran a todos usa las llaves sin dinero.
 export const COSTEO = {
   // --- Lo que ve cualquiera que entra a ingeniería (sin costos) ---
@@ -40,7 +40,7 @@ export const COSTEO = {
   precioFijo: "Precio capturado a mano: manda sobre la fórmula de su política y no se mueve cuando cambia el costo.",
   simuladorPrecios: "Antes de guardar un cambio de utilidad, recargo o ISR, ves cuántos precios se mueven, cuánto en promedio y los diez que más cambian. Respeta precios fijos y utilidades propias, igual que el cálculo real.",
   tipoCambioCosteo: "Pesos por dólar y por euro con que se costea lo importado. No cambia todos los días: sigue al del día solo cuando éste se aleja 3% o más, o cuando alguien lo captura aquí. Cada vez que cambia se recalculan esos costos y sus precios.",
-  historialCosteo: "Una foto del costo y del precio cada vez que cambian. La línea «a utilidad de hoy» dice qué precio habría tenido con la utilidad actual: si se separa del precio real, la diferencia vino de cambiar la utilidad, no el costo.",
+  historialCosteo: "Una foto del costo y del precio cada vez que cambian. Con permiso de márgenes también ves la línea «a utilidad de hoy», que dice qué precio habría tenido con la utilidad actual: si se separa del precio real, la diferencia vino de cambiar la utilidad, no el costo.",
   confiabilidadCosto: "Lo que puede hacer que el costo esté mal: piezas sin costo (cuentan como $0) y costos de hace más de 6 meses. Corrígelos y el precio se recalcula solo.",
   indiceCostoFamilia: "Cómo se movió el costo (y el precio de lista) de la familia, con 100 al inicio del periodo: 112 quiere decir 12 % más caro. Cada mes compara solo los equipos que ya existían el mes anterior, así un equipo nuevo en el catálogo no mueve el índice.",
   relacionCostoVentas: "Qué tanto se mueven juntos el costo de la familia y lo vendido, por trimestre. Cerca de 1: suben juntos; cerca de −1: uno sube cuando el otro baja; cerca de 0: no hay relación. Es orientativa: no dice que una cosa cause la otra.",

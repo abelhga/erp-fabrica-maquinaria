@@ -10,6 +10,7 @@ export const COMPRAS: Record<string, AyudaPantalla> = {
     "Reemplaza la hoja ACTUALIZACIONES: aquí compras pone al día el costo de lo que compra cuando un proveedor cambia sus precios.",
     "Escribe el costo nuevo y Enter: se guarda esa fila y bajas a la siguiente. Con ↑ ↓ te mueves sin guardar (lo escrito queda en amarillo hasta «Guardar cambios») y Esc deshace la fila. Filtra los costos de más de 6 meses o los que no tienen, o elige un proveedor para pasar su lista completa.",
     "La columna Cambio compara en pesos, con los dólares al tipo de cambio de hoy; un triángulo avisa si el cambio pasa de 50 %, casi siempre por unidad o moneda equivocada. Al guardar te dice a cuántos equipos les cambia el precio, y a la derecha quedan los últimos cambios con quién y cuándo.",
+    "Arriba a la derecha está el tipo de cambio con que se costea lo importado: si el del día no te sirve, captúralo ahí y Enter.",
   ],
   "/compras/ordenes": [
     "Todas las órdenes de compra, de la requisición al proveedor y del proveedor al almacén. Compras las arma y las envía, almacén las recibe y finanzas registra los pagos.",
