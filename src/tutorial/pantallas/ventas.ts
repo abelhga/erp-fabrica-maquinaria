@@ -66,6 +66,11 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     "“Sin tomar”: nadie de compras la ha agarrado. “Cotizando”: ya la tiene alguien. “Con precio”: ya contestaron. En rojo las que pasaron su plazo, que corre en horas hábiles (las urgentes tienen menos).",
     "Cuando llega el precio, “Aplicar a COT-…” lo pone en la partida de esa cotización. Ves el precio de lista y la entrega en días hábiles, nunca el costo. Si ya no hace falta, “Ya no la necesito” la cancela y compras deja de cotizarla.",
   ],
+  "/ventas/mercadolibre": [
+    "Lo de Mercado Libre que necesita a alguien: las preguntas de compradores por contestar y las publicaciones vendidas que falta ligar a su artículo. Las ventas no se capturan aquí: entran solas a Pedidos. La usa quien atiende Mercado Libre.",
+    "En «Preguntas», escribe la respuesta y da «Contestar» (o Ctrl+Enter): se publica en Mercado Libre tal cual. Cada pregunta dice cuánto lleva esperando; arriba ves el tiempo de respuesta de los últimos 30 días.",
+    "En «Por ligar», busca qué artículo es cada publicación y elígelo: sus ventas toman ese artículo y se pide el envío que estaba esperando. Si la publicación trae como SKU la clave del ERP, se liga sola.",
+  ],
   "/ventas/devoluciones": [
     "Aquí se registran y se siguen las devoluciones, reclamos y cancelaciones de cada venta, sobre todo de Mercado Libre, para que el código y la hora límite no se pierdan en el chat. La usan quien atiende las ventas en línea y almacén.",
     "“Nueva”: escribe el número de venta de Mercado Libre (o el folio del pedido) y Enter, elige si es devolución, reclamo o cancelación, y anota el motivo y el código. En una devolución, almacén ya sabe que viene; en un reclamo, queda la hora límite para responder.",
