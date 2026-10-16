@@ -2,7 +2,7 @@ import type { AyudaPantalla } from "./index";
 
 export const VENTAS: Record<string, AyudaPantalla> = {
   "/ventas/para-llamar": [
-    "Tu lista para arrancar el día: cada tarjeta dice por qué buscar a ese cliente y cuánto puede valer. La usan los vendedores; la gerencia ve la de todo el equipo.",
+    "Tu lista para arrancar el día: cada tarjeta dice por qué buscar a ese cliente y cuánto puede valer. La usan los vendedores: cada quien ve sus clientes y los que no tienen vendedor; la gerencia de ventas ve la de todo el equipo.",
     "Las tarjetas de arriba filtran por motivo: cotización por vencer (rojo), ya le toca (ámbar), refacciones (azul) y reactivar (gris). Pasa el mouse por cada una para ver la regla. El buscador encuentra cliente, producto o vendedor.",
     "“Redactar mensaje” arma un WhatsApp o un correo con el historial del cliente (lo escribe Claude si está conectado; si no, sale una plantilla). Revísalo y ajústalo: enviarlo lo decides tú, con “Abrir en WhatsApp” o copiándolo.",
     "Cuando vuelves de WhatsApp o del teléfono, la tarjeta pregunta “¿Sí le escribiste?”: un toque lo registra (con Deshacer) y el cliente pasa a “En seguimiento”, con el siguiente paso: llamar al día 3, último mensaje al día 10 y luego esperar una semana. Así nadie del equipo le vuelve a escribir sin saberlo.",
@@ -56,7 +56,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     "Para facturar bien captura RFC, régimen, CP fiscal y uso de CFDI, o llénalos con la constancia de situación fiscal. “Nueva cotización” sale ya ligada a este cliente.",
   ],
   "/ventas/comisiones": [
-    "La comisión de cada mes, calculada sola con los pedidos: sin rangos de filas que mover a mano. Cada vendedor ve la suya; la gerencia, dirección y finanzas ven a todos.",
+    "La comisión de cada mes, calculada sola con los pedidos: sin rangos de filas que mover a mano. Cada vendedor ve la suya; la gerencia de ventas, dirección y finanzas ven a todos (la gerencia administrativa, por ahora, solo la suya).",
     "Cada tarjeta trae la venta de maquinaria con su comisión, la barra hacia el siguiente escalón de meta, la venta de refacciones con su bono y los ajustes. “Pedidos que cuentan este mes” dice de dónde sale; con crédito compartido, qué parte te toca. Cambia de mes con las flechas.",
     "La regla (abajo, en “Cómo se calcula”): el porcentaje de tu plan (2 % en los planes actuales) sobre la venta sin IVA de todo lo que no es refacción, más un bono fijo por el escalón de meta alcanzado y otro por el de refacciones. Los escalones no se suman: se paga el más alto. El plan dice si la venta cuenta por la fecha del pedido, de la factura o del cobro.",
     "La gerencia o dirección agregan ajustes (bonos de Mercado Libre, correcciones) y finanzas la marca pagada: se guarda la foto del cálculo y el mismo mes no se paga dos veces.",

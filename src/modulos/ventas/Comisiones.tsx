@@ -41,8 +41,8 @@ const BASE: Record<Plan["base"], string> = { pedido: "la fecha del pedido (como 
 
 /**
  * Comisiones sin rangos de filas que alguien mueve a mano cada mes: salen de
- * los pedidos (comisiones_mes en la base). El vendedor ve la suya; gerencia,
- * dirección y finanzas ven a todos, agregan ajustes y marcan el pago.
+ * los pedidos (comisiones_mes en la base). El vendedor ve la suya; la gerencia de
+ * ventas y quien tiene el módulo de comisiones ven a todos; finanzas marca el pago.
  */
 export default function Comisiones() {
   const { tieneRol, puede } = useSesion();
@@ -52,7 +52,7 @@ export default function Comisiones() {
   const [anio, m] = mesTexto.split("-").map(Number);
   const mover = (d: number) => { const f = new Date(anio, m - 1 + d, 1); setParams({ mes: `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, "0")}` }, { replace: true }); };
   const puedeAjustar = tieneRol("direccion") || tieneRol("gerente_ventas");
-  const puedePagar = puede("finanzas", 2);
+  const puedePagar = puede("comisiones", 2);
 
   const filas = useQuery({ queryKey: ["comisiones_mes", mes], queryFn: () => q<FilaComision[]>(supabase.rpc("comisiones_mes", { p_mes: mes })) });
   const planes = useQuery({ queryKey: ["planes_comision"], staleTime: 10 * 60_000, queryFn: () => q<Plan[]>(supabase.from("planes_comision").select("id, nombre, pct_maquinaria, otros_como_maquinaria, base").eq("activo", true).order("id")) });

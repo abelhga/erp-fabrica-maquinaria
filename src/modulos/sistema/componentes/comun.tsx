@@ -13,12 +13,13 @@ export const ROLES: { rol: Rol; descripcion: string }[] = [
   { rol: "produccion", descripcion: "Supervisores de piso: terminal y avance de órdenes." },
   { rol: "rrhh", descripcion: "Personal, vacaciones e incidencias, con CURP, salario y cuentas." },
   { rol: "finanzas", descripcion: "Cobranza, pagos a proveedores y pago de comisiones." },
+  { rol: "administracion", descripcion: "Gerencia administrativa: lo mismo que finanzas (cobranza, pagos, caja chica), sin ver las comisiones de los vendedores." },
   { rol: "pantalla", descripcion: "TV del taller: entra directo al tablero de piso y no ve nada más." },
   { rol: "importaciones", descripcion: "Embarques, documentos con el agente aduanal, pagos en dólares y costo puesto en planta." },
 ];
 
 export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; alerta?: string }[] = [
-  { modulo: "ventas", nombre: "Ventas", descripcion: "Clientes, cotizaciones, pedidos y comisiones. 2: captura lo suyo · 3: autoriza precios y ve lo de todos." },
+  { modulo: "ventas", nombre: "Ventas", descripcion: "Clientes, cotizaciones, pedidos y la comisión propia. 2: captura lo suyo · 3: autoriza precios y ve lo de todos." },
   { modulo: "costeo", nombre: "Ingeniería", descripcion: "Equipos, subensambles y listas de materiales, sin costos. 2: edita listas." },
   { modulo: "costos", nombre: "Costos", descripcion: "Costos de compra, mano de obra, márgenes y políticas de precio.",
     alerta: "Quien tenga Costos, aunque sea en nivel 1, ve lo que cuesta cada equipo y el margen de cada venta. Ventas nunca debe tenerlo." },
@@ -27,6 +28,7 @@ export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; ale
   { modulo: "produccion", nombre: "Producción", descripcion: "1: ver el avance (lo tienen los vendedores) · 2: personal de piso · 3: gerencia." },
   { modulo: "rrhh", nombre: "Recursos humanos", descripcion: "Personal y vacaciones. 3: además CURP, RFC, NSS, salario y cuenta bancaria." },
   { modulo: "finanzas", nombre: "Finanzas", descripcion: "Cobranza y pagos. 2: registra cobros, facturas y pagos." },
+  { modulo: "comisiones", nombre: "Comisiones", descripcion: "1: ve las comisiones de todos los vendedores (cada vendedor ve la suya sin este permiso) · 2: las marca pagadas." },
   { modulo: "objetivos", nombre: "Objetivos", descripcion: "1: ve y califica solo a su gente (jefe directo) · 3: todos, plantillas, revisión y ajustes. Sin montos." },
   { modulo: "nomina", nombre: "Nómina", descripcion: "Sueldos, prenómina, préstamos y el bono en pesos. 2: captura conceptos · 3: cierra la semana y registra sueldos.",
     alerta: "Quien tenga Nómina, aunque sea en nivel 1, ve lo que gana cada persona. Los jefes califican con Objetivos sin necesitarla." },
