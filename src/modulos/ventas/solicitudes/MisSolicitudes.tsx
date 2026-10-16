@@ -15,6 +15,7 @@ import {
 import { InsigniasSolicitud, LineaTiempo, QueSePide, RespuestaVenta } from "@/modulos/compras/solicitudes/Componentes";
 import { DialogoMotivo } from "../componentes/dialogos";
 import { DialogoPedirPrecio } from "./DialogoPedirPrecio";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type Vista = "abiertas" | "con_precio" | "todas";
 
@@ -109,7 +110,7 @@ export default function MisSolicitudes() {
                 {s.cotizacion_folio && s.cotizacion_id && <Link to={`/ventas/cotizaciones/${s.cotizacion_id}`} className="text-marca-texto cifra inline-flex items-center gap-1"><FileText className="h-3 w-3" />{s.cotizacion_folio}</Link>}
               </div>
               {abierta(s) && (
-                <p className={cn("text-sm", s.semaforo === "vencida" ? "text-peligro font-medium" : "text-tenue")}>
+                <p className={cn("text-sm", s.semaforo === "vencida" ? "text-peligro font-medium" : "text-tenue")} data-explain={GLOSARIO.plazoSolicitud} data-explain-title="Plazo de compras">
                   {s.estado === "tomada" ? <>La tiene <b className="text-texto">{s.tomada_por_nombre}</b> · </> : <>Nadie la ha tomado · </>}{plazo(s)}
                 </p>
               )}

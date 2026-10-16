@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { ArrowDownRight, ArrowUpRight, BarChart3, Table2 } from "lucide-react";
 import { fecha, hoyISO, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 // -----------------------------------------------------------------------------
 // Periodo: vive en la URL (?p=12m) para que al cambiar de pestaña se quede el mismo
@@ -140,10 +141,10 @@ export function Cambio({ v, nuevo, className }: { v: number | null | undefined; 
   );
 }
 
-/** Cifra de la vista: etiqueta, valor grande y una línea de contexto. */
-export function Cifra({ titulo, valor, detalle, extra }: { titulo: string; valor: ReactNode; detalle?: ReactNode; extra?: ReactNode }) {
+/** Cifra de la vista: etiqueta, valor grande y una línea de contexto. `explica`: para el modo tutorial. */
+export function Cifra({ titulo, valor, detalle, extra, explica }: { titulo: string; valor: ReactNode; detalle?: ReactNode; extra?: ReactNode; explica?: string }) {
   return (
-    <div className="tarjeta px-4 py-3 min-w-0">
+    <div className="tarjeta px-4 py-3 min-w-0" data-explain={explica} data-explain-title={explica ? titulo : undefined}>
       <p className="text-sm text-tenue truncate">{titulo}</p>
       <div className="flex items-end gap-2 mt-0.5">
         <span className="text-2xl font-semibold tracking-tight leading-tight truncate">{valor}</span>
@@ -158,15 +159,18 @@ export function Cifra({ titulo, valor, detalle, extra }: { titulo: string; valor
  * Tarjeta de una gráfica con su gemela en tabla (para leer con lector de pantalla
  * y para copiar a Excel). La tabla es la misma información, no un resumen.
  */
-export function TarjetaGrafica({ titulo, descripcion, acciones, tabla, children, className, pie }: {
+export function TarjetaGrafica({ titulo, descripcion, acciones, tabla, children, className, pie, explica }: {
   titulo: ReactNode; descripcion?: ReactNode; acciones?: ReactNode; tabla?: ReactNode; children: ReactNode; className?: string; pie?: ReactNode;
+  /** Cómo leer la gráfica, para el modo tutorial (se muestra al pasar por el título). */
+  explica?: string;
 }) {
   const [verTabla, setVerTabla] = useState(false);
   return (
     <section className={cn("tarjeta flex flex-col min-w-0", className)}>
       <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-2">
         <div className="min-w-0">
-          <h3 className="font-semibold leading-tight">{titulo}</h3>
+          <h3 className="font-semibold leading-tight" data-explain={explica}
+              data-explain-title={explica && typeof titulo === "string" ? titulo : undefined}>{titulo}</h3>
           {descripcion && <p className="text-sm text-tenue mt-0.5">{descripcion}</p>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -207,7 +211,8 @@ export function LeyendaEscala({ escala, formato, vacio = "Sin venta", className 
     return `${formato(cortes[i - 1])} – ${formato(cortes[i])}`;
   };
   return (
-    <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-tenue", className)}>
+    <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-tenue", className)}
+      data-explain={escala.tipo === "divergente" ? GLOSARIO.crecimientoVenta : GLOSARIO.escalaCuantiles}>
       {colores.map((c, i) => (
         <span key={i} className="inline-flex items-center gap-1.5">
           <span className="h-3 w-4 rounded-sm border border-borde/60" style={{ background: c }} />

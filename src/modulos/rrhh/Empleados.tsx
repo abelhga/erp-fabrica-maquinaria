@@ -16,6 +16,7 @@ import {
   Avatar, TIPOS, antiguedad, mesesDeAntiguedad, useAusentesHoy, useCatalogosRrhh, useEmpleados, useVacaciones, type Empleado,
 } from "./componentes/comun";
 import { FichaEmpleado } from "./componentes/FichaEmpleado";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type VistaEstado = "activos" | "bajas" | "todos";
 
@@ -73,7 +74,7 @@ export default function Empleados() {
     { clave: "puesto", titulo: "Puesto", valor: (e) => e.puesto },
     { clave: "departamento", titulo: "Departamento", valor: (e) => e.departamento?.nombre },
     {
-      clave: "etapa", titulo: "Área de piso", valor: (e) => e.etapa?.nombre,
+      clave: "etapa", titulo: "Área de piso", explica: GLOSARIO.areaPiso, valor: (e) => e.etapa?.nombre,
       celda: (e) => e.etapa ? (
         <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: e.etapa.color }} />{e.etapa.nombre}</span>
       ) : <span className="text-tenue">—</span>,
@@ -88,7 +89,7 @@ export default function Empleados() {
       ),
     },
     {
-      clave: "vacaciones", titulo: "Vacaciones", alinear: "der", sinBusqueda: true, valor: (e) => saldo.get(e.id)?.saldo ?? null,
+      clave: "vacaciones", titulo: "Vacaciones", explica: GLOSARIO.saldoVacaciones, alinear: "der", sinBusqueda: true, valor: (e) => saldo.get(e.id)?.saldo ?? null,
       celda: (e) => {
         const v = saldo.get(e.id);
         if (!v) return <span className="text-tenue">—</span>;
@@ -102,7 +103,7 @@ export default function Empleados() {
       },
     },
     {
-      clave: "estado", titulo: "Estado", sinBusqueda: true,
+      clave: "estado", titulo: "Estado", explica: GLOSARIO.estadoPersonal, sinBusqueda: true,
       valor: (e) => (!e.activo ? "Baja" : ausencia.get(e.id) ? TIPOS[ausencia.get(e.id)!.tipo].texto : "Activo"),
       celda: (e) => {
         if (!e.activo) return <Insignia tono="neutro">Baja {fecha(e.baja_en)}</Insignia>;
@@ -124,9 +125,9 @@ export default function Empleados() {
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
         <Kpi titulo="Personal activo" valor={numero(activos.length)} icono={Users} tono="marca"
           detalle={`${activos.filter((e) => e.etapa_id).length} en piso · antigüedad promedio ${promedio.toFixed(1)} años`} />
-        <Kpi titulo="Ausentes hoy" valor={numero(ausentes.data?.length ?? 0)} icono={UserX} tono={(ausentes.data?.length ?? 0) > 0 ? "aviso" : "ok"}
+        <Kpi titulo="Ausentes hoy" valor={numero(ausentes.data?.length ?? 0)} icono={UserX} tono={(ausentes.data?.length ?? 0) > 0 ? "aviso" : "ok"} explica={GLOSARIO.ausentesHoy}
           detalle={nombresAusentes.length ? nombresAusentes.join(", ") : "Todos presentes"} alClic={() => ir("/rrhh/incidencias?vista=calendario")} />
-        <Kpi titulo="Solicitudes por aprobar" valor={numero(pendientes.data ?? 0)} icono={CalendarClock} tono={(pendientes.data ?? 0) > 0 ? "aviso" : "neutro"}
+        <Kpi titulo="Solicitudes por aprobar" valor={numero(pendientes.data ?? 0)} icono={CalendarClock} tono={(pendientes.data ?? 0) > 0 ? "aviso" : "neutro"} explica={GLOSARIO.solicitudesPorAprobar}
           detalle="Vacaciones y permisos" alClic={() => ir("/rrhh/incidencias")} />
         <Kpi titulo="Cumpleaños del mes" valor={numero(cumpleanos.length)} icono={Cake} tono="info"
           detalle={cumpleanos.length ? cumpleanos.slice(0, 3).map((e) => `${e.nombre.split(" ")[0]} (${Number(e.fecha_nacimiento!.slice(8))})`).join(", ") + (cumpleanos.length > 3 ? "…" : "") : "Nadie este mes"} />

@@ -25,6 +25,7 @@ import {
   type Contacto, type VCotizacion, type VOportunidad, type VPedido, haceCuanto,
 } from "./comun";
 import { Barra } from "./componentes/campos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Cliente {
   id: string; nombre: string; razon_social: string | null; rfc: string | null; regimen_fiscal: string | null; cp_fiscal: string | null;
@@ -81,11 +82,11 @@ export default function DetalleCliente() {
         <span className="inline-flex flex-wrap items-center gap-2">
           {[c.razon_social !== c.nombre ? c.razon_social : null, [c.ciudad, c.estado].filter(Boolean).join(", "), c.giro].filter(Boolean).join(" · ")}
           {c.vendedor_id ? (
-            <Insignia tono={mio ? "marca" : "neutro"}>
+            <span data-explain={GLOSARIO.cartera} data-explain-title="Vigencia de la cuenta"><Insignia tono={mio ? "marca" : "neutro"}>
               {mio ? "Cliente tuyo" : `Cliente de ${c.vendedor?.nombre}`}{cartera.data?.vence_en ? ` hasta ${fecha(cartera.data.vence_en)}` : ""}
               {cartera.data?.estado === "vencido" ? " (vencido)" : ""}
-            </Insignia>
-          ) : <Insignia tono="ok">Libre</Insignia>}
+            </Insignia></span>
+          ) : <span data-explain={GLOSARIO.clienteLibre}><Insignia tono="ok">Libre</Insignia></span>}
         </span>
       }
       acciones={<>
@@ -95,13 +96,14 @@ export default function DetalleCliente() {
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
         <Kpi titulo="Saldo por cobrar" icono={History} tono={Number(resumen.data?.saldo ?? 0) > 0.5 ? "aviso" : "ok"}
           valor={contactosVisibles || Number(resumen.data?.saldo) ? corto(resumen.data?.saldo ?? 0) : "Privado"}
-          detalle={arranque.data?.saldo ? `+ ${dinero(arranque.data.saldo)} de arranque (hoja)` : "Pedidos del ERP"} />
+          detalle={arranque.data?.saldo ? <span data-explain={GLOSARIO.saldoArranque}>+ {dinero(arranque.data.saldo)} de arranque (hoja)</span> : "Pedidos del ERP"} explica={GLOSARIO.saldoPorCobrar} />
         {/* Del cliente de otro vendedor solo se sabe de quién es y hasta cuándo (la regla de cartera); lo que compra es suyo. */}
-        <Kpi titulo="Compras 12 meses" icono={History} tono="marca" valor={contactosVisibles ? corto(resumen.data?.compras_12m ?? 0) : "Privado"} detalle="Sin IVA, pedidos del ERP" />
+        <Kpi titulo="Compras 12 meses" icono={History} tono="marca" valor={contactosVisibles ? corto(resumen.data?.compras_12m ?? 0) : "Privado"} detalle="Sin IVA, pedidos del ERP" explica={GLOSARIO.compras12m} />
         <Kpi titulo="Última compra" icono={History} tono="neutro"
           valor={!contactosVisibles ? "Privado" : (() => { const u = [resumen.data?.ultima_compra, cartera.data?.ultima_venta, arranque.data?.ultima_venta].filter(Boolean).sort().pop(); return u ? haceCuanto(u) : "—"; })()}
-          detalle={contactosVisibles && cartera.data?.ultimo_seguimiento ? `Último seguimiento ${fecha(cartera.data.ultimo_seguimiento)}` : undefined} />
-        <Kpi titulo="Cotizaciones abiertas" icono={FilePlus} tono="info" valor={String(resumen.data?.cotizaciones_abiertas ?? 0)} />
+          detalle={contactosVisibles && cartera.data?.ultimo_seguimiento ? `Último seguimiento ${fecha(cartera.data.ultimo_seguimiento)}` : undefined}
+          explica={GLOSARIO.ultimaCompra} />
+        <Kpi titulo="Cotizaciones abiertas" icono={FilePlus} tono="info" valor={String(resumen.data?.cotizaciones_abiertas ?? 0)} explica={GLOSARIO.cotizacionAbierta} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] items-start">
@@ -110,7 +112,7 @@ export default function DetalleCliente() {
           <Contactos clienteId={c.id} visibles={contactosVisibles} editable={puedeEditar} duenio={c.vendedor?.nombre} />
         </div>
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Actividad" descripcion="Llamadas, WhatsApp, visitas y tareas con fecha" />
+          <EncabezadoTarjeta titulo="Actividad" descripcion="Llamadas, WhatsApp, visitas y tareas con fecha" explica={GLOSARIO.actividad} />
           <div className="px-5 pb-5"><Actividades clienteId={c.id} puedeCapturar={puede("ventas", 2)} /></div>
         </Tarjeta>
       </div>
@@ -339,7 +341,7 @@ function Historia({ clienteId }: { clienteId: string }) {
         { valor: "cotizaciones", texto: "Cotizaciones", cuenta: cots.data?.length },
         { valor: "pedidos", texto: "Pedidos", cuenta: peds.data?.length },
         { valor: "oportunidades", texto: "Oportunidades", cuenta: ops.data?.length },
-        { valor: "hoja", texto: "Compras anteriores al ERP", cuenta: hoja.data?.length },
+        { valor: "hoja", texto: "Compras anteriores al ERP", cuenta: hoja.data?.length, explica: GLOSARIO.comprasAnterioresErp },
       ]} />
       <ContenidoPestana value="cotizaciones" className="pt-3">
         <TablaDatos filas={cots.data} columnas={colCot} cargando={cots.isLoading} claveFila={(c) => c.id} buscable={false} alClicFila={(c) => ir(`/ventas/cotizaciones/${c.id}`)}

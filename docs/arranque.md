@@ -14,6 +14,13 @@ que exige un "día de corte") para cuando la gente ya conoce el sistema.
   ajustes de inventario, base de comisiones (al vender, al facturar o al cobrar).
 - Finanzas revisa el saldo de arranque por cliente que trae el libro de ventas
   (38 clientes, $10.09 M con IVA al importar).
+- Finanzas revisa el saldo de arranque por proveedor que trae el libro de compras
+  (Pagos → "Saldos de la hoja": 43 proveedores, $4.93 M a cargo y $0.76 M a favor el
+  15 oct 2026; neto $4.17 M, como la "Cuentas por pagar" de la hoja). El préstamo de
+  socios ($2.6 M) y el crédito de Santander van aparte (tipo de acreedor; se marcan en
+  importar.config.json → tipos_acreedor): a proveedores se les deben $2.33 M.
+- Desde el arranque, los pagos a esos saldos se registran en Pagos → Saldos de la hoja
+  (no en la hoja). Si alguien lo anota también en la hoja, no se descuenta dos veces.
 - Dar de alta a cada persona con su rol.
 
 ## 1. Cotizador y catálogo (semana 1)

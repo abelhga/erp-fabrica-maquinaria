@@ -14,6 +14,7 @@ import { cn } from "@/lib/utilidades";
 import type { TipoImportacion as TipoDocumento } from "@/lib/asistente";
 import { abrirArchivo, CLAVE_EMBARQUES, NOMBRE_DEBE, subirArchivo, useVeDinero, type Debe, type Embarque } from "./comun";
 import { DOC_A_CLAUDE, LeerDocumento } from "./LeerDocumento";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Documento {
   id: string; tipo: string; descripcion: string | null; debe: Debe; estado: string; archivo: string | null; archivo_nombre: string | null;
@@ -74,7 +75,7 @@ export function Documentos({ e }: { e: Embarque }) {
   return (
     <>
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Documentos" descripcion={`${listos} de ${lista.length} listos. Los marcados “antes del arribo” los pide el agente aduanal antes de que llegue.`}
+        <EncabezadoTarjeta titulo="Documentos" explica={GLOSARIO.documentosAntesArribo} descripcion={`${listos} de ${lista.length} listos. Los marcados “antes del arribo” los pide el agente aduanal antes de que llegue.`}
           acciones={captura && <Boton tamano="sm" onClick={() => setLeer({})}><Sparkles className="h-4 w-4" /> Leer con Claude</Boton>} />
         {lista.length === 0 ? <Vacio icono={FileCheck2} titulo="Sin documentos" texto="Al dar de alta el embarque se arma su lista según la modalidad." /> : (
           <ul className="divide-y divide-borde border-t border-borde">

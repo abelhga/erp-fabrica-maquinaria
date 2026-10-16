@@ -16,6 +16,7 @@ import { CalendarioCuadrillas } from "./componentes/CalendarioCuadrillas";
 import { CargaSemanal } from "./componentes/CargaSemanal";
 import { DialogoSolicitar } from "./componentes/DialogoSolicitar";
 import { Entregar } from "./componentes/Materiales";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type Vista = "abiertos" | "solicitada" | "programada" | "en_curso" | "cerrada" | "todos";
 
@@ -51,7 +52,7 @@ export default function Servicios() {
 
   const columnas: Columna<Servicio>[] = [
     { clave: "folio", titulo: "Folio", celda: (s) => <span className="cifra font-medium whitespace-nowrap">{s.folio}</span> },
-    { clave: "tipo", titulo: "Tipo", valor: (s) => s.tipo_nombre, celda: (s) => <Tipo tipo={s.tipo} /> },
+    { clave: "tipo", titulo: "Tipo", valor: (s) => s.tipo_nombre, explica: GLOSARIO.tipoServicio, celda: (s) => <Tipo tipo={s.tipo} /> },
     { clave: "cliente", titulo: "Cliente", celda: (s) => (
       <div className="min-w-[180px]"><p className="leading-tight">{s.cliente}</p>
         <p className="text-xs text-tenue truncate max-w-[240px]">{[s.numero_serie, s.equipo, s.lugar].filter(Boolean).join(" · ") || s.descripcion}</p></div>
@@ -64,14 +65,14 @@ export default function Servicios() {
     ) : (
       <span className="text-sm text-aviso whitespace-nowrap">Sin fecha · pedido {hace(s.solicitado_en)}</span>
     ) },
-    { clave: "cuadrilla", titulo: "Cuadrilla", valor: (s) => s.cuadrilla.map((c) => c.nombre).join(", "),
+    { clave: "cuadrilla", titulo: "Cuadrilla", valor: (s) => s.cuadrilla.map((c) => c.nombre).join(", "), explica: GLOSARIO.cuadrilla,
       celda: (s) => s.cuadrilla.length ? (
         <span className="text-sm whitespace-nowrap" title={s.cuadrilla.map((c) => c.nombre).join("\n")}>
           {s.cuadrilla[0].nombre.split(" ").slice(0, 2).join(" ")}
           {s.cuadrilla.length > 1 && <span className="text-tenue"> +{s.cuadrilla.length - 1}</span>}
         </span>
       ) : <span className="text-tenue">—</span> },
-    { clave: "estado", titulo: "Estado", valor: (s) => ESTADO_SERVICIO[s.estado].texto, celda: (s) => <InsigniaEstado estado={s.estado} /> },
+    { clave: "estado", titulo: "Estado", valor: (s) => ESTADO_SERVICIO[s.estado].texto, explica: GLOSARIO.estadoServicio, celda: (s) => <InsigniaEstado estado={s.estado} /> },
   ];
 
   const cuenta = (v: Vista) => (v === "todos" ? lista.length : v === "abiertos" ? lista.filter((s) => !["cerrada", "cancelada"].includes(s.estado)).length : lista.filter((s) => s.estado === v).length);
@@ -87,10 +88,10 @@ export default function Servicios() {
       </>}
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi titulo="Por programar" valor={numero(solicitadas.length)} icono={Inbox} tono={solicitadas.length ? "aviso" : "ok"}
+        <Kpi titulo="Por programar" valor={numero(solicitadas.length)} icono={Inbox} tono={solicitadas.length ? "aviso" : "ok"} explica={GLOSARIO.estadoServicio}
              detalle={masVieja ? `El más viejo: ${masVieja.cliente}, ${hace(masVieja.solicitado_en)}` : "Nada esperando fecha"}
              alClic={() => setVista("solicitada")} />
-        <Kpi titulo="Esta semana" valor={numero(estaSemana.length)} icono={CalendarClock} tono="marca"
+        <Kpi titulo="Esta semana" valor={numero(estaSemana.length)} icono={CalendarClock} tono="marca" explica={GLOSARIO.cuadrilla}
              detalle={`${estaSemana.reduce((s, x) => s + x.cuadrilla.length, 0)} personas fuera del taller en algún momento`} alClic={() => setVista("programada")} />
         <Kpi titulo="En curso" valor={numero(enCurso.length)} icono={Truck} tono="info"
              detalle={enCurso[0] ? `${enCurso[0].cliente}${enCurso[0].lugar ? ` · ${enCurso[0].lugar}` : ""}` : "Nadie en campo ahora"} alClic={() => setVista("en_curso")} />

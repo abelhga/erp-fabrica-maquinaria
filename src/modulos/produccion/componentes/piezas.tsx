@@ -7,6 +7,7 @@ import { cn } from "@/lib/utilidades";
 import { fecha } from "@/lib/formato";
 import type { Evento, TipoEvento } from "./datos";
 import { haceRato, textoDias, textoEvento, tonoCompromiso } from "./util";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /** Avance por horas terminadas. El número va aparte, en tinta de texto. */
 export function BarraAvance({ valor, className, grosor = "h-1.5" }: { valor: number; className?: string; grosor?: string }) {
@@ -24,9 +25,11 @@ export function InsigniaCompromiso({ dias, fechaCompromiso, cerrada, corta }: {
 }) {
   const tono = tonoCompromiso(dias, cerrada);
   return (
-    <Insignia tono={tono} punto className="cifra" >
-      {corta ? textoDias(dias) : <>{fecha(fechaCompromiso)}{!cerrada && dias != null && <span className="opacity-80">· {textoDias(dias).toLowerCase()}</span>}</>}
-    </Insignia>
+    <span className="inline-flex" data-explain={GLOSARIO.fechaCompromiso} data-explain-title="Fecha compromiso">
+      <Insignia tono={tono} punto className="cifra" >
+        {corta ? textoDias(dias) : <>{fecha(fechaCompromiso)}{!cerrada && dias != null && <span className="opacity-80">· {textoDias(dias).toLowerCase()}</span>}</>}
+      </Insignia>
+    </span>
   );
 }
 

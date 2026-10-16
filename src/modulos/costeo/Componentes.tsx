@@ -10,6 +10,7 @@ import { dinero, fecha, hace, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { COMPRADOS, NOMBRE_TIPO, esCostoViejo, useCatalogo, type ArticuloCatalogo } from "./componentes/comun";
 import { NuevoArticulo } from "./componentes/NuevoArticulo";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type FiltroComp = "todos" | "sin_costo" | "viejo" | "importados" | "con_existencia";
 
@@ -83,16 +84,16 @@ export default function Componentes() {
     },
     { clave: "categoria", titulo: "Categoría", clase: "text-tenue", celda: (a) => <span className="block max-w-[110px] truncate" title={a.categoria ?? undefined}>{a.categoria ?? "—"}</span> },
     {
-      clave: "existencia", titulo: "Existencia", alinear: "der", sinBusqueda: true, valor: (a) => a.existencia ?? 0, clase: "whitespace-nowrap",
+      clave: "existencia", titulo: "Existencia", alinear: "der", sinBusqueda: true, valor: (a) => a.existencia ?? 0, clase: "whitespace-nowrap", explica: GLOSARIO.enPlanta,
       celda: (a) => <span className={cn(!a.existencia && "text-tenue")}>{numero(a.existencia ?? 0)} <span className="text-xs text-tenue">{a.unidad}</span></span>,
     },
-    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (a) => a.precio, celda: (a) => dinero(a.precio) },
+    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (a) => a.precio, celda: (a) => dinero(a.precio), explica: GLOSARIO.precioLista },
     {
-      clave: "costo", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, clase: "whitespace-nowrap",
+      clave: "costo", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, clase: "whitespace-nowrap", explica: GLOSARIO.costoArticulo,
       valor: (a) => a.costo_total ?? null, celda: (a) => <CeldaCosto a={a} />,
     },
     {
-      clave: "costo_actualizado_en", titulo: "Fecha costo", sinBusqueda: true, oculta: !costos, clase: "whitespace-nowrap",
+      clave: "costo_actualizado_en", titulo: "Fecha costo", sinBusqueda: true, oculta: !costos, clase: "whitespace-nowrap", explica: GLOSARIO.costoViejo,
       valor: (a) => a.costo_actualizado_en ?? null,
       celda: (a) => !a.costo_actualizado_en ? <span className="text-tenue">—</span>
         : esCostoViejo(a.costo_actualizado_en)

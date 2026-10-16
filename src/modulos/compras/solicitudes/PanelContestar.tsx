@@ -12,6 +12,7 @@ import { CampoNumero } from "@/modulos/ventas/componentes/campos";
 import { SelectorProveedor, hace } from "../componentes/comun";
 import { CLAVE, abierta, type Moneda, type Solicitud } from "./datos";
 import { DetalleSolicitud, RespuestaVenta } from "./Componentes";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const UNIDADES = ["pieza", "metro", "kilo", "litro", "juego", "tramo", "m2", "caja", "rollo"];
 const sumarDias = (n: number) => { const d = new Date(hoyISO() + "T12:00:00"); d.setDate(d.getDate() + n); return d.toLocaleDateString("en-CA"); };
@@ -126,7 +127,7 @@ export function PanelContestar({ s, alCerrar }: { s: Solicitud; alCerrar: () => 
 
       <form onSubmit={enviar} className="tarjeta p-4 space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="font-semibold">Respuesta</h3>
+          <h3 className="font-semibold" data-explain={GLOSARIO.contestarSolicitud}>Respuesta</h3>
           <div className="flex rounded-lg border border-borde p-0.5 bg-fondo text-xs">
             {([["catalogo", "Está en el catálogo", Search], ["nuevo", "Dar de alta", PackagePlus]] as const).map(([v, t, I]) => (
               <button key={v} type="button" onClick={() => setModo(v)}

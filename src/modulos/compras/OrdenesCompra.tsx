@@ -14,6 +14,7 @@ import { cn } from "@/lib/utilidades";
 import { todasLasFilas } from "@/modulos/almacen/componentes/comun";
 import { InsigniaOC, type OrdenCompra } from "./componentes/comun";
 import { Requisiciones } from "./componentes/Requisiciones";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type FiltroOC = "abiertas" | "atrasadas" | "borrador" | "por_recibir" | "recibidas" | "todas";
 
@@ -76,12 +77,12 @@ export default function OrdenesCompra() {
     },
     { clave: "fecha", titulo: "Fecha", clase: "whitespace-nowrap text-tenue px-2", valor: (o) => o.fecha, celda: (o) => fecha(o.fecha) },
     {
-      clave: "fecha_entrega", titulo: "Entrega", clase: "whitespace-nowrap px-2", valor: (o) => o.fecha_entrega,
+      clave: "fecha_entrega", titulo: "Entrega", clase: "whitespace-nowrap px-2", valor: (o) => o.fecha_entrega, explica: GLOSARIO.fechaEntregaOrden,
       celda: (o) => <span className={cn(o.atrasada && "text-peligro font-medium")}>{fecha(o.fecha_entrega)}</span>,
     },
-    { clave: "estado", titulo: "Estado", valor: (o) => o.estado, celda: (o) => <InsigniaOC estado={o.estado} atrasada={o.atrasada} dias={o.dias_atraso} /> },
+    { clave: "estado", titulo: "Estado", valor: (o) => o.estado, explica: GLOSARIO.estadoOrdenCompra, celda: (o) => <InsigniaOC estado={o.estado} atrasada={o.atrasada} dias={o.dias_atraso} /> },
     {
-      clave: "avance_recibido", titulo: "Recibido", sinBusqueda: true, clase: "px-2", valor: (o) => Number(o.avance_recibido),
+      clave: "avance_recibido", titulo: "Recibido", sinBusqueda: true, clase: "px-2", valor: (o) => Number(o.avance_recibido), explica: GLOSARIO.avanceRecibido,
       celda: (o) => o.estado === "borrador" || o.estado === "cancelada" ? <span className="text-tenue/50">·</span> : (
         <div className="flex items-center gap-2 min-w-[90px]">
           <div className="h-1.5 flex-1 rounded-full bg-fondo overflow-hidden"><div className="h-full rounded-full bg-ok" style={{ width: `${Math.round(Number(o.avance_recibido) * 100)}%` }} /></div>
@@ -91,7 +92,7 @@ export default function OrdenesCompra() {
     },
     { clave: "total", titulo: "Total", alinear: "der", sinBusqueda: true, oculta: !verDinero, clase: "px-2 whitespace-nowrap", valor: (o) => Number(o.total), celda: (o) => dinero(o.total, o.moneda === "USD" ? "USD" : "MXN") },
     {
-      clave: "saldo", titulo: "Por pagar", alinear: "der", sinBusqueda: true, oculta: !verDinero, clase: "px-2 whitespace-nowrap", valor: (o) => Number(o.total) - Number(o.pagado),
+      clave: "saldo", titulo: "Por pagar", alinear: "der", sinBusqueda: true, oculta: !verDinero, explica: GLOSARIO.porPagarOrden, clase: "px-2 whitespace-nowrap", valor: (o) => Number(o.total) - Number(o.pagado),
       celda: (o) => o.estado === "borrador" || o.estado === "cancelada" ? <span className="text-tenue/50">·</span>
         : Number(o.total) - Number(o.pagado) <= 0.005 ? <span className="text-ok text-xs">pagada</span>
         : <span className="text-tenue">{dinero(Number(o.total) - Number(o.pagado), o.moneda === "USD" ? "USD" : "MXN")}</span>,
@@ -107,18 +108,18 @@ export default function OrdenesCompra() {
       <Pestanas value={vista} onValueChange={(v) => cambiar("vista", v === "ordenes" ? null : v)}>
         <ListaPestanas opciones={[
           { valor: "ordenes", texto: "Órdenes" },
-          { valor: "requisiciones", texto: "Requisiciones", cuenta: reqPendientes.data || undefined },
+          { valor: "requisiciones", texto: "Requisiciones", cuenta: reqPendientes.data || undefined, explica: GLOSARIO.requisicionCompra },
         ]} />
         <ContenidoPestana value="ordenes" className="pt-5 space-y-5">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Kpi titulo="Por recibir" valor={numero(porRecibir.length)} icono={Truck} tono="info"
+            <Kpi titulo="Por recibir" explica={GLOSARIO.estadoOrdenCompra} valor={numero(porRecibir.length)} icono={Truck} tono="info"
               detalle={verDinero ? `${dineroCompacto(porRecibir.reduce((s, o) => s + enPesos(o) * (1 - Number(o.avance_recibido)), 0))} en camino` : "enviadas al proveedor"}
               alClic={() => cambiar("filtro", "por_recibir")} />
-            <Kpi titulo="Atrasadas" valor={numero(todas.filter((o) => o.atrasada).length)} icono={AlertTriangle}
+            <Kpi titulo="Atrasadas" explica={GLOSARIO.ocAtrasada} valor={numero(todas.filter((o) => o.atrasada).length)} icono={AlertTriangle}
               tono={todas.some((o) => o.atrasada) ? "peligro" : "ok"} detalle="pasó su fecha de entrega" alClic={() => cambiar("filtro", "atrasadas")} />
             <Kpi titulo="En borrador" valor={numero(todas.filter((o) => o.estado === "borrador").length)} icono={FilePen} tono="neutro"
               detalle="falta enviarlas al proveedor" alClic={() => cambiar("filtro", "borrador")} />
-            <Kpi titulo="Requisiciones" valor={numero(reqPendientes.data ?? 0)} icono={ClipboardList} tono="marca"
+            <Kpi titulo="Requisiciones" explica={GLOSARIO.requisicionCompra} valor={numero(reqPendientes.data ?? 0)} icono={ClipboardList} tono="marca"
               detalle="partidas esperando orden de compra" alClic={() => cambiar("vista", "requisiciones")} />
           </div>
 

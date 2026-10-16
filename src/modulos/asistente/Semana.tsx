@@ -17,6 +17,7 @@ import { pedirSemana, type NumerosSemana, type Semana, type Tono } from "@/lib/a
 import { dinero, dineroCompacto, fecha, hace, hoyISO, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { TIPOS as TIPOS_SERVICIO } from "@/modulos/servicio/datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const TONOS: Record<Tono, { icono: typeof Info; clase: string }> = {
   riesgo: { icono: Siren, clase: "bg-peligro-suave text-peligro" },
@@ -145,11 +146,11 @@ export default function SemanaPagina() {
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {n.ventas && (
                 <Kpi titulo={n.ventas.alcance === "tuyas" ? "Tus ventas" : "Ventas"} icono={HandCoins} tono="marca"
-                  valor={dineroCompacto(n.ventas.monto)}
+                  valor={dineroCompacto(n.ventas.monto)} explica={GLOSARIO.ventasSemana}
                   detalle={<>{numero(n.ventas.operaciones)} {n.ventas.operaciones === 1 ? "operación" : "operaciones"} · <Cambio a={n.ventas.monto} b={n.ventas.monto_anterior} /> vs {dineroCompacto(n.ventas.monto_anterior)}</>} />
               )}
               {n.ventas && (
-                <Kpi titulo="Cotizaciones enviadas" icono={FileText} tono="info" valor={numero(n.ventas.cotizaciones_enviadas.n)}
+                <Kpi titulo="Cotizaciones enviadas" icono={FileText} tono="info" valor={numero(n.ventas.cotizaciones_enviadas.n)} explica={GLOSARIO.cotizacionesSemana}
                   detalle={<>{dineroCompacto(n.ventas.cotizaciones_enviadas.monto)} · {n.ventas.cotizaciones_ganadas.n} ganadas
                     {n.ventas.cotizaciones_sin_respuesta.n > 0 && <> · <span className="text-aviso font-medium">{n.ventas.cotizaciones_sin_respuesta.n} sin respuesta</span></>}</>} />
               )}
@@ -167,7 +168,7 @@ export default function SemanaPagina() {
                   detalle={<>{n.compras.atrasadas > 0 ? <span className="text-aviso font-medium">{n.compras.atrasadas} atrasadas</span> : "ninguna atrasada"}
                     {n.compras.ajustes_pendientes > 0 && <> · {n.compras.ajustes_pendientes} ajustes por autorizar</>}</>} />
               )}
-              <Kpi titulo="Tus pendientes" icono={ListTodo} tono={n.pendientes.vencidos ? "peligro" : "neutro"} valor={numero(n.pendientes.vencidos)}
+              <Kpi titulo="Tus pendientes" icono={ListTodo} tono={n.pendientes.vencidos ? "peligro" : "neutro"} valor={numero(n.pendientes.vencidos)} explica={GLOSARIO.pendiente}
                 detalle={<>vencidos · {n.pendientes.esta_semana} vencen esta semana · {n.pendientes.cerrados} cerrados la pasada</>} />
             </div>
           )}
@@ -177,7 +178,7 @@ export default function SemanaPagina() {
               <section className={cn("tarjeta min-w-0 overflow-hidden", n.ventas ? "lg:col-span-2" : "lg:col-span-3")}>
                 <div className="px-4 py-3 border-b border-borde flex flex-wrap items-center gap-x-2 gap-y-0.5">
                   <CalendarDays className="h-4 w-4 text-tenue" />
-                  <h2 className="font-semibold">Esta semana</h2>
+                  <h2 className="font-semibold" data-explain={GLOSARIO.agendaSemana} data-explain-title="Esta semana">Esta semana</h2>
                   <span className="text-xs text-tenue hidden sm:inline">entregas, producción, lo que llega y servicios</span>
                 </div>
                 {eventos.length === 0 ? (

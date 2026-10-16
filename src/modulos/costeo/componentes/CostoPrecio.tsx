@@ -12,6 +12,7 @@ import { dinero, fecha, hace, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { cant, esCostoViejo, esFabricado, pct, rutaArticulo, type ArticuloCatalogo } from "./comun";
 import { useArbol, useCostosDe } from "./datosLista";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface Recargo { nombre: string; pct: number; monto: number }
 export interface Desglose {
@@ -123,7 +124,7 @@ export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
   return (
     <div className="grid gap-4 lg:grid-cols-5">
       <Tarjeta className="lg:col-span-3">
-        <EncabezadoTarjeta titulo="De dónde sale el precio" descripcion={<>Política <b className="text-texto">{x.politica.nombre}</b> · utilidad {pct(x.utilidad)} · ISR de compensación {pct(x.isr)}</>} />
+        <EncabezadoTarjeta titulo="De dónde sale el precio" explica={GLOSARIO.formulaPrecio} descripcion={<>Política <b className="text-texto">{x.politica.nombre}</b> · utilidad {pct(x.utilidad)} · ISR de compensación {pct(x.isr)}</>} />
         <div className="px-5 pb-5 text-sm">
           {fab && <Renglon etiqueta="Material" detalle="Lista de materiales, incluidos sus subensambles" valor={dinero(x.costo_material)} />}
           {fab && <Renglon signo="+" etiqueta="Mano de obra" detalle={`${numero(x.horas)} h a la tarifa de cada etapa`} valor={dinero(x.costo_mano_obra)} />}
@@ -149,7 +150,7 @@ export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
             <span className="flex-1 font-semibold text-marca-texto">Precio de lista sin IVA</span>
             <span className="text-2xl font-semibold cifra">{dinero(x.precio_lista)}</span>
           </div>
-          {x.precio_fijo != null && <p className="text-xs text-aviso mt-2">Precio fijo capturado a mano: manda sobre la fórmula.</p>}
+          {x.precio_fijo != null && <p className="text-xs text-aviso mt-2" data-explain={GLOSARIO.precioFijo}>Precio fijo capturado a mano: manda sobre la fórmula.</p>}
         </div>
       </Tarjeta>
 
@@ -160,7 +161,7 @@ export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
         </Tarjeta>
         {x.precio_lista != null && (
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Lo que queda con el precio de lista" descripcion="Como las columnas Z a AC de la hoja" />
+            <EncabezadoTarjeta titulo="Lo que queda con el precio de lista" explica={GLOSARIO.utilidadNeta} descripcion="Como las columnas Z a AC de la hoja" />
             <div className="px-5 pb-4 text-sm">
               <Renglon etiqueta="Precio de lista" valor={dinero(x.precio_lista)} />
               <Renglon signo="−" etiqueta="Costo con todos los recargos" valor={dinero(x.costo_con_recargos)} />
@@ -175,7 +176,7 @@ export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
 
       {fab && (
         <Tarjeta className="lg:col-span-5">
-          <EncabezadoTarjeta titulo="Confiabilidad del costo"
+          <EncabezadoTarjeta titulo="Confiabilidad del costo" explica={GLOSARIO.confiabilidadCosto}
             descripcion="Piezas sin costo cuentan como $0 y bajan el precio sin avisar; un costo de hace meses ya no es el de hoy." />
           <div className="px-5 pb-5 grid gap-5 md:grid-cols-2">
             <div>

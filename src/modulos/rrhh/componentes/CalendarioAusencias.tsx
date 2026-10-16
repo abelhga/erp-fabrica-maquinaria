@@ -8,6 +8,7 @@ import { q } from "@/lib/consultas";
 import { hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { FONDO_TIPO, TIPOS, type Incidencia, type TipoIncidencia } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
@@ -63,7 +64,7 @@ export function CalendarioAusencias({ alElegirDia }: { alElegirDia?: (dia: strin
           <Boton variante="fantasma" tamano="icono" aria-label="Mes siguiente" onClick={() => setMes(new Date(mes.getFullYear(), mes.getMonth() + 1, 1))}><ChevronRight className="h-4 w-4" /></Boton>
         </div>
         <Boton variante="secundario" tamano="sm" onClick={() => { const h = new Date(); setMes(new Date(h.getFullYear(), h.getMonth(), 1)); }}>Hoy</Boton>
-        <div className="ml-auto flex flex-wrap gap-x-3 gap-y-1 text-xs text-tenue">
+        <div className="ml-auto flex flex-wrap gap-x-3 gap-y-1 text-xs text-tenue" data-explain={GLOSARIO.calendarioAusencias} data-explain-title="Colores del calendario">
           {usados.map((t) => <span key={t} className="inline-flex items-center gap-1.5"><span className={cn("h-2.5 w-2.5 rounded-sm", FONDO_TIPO[t])} />{TIPOS[t].texto}</span>)}
           <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm border border-dashed border-tenue" />Por aprobar</span>
           <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-fondo border border-borde" />No laborable</span>

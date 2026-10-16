@@ -20,6 +20,7 @@ import {
 } from "./componentes/comun";
 import { NuevaIncidencia } from "./componentes/NuevaIncidencia";
 import { CalendarioAusencias } from "./componentes/CalendarioAusencias";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type IncidenciaCompleta = Incidencia & { empleado: { nombre: string; numero: string | null; puesto: string | null } | null };
 
@@ -53,9 +54,9 @@ export default function Incidencias() {
     >
       <Pestanas value={vista} onValueChange={(v) => setParams(v === "pendientes" ? {} : { vista: v }, { replace: true })}>
         <ListaPestanas opciones={[
-          { valor: "pendientes", texto: "Por aprobar", cuenta: pendientes.length },
-          { valor: "calendario", texto: "Calendario" },
-          { valor: "saldos", texto: "Saldos de vacaciones" },
+          { valor: "pendientes", texto: "Por aprobar", cuenta: pendientes.length, explica: GLOSARIO.solicitudesPorAprobar },
+          { valor: "calendario", texto: "Calendario", explica: GLOSARIO.calendarioAusencias },
+          { valor: "saldos", texto: "Saldos de vacaciones", explica: GLOSARIO.saldoVacaciones },
           { valor: "historial", texto: "Historial" },
         ]} />
         <ContenidoPestana value="pendientes" className="pt-4">
@@ -158,19 +159,19 @@ function Saldos({ vacaciones, cargando }: { vacaciones: Vacaciones[] | undefined
   const columnas: Columna<Vacaciones>[] = [
     { clave: "nombre", titulo: "Empleado", celda: (v) => <span className="flex items-center gap-2 whitespace-nowrap"><Avatar nombre={v.nombre} tamano="sm" />{v.nombre}</span> },
     { clave: "anios", titulo: "Antigüedad", valor: (v) => v.anios, sinBusqueda: true, celda: (v) => <span className="whitespace-nowrap" title={`Ingresó el ${fecha(v.fecha_ingreso)}`}>{antiguedad(v.fecha_ingreso)}</span> },
-    { clave: "dias_periodo", titulo: "Le tocan", alinear: "der", sinBusqueda: true },
-    { clave: "tomados", titulo: "Tomados", alinear: "der", sinBusqueda: true, valor: (v) => Number(v.tomados), celda: (v) => numero(v.tomados) },
-    { clave: "solicitados", titulo: "Por aprobar", alinear: "der", sinBusqueda: true, valor: (v) => Number(v.solicitados), celda: (v) => (Number(v.solicitados) ? numero(v.solicitados) : <span className="text-tenue">—</span>) },
+    { clave: "dias_periodo", titulo: "Le tocan", explica: GLOSARIO.diasPorLey, alinear: "der", sinBusqueda: true },
+    { clave: "tomados", titulo: "Tomados", explica: GLOSARIO.diasTomados, alinear: "der", sinBusqueda: true, valor: (v) => Number(v.tomados), celda: (v) => numero(v.tomados) },
+    { clave: "solicitados", titulo: "Por aprobar", explica: GLOSARIO.diasPorAprobar, alinear: "der", sinBusqueda: true, valor: (v) => Number(v.solicitados), celda: (v) => (Number(v.solicitados) ? numero(v.solicitados) : <span className="text-tenue">—</span>) },
     {
-      clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, valor: (v) => Number(v.saldo),
+      clave: "saldo", titulo: "Saldo", explica: GLOSARIO.saldoVacaciones, alinear: "der", sinBusqueda: true, valor: (v) => Number(v.saldo),
       celda: (v) => v.anios < 1 ? <span className="text-xs text-tenue">—</span> : <b className={v.saldo < 0 ? "text-peligro" : v.saldo > 0 ? "text-ok" : ""}>{numero(v.saldo)}</b>,
     },
     {
-      clave: "proximo_aniversario", titulo: "Próximo aniversario", valor: (v) => v.proximo_aniversario, sinBusqueda: true,
+      clave: "proximo_aniversario", titulo: "Próximo aniversario", explica: GLOSARIO.proximoAniversario, valor: (v) => v.proximo_aniversario, sinBusqueda: true,
       celda: (v) => <span className="whitespace-nowrap">{fecha(v.proximo_aniversario)} <span className="text-tenue">→ {v.dias_proximo_periodo} días</span></span>,
     },
     {
-      clave: "disfrutar_antes_de", titulo: "Disfrutar antes de", valor: (v) => v.disfrutar_antes_de, sinBusqueda: true,
+      clave: "disfrutar_antes_de", titulo: "Disfrutar antes de", explica: GLOSARIO.disfrutarAntesDe, valor: (v) => v.disfrutar_antes_de, sinBusqueda: true,
       celda: (v) => {
         if (v.anios < 1 || v.saldo <= 0) return <span className="text-tenue">—</span>;
         const dias = Math.round((new Date(v.disfrutar_antes_de + "T12:00:00").getTime() - Date.now()) / 86_400_000);
@@ -212,10 +213,10 @@ function Historial({ filas, cargando }: { filas: IncidenciaCompleta[] | undefine
   const visibles = (filas ?? []).filter((i) => (!tipo || i.tipo === tipo) && (!estado || i.estado === estado));
   const columnas: Columna<IncidenciaCompleta>[] = [
     { clave: "empleado", titulo: "Empleado", valor: (i) => i.empleado?.nombre },
-    { clave: "tipo", titulo: "Tipo", valor: (i) => TIPOS[i.tipo].texto, celda: (i) => <Insignia tono={TIPOS[i.tipo].tono}>{TIPOS[i.tipo].texto}</Insignia> },
+    { clave: "tipo", titulo: "Tipo", explica: GLOSARIO.tipoIncidencia, valor: (i) => TIPOS[i.tipo].texto, celda: (i) => <Insignia tono={TIPOS[i.tipo].tono}>{TIPOS[i.tipo].texto}</Insignia> },
     { clave: "inicio", titulo: "Fechas", valor: (i) => i.inicio, celda: (i) => <span className="whitespace-nowrap cifra">{rango(i)}</span> },
     { clave: "dias", titulo: "Cantidad", alinear: "der", sinBusqueda: true, valor: (i) => Number(i.dias), celda: (i) => <span className="whitespace-nowrap">{cantidad(i)}</span> },
-    { clave: "estado", titulo: "Estado", valor: (i) => ESTADOS[i.estado].texto, celda: (i) => <Insignia tono={ESTADOS[i.estado].tono}>{ESTADOS[i.estado].texto}</Insignia> },
+    { clave: "estado", titulo: "Estado", explica: GLOSARIO.estadoIncidencia, valor: (i) => ESTADOS[i.estado].texto, celda: (i) => <Insignia tono={ESTADOS[i.estado].tono}>{ESTADOS[i.estado].texto}</Insignia> },
     { clave: "motivo", titulo: "Motivo", clase: "max-w-[320px] truncate", valor: (i) => i.motivo },
     { clave: "creado_en", titulo: "Registrada", sinBusqueda: true, valor: (i) => i.creado_en, celda: (i) => <span className="text-tenue whitespace-nowrap">{fechaYHora(i.creado_en)}</span> },
   ];

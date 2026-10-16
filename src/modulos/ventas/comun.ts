@@ -21,6 +21,8 @@ export const ESTADO_COT: Record<EstadoCotizacion, { texto: string; tono: Tono }>
   cancelada: { texto: "Cancelada", tono: "neutro" },
 };
 /** Estados en los que la base deja editar partidas (cotizacion_editable). */
+/** El folio definitivo sale con la primera partida (antes es "BORRADOR-…"): en pantalla, "Sin folio todavía". */
+export const folioCot = (f: string) => (f.startsWith("BORRADOR-") ? "Sin folio todavía" : f);
 export const EDITABLES: EstadoCotizacion[] = ["borrador", "por_autorizar", "autorizada"];
 
 export type EtapaOportunidad = "prospecto" | "contactado" | "cotizado" | "negociacion" | "ganada" | "perdida";

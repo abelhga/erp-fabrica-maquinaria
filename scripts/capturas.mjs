@@ -20,6 +20,8 @@ pag.on("pageerror", (e) => errores.push(e.message));
 
 await pag.goto(base);
 if (process.env.OSCURO) await pag.evaluate(() => localStorage.setItem("tema", "oscuro"));
+// TUTORIAL=1 abre todo con el modo tutorial encendido: el recuadro de cada pantalla se ve en la foto.
+if (process.env.TUTORIAL) await pag.evaluate(() => localStorage.setItem("tutorial", "si"));
 await pag.getByText("Entrar con correo y contraseña").click();
 await pag.getByLabel("Correo").fill(correo);
 await pag.getByLabel("Contraseña").fill(process.env.CONTRASENA ?? "hegamex-local");
@@ -42,13 +44,19 @@ for (const ruta of rutas.length ? rutas : ["/"]) {
     await pag.keyboard.press("Enter");
     await pag.waitForTimeout(Number(process.env.ESPERA ?? 800));
   }
+  // SOBRE="texto" (o "css=…") pasa el mouse por algo: con TUTORIAL=1 sale su explicación en la foto.
+  if (process.env.SOBRE) {
+    const c = process.env.SOBRE;
+    await (c.startsWith("css=") ? pag.locator(c.slice(4)) : pag.getByText(c, { exact: false })).first().hover();
+    await pag.waitForTimeout(500);
+  }
   // La página se desplaza dentro de <main>, no en el documento: para la foto completa se agranda la ventana.
   if (process.env.COMPLETA) {
     const h = await pag.evaluate(() => { const m = document.querySelector("main"); return m ? m.scrollHeight + 64 : document.body.scrollHeight; });
     await pag.setViewportSize({ width: ancho, height: Math.min(Math.max(h, alto), 8000) });
     await pag.waitForTimeout(600);
   }
-  const nombre = `capturas/${correo.split("@")[0]}${ruta.replace(/[/?=&]+/g, "-").replace(/-$/, "") || "-inicio"}${process.env.OSCURO ? "-oscuro" : ""}.png`;
+  const nombre = `capturas/${correo.split("@")[0]}${ruta.replace(/[/?=&]+/g, "-").replace(/-$/, "") || "-inicio"}${process.env.OSCURO ? "-oscuro" : ""}${process.env.TUTORIAL ? "-tutorial" : ""}.png`;
   await pag.screenshot({ path: nombre, fullPage: !!process.env.COMPLETA });
   console.log("📸", nombre);
   if (process.env.COMPLETA) await pag.setViewportSize({ width: ancho, height: alto });

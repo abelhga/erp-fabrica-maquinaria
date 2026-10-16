@@ -20,6 +20,7 @@ import { todasLasFilas } from "@/modulos/almacen/componentes/comun";
 import { InsigniaOC, type Moneda, type OrdenCompra, hace } from "./componentes/comun";
 import { DialogoProveedor } from "./componentes/DialogoProveedor";
 import type { ProveedorCompleto } from "./componentes/tipos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface ArticuloSurtido {
   articulo_id: string; clave: string; nombre: string; unidad: string; costo: number | null; moneda: Moneda | null;
@@ -74,7 +75,7 @@ export default function DetalleProveedor() {
     { clave: "nombre", titulo: "Artículo", clase: "min-w-[240px]", celda: (a) => <><p>{a.nombre}</p><p className="text-xs text-tenue">{a.unidad}{a.proveedor_id !== id && " · su costo vigente es de otro proveedor"}</p></> },
     { clave: "costo", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !verCostos, valor: (a) => Number(a.costo ?? 0),
       celda: (a) => a.costo == null ? <span className="text-peligro text-xs">sin costo</span> : dinero(a.costo, a.moneda === "USD" ? "USD" : "MXN") },
-    { clave: "actualizado_en", titulo: "Actualizado", clase: "whitespace-nowrap text-xs", oculta: !verCostos,
+    { clave: "actualizado_en", titulo: "Actualizado", clase: "whitespace-nowrap text-xs", oculta: !verCostos, explica: GLOSARIO.costoViejo,
       celda: (a) => <span className={cn((a.dias_sin_actualizar ?? 0) > 180 ? "text-aviso" : "text-tenue")}>{hace(a.actualizado_en)}</span> },
   ];
 
@@ -90,11 +91,11 @@ export default function DetalleProveedor() {
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi titulo="Artículos que surte" valor={numero(resumen.data?.articulos ?? 0)} icono={Boxes} tono="marca" detalle={`${p.dias_entrega ?? 7} días hábiles de entrega`} />
-        <Kpi titulo="Órdenes abiertas" valor={numero(resumen.data?.oc_abiertas ?? 0)} icono={ClipboardList} tono={resumen.data?.oc_atrasadas ? "peligro" : "info"}
+        <Kpi titulo="Órdenes abiertas" explica={GLOSARIO.ordenesAbiertasProveedor} valor={numero(resumen.data?.oc_abiertas ?? 0)} icono={ClipboardList} tono={resumen.data?.oc_atrasadas ? "peligro" : "info"}
           detalle={resumen.data?.oc_atrasadas ? `${resumen.data.oc_atrasadas} atrasada(s)` : resumen.data?.ultima_compra ? `última el ${fecha(resumen.data.ultima_compra)}` : "sin compras registradas"} />
-        {verDinero && <Kpi titulo="Comprado en 12 meses" valor={dineroCompacto(resumen.data?.comprado_12m ?? 0)} icono={Wallet} tono="neutro"
+        {verDinero && <Kpi titulo="Comprado en 12 meses" explica={GLOSARIO.compradoDoceMeses} valor={dineroCompacto(resumen.data?.comprado_12m ?? 0)} icono={Wallet} tono="neutro"
           detalle={p.dias_credito ? `${p.dias_credito} días de crédito · ${p.moneda}` : `de contado · ${p.moneda}`} />}
-        {verCostos && <Kpi titulo="Sus precios en 12 meses" valor={variacion12 == null ? "—" : `${variacion12 >= 0 ? "+" : "−"}${porcentaje(Math.abs(variacion12))}`}
+        {verCostos && <Kpi titulo="Sus precios en 12 meses" explica={GLOSARIO.indicePreciosProveedor} valor={variacion12 == null ? "—" : `${variacion12 >= 0 ? "+" : "−"}${porcentaje(Math.abs(variacion12))}`}
           icono={TrendingUp} tono={variacion12 == null ? "neutro" : variacion12 > 0.1 ? "peligro" : variacion12 > 0 ? "aviso" : "ok"}
           detalle="índice de precios de lo que nos vende" />}
       </div>
@@ -103,7 +104,7 @@ export default function DetalleProveedor() {
         <div className="lg:col-span-2 space-y-5">
           {verCostos && (
             <Tarjeta>
-              <EncabezadoTarjeta titulo="Índice de precios del proveedor" descripcion="Base 100 en el primer mes con datos. Media de cuánto cambió cada artículo de un mes al otro (los que no cambiaron cuentan como 0 %)." />
+              <EncabezadoTarjeta titulo="Índice de precios del proveedor" explica={GLOSARIO.indicePreciosProveedor} descripcion="Base 100 en el primer mes con datos. Media de cuánto cambió cada artículo de un mes al otro (los que no cambiaron cuentan como 0 %)." />
               {indice.isLoading ? <Cargando filas={4} /> : serie.length < 2 ? (
                 <p className="px-5 pb-6 text-sm text-tenue">Todavía no hay historial de precios de este proveedor para graficar.</p>
               ) : (

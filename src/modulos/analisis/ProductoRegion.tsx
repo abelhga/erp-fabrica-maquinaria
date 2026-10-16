@@ -13,6 +13,7 @@ import { useSesion } from "@/lib/sesion";
 import { dinero, dineroCompacto, fecha, numero, porcentaje } from "@/lib/formato";
 import { cn, normalizar } from "@/lib/utilidades";
 import { BarraRanking, Cifra, LeyendaEscala, SEQ_TINTA, TarjetaGrafica, VACIO, escalaCuantiles, usePeriodo } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface FamiliaMonto { clave: string; nombre: string; monto: number; ventas: number; participacion: number | null }
 interface DatosProducto {
@@ -85,14 +86,14 @@ export default function ProductoRegion() {
     <div className={cn("space-y-4 transition-opacity", p.isFetching && p.isPlaceholderData && "opacity-60")}>
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
         <Cifra titulo="Venta del periodo" valor={dineroCompacto(d.total)} detalle={<>{numero(d.clasificado.ventas)} renglones de venta</>} />
-        <Cifra titulo="Familia que más vende" valor={mejor ? porcentaje(mejor.participacion, 0) : "—"} detalle={mejor?.nombre ?? "—"} />
-        <Cifra titulo="Clasificado por familia" valor={porcentaje(d.clasificado.pct, 1)}
+        <Cifra titulo="Familia que más vende" explica={GLOSARIO.familiaProducto} valor={mejor ? porcentaje(mejor.participacion, 0) : "—"} detalle={mejor?.nombre ?? "—"} />
+        <Cifra titulo="Clasificado por familia" explica={GLOSARIO.ventaSinClasificar} valor={porcentaje(d.clasificado.pct, 1)}
           detalle={<>{dineroCompacto(d.clasificado.sin_clasificar_monto)} en {numero(d.clasificado.sin_clasificar_ventas)} ventas sin clasificar</>} />
         <Cifra titulo={estado && d.estado ? `Venta en ${d.estado.nombre}` : "Estados con venta"} valor={estado && d.estado ? dineroCompacto(d.estado.total) : numero(d.estados.length)}
           detalle={estado && d.estado ? <button type="button" className="text-marca-texto hover:underline" onClick={() => poner("estado", null)}>Quitar el estado</button> : "Elige uno en la matriz para ver qué se vende ahí"} />
       </div>
 
-      <TarjetaGrafica titulo="Qué se vende dónde: familia × estado"
+      <TarjetaGrafica titulo="Qué se vende dónde: familia × estado" explica={GLOSARIO.participacionVenta}
         descripcion={modo === "mezcla" ? "Cada columna suma 100 %: la mezcla de cada estado. Clic en un estado para verlo de cerca; en una familia, para su mapa."
           : "Monto de cada familia en cada estado. Clic en un estado para verlo de cerca; en una familia, para su mapa."}
         acciones={<Filtro opciones={[{ valor: "mezcla", texto: "Mezcla del estado" }, { valor: "monto", texto: "Monto" }]} valor={modo} alCambiar={setModo} />}
@@ -182,7 +183,7 @@ export default function ProductoRegion() {
                       <span className="truncate">{f.nombre}</span>
                       <span className="ml-auto cifra font-medium">{dineroCompacto(f.monto)}</span>
                       <span className="w-12 text-right text-xs cifra">{porcentaje(f.participacion, 0)}</span>
-                      <span className={cn("w-14 text-right text-xs cifra", (f.indice ?? 0) >= 1.25 ? "text-marca-texto font-semibold" : "text-tenue")} title="Índice: peso en el estado ÷ peso en el país">
+                      <span className={cn("w-14 text-right text-xs cifra", (f.indice ?? 0) >= 1.25 ? "text-marca-texto font-semibold" : "text-tenue")} title="Índice: peso en el estado ÷ peso en el país" data-explain={GLOSARIO.indiceRegional}>
                         ×{numero(f.indice)}
                       </span>
                     </div>
@@ -292,7 +293,7 @@ function ReglasFamilia({ esDireccion, familias }: { esDireccion: boolean; famili
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
       <section className="space-y-3 min-w-0">
         <div>
-          <h3 className="font-semibold flex items-center gap-2"><Tags className="h-4 w-4 text-marca" /> Reglas de familia</h3>
+          <h3 className="font-semibold flex items-center gap-2" data-explain={GLOSARIO.reglaFamilia}><Tags className="h-4 w-4 text-marca" /> Reglas de familia</h3>
           <p className="text-sm text-tenue">El libro de la hoja solo trae texto («zeus 30 fija», «20 mts g.t. 18"»). Cada regla busca un patrón en el texto, en minúsculas y sin acentos; gana la de orden más bajo. Los pedidos del ERP usan la categoría del artículo.</p>
         </div>
         {esDireccion && (
@@ -322,7 +323,7 @@ function ReglasFamilia({ esDireccion, familias }: { esDireccion: boolean; famili
 
       <section className="space-y-3 min-w-0">
         <div>
-          <h3 className="font-semibold">Sin clasificar</h3>
+          <h3 className="font-semibold" data-explain={GLOSARIO.ventaSinClasificar}>Sin clasificar</h3>
           <p className="text-sm text-tenue">Textos de venta que no cayeron en ninguna regla, de más a menos dinero.{esDireccion && " «Usar» pone el texto como patrón arriba."}</p>
         </div>
         <TablaDatos filas={cola.data} cargando={cola.isLoading} error={cola.error} claveFila={(x) => x.texto} compacta limite={30} exportarComo="ventas-sin-clasificar"

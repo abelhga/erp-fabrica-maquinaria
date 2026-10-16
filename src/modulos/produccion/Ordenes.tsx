@@ -13,6 +13,7 @@ import { CLAVE, useProduccionEnVivo, useTablero, type OrdenTablero } from "./com
 import { BarraAvance, ChipEtapa, InsigniaCompromiso } from "./componentes/piezas";
 import { DialogoDesdePedido, DialogoOrdenStock } from "./componentes/DialogosCrear";
 import { ESTADO_OP, abreviarEquipo, textoDias } from "./componentes/util";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type FiltroOrdenes = "abiertas" | "planeada" | "liberada" | "en_proceso" | "terminada" | "atrasadas" | "faltantes";
 
@@ -93,7 +94,7 @@ export default function Ordenes() {
     },
     { clave: "estado", titulo: "Estado", oculta: true, valor: (o) => ESTADO_OP[o.estado].texto },
     {
-      clave: "fecha_compromiso", titulo: "Compromiso", valor: (o) => o.fecha_compromiso, sinBusqueda: true,
+      clave: "fecha_compromiso", titulo: "Compromiso", valor: (o) => o.fecha_compromiso, sinBusqueda: true, explica: GLOSARIO.fechaCompromiso,
       celda: (o) => (
         <div className="whitespace-nowrap">
           <p className="cifra">{fecha(o.fecha_compromiso)}</p>
@@ -102,7 +103,7 @@ export default function Ordenes() {
       ),
     },
     {
-      clave: "avance", titulo: "Avance y etapa", valor: (o) => Number(o.avance), sinBusqueda: true,
+      clave: "avance", titulo: "Avance y etapa", valor: (o) => Number(o.avance), sinBusqueda: true, explica: GLOSARIO.avanceOrden,
       celda: (o) => (
         <div className="w-40 space-y-1">
           <div className="flex flex-wrap gap-x-2 gap-y-0.5">{o.etapas_activas.length ? o.etapas_activas.map((e) => <ChipEtapa key={e.id} nombre={e.estado === "pausada" ? `${e.nombre} (pausada)` : e.nombre} color={e.color} estado={e.estado} />)
@@ -113,7 +114,7 @@ export default function Ordenes() {
     },
     { clave: "etapa", titulo: "Etapa", oculta: true, valor: (o) => o.etapa_actual ?? o.siguiente_etapa },
     {
-      clave: "material", titulo: "Material y validación", valor: (o) => o.materiales_faltantes, sinBusqueda: true,
+      clave: "material", titulo: "Material y validación", valor: (o) => o.materiales_faltantes, sinBusqueda: true, explica: GLOSARIO.validacionMaterial,
       celda: (o) => (
         <div className="space-y-1 min-w-[140px]">
           {o.estado === "terminada" ? null : o.materiales_faltantes > 0 ? (

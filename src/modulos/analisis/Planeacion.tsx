@@ -12,6 +12,7 @@ import { useSesion } from "@/lib/sesion";
 import { dinero, dineroCompacto, fecha, hoyISO, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { Cifra, MESES_CORTOS, MESES_LARGOS, TarjetaGrafica } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface MesPlan { mes: number; estacionalidad: number; meta: number | null; real: number | null; meta_acumulada: number | null; real_acumulado: number | null }
 interface DatosPlan {
@@ -82,7 +83,7 @@ export default function Planeacion() {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
         <section className="tarjeta p-5 space-y-4">
           <div>
-            <h3 className="font-semibold flex items-center gap-2"><Goal className="h-4 w-4 text-marca" /> Meta de venta {anio}</h3>
+            <h3 className="font-semibold flex items-center gap-2" data-explain={GLOSARIO.metaAnual}><Goal className="h-4 w-4 text-marca" /> Meta de venta {anio}</h3>
             <p className="text-sm text-tenue mt-0.5">Importe con IVA, la misma unidad que el tablero de inicio.</p>
           </div>
           {esDireccion ? (
@@ -122,10 +123,10 @@ export default function Planeacion() {
             detalle={a.pct != null ? <>{porcentaje(a.pct, 0)} de la meta · a la fecha tocaba {dineroCompacto(a.meta_a_la_fecha)}</> : "Sin meta para comparar"} />
           <Cifra titulo="Falta para la meta" valor={a.faltante == null ? "—" : dineroCompacto(a.faltante)}
             detalle={a.meses_restantes > 0 ? <>en {a.meses_restantes} {a.meses_restantes === 1 ? "mes" : "meses"} ({mesActual ? MESES_LARGOS.slice(mesActual - 1).join(", ") : "todo el año"})</> : "El año ya cerró"} />
-          <Cifra titulo="Hay que vender al mes" valor={a.ritmo_necesario == null ? "—" : dineroCompacto(a.ritmo_necesario)}
+          <Cifra titulo="Hay que vender al mes" explica={GLOSARIO.ritmoNecesario} valor={a.ritmo_necesario == null ? "—" : dineroCompacto(a.ritmo_necesario)}
             extra={tono != null && tono > 1.15 ? <span className={cn("mb-1 rounded-full px-1.5 py-0.5 text-[11px] font-semibold", tono > 1.4 ? "bg-peligro-suave text-peligro" : "bg-aviso-suave text-aviso")}>×{numero(Math.round(tono * 10) / 10)} el ritmo</span> : null}
             detalle={a.ritmo_actual != null ? <>el promedio del año va en {dineroCompacto(a.ritmo_actual)} al mes</> : "—"} />
-          <Cifra titulo="Cierre a este ritmo" valor={a.proyeccion == null ? "—" : dineroCompacto(a.proyeccion)}
+          <Cifra titulo="Cierre a este ritmo" explica={GLOSARIO.proyeccionCierre} valor={a.proyeccion == null ? "—" : dineroCompacto(a.proyeccion)}
             detalle={<>Si sigue {a.anio_anterior_misma_fecha > 0 ? `${a.real >= a.anio_anterior_misma_fecha ? "arriba" : "abajo"} de ${anio - 1} como va` : "como va"} (igual que el tablero)</>} />
         </div>
       </div>
@@ -134,7 +135,7 @@ export default function Planeacion() {
         <div className="tarjeta"><Vacio icono={Goal} titulo={`Sin meta para ${anio}`} texto={esDireccion ? "Captura la meta arriba (o usa el escenario) para repartirla por mes." : "Cuando dirección la capture, aquí se verá real contra meta por mes."} /></div>
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
-          <TarjetaGrafica titulo="Por mes: vendido contra meta" descripcion={hayMeta ? "La meta de cada mes sale de la estacionalidad de los últimos 3 años." : `Con el escenario de +${crec} % (todavía no hay meta capturada).`}
+          <TarjetaGrafica titulo="Por mes: vendido contra meta" explica={GLOSARIO.estacionalidadVenta} descripcion={hayMeta ? "La meta de cada mes sale de la estacionalidad de los últimos 3 años." : `Con el escenario de +${crec} % (todavía no hay meta capturada).`}
             tabla={<TablaMeses meses={d.meses} />}>
             <div className="px-5"><Leyenda series={[{ nombre: "Vendido", color: SERIE(1) }, { nombre: "Meta del mes", color: SERIE(2) }]} /></div>
             <div className="h-72 px-2 pb-3 pt-2">
@@ -173,7 +174,7 @@ export default function Planeacion() {
 
       <section className="tarjeta overflow-hidden">
         <div className="px-5 pt-4 pb-2">
-          <h3 className="font-semibold">Meta por estado</h3>
+          <h3 className="font-semibold" data-explain={GLOSARIO.metaPorEstado}>Meta por estado</h3>
           <p className="text-sm text-tenue mt-0.5">
             La sugerida reparte la meta con lo que pesó cada estado en {d.base_estacionalidad[0]}–{d.base_estacionalidad[1]}.
             {esDireccion ? " Escribe otra y Enter para guardarla; vacía para volver a la sugerida." : ""}

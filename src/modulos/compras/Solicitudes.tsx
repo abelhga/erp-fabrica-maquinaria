@@ -20,6 +20,7 @@ import {
 } from "./solicitudes/datos";
 import { InsigniasSolicitud, PuntoSemaforo, QueSePide } from "./solicitudes/Componentes";
 import { PanelContestar } from "./solicitudes/PanelContestar";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type Vista = "pendientes" | "vencidas" | "contestadas" | "todas";
 const ORDEN_SEMAFORO = { vencida: 0, por_vencer: 1, a_tiempo: 2 } as const;
@@ -80,9 +81,9 @@ export default function Solicitudes() {
   );
 
   const columnas: Columna<Solicitud>[] = [
-    { clave: "semaforo", titulo: "", clase: "w-6 pr-0", sinBusqueda: true, valor: (s) => ORDEN_SEMAFORO[s.semaforo ?? "a_tiempo"], celda: (s) => <PuntoSemaforo s={s} /> },
+    { clave: "semaforo", titulo: "", clase: "w-6 pr-0", sinBusqueda: true, explica: GLOSARIO.semaforoSolicitud, valor: (s) => ORDEN_SEMAFORO[s.semaforo ?? "a_tiempo"], celda: (s) => <PuntoSemaforo s={s} /> },
     {
-      clave: "vence_en", titulo: "Vence", clase: "whitespace-nowrap", valor: (s) => s.vence_en,
+      clave: "vence_en", titulo: "Vence", clase: "whitespace-nowrap", valor: (s) => s.vence_en, explica: GLOSARIO.plazoSolicitud,
       celda: (s) => abierta(s) ? (
         <div>
           <p className={cn("font-medium", s.semaforo === "vencida" && "text-peligro", s.semaforo === "por_vencer" && "text-aviso")}>{cuando(s.vence_en)}</p>
@@ -100,7 +101,7 @@ export default function Solicitudes() {
       celda: (s) => <div className="min-w-0"><p className="truncate">{s.solicitante}</p><p className="text-xs text-tenue truncate">{[s.cliente, s.cotizacion_folio].filter(Boolean).join(" · ") || "Sin cliente"}</p></div>,
     },
     {
-      clave: "estado", titulo: "Estado", valor: (s) => ESTADO_SOL[s.estado].texto,
+      clave: "estado", titulo: "Estado", valor: (s) => ESTADO_SOL[s.estado].texto, explica: GLOSARIO.estadoSolicitud,
       celda: (s) => <div className="space-y-0.5"><Insignia tono={ESTADO_SOL[s.estado].tono}>{ESTADO_SOL[s.estado].texto}</Insignia>
         {s.estado === "tomada" && <p className={cn("text-xs", s.tomada_por === perfil?.id ? "text-marca-texto font-medium" : "text-tenue")}>{s.tomada_por === perfil?.id ? "La tienes tú" : s.tomada_por_nombre}</p>}
         {s.estado === "contestada" && s.precio_lista_actual != null && <p className="text-xs text-tenue cifra">lista {dinero(s.precio_lista_actual)}</p>}</div>,
@@ -115,13 +116,13 @@ export default function Solicitudes() {
       ancho="max-w-[1400px]"
     >
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
-        <Kpi titulo="Por contestar" valor={numero(resumen.data?.abiertas ?? 0)} icono={Inbox} tono="info"
+        <Kpi titulo="Por contestar" valor={numero(resumen.data?.abiertas ?? 0)} icono={Inbox} tono="info" explica={GLOSARIO.tomarSolicitud}
           detalle={resumen.data ? `${resumen.data.sin_tomar} sin tomar` : undefined} alClic={() => cambiar("filtro", null)} />
-        <Kpi titulo="Por vencer" valor={numero(resumen.data?.por_vencer ?? 0)} icono={AlarmClock} tono={resumen.data?.por_vencer ? "aviso" : "neutro"}
+        <Kpi titulo="Por vencer" explica={GLOSARIO.semaforoSolicitud} valor={numero(resumen.data?.por_vencer ?? 0)} icono={AlarmClock} tono={resumen.data?.por_vencer ? "aviso" : "neutro"}
           detalle="en menos de una hora hábil" alClic={() => cambiar("filtro", null)} />
-        <Kpi titulo="Vencidas" valor={numero(resumen.data?.vencidas ?? 0)} icono={Siren} tono={resumen.data?.vencidas ? "peligro" : "ok"}
+        <Kpi titulo="Vencidas" explica={GLOSARIO.plazoSolicitud} valor={numero(resumen.data?.vencidas ?? 0)} icono={Siren} tono={resumen.data?.vencidas ? "peligro" : "ok"}
           detalle="el vendedor sigue esperando" alClic={() => cambiar("filtro", "vencidas")} />
-        <Kpi titulo="Contestadas hoy" valor={numero(resumen.data?.contestadas_hoy ?? 0)} icono={CheckCircle2} tono="ok"
+        <Kpi titulo="Contestadas hoy" explica={GLOSARIO.contestarSolicitud} valor={numero(resumen.data?.contestadas_hoy ?? 0)} icono={CheckCircle2} tono="ok"
           detalle="con precio o “no se consigue”" alClic={() => cambiar("filtro", "contestadas")} />
       </div>
 
@@ -217,7 +218,7 @@ function Indicador({ r }: { r: ResumenSolicitudes }) {
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-lg bg-marca-suave text-marca flex items-center justify-center"><Timer className="h-5 w-5" /></div>
         <div>
-          <p className="font-semibold leading-tight">Tiempo de respuesta este mes</p>
+          <p className="font-semibold leading-tight" data-explain={GLOSARIO.tiempoRespuestaPrecio}>Tiempo de respuesta este mes</p>
           <p className="text-xs text-tenue">{m.resueltas} contestada(s){m.mediana_acuse != null ? ` · acuse en ${horas(m.mediana_acuse)}` : ""}</p>
         </div>
       </div>

@@ -15,6 +15,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
 import { CLAVE, consulta, type MaterialOP } from "./datos";
 import { cifra, grupoRuta } from "./util";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type Vista = "todo" | "falta" | "por_surtir";
 
@@ -80,11 +81,11 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
               <tr>
                 <th>Material</th>
                 <th className="text-right">Requerido</th>
-                <th className="text-right">Apartado</th>
-                <th className="text-right">Surtido</th>
-                <th className="text-right">Falta</th>
-                <th className="text-right" title="Lo que se pidió a compras para esta orden">Pedido</th>
-                <th className="text-right" title="Existencia en planta menos lo apartado para cualquier orden">Disponible</th>
+                <th className="text-right" data-explain={GLOSARIO.apartadoOrden}>Apartado</th>
+                <th className="text-right" data-explain={GLOSARIO.surtidoOrden}>Surtido</th>
+                <th className="text-right" data-explain={GLOSARIO.faltanteMaterial}>Falta</th>
+                <th className="text-right" title="Lo que se pidió a compras para esta orden" data-explain={GLOSARIO.pedidoACompras}>Pedido</th>
+                <th className="text-right" title="Existencia en planta menos lo apartado para cualquier orden" data-explain={GLOSARIO.disponiblePlanta}>Disponible</th>
               </tr>
             </thead>
             <tbody>

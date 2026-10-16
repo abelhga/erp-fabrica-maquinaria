@@ -17,6 +17,7 @@ import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, hoyISO, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { abrirArchivo, CLAVE_EMBARQUES, CONCEPTOS_GASTO, ESTADOS_PAGO, subirArchivo, type Dinero, type Embarque, type Moneda } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Pago {
   id: string; orden_compra_id: string; concepto: string; estado: string; fecha: string; moneda: Moneda; monto: number; tipo_cambio: number | null;
@@ -68,7 +69,7 @@ export function DineroEmbarque({ e }: { e: Embarque }) {
       )}
 
       <Tarjeta className="overflow-hidden">
-        <EncabezadoTarjeta titulo="Pagos al proveedor" descripcion="Con el tipo de cambio real de cada pago: los pesos que salieron entre los dólares. Nunca más de lo que se debe."
+        <EncabezadoTarjeta titulo="Pagos al proveedor" explica={GLOSARIO.tcReal} descripcion="Con el tipo de cambio real de cada pago: los pesos que salieron entre los dólares. Nunca más de lo que se debe."
           acciones={capturaPagos && e.ordenes.length > 0 && <Boton tamano="sm" onClick={() => setDialogo("pago")}><Plus className="h-4 w-4" /> Pago</Boton>} />
         {pagos.isLoading ? <Cargando filas={2} /> : !pagos.data?.length ? (
           <Vacio icono={Landmark} titulo="Sin pagos" texto={e.ordenes.length ? "Registra el anticipo cuando salga; el saldo puede quedar programado con su fecha." : "Primero liga la orden de compra del proveedor."} className="py-8" />
@@ -137,7 +138,7 @@ export function DineroEmbarque({ e }: { e: Embarque }) {
 
         <div className="space-y-5">
           <Tarjeta className="overflow-hidden">
-            <EncabezadoTarjeta titulo="Pedimento" descripcion="IGI, DTA y PRV son costo; el IVA de importación es acreditable."
+            <EncabezadoTarjeta titulo="Pedimento" explica={GLOSARIO.pedimento} descripcion="IGI, DTA y PRV son costo; el IVA de importación es acreditable."
               acciones={captura && <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("pedimento")}><Plus className="h-4 w-4" /> Pedimento</Boton>} />
             {!pedimentos.data?.length ? <Vacio icono={FileText} titulo="Sin pedimento" texto="Al pagarlo se puede calcular el costeo preliminar." className="py-8" /> : (
               <ul className="divide-y divide-borde border-t border-borde">
@@ -151,7 +152,7 @@ export function DineroEmbarque({ e }: { e: Embarque }) {
             )}
           </Tarjeta>
           <Tarjeta className="overflow-hidden">
-            <EncabezadoTarjeta titulo="Por recuperar" descripcion="Saldo a favor con el agente y garantía de contenedor. No es costo: es dinero nuestro."
+            <EncabezadoTarjeta titulo="Por recuperar" explica={GLOSARIO.porRecuperar} descripcion="Saldo a favor con el agente y garantía de contenedor. No es costo: es dinero nuestro."
               acciones={capturaPagos && <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("saldo")}><Plus className="h-4 w-4" /> Saldo</Boton>} />
             {!saldos.data?.length ? <Vacio icono={Undo2} titulo="Nada por recuperar" className="py-8" /> : (
               <ul className="divide-y divide-borde border-t border-borde">

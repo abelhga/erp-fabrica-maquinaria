@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, fechaYHora, hace, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 import { CantidadConSigno, nombreCorto, useAlmacenes } from "./comun";
 
 export interface Ajuste {
@@ -74,6 +75,7 @@ export function Ajustes() {
         <Tarjeta>
           <EncabezadoTarjeta
             titulo={<span className="flex items-center gap-2">Por autorizar <span className="rounded-full bg-fondo px-2 text-xs cifra">{pendientes.length}</span></span>}
+            explica={GLOSARIO.ajusteInventario}
             descripcion={resuelve ? "Revisa el motivo y, si hace falta, que alguien lo vuelva a contar." : "Los autoriza la gerencia de producción, dirección o el jefe de almacén."}
             acciones={verCostos && pendientes.length > 0 && (
               <span className="text-sm text-tenue">Neto: <b className={cn("cifra", netoPendiente < 0 ? "text-peligro" : "text-texto")}>{dinero(netoPendiente)}</b></span>
@@ -184,7 +186,7 @@ function SolicitarAjuste() {
 
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Pedir un ajuste" descripcion="Cuando lo que hay en el estante no es lo que dice el sistema." />
+      <EncabezadoTarjeta titulo="Pedir un ajuste" descripcion="Cuando lo que hay en el estante no es lo que dice el sistema." explica={GLOSARIO.ajusteInventario} />
       <form className="px-5 pb-5 space-y-3" onSubmit={(e) => { e.preventDefault(); if (listo) pedir.mutate(undefined); }}>
         {articulo ? (
           <div className="flex items-center gap-2 rounded-lg border border-marca/40 bg-marca-suave/40 px-3 py-2">

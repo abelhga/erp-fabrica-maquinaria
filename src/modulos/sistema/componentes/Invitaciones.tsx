@@ -15,6 +15,7 @@ import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { ROLES, contrasenaNueva } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Invitacion { correo: string; nombre: string | null; roles: Rol[]; creado_en: string; invitado_por: string | null }
 
@@ -64,7 +65,7 @@ export function Invitaciones({ usuarios }: { usuarios: { id: string; nombre: str
     <div className="grid gap-4 lg:grid-cols-[1fr_380px] items-start">
       <div className="space-y-4">
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Invitar a alguien" descripcion="Para que entre ya con sus roles, o para un correo de fuera de la empresa." />
+          <EncabezadoTarjeta titulo="Invitar a alguien" explica={GLOSARIO.invitacion} descripcion="Para que entre ya con sus roles, o para un correo de fuera de la empresa." />
           <form onSubmit={enviar} className="px-5 pb-5 space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <Campo etiqueta="Correo" ayuda={externo ? "Correo externo: solo podrá entrar con esta invitación." : undefined}>
@@ -121,7 +122,7 @@ export function Invitaciones({ usuarios }: { usuarios: { id: string; nombre: str
           </ul>
         </Tarjeta>
         <Tarjeta className="p-5 space-y-3 text-sm">
-          <p className="font-semibold flex items-center gap-2"><Monitor className="h-4 w-4 text-info" /> Pantalla del taller (TV)</p>
+          <p className="font-semibold flex items-center gap-2" data-explain={GLOSARIO.cuentaPantalla}><Monitor className="h-4 w-4 text-info" /> Pantalla del taller (TV)</p>
           <p className="text-tenue">
             La TV no tiene cuenta de Google. Se le crea una con contraseña: se invita su correo con el rol <b className="text-texto">Pantalla de piso</b> y
             se le pone una contraseña. En la TV se abre el ERP, “Entrar con correo y contraseña”, y entra directo al tablero de piso sin ver nada más.

@@ -105,12 +105,12 @@ export function InsigniaDebe({ debe }: { debe: Debe | null | undefined }) {
 }
 
 /** Días usados contra días libres: la barra se pone en aviso a partir del día libres − 3 y en rojo al pasarse. */
-export function DiasLibres({ usados, libres, etiqueta }: { usados: number | null; libres: number | null; etiqueta: string }) {
+export function DiasLibres({ usados, libres, etiqueta, explica }: { usados: number | null; libres: number | null; etiqueta: string; explica?: string }) {
   if (usados == null || libres == null) return null;
   const pct = Math.min(100, libres > 0 ? (usados / libres) * 100 : 100);
   const tono = usados >= libres ? "bg-peligro" : usados >= libres - 3 ? "bg-aviso" : "bg-ok";
   return (
-    <div className="space-y-1" title={`${usados} de ${libres} días libres`}>
+    <div className="space-y-1" title={`${usados} de ${libres} días libres`} data-explain={explica} data-explain-title={explica ? etiqueta : undefined}>
       <div className="flex justify-between text-xs">
         <span className="text-tenue">{etiqueta}</span>
         <span className={cn("cifra font-medium", usados >= libres ? "text-peligro" : usados >= libres - 3 ? "text-aviso" : "text-texto")}>

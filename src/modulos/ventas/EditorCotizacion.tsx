@@ -18,7 +18,7 @@ import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Lateral } from "@/components/ui/dialogo";
 import { BuscadorArticulo } from "@/components/datos/BuscadorArticulo";
 import {
-  EDITABLES, ESTADO_COT, dineroEn, mensualidad, useAncho, usePlanesMeses, useTextosComerciales, venceEl, hoyMx,
+  EDITABLES, ESTADO_COT, dineroEn, folioCot, mensualidad, useAncho, usePlanesMeses, useTextosComerciales, venceEl, hoyMx,
   type Contacto, type Cotizacion, type Partida, type Moneda, haceCuanto,
 } from "./comun";
 import { CampoNumero, MenuAcciones, OpcionMenu, SelectorTexto, SeparadorMenu } from "./componentes/campos";
@@ -31,6 +31,9 @@ import { DialogoPedirPrecio, type DatosPedido, type InicialPedido } from "./soli
 import { CLAVE as CLAVE_SOLICITUDES, queSePide, useSolicitudes, useSolicitudesEnVivo, type Solicitud } from "@/modulos/compras/solicitudes/datos";
 import { EstadoPartida } from "./solicitudes/EstadoPartida";
 import { DetalleSolicitud, RespuestaVenta } from "@/modulos/compras/solicitudes/Componentes";
+import { Explicacion } from "@/tutorial/Explicacion";
+import { PANTALLAS } from "@/tutorial/pantallas";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export default function EditorCotizacion() {
   const { id } = useParams();
@@ -466,7 +469,7 @@ function Editor({ id }: { id: string }) {
       <div className="px-5 pb-4 space-y-2 text-sm">
         <div className="flex justify-between"><span className="text-tenue">Subtotal</span><span className="cifra">{dineroEn(tot.subtotal, c.moneda)}</span></div>
         <div className="flex items-center justify-between gap-3">
-          <span className="text-tenue">Descuento general</span>
+          <span className="text-tenue" data-explain={GLOSARIO.descuentoGeneral}>Descuento general</span>
           <CampoNumero className="w-24" valor={Number(c.descuento_pct)} escala={100} min={0} max={0.99} sufijo="%" deshabilitado={!editable}
             etiqueta="Descuento general" alCambiar={(n) => editarEnc({ descuento_pct: n })} />
         </div>
@@ -485,7 +488,7 @@ function Editor({ id }: { id: string }) {
           <button className="text-xs text-marca-texto" onClick={() => editarEnc({ leyenda_promocion: "de descuento ya aplicado por la promoción. Válido hasta el " })}>+ leyenda de promoción</button>
         )}
         <div className="flex items-center justify-between gap-2 pt-1">
-          <span className="text-tenue">Meses con tarjeta</span>
+          <span className="text-tenue" data-explain={GLOSARIO.mesesConTarjeta}>Meses con tarjeta</span>
           <select className="campo w-auto pr-8" value={c.plan_meses ?? ""} disabled={!editable} onChange={(e) => editarEnc({ plan_meses: e.target.value ? Number(e.target.value) : null })}>
             <option value="">No aplica</option>
             {planes.data?.map((p) => <option key={p.meses} value={p.meses}>{p.meses} meses</option>)}
@@ -497,7 +500,7 @@ function Editor({ id }: { id: string }) {
           </p>
         )}
         {bajoMinimo.length > 0 && (
-          <p className="rounded-lg bg-peligro-suave text-peligro px-3 py-2 text-xs flex gap-2">
+          <p className="rounded-lg bg-peligro-suave text-peligro px-3 py-2 text-xs flex gap-2" data-explain={GLOSARIO.bajoMinimo}>
             <AlertTriangle className="h-4 w-4 shrink-0" />{bajoMinimo.length} partida(s) abajo del precio mínimo{c.estado === "autorizada" ? " (autorizadas)" : ""}
           </p>
         )}
@@ -507,7 +510,7 @@ function Editor({ id }: { id: string }) {
 
   const ficha = seleccionada?.articulo_id ? (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Ficha de venta" descripcion={`Partida ${lineas.indexOf(seleccionada) + 1}`} />
+      <EncabezadoTarjeta titulo="Ficha de venta" descripcion={`Partida ${lineas.indexOf(seleccionada) + 1}`} explica={GLOSARIO.fichaVenta} />
       <div className="px-5 pb-5">
         <FichaVenta articuloId={seleccionada.articulo_id} moneda={c.moneda} tipoCambio={Number(c.tipo_cambio)} conIva={c.precios_con_iva}
           tasaIva={Number(c.tasa_iva)} precioActual={precioEfectivo(seleccionada)}
@@ -523,11 +526,12 @@ function Editor({ id }: { id: string }) {
         <Link to="/ventas/cotizaciones" className="p-1.5 -ml-1.5 rounded-lg hover:bg-fondo text-tenue" aria-label="Volver a cotizaciones"><ArrowLeft className="h-5 w-5" /></Link>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold tracking-tight cifra">{c.folio}</h1>
+            <h1 className="text-xl font-semibold tracking-tight cifra"
+              title={c.folio.startsWith("BORRADOR-") ? "El folio se asigna al agregar la primera partida: abrir y salir no gasta folios." : undefined}>{folioCot(c.folio)}</h1>
             {vendedor.data?.iniciales && <span className="rounded bg-texto/80 text-superficie text-[11px] font-bold px-1.5 py-0.5 tracking-wider">{vendedor.data.iniciales}</span>}
-            <Insignia tono={est.tono} punto>{est.texto}</Insignia>
-            {vencida && <Insignia tono="peligro">Vencida</Insignia>}
-            {c.version > 1 && <Insignia>versión {c.version}</Insignia>}
+            <span data-explain={GLOSARIO.estadoCotizacion} data-explain-title={est.texto}><Insignia tono={est.tono} punto>{est.texto}</Insignia></span>
+            {vencida && <span data-explain={GLOSARIO.vigenciaCotizacion}><Insignia tono="peligro">Vencida</Insignia></span>}
+            {c.version > 1 && <span data-explain={GLOSARIO.nuevaVersion}><Insignia>versión {c.version}</Insignia></span>}
           </div>
           <p className="text-xs text-tenue mt-0.5">
             {vendedor.data?.nombre}{!propia && vendedor.data ? " (vendedor)" : ""} · emitida {fecha(c.fecha)} · vence {fecha(vence)}
@@ -541,12 +545,15 @@ function Editor({ id }: { id: string }) {
         </div>
       </div>
 
+      {/* El editor no pasa por Pagina: el texto del tutorial de esta ruta se pone aquí. */}
+      <Explicacion>{PANTALLAS["/ventas/cotizaciones/:id"].map((p) => <p key={p}>{p}</p>)}</Explicacion>
+
       {/* Avisos de estado */}
       {c.estado === "por_autorizar" && (
         <div className="rounded-xl border border-aviso/30 bg-aviso-suave px-4 py-3 text-sm flex flex-wrap items-center gap-3">
           <ShieldCheck className="h-5 w-5 text-aviso shrink-0" />
           <div className="flex-1 min-w-[200px]">
-            <p className="font-medium">{bajoMinimo.length || "Hay"} partida(s) abajo del precio mínimo: necesita autorización de la gerencia para enviarse.</p>
+            <p className="font-medium" data-explain={GLOSARIO.autorizacionPrecios} data-explain-title="Autorización de precios">{bajoMinimo.length || "Hay"} partida(s) abajo del precio mínimo: necesita autorización de la gerencia para enviarse.</p>
             {c.autorizacion_pedida_en ? <p className="text-tenue">Pedida {haceCuanto(c.autorizacion_pedida_en)}{c.nota_autorizacion ? ` · “${c.nota_autorizacion}”` : ""}</p>
               : <p className="text-tenue">Ajusta los precios o pide la autorización cuando termines de capturar.</p>}
           </div>
@@ -625,7 +632,7 @@ function Editor({ id }: { id: string }) {
                 </div>
               </div>
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Tipo de cambio</span>
+                <span className="text-sm font-medium" data-explain={GLOSARIO.tipoCambio}>Tipo de cambio</span>
                 {c.moneda === "MXN" ? <p className="campo flex items-center text-tenue">No aplica (pesos)</p> : (
                   <CampoNumero valor={tcLocal ?? Number(c.tipo_cambio)} decimales={4} min={0.0001} deshabilitado={!editable} prefijo="$"
                     alCambiar={setTcLocal}
@@ -642,7 +649,7 @@ function Editor({ id }: { id: string }) {
                 <input type="date" className="campo" value={c.fecha} disabled={!editable} onChange={(e) => e.target.value && editarEnc({ fecha: e.target.value })} />
               </label>
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Vigencia</span>
+                <span className="text-sm font-medium" data-explain={GLOSARIO.vigenciaCotizacion}>Vigencia</span>
                 <select className="campo pr-8" value={c.vigencia_dias} disabled={!editable} onChange={(e) => editarEnc({ vigencia_dias: Number(e.target.value) })}>
                   {[...new Set([7, 15, 30, 45, 60, Number(c.vigencia_dias)])].sort((a, b) => a - b).map((d) => <option key={d} value={d}>{d} días</option>)}
                 </select>
@@ -651,7 +658,7 @@ function Editor({ id }: { id: string }) {
               <label className="flex items-start gap-2 text-sm sm:col-span-2 cursor-pointer self-end pb-1">
                 <input type="checkbox" className="mt-1" checked={c.precios_con_iva} disabled={!editable || moneda.isPending}
                   onChange={(e) => moneda.mutate({ moneda: c.moneda, tc: Number(c.tipo_cambio), conIva: e.target.checked })} />
-                <span>Precios con IVA incluido<span className="block text-xs text-tenue">Convierte las partidas; el total no cambia.</span></span>
+                <span data-explain={GLOSARIO.ivaIncluido}>Precios con IVA incluido<span className="block text-xs text-tenue">Convierte las partidas; el total no cambia.</span></span>
               </label>
               {c.cliente_id && (oportunidades.data?.length ?? 0) > 0 && (
                 <label className="space-y-1.5 sm:col-span-2">
@@ -746,7 +753,7 @@ function Editor({ id }: { id: string }) {
             {ficha ?? (seleccionada && porPartida[seleccionada.id] ? (
               // Partida libre con precio pedido: lo que va de la solicitud (sin costo; eso no llega a ventas).
               <Tarjeta>
-                <EncabezadoTarjeta titulo="Precio pedido a compras" descripcion={`Partida ${lineas.indexOf(seleccionada) + 1} · ${porPartida[seleccionada.id].folio}`} />
+                <EncabezadoTarjeta titulo="Precio pedido a compras" descripcion={`Partida ${lineas.indexOf(seleccionada) + 1} · ${porPartida[seleccionada.id].folio}`} explica={GLOSARIO.solicitudPrecio} />
                 <div className="px-5 pb-5 space-y-3">
                   <DetalleSolicitud s={porPartida[seleccionada.id]} />
                   <RespuestaVenta s={porPartida[seleccionada.id]} />

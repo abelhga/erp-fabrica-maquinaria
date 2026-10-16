@@ -11,6 +11,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { SoloLectura } from "./Editables";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export type Config = Record<string, unknown>;
 
@@ -32,12 +33,12 @@ export function useGuardarConfig(exito = "Guardado") {
   { exito, invalidar: [["configuracion"]] });
 }
 
-export function TarjetaForm({ titulo, descripcion, children, alGuardar, guardando, editable, quien, pie }: {
-  titulo: string; descripcion?: ReactNode; children: ReactNode; alGuardar: () => void; guardando?: boolean; editable: boolean; quien?: ReactNode; pie?: ReactNode;
+export function TarjetaForm({ titulo, descripcion, children, alGuardar, guardando, editable, quien, pie, explica }: {
+  titulo: string; descripcion?: ReactNode; children: ReactNode; alGuardar: () => void; guardando?: boolean; editable: boolean; quien?: ReactNode; pie?: ReactNode; explica?: string;
 }) {
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo={titulo} descripcion={descripcion} />
+      <EncabezadoTarjeta titulo={titulo} descripcion={descripcion} explica={explica} />
       <form className="px-5 pb-5 space-y-4" onSubmit={(e: FormEvent) => { e.preventDefault(); alGuardar(); }}>
         <fieldset disabled={!editable} className="space-y-4">{children}</fieldset>
         {editable ? (
@@ -139,7 +140,7 @@ function Arranque({ inicial, editable }: { inicial: string; editable: boolean })
   const [v, setV] = useState(inicial);
   const guardar = useGuardarConfig("Fecha de arranque guardada");
   return (
-    <TarjetaForm titulo="Arranque del ERP" editable={editable} quien="sistemas o dirección" guardando={guardar.isPending}
+    <TarjetaForm titulo="Arranque del ERP" explica={GLOSARIO.fechaArranque} editable={editable} quien="sistemas o dirección" guardando={guardar.isPending}
       descripcion="Desde este día las ventas y cobros salen del ERP; antes, los análisis y los saldos de arranque usan el libro de ventas de la hoja."
       alGuardar={() => v && guardar.mutate({ clave: "fecha_arranque", valor: v })}>
       <Campo etiqueta="Fecha de arranque" ayuda={inicial ? `Hoy dice ${fecha(inicial)}. Cambiarla mueve el corte entre hoja y ERP en los reportes.` : undefined}>
@@ -160,7 +161,7 @@ function Calendario({ inicial, editable }: { inicial: { dias: number[]; descanso
   });
   const guardar = useGuardarConfig("Calendario laboral guardado");
   return (
-    <TarjetaForm titulo="Semana laboral y descansos" editable={editable} quien="sistemas o dirección" guardando={guardar.isPending}
+    <TarjetaForm titulo="Semana laboral y descansos" explica={GLOSARIO.diasHabiles} editable={editable} quien="sistemas o dirección" guardando={guardar.isPending}
       descripcion="Con esto se cuentan los días hábiles de vacaciones y permisos. Los feriados de ley se descuentan solos."
       alGuardar={() => guardar.mutate({ clave: "calendario_laboral", valor: { dias: [...dias].sort(), descansos_empresa: [...descansos].sort() } })}>
       <div className="grid gap-6 md:grid-cols-3">

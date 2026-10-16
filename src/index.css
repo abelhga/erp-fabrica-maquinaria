@@ -114,4 +114,29 @@
 @media print {
   .no-imprimir { display: none !important; }
   body { background: white; }
+  /* Safari (Mac) imprimía la hoja EN BLANCO: el overflow-x: clip de arriba (para que en
+     iPhone la página no se arrastre de lado) más el height: 100% recortan todo el
+     documento al paginar. Chrome lo ignoraba. En papel no hay nada que arrastrar. */
+  html, body, #root { height: auto !important; overflow: visible !important; }
+}
+
+/* Modo tutorial (src/tutorial/). Con el modo encendido, lo que tiene explicación se nota: cursor
+   de ayuda, contorno punteado al pasar y un "?" junto al título de indicadores, columnas y
+   tarjetas. Apagado no queda rastro. Va en violeta (info) para no confundirse con un enlace. */
+.burbuja-explicacion {
+  position: fixed; z-index: 60; display: grid; gap: 4px; padding: 10px 12px; pointer-events: none;
+  font-size: 13px; line-height: 1.45;
+  background: hsl(var(--superficie)); color: hsl(var(--texto) / 0.85);
+  border: 1px solid hsl(var(--borde)); border-left: 3px solid hsl(var(--info)); border-radius: 0.625rem;
+  box-shadow: 0 10px 28px rgb(15 23 42 / 0.18);
+  animation: entrar-explicacion 120ms ease-out;
+}
+@keyframes entrar-explicacion { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+:root[data-tutorial="true"] [data-explain] { cursor: help; }
+:root[data-tutorial="true"] :is(a, button, [role="tab"])[data-explain] { cursor: pointer; }
+:root[data-tutorial="true"] [data-explain]:hover { outline: 1px dashed hsl(var(--info) / 0.75); outline-offset: 2px; }
+:root[data-tutorial="true"] :is(th[data-explain] > span, h3[data-explain], [data-explain] .titulo-explicable, [role="tab"][data-explain])::after {
+  content: "?"; display: inline-grid; place-items: center; width: 14px; height: 14px; margin-left: 6px; vertical-align: 1px;
+  border-radius: 9999px; border: 1px solid hsl(var(--info)); color: hsl(var(--info));
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0; line-height: 1; text-transform: none;
 }

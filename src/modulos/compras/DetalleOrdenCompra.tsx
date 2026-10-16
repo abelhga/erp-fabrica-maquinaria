@@ -21,6 +21,7 @@ import { RevisarCotizacion, SubirCotizacion, type CotizacionLeida } from "./comp
 import { ImpresionOC, type Empresa } from "./componentes/ImpresionOC";
 import { PagosOC } from "./componentes/PagosOC";
 import type { LineaOC, ProveedorCompleto } from "./componentes/tipos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export default function DetalleOrdenCompra() {
   const { id } = useParams();
@@ -161,7 +162,7 @@ function Detalle({ id }: { id: string }) {
             {compra && o.estado === "enviada" && !recibido && <Boton variante="secundario" onClick={() => setCancelando(true)}><Ban className="h-4 w-4" /> Cancelar</Boton>}
             {compra && borrador && <Boton onClick={() => enviar.mutate(undefined)} cargando={enviar.isPending} disabled={!lineas.data?.length}><Send className="h-4 w-4" /> Enviar al proveedor</Boton>}
             {puede("inventario", 2) && (o.estado === "enviada" || o.estado === "parcial") && (
-              <Boton onClick={() => setRecibiendo(true)}><PackageCheck className="h-4 w-4" /> Recibir</Boton>
+              <Boton onClick={() => setRecibiendo(true)} data-explain={GLOSARIO.recibirOrden}><PackageCheck className="h-4 w-4" /> Recibir</Boton>
             )}
           </>}
         >
@@ -175,9 +176,9 @@ function Detalle({ id }: { id: string }) {
                       <thead>
                         <tr>
                           <th>Artículo</th><th className="text-right w-28">Cantidad</th>
-                          {verDinero && <th className="text-right w-36">Costo unitario</th>}
+                          {verDinero && <th className="text-right w-36" data-explain={GLOSARIO.costoContraVigente}>Costo unitario</th>}
                           {verDinero && <th className="text-right">Importe</th>}
-                          {!borrador && <th className="text-right">Recibido</th>}
+                          {!borrador && <th className="text-right" data-explain={GLOSARIO.avanceRecibido}>Recibido</th>}
                           {editable && <th className="w-8" />}
                         </tr>
                       </thead>
@@ -280,13 +281,13 @@ function Detalle({ id }: { id: string }) {
                         : <span className="cifra">{o.moneda === "MXN" ? "—" : numero(o.tipo_cambio)}</span>}
                     </Dato>
                   </div>
-                  <Dato etiqueta="Fecha de entrega">
+                  <Dato etiqueta="Fecha de entrega" explica={GLOSARIO.fechaEntregaOrden}>
                     {compra && o.estado !== "recibida" && o.estado !== "cancelada" ? (
                       <input type="date" className={cn("campo", o.atrasada && "border-peligro text-peligro")} defaultValue={o.fecha_entrega ?? ""} key={o.fecha_entrega}
                         onBlur={(e) => e.target.value !== (o.fecha_entrega ?? "") && actualizar.mutate({ fecha_entrega: e.target.value || null })} />
                     ) : fecha(o.fecha_entrega)}
                   </Dato>
-                  <Dato etiqueta="Condiciones de pago">
+                  <Dato etiqueta="Condiciones de pago" explica={GLOSARIO.creditoProveedor}>
                     {compra && o.estado !== "cancelada" ? <CampoTexto valor={o.condiciones} alGuardar={(v) => actualizar.mutate({ condiciones: v })} placeholder="Crédito a 30 días" /> : (o.condiciones ?? "—")}
                   </Dato>
                   {editable && verDinero && (
@@ -325,8 +326,8 @@ function Detalle({ id }: { id: string }) {
   );
 }
 
-function Dato({ etiqueta, children }: { etiqueta: string; children: React.ReactNode }) {
-  return <div className="space-y-1"><p className="text-xs text-tenue">{etiqueta}</p><div>{children}</div></div>;
+function Dato({ etiqueta, children, explica }: { etiqueta: string; children: React.ReactNode; explica?: string }) {
+  return <div className="space-y-1"><p className="text-xs text-tenue" data-explain={explica} data-explain-title={explica ? etiqueta : undefined}>{etiqueta}</p><div>{children}</div></div>;
 }
 
 /** Número que se edita en su lugar: Enter o salir guarda, Esc regresa. */

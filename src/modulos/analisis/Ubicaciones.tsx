@@ -15,6 +15,7 @@ import { useSesion } from "@/lib/sesion";
 import { dinero, dineroCompacto, fecha, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { Cifra } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Grupo {
   estado_texto: string | null; ciudad_texto: string | null; estado_norm: string; ciudad_norm: string;
@@ -69,7 +70,7 @@ export default function Ubicaciones() {
   const columnas: Columna<Grupo>[] = [
     { clave: "estado_texto", titulo: "Estado escrito", valor: (g) => g.estado_texto ?? "", celda: (g) => g.estado_texto || <span className="text-tenue italic">vacío</span> },
     { clave: "ciudad_texto", titulo: "Ciudad escrita", valor: (g) => g.ciudad_texto ?? "", celda: (g) => g.ciudad_texto || <span className="text-tenue italic">vacía</span> },
-    { clave: "motivo", titulo: "Qué pasa", valor: (g) => MOTIVO[g.motivo]?.texto ?? g.motivo,
+    { clave: "motivo", titulo: "Qué pasa", valor: (g) => MOTIVO[g.motivo]?.texto ?? g.motivo, explica: GLOSARIO.motivoUbicacion,
       celda: (g) => <Insignia tono={MOTIVO[g.motivo]?.tono ?? "neutro"}>{!g.estado_norm && !g.ciudad_norm ? "Sin estado ni ciudad" : MOTIVO[g.motivo]?.texto ?? g.motivo}</Insignia> },
     { clave: "clientes", titulo: "Clientes", alinear: "der", sinBusqueda: true,
       celda: (g) => <button type="button" className="text-marca-texto hover:underline cifra" onClick={(e) => { e.stopPropagation(); setVerClientes(g); }}>{numero(g.clientes)}</button> },
@@ -98,8 +99,8 @@ export default function Ubicaciones() {
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
         <Cifra titulo="Venta ubicada en un estado" valor={porcentaje(c.pct_estado, 1)} detalle={<>{dineroCompacto(c.estado)} de {dineroCompacto(c.total)} desde 2018</>} />
         <Cifra titulo="Venta ubicada en un municipio" valor={porcentaje(c.pct_municipio, 1)} detalle={<>{numero(c.clientes_municipio)} de {numero(c.clientes)} clientes</>} />
-        <Cifra titulo="Exportación" valor={dineroCompacto(c.extranjero)} detalle={<>{porcentaje(c.total ? c.extranjero / c.total : null, 1)} de la venta, fuera de México</>} />
-        <Cifra titulo="Sin estado" valor={dineroCompacto(c.total - c.estado - c.extranjero)} detalle={<>{numero(c.clientes - c.clientes_estado)} clientes no salen en el mapa</>} />
+        <Cifra titulo="Exportación" explica={GLOSARIO.exportacionVenta} valor={dineroCompacto(c.extranjero)} detalle={<>{porcentaje(c.total ? c.extranjero / c.total : null, 1)} de la venta, fuera de México</>} />
+        <Cifra titulo="Sin estado" explica={GLOSARIO.ventaSinUbicar} valor={dineroCompacto(c.total - c.estado - c.extranjero)} detalle={<>{numero(c.clientes - c.clientes_estado)} clientes no salen en el mapa</>} />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -110,7 +111,7 @@ export default function Ubicaciones() {
           { valor: "aproximadas", texto: "Ubicadas por aproximación", cuenta: cuenta("aproximadas") },
           { valor: "corregidas", texto: "Corregidas por dirección", cuenta: cuenta("corregidas") },
         ]} />
-        <p className="text-xs text-tenue">Corregir una combinación ubica a todos los clientes que la escribieron igual, también a los que se den de alta después.</p>
+        <p className="text-xs text-tenue" data-explain={GLOSARIO.correccionUbicacion}>Corregir una combinación ubica a todos los clientes que la escribieron igual, también a los que se den de alta después.</p>
       </div>
 
       {vista === "corregidas" ? (

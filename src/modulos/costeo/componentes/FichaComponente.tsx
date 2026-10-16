@@ -16,6 +16,7 @@ import { esCostoViejo, leerNumero, useCategorias, useProveedores, type ArticuloC
 import { GraficaEscalonada } from "./Graficas";
 import { FormulaEnPalabras, useDesglose } from "./CostoPrecio";
 import { DondeSeUsa } from "./DondeSeUsa";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type Moneda = "MXN" | "USD" | "EUR";
 const enMoneda = (v: number | null | undefined, m: Moneda | null | undefined) =>
@@ -169,7 +170,7 @@ function CostoComponente({ a }: { a: ArticuloCatalogo }) {
   const viejo = esCostoViejo(a.costo_actualizado_en);
   return (
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Costo" descripcion={a.proveedor ? `Proveedor: ${a.proveedor}` : undefined} />
+        <EncabezadoTarjeta titulo="Costo" explica={GLOSARIO.costoArticulo} descripcion={a.proveedor ? `Proveedor: ${a.proveedor}` : undefined} />
         <div className="px-5 pb-5 space-y-4">
           {a.costo_capturado ? (
             <div>
@@ -205,7 +206,7 @@ function HistorialCosto({ a }: { a: ArticuloCatalogo }) {
   const monedaHist = historial.data?.[0]?.moneda ?? "MXN";
   return (
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Historial del costo" descripcion="Cada cambio queda registrado solo, con su origen (reemplaza la hoja ACTUALIZACIONES)." />
+        <EncabezadoTarjeta titulo="Historial del costo" explica={GLOSARIO.origenCosto} descripcion="Cada cambio queda registrado solo, con su origen (reemplaza la hoja ACTUALIZACIONES)." />
         <div className="px-5 pb-5 grid gap-5 lg:grid-cols-5">
           <div className="lg:col-span-3">
             {(historial.data?.length ?? 0) >= 1
@@ -283,7 +284,7 @@ function Publicaciones({ a }: { a: ArticuloCatalogo }) {
   });
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Canales en línea" descripcion="Precio sugerido con IVA a partir del de lista: comisión del canal, cuota fija y envío." />
+      <EncabezadoTarjeta titulo="Canales en línea" explica={GLOSARIO.canalesEnLinea} descripcion="Precio sugerido con IVA a partir del de lista: comisión del canal, cuota fija y envío." />
       <div className="overflow-x-auto">
         <table className="tabla">
           <thead><tr><th>Canal</th><th className="text-right">Comisión</th><th className="text-right">Sugerido</th><th className="text-right">Con envío</th><th>Publicado</th></tr></thead>

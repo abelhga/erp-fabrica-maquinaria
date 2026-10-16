@@ -16,6 +16,7 @@ import { Empacar } from "./Empacar";
 import { EvidenciaSalida } from "./EvidenciaSalida";
 import { DialogoCotizar, DialogoEntregado, DialogoGuia } from "./Dialogos";
 import { CLAVE, medidas, useAlmacenes, useBultos, useEventos, useLineas, usePlanSalida, type Envio } from "./datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /** Lo que va en el panel lateral de un envío: pasos, acciones, empaque y evidencia. */
 export function DetalleEnvio({ envio: e }: { envio: Envio }) {
@@ -176,7 +177,7 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
         </section>
       ) : e.lleva_empaque && (
         <section className="space-y-2 border-t border-borde pt-5">
-          <h3 className="text-lg font-semibold">Evidencia de salida</h3>
+          <h3 className="text-lg font-semibold" data-explain={GLOSARIO.evidenciaEmpaque}>Evidencia de salida</h3>
           <EvidenciaSalida envio={e} titulo={false} />
         </section>
       )}

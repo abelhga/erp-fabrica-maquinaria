@@ -11,6 +11,7 @@ import { q } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
 import { CLAVE, ORDEN_TIPOS, TIPOS, diasEntre, horas, instanteMx, isoLocal, lunesDe, periodo, sumarDias, usePersonal, type CuadrillaFila } from "../datos";
 import { estiloTipo } from "./piezas";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const DIAS = 14;
 // Los días son fechas de la planta (AAAA-MM-DD); se formatean a mediodía UTC para que no se corran.
@@ -54,7 +55,7 @@ export function CalendarioCuadrillas({ className }: { className?: string }) {
   return (
     <Tarjeta className={className}>
       <EncabezadoTarjeta
-        titulo="Calendario de cuadrillas"
+        titulo="Calendario de cuadrillas" explica={GLOSARIO.cuadrilla}
         descripcion={`${fmtMes.format(comoFecha(dias[0]))} al ${fmtMes.format(comoFecha(dias[DIAS - 1]))} · ${enUso.size} ${enUso.size === 1 ? "persona sale" : "personas salen"} a servicio, ${libres} del taller sin servicio`}
         acciones={<>
           <Boton variante="fantasma" tamano="icono" onClick={() => mover(-1)} aria-label="Semana anterior"><ChevronLeft className="h-4 w-4" /></Boton>

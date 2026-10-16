@@ -94,7 +94,24 @@
     "ventas_2018_2021": [
       "1TtNqWOn1ooYDTlUpeDY-7ukRqhCdMr5p82nB_OjoJUU",
       "VENTAS!A1:T4000"
+    ],
+    "compras": [
+      "1bMPe8wRcFv66tap2k7qW6MOIDWDYMeng8Mii4ZwAdFs",
+      "COMPRAS!A1:L30000"
+    ],
+    "proveedores_actual": [
+      "1bMPe8wRcFv66tap2k7qW6MOIDWDYMeng8Mii4ZwAdFs",
+      "'Directorio Proveedores'!A1:Y1500"
+    ],
+    "cajachica": [
+      "1bMPe8wRcFv66tap2k7qW6MOIDWDYMeng8Mii4ZwAdFs",
+      "CajaChica!A1:H6000"
     ]
+  },
+  "tipos_acreedor": {
+    "comentario": "Llave del proveedor en la hoja (sin acentos, minúsculas) → socio o financiamiento. No cuentan en 'por pagar a proveedores'.",
+    "abel hernandez guzman (prestamos)": "socio",
+    "santander (capital de creditos)": "financiamiento"
   },
   "alias_vendedores": {
     "comentario": "Cómo aparece el vendedor en el directorio de clientes → correo del usuario en el ERP. null = la cuenta queda sin dueño (libre).",

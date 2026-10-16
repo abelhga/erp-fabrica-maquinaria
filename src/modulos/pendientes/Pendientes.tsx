@@ -15,6 +15,7 @@ import { q, useAccion, useTiempoReal } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { fecha, hace, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Pendiente {
   id: string; titulo: string; detalle: string | null; vence: string | null; estado: "abierto" | "hecho" | "cancelado";
@@ -57,7 +58,7 @@ export default function Pendientes() {
             {t}<span className={cn("cifra text-xs", vista === v ? "text-white/80" : "text-tenue")}>{n}</span>
           </button>
         ))}
-        {vencidos > 0 && <Insignia tono="peligro" className="self-center">{vencidos} vencido{vencidos === 1 ? "" : "s"}</Insignia>}
+        {vencidos > 0 && <span className="self-center" data-explain={GLOSARIO.vencido}><Insignia tono="peligro">{vencidos} vencido{vencidos === 1 ? "" : "s"}</Insignia></span>}
       </div>
 
       {lista.error ? <ErrorCarga error={lista.error} /> : lista.isLoading ? <Cargando filas={5} /> : visibles.length === 0 ? (

@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { cn } from "@/lib/utilidades";
 import { PERIODOS, usePeriodo, type ClavePeriodo } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const MapaVentas = lazy(() => import("./MapaVentas"));
 const Tendencias = lazy(() => import("./Tendencias"));
@@ -76,7 +77,7 @@ function FiltroPeriodo({ clave, desde, hasta, cambiar }: {
   useEffect(() => { setD(desde); setH(hasta); }, [desde, hasta]);
   return (
     <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Periodo">
-      <span className="text-sm text-tenue mr-1">Periodo</span>
+      <span className="text-sm text-tenue mr-1" data-explain={GLOSARIO.periodoAnalisis}>Periodo</span>
       {PERIODOS.map((p) => (
         <button key={p.valor} type="button" onClick={() => cambiar(p.valor)} aria-pressed={clave === p.valor}
           className={cn("h-8 rounded-full px-3 text-xs font-medium border transition",

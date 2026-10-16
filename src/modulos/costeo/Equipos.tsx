@@ -15,6 +15,7 @@ import { dinero, fecha, hace, numero } from "@/lib/formato";
 import { diasDesde, rutaArticulo, useCatalogo, type ArticuloCatalogo, type TipoArticulo } from "./componentes/comun";
 import { cn } from "@/lib/utilidades";
 import { NuevoArticulo } from "./componentes/NuevoArticulo";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const FABRICADOS: TipoArticulo[] = ["equipo", "subensamble"];
 
@@ -58,20 +59,20 @@ function TablaFabricados({ filas, cargando, error, tipo }: {
         <div className="min-w-[260px]">
           <div>
             {a.nombre}
-            {a.medida_especial && <Insignia tono="info" className="ml-2 align-middle">medida especial</Insignia>}
+            {a.medida_especial && <span data-explain={GLOSARIO.medidaEspecial}><Insignia tono="info" className="ml-2 align-middle">medida especial</Insignia></span>}
           </div>
           {tipo === "equipo" && <span className="block text-xs text-tenue truncate">{a.categoria ?? "Sin tipo de equipo"}</span>}
         </div>
       ) },
-    { clave: "lineas_bom", titulo: "Líneas", alinear: "der", sinBusqueda: true, valor: (a) => a.lineas_bom },
-    { clave: "usado_en", titulo: "Usado en", alinear: "der", sinBusqueda: true, valor: (a) => a.usado_en, oculta: tipo === "equipo", clase: "whitespace-nowrap",
+    { clave: "lineas_bom", titulo: "Líneas", alinear: "der", sinBusqueda: true, valor: (a) => a.lineas_bom, explica: GLOSARIO.lineasLista },
+    { clave: "usado_en", titulo: "Usado en", alinear: "der", sinBusqueda: true, valor: (a) => a.usado_en, oculta: tipo === "equipo", clase: "whitespace-nowrap", explica: GLOSARIO.usadoEnListas,
       celda: (a) => a.usado_en ? <span>{a.usado_en} {a.usado_en === 1 ? "lista" : "listas"}</span> : <span className="text-tenue">en ninguna</span> },
-    { clave: "horas", titulo: "Horas", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (a) => a.horas ?? null, celda: (a) => numero(a.horas) },
-    { clave: "costo_total", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (a) => a.costo_total ?? null, celda: (a) => dinero(a.costo_total) },
-    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (a) => a.precio,
+    { clave: "horas", titulo: "Horas", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (a) => a.horas ?? null, celda: (a) => numero(a.horas), explica: GLOSARIO.horasEtapa },
+    { clave: "costo_total", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (a) => a.costo_total ?? null, celda: (a) => dinero(a.costo_total), explica: GLOSARIO.costoArticulo },
+    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (a) => a.precio, explica: GLOSARIO.precioLista,
       celda: (a) => a.precio == null ? <span className="text-tenue">sin precio</span> : <span className="font-medium">{dinero(a.precio)}</span> },
-    { clave: "sin_costo", titulo: "Sin costo", oculta: !costos, sinBusqueda: true, valor: (a) => a.sin_costo ?? 0, celda: (a) => <SinCosto a={a} /> },
-    { clave: "costo_mas_viejo", titulo: "Más viejo", oculta: !costos, sinBusqueda: true, valor: (a) => a.costo_mas_viejo ?? null,
+    { clave: "sin_costo", titulo: "Sin costo", oculta: !costos, sinBusqueda: true, valor: (a) => a.sin_costo ?? 0, celda: (a) => <SinCosto a={a} />, explica: GLOSARIO.piezasSinCosto },
+    { clave: "costo_mas_viejo", titulo: "Más viejo", oculta: !costos, sinBusqueda: true, valor: (a) => a.costo_mas_viejo ?? null, explica: GLOSARIO.costoMasViejo,
       celda: (a) => <CostoMasViejo f={a.costo_mas_viejo} /> },
   ];
 
@@ -237,8 +238,8 @@ export default function Equipos() {
       <Pestanas value={vista} onValueChange={(v) => setParams(v === "equipos" ? {} : { vista: v }, { replace: true })}>
         <ListaPestanas opciones={[
           { valor: "equipos", texto: "Equipos", cuenta: equipos?.length },
-          { valor: "subensambles", texto: "Subensambles", cuenta: subensambles?.length },
-          ...(verSolicitudes ? [{ valor: "solicitudes", texto: "Solicitudes de cambio", cuenta: pendientes || undefined }] : []),
+          { valor: "subensambles", texto: "Subensambles", cuenta: subensambles?.length, explica: GLOSARIO.subensamble },
+          ...(verSolicitudes ? [{ valor: "solicitudes", texto: "Solicitudes de cambio", cuenta: pendientes || undefined, explica: GLOSARIO.solicitudCambio }] : []),
         ]} />
         <ContenidoPestana value="equipos" className="pt-4">
           <TablaFabricados filas={equipos} cargando={cat.isLoading} error={cat.error} tipo="equipo" />

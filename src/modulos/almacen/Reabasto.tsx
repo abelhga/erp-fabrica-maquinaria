@@ -15,6 +15,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { dinero, dineroCompacto, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { SinPermiso } from "./componentes/comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 import { PorQue, Sparkline, type FilaReabasto, type ReglaReabasto } from "./componentes/Reabasto";
 
 type Vista = "ordenar" | "importados" | "excedente" | "negativo" | "todos";
@@ -136,36 +137,36 @@ export default function Reabasto() {
         </div>
       ),
     },
-    { clave: "consumo", titulo: "12 meses", sinBusqueda: true, clase: "px-2", valor: (r) => r.consumo_meses.reduce((s, x) => s + x, 0), celda: (r) => <Sparkline valores={r.consumo_meses} /> },
-    { clave: "demanda_mensual", titulo: "Dem./mes", alinear: "der", sinBusqueda: true, clase: "px-2", celda: (r) => r.demanda_mensual ? numero(r.demanda_mensual) : <span className="text-tenue">0</span> },
+    { clave: "consumo", titulo: "12 meses", sinBusqueda: true, clase: "px-2", explica: GLOSARIO.consumo12Meses, valor: (r) => r.consumo_meses.reduce((s, x) => s + x, 0), celda: (r) => <Sparkline valores={r.consumo_meses} /> },
+    { clave: "demanda_mensual", titulo: "Dem./mes", alinear: "der", sinBusqueda: true, clase: "px-2", explica: GLOSARIO.demandaMensual, celda: (r) => r.demanda_mensual ? numero(r.demanda_mensual) : <span className="text-tenue">0</span> },
     {
-      clave: "meses_cobertura", titulo: "Cobertura", alinear: "der", sinBusqueda: true, clase: "px-1", valor: (r) => Number(r.meses_cobertura),
+      clave: "meses_cobertura", titulo: "Cobertura", alinear: "der", sinBusqueda: true, clase: "px-1", explica: GLOSARIO.mesesCobertura, valor: (r) => Number(r.meses_cobertura),
       celda: (r) => editaParametros
         ? <CeldaNumero valor={r.cobertura_propia} defecto={Number(r.meses_cobertura)} sufijo="m" min={0.01}
             alGuardar={(valor) => parametro.mutate({ id: r.articulo_id, campo: "meses_cobertura", valor })} titulo="Meses de cobertura (vacío = 1 nacional, 6 importado)" />
         : <span>{numero(r.meses_cobertura)} m</span>,
     },
     {
-      clave: "stock_seguridad", titulo: "Seguridad", alinear: "der", sinBusqueda: true, clase: "px-1", valor: (r) => Number(r.stock_seguridad ?? 0),
+      clave: "stock_seguridad", titulo: "Seguridad", alinear: "der", sinBusqueda: true, clase: "px-1", explica: GLOSARIO.stockSeguridad, valor: (r) => Number(r.stock_seguridad ?? 0),
       celda: (r) => editaParametros
         ? <CeldaNumero valor={r.stock_seguridad} defecto={null} min={0}
             alGuardar={(valor) => parametro.mutate({ id: r.articulo_id, campo: "stock_minimo_fijo", valor })} titulo="Stock de seguridad (se suma al punto de reorden)" />
         : <span>{r.stock_seguridad ? numero(r.stock_seguridad) : "—"}</span>,
     },
     {
-      clave: "punto_reorden", titulo: "Reorden", alinear: "der", sinBusqueda: true, clase: "px-2",
+      clave: "punto_reorden", titulo: "Reorden", alinear: "der", sinBusqueda: true, clase: "px-2", explica: GLOSARIO.puntoReorden,
       celda: (r) => <div><p>{numero(r.punto_reorden)}</p><p className="text-[11px] text-tenue whitespace-nowrap">{r.dias_entrega} d entrega</p></div>,
     },
-    { clave: "lote", titulo: "Lote", alinear: "der", sinBusqueda: true, clase: "px-2", celda: (r) => numero(r.lote) },
+    { clave: "lote", titulo: "Lote", alinear: "der", sinBusqueda: true, clase: "px-2", explica: GLOSARIO.lote, celda: (r) => numero(r.lote) },
     {
-      clave: "disponible", titulo: "Disponible", alinear: "der", sinBusqueda: true, clase: "px-2",
+      clave: "disponible", titulo: "Disponible", alinear: "der", sinBusqueda: true, clase: "px-2", explica: GLOSARIO.disponibleReabasto,
       celda: (r) => (
         <span title={`${numero(r.en_planta)} en planta − ${numero(r.reservado)} apartado + ${numero(r.en_transito)} en tránsito`}
           className={cn("font-medium", r.disponible < r.punto_reorden && "text-peligro")}>{numero(r.disponible)}</span>
       ),
     },
     {
-      clave: "sugerido", titulo: "Sugerido", alinear: "der", sinBusqueda: true, clase: "px-2",
+      clave: "sugerido", titulo: "Sugerido", alinear: "der", sinBusqueda: true, clase: "px-2", explica: GLOSARIO.sugerido,
       celda: (r) => r.sugerido > 0 ? (
         <div>
           <span className="font-semibold">{numero(r.sugerido)}</span> <span className="text-xs text-tenue">{r.unidad}</span>
@@ -179,7 +180,7 @@ export default function Reabasto() {
       ) : <span className="text-tenue/50">·</span>,
     },
     {
-      clave: "estado", titulo: "Estado", clase: "px-2", valor: (r) => ESTADO[r.estado].texto,
+      clave: "estado", titulo: "Estado", clase: "px-2", valor: (r) => ESTADO[r.estado].texto, explica: GLOSARIO.estadoReabasto,
       celda: (r) => <div className="space-y-0.5"><Insignia tono={ESTADO[r.estado].tono}>{ESTADO[r.estado].texto}</Insignia><div><PorQue r={r} regla={regla.data} /></div></div>,
     },
   ];
@@ -192,18 +193,18 @@ export default function Reabasto() {
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi titulo="A ordenar" valor={numero(aOrdenar.length)} icono={ShoppingCart} tono={aOrdenar.length ? "peligro" : "ok"}
-          detalle="por debajo de su punto de reorden" alClic={() => setVista("ordenar")} />
-        <Kpi titulo="Desabasto" valor={porcentaje(desabasto)} icono={Gauge}
+          detalle="por debajo de su punto de reorden" alClic={() => setVista("ordenar")} explica={GLOSARIO.puntoReorden} />
+        <Kpi titulo="Desabasto" valor={porcentaje(desabasto)} icono={Gauge} explica={GLOSARIO.desabasto}
           tono={desabasto < 0.08 ? "ok" : desabasto <= 0.17 ? "aviso" : "peligro"}
           detalle={`${aOrdenar.length} de ${conMinimo} con mínimo · ${desabasto < 0.08 ? "óptimo (<8 %)" : desabasto <= 0.17 ? "aceptable (8–17 %)" : "deficiente (>17 %)"}`} />
         {verCostos ? (
           <Kpi titulo="Inversión sugerida" valor={dineroCompacto(inversion)} icono={Wallet} tono="info" detalle="lo sugerido a costo vigente, sin IVA" />
         ) : (
-          <Kpi titulo="Importados" valor={numero(cuenta("importados"))} icono={TrendingDown} tono="info" detalle="con 6 meses de cobertura" alClic={() => setVista("importados")} />
+          <Kpi titulo="Importados" valor={numero(cuenta("importados"))} icono={TrendingDown} tono="info" detalle="con 6 meses de cobertura" alClic={() => setVista("importados")} explica={GLOSARIO.mesesCobertura} />
         )}
         <Kpi titulo="Excedentes" valor={numero(excedentes.length)} icono={PackageX} tono="neutro"
           detalle={verCostos ? `${dineroCompacto(excedentes.reduce((s, r) => s + r.en_planta * Number(r.costo_mxn ?? 0), 0))} parados sin consumo en 12 meses` : "sin consumo en 12 meses"}
-          alClic={() => setVista("excedente")} />
+          alClic={() => setVista("excedente")} explica={GLOSARIO.estadoReabasto} />
       </div>
 
       {sel.size > 0 && (
