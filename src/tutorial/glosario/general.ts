@@ -3,7 +3,7 @@ export const GENERAL = {
   folio: "El número que el sistema le pone solo a cada documento (cotización, pedido, orden…), en orden y sin repetirse. Con él lo buscas y lo citas; no se escribe a mano.",
   iva: "Impuesto al valor agregado, normalmente 16 %. Los precios de lista son sin IVA; el total con IVA es lo que paga el cliente. Si un número ya trae IVA, la pantalla lo dice.",
   montoSinIva: "El importe antes del impuesto. Las ventas del mes, las comisiones y las compras de 12 meses se miden sin IVA, para comparar parejo sin importar cómo se cotizó.",
-  tipoCambio: "Cuántos pesos vale un dólar (o un euro). Una cotización o un pedido en otra moneda guarda su propio tipo de cambio, y con él se convierte a pesos para sumarlo con lo demás.",
+  tipoCambio: "Cuántos pesos vale un dólar (o un euro). Se toma solo cada día hábil: el dólar del Diario Oficial y el euro del Banco Central Europeo; finanzas o compras pueden capturar otro a mano. Una cotización o un pedido en otra moneda guarda su propio tipo de cambio, y con él se convierte a pesos para sumarlo con lo demás.",
   pendiente: "Algo que una persona le pide a otra, con fecha. Al asignarlo le llega un aviso al responsable; cuando lo marca hecho, le llega un aviso a quien lo pidió.",
   aviso: "Notificación que llega a la campana del encabezado: un pendiente nuevo, algo que se terminó, una autorización que espera. Al darle clic te lleva a la pantalla donde se atiende.",
   vencido: "Ya pasó su fecha y sigue abierto. Se pinta en rojo; lo que vence hoy, en ámbar.",
