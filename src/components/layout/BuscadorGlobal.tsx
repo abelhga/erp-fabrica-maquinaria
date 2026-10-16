@@ -2,19 +2,19 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Command } from "cmdk";
 import * as D from "@radix-ui/react-dialog";
-import { Boxes, ClipboardCheck, ClipboardList, FileText, Layers, Loader2, Search, ShoppingCart, Truck, Users } from "lucide-react";
+import { Boxes, ClipboardCheck, ClipboardList, FileText, Hash, Layers, Loader2, Search, ShoppingCart, Truck, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface Resultado { tipo: string; id: string; titulo: string; subtitulo: string | null; ruta: string }
 
 const ICONOS: Record<string, typeof Users> = {
   cliente: Users, equipo: Layers, subensamble: Layers, componente: Boxes, cotizacion: FileText,
-  pedido: ShoppingCart, proveedor: Truck, orden_produccion: ClipboardCheck, orden_compra: ClipboardList,
+  pedido: ShoppingCart, proveedor: Truck, orden_produccion: ClipboardCheck, orden_compra: ClipboardList, numero_serie: Hash,
 };
 const NOMBRES: Record<string, string> = {
   cliente: "Clientes", equipo: "Equipos", subensamble: "Subensambles", componente: "Componentes",
   cotizacion: "Cotizaciones", pedido: "Pedidos", proveedor: "Proveedores", orden_produccion: "Órdenes de producción",
-  orden_compra: "Órdenes de compra",
+  orden_compra: "Órdenes de compra", numero_serie: "Números de serie (antes del ERP)",
 };
 
 /** Un solo buscador para todo (Ctrl+K). La base filtra por permisos: cada quien ve solo lo suyo. */

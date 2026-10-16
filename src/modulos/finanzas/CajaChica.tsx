@@ -38,7 +38,7 @@ export default function CajaChica() {
     queryFn: async () => {
       const f = await q<{ clave: string; valor: unknown }[]>(supabase.from("configuracion").select("clave, valor").in("clave", ["caja_chica_minimo", "caja_chica_maximo"]));
       const v = Object.fromEntries(f.map((x) => [x.clave, Number(x.valor)]));
-      return { minimo: v.caja_chica_minimo ?? 500, maximo: v.caja_chica_maximo ?? 4500 };
+      return { minimo: v.caja_chica_minimo ?? 1000, maximo: v.caja_chica_maximo ?? 5000 };
     },
   });
   const movs = datos.data ?? [];
@@ -48,7 +48,7 @@ export default function CajaChica() {
   const salidasMes = delMes.filter((m) => m.tipo === "salida").reduce((s, m) => s - Number(m.importe), 0);
   const entradasMes = delMes.filter((m) => m.tipo === "entrada").reduce((s, m) => s + Number(m.importe), 0);
   const ultimoArqueo = movs.find((m) => m.tipo === "arqueo");
-  const min = topes.data?.minimo ?? 500, max = topes.data?.maximo ?? 4500;
+  const min = topes.data?.minimo ?? 1000, max = topes.data?.maximo ?? 5000;
   const estado = saldo < min ? { tono: "peligro" as const, texto: `Abajo del mínimo (${dinero(min)}): toca reponer` }
     : saldo > max ? { tono: "aviso" as const, texto: `Arriba del máximo (${dinero(max)}): llévalo al banco` }
     : { tono: "ok" as const, texto: `Entre ${dinero(min)} y ${dinero(max)}` };

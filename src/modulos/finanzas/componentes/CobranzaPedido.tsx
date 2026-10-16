@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, FileText, HandCoins, Receipt } from "lucide-react";
+import { ExternalLink, FileCode2, FileText, HandCoins, Receipt, Upload } from "lucide-react";
 import { Lateral, Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { Campo, Entrada, Seleccion } from "@/components/ui/campo";
@@ -13,6 +13,9 @@ import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, hoyISO } from "@/lib/formato";
 import { ESTADO_PEDIDO, METODOS, enMoneda, nombreMetodo, tonoRango, type Moneda, type Rango } from "./comun";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { folioCfdi, leerCfdi } from "@/lib/cfdi";
+import { useEmpresa } from "@/modulos/ventas/comun";
+import { SubirComplementos } from "./SubirComplementos";
 
 export interface FilaCobranza {
   pedido_id: string; folio: string; cliente_id: string; cliente: string; vendedor_id: string | null; vendedor: string | null;
@@ -27,6 +30,7 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
   const { puede } = useSesion();
   const [cobro, setCobro] = useState(false);
   const [factura, setFactura] = useState(false);
+  const [complementos, setComplementos] = useState(false);
   const cobros = useQuery({
     queryKey: ["cobros", p?.pedido_id],
     enabled: !!p,
@@ -65,7 +69,10 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
           <section className="space-y-2">
             <div className="flex items-center justify-between">
               <h4 className="font-medium">Cobros</h4>
-              {puede("finanzas", 2) && p.estado !== "cancelado" && <Boton tamano="sm" onClick={() => setCobro(true)}><HandCoins className="h-4 w-4" /> Registrar cobro</Boton>}
+              {puede("finanzas", 2) && p.estado !== "cancelado" && <span className="flex gap-2">
+                <Boton tamano="sm" variante="secundario" onClick={() => setComplementos(true)}><Upload className="h-4 w-4" /> Complemento</Boton>
+                <Boton tamano="sm" onClick={() => setCobro(true)}><HandCoins className="h-4 w-4" /> Registrar cobro</Boton>
+              </span>}
             </div>
             {cobros.isLoading ? <Cargando filas={2} /> : (cobros.data ?? []).length === 0 ? <p className="text-sm text-tenue">Sin cobros todavía.</p> : (
               <table className="tabla rounded-xl border border-borde overflow-hidden">
@@ -105,6 +112,7 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
           </section>
           <RegistrarCobro pedido={p} abierto={cobro} alCambiar={setCobro} />
           <RegistrarFactura pedido={p} abierto={factura} alCambiar={setFactura} />
+          <SubirComplementos abierto={complementos} alCambiar={setComplementos} />
         </div>
       )}
     </Lateral>
@@ -161,14 +169,52 @@ export function RegistrarFactura({ pedido: p, abierto, alCambiar }: { pedido: Fi
     pedido_id: p.pedido_id, folio: f.folio, uuid_sat: f.uuid.trim() || null, fecha: f.fecha, total: Number(f.total), notas: f.notas.trim() || null,
   })), { exito: `Factura ${f.folio} registrada`, invalidar: INVALIDAR, alTerminar: () => alCambiar(false) });
   const uuidMal = f.uuid.trim() !== "" && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(f.uuid.trim());
+  // Con el XML de la factura que timbramos se llena todo; se revisa que sea nuestra y de este cliente.
+  const empresa = useEmpresa();
+  const [xml, setXml] = useState<{ nombre: string; aviso: string | null; error: string | null } | null>(null);
+  useEffect(() => { if (abierto) setXml(null); }, [abierto]);
+  async function leerXml(archivo: File | undefined) {
+    if (!archivo) return;
+    try {
+      const c = leerCfdi(await archivo.text());
+      const propio = (empresa.data?.fiscal.rfc ?? "").toUpperCase();
+      const { data: cli } = await supabase.from("clientes").select("rfc").eq("id", p.cliente_id).maybeSingle();
+      const { data: ya } = c.uuid ? await supabase.from("facturas").select("folio").eq("uuid_sat", c.uuid).maybeSingle() : { data: null };
+      const error = c.tipo === "P" ? "Es un complemento de pago: súbelo con el botón Complemento, en Cobros."
+        : c.tipo === "E" ? "Es una nota de crédito, no una factura: regístrala como cobro negativo (devolución) con una nota."
+        : c.tipo !== "I" ? "No es una factura de ingreso."
+        : propio && c.emisor.rfc !== propio ? `La emitió otro RFC (${c.emisor.rfc}): no es una factura nuestra.`
+        : ya ? `Esa factura ya está registrada (${ya.folio}).` : null;
+      const avisos = [
+        cli?.rfc && c.receptor.rfc && cli.rfc !== c.receptor.rfc ? `Es para el RFC ${c.receptor.rfc} y el cliente tiene ${cli.rfc}: revisa que sea de este pedido.` : null,
+        c.moneda && c.moneda !== p.moneda && c.moneda !== "XXX" ? `La factura está en ${c.moneda} y el pedido en ${p.moneda}.` : null,
+      ].filter(Boolean).join(" ");
+      setXml({ nombre: archivo.name, aviso: avisos || null, error });
+      if (!error) setF((x) => ({ ...x, folio: folioCfdi(c) ?? x.folio, uuid: c.uuid ?? x.uuid, fecha: c.fecha ?? x.fecha,
+        total: c.total ? String(c.total) : x.total, notas: x.notas || (c.metodoPago === "PPD" ? "A crédito (PPD)" : c.metodoPago === "PUE" ? "De contado (PUE)" : "") }));
+    } catch (e) {
+      setXml({ nombre: archivo.name, aviso: null, error: e instanceof Error ? e.message : "No se pudo leer" });
+    }
+  }
   return (
     <Dialogo abierto={abierto} alCambiar={alCambiar} titulo={`Registrar factura · ${p.folio}`}
       descripcion={`${p.cliente} · total del pedido ${enMoneda(p.total, p.moneda)}${p.facturado_monto ? `, ya facturado ${enMoneda(p.facturado_monto, p.moneda)}` : ""}`}
       pie={<>
         <Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
-        <Boton type="submit" form="registrar-factura" cargando={guardar.isPending} disabled={!f.folio.trim() || !Number(f.total)}>Registrar factura</Boton>
+        <Boton type="submit" form="registrar-factura" cargando={guardar.isPending} disabled={!f.folio.trim() || !Number(f.total) || !!xml?.error}>Registrar factura</Boton>
       </>}>
-      <form id="registrar-factura" onSubmit={(e) => { e.preventDefault(); guardar.mutate(undefined); }} className="grid gap-4 sm:grid-cols-2">
+      <form id="registrar-factura" onSubmit={(e) => { e.preventDefault(); if (!xml?.error) guardar.mutate(undefined); }} className="grid gap-4 sm:grid-cols-2">
+        <label className="sm:col-span-2 flex items-center gap-3 rounded-xl border border-dashed border-borde px-4 py-3 cursor-pointer hover:bg-fondo"
+          data-explain={GLOSARIO.cfdi} data-explain-title="Factura electrónica (XML)">
+          {xml ? <FileCode2 className="h-5 w-5 text-tenue shrink-0" /> : <Upload className="h-5 w-5 text-tenue shrink-0" />}
+          <span className="flex-1 min-w-0 text-sm">
+            <span className="font-medium break-all">{xml ? xml.nombre : "Sube el XML de la factura"}</span>
+            <span className={`block ${xml?.error ? "text-peligro" : xml?.aviso ? "text-aviso" : "text-tenue"}`}>
+              {xml?.error ?? xml?.aviso ?? (xml ? "Listo: revisa los datos y registra." : "Se llenan folio, UUID, fecha y total. Sin XML, captura a mano.")}
+            </span>
+          </span>
+          <input type="file" accept=".xml,text/xml,application/xml" className="sr-only" onChange={(e) => leerXml(e.target.files?.[0])} />
+        </label>
         <Campo etiqueta="Folio">
           <Entrada autoFocus value={f.folio} onChange={(e) => setF({ ...f, folio: e.target.value })} placeholder="A 3350" required />
         </Campo>

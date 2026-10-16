@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
 import { MENU, INICIO, PENDIENTES, SEMANA } from "@/navegacion";
 import { useSesion, NOMBRE_ROL } from "@/lib/sesion";
 import { cn } from "@/lib/utilidades";
+import { supabase } from "@/lib/supabase";
+import { q } from "@/lib/consultas";
+import { elegirTema, recordarTemaEmpresa, temaInicial } from "@/lib/tema";
 import { Logo } from "./Logo";
 import { BuscadorGlobal } from "./BuscadorGlobal";
 import { Asistente } from "@/components/asistente/Asistente";
@@ -15,14 +19,18 @@ import { CapaExplicacion } from "@/tutorial/CapaExplicacion";
 import { ayudaDe } from "@/tutorial/pantallas";
 
 function useTema() {
-  const [oscuro, setOscuro] = useState(() => {
-    try { return localStorage.getItem("tema") === "oscuro"; } catch { return false; }
+  const [oscuro, setOscuro] = useState(() => temaInicial() === "oscuro");
+  // El de la empresa puede haber cambiado en Configuración: si esta persona no eligió uno, se sigue.
+  const empresa = useQuery({
+    queryKey: ["configuracion", "tema_por_defecto"], staleTime: 10 * 60_000,
+    queryFn: () => q<{ valor: unknown }[]>(supabase.from("configuracion").select("valor").eq("clave", "tema_por_defecto")),
   });
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", oscuro);
-    try { localStorage.setItem("tema", oscuro ? "oscuro" : "claro"); } catch { /* modo privado */ }
-  }, [oscuro]);
-  return [oscuro, setOscuro] as const;
+    const v = empresa.data?.[0]?.valor;
+    if (v === "oscuro" || v === "claro") setOscuro(recordarTemaEmpresa(v) === "oscuro");
+  }, [empresa.data]);
+  const cambiar = (v: boolean) => { elegirTema(v ? "oscuro" : "claro"); setOscuro(v); };
+  return [oscuro, cambiar] as const;
 }
 
 export function Shell() {

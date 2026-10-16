@@ -18,6 +18,12 @@ export interface Cfdi {
   emisor: { rfc: string | null; nombre: string | null };
   receptor: { rfc: string | null; nombre: string | null };
   conceptos: string[];
+  /** Complemento de pago (tipo P): cada pago y las facturas que liquida. */
+  pagos: PagoCfdi[];
+}
+export interface PagoCfdi {
+  fecha: string | null; formaPago: string | null; moneda: string | null; monto: number | null;
+  doctos: { uuid: string; serie: string | null; folio: string | null; moneda: string | null; parcialidad: number | null; pagado: number | null; saldoInsoluto: number | null }[];
 }
 
 const ENTIDADES: Record<string, string> = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&apos;": "'" };
@@ -63,7 +69,30 @@ export function leerCfdi(xml: string): Cfdi {
     emisor: { rfc: txt(e.Rfc)?.toUpperCase() ?? null, nombre: txt(e.Nombre) },
     receptor: { rfc: txt(r.Rfc)?.toUpperCase() ?? null, nombre: txt(r.Nombre) },
     conceptos: todas(xml, "Concepto").map((k) => txt(k.Descripcion)).filter((x): x is string => !!x),
+    pagos: leerPagos(xml),
   };
+}
+
+/**
+ * Los pagos de un complemento de pago (pago10 o pago20). "Pago" seguido de otra letra
+ * ("Pagos", "PagoTotales") es otra etiqueta: por eso el \b.
+ */
+function leerPagos(xml: string): PagoCfdi[] {
+  return [...xml.matchAll(/<(?:[\w-]+:)?Pago\b([^>]*)>([\s\S]*?)<\/(?:[\w-]+:)?Pago>/g)].map((m) => {
+    const a = etiqueta(`<Pago ${m[1]}>`, "Pago") ?? {};
+    return {
+      fecha: txt(a.FechaPago)?.slice(0, 10) ?? null, formaPago: txt(a.FormaDePagoP), moneda: txt(a.MonedaP), monto: num(a.Monto),
+      doctos: todas(m[2], "DoctoRelacionado").filter((d) => txt(d.IdDocumento)).map((d) => ({
+        uuid: txt(d.IdDocumento)!.toUpperCase(), serie: txt(d.Serie), folio: txt(d.Folio), moneda: txt(d.MonedaDR),
+        parcialidad: num(d.NumParcialidad), pagado: num(d.ImpPagado), saldoInsoluto: num(d.ImpSaldoInsoluto),
+      })),
+    };
+  });
+}
+
+/** Forma de pago del SAT → método de cobro del ERP. */
+export function metodoDeFormaPago(forma: string | null): string {
+  return ({ "01": "efectivo", "02": "cheque", "03": "transferencia", "04": "tarjeta", "28": "tarjeta" } as Record<string, string>)[forma ?? ""] ?? "otro";
 }
 
 /** "A 3354" o solo el folio; el UUID corto si la factura no trae folio. */

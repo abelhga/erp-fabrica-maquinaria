@@ -206,7 +206,13 @@ function DatosGenerales({ empleado: e, empleados, usuarios, alCrear }: {
   );
 }
 
-interface DatosPrivados { curp: string | null; rfc: string | null; nss: string | null; domicilio: string | null; salario_diario: number | null; cuenta_bancaria: string | null }
+type Contrato = "firmado" | "pendiente" | "no_aplica";
+interface DatosPrivados {
+  curp: string | null; rfc: string | null; nss: string | null; domicilio: string | null; salario_diario: number | null; cuenta_bancaria: string | null;
+  tipo_sangre: string | null; informacion_medica: string | null; infonavit_credito: string | null; infonavit_descuento: string | null;
+  contrato_trabajo: Contrato | null; contrato_confidencialidad: Contrato | null; contrato_adicional: Contrato | null;
+}
+const SANGRE = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
 
 function DatosSensibles({ empleado: e }: { empleado: Empleado }) {
   const datos = useQuery({
@@ -221,6 +227,10 @@ function FormSensibles({ empleado: e, datos }: { empleado: Empleado; datos: Dato
   const [f, setF] = useState({
     curp: datos?.curp ?? "", rfc: datos?.rfc ?? "", nss: datos?.nss ?? "", domicilio: datos?.domicilio ?? "",
     salario_diario: datos?.salario_diario != null ? String(datos.salario_diario) : "", cuenta_bancaria: datos?.cuenta_bancaria ?? "",
+    tipo_sangre: datos?.tipo_sangre ?? "", informacion_medica: datos?.informacion_medica ?? "",
+    infonavit_credito: datos?.infonavit_credito ?? "", infonavit_descuento: datos?.infonavit_descuento ?? "",
+    contrato_trabajo: datos?.contrato_trabajo ?? "", contrato_confidencialidad: datos?.contrato_confidencialidad ?? "",
+    contrato_adicional: datos?.contrato_adicional ?? "",
   });
   const cambiar = (k: keyof typeof f, mayus = false) => (ev: { target: { value: string } }) =>
     setF((x) => ({ ...x, [k]: mayus ? ev.target.value.toUpperCase() : ev.target.value }));
@@ -228,6 +238,10 @@ function FormSensibles({ empleado: e, datos }: { empleado: Empleado; datos: Dato
     empleado_id: e.id, curp: f.curp.trim() || null, rfc: f.rfc.trim() || null, nss: f.nss.replace(/\D/g, "") || null,
     domicilio: f.domicilio.trim() || null, salario_diario: f.salario_diario ? Number(f.salario_diario) : null,
     cuenta_bancaria: f.cuenta_bancaria.replace(/\s/g, "") || null,
+    tipo_sangre: f.tipo_sangre || null, informacion_medica: f.informacion_medica.trim() || null,
+    infonavit_credito: f.infonavit_credito.trim() || null, infonavit_descuento: f.infonavit_descuento.trim() || null,
+    contrato_trabajo: f.contrato_trabajo || null, contrato_confidencialidad: f.contrato_confidencialidad || null,
+    contrato_adicional: f.contrato_adicional || null,
   })), { exito: "Datos sensibles guardados", invalidar: [["empleado_datos", e.id]] });
   const salario = Number(f.salario_diario) || 0;
 
@@ -257,6 +271,40 @@ function FormSensibles({ empleado: e, datos }: { empleado: Empleado; datos: Dato
           <AreaTexto value={f.domicilio} onChange={cambiar("domicilio")} className="min-h-[60px]" />
         </Campo>
       </div>
+      <fieldset className="grid gap-4 sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-medium">Salud</legend>
+        <Campo etiqueta="Tipo de sangre">
+          <Seleccion value={f.tipo_sangre} onChange={cambiar("tipo_sangre")}>
+            <option value="">No sabemos</option>
+            {SANGRE.map((x) => <option key={x} value={x}>{x}</option>)}
+          </Seleccion>
+        </Campo>
+        <Campo etiqueta="Alergias y condiciones médicas" className="sm:col-span-2" ayuda="Lo que hay que saber en una emergencia: alergias a medicamentos, enfermedades, tratamientos.">
+          <AreaTexto value={f.informacion_medica} onChange={cambiar("informacion_medica")} className="min-h-[60px]" />
+        </Campo>
+      </fieldset>
+      <fieldset className="grid gap-4 sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-medium" data-explain={GLOSARIO.infonavit}>Infonavit</legend>
+        <Campo etiqueta="Número de crédito">
+          <Entrada value={f.infonavit_credito} onChange={cambiar("infonavit_credito")} className="font-mono" placeholder="Sin crédito" />
+        </Campo>
+        <Campo etiqueta="Descuento" ayuda="Como lo dice el aviso de retención: monto y cada cuándo.">
+          <Entrada value={f.infonavit_descuento} onChange={cambiar("infonavit_descuento")} placeholder="Ej. $1,200 semanal" />
+        </Campo>
+      </fieldset>
+      <fieldset className="grid gap-4 sm:grid-cols-3">
+        <legend className="mb-2 text-sm font-medium">Contratos</legend>
+        {([["contrato_trabajo", "De trabajo"], ["contrato_confidencialidad", "De confidencialidad"], ["contrato_adicional", "Adicional"]] as const).map(([c, t]) => (
+          <Campo key={c} etiqueta={t}>
+            <Seleccion value={f[c]} onChange={cambiar(c)}>
+              <option value="">Sin revisar</option>
+              <option value="firmado">Firmado</option>
+              <option value="pendiente">Pendiente de firma</option>
+              {c === "contrato_adicional" && <option value="no_aplica">No aplica</option>}
+            </Seleccion>
+          </Campo>
+        ))}
+      </fieldset>
       <div className="flex justify-end">
         <Boton type="submit" cargando={guardar.isPending}><Save className="h-4 w-4" /> Guardar datos sensibles</Boton>
       </div>
@@ -267,6 +315,7 @@ function FormSensibles({ empleado: e, datos }: { empleado: Empleado; datos: Dato
 function HistorialEmpleado({ empleado: e }: { empleado: Empleado }) {
   const { puede } = useSesion();
   const [nueva, setNueva] = useState(false);
+  const [corregir, setCorregir] = useState(false);
   const vac = useQuery({
     queryKey: ["v_vacaciones", e.id],
     enabled: e.activo,
@@ -300,6 +349,12 @@ function HistorialEmpleado({ empleado: e }: { empleado: Empleado }) {
                   : <> Debe disfrutarlos antes del {fecha(v.disfrutar_antes_de)} (art. 81 LFT).</>} En su próximo aniversario le tocarán {v.dias_proximo_periodo} días.
                 {v.solicitados > 0 && <> Tiene {numero(v.solicitados)} días solicitados por aprobar.</>}
               </p>
+              <p className="text-xs text-tenue mt-2 flex flex-wrap items-center gap-x-2">
+                {v.saldo_arranque != null
+                  ? <span data-explain={GLOSARIO.saldoArranqueVacaciones} data-explain-title="Saldo de arranque">Arrancó en el ERP con {numero(v.saldo_arranque)} días el {fecha(v.fecha_arranque)} (control de vacaciones en Excel).</span>
+                  : <span data-explain={GLOSARIO.saldoArranqueVacaciones} data-explain-title="Saldo de arranque">Saldo calculado por ley desde su aniversario.</span>}
+                {puede("rrhh", 3) && <button type="button" className="text-marca-texto hover:underline" onClick={() => setCorregir(true)}>Corregir saldo</button>}
+              </p>
             </>
           )}
         </div>
@@ -328,7 +383,35 @@ function HistorialEmpleado({ empleado: e }: { empleado: Empleado }) {
         </ul>
       )}
       <NuevaIncidencia abierto={nueva} alCambiar={setNueva} empleadoId={e.id} />
+      {v && <CorregirSaldo abierto={corregir} alCambiar={setCorregir} vacaciones={v} />}
     </div>
+  );
+}
+
+/** Fija el saldo de hoy a mano (lo que diga el control en papel o en Excel). Vale hasta su próximo aniversario. */
+function CorregirSaldo({ abierto, alCambiar, vacaciones: v }: { abierto: boolean; alCambiar: (x: boolean) => void; vacaciones: Vacaciones }) {
+  const [saldo, setSaldo] = useState("");
+  const [nota, setNota] = useState("");
+  useEffect(() => { if (abierto) { setSaldo(String(v.saldo)); setNota(""); } }, [abierto, v.saldo]);
+  const guardar = useAccion(() => q(supabase.from("vacaciones_arranque").upsert({
+    empleado_id: v.empleado_id, fecha: hoyISO(), saldo: Number(saldo), nota: nota.trim() || null,
+  })), { exito: "Saldo corregido", invalidar: [["v_vacaciones"]], alTerminar: () => alCambiar(false) });
+  return (
+    <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="Corregir saldo de vacaciones"
+      descripcion={`Cuántos días le quedan hoy a ${v.nombre}. Desde hoy se le restarán las vacaciones que se aprueben, hasta su próximo aniversario (${fecha(v.proximo_aniversario)}).`}
+      pie={<>
+        <Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
+        <Boton cargando={guardar.isPending} disabled={saldo === "" || Number.isNaN(Number(saldo))} onClick={() => guardar.mutate(undefined)}>Guardar</Boton>
+      </>}>
+      <form className="space-y-4" onSubmit={(ev) => { ev.preventDefault(); if (saldo !== "") guardar.mutate(undefined); }}>
+        <Campo etiqueta="Días que le quedan hoy">
+          <Entrada type="number" step="0.5" value={saldo} onChange={(ev) => setSaldo(ev.target.value)} className="cifra" autoFocus />
+        </Campo>
+        <Campo etiqueta="Por qué" ayuda="Ej. «Así viene en el control de vacaciones» o «le quedaban 3 días del año pasado».">
+          <Entrada value={nota} onChange={(ev) => setNota(ev.target.value)} />
+        </Campo>
+      </form>
+    </Dialogo>
   );
 }
 

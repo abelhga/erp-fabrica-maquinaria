@@ -146,6 +146,6 @@ begin
   select costo into v_num from costos_articulo where articulo_id = v_import;
   assert v_num = 300 and (select moneda from costos_articulo where articulo_id = v_import) = 'USD', 'el costo pasó a 300 USD';
   assert (select origen from historial_costos where articulo_id = v_import order by id desc limit 1) = 'orden_compra', 'historial con origen OC';
-  -- …y el costeo lo convierte a pesos al tipo de cambio vigente.
-  assert (select costo_total from costos_calculados where articulo_id = v_import) = 300 * tc('USD'), 'costo en MXN';
+  -- …y el costeo lo convierte a pesos con el tipo de cambio del costeo (104), no con el del día.
+  assert (select costo_total from costos_calculados where articulo_id = v_import) = 300 * tc_costeo('USD'), 'costo en MXN';
 end $$;

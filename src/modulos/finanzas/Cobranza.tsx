@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { AlarmClock, Clock, Hourglass, Wallet, X } from "lucide-react";
+import { AlarmClock, Clock, Hourglass, Upload, Wallet, X } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
 import { Insignia } from "@/components/ui/insignia";
@@ -15,6 +15,9 @@ import { dinero, dineroCompacto, fecha, numero } from "@/lib/formato";
 import { ESTADO_PEDIDO, RANGOS, TipoCambioDia, enMoneda, tonoRango, type Rango } from "./componentes/comun";
 import { DetalleCobranza, type FilaCobranza } from "./componentes/CobranzaPedido";
 import { SaldosArranque } from "./componentes/SaldosArranque";
+import { SubirComplementos } from "./componentes/SubirComplementos";
+import { Boton } from "@/components/ui/boton";
+import { useSesion } from "@/lib/sesion";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
@@ -35,6 +38,8 @@ function agrupar(filas: FilaCobranza[], clave: (f: FilaCobranza) => string, nomb
 
 export default function Cobranza() {
   const [vista, setVista] = useState("pedidos");
+  const { puede } = useSesion();
+  const [complementos, setComplementos] = useState(false);
   const [rango, setRango] = useState<Rango | "todos">("todos");
   const [conSaldo, setConSaldo] = useState<"saldo" | "todos" | "sin_factura">("saldo");
   const [filtro, setFiltro] = useState<{ tipo: "cliente" | "vendedor"; clave: string; nombre: string } | null>(null);
@@ -110,7 +115,12 @@ export default function Cobranza() {
   ];
 
   return (
-    <Pagina titulo="Cobranza" descripcion="Lo que nos deben los clientes, desde cuándo, y lo que se ha cobrado mes a mes." acciones={<TipoCambioDia />}>
+    <Pagina titulo="Cobranza" descripcion="Lo que nos deben los clientes, desde cuándo, y lo que se ha cobrado mes a mes."
+      acciones={<>
+        <TipoCambioDia />
+        {puede("finanzas", 2) && <Boton variante="secundario" onClick={() => setComplementos(true)}><Upload className="h-4 w-4" /> Subir complementos de pago</Boton>}
+      </>}>
+      <SubirComplementos abierto={complementos} alCambiar={setComplementos} />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <div className="sm:col-span-2 lg:col-span-1">
           <Kpi titulo="Por cobrar" valor={dineroCompacto(total)} icono={Wallet} tono="marca" explica={GLOSARIO.porCobrar}

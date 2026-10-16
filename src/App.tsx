@@ -47,6 +47,7 @@ const MiDesempeno = p(() => import("./modulos/rrhh/MiDesempeno"));
 const Cobranza = p(() => import("./modulos/finanzas/Cobranza"));
 const Pagos = p(() => import("./modulos/finanzas/Pagos"));
 const CajaChica = p(() => import("./modulos/finanzas/CajaChica"));
+const NumerosSerie = p(() => import("./modulos/produccion/NumerosSerie"));
 const Usuarios = p(() => import("./modulos/sistema/Usuarios"));
 const Importar = p(() => import("./modulos/sistema/Importar"));
 const Bitacora = p(() => import("./modulos/sistema/Bitacora"));
@@ -152,6 +153,7 @@ export function App() {
           <Route path="produccion/gerencia" element={<Con m="produccion"><Gerencia /></Con>} />
           <Route path="produccion/ordenes" element={<Con m="produccion"><OrdenesProduccion /></Con>} />
           <Route path="produccion/ordenes/:id" element={<Con m="produccion"><DetalleOrden /></Con>} />
+          <Route path="produccion/seriales" element={<Con m="produccion"><NumerosSerie /></Con>} />
           <Route path="servicio" element={<Con m="servicio"><Servicios /></Con>} />
           <Route path="servicio/maquinas" element={<Con m="servicio"><Maquinas /></Con>} />
           <Route path="servicio/maquinas/:id" element={<Con m="servicio"><FichaMaquina /></Con>} />

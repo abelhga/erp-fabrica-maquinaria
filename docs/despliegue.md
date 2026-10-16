@@ -5,7 +5,7 @@ Dos piezas: la base (Supabase) y el sitio (estático, en Cloudflare Workers).
 El 3 de octubre de 2026 se creó el proyecto `erp-hegamex` (Supabase, us-west-1) con las
 migraciones, los datos de la instancia local de verificación y usuarios de prueba por rol con
 contraseña propia (no "hegamex-local"). Ya tiene entrada con Google, la llave de Claude y el
-sitio en `erp-fabrica-maquinaria.figugu.workers.dev`. El 4 de octubre se le quitó toda la
+sitio en `erp-fabrica-maquinaria.figugu.workers.dev` (y, desde el 16 de octubre, en camino a `erp.hegamex.com`; ver "Dominio propio"). El 4 de octubre se le quitó toda la
 demostración con `scripts/demo/limpiar_todo.sql`: quedan solo las migraciones, lo importado
 de las hojas y lo que han capturado personas reales. Si alguna vez se vuelve a cargar
 demostración en una base que se va a usar en serio, ese mismo script la quita (corre en una
@@ -123,7 +123,35 @@ npx supabase functions deploy ver-como --no-verify-jwt
   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (Project Settings → API, llave publicable) y
   `VITE_DOMINIO_EMPRESA=hegamex.com`. Vite las mete en el código al construir: si se cambian,
   hay que volver a construir.
-- Dominio propio: Settings → Domains & Routes → `erp.hegamex.com`.
+- Dominio propio: un Worker solo acepta dominio propio si **toda** la zona del dominio está en
+  Cloudflare. El DNS de hegamex.com está en Wix (nameservers `ns1/ns2.wix.com`, correo en
+  Google), así que el ERP se publica también en **Cloudflare Pages**, que sí acepta un CNAME
+  desde otro DNS. Así no se toca el sitio web ni el correo.
+
+### Dominio propio con DNS en Wix (`erp.hegamex.com`)
+
+1. **Cloudflare → Workers & Pages → Create → pestaña Pages → Import an existing Git
+   repository** → `abelhga/erp-fabrica-maquinaria`, rama `main`.
+   - Framework preset: *None*. Build command `npm run build`. Build output directory `dist`.
+   - Environment variables (Production): las mismas tres del Worker (`VITE_SUPABASE_URL`,
+     `VITE_SUPABASE_ANON_KEY`, `VITE_DOMINIO_EMPRESA=hegamex.com`).
+   - Pages manda a `index.html` cualquier ruta que no sea un archivo (no hay `404.html`), así
+     que la aplicación abre igual que en el Worker. Al terminar queda en
+     `https://<proyecto>.pages.dev`: abrirla y revisar que cargue la pantalla de entrar.
+2. En el proyecto de Pages → **Custom domains → Set up a custom domain** → `erp.hegamex.com`.
+   Como el dominio no está en Cloudflare, pide hacerlo con un **CNAME**: anota el destino
+   (`<proyecto>.pages.dev`).
+3. **Wix → Configuración → Dominios → hegamex.com → Administrar registros DNS → CNAME →
+   Agregar registro**: nombre de host `erp`, valor `<proyecto>.pages.dev`. No se toca ningún
+   otro registro (A del sitio, MX de Google, TXT).
+4. Esperar a que Cloudflare diga *Active* en el dominio (crea el certificado solo; de minutos a
+   unas horas). Comprobar: `https://erp.hegamex.com` abre la pantalla de entrar.
+5. **Supabase → Authentication → URL Configuration**: *Redirect URLs* ya incluye
+   `https://erp.hegamex.com/**` (y el `workers.dev`, para que nadie quede fuera durante el
+   cambio). Cuando el dominio ya funcione, cambiar *Site URL* a `https://erp.hegamex.com`.
+   Google no cambia: su redirección es la de Supabase (`<ref>.supabase.co/auth/v1/callback`).
+6. Avisar a todos la dirección nueva. El Worker puede seguir como respaldo o apagarse después;
+   los dos se construyen solos con cada cambio en `main`.
 
 ## 3. Datos
 

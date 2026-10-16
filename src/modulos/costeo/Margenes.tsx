@@ -313,30 +313,38 @@ function TarjetaTipoCambio() {
     queryKey: ["costeo", "tipos-cambio"],
     queryFn: () => q<TipoCambio[]>(supabase.from("tipos_cambio").select("fecha, moneda, valor, fuente").order("fecha", { ascending: false }).limit(60)),
   });
+  // Con este se costea: sigue al del día solo si se aleja el umbral (3%) o si alguien captura uno.
+  const costeo = useQuery({
+    queryKey: ["costeo", "tipo-cambio-costeo"],
+    queryFn: async () => {
+      const f = await q<{ clave: string; valor: unknown }[]>(supabase.from("configuracion").select("clave, valor").in("clave", ["tipo_cambio_costeo", "tipo_cambio_umbral"]));
+      const v = Object.fromEntries(f.map((x) => [x.clave, x.valor]));
+      return { tc: (v.tipo_cambio_costeo ?? {}) as Record<string, number>, umbral: Number(v.tipo_cambio_umbral ?? 0.03) };
+    },
+  });
   async function capturar(moneda: "USD" | "EUR", v: number | null) {
     if (v == null || v <= 0) return;
-    const hoy = new Date().toLocaleDateString("en-CA");
-    const { error } = await supabase.from("tipos_cambio").upsert({ fecha: hoy, moneda, valor: v, fuente: "manual" });
+    const { error } = await supabase.rpc("fijar_tc_costeo", { p_moneda: moneda, p_valor: v });
     if (error) { toast.error(mensajeError(error)); return; }
-    toast.success(`${moneda} a ${dinero(v)}: costos importados y precios recalculados.`);
+    toast.success(`${moneda} a ${dinero(v)}: costos importados y precios recalculados con este tipo de cambio.`);
     qc.invalidateQueries({ queryKey: ["costeo"] });
   }
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Tipo de cambio" explica={GLOSARIO.tipoCambioCosteo} descripcion="Convierte a pesos los costos de lo importado" />
+      <EncabezadoTarjeta titulo="Tipo de cambio" explica={GLOSARIO.tipoCambioCosteo} descripcion={`Convierte a pesos los costos de lo importado. Sigue al del día cuando se mueve ${Math.round((costeo.data?.umbral ?? 0.03) * 100)}% o más.`} />
       <div className="px-5 pb-5 grid grid-cols-2 gap-4">
         {(["USD", "EUR"] as const).map((m) => {
           const ult = tc.data?.find((t) => t.moneda === m);
-          const ant = tc.data?.filter((t) => t.moneda === m)[1];
+          const usado = costeo.data?.tc[m];
           return (
             <div key={m}>
               <p className="text-xs text-tenue">{m === "USD" ? "Dólar" : "Euro"}</p>
               {editar ? (
                 <div className="-ml-1.5 text-2xl font-semibold w-32">
-                  <CeldaNumero valor={ult ? Number(ult.valor) : null} etiqueta={`Tipo de cambio ${m}`} className="h-9 text-2xl font-semibold text-left" alGuardar={(v) => capturar(m, v)} />
+                  <CeldaNumero valor={usado != null ? Number(usado) : null} etiqueta={`Tipo de cambio de costeo ${m}`} className="h-9 text-2xl font-semibold text-left" alGuardar={(v) => capturar(m, v)} />
                 </div>
-              ) : <p className="text-2xl font-semibold cifra">{ult ? Number(ult.valor).toFixed(4) : "—"}</p>}
-              <p className="text-xs text-tenue">{ult ? <>al {fecha(ult.fecha)}{ant && <> · antes {Number(ant.valor).toFixed(2)}</>}</> : "sin capturar"}</p>
+              ) : <p className="text-2xl font-semibold cifra">{usado != null ? Number(usado).toFixed(4) : "—"}</p>}
+              <p className="text-xs text-tenue">{ult ? <>del día {Number(ult.valor).toFixed(4)} ({ult.fuente === "DOF" ? "DOF" : ult.fuente === "BCE" ? "BCE" : ult.fuente === "manual" ? "a mano" : "inicial"}, {fecha(ult.fecha)})</> : "sin tipo de cambio del día"}</p>
             </div>
           );
         })}

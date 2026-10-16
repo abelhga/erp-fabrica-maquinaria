@@ -2,7 +2,7 @@ import type { AyudaPantalla } from "./index";
 
 export const VENTAS: Record<string, AyudaPantalla> = {
   "/ventas/para-llamar": [
-    "Tu lista para arrancar el día: cada tarjeta dice por qué buscar a ese cliente y cuánto puede valer. La usan los vendedores; la gerencia ve la de todo el equipo.",
+    "Tu lista para arrancar el día: cada tarjeta dice por qué buscar a ese cliente y cuánto puede valer. La usan los vendedores: cada quien ve sus clientes y los que no tienen vendedor; la gerencia de ventas ve la de todo el equipo.",
     "Las tarjetas de arriba filtran por motivo: cotización por vencer (rojo), ya le toca (ámbar), refacciones (azul) y reactivar (gris). Pasa el mouse por cada una para ver la regla. El buscador encuentra cliente, producto o vendedor.",
     "“Redactar mensaje” arma un WhatsApp o un correo con el historial del cliente (lo escribe Claude si está conectado; si no, sale una plantilla). Revísalo y ajústalo: enviarlo lo decides tú, con “Abrir en WhatsApp” o copiándolo.",
     "Cuando vuelves de WhatsApp o del teléfono, la tarjeta pregunta “¿Sí le escribiste?”: un toque lo registra (con Deshacer) y el cliente pasa a “En seguimiento”, con el siguiente paso: llamar al día 3, último mensaje al día 10 y luego esperar una semana. Así nadie del equipo le vuelve a escribir sin saberlo.",
@@ -30,12 +30,13 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     "Agrega partidas escribiendo parte del nombre o la clave y Enter: precio de lista, descripción y foto se llenan solos. Para fletes, instalación o servicios usa “Partida libre”; si algo no tiene precio, “Pedir precio a compras” y aquí ves cuando contestan. Clic en una partida muestra su ficha de venta: precio mínimo, existencia y entrega.",
     "Si un precio queda abajo del mínimo, la partida se marca en rojo y la cotización pasa a “Por autorizar”: pide la autorización a la gerencia antes de enviarla. Ya enviada no se edita; para cambiarla saca una nueva versión.",
     "El botón principal cambia según el estado: Enviar (por WhatsApp o PDF; la deja como enviada), Convertir a pedido (eliges partidas y fecha compromiso) o Nueva versión. En el menú “···” están imprimir, duplicar y marcar rechazada con su motivo.",
+    "Abajo de “Tiempo de entrega” ves cuándo sale de verdad con el taller como está hoy: lo que tarda el equipo o lo que tarda la fila del taller, lo que sea más tarde. Con “Usar” lo pones en la cotización; si prometes menos días, se pone en amarillo. Al convertir a pedido, la fecha compromiso ya viene con esa fecha.",
   ],
   "/ventas/pedidos": [
     "Los pedidos de todos los canales en una sola lista. Ventas, producción y cobranza la usan para saber en qué va cada uno sin preguntar por WhatsApp.",
     "Filtra por abiertos, entregados o cancelados y por canal. Los renglones en rojo están atrasados: pasó su fecha compromiso. “Producción” muestra el avance del taller y “Saldo” lo que falta por cobrar (dice “pagado” en verde si ya se cobró todo). Clic en un renglón abre el pedido.",
     "“Pedido sin cotización” es para ventas de Mercado Libre, sitio web o mostrador: eliges cliente, canal y número de venta, y en el siguiente paso agregas las partidas con su precio de lista. Abajo ves el total y lo por cobrar de lo filtrado, en pesos.",
-    "Los pedidos importados de los paneles de ventas de las hojas no salen de entrada; actívalos con “Incluir históricos de los paneles”.",
+    "Los pedidos ya entregados que vienen de las hojas no salen de entrada; actívalos con “Incluir históricos de los paneles”. Los de la hoja que siguen en el taller sí salen siempre, con «en saldo de arranque» en la columna de saldo: su cobro se lleva en el saldo de arranque del cliente.",
   ],
   "/ventas/pedidos/:id": [
     "Todo lo de un pedido en una página: partidas, avance de producción, envío, facturas, cobros y a quién le cuenta la venta. La línea de arriba marca por dónde va: confirmado, en producción, listo y entregado.",
@@ -55,7 +56,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     "Para facturar bien captura RFC, régimen, CP fiscal y uso de CFDI, o llénalos con la constancia de situación fiscal. “Nueva cotización” sale ya ligada a este cliente.",
   ],
   "/ventas/comisiones": [
-    "La comisión de cada mes, calculada sola con los pedidos: sin rangos de filas que mover a mano. Cada vendedor ve la suya; la gerencia, dirección y finanzas ven a todos.",
+    "La comisión de cada mes, calculada sola con los pedidos: sin rangos de filas que mover a mano. Cada vendedor ve la suya; la gerencia de ventas, dirección y finanzas ven a todos (la gerencia administrativa, por ahora, solo la suya).",
     "Cada tarjeta trae la venta de maquinaria con su comisión, la barra hacia el siguiente escalón de meta, la venta de refacciones con su bono y los ajustes. “Pedidos que cuentan este mes” dice de dónde sale; con crédito compartido, qué parte te toca. Cambia de mes con las flechas.",
     "La regla (abajo, en “Cómo se calcula”): el porcentaje de tu plan (2 % en los planes actuales) sobre la venta sin IVA de todo lo que no es refacción, más un bono fijo por el escalón de meta alcanzado y otro por el de refacciones. Los escalones no se suman: se paga el más alto. El plan dice si la venta cuenta por la fecha del pedido, de la factura o del cobro.",
     "La gerencia o dirección agregan ajustes (bonos de Mercado Libre, correcciones) y finanzas la marca pagada: se guarda la foto del cálculo y el mismo mes no se paga dos veces.",

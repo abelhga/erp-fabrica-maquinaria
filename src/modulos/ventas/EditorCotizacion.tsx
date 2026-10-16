@@ -27,6 +27,7 @@ import { FichaVenta } from "./componentes/FichaVenta";
 import { DialogoCliente, DialogoMotivo, ElegirCliente, MOTIVOS_PERDIDA, type ClienteNuevo } from "./componentes/dialogos";
 import { DialogoConvertir, DialogoEnviar, DialogoPedirAutorizacion } from "./componentes/DialogosCotizacion";
 import { useFichas } from "./componentes/Fichas";
+import { EntregaRealista, useEstimacionEntrega } from "./componentes/EntregaRealista";
 import { DialogoPedirPrecio, type DatosPedido, type InicialPedido } from "./solicitudes/DialogoPedirPrecio";
 import { CLAVE as CLAVE_SOLICITUDES, queSePide, useSolicitudes, useSolicitudesEnVivo, type Solicitud } from "@/modulos/compras/solicitudes/datos";
 import { EstadoPartida } from "./solicitudes/EstadoPartida";
@@ -191,6 +192,7 @@ function Editor({ id }: { id: string }) {
   const c: Cotizacion | null = cot.data ? { ...cot.data, ...pendEnc } : null;
   const lineas = useMemo(() => (lineasQ.data ?? []).map((l) => (pendLin[l.id] ? { ...l, ...pendLin[l.id] } : l)).sort((a, b) => a.orden - b.orden),
     [lineasQ.data, pendLin]);
+  const estimacion = useEstimacionEntrega(lineas);
   const sucias = useMemo(() => new Set(Object.keys(pendLin)), [pendLin]);
   const sucio = Object.keys(pendEnc).length > 0 || sucias.size > 0 || guardado === "guardando";
   const [seleccion, setSeleccion] = useState<string | null>(null);
@@ -730,6 +732,9 @@ function Editor({ id }: { id: string }) {
                 <span className="text-sm font-medium">Tiempo de entrega</span>
                 <SelectorTexto valor={c.tiempo_entrega} opciones={textosDe("entrega")} deshabilitado={!editable} alCambiar={(v) => editarEnc({ tiempo_entrega: v })} />
               </label>
+              <div className="md:col-span-2 -mt-1">
+                <EntregaRealista e={estimacion.data} prometido={c.tiempo_entrega} editable={editable} alUsar={(v) => editarEnc({ tiempo_entrega: v })} />
+              </div>
               <div className="md:col-span-2 space-y-2">
                 <span className="text-sm font-medium">Notas</span>
                 <Notas notas={c.notas ?? []} catalogo={notasCatalogo} editable={editable} alCambiar={(n) => editarEnc({ notas: n })} />
@@ -786,7 +791,7 @@ function Editor({ id }: { id: string }) {
         alMarcarEnviada={() => cambiarEstado.mutateAsync("enviada")} alAbrirPdf={abrirPdf} enviando={cambiarEstado.isPending} fichas={ligasFichas} />
       <DialogoPedirPrecio abierto={!!pedirPara} alCambiar={(v) => !v && setPedirPara(null)} inicial={pedirPara ?? {}}
         crear={pedirPara?.nuevaPartida ? crearConPartida : undefined} />
-      <DialogoConvertir abierto={dlg === "convertir"} alCambiar={(v) => setDlg(v ? "convertir" : null)} c={c} partidas={lineas}
+      <DialogoConvertir estimacion={estimacion.data} abierto={dlg === "convertir"} alCambiar={(v) => setDlg(v ? "convertir" : null)} c={c} partidas={lineas}
         cargando={convertir.isPending} alConfirmar={(f, ids) => convertir.mutate({ fecha: f, ids })} />
       <DialogoPedirAutorizacion abierto={dlg === "autorizacion"} alCambiar={(v) => setDlg(v ? "autorizacion" : null)} partidasBajo={bajoMinimo}
         pedidaEn={c.autorizacion_pedida_en} cargando={pedirAutorizacion.isPending} alConfirmar={(n) => pedirAutorizacion.mutate(n)} />

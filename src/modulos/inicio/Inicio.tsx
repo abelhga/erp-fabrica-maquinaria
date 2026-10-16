@@ -57,7 +57,7 @@ function areaDeRoles(tieneRol: (r: Rol) => boolean, puede: (m: Modulo, n?: numbe
   if (tieneRol("gerente_produccion")) return "produccion";
   if (tieneRol("almacen")) return "almacen";
   if (tieneRol("compras")) return "compras";
-  if (tieneRol("finanzas")) return "finanzas";
+  if (tieneRol("finanzas") || tieneRol("administracion")) return "finanzas";
   if (tieneRol("importaciones")) return "importaciones";
   return puede("asistente") ? "direccion" : null;
 }

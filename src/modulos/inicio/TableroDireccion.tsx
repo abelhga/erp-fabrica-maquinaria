@@ -140,6 +140,13 @@ export function TableroDireccion() {
     queryFn: () => q<{ mes: string; monto: number }[]>(supabase.rpc("ventas_historicas_mes", { p_desde: `${new Date().getFullYear() - 2}-01-01` })),
     refetchInterval: 300_000,
   });
+  // Órdenes que con la fila del taller ya no salen en su fecha (Análisis → Entregas).
+  const { puede } = useSesion();
+  const promesas = useQuery({
+    queryKey: ["analisis_promesas"], enabled: puede("analisis"), refetchInterval: 300_000,
+    queryFn: () => q<{ dias: number }[]>(supabase.rpc("analisis_promesas")),
+  });
+  const enRiesgo = (promesas.data ?? []).filter((x) => x.dias > 0).length;
   // Se mueve solo: cualquier pedido, cobro, cotización, avance de taller o existencia nueva refresca el tablero.
   for (const tabla of ["pedidos", "cobros", "cotizaciones", "ordenes_produccion", "op_eventos", "existencias", "ajustes_inventario"]) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -214,8 +221,9 @@ export function TableroDireccion() {
         {d.produccion && (
           <Indicador titulo="Taller" valor={`${numero(d.produccion.abiertas)} órdenes`} icono={Factory}
             tono={d.produccion.atrasadas ? "peligro" : "ok"}
-            detalle={<>{d.produccion.atrasadas > 0 ? <b className="text-peligro">{d.produccion.atrasadas} atrasadas</b> : "Ninguna atrasada"} · a tiempo {d.produccion.a_tiempo_90d == null ? "—" : porcentaje(d.produccion.a_tiempo_90d, 0)}</>}
-            alClic={() => ir("/produccion/gerencia")} />
+            detalle={<>{d.produccion.atrasadas > 0 ? <b className="text-peligro">{d.produccion.atrasadas} atrasadas</b> : "Ninguna atrasada"} · a tiempo {d.produccion.a_tiempo_90d == null ? "—" : porcentaje(d.produccion.a_tiempo_90d, 0)}
+              {enRiesgo > 0 && <> · <b className="text-peligro">{enRiesgo} {enRiesgo === 1 ? "promesa" : "promesas"} en riesgo</b></>}</>}
+            alClic={() => ir(enRiesgo > 0 ? "/analisis/entregas" : "/produccion/gerencia")} />
         )}
       </div>
 

@@ -21,7 +21,7 @@ export const COSTEO = {
   canalesEnLinea: "Precio sugerido con IVA para cada canal (Mercado Libre, sitio web…): parte del precio de lista y le suma la comisión del canal, la cuota fija y el envío. «Abajo del sugerido» avisa que una publicación está más barata que eso.",
 
   // --- Solo para quien ve costos ---
-  costoArticulo: "Lo que nos cuesta. En lo que se compra, el último costo capturado (si está en dólares o euros, convertido a pesos con el tipo de cambio de hoy). En lo que se fabrica, el material de su lista más la mano de obra de sus horas.",
+  costoArticulo: "Lo que nos cuesta. En lo que se compra, el último costo capturado (si está en dólares o euros, convertido a pesos con el tipo de cambio del costeo). En lo que se fabrica, el material de su lista más la mano de obra de sus horas.",
   piezasSinCosto: "Componentes dentro de la lista, en cualquier nivel, que no tienen costo capturado. Cuentan como $0: el costo y el precio del equipo salen más bajos de lo real sin avisar.",
   costoMasViejo: "La fecha del costo más antiguo entre las piezas del equipo. Si pasa de un año se marca en amarillo: el costo del equipo ya no es el de hoy.",
   costoViejo: "Un costo capturado hace más de 6 meses. Ya no es confiable para cotizar: conviene confirmarlo con el proveedor.",
@@ -39,7 +39,7 @@ export const COSTEO = {
   descuentoMaximoPolitica: "Lo más que un vendedor puede bajar del precio de lista sin pedir autorización.",
   precioFijo: "Precio capturado a mano: manda sobre la fórmula de su política y no se mueve cuando cambia el costo.",
   simuladorPrecios: "Antes de guardar un cambio de utilidad, recargo o ISR, ves cuántos precios se mueven, cuánto en promedio y los diez que más cambian. Respeta precios fijos y utilidades propias, igual que el cálculo real.",
-  tipoCambioCosteo: "Pesos por dólar y por euro. Convierte a pesos los costos de lo importado: al capturar uno nuevo se recalculan esos costos y sus precios.",
+  tipoCambioCosteo: "Pesos por dólar y por euro con que se costea lo importado. No cambia todos los días: sigue al del día solo cuando éste se aleja 3% o más, o cuando alguien lo captura aquí. Cada vez que cambia se recalculan esos costos y sus precios.",
   historialCosteo: "Una foto del costo y del precio cada vez que cambian. La línea «a utilidad de hoy» dice qué precio habría tenido con la utilidad actual: si se separa del precio real, la diferencia vino de cambiar la utilidad, no el costo.",
   confiabilidadCosto: "Lo que puede hacer que el costo esté mal: piezas sin costo (cuentan como $0) y costos de hace más de 6 meses. Corrígelos y el precio se recalcula solo.",
   indiceCostoFamilia: "Cómo se movió el costo (y el precio de lista) de la familia, con 100 al inicio del periodo: 112 quiere decir 12 % más caro. Cada mes compara solo los equipos que ya existían el mes anterior, así un equipo nuevo en el catálogo no mueve el índice.",

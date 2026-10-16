@@ -8,7 +8,7 @@
     },
     "juan": {
       "nombre": "Juan Manuel Ramírez",
-      "correo": "juan@hegamex.com",
+      "correo": "j.manuel@hegamex.com",
       "panel": "panel_juan"
     },
     "susy": {
@@ -104,8 +104,68 @@
       "'Directorio Proveedores'!A1:Y1500"
     ],
     "cajachica": [
-      "1bMPe8wRcFv66tap2k7qW6MOIDWDYMeng8Mii4ZwAdFs",
+      "12779PFwK9iQBzJkRQYvoAxM4-xICgOsFKvoB0PDZvuc",
       "CajaChica!A1:H6000"
+    ],
+    "seriales_banda": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'Transportador de Banda'!A1:AJ3000"
+    ],
+    "seriales_artesa": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'TRANSPORTADOR ARTESA'!A1:AJ3000"
+    ],
+    "seriales_bazuca_helicoidal": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'Bazuca Helicoidal'!A1:AJ3000"
+    ],
+    "seriales_bazuca_banda": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'Bazuca de banda'!A1:AJ3000"
+    ],
+    "seriales_helicoidal": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'T. Helicoidales Horizontales'!A1:AJ3000"
+    ],
+    "seriales_granel": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'TRANSPORTADOR PARA GRANEL'!A1:AJ3000"
+    ],
+    "seriales_elevador": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'ELEVADOR DE CANGILONES'!A1:AJ3000"
+    ],
+    "seriales_tolva": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'Tolvas'!A1:AJ3000"
+    ],
+    "seriales_silo": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'SILOS'!A1:AJ3000"
+    ],
+    "seriales_dosificadora": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'Dosificadoras'!A1:AJ3000"
+    ],
+    "seriales_cribadora": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'Cribadoras'!A1:AJ3000"
+    ],
+    "seriales_mezcladora": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'Mezcladoras-Revolvedoras'!A1:AJ3000"
+    ],
+    "seriales_quebrador": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'QUEBRADORES'!A1:AJ3000"
+    ],
+    "seriales_seleccionadora": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'seleccionadoras'!A1:AJ3000"
+    ],
+    "seriales_molino": [
+      "1rq7ER5G5bycTAXLNsddNb3YfA1O92WkLASg1ESjTiqc",
+      "'Molinos'!A1:AJ3000"
     ]
   },
   "tipos_acreedor": {
@@ -117,13 +177,13 @@
     "comentario": "Cómo aparece el vendedor en el directorio de clientes → correo del usuario en el ERP. null = la cuenta queda sin dueño (libre).",
     "isaac": "isaac@hegamex.com",
     "issac": "isaac@hegamex.com",
-    "j. manuel": "juan@hegamex.com",
-    "juan manuel": "juan@hegamex.com",
+    "j. manuel": "j.manuel@hegamex.com",
+    "juan manuel": "j.manuel@hegamex.com",
     "susy": "susana@hegamex.com",
     "susana": "susana@hegamex.com",
-    "sr. abel": "direccion@hegamex.com",
-    "sr abel": "direccion@hegamex.com",
-    "abel hernandez": "direccion@hegamex.com",
+    "sr. abel": "abel@hegamex.com",
+    "sr abel": "abel@hegamex.com",
+    "abel hernandez": "abel@hegamex.com",
     "victor": null,
     "abel jr.": null,
     "abel jr": null,

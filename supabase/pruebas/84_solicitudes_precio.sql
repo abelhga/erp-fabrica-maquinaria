@@ -288,7 +288,9 @@ begin
       'ventas ve el precio de lista, la entrega y la nota';
     assert r.costo is null and r.moneda is null and r.proveedor_id is null and r.proveedor is null, 'ventas vio el costo o el proveedor';
     assert not exists (select 1 from solicitudes_precio_costos), 'ventas leyó la tabla de costos de las solicitudes';
-    assert (select to_jsonb(v)::text from v_solicitudes_precio v where id = v_s3) not like '%770%', 'el costo se coló en la vista';
+    -- Por valor, no por texto: un uuid al azar puede traer "770" y tiraba la prueba de vez en cuando.
+    assert not exists (select 1 from v_solicitudes_precio v, jsonb_each_text(to_jsonb(v)) c
+                       where v.id = v_s3 and c.value ~ '^770(\.0+)?$'), 'el costo se coló en la vista';
     assert resumen_solicitudes_precio()::text not like '%735%' and resumen_solicitudes_precio()::text not like '%770%', 'el resumen trae costos';
     assert not exists (select 1 from hallazgos_solicitudes('ventas') h where h.titulo || h.detalle like '%735%' or h.titulo || h.detalle like '%770%'), 'un hallazgo trae costos';
     begin

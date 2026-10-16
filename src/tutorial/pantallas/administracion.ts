@@ -5,7 +5,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
     "Aquí está la plantilla de la empresa: cada persona con su puesto, departamento, área del taller, antigüedad y vacaciones. La usa Recursos Humanos para dar altas, bajas y llevar la ficha de cada quien.",
     "Dale clic a un renglón para abrir su ficha a la derecha sin perder la lista. Ahí cambias sus datos (Enter guarda), ves su historial de vacaciones e incidencias y, al final, la das de baja o registras un reingreso. Con «Nuevo empleado» das de alta a alguien.",
     "Arriba filtras activos, bajas o todos, y por departamento. Los indicadores de ausentes y solicitudes te llevan directo a Vacaciones e incidencias. El botón CSV baja la lista para Excel.",
-    "La antigüedad y las vacaciones salen solas de la fecha de ingreso. Una baja no borra a nadie: su historial se conserva. Si la persona tenía cuenta en el ERP, desactívala al darla de baja para que ya no pueda entrar.",
+    "La antigüedad y las vacaciones salen solas de la fecha de ingreso; quien venía del control de vacaciones en Excel arranca con el saldo que tenía ahí, y en su ficha puedes corregirlo. Una baja no borra a nadie: su historial se conserva. Si la persona tenía cuenta en el ERP, desactívala al darla de baja para que ya no pueda entrar.",
   ],
   "/rrhh/incidencias": [
     "Aquí se llevan las vacaciones, permisos, faltas, incapacidades, retardos y horas extra. Recursos Humanos aprueba las solicitudes y ve quién falta cada día; la gerencia de producción también puede registrar las de su gente.",
@@ -41,6 +41,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
     "Aquí ves lo que nos deben los clientes por sus pedidos, desde cuándo, y lo que se ha cobrado mes a mes. La usa finanzas para saber a quién llamar primero y para registrar cobros y facturas.",
     "Los indicadores de arriba parten el saldo por antigüedad; dale clic a uno para filtrar la tabla. «Los más atrasados» es por dónde empezar a llamar. Dale clic a un pedido para ver sus cobros y facturas y registrar uno nuevo; un cobro negativo es una devolución al cliente.",
     "Las pestañas agrupan por cliente o por vendedor (clic en un renglón para ver sus pedidos) y «Saldos de arranque» trae lo que se debía en la hoja antes del ERP, aparte para no contarlo dos veces; dale clic a un cliente para ver sus movimientos y registrar lo que pague de ese saldo. Los filtros separan lo que tiene saldo y lo que falta facturar; el CSV baja lo que ves.",
+    "Las facturas y los cobros se pueden registrar subiendo su XML: en el pedido, «Registrar factura» lee la factura que timbramos (folio, UUID, fecha y total) y revisa que sea de ese cliente; «Subir complementos de pago», arriba, registra cada pago en el pedido de su factura, aunque subas muchos a la vez, y no duplica lo que ya estaba.",
     "La antigüedad corre desde la primera factura, o desde el pedido si aún no se factura. Los saldos en dólares se pasan a pesos con el tipo de cambio de hoy, que se ve arriba (finanzas y compras lo pueden capturar ahí).",
   ],
   "/finanzas/pagos": [

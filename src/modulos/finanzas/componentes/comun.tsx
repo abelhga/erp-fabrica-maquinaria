@@ -68,13 +68,16 @@ export function TipoCambioDia() {
   const guardar = useAccion(() => q(supabase.from("tipos_cambio").upsert({ fecha: hoyISO(), moneda: "USD", valor: Number(valor), fuente: "manual" })), {
     exito: "Tipo de cambio del día guardado", invalidar: [["tipos_cambio"], ["v_por_pagar"], ["v_cobranza"]], alTerminar: () => setAbierto(false),
   });
-  const viejo = v && v.fecha < hoyISO();
+  // El DOF no publica en fin de semana: hasta 3 días es normal; más es que algo falló.
+  const dias = v ? Math.round((new Date(hoyISO()).getTime() - new Date(v.fecha).getTime()) / 86_400_000) : 0;
+  const viejo = !!v && dias > 3;
+  const origen = v?.fuente === "DOF" ? "DOF" : v?.fuente === "manual" ? "a mano" : null;
   const contenido = (
     <span className="inline-flex items-center gap-1.5 text-sm">
       <DollarSign className="h-4 w-4 text-tenue" />
       <span className="text-tenue">Dólar:</span>
       <b className="cifra">{v ? dinero(Number(v.valor)) : "—"}</b>
-      {v && <span className={viejo ? "text-aviso text-xs" : "text-tenue text-xs"}>{viejo ? `del ${fecha(v.fecha)}` : "hoy"}</span>}
+      {v && <span className={viejo ? "text-aviso text-xs" : "text-tenue text-xs"}>{dias === 0 ? "hoy" : `del ${fecha(v.fecha)}`}{origen ? ` · ${origen}` : ""}</span>}
       {editable && <Pencil className="h-3.5 w-3.5 text-tenue" />}
     </span>
   );
@@ -87,7 +90,7 @@ export function TipoCambioDia() {
       <P.Portal>
         <P.Content align="end" sideOffset={6} className="z-50 tarjeta shadow-xl p-4 w-72">
           <form onSubmit={(e) => { e.preventDefault(); if (Number(valor) > 0) guardar.mutate(undefined); }} className="space-y-3">
-            <Campo etiqueta={`Dólar del ${fecha(hoyISO())}`} ayuda="El del DOF o el de tu banco. Mueve los saldos en dólares y los costos importados.">
+            <Campo etiqueta={`Dólar del ${fecha(hoyISO())}`} ayuda="Se toma solo del Diario Oficial cada día hábil. Captúralo aquí solo si necesitas otro (el de tu banco): pesa sobre el del DOF de hoy y también mueve los costos importados.">
               <Entrada autoFocus type="number" step="0.0001" min="0" value={valor} onChange={(e) => setValor(e.target.value)} className="cifra" />
             </Campo>
             <Boton type="submit" className="w-full" cargando={guardar.isPending}>Guardar</Boton>

@@ -17,7 +17,7 @@ export interface Empleado {
 export interface Vacaciones {
   empleado_id: string; nombre: string; fecha_ingreso: string; anios: number; dias_periodo: number; inicio_periodo: string;
   tomados: number; saldo: number; proximo_aniversario: string; dias_proximo_periodo: number; solicitados: number;
-  disfrutar_antes_de: string;
+  disfrutar_antes_de: string; saldo_arranque: number | null; fecha_arranque: string | null;
 }
 
 export type TipoIncidencia = "vacaciones" | "permiso_con_goce" | "permiso_sin_goce" | "falta" | "incapacidad" | "retardo" | "horas_extra";
