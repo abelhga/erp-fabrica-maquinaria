@@ -779,7 +779,8 @@ export async function redactar(opts: {
 // Hoy esos datos se copian a mano de PDFs (a veces escaneados o en chino) a la
 // hoja, a PRORRATEO.xlsx y a los correos con el agente.
 // -----------------------------------------------------------------------------
-export type TipoDocumento = "proforma" | "factura" | "lista_empaque" | "bl" | "pedimento" | "cuenta_gastos" | "cotizacion_proveedor" | "constancia_fiscal";
+export type TipoDocumento = "proforma" | "factura" | "lista_empaque" | "bl" | "pedimento" | "cuenta_gastos" | "cotizacion_proveedor" | "constancia_fiscal"
+  | "factura_proveedor";
 type Esquema = Record<string, unknown>;
 
 // Un dato que no aparece en el documento va en null: nunca se inventa.
@@ -937,6 +938,29 @@ export const DOCUMENTOS: Record<TipoDocumento, { nombre: string; esquema: Esquem
       advertencias,
     }),
   },
+  // La factura (CFDI) de un proveedor cuando solo hay PDF o foto: el XML se lee en el navegador,
+  // exacto y sin costo; esto es el respaldo y la persona lo revisa antes de guardar.
+  factura_proveedor: {
+    nombre: "factura de proveedor (CFDI mexicano o factura de un proveedor extranjero)",
+    guia: "Es una factura que un proveedor le emitió a Hegamex (Máquinas y Herramientas Gamex). El UUID (folio fiscal) son 36 " +
+      "caracteres con guiones (8-4-4-4-12): cópialo exacto o pon null si no se lee completo; nunca lo completes. tipo_comprobante: " +
+      "I si es ingreso (factura normal), E si es egreso (nota de crédito); P (pago), N (nómina) o T (traslado) solo si así lo dice. " +
+      "metodo_pago: PUE o PPD si viene. Total y subtotal tal como vienen en el documento.",
+    esquema: objeto({
+      uuid: nulo("string", "Folio fiscal (UUID) completo"),
+      rfc_emisor: nulo("string", "RFC de quien emite (el proveedor); null si es extranjero sin RFC"),
+      nombre_emisor: nulo("string", "Nombre o razón social de quien emite"),
+      rfc_receptor: nulo("string", "RFC del receptor (debería ser el de Hegamex)"),
+      serie: nulo("string", "Serie"), folio: nulo("string", "Folio o número de factura"),
+      fecha: fechaONulo("Fecha de emisión"),
+      tipo_comprobante: { anyOf: [{ type: "string", enum: ["I", "E", "P", "N", "T"] }, { type: "null" }], description: "Tipo de comprobante" },
+      metodo_pago: { anyOf: [{ type: "string", enum: ["PUE", "PPD"] }, { type: "null" }], description: "Método de pago" },
+      moneda: nulo("string", "Moneda (MXN, USD, EUR…)"), tipo_cambio: nulo("number", "Tipo de cambio, si viene"),
+      subtotal: nulo("number", "Subtotal"), total: nulo("number", "Total a pagar"),
+      conceptos: lista({ type: "string" }, "Descripción de cada concepto, tal como viene"),
+      advertencias,
+    }),
+  },
 };
 
 /**
@@ -950,6 +974,7 @@ const PERMISO_DOCUMENTO: Record<TipoDocumento, { modulos: string[]; mensaje: str
   cotizacion_proveedor: { modulos: ["compras"], mensaje: "Leer cotizaciones de proveedores es de compras." },
   // Finanzas también: lleva lo contable con los contadores y pone al día los datos fiscales del proveedor.
   constancia_fiscal: { modulos: ["ventas", "compras", "finanzas"], mensaje: "Leer constancias fiscales es de quien da de alta clientes o proveedores, o lleva sus datos fiscales." },
+  factura_proveedor: { modulos: ["finanzas"], mensaje: "Leer facturas de proveedores para registrarlas es de finanzas." },
 };
 
 /** Revisa que lo que devolvió Claude cumpla el esquema antes de mostrarlo. Devuelve los errores. */
@@ -1074,6 +1099,11 @@ export function ejemploDocumento(tipo: TipoDocumento): Record<string, unknown> {
         nombre_comercial: null, codigo_postal: "47750", domicilio: "AV. INDUSTRIAL 455 INT. 2, COL. EL SALTO", municipio: "ATOTONILCO EL ALTO",
         estado: "JALISCO", estatus: "ACTIVO", fecha_emision: "2026-09-30",
         regimenes: [{ clave: "601", descripcion: "Régimen General de Ley Personas Morales" }], advertencias: aviso };
+    case "factura_proveedor":
+      // Sin RFC de receptor: el ejemplo no debe chocar con el RFC real de la empresa.
+      return { uuid: null, rfc_emisor: "RBB980512KZ3", nombre_emisor: "RODAMIENTOS Y BANDAS DEL BAJIO", rfc_receptor: null,
+        serie: "A", folio: "4471", fecha: "2026-10-08", tipo_comprobante: "I", metodo_pago: "PPD", moneda: "MXN", tipo_cambio: null,
+        subtotal: 6177.76, total: 7166.2, conceptos: ["Rodamiento rígido de bolas 6205 2RS", "Chumacera de piso UCP 205"], advertencias: aviso };
   }
 }
 

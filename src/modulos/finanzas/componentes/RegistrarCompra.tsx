@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, FileCode2, Upload } from "lucide-react";
+import { AlertTriangle, FileCode2, Loader2, Sparkles, Upload } from "lucide-react";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { Campo, Entrada } from "@/components/ui/campo";
@@ -9,15 +9,24 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
-import { folioCfdi, leerCfdi, type Cfdi } from "@/lib/cfdi";
+import { cfdiDeLectura, folioCfdi, leerCfdi, type Cfdi } from "@/lib/cfdi";
+import { leerDocumento } from "@/lib/asistente";
+import { mensajeError } from "@/lib/consultas";
 import { useEmpresa } from "@/modulos/ventas/comun";
 import { SelectorProveedor } from "@/modulos/compras/componentes/comun";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { INVALIDAR_PROVEEDORES, SelectorCuenta, sumarDias } from "./cuentas";
 
 interface Proveedor { id: string; nombre: string; categoria: string | null; dias_credito: number; rfc: string | null }
-/** Un XML de la fila: leído, o con el porqué no se puede registrar. */
-interface Archivo { nombre: string; cfdi: Cfdi | null; error: string | null }
+/**
+ * Una factura de la fila: leída, o con el porqué no se puede registrar. El XML se lee aquí,
+ * exacto; un PDF o una foto los lee Claude (deClaude) y quien registra lo revisa.
+ */
+interface Archivo {
+  nombre: string; cfdi: Cfdi | null; error: string | null;
+  deClaude?: boolean; advertencias?: string[]; simulado?: boolean; url?: string;
+}
+const esXml = (a: File) => /\.xml$/i.test(a.name) || /xml/.test(a.type);
 
 const VACIO = { fecha: hoyISO(), monto: "", factura: "", descripcion: "", categoria: "", vence: "", pagada: false, cuenta: "" };
 
@@ -37,6 +46,8 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
   const [prov, setProv] = useState<Proveedor | null>(null);
   const [f, setF] = useState(VACIO);
   const [tocoVence, setTocoVence] = useState(false);
+  const [leyendo, setLeyendo] = useState(0);
+  const [verArchivo, setVerArchivo] = useState(false);
   const archivo = useRef<HTMLInputElement>(null);
   const actual = cola[idx] ?? null;
   const cfdi = actual?.cfdi ?? null;
@@ -82,23 +93,48 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
     if (cfdi && porRfc.data?.length === 1) { setProv(porRfc.data[0]); setF((x) => ({ ...x, categoria: x.categoria || porRfc.data![0].categoria || "" })); }
   }, [cfdi, porRfc.data]);
 
+  // Lo que impide registrarla, igual si vino del XML que de un PDF.
+  const motivoDe = (c: Cfdi) =>
+    rfcPropio && c.emisor.rfc === rfcPropio ? "La emitimos nosotros: es una venta, va en Cobranza."
+    : rfcPropio && c.receptor.rfc && c.receptor.rfc !== rfcPropio ? `Es para otro RFC (${c.receptor.rfc}), no para la empresa.`
+    : c.tipo === "P" ? "Es un complemento de pago, no una compra: registra el pago en la cuenta del proveedor."
+    : c.tipo === "N" ? "Es un recibo de nómina, no una compra."
+    : c.tipo === "T" ? "Es un traslado (no cobra nada)."
+    : !c.total ? "No trae total." : null;
+
   async function leerArchivos(lista: FileList | null) {
     if (!lista?.length) return;
-    const leidos: Archivo[] = await Promise.all([...lista].map(async (a) => {
+    const todos = [...lista];
+    const xmls: Archivo[] = await Promise.all(todos.filter(esXml).map(async (a) => {
       try {
         const c = leerCfdi(await a.text());
-        const motivo =
-          rfcPropio && c.emisor.rfc === rfcPropio ? "La emitimos nosotros: es una venta, va en Cobranza."
-          : rfcPropio && c.receptor.rfc && c.receptor.rfc !== rfcPropio ? `Es para otro RFC (${c.receptor.rfc}), no para la empresa.`
-          : c.tipo === "P" ? "Es un complemento de pago, no una compra: registra el pago en la cuenta del proveedor."
-          : c.tipo === "N" ? "Es un recibo de nómina, no una compra."
-          : c.tipo === "T" ? "Es un traslado (no cobra nada)."
-          : !c.total ? "No trae total." : null;
-        return { nombre: a.name, cfdi: c, error: motivo };
+        return { nombre: a.name, cfdi: c, error: motivoDe(c) };
       } catch (e) {
         return { nombre: a.name, cfdi: null, error: e instanceof Error ? e.message : "No se pudo leer" };
       }
     }));
+    // Los PDF y las fotos, uno por uno con Claude (cuesta y tarda: no se mandan todos a la vez).
+    const otros = todos.filter((a) => !esXml(a));
+    const leidosPdf: Archivo[] = [];
+    if (archivo.current) archivo.current.value = "";
+    setLeyendo(otros.length);
+    for (const a of otros) {
+      const url = URL.createObjectURL(a);
+      try {
+        if (!/^(application\/pdf|image\/(jpeg|png))$/.test(a.type)) throw new Error("Sube el XML, un PDF o una foto (JPG o PNG).");
+        const r = await leerDocumento("factura_proveedor", a);
+        const c = cfdiDeLectura(r.campos);
+        const adv = Array.isArray(r.campos.advertencias) ? (r.campos.advertencias as string[]) : [];
+        const enXml = c.uuid && xmls.some((x) => x.cfdi?.uuid === c.uuid);
+        leidosPdf.push({ nombre: a.name, cfdi: c, deClaude: true, simulado: r.simulado, url,
+          advertencias: c.uuid ? adv : [...adv, "No se leyó el folio fiscal (UUID): no se puede revisar si esta factura ya estaba registrada."],
+          error: enXml ? "Ya viene en el XML que subiste: se registra con ese." : motivoDe(c) });
+      } catch (e) {
+        leidosPdf.push({ nombre: a.name, cfdi: null, url, error: mensajeError(e) });
+      }
+      setLeyendo((n) => n - 1);
+    }
+    const leidos = [...xmls, ...leidosPdf];
     // Las que ya se registraron se avisan de una vez (subir la carpeta del mes dos veces no duplica).
     const uuids = leidos.map((l) => l.cfdi?.uuid).filter((u): u is string => !!u);
     if (uuids.length) {
@@ -108,15 +144,14 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
         if (r && !l.error) l.error = `Ya está registrada (factura del ${fecha(r.fecha)}).`;
       }
     }
-    setCola(leidos); setIdx(0);
-    if (archivo.current) archivo.current.value = "";
+    setCola(leidos); setIdx(0); setVerArchivo(false);
   }
 
   const notaCredito = cfdi?.tipo === "E";
   const monto = Number(f.monto) || 0;
   const venceCalculado = prov ? sumarDias(f.fecha, prov.dias_credito ?? 0) : null;
   const vence = tocoVence ? f.vence : venceCalculado ?? "";
-  const siguiente = () => { if (idx + 1 < cola.length) setIdx(idx + 1); else alCerrar(); };
+  const siguiente = () => { setVerArchivo(false); if (idx + 1 < cola.length) setIdx(idx + 1); else alCerrar(); };
 
   const alta = useAccion(() => q<string>(supabase.rpc("alta_proveedor_finanzas", { p_nombre: cfdi!.emisor.nombre ?? rfc, p_rfc: rfc, p_categoria: f.categoria || null })), {
     exito: "Proveedor dado de alta", invalidar: [["proveedores"]], alTerminar: (id) => cargarProveedor(id),
@@ -128,6 +163,8 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
       p_descripcion: (notaCredito ? `Nota de crédito. ${f.descripcion}` : f.descripcion) || null,
       p_vence: tocoVence && f.vence ? f.vence : null, p_categoria: f.categoria || null,
       p_cfdi_uuid: cfdi?.uuid ?? null, p_metodo_pago: cfdi?.metodoPago ?? null,
+      // De dónde salió: el contador pide el XML de las que vinieron de un PDF.
+      p_leido_de: actual?.deClaude ? "pdf" : cfdi ? "xml" : "captura",
     }));
     // De contado: el pago va en el mismo paso. Se marca como anticipo para que, si el
     // proveedor tenía saldo a favor, no se rechace un pago que es exacto a la factura.
@@ -170,17 +207,32 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
             {actual ? <>
               <span className="font-medium break-all">{actual.nombre}</span>
               {cfdi && <span className="block text-tenue">{cfdi.emisor.nombre} · {cfdi.emisor.rfc} · {dinero(cfdi.total)}{cfdi.moneda && cfdi.moneda !== "MXN" ? ` ${cfdi.moneda}` : ""} · {fecha(cfdi.fecha)}</span>}
+            </> : leyendo > 0 ? <>
+              <span className="font-medium inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Claude está leyendo {leyendo === 1 ? "la factura" : `${leyendo} facturas`}…</span>
+              <span className="block text-tenue">Unos segundos por archivo.</span>
             </> : <>
               <span className="font-medium">Sube el XML de la factura</span>
-              <span className="block text-tenue">Se llena solo. Puedes elegir varios a la vez. Sin XML, captura a mano abajo.</span>
+              <span className="block text-tenue">Se llena solo. Puedes elegir varios a la vez. Sin XML, sube el PDF o una foto y revisa lo que lea Claude; o captura a mano abajo.</span>
             </>}
           </span>
           {cfdi?.metodoPago && <span data-explain={GLOSARIO.puePpd} data-explain-title="PUE o PPD"><Insignia tono={cfdi.metodoPago === "PUE" ? "ok" : "info"}>{cfdi.metodoPago === "PUE" ? "De contado (PUE)" : "A crédito (PPD)"}</Insignia></span>}
-          <input ref={archivo} type="file" accept=".xml,text/xml,application/xml" multiple className="sr-only" onChange={(e) => leerArchivos(e.target.files)} />
+          <input ref={archivo} type="file" accept=".xml,text/xml,application/xml,application/pdf,image/jpeg,image/png" multiple className="sr-only"
+            disabled={leyendo > 0} onChange={(e) => leerArchivos(e.target.files)} />
         </label>
         {actual?.error && (
           <p className="flex items-start gap-2 rounded-lg bg-aviso-suave px-3 py-2 text-sm"><AlertTriangle className="h-4 w-4 mt-0.5 text-aviso shrink-0" />{actual.error}</p>
         )}
+        {actual?.deClaude && !actual.error && (
+          <div className="rounded-lg bg-info-suave px-3 py-2 text-sm space-y-1" data-explain={GLOSARIO.facturaLeidaPdf} data-explain-title="Leída de un PDF">
+            <p className="flex items-start gap-2"><Sparkles className="h-4 w-4 mt-0.5 text-info shrink-0" />
+              <span><b>Leída por Claude de {actual.url && /\.pdf$/i.test(actual.nombre) ? "un PDF" : "un archivo"}</b>{actual.simulado ? " (modo demostración: datos de ejemplo)" : ""}: revisa total, fecha, folio y proveedor antes de registrar.
+                {actual.url && <> <button type="button" className="text-marca-texto hover:underline" onClick={() => setVerArchivo((v) => !v)}>{verArchivo ? "Ocultar archivo" : "Ver archivo"}</button></>}</span></p>
+            {(actual.advertencias ?? []).map((a) => <p key={a} className="pl-6 text-tenue">• {a}</p>)}
+          </div>
+        )}
+        {verArchivo && actual?.url && (/\.pdf$/i.test(actual.nombre)
+          ? <object data={actual.url} type="application/pdf" className="w-full h-80 rounded-lg border border-borde" aria-label="Factura" />
+          : <img src={actual.url} alt="Factura" className="w-full max-h-80 object-contain rounded-lg border border-borde" />)}
 
         <form id="registrar-compra" onSubmit={enviar} className="grid gap-4 sm:grid-cols-2">
           {/* Un div y no Campo (que es un <label>): con varios botones adentro, un clic en el

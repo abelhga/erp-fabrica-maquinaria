@@ -97,3 +97,34 @@ export function metodoDeFormaPago(forma: string | null): string {
 
 /** "A 3354" o solo el folio; el UUID corto si la factura no trae folio. */
 export const folioCfdi = (c: Cfdi) => [c.serie, c.folio].filter(Boolean).join(" ") || (c.uuid ? c.uuid.slice(0, 8) : null);
+
+const UUID = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/;
+/** El UUID solo vale completo: uno mal leído de un PDF dejaría pasar la factura dos veces. */
+export const uuidValido = (u: string | null | undefined) => !!u && UUID.test(u.trim().toUpperCase());
+
+/**
+ * Lo que Claude leyó de un PDF o una foto de factura, en la misma forma que el XML, para que
+ * el resto (proveedor por RFC, duplicados, contado o crédito, nota de crédito) sea igual.
+ * No es exacto como el XML: quien registra lo revisa antes de guardar.
+ */
+export function cfdiDeLectura(c: Record<string, unknown>): Cfdi {
+  const t = (k: string) => (typeof c[k] === "string" && (c[k] as string).trim() ? (c[k] as string).trim() : null);
+  const n = (k: string) => (typeof c[k] === "number" && Number.isFinite(c[k]) ? (c[k] as number) : null);
+  const rfc = (k: string) => t(k)?.toUpperCase().replace(/[\s-]/g, "") ?? null;
+  const tipo = t("tipo_comprobante");
+  const metodo = t("metodo_pago");
+  const uuid = t("uuid")?.toUpperCase() ?? null;
+  return {
+    version: null,
+    uuid: uuidValido(uuid) ? uuid : null,
+    serie: t("serie"), folio: t("folio"), fecha: t("fecha"),
+    tipo: tipo === "I" || tipo === "E" || tipo === "P" || tipo === "T" || tipo === "N" ? tipo : null,
+    subtotal: n("subtotal"), total: n("total"),
+    moneda: t("moneda")?.toUpperCase() ?? null, tipoCambio: n("tipo_cambio"),
+    metodoPago: metodo === "PUE" || metodo === "PPD" ? metodo : null, formaPago: null,
+    emisor: { rfc: rfc("rfc_emisor"), nombre: t("nombre_emisor") },
+    receptor: { rfc: rfc("rfc_receptor"), nombre: null },
+    conceptos: Array.isArray(c.conceptos) ? (c.conceptos as unknown[]).filter((x): x is string => typeof x === "string" && !!x.trim()) : [],
+    pagos: [],
+  };
+}

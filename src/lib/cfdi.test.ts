@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { folioCfdi, leerCfdi, metodoDeFormaPago } from "./cfdi";
+import { cfdiDeLectura, folioCfdi, leerCfdi, metodoDeFormaPago, uuidValido } from "./cfdi";
 
 const XML = `<?xml version="1.0" encoding="UTF-8"?>
 <cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Serie="A" Folio="3354" Fecha="2026-10-08T15:37:11"
@@ -47,5 +47,24 @@ describe("CFDI", () => {
       ["AAAAAAAA-1111-2222-3333-444444444444", 10000, 2], ["BBBBBBBB-1111-2222-3333-444444444444", 5000, 1]]);
     expect(metodoDeFormaPago("03")).toBe("transferencia");
     expect(leerCfdi(XML).pagos).toEqual([]);
+  });
+});
+
+describe("cfdiDeLectura (lo que Claude leyó de un PDF)", () => {
+  it("lo pone en la misma forma que el XML", () => {
+    const c = cfdiDeLectura({ uuid: "aaaabbbb-1111-2222-3333-444455556666", rfc_emisor: "rbb-980512-kz3", nombre_emisor: "RODAMIENTOS", rfc_receptor: null,
+      serie: "A", folio: "4471", fecha: "2026-10-08", tipo_comprobante: "E", metodo_pago: "PUE", moneda: "usd", tipo_cambio: 18.5,
+      subtotal: 100, total: 116, conceptos: ["Rodamiento", ""], advertencias: [] });
+    expect(c.uuid).toBe("AAAABBBB-1111-2222-3333-444455556666");
+    expect(c.emisor.rfc).toBe("RBB980512KZ3");
+    expect(c.tipo).toBe("E");
+    expect(c.metodoPago).toBe("PUE");
+    expect(c.moneda).toBe("USD");
+    expect(c.total).toBe(116);
+    expect(c.conceptos).toEqual(["Rodamiento"]);
+  });
+  it("un UUID incompleto no se usa (dejaría pasar duplicados)", () => {
+    expect(cfdiDeLectura({ uuid: "AAAABBBB-1111-2222-3333" }).uuid).toBeNull();
+    expect(uuidValido("AAAABBBB-1111-2222-3333-444455556666")).toBe(true);
   });
 });
