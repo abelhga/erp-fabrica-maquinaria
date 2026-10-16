@@ -19,7 +19,8 @@ pag.on("console", (m) => { if (m.type() === "error") errores.push(m.text()); });
 pag.on("pageerror", (e) => errores.push(e.message));
 
 await pag.goto(base);
-if (process.env.OSCURO) await pag.evaluate(() => localStorage.setItem("tema", "oscuro"));
+// El tema por omisión es oscuro: sin OSCURO, la foto se pide en claro a propósito.
+await pag.evaluate((o) => localStorage.setItem("tema_elegido", o ? "oscuro" : "claro"), !!process.env.OSCURO);
 // TUTORIAL=1 abre todo con el modo tutorial encendido: el recuadro de cada pantalla se ve en la foto.
 if (process.env.TUTORIAL) await pag.evaluate(() => localStorage.setItem("tutorial", "si"));
 await pag.getByText("Entrar con correo y contraseña").click();

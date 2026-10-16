@@ -1,4 +1,5 @@
 export const SISTEMA = {
+  temaPorDefecto: "El tema con el que abre el ERP para todos. Cada persona puede cambiarlo con el botón de la luna o el sol (arriba a la derecha); lo que escoja se queda en su navegador y manda sobre este.",
   rolUsuario: "El puesto de la persona dentro del ERP (Ventas, Almacén, RR. HH.…). Cada rol trae sus permisos por módulo; alguien puede tener varios y vale el nivel más alto. «Espera rol» = entró, pero todavía no puede ver nada.",
   nivelPermiso: "Lo que un rol puede hacer en un módulo: 1 ver, 2 capturar (ver y registrar), 3 administrar (aprobar, borrar, configurar). Un guion = sin acceso: ni lo ve en el menú ni la base le entrega esos datos.",
   permisosRolModulo: "La tabla de rol × módulo. Cada cruce dice el nivel que tiene ese rol en ese módulo. Solo dirección la cambia, y dirección siempre tiene nivel 3 en todo.",
