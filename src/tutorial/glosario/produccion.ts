@@ -20,6 +20,8 @@ export const PRODUCCION = {
   validacionMaterial: "Los cinco pasos antes del taller: ingeniería revisa la lista, se aparta el material, se piden los faltantes, almacén revisa y la gerencia libera. Cada uno guarda quién y cuándo.",
   etapaPausada: "Una etapa que empezó y el taller detuvo. La orden se marca en ámbar hasta que la reanudan.",
   cargaTaller: "Semanas de trabajo pendientes en cada etapa: horas que faltan ÷ horas que esa etapa puede trabajar por semana. Oscuro es lo liberado; claro, lo planeado que viene.",
-  numeroSerie: "El número que identifica a un equipo fabricado. Se usa para la garantía y es el que se revisa al empacarlo para enviarlo.",
+  numeroSerie: "El número que identifica a un equipo fabricado. Lo pone el ERP solo al crear la orden de producción: el código del equipo (medidas y motor) más el siguiente número de su familia. Se usa para la garantía y es el que se revisa al empacarlo para enviarlo.",
+  codigoSerie: "La parte fija del número de serie de un equipo: su tipo, medidas y motor, como en la hoja (TB20090275E = banda, 20 pulgadas, 9 m, 2 HP, caja 75). Se captura una vez por equipo; sin él, su orden de producción se crea sin número de serie.",
+  equipoHistorico: "Equipo que viene del libro de seriales de la hoja (desde 2015): se puede buscar y dar servicio, pero no tiene orden de producción en el ERP. ERP = lo numeró el ERP.",
   solicitudCambio: "Cuando algo de la lista de materiales está mal, producción, almacén o ventas lo reportan desde la orden; ingeniería lo corrige y lo marca como aplicado o descartado.",
 } satisfies Record<string, string>;

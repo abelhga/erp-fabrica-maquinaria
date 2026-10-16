@@ -468,3 +468,58 @@ export function adeudos2021(v: Filas): { proveedor: string; llave_proveedor: str
     return proveedor && monto ? [{ proveedor, llave_proveedor: llave(proveedor), monto }] : [];
   });
 }
+
+// ---------------------------------------------------------------------------
+// Números de serie ("SERIALES Y CLIENTES", una pestaña por familia)
+// ---------------------------------------------------------------------------
+/** Pestaña del libro → familia de serie del ERP (familias_serie). */
+export const PESTANAS_SERIE: Record<string, string> = {
+  banda: "Transportador de Banda", artesa: "TRANSPORTADOR ARTESA", bazuca_helicoidal: "Bazuca Helicoidal",
+  bazuca_banda: "Bazuca de banda", helicoidal: "T. Helicoidales Horizontales", granel: "TRANSPORTADOR PARA GRANEL",
+  elevador: "ELEVADOR DE CANGILONES", tolva: "Tolvas", silo: "SILOS", dosificadora: "Dosificadoras", cribadora: "Cribadoras",
+  mezcladora: "Mezcladoras-Revolvedoras", quebrador: "QUEBRADORES", seleccionadora: "seleccionadoras", molino: "Molinos",
+};
+export type EstadoSerie = "espera" | "proceso" | "terminado" | "entregado" | "cancelado";
+export interface EquipoSerie {
+  numero_serie: string; familia: string; consecutivo: number | null; tipo_equipo: string | null; subcategoria: string | null;
+  pedido_hoja: string | null; fecha_pedido: string | null; cliente_nombre: string | null; llave_cliente: string | null;
+  contacto: string | null; factura: string | null; entrega_acordada: string | null; estado: EstadoSerie | null;
+  vendedor: string | null; descripcion: string | null; ubicacion: string | null; fila: number;
+}
+
+/**
+ * Una pestaña del libro de seriales. Cada pestaña acomoda las columnas a su manera
+ * ("Nº" o "Nº de equipo", "Fecha" o "Fecha de pedido", "Descripción" o "Notas"), así
+ * que se ubican por nombre. A la derecha hay leyendas del código (letra por letra) que
+ * no son datos. Renglón sin serial (cancelado antes de asignarlo) no entra.
+ */
+export function seriales(v: Filas, familia: string): { equipos: EquipoSerie[]; descartados: number } {
+  const fe = v.findIndex((f) => f.some((x) => /de serie/.test(llave(x))));
+  if (fe < 0) throw new Error(`No encontré el encabezado (Nº de Serie) en la pestaña de ${familia}`);
+  const enc = v[fe];
+  const c = columnas(enc, {
+    serie: /de serie/, consecutivo: /^n[º°o]?\.?(\s*de\s*equipo)?$/, tipo: /^tipo equipo/, sub: /^sub ?categoria/,
+    pedido: /^(n[º°o]?|numero)\s*(de\s*)?pedido/, fecha: /^fecha( de pedido)?$/, cliente: /compania|persona/, contacto: /contacto/,
+    factura: /^factura/, entrega: /entrega/, estado: /^estado$/, vendedor: /^vendedor/,
+    descripcion: /^descripcion/, notas: /^notas/, ubicacion: /^(ubicacion|destino)/,
+  }, ["consecutivo", "tipo", "sub", "pedido", "contacto", "factura", "entrega", "vendedor", "descripcion", "notas", "ubicacion"]);
+  const t = (f: string[], i: number) => (i < 0 ? null : limpiarNombre(f[i]) || null);
+  const estados: Record<string, EstadoSerie> = { espera: "espera", proceso: "proceso", terminado: "terminado", entregado: "entregado", cancelado: "cancelado" };
+  const equipos: EquipoSerie[] = [];
+  let descartados = 0;
+  v.slice(fe + 1).forEach((f, i) => {
+    // Espacios en medio ("CZ0202VT 141") o al principio son de captura; el código no los lleva.
+    const serie = (t(f, c.serie) ?? "").replace(/\s+/g, "").toUpperCase();
+    if (!/^[A-Z0-9]{4,}$/.test(serie)) { if (serie || t(f, c.cliente)) descartados++; return; }
+    const cliente = t(f, c.cliente);
+    const n = c.consecutivo < 0 ? null : numero(f[c.consecutivo]);
+    equipos.push({
+      numero_serie: serie, familia, consecutivo: n != null && Number.isInteger(n) ? n : null,
+      tipo_equipo: t(f, c.tipo), subcategoria: t(f, c.sub), pedido_hoja: t(f, c.pedido), fecha_pedido: fecha(f[c.fecha]),
+      cliente_nombre: cliente, llave_cliente: cliente ? llave(cliente) : null, contacto: t(f, c.contacto), factura: t(f, c.factura),
+      entrega_acordada: c.entrega < 0 ? null : fecha(f[c.entrega]), estado: estados[llave(f[c.estado])] ?? null,
+      vendedor: t(f, c.vendedor), descripcion: t(f, c.descripcion) ?? t(f, c.notas), ubicacion: t(f, c.ubicacion), fila: fe + i + 2,
+    });
+  });
+  return { equipos, descartados };
+}

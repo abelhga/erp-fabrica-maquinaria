@@ -5,7 +5,7 @@ import {
   Ship,
   type LucideIcon,
 } from "lucide-react";
-import { Award, Banknote, Coins, ListChecks, Target } from "lucide-react";
+import { Award, Banknote, Coins, Hash, ListChecks, Target } from "lucide-react";
 import { AlertTriangle, CalendarDays, CalendarRange, Hand, Wrench } from "lucide-react";
 import { MessageSquareQuote, PackageCheck, Undo2 } from "lucide-react";
 import { Map as MapaIcono } from "lucide-react";
@@ -77,6 +77,7 @@ export const MENU: SeccionMenu[] = [
     entradas: [
       { ruta: "/produccion/gerencia", texto: "Gerencia de producción", icono: Factory, modulo: "produccion" },
       { ruta: "/produccion/ordenes", texto: "Órdenes y material", icono: ClipboardCheck, modulo: "produccion" },
+      { ruta: "/produccion/seriales", texto: "Números de serie", icono: Hash, modulo: "produccion" },
       { ruta: "/produccion/terminal", texto: "Terminal de piso", icono: Tablet, modulo: "produccion", nivel: 2 },
       { ruta: "/piso", texto: "Pantalla de piso (TV)", icono: Monitor, modulo: "produccion" },
     ],

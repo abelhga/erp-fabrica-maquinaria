@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { dinero, fecha, imagen, llave, numero, rfc, unidad } from "./util";
-import { actualizaciones, baseEquipos, componentes, equipos, etapaDeManoObra, inventario, tipoComponente, ventasPanel } from "./transformar";
+import { actualizaciones, baseEquipos, componentes, equipos, etapaDeManoObra, inventario, seriales, tipoComponente, ventasPanel } from "./transformar";
 
 // Filas tal como las entrega la API de Sheets (copiadas de las hojas reales).
 describe("limpieza de valores", () => {
@@ -151,5 +151,23 @@ describe("BASE DE DATOS ACTUAL", async () => {
     const dir = [["adeudo", "Al agregar un nuevo proveedor…"], ["", "Nombre", "Tipo de Proveedor ", "TELÉFONO", "Adeudo fin de año 2021", "BALANCE"],
       ["", "LME Agent SC", "Importaciones", "", "$12,500.00", "$0.00"], ["", "39F SA de CV", "", "", "$0.00", "$0.00"]];
     expect(adeudos2021(dir)).toEqual([{ proveedor: "LME Agent SC", llave_proveedor: "lme agent sc", monto: 12500 }]);
+  });
+});
+
+describe("seriales", () => {
+  it("ubica las columnas por nombre, limpia el serial y lee el estado", () => {
+    const v = [
+      [], ["", "SERIALES CRIBADORAS"], [],
+      ["", "Nº de\nEquipo", "TIPO EQUIPO", "SUB CATEGORIA", "Nº de Serie", "Nº de Pedido", "FECHA", " Nombre de la compañía/Persona",
+        " Nombre del Contacto", " Factura", " Fecha Acordada de Entrega", "Estado", " VENDEDOR", " Descripción", " DESTINO EQUIPO", "", "Cribadoras"],
+      ["", "157", "CRIBADORA", "ZAR 4", " cz0202vt 157", "791", "18/08/26", " Granos del Norte", " Gustavo", "A 3301", "20/10/2026", "PROCESO", " ISAAC", " CRIBADORA ZAR 4", " SLP", "", "C"],
+      ["", "158", "CRIBADORA", "", "", "", "", "", "", "", "", "CANCELADO"],
+    ];
+    const r = seriales(v, "cribadora");
+    expect(r.equipos).toHaveLength(1);
+    expect(r.equipos[0]).toMatchObject({
+      numero_serie: "CZ0202VT157", consecutivo: 157, pedido_hoja: "791", fecha_pedido: "2026-08-18", cliente_nombre: "Granos del Norte",
+      llave_cliente: "granos del norte", entrega_acordada: "2026-10-20", estado: "proceso", vendedor: "ISAAC", ubicacion: "SLP", descripcion: "CRIBADORA ZAR 4",
+    });
   });
 });
