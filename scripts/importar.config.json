@@ -8,7 +8,7 @@
     },
     "juan": {
       "nombre": "Juan Manuel Ramírez",
-      "correo": "juan@hegamex.com",
+      "correo": "j.manuel@hegamex.com",
       "panel": "panel_juan"
     },
     "susy": {
@@ -177,13 +177,13 @@
     "comentario": "Cómo aparece el vendedor en el directorio de clientes → correo del usuario en el ERP. null = la cuenta queda sin dueño (libre).",
     "isaac": "isaac@hegamex.com",
     "issac": "isaac@hegamex.com",
-    "j. manuel": "juan@hegamex.com",
-    "juan manuel": "juan@hegamex.com",
+    "j. manuel": "j.manuel@hegamex.com",
+    "juan manuel": "j.manuel@hegamex.com",
     "susy": "susana@hegamex.com",
     "susana": "susana@hegamex.com",
-    "sr. abel": "direccion@hegamex.com",
-    "sr abel": "direccion@hegamex.com",
-    "abel hernandez": "direccion@hegamex.com",
+    "sr. abel": "abel@hegamex.com",
+    "sr abel": "abel@hegamex.com",
+    "abel hernandez": "abel@hegamex.com",
     "victor": null,
     "abel jr.": null,
     "abel jr": null,

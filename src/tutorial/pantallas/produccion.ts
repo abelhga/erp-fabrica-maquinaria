@@ -10,7 +10,8 @@ export const PRODUCCION: Record<string, AyudaPantalla> = {
   "/produccion/seriales": [
     "Aquí está cada equipo que hemos hecho con su número de serie: los del libro de seriales de la hoja (desde 2015) y los que numera el ERP. Sirve para saber de quién es un equipo, de qué pedido y factura, y qué tiene cada cliente. La usan producción, servicio y ventas.",
     "Busca por serie, cliente, equipo, pedido o factura; filtra por familia o por lo que sigue en taller. Clic en un renglón abre su ficha, con la orden de producción y los servicios que ha tenido.",
-    "El número de serie ya no se escribe a mano: al crear la orden de producción de un equipo, el ERP arma su código y le pone el siguiente número de su familia, sin repetir ni saltar. Para eso cada equipo necesita su código una vez, en la pestaña Códigos por equipo; la flecha muestra el serial que saldría con el número que sigue.",
+    "El número de serie ya no se escribe a mano: al crear la orden de producción de un equipo, el ERP arma su código y le pone el siguiente número de su familia, sin repetir ni saltar. Para eso cada equipo necesita su código una vez, en la pestaña Códigos y tiempos por equipo; la flecha muestra el serial que saldría con el número que sigue.",
+    "En esa misma pestaña van los días de fabricación de cada equipo: lo que tarda con el taller libre. Con ellos y con la fila del taller, ventas ve al cotizar cuándo sale de verdad un equipo; si un equipo no tiene días, solo cuenta la fila.",
     "Si un equipo no tenía código cuando se creó su orden, la orden queda sin serie; captura el código y asígnalo desde la orden.",
   ],
   "/produccion/ordenes": [

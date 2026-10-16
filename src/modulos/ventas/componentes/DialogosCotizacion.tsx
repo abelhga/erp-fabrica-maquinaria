@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FileText, MessageCircle, Send } from "lucide-react";
 import { textoFichas } from "./Fichas";
+import type { Estimacion } from "./EntregaRealista";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, Entrada } from "@/components/ui/campo";
@@ -83,15 +84,17 @@ export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vende
  * Cotización → pedido. Aquí se eligen las partidas: las opcionales vienen sin
  * marcar (no suman), pero si el cliente eligió la alternativa se palomea.
  */
-export function DialogoConvertir({ abierto, alCambiar, c, partidas, alConfirmar, cargando }: {
-  abierto: boolean; alCambiar: (v: boolean) => void; c: Cotizacion; partidas: Partida[];
+export function DialogoConvertir({ abierto, alCambiar, c, partidas, alConfirmar, cargando, estimacion }: {
+  abierto: boolean; alCambiar: (v: boolean) => void; c: Cotizacion; partidas: Partida[]; estimacion?: Estimacion;
   alConfirmar: (fechaCompromiso: string, ids: string[]) => void; cargando?: boolean;
 }) {
   const [fechaC, setFechaC] = useState("");
   const [sel, setSel] = useState<Set<string>>(new Set());
   useEffect(() => {
     if (!abierto) return;
-    setFechaC(compromisoDesde(c.tiempo_entrega));
+    // Lo prometido en la cotización, pero nunca antes de lo que el taller puede sacar hoy.
+    const prometida = compromisoDesde(c.tiempo_entrega);
+    setFechaC(estimacion?.fecha_propuesta && estimacion.fecha_propuesta > prometida ? estimacion.fecha_propuesta : prometida);
     setSel(new Set(partidas.filter((p) => !p.opcional).map((p) => p.id)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [abierto]);
@@ -110,9 +113,17 @@ export function DialogoConvertir({ abierto, alCambiar, c, partidas, alConfirmar,
       </>}>
       <div className="space-y-4">
         {!c.cliente_id && <p className="rounded-lg bg-aviso-suave text-aviso text-sm p-3">Liga la cotización a un cliente antes de convertirla (arriba, en “Cliente”).</p>}
-        <Campo etiqueta="Fecha compromiso de entrega" ayuda={c.tiempo_entrega ? `Propuesta según “${c.tiempo_entrega}”` : undefined}>
+        <Campo etiqueta="Fecha compromiso de entrega"
+          ayuda={estimacion?.fecha_propuesta
+            ? `Con el taller como está hoy, lo realista es el ${fecha(estimacion.fecha_propuesta)}${c.tiempo_entrega ? ` (la cotización dice “${c.tiempo_entrega}”)` : ""}.`
+            : c.tiempo_entrega ? `Propuesta según “${c.tiempo_entrega}”` : undefined}>
           <Entrada type="date" value={fechaC} onChange={(e) => setFechaC(e.target.value)} className="sm:w-52" />
         </Campo>
+        {estimacion?.fecha_propuesta && fechaC && fechaC < estimacion.fecha_propuesta && (
+          <p className="rounded-lg bg-aviso-suave text-aviso text-sm p-3">
+            Esa fecha es antes de lo que el taller puede sacar ({fecha(estimacion.fecha_propuesta)}): el pedido nacería atrasado. Si de todos modos la prometes, avísale a producción.
+          </p>
+        )}
         <div className="tarjeta divide-y divide-borde">
           {partidas.map((p) => (
             <label key={p.id} className={cn("flex items-start gap-3 px-3 py-2.5 cursor-pointer", !sel.has(p.id) && "opacity-60")}>
