@@ -1,7 +1,8 @@
 import type { AyudaPantalla } from "./index";
 
 // Equipos, Componentes y Planos los ven también ventas y producción (costeo nivel 1): su texto no
-// habla de costos ni de cómo sale el precio. Márgenes y Precios vs ventas son del módulo de costos.
+// habla de costos ni de cómo sale el precio. Márgenes y Precios vs ventas son del módulo de márgenes
+// (compras tiene costos pero no márgenes: tampoco ahí se explica la utilidad).
 export const COSTEO: Record<string, AyudaPantalla> = {
   "/costeo/equipos": [
     "Aquí viven los equipos que fabricamos y sus subensambles: qué lleva cada uno y cuántas horas toma hacerlo. Ingeniería los da de alta y los mantiene; ventas y producción los consultan.",
@@ -33,13 +34,13 @@ export const COSTEO: Record<string, AyudaPantalla> = {
     "Para ligar un plano, entra al equipo (Equipos y subensambles), pestaña Planos, y liga el archivo de Drive: el ERP le da folio y revisión. Si hay equipos en producción sin plano vigente, ingeniería los ve arriba en un aviso.",
   ],
   "/costeo/margenes": [
-    "El panel de utilidad, antes la pestaña Reglas de Nuevo Costeo: de aquí sale el precio de lista de todo el catálogo. Lo consultan ingeniería y compras; solo dirección lo cambia.",
+    "El panel de utilidad, antes la pestaña Reglas de Nuevo Costeo: de aquí sale el precio de lista de todo el catálogo. Lo consultan ingeniería, finanzas y la gerencia administrativa; solo dirección lo cambia.",
     "Cada tarjeta es una política de precio: utilidad, recargos sobre costo y sobre precio, medida especial, redondeo y descuento máximo. «Editar» abre el simulador: antes de guardar ves cuántos precios se mueven y cuáles más. Cada cambio queda en la bitácora con quién y cuándo.",
     "El precio de un equipo es: costo × (1 + recargos sobre costo + medida especial) ÷ (1 − utilidad ÷ (1 − ISR) − recargos sobre precio), redondeado hacia arriba. Lo que se revende usa el margen sobre precio de su política, sin compensar ISR: costo ÷ (1 − margen).",
-    "El ISR de compensación, la mano de obra por etapa y el tipo de cambio también mueven precios: al cambiarlos se recalcula todo lo que depende de ellos. El tipo de cambio lo capturan compras o finanzas: escribe el valor y Enter.",
+    "El ISR de compensación, la mano de obra por etapa y el tipo de cambio también mueven precios: al cambiarlos se recalcula todo lo que depende de ellos. El tipo de cambio lo capturan compras (en Actualizar precios) o finanzas: escribe el valor y Enter.",
   ],
   "/costeo/precios-ventas": [
-    "Para ver si los cambios de costo y de precio de una familia de equipos se notaron en lo que se vende: el costo y el precio de lista mes a mes, junto a lo vendido de esa familia. Lo ve quien tiene costos.",
+    "Para ver si los cambios de costo y de precio de una familia de equipos se notaron en lo que se vende: el costo y el precio de lista mes a mes, junto a lo vendido de esa familia. Lo ve quien tiene permiso de márgenes.",
     "Arriba eliges la familia y desde qué año. La primera gráfica es un índice (100 al inicio del periodo) y la segunda son pesos; van separadas a propósito, porque mezclar índice y pesos en un mismo eje engaña.",
     "El precio de lista se registra desde el arranque del ERP (la hoja no guardaba la utilidad aplicada), por eso su línea empieza después. Las ventas de antes del arranque salen del libro de la hoja (ventas desde $40,000, clasificadas por su descripción); después, de los pedidos.",
     "La relación costo ↔ ventas se mide por trimestre, porque con pocas ventas al mes el mes a mes es puro ruido. Es orientativa: no prueba que una cosa cause la otra.",

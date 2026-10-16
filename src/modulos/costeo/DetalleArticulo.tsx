@@ -54,6 +54,7 @@ function ComparacionCopia({ origen, copia }: { origen: string; copia: ArticuloCa
 function Encabezado({ a }: { a: ArticuloCatalogo }) {
   const { puede } = useSesion();
   const costos = puede("costos");
+  const margenes = puede("margenes");
   const d = useDesglose(a.id);
   const fab = esFabricado(a.tipo);
   const x = d.data;
@@ -75,10 +76,18 @@ function Encabezado({ a }: { a: ArticuloCatalogo }) {
             <Cifra etiqueta="Costo" valor={dinero(a.costo_total)} explica={GLOSARIO.costoArticulo}
               detalle={fab ? <>material {dinero(a.costo_material)} · mano de obra {dinero(a.costo_mano_obra)}</>
                 : a.moneda_costo && a.moneda_costo !== "MXN" ? `${a.moneda_costo} ${numero(a.costo_capturado)}` : a.costo_actualizado_en ? `al ${fecha(a.costo_actualizado_en)}` : undefined} />
-            <Cifra etiqueta="Utilidad neta" valor={neto == null ? "—" : pct(neto)} explica={GLOSARIO.utilidadNeta}
-              tono={neto == null ? undefined : x && neto < x.utilidad - 0.005 ? "aviso" : undefined}
-              detalle={x ? <>política {x.politica.nombre}: {pct(x.utilidad)}{x.politica.compensar_isr ? " después de ISR" : ""}</> : undefined} />
-            <Cifra etiqueta="Precio ÷ costo" explica={GLOSARIO.precioEntreCosto} valor={x?.factor ? `${(Math.round(x.factor * 100) / 100).toLocaleString("es-MX")}×` : "—"} detalle="antes del redondeo" />
+            {margenes ? <>
+              <Cifra etiqueta="Utilidad neta" valor={neto == null ? "—" : pct(neto)} explica={GLOSARIO.utilidadNeta}
+                tono={neto == null ? undefined : x && neto < x.utilidad - 0.005 ? "aviso" : undefined}
+                detalle={x ? <>política {x.politica.nombre}: {pct(x.utilidad)}{x.politica.compensar_isr ? " después de ISR" : ""}</> : undefined} />
+              <Cifra etiqueta="Precio ÷ costo" explica={GLOSARIO.precioEntreCosto} valor={x?.factor ? `${(Math.round(x.factor * 100) / 100).toLocaleString("es-MX")}×` : "—"} detalle="antes del redondeo" />
+            </> : <>
+              {/* Sin márgenes: lo que sí le sirve a compras en lugar de la utilidad. */}
+              <Cifra etiqueta="Costo actualizado" valor={a.costo_actualizado_en ? hace(a.costo_actualizado_en) : fab && a.costo_mas_viejo ? hace(a.costo_mas_viejo) : "—"}
+                detalle={fab ? "su costo más viejo" : a.proveedor ?? undefined} explica={GLOSARIO.costoViejo} />
+              <Cifra etiqueta={fab ? "Piezas sin costo" : "Tiempo de entrega"} valor={fab ? numero(a.sin_costo ?? 0) : a.tiempo_entrega_dias != null ? `${a.tiempo_entrega_dias} días` : "—"}
+                tono={fab && (a.sin_costo ?? 0) > 0 ? "aviso" : undefined} />
+            </>}
             {fab ? <Cifra etiqueta="Horas hombre" valor={numero(a.horas)} detalle="con las de sus subensambles" explica={GLOSARIO.horasEtapa} />
               : <Cifra etiqueta="Existencia en planta" valor={`${numero(a.existencia ?? 0)}`} detalle={a.unidad} explica={GLOSARIO.enPlanta} />}
           </>
@@ -122,7 +131,7 @@ export default function DetalleArticulo() {
     { valor: "lista", texto: "Lista de materiales", cuenta: a.lineas_bom, explica: GLOSARIO.listaMateriales },
     { valor: "parametros", texto: "Parámetros", cuenta: parametros.length || undefined, explica: GLOSARIO.parametroEquipo },
     { valor: "horas", texto: "Horas por etapa", explica: GLOSARIO.horasEtapa },
-    ...(costos ? [{ valor: "costo", texto: "Costo y precio", explica: GLOSARIO.formulaPrecio }, { valor: "historial", texto: "Historial", explica: GLOSARIO.historialCosteo }] : []),
+    ...(costos ? [{ valor: "costo", texto: puede("margenes") ? "Costo y precio" : "Costo", explica: puede("margenes") ? GLOSARIO.formulaPrecio : GLOSARIO.costoArticulo }, { valor: "historial", texto: "Historial", explica: GLOSARIO.historialCosteo }] : []),
     ...(a.tipo === "subensamble" || a.usado_en > 0 ? [{ valor: "usos", texto: "Dónde se usa", cuenta: a.usado_en, explica: GLOSARIO.usadoEnListas }] : []),
     { valor: "planos", texto: "Planos" },
   ] : [];

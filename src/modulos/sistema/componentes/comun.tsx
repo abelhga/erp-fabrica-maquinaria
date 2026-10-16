@@ -21,8 +21,10 @@ export const ROLES: { rol: Rol; descripcion: string }[] = [
 export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; alerta?: string }[] = [
   { modulo: "ventas", nombre: "Ventas", descripcion: "Clientes, cotizaciones, pedidos y la comisión propia. 2: captura lo suyo · 3: autoriza precios y ve lo de todos." },
   { modulo: "costeo", nombre: "Ingeniería", descripcion: "Equipos, subensambles y listas de materiales, sin costos. 2: edita listas." },
-  { modulo: "costos", nombre: "Costos", descripcion: "Costos de compra, mano de obra, márgenes y políticas de precio.",
-    alerta: "Quien tenga Costos, aunque sea en nivel 1, ve lo que cuesta cada equipo y el margen de cada venta. Ventas nunca debe tenerlo." },
+  { modulo: "costos", nombre: "Costos", descripcion: "Costos de compra y de mano de obra. 2: captura costos · 3: tarifas de mano de obra.",
+    alerta: "Quien tenga Costos, aunque sea en nivel 1, ve lo que cuesta cada equipo. Ventas nunca debe tenerlo." },
+  { modulo: "margenes", nombre: "Márgenes", descripcion: "Utilidad, políticas de precio y la fórmula del precio. 2: fija el margen de un artículo · 3: cambia políticas e ISR.",
+    alerta: "Quien tenga Márgenes ve cuánto se gana en cada equipo. Ni ventas ni compras lo necesitan." },
   { modulo: "compras", nombre: "Compras", descripcion: "Proveedores, órdenes de compra y requisiciones. 2: captura · 3: autoriza." },
   { modulo: "inventario", nombre: "Almacén", descripcion: "Existencias y movimientos. 2: entradas y salidas · 3: autoriza ajustes." },
   { modulo: "produccion", nombre: "Producción", descripcion: "1: ver el avance (lo tienen los vendedores) · 2: personal de piso · 3: gerencia." },

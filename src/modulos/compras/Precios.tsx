@@ -17,6 +17,7 @@ import { cn, coincide } from "@/lib/utilidades";
 import { todasLasFilas } from "@/modulos/almacen/componentes/comun";
 import { useTiposCambio, type Moneda, hace } from "./componentes/comun";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { TarjetaTipoCambio } from "@/modulos/costeo/Margenes";
 
 interface Precio {
   articulo_id: string; clave: string; nombre: string; unidad: string; tipo: string; es_importado: boolean;
@@ -268,7 +269,11 @@ export default function Precios() {
           </div>
         </Tarjeta>
 
-        <Tarjeta className="2xl:sticky 2xl:top-4">
+        {/* El tipo de cambio de costeo vivía en Márgenes y precios, que compras ya no ve: los
+            costos en dólares se convierten con él, así que va junto a donde se capturan. */}
+        <div className="space-y-5 2xl:sticky 2xl:top-4">
+        <TarjetaTipoCambio />
+        <Tarjeta>
           <EncabezadoTarjeta titulo={<span className="flex items-center gap-2"><History className="h-4 w-4 text-tenue" /> Últimos cambios</span>}
             descripcion="Quién movió qué costo y cuándo" explica={GLOSARIO.origenCosto} />
           {historial.isLoading ? <Cargando filas={5} /> : (historial.data?.length ?? 0) === 0 ? (
@@ -304,6 +309,7 @@ export default function Precios() {
             </div>
           )}
         </Tarjeta>
+        </div>
       </div>
     </Pagina>
   );

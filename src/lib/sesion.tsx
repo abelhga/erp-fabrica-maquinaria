@@ -25,7 +25,10 @@ export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" |
   // analisis: el BI de dirección (mapa, tendencias, clientes, producto, metas). Sin costos.
   | "analisis"
   // comisiones: 1 = ver las de todos los vendedores (cada vendedor ve la suya sin él) · 2 = marcarlas pagadas.
-  | "comisiones";
+  | "comisiones"
+  // margenes: 1 = ver utilidad, políticas y la fórmula del precio · 2 = fijar el margen o precio de un artículo
+  // · 3 = cambiar políticas e ISR. Aparte de "costos" para que compras capture costos sin ver márgenes.
+  | "margenes";
 
 export interface Perfil { id: string; nombre: string; correo: string; puesto: string | null; iniciales: string | null; activo: boolean; telefono: string | null }
 /** "Ver como": esta sesión es de otra persona, abierta por dirección o sistemas, solo para ver. */

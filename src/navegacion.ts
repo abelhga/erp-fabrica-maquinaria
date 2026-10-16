@@ -44,8 +44,8 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/costeo/equipos", texto: "Equipos y subensambles", icono: Layers, modulo: "costeo" },
       { ruta: "/costeo/componentes", texto: "Componentes", icono: Boxes, modulo: "costeo" },
       { ruta: "/costeo/planos", texto: "Planos", icono: FileStack, modulo: "costeo" },
-      { ruta: "/costeo/margenes", texto: "Márgenes y precios", icono: Percent, modulo: "costos", nivel: 2 },
-      { ruta: "/costeo/precios-ventas", texto: "Precios vs ventas", icono: LineChart, modulo: "costos" },
+      { ruta: "/costeo/margenes", texto: "Márgenes y precios", icono: Percent, modulo: "margenes" },
+      { ruta: "/costeo/precios-ventas", texto: "Precios vs ventas", icono: LineChart, modulo: "margenes" },
     ],
   },
   {

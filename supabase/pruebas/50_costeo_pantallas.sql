@@ -54,8 +54,11 @@ begin
   end;
   -- …ni ver el desglose del precio ni simular márgenes (los costos no le llegan por ningún lado)
   assert desglose_precio(v_eq) is null, 'un vendedor recibió el desglose del precio';
-  select count(*) into v_n from simular_precios(null, '{}', 0.25);
-  assert v_n = 0, format('un vendedor recibió %s precios simulados (con costo)', v_n);
+  begin
+    perform simular_precios(null, '{}', 0.25);
+    assert false, 'un vendedor simuló precios (con costo)';
+  exception when insufficient_privilege then null;
+  end;
   select count(*) into v_n from subensambles_coincidentes(v_eq, array[v_l_motor]);
   assert v_n = 0, 'no debía haber candidatos';
   -- La RLS es la barrera, no la pantalla: aunque un vendedor pida las columnas de costo, le llegan vacías.
@@ -64,12 +67,18 @@ begin
   select count(*) into v_n from v_catalogo where id in (v_eq, v_motor)
     and (costo_total is not null or costo_material is not null or costo_capturado is not null or costo_mano_obra is not null);
   assert v_n = 0, 'un vendedor vio costos en v_catalogo';
-  select count(*) into v_n from serie_costeo(v_eq);
-  assert v_n = 0, 'un vendedor vio el historial de costo y precio de un equipo';
+  begin
+    perform serie_costeo(v_eq);
+    assert false, 'un vendedor vio el historial de costo y precio de un equipo';
+  exception when insufficient_privilege then null;
+  end;
   select count(*) into v_n from historial_costos;
   assert v_n = 0, 'un vendedor vio el historial de costos de compra';
-  select count(*) into v_n from simular_politica((select id from politicas_precio where nombre = 'Banda Transportadora'), 0.4);
-  assert v_n = 0, 'un vendedor simuló precios (trae costos)';
+  begin
+    perform simular_politica(1, 0.4);
+    assert false, 'un vendedor simuló precios (trae costos)';
+  exception when insufficient_privilege then null;
+  end;
   begin
     perform duplicar_articulo(v_eq, 'T50-B22-V', 'No debe crearse', '{"largo_m": 22}');
     assert false, 'un vendedor pudo duplicar un equipo';
