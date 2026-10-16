@@ -5,7 +5,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
     "Aquí está la plantilla de la empresa: cada persona con su puesto, departamento, área del taller, antigüedad y vacaciones. La usa Recursos Humanos para dar altas, bajas y llevar la ficha de cada quien.",
     "Dale clic a un renglón para abrir su ficha a la derecha sin perder la lista. Ahí cambias sus datos (Enter guarda), ves su historial de vacaciones e incidencias y, al final, la das de baja o registras un reingreso. Con «Nuevo empleado» das de alta a alguien.",
     "Arriba filtras activos, bajas o todos, y por departamento. Los indicadores de ausentes y solicitudes te llevan directo a Vacaciones e incidencias. El botón CSV baja la lista para Excel.",
-    "La antigüedad y las vacaciones salen solas de la fecha de ingreso. Una baja no borra a nadie: su historial se conserva. Si la persona tenía cuenta en el ERP, desactívala al darla de baja para que ya no pueda entrar.",
+    "La antigüedad y las vacaciones salen solas de la fecha de ingreso; quien venía del control de vacaciones en Excel arranca con el saldo que tenía ahí, y en su ficha puedes corregirlo. Una baja no borra a nadie: su historial se conserva. Si la persona tenía cuenta en el ERP, desactívala al darla de baja para que ya no pueda entrar.",
   ],
   "/rrhh/incidencias": [
     "Aquí se llevan las vacaciones, permisos, faltas, incapacidades, retardos y horas extra. Recursos Humanos aprueba las solicitudes y ve quién falta cada día; la gerencia de producción también puede registrar las de su gente.",
