@@ -10,6 +10,7 @@ import { ChipsFichas, type FichaDoc } from "./Fichas";
 import { EstadoPartida } from "../solicitudes/EstadoPartida";
 import type { Solicitud } from "@/modulos/compras/solicitudes/datos";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { BotonSubirFoto } from "@/components/datos/SubirFoto";
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 /** Importe de la partida mientras se escribe (la columna generada de la base hace lo mismo al guardar). */
@@ -264,21 +265,23 @@ function AreaAuto({ valor, alCambiar, deshabilitado, placeholder, className, tit
   );
 }
 
-/** Foto de la partida: viene del catálogo; se puede pegar otra liga. */
+/** Foto de la partida: viene del catálogo; se puede pegar otra liga (la de Drive se convierte sola) o subirla. */
 function ImagenPartida({ l, editable, alCambiar, chica }: { l: Partida; editable: boolean; alCambiar: (url: string | null) => void; chica?: boolean }) {
   const [url, setUrl] = useState(l.imagen_url ?? "");
+  const [abierto, setAbierto] = useState(false);
   useEffect(() => setUrl(l.imagen_url ?? ""), [l.imagen_url]);
   const tam = chica ? "h-10 w-10" : "h-16 w-16";
   const contenido = <Imagen key={l.imagen_url ?? ""} src={l.imagen_url} className={tam} />;
   if (!editable) return <div className="shrink-0">{contenido}</div>;
   return (
-    <P.Root>
+    <P.Root open={abierto} onOpenChange={setAbierto}>
       <P.Trigger asChild><button type="button" className="shrink-0 self-start" title="Cambiar foto">{contenido}</button></P.Trigger>
       <P.Portal>
         <P.Content sideOffset={6} align="start" className="z-50 tarjeta shadow-xl p-3 w-80 space-y-2">
           <p className="text-sm font-medium">Foto de la partida</p>
-          <input className="campo" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Pega la liga de la imagen (https://…)" autoFocus />
-          <div className="flex justify-end gap-2">
+          <input className="campo" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Pega la liga de Drive o de la imagen" autoFocus />
+          <div className="flex items-center justify-end gap-3">
+            <BotonSubirFoto carpeta={`cotizaciones/${l.cotizacion_id}`} className="mr-auto" alSubir={(u) => { alCambiar(u); setAbierto(false); }} />
             {l.imagen_url && <P.Close asChild><button className="text-sm text-peligro" onClick={() => alCambiar(null)}>Quitar</button></P.Close>}
             <P.Close asChild><button className="text-sm text-marca-texto font-medium" onClick={() => alCambiar(url.trim() || null)}>Usar esta</button></P.Close>
           </div>

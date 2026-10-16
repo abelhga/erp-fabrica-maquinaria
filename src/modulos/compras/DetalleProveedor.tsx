@@ -21,6 +21,7 @@ import { InsigniaOC, type Moneda, type OrdenCompra, hace } from "./componentes/c
 import { DialogoProveedor } from "./componentes/DialogoProveedor";
 import type { ProveedorCompleto } from "./componentes/tipos";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { HistorialCambios } from "@/components/datos/HistorialCambios";
 
 interface ArticuloSurtido {
   articulo_id: string; clave: string; nombre: string; unidad: string; costo: number | null; moneda: Moneda | null;
@@ -85,7 +86,8 @@ export default function DetalleProveedor() {
       descripcion={[p.razon_social !== p.nombre ? p.razon_social : null, p.categoria, p.pais].filter(Boolean).join(" · ")}
       acciones={<>
         <Boton variante="fantasma" onClick={() => ir("/compras/proveedores")}><ArrowLeft className="h-4 w-4" /> Proveedores</Boton>
-        {puede("compras", 2) && <Boton variante="secundario" onClick={() => setEditando(true)}><Pencil className="h-4 w-4" /> Editar</Boton>}
+        {/* Finanzas y Gerencia administrativa editan los datos de pago y fiscales (el diálogo sabe qué). */}
+        {(puede("compras", 2) || puede("finanzas", 2)) && <Boton variante="secundario" onClick={() => setEditando(true)}><Pencil className="h-4 w-4" /> Editar</Boton>}
         {puede("compras", 2) && <Boton onClick={() => ir(`/compras/ordenes/nueva?proveedor=${p.id}`)}><Plus className="h-4 w-4" /> Nueva orden</Boton>}
       </>}
     >
@@ -143,6 +145,7 @@ export default function DetalleProveedor() {
             <dl className="px-5 pb-5 grid grid-cols-[110px_1fr] gap-x-3 gap-y-2 text-sm">
               {([
                 ["Contacto", p.contacto], ["Teléfono", p.telefono], ["Correo", p.correo], ["Sitio", p.sitio], ["RFC", p.rfc],
+                ["Razón social", p.razon_social], ["Régimen fiscal", p.regimen_fiscal], ["CP fiscal", p.cp_fiscal],
                 ["Domicilio", p.domicilio], ["Moneda", p.moneda], ["Crédito", p.dias_credito ? `${p.dias_credito} días` : "Contado"],
                 ["Entrega", p.dias_entrega != null ? `${p.dias_entrega} días hábiles` : "7 días hábiles (estándar)"],
                 ["Bancarios", p.datos_bancarios], ["Notas", p.notas],
@@ -151,6 +154,8 @@ export default function DetalleProveedor() {
               ))}
             </dl>
           </Tarjeta>
+
+          <HistorialCambios tabla="proveedores" id={p.id} explica={GLOSARIO.quienCambioQue} />
 
           <Tarjeta className="overflow-hidden">
             <EncabezadoTarjeta titulo="Órdenes de compra" descripcion="Las 50 más recientes" />

@@ -75,7 +75,7 @@ export default function Proveedores() {
     <Pagina
       titulo="Proveedores"
       descripcion="A quién se le compra, en qué moneda, con cuánto crédito y en cuántos días entrega."
-      acciones={puede("compras", 2) && <Boton onClick={() => setNuevo(true)}><Plus className="h-4 w-4" /> Nuevo proveedor</Boton>}
+      acciones={(puede("compras", 2) || puede("finanzas", 2)) && <Boton onClick={() => setNuevo(true)}><Plus className="h-4 w-4" /> Nuevo proveedor</Boton>}
     >
       <TablaDatos
         filas={filas.filter((p) => pasa(p, vista))}
