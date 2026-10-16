@@ -6,13 +6,13 @@ import { EN_VISTA_PREVIA, supabase } from "./supabase";
 export type Rol =
   | "direccion" | "admin" | "gerente_ventas" | "ventas" | "ingenieria" | "compras" | "almacen"
   | "gerente_produccion" | "produccion" | "rrhh" | "finanzas" | "pantalla"
-  | "importaciones";
+  | "importaciones" | "administracion";
 
 export const NOMBRE_ROL: Record<Rol, string> = {
   direccion: "Dirección", admin: "Sistemas", gerente_ventas: "Gerencia de ventas", ventas: "Ventas",
   ingenieria: "Ingeniería", compras: "Compras", almacen: "Almacén", gerente_produccion: "Gerencia de producción",
   produccion: "Producción", rrhh: "Recursos humanos", finanzas: "Finanzas", pantalla: "Pantalla de piso",
-  importaciones: "Importaciones",
+  importaciones: "Importaciones", administracion: "Gerencia administrativa",
 };
 
 export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" | "produccion" | "rrhh" | "finanzas" | "admin" | "asistente"
@@ -23,7 +23,9 @@ export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" |
   | "envios"
   | "servicio"
   // analisis: el BI de dirección (mapa, tendencias, clientes, producto, metas). Sin costos.
-  | "analisis";
+  | "analisis"
+  // comisiones: 1 = ver las de todos los vendedores (cada vendedor ve la suya sin él) · 2 = marcarlas pagadas.
+  | "comisiones";
 
 export interface Perfil { id: string; nombre: string; correo: string; puesto: string | null; iniciales: string | null; activo: boolean; telefono: string | null }
 /** "Ver como": esta sesión es de otra persona, abierta por dirección o sistemas, solo para ver. */
