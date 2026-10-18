@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { AlertTriangle, Ban, Check, ClipboardCopy, FileText, PackageCheck, Truck, Warehouse } from "lucide-react";
+import { AlertTriangle, Ban, Check, ClipboardCopy, ExternalLink, FileText, PackageCheck, Send, Truck, Warehouse } from "lucide-react";
 import { Boton } from "@/components/ui/boton";
 import { Cargando } from "@/components/ui/estados";
 import { Seleccion } from "@/components/ui/campo";
@@ -15,6 +15,7 @@ import { Dato } from "@/modulos/ventas/componentes/campos";
 import { Empacar } from "./Empacar";
 import { EvidenciaSalida } from "./EvidenciaSalida";
 import { DialogoCotizar, DialogoEntregado, DialogoGuia } from "./Dialogos";
+import { DialogoSkydropx } from "./DialogoSkydropx";
 import { CLAVE, medidas, useAlmacenes, useBultos, useEventos, useLineas, usePlanSalida, type Envio } from "./datos";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -27,8 +28,9 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
   const almacenes = useAlmacenes();
   const almacen = puede("envios", 2) && puede("inventario", 2);
   const captura = puede("envios", 2);
+  const skydropx = captura && e.tipo === "paqueteria" && !e.numero_guia;
   const plan = usePlanSalida(e.id, almacen && !e.inventario_descontado_en && e.estado !== "cancelado");
-  const [dlg, setDlg] = useState<null | "cotizar" | "guia" | "entregado" | "cancelar">(null);
+  const [dlg, setDlg] = useState<null | "skydropx" | "cotizar" | "guia" | "entregado" | "cancelar">(null);
 
   const inv = { invalidar: [CLAVE] };
   const actualizar = useAccion((datos: Record<string, unknown>) => q(supabase.rpc("actualizar_envio", { p_envio: e.id, p_datos: datos })), { ...inv, exito: "Guardado" });
@@ -75,11 +77,18 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
       {/* Acciones de lo que toca */}
       {e.abierto && (
         <div className="flex flex-wrap gap-2">
+          {/* Paquetería: Skydropx cotiza y genera; lo manual queda de respaldo (fletes, o si Skydropx falla). */}
+          {skydropx && (
+            <Boton onClick={() => setDlg("skydropx")} data-explain={GLOSARIO.cotizarSkydropx} data-explain-title="Cotizar con Skydropx">
+              <Send className="h-4 w-4" />{e.skydropx_envio_id ? "Revisar guía de Skydropx" : "Cotizar con Skydropx"}</Boton>
+          )}
           {captura && (e.tipo === "paqueteria" || e.tipo === "flete") && !e.numero_guia && (
-            <Boton variante={e.estado === "solicitado" ? "primario" : "secundario"} onClick={() => setDlg("cotizar")}>{e.costo_cotizado != null ? "Cambiar cotización" : "Cotizar"}</Boton>
+            <Boton variante={e.estado === "solicitado" && !skydropx ? "primario" : "secundario"} onClick={() => setDlg("cotizar")}>
+              {e.costo_cotizado != null ? "Cambiar cotización" : skydropx ? "Cotizar a mano" : "Cotizar"}</Boton>
           )}
           {captura && (e.tipo === "paqueteria" || e.tipo === "flete" || e.tipo === "a_full" || e.tipo === "proveedor") && (
-            <Boton variante={e.estado === "cotizado" ? "primario" : "secundario"} onClick={() => setDlg("guia")}><FileText className="h-4 w-4" />{e.numero_guia ? "Cambiar guía" : "Registrar guía"}</Boton>
+            <Boton variante={e.estado === "cotizado" && !skydropx ? "primario" : "secundario"} onClick={() => setDlg("guia")}><FileText className="h-4 w-4" />
+              {e.numero_guia ? "Cambiar guía" : skydropx ? "Registrar guía a mano" : "Registrar guía"}</Boton>
           )}
           {almacen && e.empacado_en && e.tipo !== "recoge" && e.listo_para_salir && (
             <Boton variante="exito" onClick={() => enviar.mutate(undefined)} cargando={enviar.isPending}><Truck className="h-4 w-4" />Ya salió</Boton>
@@ -101,7 +110,9 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Dato etiqueta="Tipo">{e.tipo_nombre}</Dato>
         <Dato etiqueta={e.tipo === "flete" ? "Transportista" : "Paquetería"}>{e.paqueteria ?? "—"}{e.servicio && <span className="text-tenue font-normal"> · {e.servicio}</span>}</Dato>
-        <Dato etiqueta="Guía">{e.numero_guia ? <span className="cifra">{e.numero_guia}</span> : "—"}</Dato>
+        <Dato etiqueta="Guía">{e.numero_guia ? (e.rastreo_url
+          ? <a href={e.rastreo_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-marca-texto hover:underline cifra">{e.numero_guia}<ExternalLink className="h-3 w-3" /></a>
+          : <span className="cifra">{e.numero_guia}</span>) : "—"}</Dato>
         <Dato etiqueta="Cotizado">{e.costo_cotizado != null ? <span className="cifra">{dinero(e.costo_cotizado)}</span> : "—"}</Dato>
         <Dato etiqueta="Costo de la guía">{e.costo_real != null ? <span className="cifra">{dinero(e.costo_real)}</span> : "—"}</Dato>
         <Dato etiqueta={e.tipo === "recoge" ? "Pasan por él" : "Recolección"}>
@@ -201,11 +212,12 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
         <p className="text-sm"><Link to={`/ventas/pedidos/${e.pedido_id}`} className="text-marca-texto hover:underline">Ver el pedido {e.pedido_folio}</Link></p>
       )}
 
+      {skydropx && <DialogoSkydropx envio={e} abierto={dlg === "skydropx"} alCambiar={(v) => setDlg(v ? "skydropx" : null)} />}
       <DialogoCotizar envio={e} abierto={dlg === "cotizar"} alCambiar={(v) => setDlg(v ? "cotizar" : null)} />
       <DialogoGuia envio={e} abierto={dlg === "guia"} alCambiar={(v) => setDlg(v ? "guia" : null)} />
       <DialogoEntregado envio={e} abierto={dlg === "entregado"} alCambiar={(v) => setDlg(v ? "entregado" : null)} />
       <DialogoMotivo abierto={dlg === "cancelar"} alCambiar={(v) => setDlg(v ? "cancelar" : null)} titulo={`Cancelar ${e.folio}`}
-        descripcion={e.numero_guia ? "Si ya se generó la guía, cancélala también en la plataforma para que regrese el saldo." : "Almacén recibe el aviso."}
+        descripcion={e.numero_guia ? `Si ya se generó la guía, cancélala también en ${e.paqueteria === "Skydropx" ? "el panel de Skydropx" : "la plataforma"} para que regrese el saldo.` : "Almacén recibe el aviso."}
         sugerencias={["El cliente canceló", "Lo va a recoger en planta", "Se pidió dos veces", "Cambió el domicilio"]}
         textoBoton="Cancelar envío" cargando={cancelar.isPending} alConfirmar={(m) => cancelar.mutate(m)} />
     </div>

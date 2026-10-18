@@ -18,9 +18,9 @@ export const SISTEMA: Record<string, AyudaPantalla> = {
     "Se muestran los 500 cambios más recientes: para ir más atrás usa los filtros. Solo ves los cambios de lo que tu rol puede ver: sueldos y datos sensibles necesitan Recursos Humanos nivel 3, y costos, el módulo de costos.",
   ],
   "/sistema/configuracion": [
-    "Aquí están los datos de la empresa y los catálogos que usan todas las pantallas: datos fiscales, IVA, fecha de arranque, tema con el que abre el ERP (oscuro o claro), semana laboral, reglas de venta, almacenes, etapas del taller, tipos de cambio e integraciones (Mercado Libre). La usan sistemas y dirección.",
+    "Aquí están los datos de la empresa y los catálogos que usan todas las pantallas: datos fiscales, IVA, fecha de arranque, tema con el que abre el ERP (oscuro o claro), semana laboral, reglas de venta, almacenes, etapas del taller, tipos de cambio e integraciones (Mercado Libre y Skydropx). La usan sistemas y dirección.",
     "Cada pestaña es una sección. En las tarjetas con formulario cambias los datos y das «Guardar»; en las tablas cada celda se guarda sola al salir de ella o con Enter, como en la hoja (Escape la regresa). Lo que tu rol no puede cambiar sale en solo lectura y dice quién sí puede.",
     "Algunas cosas mueven números en otras pantallas: la semana laboral y los descansos cuentan los días de vacaciones y permisos; la fecha de arranque marca el corte entre la hoja y el ERP; un almacén no disponible para planta no cuenta para producción ni para el cotizador; el tipo de cambio más reciente convierte todo lo que está en dólares. Cada cambio queda en la bitácora.",
-    "En «Integraciones», dirección conecta la cuenta de Mercado Libre (los pasos vienen ahí mismo) y elige quién la atiende. La tarjeta dice si los avisos de ML están entrando; «Revisar ahora» vuelve a intentar lo que quedó pendiente.",
+    "En «Integraciones», dirección conecta la cuenta de Mercado Libre (los pasos vienen ahí mismo) y elige quién la atiende. La tarjeta dice si los avisos de ML están entrando; «Revisar ahora» vuelve a intentar lo que quedó pendiente. En la de Skydropx, quien administra envíos prueba la conexión (muestra el saldo), elige la dirección de la planta de las que ya están en Skydropx, la clave de carta porte y el tipo de empaque; sin dirección y carta porte no se puede generar guía.",
   ],
 };

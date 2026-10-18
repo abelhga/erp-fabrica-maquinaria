@@ -39,4 +39,7 @@ export const ALMACEN = {
   estadoEnvio: "En qué paso va: Por cotizar, Cotizado, Guía lista, Empacado, En camino, Entregado o Cancelado. Lo que recoge el cliente o surte Full se salta los pasos de guía.",
   evidenciaEmpaque: "Las fotos del paquete antes de salir, el check list y el número de serie del equipo. No se pueden cambiar ni borrar: es con lo que uno se defiende de un reclamo.",
   saldoPaqueteria: "Lo que queda en la cuenta de prepago de una paquetería: recargas menos lo que costaron las guías. En rojo, abajo del mínimo.",
+  cotizarSkydropx: "Cotiza el envío con todas las paqueterías de Skydropx a la vez y genera la guía sin salir del ERP: el PDF, el número, el rastreo y el costo quedan en el envío y el costo se descuenta del saldo de Skydropx. La guía se cobra al generarla. Si Skydropx falla o es flete, registra la guía a mano como antes.",
+  cartaPorte: "La clave del SAT que describe lo que se manda. La paquetería la exige en cada guía; aquí se elige una vez para todas.",
+  saldoSkydropx: "Lo que Skydropx dice que queda en la cuenta. Si no cuadra con el calculado (recargas menos guías), falta registrar una recarga o un cargo, como un sobrepeso.",
 } satisfies Record<string, string>;
