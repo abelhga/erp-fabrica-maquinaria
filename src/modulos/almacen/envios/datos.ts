@@ -79,6 +79,9 @@ export interface Envio {
   partidas: number; piezas: number | null; resumen: string | null; lleva_equipo: boolean; fotos: number; guia_ruta: string | null;
   abierto: boolean; lleva_empaque: boolean; falta_guia: boolean; falta_empaque: boolean; listo_para_salir: boolean;
   dias_desde_solicitud: number; dias_en_camino: number | null;
+  dest_cp: string | null; dest_estado: string | null; dest_municipio: string | null; dest_colonia: string | null; dest_calle: string | null;
+  dest_referencia: string | null; dest_empresa: string | null; dest_correo: string | null;
+  skydropx_cotizacion_id: string | null; skydropx_envio_id: string | null; rastreo_url: string | null;
 }
 
 export interface LineaEnvio {

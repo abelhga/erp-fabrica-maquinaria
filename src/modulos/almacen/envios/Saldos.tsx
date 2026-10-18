@@ -1,5 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Wallet } from "lucide-react";
 import { dinero, fecha } from "@/lib/formato";
+import { useSesion } from "@/lib/sesion";
+import { llamarSkydropx, type SaldoSkydropx } from "@/lib/skydropx";
 import { cn } from "@/lib/utilidades";
 import { useSaldos } from "./datos";
 import { GLOSARIO } from "@/tutorial/glosario";
@@ -10,8 +13,16 @@ import { GLOSARIO } from "@/tutorial/glosario";
  */
 export function Saldos({ alRecargar }: { alRecargar?: (paqueteriaId: number) => void }) {
   const saldos = useSaldos();
+  const { puede } = useSesion();
+  // El saldo que reporta Skydropx, para compararlo con el calculado: si no cuadran, falta
+  // registrar una recarga o un cargo (sobrepeso) que Skydropx hizo por su cuenta.
+  const real = useQuery({
+    queryKey: ["saldo_skydropx"], staleTime: 5 * 60_000, retry: false, enabled: puede("envios", 2) || puede("finanzas"),
+    queryFn: () => llamarSkydropx<SaldoSkydropx>("saldo"),
+  });
+  const realSky = real.data?.conectado && real.data.saldo != null ? Number(real.data.saldo) : null;
   // Solo las que se usan: una paquetería sin recargas ni guías no tiene saldo que vigilar.
-  const conSaldo = (saldos.data ?? []).filter((s) => s.usa_saldo && (Number(s.recargas) !== 0 || Number(s.consumo) !== 0));
+  const conSaldo = (saldos.data ?? []).filter((s) => s.usa_saldo && (Number(s.recargas) !== 0 || Number(s.consumo) !== 0 || (s.paqueteria === "Skydropx" && realSky != null)));
   if (conSaldo.length === 0) return null;
   return (
     <div className="grid gap-2 grid-cols-2 md:grid-cols-4" data-explain={GLOSARIO.saldoPaqueteria} data-explain-title="Saldo de paquetería">
@@ -30,6 +41,12 @@ export function Saldos({ alRecargar }: { alRecargar?: (paqueteriaId: number) => 
               {s.bajo ? `abajo del mínimo (${dinero(s.saldo_minimo)})` : `${s.guias_30d} guías en 30 días`}
               {s.ultima_recarga && ` · recarga ${fecha(s.ultima_recarga)}`}
             </span>
+            {s.paqueteria === "Skydropx" && realSky != null && (
+              <span className={cn("block truncate text-[11px]", Math.abs(realSky - Number(s.saldo)) >= 1 ? "text-aviso" : "text-tenue")}
+                data-explain={GLOSARIO.saldoSkydropx} data-explain-title="Saldo de Skydropx">
+                Skydropx reporta <b className="cifra">{dinero(realSky)}</b>
+              </span>
+            )}
           </span>
         </button>
       ))}

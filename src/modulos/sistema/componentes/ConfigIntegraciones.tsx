@@ -14,8 +14,9 @@ import { useSesion } from "@/lib/sesion";
 import { fecha, fechaYHora, hace, numero } from "@/lib/formato";
 import { llamarML, URL_ML, type EstadoML } from "@/lib/mercadolibre";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { ConfigSkydropx } from "./ConfigSkydropx";
 
-/** Mercado Libre: conectar la cuenta, a quién le llegan las ventas y si los avisos están entrando. */
+/** Mercado Libre (conectar la cuenta, a quién le llegan las ventas, si los avisos entran) y Skydropx (guías). */
 export function ConfigIntegraciones() {
   const { tieneRol } = useSesion();
   const direccion = tieneRol("direccion");
@@ -116,6 +117,8 @@ export function ConfigIntegraciones() {
           </ol>
         </Tarjeta>
       )}
+
+      <ConfigSkydropx />
     </div>
   );
 }
