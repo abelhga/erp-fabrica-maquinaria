@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 
 export const URL_SKYDROPX = import.meta.env.VITE_SKYDROPX_URL || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/skydropx`;
 
-export async function llamarSkydropx<T>(accion: "probar" | "catalogo" | "saldo" | "cotizar" | "generar" | "revisar", cuerpo: object = {}): Promise<T> {
+export async function llamarSkydropx<T>(accion: "probar" | "catalogo" | "saldo" | "cotizar" | "cotizar_libre" | "generar" | "revisar", cuerpo: object = {}): Promise<T> {
   const { data } = await supabase.auth.getSession();
   const r = await fetch(`${URL_SKYDROPX}/${accion}`, {
     method: "POST",
@@ -27,4 +27,6 @@ export interface PruebaSkydropx extends SaldoSkydropx {
 }
 export interface ConfigSkydropx {
   origen_plantilla_id: string | null; origen: DireccionSkydropx | null; carta_porte: string | null; tipo_empaque: string | null; formato: "standard" | "thermal" | null;
+  /** Lo que se le suma a la tarifa de Skydropx al ponerla en una cotización (0.15 = 15 %). */
+  recargo_flete?: number | null;
 }

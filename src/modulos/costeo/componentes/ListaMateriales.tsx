@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  ArrowDown, ArrowUp, ArrowUpToLine, ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, ExternalLink, FolderInput,
+  ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpToLine, ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, ExternalLink, FolderInput,
   Layers, ListPlus, Loader2, PackageOpen, Trash2,
 } from "lucide-react";
 import { BuscadorArticulo, type ArticuloEncontrado } from "@/components/datos/BuscadorArticulo";
@@ -20,6 +20,7 @@ import { cant, esFabricado, rutaArticulo, type ArticuloCatalogo, type Parametro 
 import { claveArbol, llaveRuta, useArbol, useCostosDe, type CostoHijo, type LineaArbol } from "./datosLista";
 import { DialogoConvertir, DialogoGrupo, DialogoUsarExistente } from "./DialogosSubensamble";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { Dialogo } from "@/components/ui/dialogo";
 
 type CambioLinea = Partial<Pick<LineaArbol, "cantidad" | "parametro" | "por_parametro" | "redondear_arriba" | "merma" | "notas" | "grupo">>;
 
@@ -49,6 +50,7 @@ export function ListaMateriales({ articulo, parametros }: { articulo: ArticuloCa
   const [enfocar, setEnfocar] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(0);
   const [dialogo, setDialogo] = useState<"convertir" | "usar" | "grupo" | null>(null);
+  const [reemplazando, setReemplazando] = useState<LineaArbol | null>(null);
 
   const nivel1 = useMemo(() => (arbol.data ?? []).filter((l) => l.nivel === 1), [arbol.data]);
   const hijos = useMemo(() => {
@@ -123,6 +125,19 @@ export function ListaMateriales({ articulo, parametros }: { articulo: ArticuloCa
       return;
     }
     insertar(a);
+  }
+
+  // Otra pieza en la misma línea: se quedan cantidad, parámetro, merma, grupo y nota.
+  async function reemplazar(l: LineaArbol, a: ArticuloEncontrado) {
+    if (a.id === articulo.id) { toast.error("Un artículo no puede llevarse a sí mismo."); return; }
+    if (a.id === l.articulo_id) { setReemplazando(null); return; }
+    const ok = await ejecutar(() => supabase.from("bom_lineas").update({ hijo_id: a.id }).eq("id", l.linea_id));
+    if (!ok) return;
+    setReemplazando(null);
+    setEnfocar(l.linea_id);
+    toast(`«${l.nombre}» → «${a.nombre}», con la misma cantidad.`, {
+      action: { label: "Deshacer", onClick: () => ejecutar(() => supabase.from("bom_lineas").update({ hijo_id: l.articulo_id }).eq("id", l.linea_id)) },
+    });
   }
 
   async function quitar(lineas: LineaArbol[]) {
@@ -264,7 +279,7 @@ export function ListaMateriales({ articulo, parametros }: { articulo: ArticuloCa
                           mapa={mapa} elegida={elegidas.has(l.linea_id)} alElegir={() => alternar(l.linea_id)}
                           abierta={abiertos.has(l.linea_id)} alAbrir={() => setAbiertos((s) => { const n = new Set(s); if (n.has(l.linea_id)) n.delete(l.linea_id); else n.add(l.linea_id); return n; })}
                           enfocar={enfocar === l.linea_id} primera={k === 0} ultima={k === g.lineas.length - 1}
-                          alCambiar={(c) => actualizar(l, c)} alMover={(d) => mover(l, d)} alQuitar={() => quitar([l])}
+                          alCambiar={(c) => actualizar(l, c)} alMover={(d) => mover(l, d)} alQuitar={() => quitar([l])} alReemplazar={() => setReemplazando(l)}
                           hijos={hijos} columnas={columnas} />
                       ))}
                     </Fragment>
@@ -297,6 +312,13 @@ export function ListaMateriales({ articulo, parametros }: { articulo: ArticuloCa
 
       <DialogoConvertir abierto={dialogo === "convertir"} alCambiar={(v) => !v && setDialogo(null)} padre={articulo}
         lineas={lineasElegidas} alTerminar={() => setElegidas(new Set())} />
+      <Dialogo abierto={!!reemplazando} alCambiar={(v) => !v && setReemplazando(null)} titulo="Reemplazar pieza"
+        descripcion={reemplazando && <>Cambia <b>{reemplazando.nombre}</b> ({reemplazando.clave}) por otra; se queda la misma cantidad
+          ({cant(reemplazando.cantidad)} {reemplazando.unidad}{reemplazando.parametro ? `, + ${cant(reemplazando.por_parametro)} × ${reemplazando.parametro}` : ""}). Solo en este equipo.</>}>
+        <BuscadorArticulo autoFocus mostrarPrecio={false} tipos={["componente", "materia_prima", "subensamble", "servicio"]}
+          placeholder="Escribe la clave o el nombre de la pieza nueva y Enter…" alElegir={(a) => reemplazando && reemplazar(reemplazando, a)} />
+        <p className="mt-2 text-xs text-tenue">Para cambiarla en varios equipos a la vez usa «Reemplazar componente» en Equipos y subensambles.</p>
+      </Dialogo>
       <DialogoUsarExistente abierto={dialogo === "usar"} alCambiar={(v) => !v && setDialogo(null)} padre={articulo}
         lineas={lineasElegidas} grupo={grupoDestino.trim() || null} alTerminar={() => setElegidas(new Set())} />
       <DialogoGrupo abierto={dialogo === "grupo"} alCambiar={(v) => !v && setDialogo(null)} padre={articulo.id}
@@ -306,10 +328,10 @@ export function ListaMateriales({ articulo, parametros }: { articulo: ArticuloCa
 }
 
 function FilaLinea({ l, parametros, usaParametros, editar, costos, mapa, elegida, alElegir, abierta, alAbrir, enfocar, primera, ultima,
-  alCambiar, alMover, alQuitar, hijos, columnas }: {
+  alCambiar, alMover, alQuitar, alReemplazar, hijos, columnas }: {
   l: LineaArbol; parametros: Parametro[]; usaParametros: boolean; editar: boolean; costos: boolean; mapa: Map<string, CostoHijo> | undefined;
   elegida: boolean; alElegir: () => void; abierta: boolean; alAbrir: () => void; enfocar: boolean; primera: boolean; ultima: boolean;
-  alCambiar: (c: CambioLinea) => void; alMover: (d: -1 | 1) => void; alQuitar: () => void; hijos: Map<string, LineaArbol[]>; columnas: number;
+  alCambiar: (c: CambioLinea) => void; alMover: (d: -1 | 1) => void; alQuitar: () => void; alReemplazar: () => void; hijos: Map<string, LineaArbol[]>; columnas: number;
 }) {
   const c = mapa?.get(l.articulo_id);
   const sinCosto = costos && c && !esFabricado(l.tipo) && !c.costo_total;
@@ -392,6 +414,8 @@ function FilaLinea({ l, parametros, usaParametros, editar, costos, mapa, elegida
           <td className="whitespace-nowrap text-right">
             <button className="p-0.5 rounded text-tenue hover:text-texto hover:bg-fondo disabled:opacity-30" disabled={primera} onClick={() => alMover(-1)} aria-label="Subir" title="Subir (Alt+↑)"><ArrowUp className="h-3.5 w-3.5" /></button>
             <button className="p-0.5 rounded text-tenue hover:text-texto hover:bg-fondo disabled:opacity-30" disabled={ultima} onClick={() => alMover(1)} aria-label="Bajar" title="Bajar (Alt+↓)"><ArrowDown className="h-3.5 w-3.5" /></button>
+            <button className="p-0.5 ml-0.5 rounded text-tenue hover:text-texto hover:bg-fondo" onClick={alReemplazar} aria-label={`Reemplazar ${l.nombre}`} title="Reemplazar por otra pieza (misma cantidad)"
+              data-explain={GLOSARIO.reemplazarPieza} data-explain-title="Reemplazar pieza"><ArrowLeftRight className="h-3.5 w-3.5" /></button>
             <button className="p-0.5 ml-0.5 rounded text-tenue hover:text-peligro hover:bg-peligro-suave" onClick={alQuitar} aria-label="Quitar línea" title="Quitar"><Trash2 className="h-3.5 w-3.5" /></button>
           </td>
         )}

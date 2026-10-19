@@ -16,6 +16,7 @@ import { esCostoViejo, leerNumero, useCategorias, useProveedores, type ArticuloC
 import { GraficaEscalonada } from "./Graficas";
 import { FormulaEnPalabras, useDesglose } from "./CostoPrecio";
 import { DondeSeUsa } from "./DondeSeUsa";
+import { BotonReemplazarComponente } from "./ReemplazarComponente";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { BotonSubirFoto } from "@/components/datos/SubirFoto";
 
@@ -354,7 +355,10 @@ export function FichaComponente({ articulo }: { articulo: ArticuloCatalogo }) {
       {costos && <div className="lg:col-span-5"><HistorialCosto a={articulo} /></div>}
       {verCanales && <div className="lg:col-span-5"><Publicaciones a={articulo} /></div>}
       <div className="lg:col-span-5 space-y-2">
-        <h3 className="font-semibold">Dónde se usa</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="font-semibold">Dónde se usa</h3>
+          <BotonReemplazarComponente viejo={articulo} variante="fantasma" />
+        </div>
         <DondeSeUsa id={articulo.id} unidad={articulo.unidad} />
       </div>
     </div>

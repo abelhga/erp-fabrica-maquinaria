@@ -219,6 +219,24 @@ describe.skipIf(!hayBase)("Skydropx contra la base local", () => {
     expect(new Uint8Array(await pdf.data!.arrayBuffer())).toEqual(PDF);
   });
 
+  it("un vendedor cotiza un flete sin envío (antes de la venta); producción no", async () => {
+    const db = createClient(URL_SB, ANON, { auth: { persistSession: false } });
+    const vend = (await db.auth.signInWithPassword({ email: "isaac@hegamex.com", password: "hegamex-local" })).data.session!.access_token;
+    const taller = (await db.auth.signInWithPassword({ email: "taller@hegamex.com", password: "hegamex-local" })).data.session!.access_token;
+    const destino = { cp: "45130", estado: "Jalisco", municipio: "Zapopan", colonia: "Centro" };
+    const bultos = [{ peso_kg: 13, largo_cm: 38, ancho_cm: 62, alto_cm: 29 }];
+    expect((await llamar("cotizar_libre", { destino, bultos }, taller)).status).toBe(403);
+    const sinColonia = await llamar("cotizar_libre", { destino: { ...destino, colonia: "" }, bultos }, vend);
+    expect(sinColonia.status).toBe(400);
+    const sinMedidas = await llamar("cotizar_libre", { destino, bultos: [{ peso_kg: 13 }] }, vend);
+    expect((await sinMedidas.json()).error).toMatch(/medidas/);
+    const r = await llamar("cotizar_libre", { destino, bultos }, vend);
+    expect(r.status).toBe(200);
+    const d = await r.json();
+    expect(d.tarifas.map((t: { id: string }) => t.id)).toEqual(["r-estafeta", "r-fedex"]);
+    expect(d.recargo).toBe(0);
+  });
+
   it("con guía ya no se vuelve a cotizar", async () => {
     const r = await llamar("cotizar", { envio_id: ids.envio });
     expect(r.status).toBe(400);

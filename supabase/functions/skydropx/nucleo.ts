@@ -2,6 +2,7 @@
 //   probar     saldo y plantillas de dirección (para elegir el origen)        envíos 3
 //   catalogo   buscar claves de carta porte o de empaque del SAT              envíos 3
 //   saldo      el saldo real de la cuenta de Skydropx                         envíos 2 o finanzas 1
+//   cotizar_libre {destino, bultos} → tarifas, sin envío (flete en una cotización)  ventas 2 o envíos 2
 //   cotizar    {envio_id} → tarifas de todas las paqueterías                  envíos 2
 //   generar    {envio_id, tarifa_id} → guía pagada, PDF en el envío           envíos 2
 //   revisar    {envio_id} → termina una guía que Skydropx tardó en entregar   envíos 2
@@ -80,7 +81,12 @@ export function faltaParaCotizar(e: EnvioERP, bultos: Bulto[], cfg: ConfigSky | 
   return null;
 }
 
-export function cotizacion(e: EnvioERP, bultos: Bulto[], cfg: ConfigSky) {
+/** Para cotizar sin envío (desde una cotización): solo cuentan CP, estado, municipio y colonia. */
+export function destinoLibre(d: Obj): Pick<EnvioERP, "dest_cp" | "dest_estado" | "dest_municipio" | "dest_colonia"> {
+  return { dest_cp: txt(d.cp)?.replace(/\s/g, "") ?? null, dest_estado: txt(d.estado), dest_municipio: txt(d.municipio), dest_colonia: txt(d.colonia) };
+}
+
+export function cotizacion(e: Pick<EnvioERP, "dest_cp" | "dest_estado" | "dest_municipio" | "dest_colonia">, bultos: Bulto[], cfg: ConfigSky) {
   const g = cfg.origen!;
   return {
     quotation: {
@@ -213,6 +219,17 @@ async function hastaQue<T>(e: Entorno, leer: () => Promise<T>, listo: (x: T) => 
   return x;
 }
 
+/** POST /quotations y espera hasta ~20 s a que contesten todas las paqueterías. */
+async function cotizarEnSkydropx(e: Entorno, cuerpo: unknown) {
+  const r = await api(e, "/api/v1/quotations", { method: "POST", body: cuerpo });
+  if (r.status >= 400) throw new ErrorSky(mensajeError(r.d, r.status), 422);
+  const id = txt(r.d.id);
+  if (!id) throw new ErrorSky("Skydropx no regresó la cotización", 502);
+  const c = r.d.is_completed === true ? r.d
+    : await hastaQue(e, async () => (await api(e, `/api/v1/quotations/${id}`)).d, (x) => x.is_completed === true, 11, 2000);
+  return { cotizacion_id: id, completa: c.is_completed === true, tarifas: tarifas(c) };
+}
+
 /** Baja las etiquetas, las sube al envío y registra la guía. */
 async function terminarGuia(e: Entorno, db: SupabaseClient, envio: EnvioERP, g: ReturnType<typeof leerEnvio>, servicio: string | null) {
   const rutas: string[] = [];
@@ -289,6 +306,23 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
       return json({ conectado: r.status < 400, saldo: num(o(r.d.data).balance), moneda: txt(o(r.d.data).currency) ?? "MXN" });
     }
 
+    // Cotizar antes de la venta: con destino y bultos, sin envío y sin escribir nada.
+    if (accion === "cotizar_libre") {
+      if (!(await puede(db, "ventas", 2)) && !(await puede(db, "envios", 2))) return json({ error: "Sin permiso para cotizar fletes" }, 403);
+      const destino = destinoLibre(o(cuerpo.destino));
+      const bultos = lista(cuerpo.bultos).map(o).map((b) => ({ peso_kg: num(b.peso_kg), largo_cm: num(b.largo_cm), ancho_cm: num(b.ancho_cm), alto_cm: num(b.alto_cm) }));
+      const { data: c } = await db.from("configuracion").select("valor").eq("clave", "skydropx").maybeSingle();
+      const cfg = (c?.valor ?? null) as (ConfigSky & { recargo_flete?: number }) | null;
+      if (!cfg?.origen?.postal_code) return json({ error: "Falta configurar Skydropx (dirección de la planta) en Configuración → Integraciones." }, 400);
+      if (!/^\d{5}$/.test(destino.dest_cp ?? "")) return json({ error: "El código postal son 5 números." }, 400);
+      if (!destino.dest_estado || !destino.dest_municipio || !destino.dest_colonia) return json({ error: "Faltan estado, municipio o colonia: la paquetería cotiza con ellos." }, 400);
+      if (bultos.length === 0 || bultos.length > 40) return json({ error: bultos.length ? "Son demasiados bultos para paquetería: cotízalo como flete." : "No hay nada que mandar: agrega partidas con artículos." }, 400);
+      const sin = bultos.filter((b) => !b.peso_kg || !b.largo_cm || !b.ancho_cm || !b.alto_cm).length;
+      if (sin) return json({ error: sin === 1 ? "A un bulto le falta peso o medidas." : `A ${sin} bultos les falta peso o medidas.` }, 400);
+      const r = await cotizarEnSkydropx(e, cotizacion(destino, bultos as Bulto[], cfg));
+      return json({ ...r, recargo: Number(cfg.recargo_flete ?? 0) });
+    }
+
     const envioId = txt(cuerpo.envio_id);
     if (!envioId) return json({ error: "Falta el envío" }, 400);
     if (!(await puede(db, "envios", 2))) return json({ error: "Sin permiso para cotizar ni generar guías" }, 403);
@@ -298,15 +332,9 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
       const falta = faltaParaCotizar(envio, bultos, cfg);
       if (falta) return json({ error: falta }, 400);
       if (envio.skydropx_envio_id) return json({ error: `${envio.folio} ya tiene una guía pedida a Skydropx: da "Revisar guía".` }, 409);
-      const r = await api(e, "/api/v1/quotations", { method: "POST", body: cotizacion(envio, bultos, cfg!) });
-      if (r.status >= 400) throw new ErrorSky(mensajeError(r.d, r.status), 422);
-      const id = txt(r.d.id);
-      if (!id) throw new ErrorSky("Skydropx no regresó la cotización", 502);
-      // Las paqueterías van contestando: se espera hasta ~20 s a que acaben todas.
-      const c = r.d.is_completed === true ? r.d
-        : await hastaQue(e, async () => (await api(e, `/api/v1/quotations/${id}`)).d, (x) => x.is_completed === true, 11, 2000);
-      await rpc(db, "registrar_cotizacion_skydropx", { p_envio: envio.id, p_cotizacion: id });
-      return json({ cotizacion_id: id, completa: c.is_completed === true, tarifas: tarifas(c) });
+      const r = await cotizarEnSkydropx(e, cotizacion(envio, bultos, cfg!));
+      await rpc(db, "registrar_cotizacion_skydropx", { p_envio: envio.id, p_cotizacion: r.cotizacion_id });
+      return json(r);
     }
 
     if (accion === "generar") {
