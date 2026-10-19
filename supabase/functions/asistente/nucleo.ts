@@ -20,9 +20,9 @@ export interface Entorno {
 }
 
 type Area = "direccion" | "ventas" | "compras" | "almacen" | "produccion" | "finanzas" | "importaciones"
-  | "servicio";
+  | "servicio" | "rrhh" | "ingenieria";
 const AREAS: Area[] = ["direccion", "ventas", "compras", "almacen", "produccion", "finanzas", "importaciones",
-  "servicio"];
+  "servicio", "rrhh", "ingenieria"];
 
 export const RUTAS = [
   "/", "/semana", "/pendientes", "/ventas/para-llamar", "/ventas/oportunidades", "/ventas/cotizaciones", "/ventas/pedidos",

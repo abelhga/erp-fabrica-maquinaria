@@ -1,4 +1,5 @@
 export const IMPORTACIONES = {
+  embarquesEnCamino: "Embarques en el mar o en puerto. En ámbar si alguno llega a planta en los próximos 7 días; abiertos son todos los que no se han cerrado ni cancelado, incluidos los que siguen en producción con el proveedor.",
   embarque: "Un viaje de mercancía importada: puede traer una o varias órdenes de compra (un consolidado junta varios proveedores). Lleva sus fechas reales por etapa, sus documentos y su dinero.",
   faseEmbarque: "En qué va el embarque: cotizando, en producción, listo para embarcar, en el mar, en puerto, en planta (falta cerrar cuentas) y cerrado. La marca la última etapa con fecha real, no una casilla. Si ya se devolvió el vacío o llegó la cuenta de gastos, cuenta como en planta aunque falte anotar el día que llegó.",
   eta: "Fecha estimada de arribo al puerto que da la naviera. Si cambia, queda en la historia del embarque y cuenta cuántas veces cambió.",

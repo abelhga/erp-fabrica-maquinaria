@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
-  AlertTriangle, Boxes, CheckCircle2, ClipboardList, Factory, FileText, PackageCheck, Scale, ShoppingCart,
+  AlertTriangle, Boxes, CheckCircle2, ClipboardList, Factory, FileText, FileWarning, PackageCheck, Scale, Ship, ShoppingCart,
   TrendingUp, Truck, UserRound, Wallet,
 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
@@ -11,7 +11,7 @@ import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando } from "@/components/ui/estados";
 import { SERIE, TooltipGrafica, ejeProps, Leyenda } from "@/components/graficas/comunes";
-import { useSesion, type Modulo, type Rol } from "@/lib/sesion";
+import { useSesion, type Rol } from "@/lib/sesion";
 import type { Area } from "@/lib/asistente";
 import { TableroDireccion } from "./TableroDireccion";
 import { ResumenIA } from "./ResumenIA";
@@ -20,6 +20,7 @@ import { q } from "@/lib/consultas";
 import { dinero, dineroCompacto, fecha, numero, porcentaje } from "@/lib/formato";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { useSaldoHoja } from "@/modulos/finanzas/componentes/SaldosArranque";
+import { contenidoInicio } from "./porRol";
 
 interface Indicadores {
   ventas?: { mes: number; mes_anterior: number; anio: number; pedidos_mes: number };
@@ -33,6 +34,7 @@ interface Indicadores {
   compras?: { oc_abiertas: number; oc_atrasadas: number; requisiciones_abiertas: number };
   produccion?: { abiertas: number; atrasadas: number; en_proceso: number; con_faltantes: number; terminadas_mes: number };
   rrhh?: { empleados: number; incidencias_pendientes: number; ausentes_hoy: number };
+  importaciones?: { activos: number; en_camino: number; llegan_semana: number; docs_pendientes: number };
 }
 
 const LINEAS = [
@@ -53,30 +55,39 @@ export default function Inicio() {
   return tieneRol("direccion") ? <TableroDireccion /> : <InicioPorArea />;
 }
 
-function areaDeRoles(tieneRol: (r: Rol) => boolean, puede: (m: Modulo, n?: number) => boolean): Area | null {
+// Antes, quien no tenía área (RRHH, ingeniería, sistemas) recibía el resumen de dirección,
+// que junta todo lo que su rol alcanza a leer: a RRHH, con "Ventas: ver", le salían las
+// ventas del año. Sin área propia no hay resumen.
+function areaDeRoles(tieneRol: (r: Rol) => boolean): Area | null {
   if (tieneRol("gerente_ventas") || tieneRol("ventas")) return "ventas";
   if (tieneRol("gerente_produccion")) return "produccion";
   if (tieneRol("almacen")) return "almacen";
   if (tieneRol("compras")) return "compras";
   if (tieneRol("finanzas") || tieneRol("administracion")) return "finanzas";
   if (tieneRol("importaciones")) return "importaciones";
-  return puede("asistente") ? "direccion" : null;
+  if (tieneRol("rrhh")) return "rrhh";
+  if (tieneRol("ingenieria")) return "ingenieria";
+  return null;
 }
 
 function InicioPorArea() {
   const { perfil, puede, tieneRol } = useSesion();
-  const area = areaDeRoles(tieneRol, puede);
+  const area = puede("asistente") ? areaDeRoles(tieneRol) : null;
   const ir = useNavigate();
-  const ind = useQuery({ queryKey: ["indicadores"], queryFn: () => q<Indicadores>(supabase.rpc("indicadores")) });
+  // Solo lo que le importa a su puesto, aunque pueda leer más (ver porRol.ts).
+  const { tarjetas: ver, pendientes: avisar, secciones } = contenidoInicio(tieneRol);
+  const ind = useQuery({ queryKey: ["indicadores", secciones],
+    queryFn: () => q<Indicadores>(supabase.rpc("indicadores", { p_secciones: secciones })) });
   const hoja = useSaldoHoja(!!ind.data?.cobranza);
+  const conGrafica = ver.has("grafica_ventas") && puede("ventas");
   const ventas = useQuery({
     queryKey: ["ventas_por_mes", 12],
-    enabled: puede("ventas"),
+    enabled: conGrafica,
     queryFn: () => q<{ mes: string; canal: string; linea: string; importe: number }[]>(supabase.rpc("ventas_por_mes", { p_meses: 12 })),
   });
   const atrasadas = useQuery({
     queryKey: ["tablero_produccion", "atrasadas"],
-    enabled: puede("produccion"),
+    enabled: ver.has("ordenes_por_vencer") && puede("produccion"),
     queryFn: () => q<{ id: string; folio: string; equipo: string; cliente: string | null; para_stock: boolean; fecha_compromiso: string; avance: number; dias_restantes: number }[]>(
       supabase.from("v_tablero_produccion").select("id, folio, equipo, cliente, para_stock, fecha_compromiso, avance, dias_restantes")
         .or("atrasada.eq.true,dias_restantes.lte.5").order("fecha_compromiso").limit(6)),
@@ -101,14 +112,15 @@ function InicioPorArea() {
   const conversion = i.cotizaciones && i.cotizaciones.cerradas_90d > 0 ? i.cotizaciones.ganadas_90d / i.cotizaciones.cerradas_90d : null;
 
   const pendientes = [
-    i.cotizaciones?.por_autorizar && puede("ventas", 3) ? { texto: `${i.cotizaciones.por_autorizar} cotización(es) esperan tu autorización de precio`, ruta: "/ventas/cotizaciones?estado=por_autorizar", icono: FileText, tono: "aviso" as const } : null,
-    i.tareas_vencidas ? { texto: `${i.tareas_vencidas} seguimiento(s) vencido(s) con clientes`, ruta: "/ventas/oportunidades", icono: UserRound, tono: "peligro" as const } : null,
-    i.inventario?.ajustes_pendientes && (puede("inventario", 3) || puede("produccion", 3)) ? { texto: `${i.inventario.ajustes_pendientes} ajuste(s) de inventario por autorizar`, ruta: "/almacen/movimientos?vista=ajustes", icono: Scale, tono: "aviso" as const } : null,
-    i.produccion?.con_faltantes ? { texto: `${i.produccion.con_faltantes} orden(es) de producción con material faltante`, ruta: "/produccion/ordenes?filtro=faltantes", icono: AlertTriangle, tono: "peligro" as const } : null,
-    i.compras?.oc_atrasadas ? { texto: `${i.compras.oc_atrasadas} orden(es) de compra con entrega atrasada`, ruta: "/compras/ordenes?filtro=atrasadas", icono: Truck, tono: "aviso" as const } : null,
-    i.compras?.requisiciones_abiertas && puede("compras", 2) ? { texto: `${i.compras.requisiciones_abiertas} requisición(es) por comprar`, ruta: "/compras/ordenes?vista=requisiciones", icono: ClipboardList, tono: "marca" as const } : null,
-    i.costos_viejos && puede("compras", 2) ? { texto: `${numero(i.costos_viejos)} costos con más de 6 meses sin actualizar`, ruta: "/compras/precios?filtro=viejos", icono: Boxes, tono: "neutro" as const } : null,
-    i.rrhh?.incidencias_pendientes ? { texto: `${i.rrhh.incidencias_pendientes} solicitud(es) de vacaciones o permisos`, ruta: "/rrhh/incidencias", icono: UserRound, tono: "marca" as const } : null,
+    i.cotizaciones?.por_autorizar && avisar.has("por_autorizar") && puede("ventas", 3) ? { texto: `${i.cotizaciones.por_autorizar} cotización(es) esperan tu autorización de precio`, ruta: "/ventas/cotizaciones?estado=por_autorizar", icono: FileText, tono: "aviso" as const } : null,
+    i.tareas_vencidas && avisar.has("tareas_vencidas") ? { texto: `${i.tareas_vencidas} seguimiento(s) vencido(s) con clientes`, ruta: "/ventas/oportunidades", icono: UserRound, tono: "peligro" as const } : null,
+    i.inventario?.ajustes_pendientes && avisar.has("ajustes") && (puede("inventario", 3) || puede("produccion", 3)) ? { texto: `${i.inventario.ajustes_pendientes} ajuste(s) de inventario por autorizar`, ruta: "/almacen/movimientos?vista=ajustes", icono: Scale, tono: "aviso" as const } : null,
+    i.produccion?.con_faltantes && avisar.has("faltantes") ? { texto: `${i.produccion.con_faltantes} orden(es) de producción con material faltante`, ruta: "/produccion/ordenes?filtro=faltantes", icono: AlertTriangle, tono: "peligro" as const } : null,
+    i.compras?.oc_atrasadas && avisar.has("oc_atrasadas") ? { texto: `${i.compras.oc_atrasadas} orden(es) de compra con entrega atrasada`, ruta: "/compras/ordenes?filtro=atrasadas", icono: Truck, tono: "aviso" as const } : null,
+    i.compras?.requisiciones_abiertas && avisar.has("requisiciones") && puede("compras", 2) ? { texto: `${i.compras.requisiciones_abiertas} requisición(es) por comprar`, ruta: "/compras/ordenes?vista=requisiciones", icono: ClipboardList, tono: "marca" as const } : null,
+    i.costos_viejos && avisar.has("costos_viejos") && puede("compras", 2) ? { texto: `${numero(i.costos_viejos)} costos con más de 6 meses sin actualizar`, ruta: "/compras/precios?filtro=viejos", icono: Boxes, tono: "neutro" as const } : null,
+    i.rrhh?.incidencias_pendientes && avisar.has("incidencias") ? { texto: `${i.rrhh.incidencias_pendientes} solicitud(es) de vacaciones o permisos`, ruta: "/rrhh/incidencias", icono: UserRound, tono: "marca" as const } : null,
+    i.importaciones?.docs_pendientes && avisar.has("docs_embarque") ? { texto: `${i.importaciones.docs_pendientes} documento(s) de embarques que faltan antes del arribo`, ruta: "/importaciones", icono: FileWarning, tono: "aviso" as const } : null,
   ].filter(Boolean) as { texto: string; ruta: string; icono: typeof FileText; tono: "aviso" | "peligro" | "marca" | "neutro" }[];
 
   return (
@@ -120,49 +132,54 @@ function InicioPorArea() {
       {ind.isLoading ? <Cargando filas={4} /> : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {i.ventas && (
+            {i.ventas && ver.has("ventas") && (
               <Kpi titulo="Ventas del mes" valor={dineroCompacto(i.ventas.mes)} icono={TrendingUp} tono="marca"
                 detalle={variacion == null ? `${i.ventas.pedidos_mes} pedidos` : `${variacion >= 0 ? "▲" : "▼"} ${porcentaje(Math.abs(variacion), 0)} vs. mes anterior · ${i.ventas.pedidos_mes} pedidos`}
                 alClic={() => ir("/ventas/pedidos")} explica={GLOSARIO.ventasDelMes} />
             )}
-            {i.cotizaciones && (
+            {i.cotizaciones && ver.has("cotizaciones") && (
               <Kpi titulo="Cotizaciones vivas" valor={numero(i.cotizaciones.abiertas)} icono={FileText} tono="info"
                 detalle={`${dineroCompacto(i.cotizaciones.monto_abierto)} enviadas${conversion != null ? ` · cierre ${porcentaje(conversion, 0)} (90 días)` : ""}`}
                 alClic={() => ir("/ventas/cotizaciones")} explica={GLOSARIO.cotizacionesVivas} />
             )}
-            {i.cobranza && (
+            {i.cobranza && ver.has("cobranza") && (
               <Kpi titulo="Por cobrar" valor={dineroCompacto(i.cobranza.por_cobrar + (hoja.data?.total ?? 0))} icono={Wallet} tono="aviso"
                 detalle={hoja.data?.total ? `${dineroCompacto(hoja.data.total)} de la hoja (${hoja.data.clientes} clientes)${i.cobranza.pedidos_con_saldo ? ` · ${i.cobranza.pedidos_con_saldo} pedidos del ERP` : ""}` : `${i.cobranza.pedidos_con_saldo} pedidos con saldo`}
                 alClic={puede("finanzas") ? () => ir("/finanzas/cobranza") : undefined}
                 explica={GLOSARIO.porCobrar} />
             )}
-            {i.produccion && (
+            {i.produccion && ver.has("taller") && (
               <Kpi titulo="Órdenes en taller" valor={numero(i.produccion.abiertas)} icono={Factory}
                 tono={i.produccion.atrasadas ? "peligro" : "ok"}
                 detalle={`${i.produccion.atrasadas} atrasadas · ${i.produccion.terminadas_mes} terminadas este mes`}
                 alClic={() => ir("/produccion/gerencia")} />
             )}
-            {i.compras && (
+            {i.importaciones && ver.has("embarques") && (
+              <Kpi titulo="Embarques en camino" valor={numero(i.importaciones.en_camino)} icono={Ship} tono={i.importaciones.llegan_semana ? "aviso" : "info"}
+                detalle={`${i.importaciones.llegan_semana} llegan a planta esta semana · ${i.importaciones.activos} abiertos`}
+                alClic={() => ir("/importaciones")} explica={GLOSARIO.embarquesEnCamino} />
+            )}
+            {i.compras && ver.has("compras") && (
               <Kpi titulo="Compras en camino" valor={numero(i.compras.oc_abiertas)} icono={Truck} tono="info"
                 detalle={`${i.compras.oc_atrasadas} atrasadas`} alClic={() => ir("/compras/ordenes")} />
             )}
-            {i.valor_inventario != null && (
+            {i.valor_inventario != null && ver.has("valor_inventario") && (
               <Kpi titulo="Valor del inventario" valor={dineroCompacto(i.valor_inventario)} icono={PackageCheck} tono="neutro"
                 detalle={`${numero(i.inventario?.articulos_con_existencia)} artículos con existencia`} alClic={() => ir("/almacen/existencias")} />
             )}
-            {i.por_pagar && (
+            {i.por_pagar && ver.has("por_pagar") && (
               <Kpi titulo="Por pagar a proveedores" valor={dineroCompacto(i.por_pagar.total)} icono={ShoppingCart}
                 tono={i.por_pagar.vencido > 0 ? "peligro" : "neutro"} detalle={`${dinero(i.por_pagar.vencido)} vencido`} explica={GLOSARIO.porPagar}
                 alClic={() => ir("/finanzas/pagos")} />
             )}
-            {i.rrhh && (
+            {i.rrhh && ver.has("personal") && (
               <Kpi titulo="Personal" valor={numero(i.rrhh.empleados)} icono={UserRound} tono="neutro"
                 detalle={`${i.rrhh.ausentes_hoy} ausentes hoy`} alClic={() => ir("/rrhh/empleados")} />
             )}
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
-            {puede("ventas") && (
+            {conGrafica && (
               <Tarjeta className="lg:col-span-2">
                 <EncabezadoTarjeta titulo="Ventas por mes" descripcion="Pedidos sin IVA, por línea" explica={GLOSARIO.lineaVenta}
                   acciones={i.ventas && <span className="text-sm text-tenue">Año: <b className="text-texto cifra">{dinero(i.ventas.anio)}</b></span>} />
@@ -184,7 +201,7 @@ function InicioPorArea() {
               </Tarjeta>
             )}
 
-            <Tarjeta className={puede("ventas") ? "" : "lg:col-span-3"}>
+            <Tarjeta className={conGrafica ? "" : "lg:col-span-3"}>
               <EncabezadoTarjeta titulo="Pendientes" descripcion="Lo que espera algo de ti" />
               <div className="px-3 pb-3 space-y-1">
                 {pendientes.length === 0 ? (
@@ -201,7 +218,7 @@ function InicioPorArea() {
             </Tarjeta>
           </div>
 
-          {puede("produccion") && (atrasadas.data?.length ?? 0) > 0 && (
+          {ver.has("ordenes_por_vencer") && (atrasadas.data?.length ?? 0) > 0 && (
             <Tarjeta>
               <EncabezadoTarjeta titulo="Órdenes por vencer o atrasadas" descripcion="Compromiso en 5 días o menos"
                 acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/produccion/gerencia")}>Ver tablero</button>} />
