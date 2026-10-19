@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
-  AlertTriangle, Boxes, CheckCircle2, ClipboardList, Factory, FileText, FileWarning, PackageCheck, Scale, Ship, ShoppingCart,
+  AlertTriangle, Boxes, CheckCircle2, ClipboardList, Factory, FileText, FileWarning, Inbox, PackageCheck, Scale, Ship, ShoppingCart,
   TrendingUp, Truck, UserRound, Wallet,
 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
@@ -35,6 +35,7 @@ interface Indicadores {
   produccion?: { abiertas: number; atrasadas: number; en_proceso: number; con_faltantes: number; terminadas_mes: number };
   rrhh?: { empleados: number; incidencias_pendientes: number; ausentes_hoy: number };
   importaciones?: { activos: number; en_camino: number; llegan_semana: number; docs_pendientes: number };
+  leads?: { por_tomar: number; mios_sin_atender: number; sin_atender: number; capturados_hoy: number; convertidos_mes: number };
 }
 
 const LINEAS = [
@@ -112,6 +113,9 @@ function InicioPorArea() {
   const conversion = i.cotizaciones && i.cotizaciones.cerradas_90d > 0 ? i.cotizaciones.ganadas_90d / i.cotizaciones.cerradas_90d : null;
 
   const pendientes = [
+    i.leads?.por_tomar && avisar.has("leads_por_tomar") ? { texto: `${i.leads.por_tomar} lead(s) esperando vendedor`, ruta: "/ventas/leads?filtro=por_tomar", icono: Inbox, tono: "peligro" as const } : null,
+    i.leads?.mios_sin_atender && avisar.has("leads_mios") ? { texto: `${i.leads.mios_sin_atender} lead(s) tuyos por atender`, ruta: "/ventas/leads?filtro=mios", icono: Inbox, tono: "aviso" as const } : null,
+    i.leads?.sin_atender && avisar.has("leads_sin_atender") ? { texto: `${i.leads.sin_atender} lead(s) con vendedor, sin atender todavía`, ruta: "/ventas/leads?filtro=abiertos", icono: Inbox, tono: "marca" as const } : null,
     i.cotizaciones?.por_autorizar && avisar.has("por_autorizar") && puede("ventas", 3) ? { texto: `${i.cotizaciones.por_autorizar} cotización(es) esperan tu autorización de precio`, ruta: "/ventas/cotizaciones?estado=por_autorizar", icono: FileText, tono: "aviso" as const } : null,
     i.tareas_vencidas && avisar.has("tareas_vencidas") ? { texto: `${i.tareas_vencidas} seguimiento(s) vencido(s) con clientes`, ruta: "/ventas/oportunidades", icono: UserRound, tono: "peligro" as const } : null,
     i.inventario?.ajustes_pendientes && avisar.has("ajustes") && (puede("inventario", 3) || puede("produccion", 3)) ? { texto: `${i.inventario.ajustes_pendientes} ajuste(s) de inventario por autorizar`, ruta: "/almacen/movimientos?vista=ajustes", icono: Scale, tono: "aviso" as const } : null,
@@ -132,6 +136,11 @@ function InicioPorArea() {
       {ind.isLoading ? <Cargando filas={4} /> : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {i.leads && ver.has("leads") && (
+              <Kpi titulo="Leads de hoy" valor={numero(i.leads.capturados_hoy)} icono={Inbox} tono={i.leads.por_tomar ? "aviso" : "marca"}
+                detalle={`${i.leads.por_tomar} esperando vendedor · ${i.leads.sin_atender} con vendedor, sin atender`}
+                alClic={() => ir("/ventas/leads")} explica={GLOSARIO.estadoLead} />
+            )}
             {i.ventas && ver.has("ventas") && (
               <Kpi titulo="Ventas del mes" valor={dineroCompacto(i.ventas.mes)} icono={TrendingUp} tono="marca"
                 detalle={variacion == null ? `${i.ventas.pedidos_mes} pedidos` : `${variacion >= 0 ? "▲" : "▼"} ${porcentaje(Math.abs(variacion), 0)} vs. mes anterior · ${i.ventas.pedidos_mes} pedidos`}
