@@ -8,7 +8,7 @@ import {
 import { Award, Banknote, Coins, Hash, ListChecks, Target } from "lucide-react";
 import { AlertTriangle, CalendarDays, CalendarRange, Hand, Wrench } from "lucide-react";
 import { MessageSquareQuote, PackageCheck, Store, Undo2 } from "lucide-react";
-import { Map as MapaIcono } from "lucide-react";
+import { BookOpen, Map as MapaIcono } from "lucide-react";
 import type { Modulo } from "./lib/sesion";
 
 export interface EntradaMenu { ruta: string; texto: string; icono: LucideIcon; modulo: Modulo; nivel?: number }
@@ -124,3 +124,5 @@ export const INICIO: EntradaMenu = { ruta: "/", texto: "Inicio", icono: LayoutDa
 export const PENDIENTES: EntradaMenu = { ruta: "/pendientes", texto: "Pendientes", icono: ListTodo, modulo: "ventas" };
 // El resumen de la semana lo arma el asistente: lo ve quien tiene asistente.
 export const SEMANA: EntradaMenu = { ruta: "/semana", texto: "Tu semana", icono: CalendarDays, modulo: "asistente" };
+// Los manuales son de todos (cada quien ve los de su área dentro de la pantalla).
+export const MANUALES: EntradaMenu = { ruta: "/ayuda", texto: "Manuales", icono: BookOpen, modulo: "ventas" };

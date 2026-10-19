@@ -242,7 +242,7 @@ tr.fuera td { opacity: .38; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 
-<div class="envoltura">
+<div class="envoltura" style="padding-bottom: 0;">
   <header class="cabecera">
     <span class="etiqueta">ERP Hegamex · Manual de uso</span>
     <h1>Importaciones: de la PI a la bodega</h1>
@@ -503,7 +503,7 @@ tr.fuera td { opacity: .38; }
             <li>Almacén recibe en <b>Compras → Órdenes de compra → la orden → <span class="btn-ui">Recibir</span></b>. La recepción de una orden que viene en un embarque <b>marca sola la etapa En planta</b> y la entrada se valúa con el último costeo del embarque. No toca el costo del catálogo.</li>
             <li>Pestaña <span class="btn-ui">Costeo</span> (quien ve costos): <span class="btn-ui">Preliminar</span> se habilita con el pedimento; sirve para valuar la entrada a almacén y ver el costo antes de la cuenta de gastos. No cambia el catálogo.</li>
             <li>Cuando llega la cuenta de gastos, regístrala (etapa <b>Cuenta de gastos</b> y sus gastos sin «estimado») y da <span class="btn-ui">Final</span>. Revisa «Por partida» (costo unitario contra el «Antes» del catálogo) y da <span class="btn-ui">Cerrar costeo</span>.</li>
-            <li>Al cerrar el final, el costo de cada componente se actualiza con su historial (origen «importación» y el folio) y su precio de lista se recalcula: <b>costo ÷ 0.70</b>. Compras e ingeniería reciben aviso.</li>
+            <li>Al cerrar el final, el costo de cada componente se actualiza con su historial (origen «importación» y el folio) y su precio de lista se recalcula solo. Compras e ingeniería reciben aviso.</li>
             <li>Si después llega un complemento (almacenaje, demoras, limpieza), se calcula otra versión del final. El tablero avisa «hay gastos nuevos después del costeo final».</li>
           </ol>
           <div class="nota ojo"><b class="marca">!</b><p>Si cambian pagos, gastos o el pedimento entre «calcular» y «cerrar», la base no deja cerrar: «vuelve a calcular antes de cerrar». Así el costo cerrado siempre corresponde a lo que estaba capturado.</p></div>
@@ -517,6 +517,7 @@ tr.fuera td { opacity: .38; }
             <li>FCL y consolidado: registra <b>Vacío devuelto</b> y sube el <b>EIR</b>. Sin el EIR no se recupera la garantía.</li>
             <li>Pide la cuenta de gastos al agente si no llega: el tablero lo marca cuando la mercancía ya lleva días en planta, porque contabilidad la necesita para cerrar.</li>
             <li>Anota el saldo a favor y la garantía como <b>por recuperar</b> y márcalos <span class="btn-ui">Recuperado</span> cuando entren.</li>
+            <li>Si anotaste «Vacío devuelto» o «Cuenta de gastos» pero no el día de «En planta», el embarque ya cuenta como en planta (eso prueba que llegó) y su tarjeta dice «Ya está en planta; falta anotar el día que llegó». Anótalo cuando lo sepas: de ahí salen los tiempos por proveedor.</li>
             <li>Registra la etapa <b>Cerrado</b>. El embarque pasa a «Ver cerrados y cancelados» y sus tiempos quedan en <b>Tiempos por proveedor</b>.</li>
           </ol>
           <div class="nota"><b class="marca">✓</b><p><b>Tiempos por proveedor</b> mide pedido → zarpe, travesía, puerto → planta y planta → cuenta de gastos con fechas reales. El reabasto usa esos días hábiles en lugar de los capturados a mano, y a los importados les pide 6 meses de cobertura.</p></div>
@@ -597,11 +598,11 @@ tr.fuera td { opacity: .38; }
         </div>
         <div class="tabla-env tarjeta" style="box-shadow:none;">
           <table>
-            <thead><tr><th>Partida</th><th class="der">Mercancía</th><th class="der">Gastos</th><th class="der">Unitario</th><th class="der">Precio de lista</th></tr></thead>
+            <thead><tr><th>Partida</th><th class="der">Mercancía</th><th class="der">Gastos</th><th class="der">Costo unitario</th></tr></thead>
             <tbody id="c-tabla"></tbody>
           </table>
         </div>
-        <div class="nota"><b class="marca">✓</b><p>Así lo calcula la base al dar <span class="btn-ui">Final</span>: mercancía = cantidad × precio × TC real; cada partida carga los gastos en proporción a su valor; unitario = (mercancía + gastos) ÷ cantidad. Al <span class="btn-ui">Cerrar costeo</span>, ese unitario es el nuevo costo del componente y su precio de lista es costo ÷ 0.70.</p></div>
+        <div class="nota"><b class="marca">✓</b><p>Así lo calcula la base al dar <span class="btn-ui">Final</span>: mercancía = cantidad × precio × TC real; cada partida carga los gastos en proporción a su valor; unitario = (mercancía + gastos) ÷ cantidad. Al <span class="btn-ui">Cerrar costeo</span>, ese unitario es el nuevo costo del componente y su precio de lista se recalcula solo.</p></div>
         <p class="tenue" style="font-size:12.5px;">En un consolidado, los gastos marcados «Por volumen» se reparten primero entre órdenes según sus m³ y luego por valor dentro de cada orden.</p>
       </div>
     </div>
@@ -749,6 +750,8 @@ tr.fuera td { opacity: .38; }
   var fase = function () {
     var f = "cotizando", ord = -1;
     ETAPAS.forEach(function (e, i) { if (e.hito && tiene(e.tipo) && i > ord) { ord = i; f = e.fase; } });
+    // Igual que la base: el vacío devuelto o la cuenta de gastos prueban que ya llegó a planta.
+    if (f !== "cerrado" && f !== "planta" && (tiene("vacio_devuelto") || tiene("cuenta_gastos"))) f = "planta";
     return f;
   };
   var docsArribo = function () { return DOCS.filter(function (d) { return d.arribo && aplicaDoc(d, s.mod, s.inc); }); };
@@ -785,7 +788,7 @@ tr.fuera td { opacity: .38; }
 
   var alertas = function () {
     var f = fase(), fl = faltan(), out = [], conCont = s.mod === "fcl" || s.mod === "consolidado";
-    var enPuerto = tiene("arribo") && !tiene("despacho") && !tiene("en_planta");
+    var enPuerto = tiene("arribo") && !tiene("despacho") && !tiene("en_planta") && fase() !== "planta";
     if ((f === "transito" || enPuerto) && fl.length) {
       var txt = fl.length === 1 ? "falta 1 documento" : "faltan " + fl.length + " documentos";
       out.push({ tono: f === "transito" ? "atencion" : "riesgo",
@@ -818,7 +821,8 @@ tr.fuera td { opacity: .38; }
   var pintar = function () {
     $("s-modalidad").value = s.mod; $("s-incoterm").value = s.inc;
     var f = fase(), lista = aplican();
-    $("s-fase").innerHTML = '<span class="insignia punto ' + FASES[f][1] + '">' + FASES[f][0] + "</span>";
+    $("s-fase").innerHTML = '<span class="insignia punto ' + FASES[f][1] + '">' + FASES[f][0] + "</span>" +
+      (f === "planta" && !tiene("en_planta") ? ' <span class="tenue" style="font-size:12.5px">Ya está en planta; falta anotar el día que llegó</span>' : "");
     var ultima = -1;
     lista.forEach(function (e, i) { if (tiene(e.tipo)) ultima = i; });
     var cerrado = f === "cerrado";
@@ -835,7 +839,7 @@ tr.fuera td { opacity: .38; }
     var sp = siguiente();
     $("s-siguiente").innerHTML = sp ? "<b>→ " + esc(sp[0]) + "</b><span>" + chipDebe(sp[1]) + "</span>" : "<b>Embarque cerrado</b><span class=\"tenue\" style=\"font-size:13px\">Sus tiempos ya cuentan en «Tiempos por proveedor».</span>";
 
-    var enPuerto = tiene("arribo") && !tiene("despacho") && !tiene("en_planta");
+    var enPuerto = tiene("arribo") && !tiene("despacho") && !tiene("en_planta") && fase() !== "planta";
     var conCont = s.mod === "fcl" || s.mod === "consolidado";
     $("s-panel-dias").hidden = !(tiene("arribo") && !cerrado && (enPuerto || (conCont && !tiene("vacio_devuelto"))));
     $("s-dias").value = s.dias; $("s-dias-txt").textContent = s.dias;
@@ -924,7 +928,7 @@ tr.fuera td { opacity: .38; }
     $("c-tabla").innerHTML = lineas.map(function (l) {
       var v = l.q * l.p * tcReal, g = valor > 0 ? gastos * v / valor : 0, u = l.q > 0 ? (v + g) / l.q : 0;
       return "<tr><td>" + esc(l.n) + '<div class="tenue" style="font-size:12px">' + l.q + " × US$ " + l.p + "</div></td><td class=\"der cifra\">" + mx0.format(v) + '</td><td class="der cifra">' + mx0.format(g) +
-        '</td><td class="der cifra"><b>' + mx.format(u) + '</b></td><td class="der cifra">' + mx.format(u / 0.70) + "</td></tr>";
+        '</td><td class="der cifra"><b>' + mx.format(u) + "</b></td></tr>";
     }).join("");
   };
   $("costeo").addEventListener("input", calcular);

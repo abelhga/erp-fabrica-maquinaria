@@ -16,7 +16,7 @@ export const USUARIOS = [
   ["direccion@hegamex.com", "Abel Hernández G", ["direccion"]],
   ["isaac@hegamex.com", "Isaac Hernández", ["ventas"]],
   ["juan@hegamex.com", "Juan Manuel Ramírez", ["ventas"]],
-  ["susana@hegamex.com", "Susana Rizo", ["ventas"]],
+  ["susana@hegamex.com", "Susana Rizo", ["ventas", "administracion"]], // como en producción (111)
   ["gerente.ventas@hegamex.com", "Elizabeth Hernández", ["gerente_ventas"]],
   ["ingenieria@hegamex.com", "Miguel Ingeniería", ["ingenieria"]],
   ["compras@hegamex.com", "Comprador Hegamex", ["compras"]],

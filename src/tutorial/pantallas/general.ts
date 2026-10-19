@@ -12,6 +12,14 @@ export const GENERAL: Record<string, AyudaPantalla> = {
     "“Me tocan” son los tuyos: dale clic al círculo para marcarlo hecho y, si quieres, deja una respuesta corta (un precio, una fecha). “Los que pedí” son los que esperas de otros; si ya no hace falta, cancélalo con la X. La flecha te lleva al pedido, orden o pantalla de donde salió.",
     "La fecha sale en ámbar si vence hoy y en rojo si ya venció; mientras siga vencido, el sistema les recuerda a los dos. Para pedir algo nuevo usa “Pedir algo a alguien”: qué hay que hacer, quién y para cuándo.",
   ],
+  "/ayuda": [
+    "Aquí están los manuales de uso del ERP. Ves el general y los de tu área: importaciones, finanzas o el de la gerencia administrativa.",
+    "Cada manual explica el flujo paso a paso con los mismos nombres de botones de las pantallas, y trae prácticas que se comportan como el ERP pero no guardan nada. Dale clic a uno para abrirlo.",
+  ],
+  "/ayuda/:manual": [
+    "El manual se lee aquí mismo, con el tema claro u oscuro que tengas. Las ligas a otros manuales te traen a su pantalla; «Abrir en otra pestaña» lo abre solo, para tenerlo junto al ERP mientras trabajas.",
+    "Las prácticas son de ejemplo: folios, clientes y cifras inventados, y nada de lo que captures ahí llega a la base.",
+  ],
   "/semana": [
     "Tu resumen de los lunes: lo que pasó la semana pasada comparado con la anterior, y lo que viene en esta. Sirve para preparar la junta o para saber de un vistazo cómo vamos.",
     "Arriba, “La semana en una frase” la narra Claude con los números (o las reglas del ERP si no está conectado); el botón de flechas la vuelve a escribir. En las tarjetas, el porcentaje compara contra la semana anterior: verde si subió, rojo si bajó.",

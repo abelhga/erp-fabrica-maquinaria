@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
-import { MENU, INICIO, PENDIENTES, SEMANA } from "@/navegacion";
+import { MENU, INICIO, PENDIENTES, SEMANA, MANUALES } from "@/navegacion";
 import { useSesion, NOMBRE_ROL } from "@/lib/sesion";
 import { cn } from "@/lib/utilidades";
 import { supabase } from "@/lib/supabase";
@@ -58,6 +58,7 @@ export function Shell() {
         <ItemMenu ruta={INICIO.ruta} texto={INICIO.texto} Icono={INICIO.icono} />
         <ItemMenu ruta={PENDIENTES.ruta} texto={PENDIENTES.texto} Icono={PENDIENTES.icono} />
         {puede(SEMANA.modulo, 1) && <ItemMenu ruta={SEMANA.ruta} texto={SEMANA.texto} Icono={SEMANA.icono} />}
+        <ItemMenu ruta={MANUALES.ruta} texto={MANUALES.texto} Icono={MANUALES.icono} />
       </div>
       {secciones.map((s) => (
         <div key={s.titulo}>

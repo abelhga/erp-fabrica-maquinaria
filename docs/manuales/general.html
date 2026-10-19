@@ -182,7 +182,7 @@ tr.yo td { background: var(--marca-suave); }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 </style>
 
-<div class="envoltura">
+<div class="envoltura" style="padding-bottom: 0;">
   <header class="cabecera">
     <span class="etiqueta">ERP Hegamex · Manual de uso</span>
     <h1>De la llamada al cliente a la cobranza</h1>
@@ -282,7 +282,7 @@ tr.yo td { background: var(--marca-suave); }
         <p class="quien">Compras · Ingeniería · Dirección</p>
         <ol>
           <li>El costo cambia en <span class="ruta">/compras/precios</span> («Escribe el costo nuevo y Enter»), al recibir una OC con la casilla de actualizar costo, al contestar una solicitud de precio o con el costeo final de un embarque.</li>
-          <li>La base recalcula el precio de lista de cada equipo que usa esa pieza, con su historial. Componentes: costo ÷ 0.70.</li>
+          <li>La base recalcula el precio de lista de cada equipo que usa esa pieza, con su historial.</li>
           <li>Dirección revisa en <span class="ruta">/costeo/margenes</span> y simula políticas. Ventas solo ve el precio nuevo.</li>
         </ol>
       </div>

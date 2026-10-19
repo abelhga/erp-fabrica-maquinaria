@@ -1,0 +1,976 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<!-- Generado por `npm run manuales` desde docs/manuales. No se edita aquí. -->
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<script>
+// El manual sigue el tema del ERP: dentro de la pantalla de ayuda copia el del marco (y
+// cambia si alguien lo cambia); abierto solo, el que se eligió o el de la empresa.
+(function () {
+  var raiz = document.documentElement;
+  function tema() {
+    var t = null;
+    try { t = localStorage.getItem("tema_elegido") || localStorage.getItem("tema_empresa"); } catch (e) {}
+    try { if (window.parent !== window) t = window.parent.document.documentElement.classList.contains("dark") ? "oscuro" : "claro"; } catch (e) {}
+    raiz.setAttribute("data-theme", (t || "oscuro") === "oscuro" ? "dark" : "light");
+  }
+  tema();
+  try { if (window.parent !== window) new MutationObserver(tema).observe(window.parent.document.documentElement, { attributes: true, attributeFilter: ["class"] }); } catch (e) {}
+  window.addEventListener("storage", tema);
+})();
+</script>
+</head>
+<body>
+<title>Manual de Importaciones Hegamex</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: una sola columna de lectura con índice fijo arriba; las piezas interactivas
+   (simulador, documentos, calculadora) rompen a ancho completo dentro de tarjetas.
+   Los colores son los mismos tokens del ERP para que el manual se vea como la pantalla. */
+:root {
+  --fondo: hsl(220 20% 97%);
+  --superficie: hsl(0 0% 100%);
+  --borde: hsl(220 14% 89%);
+  --texto: hsl(222 30% 14%);
+  --tenue: hsl(220 9% 46%);
+  --marca: hsl(214 100% 52%);
+  --marca-suave: hsl(214 100% 96%);
+  --marca-texto: hsl(214 90% 40%);
+  --ok: hsl(152 60% 36%);
+  --ok-suave: hsl(150 60% 95%);
+  --aviso: hsl(35 92% 40%);
+  --aviso-suave: hsl(45 100% 94%);
+  --peligro: hsl(0 72% 48%);
+  --peligro-suave: hsl(0 85% 96%);
+  --info: hsl(262 60% 52%);
+  --info-suave: hsl(262 80% 97%);
+  --mar: hsl(205 70% 30%);
+  --sombra: 0 1px 2px hsl(222 40% 20% / .05), 0 2px 6px hsl(222 40% 20% / .06);
+  --f-texto: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fondo: hsl(222 25% 8%); --superficie: hsl(222 22% 12%); --borde: hsl(220 15% 22%);
+    --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 64%);
+    --marca: hsl(214 100% 62%); --marca-suave: hsl(214 60% 18%); --marca-texto: hsl(214 100% 74%);
+    --ok: hsl(152 55% 50%); --ok-suave: hsl(152 40% 15%);
+    --aviso: hsl(38 92% 58%); --aviso-suave: hsl(38 50% 15%);
+    --peligro: hsl(0 75% 64%); --peligro-suave: hsl(0 45% 17%);
+    --info: hsl(262 70% 74%); --info-suave: hsl(262 35% 18%);
+    --mar: hsl(205 70% 70%);
+    --sombra: 0 1px 2px hsl(0 0% 0% / .3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fondo: hsl(222 25% 8%); --superficie: hsl(222 22% 12%); --borde: hsl(220 15% 22%);
+  --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 64%);
+  --marca: hsl(214 100% 62%); --marca-suave: hsl(214 60% 18%); --marca-texto: hsl(214 100% 74%);
+  --ok: hsl(152 55% 50%); --ok-suave: hsl(152 40% 15%);
+  --aviso: hsl(38 92% 58%); --aviso-suave: hsl(38 50% 15%);
+  --peligro: hsl(0 75% 64%); --peligro-suave: hsl(0 45% 17%);
+  --info: hsl(262 70% 74%); --info-suave: hsl(262 35% 18%);
+  --mar: hsl(205 70% 70%);
+  --sombra: 0 1px 2px hsl(0 0% 0% / .3);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--fondo); color: var(--texto); font-family: var(--f-texto); font-size: 15px; line-height: 1.6; }
+.envoltura { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 16px; font-weight: 600; }
+p { margin: 0; }
+a { color: var(--marca-texto); }
+code, .ruta { font-family: var(--f-mono); font-size: 0.85em; background: var(--marca-suave); color: var(--marca-texto); padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+.cifra { font-variant-numeric: tabular-nums; }
+.tenue { color: var(--tenue); }
+.etiqueta { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--tenue); }
+.lectura { max-width: 68ch; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; border-radius: 6px; }
+
+/* Encabezado */
+.cabecera { padding-block: 40px 28px; display: grid; gap: 14px; }
+.cabecera .lectura { font-size: 17px; color: var(--tenue); }
+.quienes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+
+/* Índice fijo */
+.indice { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--fondo) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--borde); margin-bottom: 28px; }
+.indice nav { display: flex; gap: 4px; overflow-x: auto; padding-block: 8px; scrollbar-width: none; }
+.indice a { flex: none; text-decoration: none; color: var(--tenue); font-size: 13.5px; font-weight: 500; padding: 6px 12px; border-radius: 999px; }
+.indice a:hover { color: var(--texto); background: var(--superficie); }
+.indice a.activo { color: var(--marca-texto); background: var(--marca-suave); }
+
+section.bloque { display: grid; gap: 18px; padding-block: 28px; scroll-margin-top: 64px; }
+section.bloque > header { display: grid; gap: 6px; }
+section.bloque > * { min-width: 0; }
+select { max-width: 100%; }
+
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; box-shadow: var(--sombra); }
+
+/* Insignias como en el ERP */
+.insignia { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 999px; white-space: nowrap; background: var(--fondo); color: var(--tenue); border: 1px solid var(--borde); }
+.insignia.punto::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.t-neutro { background: var(--fondo); color: var(--tenue); }
+.t-info { background: var(--info-suave); color: var(--info); border-color: transparent; }
+.t-marca { background: var(--marca-suave); color: var(--marca-texto); border-color: transparent; }
+.t-aviso { background: var(--aviso-suave); color: var(--aviso); border-color: transparent; }
+.t-ok { background: var(--ok-suave); color: var(--ok); border-color: transparent; }
+.t-peligro { background: var(--peligro-suave); color: var(--peligro); border-color: transparent; }
+
+/* Tablero de ejemplo */
+.tablero { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.columna { background: color-mix(in srgb, var(--fondo) 70%, var(--superficie)); border: 1px solid var(--borde); border-radius: 12px; padding: 10px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.columna header { padding: 0 4px; }
+.columna header b { font-size: 14px; }
+.columna header p { font-size: 12px; color: var(--tenue); }
+.emb { background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 10px; display: grid; gap: 7px; font-size: 13px; min-width: 0; }
+.emb.riesgo { border-color: color-mix(in srgb, var(--peligro) 50%, transparent); }
+.emb .fila { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.emb .folio { font-weight: 600; font-variant-numeric: tabular-nums; }
+.emb .meta { font-size: 11px; color: var(--tenue); }
+.emb .paso { background: var(--fondo); border-radius: 8px; padding: 7px 9px; display: grid; gap: 5px; font-size: 12px; font-weight: 500; }
+.emb .paso::before { content: "→ " attr(data-x); }
+.barra { display: grid; gap: 3px; font-size: 11.5px; }
+.barra .riel { height: 6px; border-radius: 99px; background: var(--fondo); overflow: hidden; }
+.barra .riel i { display: block; height: 100%; border-radius: 99px; background: var(--ok); transition: width .25s ease; }
+.barra.aviso .riel i { background: var(--aviso); } .barra.aviso b { color: var(--aviso); }
+.barra.peligro .riel i { background: var(--peligro); } .barra.peligro b { color: var(--peligro); }
+.llamadas { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.llamada { display: grid; grid-template-columns: 26px 1fr; gap: 10px; font-size: 14px; }
+.llamada .n { width: 26px; height: 26px; border-radius: 50%; background: var(--marca); color: var(--superficie); display: grid; place-items: center; font-size: 12.5px; font-weight: 600; }
+
+/* Simulador */
+.sim { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 0; overflow: hidden; }
+.sim > div { padding: 20px; min-width: 0; }
+.sim .lado { border-left: 1px solid var(--borde); background: color-mix(in srgb, var(--fondo) 55%, var(--superficie)); display: grid; gap: 16px; align-content: start; }
+.controles { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; margin-bottom: 16px; }
+.campo { display: grid; gap: 4px; font-size: 12.5px; color: var(--tenue); }
+select, input[type="number"], input[type="text"] { background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; padding: 6px 10px; font-size: 14px; min-width: 0; }
+input[type="number"] { width: 100%; font-variant-numeric: tabular-nums; }
+.boton { display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; background: var(--marca); color: hsl(0 0% 100%); font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+.boton:hover { filter: brightness(1.06); }
+.boton.sec { background: var(--superficie); color: var(--texto); border-color: var(--borde); font-weight: 500; }
+.boton.sec:hover { background: var(--fondo); filter: none; }
+.boton.chico { font-size: 12px; padding: 4px 9px; }
+.boton:disabled { opacity: .45; cursor: not-allowed; }
+.etapas { list-style: none; margin: 0; padding: 0; }
+.etapas li { position: relative; display: grid; grid-template-columns: 26px 1fr; gap: 12px; padding-bottom: 14px; }
+.etapas li:last-child { padding-bottom: 0; }
+.etapas li:not(:last-child)::after { content: ""; position: absolute; left: 12px; top: 26px; bottom: 0; width: 1px; background: var(--borde); }
+.etapas li.hecha:not(:last-child)::after { background: color-mix(in srgb, var(--ok) 60%, transparent); }
+.etapas .bola { position: relative; z-index: 1; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--borde); background: var(--superficie); color: var(--tenue); display: grid; place-items: center; font-size: 11px; font-variant-numeric: tabular-nums; }
+.etapas li.hecha .bola { background: var(--ok); border-color: var(--ok); color: hsl(0 0% 100%); }
+.etapas li.sig .bola { background: var(--marca-suave); border-color: var(--marca); color: var(--marca-texto); }
+.etapas .cab { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; align-items: center; }
+.etapas .nom { font-size: 14px; font-weight: 500; }
+.etapas li.lejos .nom { color: var(--tenue); }
+.etapas .des { font-size: 12.5px; color: var(--tenue); }
+.etapas .fase-chip { font-size: 10.5px; }
+.panel { display: grid; gap: 8px; }
+.panel h4 { margin: 0; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--tenue); font-weight: 600; }
+.siguiente { background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 12px; display: grid; gap: 6px; }
+.siguiente b { font-size: 15px; }
+.alerta { display: grid; grid-template-columns: 30px 1fr; gap: 10px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 10px; font-size: 13px; }
+.alerta .ico { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-weight: 700; }
+.alerta.riesgo .ico { background: var(--peligro-suave); color: var(--peligro); }
+.alerta.atencion .ico { background: var(--aviso-suave); color: var(--aviso); }
+.alerta.info .ico { background: var(--info-suave); color: var(--info); }
+.alerta p:last-child { color: var(--tenue); font-size: 12px; }
+.docs-sim { display: grid; gap: 4px; }
+.docs-sim label { display: flex; gap: 8px; align-items: center; font-size: 13px; padding: 3px 0; cursor: pointer; }
+.docs-sim label span.quien { margin-left: auto; font-size: 11.5px; color: var(--tenue); }
+.docs-sim input { accent-color: var(--ok); width: 15px; height: 15px; }
+.aviso-campana { font-size: 12.5px; padding: 8px 10px; border-radius: 8px; background: var(--superficie); border: 1px solid var(--borde); display: grid; gap: 2px; animation: entrar .3s ease both; }
+.aviso-campana b { font-weight: 600; }
+.vacio-txt { font-size: 13px; color: var(--tenue); }
+.deslizador { display: grid; gap: 6px; }
+.deslizador input[type="range"] { width: 100%; accent-color: var(--marca); }
+@keyframes entrar { from { opacity: .4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* Pasos por fase */
+.fases { display: grid; gap: 10px; }
+details.fase { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; }
+details.fase summary { list-style: none; cursor: pointer; padding: 14px 18px; display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; }
+details.fase summary::-webkit-details-marker { display: none; }
+details.fase summary .num { font-family: var(--f-mono); font-size: 12px; color: var(--marca-texto); background: var(--marca-suave); border-radius: 6px; padding: 2px 7px; }
+details.fase summary .flecha { color: var(--tenue); transition: transform .2s; }
+details.fase[open] summary .flecha { transform: rotate(90deg); }
+details.fase summary p { font-size: 13px; color: var(--tenue); }
+.cuerpo { padding: 0 18px 18px; display: grid; gap: 14px; border-top: 1px solid var(--borde); padding-top: 16px; }
+.cuerpo ol, .cuerpo ul { margin: 0; padding-left: 20px; display: grid; gap: 7px; }
+.cuerpo li { padding-left: 2px; }
+.btn-ui { display: inline-block; font-size: 12.5px; font-weight: 600; padding: 0 7px; border-radius: 6px; border: 1px solid var(--borde); background: var(--fondo); white-space: nowrap; }
+.nota { display: grid; grid-template-columns: auto 1fr; gap: 10px; font-size: 13.5px; padding: 10px 12px; border-radius: 10px; background: var(--marca-suave); color: var(--texto); }
+.nota.ojo { background: var(--aviso-suave); }
+.nota b.marca { color: var(--marca-texto); }
+.nota.ojo b.marca { color: var(--aviso); }
+.dos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+
+/* Tablas */
+.tabla-env { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th { text-align: left; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--borde); white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.der, th.der { text-align: right; }
+td .si { color: var(--ok); font-weight: 600; }
+tr.fuera td { opacity: .38; }
+.filtros { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: end; padding: 16px 16px 4px; }
+.contador { font-size: 13px; color: var(--tenue); padding: 0 16px 10px; }
+
+/* Calculadora */
+.calc { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.calc > div { padding: 20px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.calc .res { border-left: 1px solid var(--borde); background: color-mix(in srgb, var(--fondo) 55%, var(--superficie)); }
+.rejilla { display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)); gap: 8px; align-items: end; }
+.rejilla3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.gran { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.kpi { background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; min-width: 0; }
+.kpi span { font-size: 12px; color: var(--tenue); }
+.kpis4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 960px) { .kpis4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi b { font-size: 17px; font-variant-numeric: tabular-nums; }
+
+/* Permisos */
+.permisos td:first-child { font-weight: 500; }
+.nivel { display: inline-flex; gap: 3px; vertical-align: middle; margin-right: 6px; }
+.nivel i { width: 8px; height: 8px; border-radius: 2px; background: var(--borde); }
+.nivel i.on { background: var(--marca); }
+
+.pie { border-top: 1px solid var(--borde); margin-top: 24px; padding-top: 18px; font-size: 13px; color: var(--tenue); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+
+@media (max-width: 960px) {
+  .tablero { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sim, .calc { grid-template-columns: minmax(0, 1fr); }
+  .sim .lado, .calc .res { border-left: 0; border-top: 1px solid var(--borde); }
+}
+@media (max-width: 620px) {
+  .tablero, .dos { grid-template-columns: minmax(0, 1fr); }
+  .kpis { grid-template-columns: minmax(0, 1fr); }
+  .rejilla { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .rejilla .campo:first-child { grid-column: 1 / -1; }
+  .sim > div, .calc > div { padding: 16px; }
+  details.fase summary { padding: 12px 14px; gap: 10px; }
+  .cuerpo { padding: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="envoltura" style="padding-bottom: 0;">
+  <header class="cabecera">
+    <span class="etiqueta">ERP Hegamex · Manual de uso</span>
+    <h1>Importaciones: de la PI a la bodega</h1>
+    <p class="lectura">Cada embarque guarda la fecha real de cada paso, qué documento falta y quién lo debe, el dinero en dólares con su tipo de cambio real y, al final, el costo puesto en planta que actualiza el catálogo. Este manual sigue un embarque de principio a fin. El simulador de abajo se mueve igual que la pantalla de verdad.</p>
+    <div class="quienes">
+      <span class="insignia t-marca">Para: Importaciones (captura y cierra)</span>
+      <span class="insignia">Compras: captura</span>
+      <span class="insignia">Finanzas: ve el dinero</span>
+      <span class="insignia">Almacén y taller: ven qué llega y cuándo</span>
+    </div>
+  </header>
+</div>
+
+<div class="indice">
+  <div class="envoltura" style="padding-block: 0;">
+    <nav id="indice" aria-label="Secciones">
+      <a href="#tablero">El tablero</a>
+      <a href="#simulador">Simulador</a>
+      <a href="#paso-a-paso">Paso a paso</a>
+      <a href="#documentos">Documentos</a>
+      <a href="#costeo">Costo puesto en planta</a>
+      <a href="#alertas">Alertas y avisos</a>
+      <a href="#permisos">Quién ve qué</a>
+    </nav>
+  </div>
+</div>
+
+<main class="envoltura">
+
+  <!-- 1. TABLERO -->
+  <section class="bloque" id="tablero">
+    <header>
+      <span class="etiqueta">Menú → Importaciones → Embarques · <span class="ruta">/importaciones</span></span>
+      <h2>El tablero: cada embarque en su etapa</h2>
+      <p class="lectura tenue">Reemplaza la hoja IMPORTACIONES de 29 casillas. Arriba lo urgente; luego cada embarque en una de cuatro columnas con su siguiente paso y quién lo debe; abajo, lo que estamos esperando de otros. Se actualiza solo cuando alguien registra algo.</p>
+    </header>
+
+    <div class="tarjeta" style="padding: 16px; display: grid; gap: 14px;">
+      <div class="kpis kpis4" id="kpis-tablero">
+        <div class="kpi"><span>En curso</span><b>4</b><span>1 en el mar · 1 en puerto</span></div>
+        <div class="kpi"><span>Riesgos hoy</span><b style="color: var(--peligro)">1</b><span>3 alertas en total</span></div>
+        <div class="kpi"><span>Por pagar a proveedores</span><b>US$ 41,250</b><span>≈ al tipo de cambio de hoy</span></div>
+        <div class="kpi"><span>Por recuperar</span><b>$ 18,600</b><span>Saldos a favor y garantías</span></div>
+      </div>
+      <div class="tablero" aria-label="Tablero de ejemplo">
+        <div class="columna">
+          <header><b>Con el proveedor</b><p>PI, anticipo, producción y saldo</p></header>
+          <div class="emb">
+            <div class="fila"><span class="folio">EMB-2026-00011</span><span class="meta">LCL · FOB</span></div>
+            <div>20 cosedoras N600A y 2 cabezales F900A<div class="meta">Proveedor de Ningbo</div></div>
+            <div class="meta">ETA 28 nov 2026</div>
+            <div class="paso" data-x="Pagar el anticipo"><span class="insignia t-marca" style="justify-self:start">Nos toca</span></div>
+          </div>
+        </div>
+        <div class="columna">
+          <header><b>En el mar</b><p>Documentos al agente antes del arribo</p></header>
+          <div class="emb">
+            <div class="fila"><span class="folio">EMB-2026-00010</span><span class="meta">FCL · CIF</span></div>
+            <div>Rodamientos y chumaceras<div class="meta">Proveedor de Qingdao</div></div>
+            <div class="meta">ETA 19 oct 2026 (cambió 1 vez)</div>
+            <div class="paso" data-x="Juntar los documentos para el agente aduanal"><span class="insignia" style="justify-self:start">Debe: Proveedor</span></div>
+            <div class="meta" style="color: var(--aviso)">3 documentos pendientes</div>
+          </div>
+        </div>
+        <div class="columna">
+          <header><b>En puerto</b><p>Los días libres corren</p></header>
+          <div class="emb riesgo">
+            <div class="fila"><span class="folio">EMB-2026-00008</span><span class="meta">Consolidado · FOB</span></div>
+            <div>71 celdas de carga<div class="meta">Dos proveedores</div></div>
+            <div class="barra peligro"><div class="fila"><span class="tenue">Días en puerto</span><b class="cifra">7 de 7 días</b></div><div class="riel"><i style="width:100%"></i></div></div>
+            <div class="barra"><div class="fila"><span class="tenue">Contenedor</span><b class="cifra">7 de 21 días</b></div><div class="riel"><i style="width:33%"></i></div></div>
+            <div class="paso" data-x="Pagar el pedimento"><span class="insignia" style="justify-self:start">Debe: Agente aduanal</span></div>
+          </div>
+        </div>
+        <div class="columna">
+          <header><b>En planta</b><p>Cuenta de gastos, saldo y garantía</p></header>
+          <div class="emb">
+            <div class="fila"><span class="folio">EMB-2026-00006</span><span class="meta">LCL · FOB</span></div>
+            <div>Catarinas y cadena<div class="meta">Proveedor de Shekou</div></div>
+            <div class="meta">En planta desde el 02 oct 2026</div>
+            <div class="paso" data-x="Pedir la cuenta de gastos"><span class="insignia" style="justify-self:start">Debe: Agente aduanal</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="tenue" style="font-size: 12.5px;">Ejemplo ilustrativo: folios, mercancía y cifras inventados para el manual.</p>
+    </div>
+
+    <div class="llamadas">
+      <div class="llamada"><span class="n">1</span><p><b>Lo que no puede esperar.</b> Alertas que calcula la base: documentos que faltan a una semana del arribo, días libres que se acaban, pagos retenidos o sin comprobante, cuentas de gastos que no llegan.</p></div>
+      <div class="llamada"><span class="n">2</span><p><b>Siguiente paso + quién lo debe.</b> Cada tarjeta dice qué sigue. <span class="insignia t-marca">Nos toca</span> es trabajo de Hegamex; <span class="insignia">Debe: Agente aduanal</span> es a quién hay que perseguir.</p></div>
+      <div class="llamada"><span class="n">3</span><p><b>Lo que estamos esperando de otros.</b> Documentos pendientes agrupados por proveedor, agente, naviera o forwarder. <span class="btn-ui">Ya lo pedí</span> anota que hoy lo pediste (se puede deshacer desde el aviso).</p></div>
+      <div class="llamada"><span class="n">4</span><p><b>Pestañas.</b> <span class="btn-ui">Embarques</span>, <span class="btn-ui">Dinero</span> (solo quien ve dinero) y <span class="btn-ui">Tiempos por proveedor</span>, que son los días reales que usa el reabasto.</p></div>
+    </div>
+  </section>
+
+  <!-- 2. SIMULADOR -->
+  <section class="bloque" id="simulador">
+    <header>
+      <span class="etiqueta">Pruébalo aquí, no se guarda nada</span>
+      <h2>Simulador de un embarque</h2>
+      <p class="lectura tenue">Registra las etapas en orden y mira cómo cambian la fase, el siguiente paso, las alertas y los avisos que manda el sistema. Usa la misma regla que la base: la fase la marca la última etapa registrada, y el siguiente paso depende de la fase, las fechas y los documentos que faltan.</p>
+    </header>
+
+    <div class="tarjeta sim">
+      <div>
+        <div class="controles">
+          <label class="campo">Modalidad
+            <select id="s-modalidad">
+              <option value="lcl">Carga consolidada (LCL)</option>
+              <option value="fcl">Contenedor completo (FCL)</option>
+              <option value="consolidado">Consolidado de varios proveedores</option>
+              <option value="aereo">Aéreo</option>
+            </select>
+          </label>
+          <label class="campo">Incoterm
+            <select id="s-incoterm">
+              <option>FOB</option><option>EXW</option><option>FCA</option><option>CFR</option><option>CIF</option><option>CIP</option><option>DAP</option><option>DDP</option>
+            </select>
+          </label>
+          <span style="display:flex; gap:8px; margin-left:auto;">
+            <button class="boton sec chico" id="s-deshacer" type="button">Deshacer</button>
+            <button class="boton sec chico" id="s-reiniciar" type="button">Empezar de nuevo</button>
+          </span>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom: 16px;">
+          <b class="cifra" style="font-size: 18px;">EMB-2026-00012</b>
+          <span id="s-fase"></span>
+          <span class="tenue" style="font-size: 13px;">20 cosedoras N600A y 2 cabezales F900A</span>
+        </div>
+        <ol class="etapas" id="s-etapas"></ol>
+      </div>
+
+      <div class="lado">
+        <div class="panel">
+          <h4>Siguiente paso</h4>
+          <div class="siguiente" id="s-siguiente"></div>
+        </div>
+        <div class="panel" id="s-panel-dias" hidden>
+          <h4>Días en puerto</h4>
+          <div class="deslizador">
+            <label class="campo" for="s-dias">Días desde el arribo: <b id="s-dias-txt" class="cifra" style="color: var(--texto)">0</b></label>
+            <input type="range" id="s-dias" min="0" max="30" value="2">
+          </div>
+          <div id="s-barras" style="display:grid; gap:8px;"></div>
+        </div>
+        <div class="panel">
+          <h4>Documentos para el agente <span style="text-transform:none; letter-spacing:0; font-weight:400">(antes del arribo)</span></h4>
+          <div class="docs-sim" id="s-docs"></div>
+        </div>
+        <div class="panel">
+          <h4>Así aparecería en «Lo que no puede esperar»</h4>
+          <div id="s-alertas" style="display:grid; gap:8px;"></div>
+        </div>
+        <div class="panel">
+          <h4>Avisos que mandó el sistema (campana)</h4>
+          <div id="s-avisos" style="display:grid; gap:6px;"></div>
+          <button class="boton sec chico" id="s-eta" type="button" style="justify-self:start;">Simular que la naviera mueve la ETA</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. PASO A PASO -->
+  <section class="bloque" id="paso-a-paso">
+    <header>
+      <span class="etiqueta">Lo que haces en cada momento</span>
+      <h2>Paso a paso</h2>
+      <p class="lectura tenue">Ábrelas en orden la primera vez. Los nombres de botones y campos son los mismos que verás en pantalla.</p>
+    </header>
+
+    <div class="fases">
+      <details class="fase" open>
+        <summary><span class="num">1</span><div><h3>Dar de alta el embarque</h3><p>Cuando el proveedor manda la PI. Con eso se arma la lista de documentos y empiezan a contar los tiempos.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>En <span class="ruta">/importaciones</span> da clic en <span class="btn-ui">+ Nuevo embarque</span>.</li>
+            <li><b>Atajo:</b> en «¿Ya tienes el documento? Súbelo y Claude llena el embarque.» sube el BL, la PI, la factura o el packing list (PDF o foto, escaneado o en chino). Los datos caen en el formulario <b>marcados para revisarlos</b>; nada se guarda hasta que das <span class="btn-ui">Dar de alta</span>, y el archivo queda en el expediente.</li>
+            <li>Revisa o captura: <b>¿Qué viene?</b> (como el nombre de la carpeta: «20 cosedoras N600A y 2 cabezales F900A»), <b>Proveedor</b>, <b>Modalidad</b>, <b>Incoterm</b>, <b>Importador</b> (la empresa o persona física), puertos, naviera, forwarder, agente aduanal y su referencia, BL, contenedores, buque y viaje, <b>ETD</b> y <b>ETA</b>.</li>
+            <li><b>Días libres de almacenaje</b> (7 si no dices otra cosa) y <b>de demoras del contenedor</b> (21 en FCL y consolidado). De ahí salen las barras de días.</li>
+            <li>Pega el enlace de la <b>Carpeta del expediente</b> en Drive: aparece como botón <span class="btn-ui">Expediente</span> en el detalle.</li>
+          </ol>
+          <div class="nota"><b class="marca">✓</b><p>El folio (<code>EMB-2026-00012</code>) lo pone el sistema. La lista de documentos se arma sola según la modalidad y el incoterm; si cambias la modalidad después, la lista se ajusta.</p></div>
+        </div>
+      </details>
+
+      <details class="fase">
+        <summary><span class="num">2</span><div><h3>Ligar la orden de compra</h3><p>De la orden salen las partidas, lo que se debe y el costeo.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>En el embarque, pestaña <span class="btn-ui">Órdenes</span>: elige en «Ligar una orden de compra…» y da <span class="btn-ui">Ligar</span>. Un BL puede traer varias facturas y un consolidado varios proveedores: liga todas.</li>
+            <li>Si todavía no existe, <span class="btn-ui">Nueva orden</span> te lleva a Compras. La orden se captura en USD (o la moneda del proveedor). En Compras también puedes crearla <b>desde la cotización del proveedor</b>: Claude la lee y tú la revisas.</li>
+            <li>Escribe la <b>CI del proveedor</b> en la orden ligada cuando llegue la factura comercial.</li>
+            <li><span class="btn-ui">OC y contrato</span> imprime la orden y el contrato de compraventa que pide el agente.</li>
+          </ol>
+          <div class="nota ojo"><b class="marca">!</b><p>Al ligar, si la orden traía IVA queda en 0: el IVA de importación se paga en el pedimento, no al proveedor.</p></div>
+        </div>
+      </details>
+
+      <details class="fase">
+        <summary><span class="num">3</span><div><h3>Registrar cada etapa con su fecha real</h3><p>Una casilla dice «ya»; una fecha dice cuánto tardó cada tramo.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>Pestaña <span class="btn-ui">Etapas</span>: escribe la fecha en la siguiente etapa y <b>Enter guarda</b>. Puedes registrar hasta dos etapas adelante si alguna no aplica (por ejemplo, sin previo).</li>
+            <li>No acepta fechas futuras: para lo que todavía no pasa está la <b>ETA</b>, en <span class="btn-ui">Datos</span>.</li>
+            <li>Para corregir, el lápiz junto a la fecha. Cada cambio queda con el nombre de quien lo hizo.</li>
+            <li>La <b>Historia</b> guarda cada cambio de ETA y las notas («el agente pide la carta 3.1.8 corregida…»).</li>
+            <li>Ya cerrado el embarque, las etapas que no se registraron se quedan así; solo se corrige lo que ya tiene fecha.</li>
+          </ol>
+          <div class="nota"><b class="marca">✓</b><p>«Anticipo pagado» se anota sola cuando registras en <b>Dinero</b> el primer pago con concepto Anticipo o Pago total. No la registres dos veces.</p></div>
+        </div>
+      </details>
+
+      <details class="fase">
+        <summary><span class="num">4</span><div><h3>Documentos y «Leer con Claude»</h3><p>El checklist por modalidad, con quién debe cada uno.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>Pestaña <span class="btn-ui">Documentos</span>: cada renglón dice quién lo debe y si se necesita <b>antes del arribo</b> (lo pide el agente aduanal).</li>
+            <li><span class="btn-ui">Leer con Claude</span> (arriba a la derecha o en cada documento): subes el PDF o la foto, eliges «¿Qué documento es?» y Claude devuelve los campos <b>junto al archivo</b>. Los corriges y confirmas. Nada se guarda antes de confirmar.</li>
+            <li>De una factura, Claude pregunta «¿De qué orden de compra es esta factura?». De una cuenta de gastos o un aviso de arribo propone los conceptos con su «Clasificación del concepto»; marca <b>Incluir como gasto</b> en los que van al costo.</li>
+            <li>¿Pediste algo por correo? <span class="btn-ui">Ya lo pedí</span> anota la fecha. En el tablero se ve «pedido hace 3 días» en vez de «sin pedir todavía».</li>
+            <li>«Agregar otro documento…» para lo que no está en la lista (carta de no previo, carta valor, comprobantes).</li>
+          </ol>
+          <div class="nota ojo"><b class="marca">!</b><p>Los documentos <b>con precios</b> (PI, factura, póliza, cuenta de gastos…) solo los abren importaciones, compras y finanzas. Almacén ve que existen, no lo que dicen.</p></div>
+        </div>
+      </details>
+
+      <details class="fase">
+        <summary><span class="num">5</span><div><h3>Dinero: pagos, gastos, pedimento y saldos</h3><p>Pestaña Dinero. Solo la ve quien ve dinero (la base lo filtra).</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <div class="dos">
+            <div style="display:grid; gap:8px;">
+              <h3><span class="btn-ui">+ Pago</span> al proveedor</h3>
+              <p class="tenue" style="font-size:14px;">Concepto (Anticipo, Saldo, Pago total), monto en la moneda de la orden, <b>pesos que salieron</b>, cuenta de origen, método (Transferencia internacional o EBANX/Alibaba) y comprobante. El <b>TC real</b> sale solo: pesos ÷ dólares. Es el que pide el agente para demostrarlo ante la aduana.</p>
+              <p class="tenue" style="font-size:14px;">Estados: <span class="insignia t-info">Programado</span> <span class="insignia t-aviso">Pagado</span> <span class="insignia t-peligro">Retenido</span> <span class="insignia t-ok">Confirmado</span> <span class="insignia">Devuelto</span>. Nunca deja pagar más de lo que se debe.</p>
+            </div>
+            <div style="display:grid; gap:8px;">
+              <h3><span class="btn-ui">+ Gasto</span></h3>
+              <p class="tenue" style="font-size:14px;">Flete internacional, seguro, cargos locales, revalidación, desconsolidación, maniobras, almacenaje, demoras, limpieza, honorarios, flete Manzanillo–Atotonilco, grúa… <b>Monto sin IVA</b> y el IVA aparte, porque se acredita. Criterio: <b>Por valor de la mercancía</b>, <b>Por volumen (consolidado)</b> o directo a una partida. Marca <b>estimado</b> si aún no llega la factura: entra al preliminar, no al final.</p>
+            </div>
+            <div style="display:grid; gap:8px;">
+              <h3><span class="btn-ui">+ Pedimento</span></h3>
+              <p class="tenue" style="font-size:14px;">Número, fecha de pago, tipo de cambio, <b>IGI, DTA y PRV</b> (son costo) e <b>IVA</b> (acreditable). O léelo con Claude desde Documentos. Al guardarlo ya se puede calcular el costeo preliminar.</p>
+            </div>
+            <div style="display:grid; gap:8px;">
+              <h3><span class="btn-ui">+ Saldo</span> por recuperar</h3>
+              <p class="tenue" style="font-size:14px;"><b>Saldo a favor con el agente</b> o <b>Garantía de contenedor</b>. No es costo: es dinero nuestro. Si no dices cuándo, se espera 15 días después de la cuenta de gastos (saldo) o a los 30 (garantía). Cuando regrese, <span class="btn-ui">Recuperado</span>.</p>
+            </div>
+          </div>
+          <div class="nota"><b class="marca">✓</b><p>En el tablero, la pestaña <b>Dinero</b> junta todo: «Pagos en dólares que vienen» (con el próximo pago y lo que falta en dólares y ≈ en pesos hoy), «Dinero por recuperar» con días de atraso y el resumen por embarque con TC real, gastos, IVA acreditable y lo que falta recuperar. Ahí trabaja Finanzas.</p></div>
+        </div>
+      </details>
+
+      <details class="fase">
+        <summary><span class="num">6</span><div><h3>Llegada, recepción en almacén y costeo</h3><p>Preliminar con el pedimento; final con la cuenta de gastos.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>Al registrar <b>Llegó a puerto</b>, almacén y compras reciben aviso con la fecha estimada a planta. Al registrar <b>Despachado</b>, almacén recibe «salió del puerto: llega a planta hacia el…» para preparar espacio y quién recibe.</li>
+            <li>Almacén recibe en <b>Compras → Órdenes de compra → la orden → <span class="btn-ui">Recibir</span></b>. La recepción de una orden que viene en un embarque <b>marca sola la etapa En planta</b> y la entrada se valúa con el último costeo del embarque. No toca el costo del catálogo.</li>
+            <li>Pestaña <span class="btn-ui">Costeo</span> (quien ve costos): <span class="btn-ui">Preliminar</span> se habilita con el pedimento; sirve para valuar la entrada a almacén y ver el costo antes de la cuenta de gastos. No cambia el catálogo.</li>
+            <li>Cuando llega la cuenta de gastos, regístrala (etapa <b>Cuenta de gastos</b> y sus gastos sin «estimado») y da <span class="btn-ui">Final</span>. Revisa «Por partida» (costo unitario contra el «Antes» del catálogo) y da <span class="btn-ui">Cerrar costeo</span>.</li>
+            <li>Al cerrar el final, el costo de cada componente se actualiza con su historial (origen «importación» y el folio) y su precio de lista se recalcula solo. Compras e ingeniería reciben aviso.</li>
+            <li>Si después llega un complemento (almacenaje, demoras, limpieza), se calcula otra versión del final. El tablero avisa «hay gastos nuevos después del costeo final».</li>
+          </ol>
+          <div class="nota ojo"><b class="marca">!</b><p>Si cambian pagos, gastos o el pedimento entre «calcular» y «cerrar», la base no deja cerrar: «vuelve a calcular antes de cerrar». Así el costo cerrado siempre corresponde a lo que estaba capturado.</p></div>
+        </div>
+      </details>
+
+      <details class="fase">
+        <summary><span class="num">7</span><div><h3>Cerrar el embarque</h3><p>Vacío devuelto, EIR, cuenta de gastos y dinero recuperado.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>FCL y consolidado: registra <b>Vacío devuelto</b> y sube el <b>EIR</b>. Sin el EIR no se recupera la garantía.</li>
+            <li>Pide la cuenta de gastos al agente si no llega: el tablero lo marca cuando la mercancía ya lleva días en planta, porque contabilidad la necesita para cerrar.</li>
+            <li>Anota el saldo a favor y la garantía como <b>por recuperar</b> y márcalos <span class="btn-ui">Recuperado</span> cuando entren.</li>
+            <li>Si anotaste «Vacío devuelto» o «Cuenta de gastos» pero no el día de «En planta», el embarque ya cuenta como en planta (eso prueba que llegó) y su tarjeta dice «Ya está en planta; falta anotar el día que llegó». Anótalo cuando lo sepas: de ahí salen los tiempos por proveedor.</li>
+            <li>Registra la etapa <b>Cerrado</b>. El embarque pasa a «Ver cerrados y cancelados» y sus tiempos quedan en <b>Tiempos por proveedor</b>.</li>
+          </ol>
+          <div class="nota"><b class="marca">✓</b><p><b>Tiempos por proveedor</b> mide pedido → zarpe, travesía, puerto → planta y planta → cuenta de gastos con fechas reales. El reabasto usa esos días hábiles en lugar de los capturados a mano, y a los importados les pide 6 meses de cobertura.</p></div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 4. DOCUMENTOS -->
+  <section class="bloque" id="documentos">
+    <header>
+      <span class="etiqueta">El checklist que reemplaza las casillas y las 4 subcarpetas</span>
+      <h2>¿Qué documentos lleva mi embarque?</h2>
+      <p class="lectura tenue">Elige la modalidad y el incoterm. Lo que no aplica se atenúa. Es la misma lista que arma el sistema al dar de alta.</p>
+    </header>
+    <div class="tarjeta">
+      <div class="filtros">
+        <label class="campo">Modalidad
+          <select id="d-modalidad">
+            <option value="lcl">Carga consolidada (LCL)</option>
+            <option value="fcl">Contenedor completo (FCL)</option>
+            <option value="consolidado">Consolidado de varios proveedores</option>
+            <option value="aereo">Aéreo</option>
+          </select>
+        </label>
+        <label class="campo">Incoterm
+          <select id="d-incoterm"><option>FOB</option><option>EXW</option><option>FCA</option><option>CFR</option><option>CIF</option><option>CIP</option><option>DAP</option><option>DDP</option></select>
+        </label>
+        <label class="campo">Quién lo debe
+          <select id="d-debe"><option value="">Todos</option><option value="proveedor">Proveedor</option><option value="hegamex">Hegamex</option><option value="agente">Agente aduanal</option><option value="naviera">Naviera</option><option value="forwarder">Forwarder</option></select>
+        </label>
+      </div>
+      <p class="contador" id="d-contador"></p>
+      <div class="tabla-env">
+        <table>
+          <thead><tr><th>Documento</th><th>Lo debe</th><th>Antes del arribo</th><th>Trae precios</th></tr></thead>
+          <tbody id="d-tabla"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. COSTEO -->
+  <section class="bloque" id="costeo">
+    <header>
+      <span class="etiqueta">Reemplaza PRORRATEO.xlsx</span>
+      <h2>Costo puesto en planta, con números</h2>
+      <p class="lectura tenue">La mercancía se valúa al <b>TC real de los pagos</b>; los gastos sin IVA y los impuestos que son costo (IGI, DTA, PRV) se reparten por valor. El IVA queda fuera antes de prorratear. Cambia las cifras para ver cómo se mueve el costo de cada partida.</p>
+    </header>
+    <div class="tarjeta calc">
+      <div>
+        <h3>Partidas de la orden (USD)</h3>
+        <div class="rejilla">
+          <span class="etiqueta">Artículo</span><span class="etiqueta">Cantidad</span><span class="etiqueta">Precio USD</span>
+        </div>
+        <div class="rejilla" id="c-partidas"></div>
+        <h3 style="margin-top:4px;">Pagos al proveedor</h3>
+        <div class="rejilla3">
+          <label class="campo">Anticipo %<input type="number" id="c-pct" value="30" min="0" max="100" step="5"></label>
+          <label class="campo">TC del anticipo<input type="number" id="c-tc1" value="18.40" step="0.01"></label>
+          <label class="campo">TC del saldo<input type="number" id="c-tc2" value="18.95" step="0.01"></label>
+        </div>
+        <h3 style="margin-top:4px;">Gastos sin IVA (MXN)</h3>
+        <div class="rejilla3">
+          <label class="campo">Flete internacional<input type="number" id="c-flete" value="26500" step="500"></label>
+          <label class="campo">IGI + DTA + PRV<input type="number" id="c-imp" value="9800" step="100"></label>
+          <label class="campo">Agente, maniobras y locales<input type="number" id="c-agente" value="14200" step="100"></label>
+          <label class="campo">Flete a Atotonilco<input type="number" id="c-local" value="12000" step="500"></label>
+          <label class="campo">IVA de importación<input type="number" id="c-iva" value="21300" step="100"></label>
+        </div>
+        <p class="tenue" style="font-size:12.5px;">Cifras de ejemplo. El IVA se muestra para recordar que no entra al costo.</p>
+      </div>
+      <div class="res">
+        <div class="kpis">
+          <div class="kpi"><span>TC real</span><b id="c-tcreal">—</b></div>
+          <div class="kpi"><span>Factor de gastos</span><b id="c-factor">—</b></div>
+          <div class="kpi"><span>IVA acreditable (fuera)</span><b id="c-ivaout">—</b></div>
+        </div>
+        <div class="tabla-env tarjeta" style="box-shadow:none;">
+          <table>
+            <thead><tr><th>Partida</th><th class="der">Mercancía</th><th class="der">Gastos</th><th class="der">Costo unitario</th></tr></thead>
+            <tbody id="c-tabla"></tbody>
+          </table>
+        </div>
+        <div class="nota"><b class="marca">✓</b><p>Así lo calcula la base al dar <span class="btn-ui">Final</span>: mercancía = cantidad × precio × TC real; cada partida carga los gastos en proporción a su valor; unitario = (mercancía + gastos) ÷ cantidad. Al <span class="btn-ui">Cerrar costeo</span>, ese unitario es el nuevo costo del componente y su precio de lista se recalcula solo.</p></div>
+        <p class="tenue" style="font-size:12.5px;">En un consolidado, los gastos marcados «Por volumen» se reparten primero entre órdenes según sus m³ y luego por valor dentro de cada orden.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. ALERTAS -->
+  <section class="bloque" id="alertas">
+    <header>
+      <span class="etiqueta">Lo que la base revisa por ti todos los días</span>
+      <h2>Alertas y avisos</h2>
+      <p class="lectura tenue">Las <b>alertas</b> viven en «Lo que no puede esperar» y en tu Inicio. Los <b>avisos</b> llegan a la campana de quien le toca, sin estar en copia de ningún correo.</p>
+    </header>
+    <div class="tarjeta tabla-env">
+      <table>
+        <thead><tr><th>Cuándo aparece</th><th>Tono</th><th>Qué hacer</th></tr></thead>
+        <tbody>
+          <tr><td>Faltan documentos para el agente y el arribo es en 7 días o menos (o ya está en puerto)</td><td><span class="insignia t-aviso punto">Atención</span> <span class="insignia t-peligro punto">Riesgo</span> si ya llegó o llega en 3 días</td><td>Pedirlos a quien los debe; «Ya lo pedí».</td></tr>
+          <tr><td>Días en puerto a partir del día libres − 3 (día 4 de 7)</td><td><span class="insignia t-aviso punto">Atención</span> → <span class="insignia t-peligro punto">Riesgo</span> al pasarse</td><td>Apurar revalidación, pedimento y despacho con el agente. Lo que pase se cobra como almacenaje.</td></tr>
+          <tr><td>Contenedor a 5 días de acabar sus días libres de demoras</td><td><span class="insignia t-aviso punto">Atención</span> → <span class="insignia t-peligro punto">Riesgo</span></td><td>Descargar y devolver el vacío.</td></tr>
+          <tr><td>La ETA cambió</td><td><span class="insignia t-aviso punto">Atención</span> si se atrasó</td><td>Avisar a ventas o producción si esperan esa mercancía.</td></tr>
+          <tr><td>El ETD ya pasó y no ha zarpado</td><td><span class="insignia t-aviso punto">Atención</span></td><td>Confirmar zarpe con el proveedor o el forwarder.</td></tr>
+          <tr><td>Pago retenido, programado vencido, sin comprobante o sin confirmar por el proveedor</td><td><span class="insignia t-peligro punto">Riesgo</span> si está retenido</td><td>Hablar con el banco y el proveedor; subir el comprobante (el agente lo pide para el tipo de cambio).</td></tr>
+          <tr><td>En planta y la cuenta de gastos no llega</td><td><span class="insignia t-aviso punto">Atención</span></td><td>Pedirla al agente: contabilidad la necesita para cerrar.</td></tr>
+          <tr><td>Saldo a favor o garantía sin recuperar después de la fecha esperada</td><td><span class="insignia t-aviso punto">Atención</span> → <span class="insignia t-peligro punto">Riesgo</span> a los 30 días</td><td>Cobrarlo a quien lo debe.</td></tr>
+          <tr><td>Vacío devuelto sin EIR</td><td><span class="insignia t-aviso punto">Atención</span></td><td>Pedirlo a la naviera: sin EIR no hay garantía.</td></tr>
+          <tr><td>Gastos nuevos después del costeo final</td><td><span class="insignia t-aviso punto">Atención</span></td><td>Calcular otra versión del final y cerrarla.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="dos">
+      <div class="tarjeta" style="padding:16px; display:grid; gap:8px;">
+        <h3>Avisos a la campana</h3>
+        <ul style="margin:0; padding-left:18px; display:grid; gap:6px; font-size:14px;">
+          <li><b>Cambió la ETA</b> → importaciones, compras y almacén.</li>
+          <li><b>Llegó a puerto</b> → almacén y compras, con la llegada estimada a planta.</li>
+          <li><b>Salió del puerto</b> → almacén: preparar espacio y quién recibe contra su orden.</li>
+          <li><b>Cambió el costo de N componentes importados</b> (costeo final cerrado) → compras e ingeniería.</li>
+          <li>Las alertas de riesgo y atención también llegan a importaciones.</li>
+        </ul>
+      </div>
+      <div class="tarjeta" style="padding:16px; display:grid; gap:8px;">
+        <h3>¿Y el asistente?</h3>
+        <p style="font-size:14px;">Con <b>Ctrl+J</b> en cualquier pantalla puedes preguntar «¿qué embarques llegan este mes?» o «¿cuánto debemos en dólares?». Contesta con tus permisos: si tú no ves el dinero, él tampoco.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. PERMISOS -->
+  <section class="bloque" id="permisos">
+    <header>
+      <span class="etiqueta">La base es la barrera, no el menú</span>
+      <h2>Quién ve qué</h2>
+      <p class="lectura tenue">Nivel 1 ve, 2 captura, 3 administra. El dinero de importaciones lo ve quien ya ve el dinero de compras (compras 2, finanzas o costos) y además ve importaciones.</p>
+    </header>
+    <div class="tarjeta tabla-env permisos">
+      <table>
+        <thead><tr><th>Rol</th><th>Importaciones</th><th>Ve el dinero</th><th>Costeo</th><th>Para qué entra</th></tr></thead>
+        <tbody>
+          <tr><td>Importaciones</td><td><span class="nivel"><i class="on"></i><i class="on"></i><i class="on"></i></span>Administra</td><td class="si">Sí</td><td>Calcula y cierra</td><td>Todo el flujo; además captura órdenes en compras.</td></tr>
+          <tr><td>Dirección</td><td><span class="nivel"><i class="on"></i><i class="on"></i><i class="on"></i></span>Administra</td><td class="si">Sí</td><td>Calcula y cierra</td><td>Supervisar riesgos y dinero.</td></tr>
+          <tr><td>Compras</td><td><span class="nivel"><i class="on"></i><i class="on"></i><i></i></span>Captura</td><td class="si">Sí</td><td>Calcula; cierra si tiene costos 2</td><td>Órdenes en USD, pagos, documentos.</td></tr>
+          <tr><td>Finanzas</td><td><span class="nivel"><i class="on"></i><i></i><i></i></span>Ve</td><td class="si">Sí</td><td>—</td><td>Pagos en dólares, saldos por recuperar.</td></tr>
+          <tr><td>Almacén</td><td><span class="nivel"><i class="on"></i><i></i><i></i></span>Ve</td><td>No</td><td>—</td><td>Qué llega y cuándo; recibir contra la orden.</td></tr>
+          <tr><td>Gerente de producción</td><td><span class="nivel"><i class="on"></i><i></i><i></i></span>Ve</td><td>No</td><td>—</td><td>Cuándo llega el material de sus órdenes.</td></tr>
+          <tr><td>Ventas</td><td>—</td><td>No</td><td>—</td><td>No ve importaciones. Ve el precio de lista que resulta.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="pie">
+    <span>Manual de Importaciones · ERP Hegamex · octubre 2026</span>
+    <span>Ver también: <a href="/ayuda/general" target="_top">Manual del ERP Hegamex</a> · <a href="/ayuda/finanzas" target="_top">Manual de Finanzas</a></span>
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+
+  // ---------- Datos: los mismos de la base (etapas_importacion y documentos_importacion) ----------
+  var FASES = {
+    cotizando: ["Cotizando", "t-neutro"], produccion: ["En producción", "t-info"], listo: ["Listo para embarcar", "t-info"],
+    transito: ["En el mar", "t-marca"], puerto: ["En puerto", "t-aviso"], planta: ["En planta · cierre pendiente", "t-ok"],
+    cerrado: ["Cerrado", "t-neutro"]
+  };
+  var DEBE = { proveedor: "Proveedor", agente: "Agente aduanal", naviera: "Naviera", forwarder: "Forwarder", hegamex: "Hegamex", transportista: "Transportista" };
+  var ETAPAS = [
+    ["pi", "PI aceptada", "produccion", true, "Proforma invoice confirmada con el proveedor"],
+    ["anticipo", "Anticipo pagado", "produccion", true, "30–50 % según el proveedor. Se anota sola al registrar el pago en Dinero."],
+    ["produccion", "En producción", "produccion", true, "El proveedor confirmó que ya fabrica"],
+    ["listo", "Mercancía lista", "listo", true, "Aviso de «goods ready»: toca pagar el saldo"],
+    ["zarpe", "Zarpó", "transito", true, "Salida real del buque (ETD real)"],
+    ["documentos_agente", "Documentos al agente", "transito", false, "CI, PL, BL, fichas y cartas mandadas al agente aduanal"],
+    ["arribo", "Llegó a puerto", "puerto", true, "Atraque o aviso de arribo: empiezan a correr los días libres"],
+    ["revalidacion", "BL revalidado", "puerto", true, "Incluye desconsolidación en LCL"],
+    ["previo", "Previo", "puerto", true, "Reconocimiento previo o carta de no previo"],
+    ["pedimento_pagado", "Pedimento pagado", "puerto", true, "IGI, DTA, IVA y PRV pagados"],
+    ["despacho", "Despachado", "puerto", true, "Salió del puerto con el transportista"],
+    ["en_planta", "En planta", "planta", true, "Recibida en Atotonilco. Se marca sola al recibir la orden en almacén."],
+    ["vacio_devuelto", "Vacío devuelto", "planta", false, "Contenedor vacío entregado a la naviera (FCL)"],
+    ["cuenta_gastos", "Cuenta de gastos", "planta", false, "El agente aduanal mandó su cuenta de gastos"],
+    ["cierre", "Cerrado", "cerrado", true, "Cuenta de gastos cerrada: saldo a favor y garantía recuperados"]
+  ].map(function (e) { return { tipo: e[0], nombre: e[1], fase: e[2], hito: e[3], desc: e[4] }; });
+
+  var TODAS = "fcl,lcl,consolidado,aereo";
+  var DOCS = [
+    ["pi", "Proforma invoice (PI)", "proveedor", TODAS, null, false, true],
+    ["ci", "Commercial invoice", "proveedor", TODAS, null, true, true],
+    ["pl", "Packing list", "proveedor", TODAS, null, true, false],
+    ["bl_draft", "BL draft", "proveedor", "fcl,lcl,consolidado", null, false, false],
+    ["bl", "BL Telex / Seaway (o guía aérea)", "proveedor", TODAS, null, true, false],
+    ["poliza", "Póliza de seguro", "proveedor", TODAS, "CIF,CIP", true, true],
+    ["certificado_origen", "Certificado de origen", "proveedor", TODAS, null, true, false],
+    ["pedimento_exportacion", "Pedimento de exportación del proveedor", "proveedor", "fcl,lcl,consolidado", null, false, false],
+    ["oc", "Orden de compra", "hegamex", TODAS, null, true, true],
+    ["contrato", "Contrato de compraventa", "hegamex", TODAS, null, true, true],
+    ["ficha_tecnica", "Fichas técnicas en español", "hegamex", TODAS, null, true, false],
+    ["carta_318", "Carta 3.1.8", "hegamex", TODAS, null, true, false],
+    ["carta_instrucciones", "Carta de instrucciones", "hegamex", TODAS, null, true, false],
+    ["carta_encomienda", "Carta encomienda", "hegamex", "fcl,consolidado", null, true, false],
+    ["aviso_arribo", "Aviso de arribo y cargos locales", "naviera", "fcl,lcl,consolidado", null, false, true],
+    ["aviso_desconsolidacion", "Aviso de desconsolidación", "forwarder", "lcl", null, false, false],
+    ["proforma_pedimento", "Proforma del pedimento", "agente", TODAS, null, false, true],
+    ["manifestacion_valor", "Manifestación de valor (MVE)", "agente", TODAS, null, false, true],
+    ["bl_revalidado", "BL revalidado", "agente", "fcl,lcl,consolidado", null, false, false],
+    ["pedimento", "Pedimento pagado", "agente", TODAS, null, false, true],
+    ["eir", "EIR (devolución del vacío)", "naviera", "fcl,consolidado", null, false, false],
+    ["cuenta_gastos", "Cuenta de gastos del agente", "agente", TODAS, null, false, true]
+  ].map(function (d) { return { tipo: d[0], nombre: d[1], debe: d[2], mod: d[3].split(","), inc: d[4] ? d[4].split(",") : null, arribo: d[5], montos: d[6] }; });
+  var aplicaDoc = function (d, mod, inc) { return d.mod.indexOf(mod) >= 0 && (!d.inc || d.inc.indexOf(inc) >= 0); };
+
+  // ---------- Simulador ----------
+  var FOLIO = "EMB-2026-00012";
+  var s = { mod: "lcl", inc: "FOB", hechas: [], recibidos: {}, dias: 2, avisos: [], etaCambios: 0 };
+  var guardado = null;
+  try { guardado = JSON.parse(localStorage.getItem("hegamex-manual-imp") || "null"); } catch (e) { guardado = null; }
+  if (guardado && Array.isArray(guardado.hechas)) { s = Object.assign(s, guardado); }
+  var guardar = function () { try { localStorage.setItem("hegamex-manual-imp", JSON.stringify(s)); } catch (e) { /* sin almacenamiento: el simulador funciona igual */ } };
+
+  var aplican = function () { return ETAPAS.filter(function (e) { return e.tipo !== "vacio_devuelto" || s.mod === "fcl" || s.mod === "consolidado"; }); };
+  var tiene = function (t) { return s.hechas.indexOf(t) >= 0; };
+  var fase = function () {
+    var f = "cotizando", ord = -1;
+    ETAPAS.forEach(function (e, i) { if (e.hito && tiene(e.tipo) && i > ord) { ord = i; f = e.fase; } });
+    // Igual que la base: el vacío devuelto o la cuenta de gastos prueban que ya llegó a planta.
+    if (f !== "cerrado" && f !== "planta" && (tiene("vacio_devuelto") || tiene("cuenta_gastos"))) f = "planta";
+    return f;
+  };
+  var docsArribo = function () { return DOCS.filter(function (d) { return d.arribo && aplicaDoc(d, s.mod, s.inc); }); };
+  var faltan = function () { return docsArribo().filter(function (d) { return !s.recibidos[d.tipo]; }); };
+
+  // Misma lógica que siguiente_paso_embarque() en la base.
+  var siguiente = function () {
+    var f = fase(), fl = faltan(), conCont = s.mod === "fcl" || s.mod === "consolidado";
+    if (f === "cerrado") return null;
+    if (f === "cotizando") return ["Confirmar la PI con el proveedor", "proveedor"];
+    if (f === "produccion" && !tiene("anticipo")) return ["Pagar el anticipo", "hegamex"];
+    if (f === "produccion") return ["Que el proveedor avise que la mercancía está lista", "proveedor"];
+    if (f === "listo") return ["Pagar el saldo y confirmar zarpe y BL", "hegamex"];
+    if (f === "transito" && fl.length) return ["Juntar los documentos para el agente aduanal", fl[0].debe];
+    if (f === "transito" && !tiene("documentos_agente")) return ["Mandar los documentos al agente aduanal", "hegamex"];
+    if (f === "transito") return ["Esperar el arribo (ETA 19 oct 2026)", "naviera"];
+    if (f === "puerto" && !tiene("revalidacion")) return ["Revalidar el BL", "agente"];
+    if (f === "puerto" && !(tiene("previo") || tiene("pedimento_pagado"))) return ["Previo o carta de no previo", "agente"];
+    if (f === "puerto" && !tiene("pedimento_pagado")) return ["Pagar el pedimento", "agente"];
+    if (f === "puerto" && !tiene("despacho")) return ["Cita y despacho con el transportista", "agente"];
+    if (f === "puerto") return ["Recibir en planta", "transportista"];
+    if (f === "planta" && conCont && !tiene("vacio_devuelto")) return ["Devolver el contenedor vacío", "transportista"];
+    if (f === "planta" && !tiene("cuenta_gastos")) return ["Pedir la cuenta de gastos", "agente"];
+    if (f === "planta") return ["Recuperar saldo a favor y garantía, y cerrar", "agente"];
+    return null;
+  };
+  var chipDebe = function (d) { return d === "hegamex" ? '<span class="insignia t-marca">Nos toca</span>' : '<span class="insignia">Debe: ' + esc(DEBE[d]) + "</span>"; };
+
+  var barra = function (usados, libres, etiqueta) {
+    var pct = Math.min(100, libres > 0 ? usados / libres * 100 : 100);
+    var cls = usados >= libres ? "peligro" : usados >= libres - 3 ? "aviso" : "";
+    return '<div class="barra ' + cls + '"><div class="fila" style="display:flex;justify-content:space-between"><span class="tenue">' + etiqueta + '</span><b class="cifra">' + usados + " de " + libres + ' días</b></div><div class="riel"><i style="width:' + pct + '%"></i></div></div>';
+  };
+
+  var alertas = function () {
+    var f = fase(), fl = faltan(), out = [], conCont = s.mod === "fcl" || s.mod === "consolidado";
+    var enPuerto = tiene("arribo") && !tiene("despacho") && !tiene("en_planta") && fase() !== "planta";
+    if ((f === "transito" || enPuerto) && fl.length) {
+      var txt = fl.length === 1 ? "falta 1 documento" : "faltan " + fl.length + " documentos";
+      out.push({ tono: f === "transito" ? "atencion" : "riesgo",
+        titulo: f === "transito" ? FOLIO + " llega en 5 días y " + txt : FOLIO + " ya está en puerto y " + txt,
+        detalle: fl.map(function (d) { return d.nombre + " (" + DEBE[d.debe] + ")"; }).join(", "), debe: fl[0].debe });
+    }
+    if (enPuerto && s.dias >= 7 - 3) {
+      out.push({ tono: s.dias >= 7 ? "riesgo" : "atencion",
+        titulo: s.dias >= 7 ? FOLIO + " lleva " + s.dias + " días en puerto: ya pasó sus 7 días libres" : FOLIO + ": día " + s.dias + " de 7 libres en puerto",
+        detalle: "Lo que pase de los días libres se cobra como almacenaje.", debe: "agente" });
+    }
+    if (conCont && tiene("arribo") && !tiene("vacio_devuelto") && s.dias >= 21 - 5) {
+      out.push({ tono: s.dias >= 21 ? "riesgo" : "atencion",
+        titulo: s.dias >= 21 ? FOLIO + ": el contenedor ya genera demoras (" + s.dias + " de 21 días libres)" : FOLIO + ": el contenedor lleva " + s.dias + " de 21 días libres",
+        detalle: "Hay que devolver el vacío antes de que se acaben.", debe: "transportista" });
+    }
+    if (s.etaCambios > 0 && f !== "cerrado" && !tiene("arribo")) {
+      out.push({ tono: "atencion", titulo: "La ETA de " + FOLIO + " cambió del 19 oct 2026 al " + (19 + 5 * s.etaCambios) + " oct 2026",
+        detalle: (5 * s.etaCambios) + " días después. Avisa a quien espera esta mercancía (ventas, producción).", debe: null });
+    }
+    if (f === "planta" && !tiene("cuenta_gastos")) {
+      out.push({ tono: "atencion", titulo: FOLIO + ": la cuenta de gastos no ha llegado", detalle: "Contabilidad la necesita para cerrar.", debe: "agente" });
+    }
+    if (tiene("vacio_devuelto") && f !== "cerrado") {
+      out.push({ tono: "atencion", titulo: FOLIO + ": falta el EIR del contenedor", detalle: "Sin el EIR no se recupera la garantía.", debe: "naviera" });
+    }
+    return out;
+  };
+
+  var pintar = function () {
+    $("s-modalidad").value = s.mod; $("s-incoterm").value = s.inc;
+    var f = fase(), lista = aplican();
+    $("s-fase").innerHTML = '<span class="insignia punto ' + FASES[f][1] + '">' + FASES[f][0] + "</span>" +
+      (f === "planta" && !tiene("en_planta") ? ' <span class="tenue" style="font-size:12.5px">Ya está en planta; falta anotar el día que llegó</span>' : "");
+    var ultima = -1;
+    lista.forEach(function (e, i) { if (tiene(e.tipo)) ultima = i; });
+    var cerrado = f === "cerrado";
+    $("s-etapas").innerHTML = lista.map(function (e, i) {
+      var hecha = tiene(e.tipo), sig = !hecha && i === ultima + 1, puede = !hecha && !cerrado && i <= ultima + 2;
+      var cls = hecha ? "hecha" : sig ? "sig" : (i > ultima + 2 ? "lejos" : "");
+      var auto = e.tipo === "anticipo" ? "Registrar pago" : e.tipo === "en_planta" ? "Recibir en almacén" : "Registrar fecha";
+      return '<li class="' + cls + '"><span class="bola">' + (hecha ? "✓" : i + 1) + '</span><div><div class="cab"><span class="nom">' + esc(e.nombre) +
+        (e.hito ? "" : ' <span class="tenue" style="font-weight:400;font-size:12px">· no cambia la fase</span>') + "</span>" +
+        (hecha ? '<span class="insignia t-ok fase-chip">registrada</span>' : puede ? '<button type="button" class="boton chico' + (sig ? "" : " sec") + '" data-etapa="' + e.tipo + '">' + auto + "</button>" : "") +
+        '</div><p class="des">' + esc(e.desc) + "</p></div></li>";
+    }).join("");
+
+    var sp = siguiente();
+    $("s-siguiente").innerHTML = sp ? "<b>→ " + esc(sp[0]) + "</b><span>" + chipDebe(sp[1]) + "</span>" : "<b>Embarque cerrado</b><span class=\"tenue\" style=\"font-size:13px\">Sus tiempos ya cuentan en «Tiempos por proveedor».</span>";
+
+    var enPuerto = tiene("arribo") && !tiene("despacho") && !tiene("en_planta") && fase() !== "planta";
+    var conCont = s.mod === "fcl" || s.mod === "consolidado";
+    $("s-panel-dias").hidden = !(tiene("arribo") && !cerrado && (enPuerto || (conCont && !tiene("vacio_devuelto"))));
+    $("s-dias").value = s.dias; $("s-dias-txt").textContent = s.dias;
+    $("s-barras").innerHTML = (enPuerto ? barra(s.dias, 7, "Días en puerto") : "") + (conCont && tiene("arribo") && !tiene("vacio_devuelto") ? barra(s.dias, 21, "Contenedor (demoras)") : "");
+
+    var da = docsArribo();
+    $("s-docs").innerHTML = da.map(function (d) {
+      return '<label><input type="checkbox" data-doc="' + d.tipo + '"' + (s.recibidos[d.tipo] ? " checked" : "") + "> " + esc(d.nombre) + '<span class="quien">' + esc(DEBE[d.debe]) + "</span></label>";
+    }).join("");
+
+    var al = alertas();
+    $("s-alertas").innerHTML = al.length ? al.map(function (a) {
+      return '<div class="alerta ' + a.tono + '"><span class="ico">' + (a.tono === "riesgo" ? "!!" : "!") + "</span><div><p><b>" + esc(a.titulo) + "</b></p><p>" + esc(a.detalle) + "</p>" + (a.debe ? '<p style="margin-top:4px">' + chipDebe(a.debe) + "</p>" : "") + "</div></div>";
+    }).join("") : '<p class="vacio-txt">Nada urgente hoy. Cuando falte un documento a una semana del arribo o se acaben los días libres, aparece aquí.</p>';
+
+    $("s-avisos").innerHTML = s.avisos.length ? s.avisos.slice().reverse().map(function (a) {
+      return '<div class="aviso-campana"><span class="tenue" style="font-size:11.5px">Para: ' + esc(a.para) + "</span><b>" + esc(a.titulo) + "</b></div>";
+    }).join("") : '<p class="vacio-txt">Todavía ninguno. Registra «Llegó a puerto» o «Despachado».</p>';
+    $("s-eta").disabled = tiene("arribo") || cerrado;
+    $("s-deshacer").disabled = s.hechas.length === 0;
+    guardar();
+  };
+
+  $("s-etapas").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-etapa]"); if (!b) return;
+    var t = b.getAttribute("data-etapa");
+    s.hechas.push(t);
+    if (t === "arribo") { s.dias = 2; s.avisos.push({ para: "Almacén y compras", titulo: "Llegó a puerto " + FOLIO + ": 20 cosedoras N600A y 2 cabezales F900A" }); }
+    if (t === "despacho") s.avisos.push({ para: "Almacén", titulo: FOLIO + " salió del puerto: llega a planta hacia el día siguiente" });
+    pintar();
+  });
+  $("s-docs").addEventListener("change", function (ev) {
+    var t = ev.target.getAttribute("data-doc"); if (!t) return;
+    s.recibidos[t] = ev.target.checked; pintar();
+  });
+  $("s-dias").addEventListener("input", function (ev) { s.dias = Number(ev.target.value); pintar(); });
+  $("s-modalidad").addEventListener("change", function (ev) {
+    s.mod = ev.target.value;
+    if (s.mod !== "fcl" && s.mod !== "consolidado") s.hechas = s.hechas.filter(function (t) { return t !== "vacio_devuelto"; });
+    pintar();
+  });
+  $("s-incoterm").addEventListener("change", function (ev) { s.inc = ev.target.value; pintar(); });
+  $("s-deshacer").addEventListener("click", function () { s.hechas.pop(); pintar(); });
+  $("s-reiniciar").addEventListener("click", function () { s = { mod: s.mod, inc: s.inc, hechas: [], recibidos: {}, dias: 2, avisos: [], etaCambios: 0 }; pintar(); });
+  $("s-eta").addEventListener("click", function () {
+    s.etaCambios += 1;
+    s.avisos.push({ para: "Importaciones, compras y almacén", titulo: "Cambió la ETA de " + FOLIO + ": del 19 oct 2026 al " + (19 + 5 * s.etaCambios) + " oct 2026" });
+    pintar();
+  });
+  pintar();
+
+  // ---------- Documentos ----------
+  var pintarDocs = function () {
+    var mod = $("d-modalidad").value, inc = $("d-incoterm").value, debe = $("d-debe").value, n = 0, a = 0;
+    $("d-tabla").innerHTML = DOCS.filter(function (d) { return !debe || d.debe === debe; }).map(function (d) {
+      var ap = aplicaDoc(d, mod, inc); if (ap) { n++; if (d.arribo) a++; }
+      var por = !ap ? (d.inc ? "Solo con " + d.inc.join(" o ") : "No aplica en esta modalidad") : "";
+      return '<tr class="' + (ap ? "" : "fuera") + '"><td>' + esc(d.nombre) + (por ? '<div class="tenue" style="font-size:12px">' + por + "</div>" : "") + "</td><td>" + (d.debe === "hegamex" ? '<span class="insignia t-marca">Hegamex</span>' : esc(DEBE[d.debe])) +
+        "</td><td>" + (d.arribo ? '<span class="si">Sí</span>' : '<span class="tenue">—</span>') + "</td><td>" + (d.montos ? '<span class="insignia t-aviso">con precios</span>' : '<span class="tenue">—</span>') + "</td></tr>";
+    }).join("");
+    $("d-contador").textContent = n + " documentos aplican · " + a + " los pide el agente antes del arribo. Además puedes agregar carta de no previo, carta valor, DODA, comprobantes de pago u otros.";
+  };
+  ["d-modalidad", "d-incoterm", "d-debe"].forEach(function (id) { $(id).addEventListener("change", pintarDocs); });
+  pintarDocs();
+
+  // ---------- Calculadora de costo puesto en planta ----------
+  var PARTIDAS = [["Cosedora N600A", 20, 180], ["Cabezal F900A", 2, 950], ["Kit de refacciones", 10, 35]];
+  $("c-partidas").innerHTML = PARTIDAS.map(function (p, i) {
+    return '<label class="campo"><span class="tenue" style="font-size:12px">Partida ' + (i + 1) + '</span><input type="text" id="c-n' + i + '" value="' + esc(p[0]) + '"></label>' +
+      '<label class="campo"><span class="tenue" style="font-size:12px">Cantidad</span><input type="number" id="c-q' + i + '" value="' + p[1] + '" min="0"></label>' +
+      '<label class="campo"><span class="tenue" style="font-size:12px">USD c/u</span><input type="number" id="c-p' + i + '" value="' + p[2] + '" min="0" step="0.5"></label>';
+  }).join("");
+  var mx = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 2 });
+  var mx0 = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
+  var num = function (id) { var v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
+  var calcular = function () {
+    var lineas = PARTIDAS.map(function (_, i) { return { n: $("c-n" + i).value || "Partida " + (i + 1), q: num("c-q" + i), p: num("c-p" + i) }; });
+    var usd = lineas.reduce(function (t, l) { return t + l.q * l.p; }, 0);
+    var pct = Math.min(100, Math.max(0, num("c-pct"))) / 100;
+    var tcReal = usd > 0 ? (usd * pct * num("c-tc1") + usd * (1 - pct) * num("c-tc2")) / usd : 0; // pesos que salieron ÷ dólares
+    var gastos = num("c-flete") + num("c-imp") + num("c-agente") + num("c-local");
+    var valor = usd * tcReal;
+    $("c-tcreal").textContent = tcReal ? tcReal.toFixed(4) : "—";
+    $("c-factor").textContent = valor > 0 ? (gastos / valor * 100).toFixed(1) + " %" : "—";
+    $("c-ivaout").textContent = mx0.format(num("c-iva"));
+    $("c-tabla").innerHTML = lineas.map(function (l) {
+      var v = l.q * l.p * tcReal, g = valor > 0 ? gastos * v / valor : 0, u = l.q > 0 ? (v + g) / l.q : 0;
+      return "<tr><td>" + esc(l.n) + '<div class="tenue" style="font-size:12px">' + l.q + " × US$ " + l.p + "</div></td><td class=\"der cifra\">" + mx0.format(v) + '</td><td class="der cifra">' + mx0.format(g) +
+        '</td><td class="der cifra"><b>' + mx.format(u) + "</b></td></tr>";
+    }).join("");
+  };
+  $("costeo").addEventListener("input", calcular);
+  calcular();
+
+  // ---------- Índice: resalta la sección visible ----------
+  var enlaces = Array.prototype.slice.call(document.querySelectorAll("#indice a"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (en) {
+        if (en.isIntersecting) enlaces.forEach(function (a) { a.classList.toggle("activo", a.getAttribute("href") === "#" + en.target.id); });
+      });
+    }, { rootMargin: "-30% 0px -60% 0px" });
+    document.querySelectorAll("section.bloque").forEach(function (sec) { obs.observe(sec); });
+  }
+})();
+</script>
+</body>
+</html>
