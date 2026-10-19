@@ -2,10 +2,10 @@ import type { AyudaPantalla } from "./index";
 
 export const GENERAL: Record<string, AyudaPantalla> = {
   "/": [
-    "Es tu punto de partida del día. Lo que ves depende de tu puesto: dirección ve el centro de mando de toda la empresa; ventas, producción, almacén, compras y finanzas ven el tablero de su área.",
+    "Es tu punto de partida del día. Lo que ves depende de tu puesto: dirección ve el centro de mando de toda la empresa; los demás ven solo lo que le importa a su área (ventas sus ventas y cotizaciones, finanzas lo que se cobra y se paga, importaciones sus embarques, producción el taller…). Si tienes dos puestos, ves lo de los dos.",
     "Arriba, “Lo que importa hoy” junta lo urgente de tu área: en rojo los riesgos, en ámbar lo que pide atención, en verde lo que va bien. Dale clic a una tarjeta para ir directo a donde se atiende; el botón de flechas lo vuelve a analizar.",
     "Casi todos los indicadores se abren con un clic y te llevan a la lista de donde salen (Ventas del mes abre los pedidos, por ejemplo). Todo se calcula con tus permisos: un vendedor ve lo suyo, no el total de la empresa.",
-    "En el tablero de área, la tarjeta “Pendientes” reúne lo que espera algo de ti: precios por autorizar, seguimientos vencidos con clientes, ajustes de inventario, compras atrasadas. En el centro de mando las cifras se actualizan solas cuando alguien registra un pedido, un cobro o un avance del taller.",
+    "En el tablero de área, la tarjeta “Pendientes” reúne lo que espera algo de ti según tu puesto: precios por autorizar, seguimientos vencidos con clientes, ajustes de inventario, compras atrasadas, documentos de embarques que faltan. En el centro de mando las cifras se actualizan solas cuando alguien registra un pedido, un cobro o un avance del taller.",
   ],
   "/pendientes": [
     "Aquí ves lo que te pidieron a ti y lo que tú les pediste a otros, con fecha. Reemplaza el “¿ya quedó?” por chat: cuando alguien termina, a quien lo pidió le llega un aviso en la campana.",
