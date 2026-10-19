@@ -110,7 +110,7 @@ export function ResumenIA({ area = "direccion" }: { area?: Area }) {
             );
           })}
           {datos && datos.puntos.length === 0 && (
-            <p className="text-sm text-tenue">Nada fuera de lo normal en lo que puedes ver. Buen día para vender.</p>
+            <p className="text-sm text-tenue">Nada fuera de lo normal en lo que le toca a tu área.</p>
           )}
         </div>
         {datos?.aviso && <p className="mt-3 text-xs text-aviso">{datos.aviso}</p>}
