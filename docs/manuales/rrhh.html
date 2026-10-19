@@ -1,0 +1,727 @@
+<title>Manual de RRHH Hegamex</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: lectura en una columna con índice fijo. Tres herramientas de práctica
+   (qué hacer con un XML, cómo se aplica un pago, caja chica) rompen a tarjetas de dos
+   columnas: captura a la izquierda, lo que haría el ERP a la derecha.
+   Mismos tokens que el ERP para que el manual se vea como la pantalla. */
+:root {
+  --fondo: hsl(220 20% 97%);
+  --superficie: hsl(0 0% 100%);
+  --borde: hsl(220 14% 89%);
+  --texto: hsl(222 30% 14%);
+  --tenue: hsl(220 9% 46%);
+  --marca: hsl(214 100% 52%);
+  --marca-suave: hsl(214 100% 96%);
+  --marca-texto: hsl(214 90% 40%);
+  --ok: hsl(152 60% 36%);
+  --ok-suave: hsl(150 60% 95%);
+  --aviso: hsl(35 92% 40%);
+  --aviso-suave: hsl(45 100% 94%);
+  --peligro: hsl(0 72% 48%);
+  --peligro-suave: hsl(0 85% 96%);
+  --info: hsl(262 60% 52%);
+  --info-suave: hsl(262 80% 97%);
+  --sombra: 0 1px 2px hsl(222 40% 20% / .05), 0 2px 6px hsl(222 40% 20% / .06);
+  --f-texto: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fondo: hsl(222 25% 8%); --superficie: hsl(222 22% 12%); --borde: hsl(220 15% 22%);
+    --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 64%);
+    --marca: hsl(214 100% 62%); --marca-suave: hsl(214 60% 18%); --marca-texto: hsl(214 100% 74%);
+    --ok: hsl(152 55% 50%); --ok-suave: hsl(152 40% 15%);
+    --aviso: hsl(38 92% 58%); --aviso-suave: hsl(38 50% 15%);
+    --peligro: hsl(0 75% 64%); --peligro-suave: hsl(0 45% 17%);
+    --info: hsl(262 70% 74%); --info-suave: hsl(262 35% 18%);
+    --sombra: 0 1px 2px hsl(0 0% 0% / .3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fondo: hsl(222 25% 8%); --superficie: hsl(222 22% 12%); --borde: hsl(220 15% 22%);
+  --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 64%);
+  --marca: hsl(214 100% 62%); --marca-suave: hsl(214 60% 18%); --marca-texto: hsl(214 100% 74%);
+  --ok: hsl(152 55% 50%); --ok-suave: hsl(152 40% 15%);
+  --aviso: hsl(38 92% 58%); --aviso-suave: hsl(38 50% 15%);
+  --peligro: hsl(0 75% 64%); --peligro-suave: hsl(0 45% 17%);
+  --info: hsl(262 70% 74%); --info-suave: hsl(262 35% 18%);
+  --sombra: 0 1px 2px hsl(0 0% 0% / .3);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--fondo); color: var(--texto); font-family: var(--f-texto); font-size: 15px; line-height: 1.6; }
+.envoltura { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 16px; font-weight: 600; }
+p { margin: 0; }
+a { color: var(--marca-texto); }
+code, .ruta { font-family: var(--f-mono); font-size: 0.85em; background: var(--marca-suave); color: var(--marca-texto); padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+.cifra { font-variant-numeric: tabular-nums; }
+.tenue { color: var(--tenue); }
+.etiqueta { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--tenue); }
+.lectura { max-width: 68ch; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; border-radius: 6px; }
+
+.cabecera { padding-block: 40px 28px; display: grid; gap: 14px; }
+.cabecera .lectura { font-size: 17px; color: var(--tenue); }
+.quienes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.quienes .insignia { white-space: normal; }
+
+.indice { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--fondo) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--borde); margin-bottom: 20px; }
+.indice nav { display: flex; gap: 4px; overflow-x: auto; padding-block: 8px; scrollbar-width: none; }
+.indice a { flex: none; text-decoration: none; color: var(--tenue); font-size: 13.5px; font-weight: 500; padding: 6px 12px; border-radius: 999px; }
+.indice a:hover { color: var(--texto); background: var(--superficie); }
+.indice a.activo { color: var(--marca-texto); background: var(--marca-suave); }
+
+section.bloque { display: grid; gap: 18px; padding-block: 28px; scroll-margin-top: 64px; }
+section.bloque > header { display: grid; gap: 6px; }
+section.bloque > * { min-width: 0; }
+select { max-width: 100%; }
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; box-shadow: var(--sombra); }
+
+.insignia { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 999px; white-space: nowrap; background: var(--fondo); color: var(--tenue); border: 1px solid var(--borde); }
+.insignia.punto::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.t-info { background: var(--info-suave); color: var(--info); border-color: transparent; }
+.t-marca { background: var(--marca-suave); color: var(--marca-texto); border-color: transparent; }
+.t-aviso { background: var(--aviso-suave); color: var(--aviso); border-color: transparent; }
+.t-ok { background: var(--ok-suave); color: var(--ok); border-color: transparent; }
+.t-peligro { background: var(--peligro-suave); color: var(--peligro); border-color: transparent; }
+.btn-ui { display: inline-block; font-size: 12.5px; font-weight: 600; padding: 0 7px; border-radius: 6px; border: 1px solid var(--borde); background: var(--fondo); white-space: nowrap; line-height: 1.6; }
+.nota { display: grid; grid-template-columns: auto 1fr; gap: 10px; font-size: 13.5px; padding: 10px 12px; border-radius: 10px; background: var(--marca-suave); }
+.nota.ojo { background: var(--aviso-suave); }
+.nota.mal { background: var(--peligro-suave); }
+.nota b.m { color: var(--marca-texto); }
+.nota.ojo b.m { color: var(--aviso); }
+.nota.mal b.m { color: var(--peligro); }
+
+/* Mapa del dinero */
+.mapa { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.lugar { padding: 16px; display: grid; gap: 8px; align-content: start; text-decoration: none; color: inherit; }
+.lugar:hover { border-color: var(--marca); }
+.lugar .dir { font-family: var(--f-mono); font-size: 12px; font-weight: 500; }
+.lugar .dir.entra { color: var(--ok); } .lugar .dir.sale { color: var(--peligro); } .lugar .dir.caja { color: var(--aviso); } .lugar .dir.usd { color: var(--info); }
+.lugar p { font-size: 14px; color: var(--tenue); }
+
+/* Rutina */
+.rutina { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.cada { padding: 16px; display: grid; gap: 10px; align-content: start; }
+.cada label { display: grid; grid-template-columns: 18px 1fr; gap: 10px; font-size: 14px; cursor: pointer; align-items: start; }
+.cada input { accent-color: var(--ok); width: 16px; height: 16px; margin-top: 3px; }
+.cada label.hecho span { color: var(--tenue); text-decoration: line-through; }
+.progreso { height: 5px; border-radius: 99px; background: var(--fondo); overflow: hidden; }
+.progreso i { display: block; height: 100%; background: var(--ok); transition: width .2s; }
+
+/* Pasos */
+.fases { display: grid; gap: 10px; }
+details.fase { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; }
+details.fase summary { list-style: none; cursor: pointer; padding: 14px 18px; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; }
+details.fase summary::-webkit-details-marker { display: none; }
+details.fase summary .flecha { color: var(--tenue); transition: transform .2s; }
+details.fase[open] summary .flecha { transform: rotate(90deg); }
+details.fase summary p { font-size: 13px; color: var(--tenue); }
+.cuerpo { padding: 16px 18px 18px; display: grid; gap: 14px; border-top: 1px solid var(--borde); }
+.cuerpo ol, .cuerpo ul { margin: 0; padding-left: 20px; display: grid; gap: 7px; }
+.dos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+
+/* Herramientas de práctica */
+.practica { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); overflow: hidden; }
+.practica > div { padding: 20px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.practica .lado { border-left: 1px solid var(--borde); background: color-mix(in srgb, var(--fondo) 55%, var(--superficie)); }
+.opciones { display: grid; gap: 6px; }
+.opcion { text-align: left; border: 1px solid var(--borde); background: var(--superficie); border-radius: 10px; padding: 9px 12px; cursor: pointer; display: grid; gap: 1px; font-size: 14px; }
+.opcion span { font-size: 12.5px; color: var(--tenue); }
+.opcion:hover { border-color: var(--marca); }
+.opcion[aria-pressed="true"] { border-color: var(--marca); background: var(--marca-suave); }
+.opcion[aria-pressed="true"] b { color: var(--marca-texto); }
+.dialogo { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 14px; display: grid; gap: 10px; font-size: 14px; }
+.dialogo .titulo { font-weight: 600; }
+.campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; }
+.campos div { display: grid; gap: 1px; min-width: 0; }
+.campos span { font-size: 12px; color: var(--tenue); }
+.campos b { font-weight: 500; overflow-wrap: anywhere; }
+.boton { display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; background: var(--marca); color: hsl(0 0% 100%); font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; justify-self: start; }
+.boton.sec { background: var(--superficie); color: var(--texto); border-color: var(--borde); font-weight: 500; }
+.boton:disabled { opacity: .45; cursor: not-allowed; }
+.campo { display: grid; gap: 4px; font-size: 12.5px; color: var(--tenue); }
+select, input[type="number"], input[type="text"] { background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; padding: 6px 10px; font-size: 14px; min-width: 0; width: 100%; }
+input[type="number"] { font-variant-numeric: tabular-nums; }
+.fila-campos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: end; }
+.check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.check input { accent-color: var(--marca); width: 16px; height: 16px; margin-top: 3px; }
+.rapidos { display: flex; gap: 6px; flex-wrap: wrap; }
+.toast { font-size: 13.5px; padding: 8px 12px; border-radius: 8px; background: var(--ok-suave); color: var(--ok); font-weight: 500; justify-self: start; }
+.toast.mal { background: var(--peligro-suave); color: var(--peligro); }
+.segmento { display: inline-flex; border: 1px solid var(--borde); border-radius: 8px; overflow: hidden; }
+.segmento button { border: 0; background: var(--superficie); padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.segmento button[aria-pressed="true"] { background: var(--marca); color: hsl(0 0% 100%); }
+.saldo-grande { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+/* Tablas */
+.tabla-env { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th { text-align: left; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--borde); white-space: nowrap; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.kpi { background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; min-width: 0; }
+.kpi span { font-size: 12px; color: var(--tenue); }
+.kpi b { font-size: 17px; font-variant-numeric: tabular-nums; }
+.agenda { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.semana { background: color-mix(in srgb, var(--fondo) 70%, var(--superficie)); border: 1px solid var(--borde); border-radius: 10px; padding: 10px; display: grid; gap: 6px; align-content: start; font-size: 13px; min-width: 0; }
+.semana header b { display: block; font-size: 13.5px; }
+.semana header span { font-size: 11.5px; color: var(--tenue); }
+.semana.vencido { border-color: color-mix(in srgb, var(--peligro) 45%, transparent); }
+.semana .linea { display: flex; justify-content: space-between; gap: 6px; }
+.semana .linea span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.semana .total { border-top: 1px solid var(--borde); padding-top: 6px; font-weight: 600; display: flex; justify-content: space-between; }
+
+/* Mensajes */
+.buscador { padding: 14px 16px 6px; }
+.msg { font-family: var(--f-mono); font-size: 12.5px; }
+.reglas td:first-child { width: 42%; }
+
+.pie { border-top: 1px solid var(--borde); margin-top: 24px; padding-top: 18px; font-size: 13px; color: var(--tenue); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+
+@media (max-width: 960px) {
+  .mapa { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .practica { grid-template-columns: minmax(0, 1fr); }
+  .practica .lado { border-left: 0; border-top: 1px solid var(--borde); }
+  .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .agenda { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .rutina, .dos { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 620px) {
+  .mapa, .campos { grid-template-columns: minmax(0, 1fr); }
+  .kpis, .agenda { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fila-campos { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .practica > div { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+<style>
+/* Piezas de RRHH: tabla de vacaciones con el renglón que toca, mini calendario de días
+   hábiles, la cadena de estados de la evaluación y los indicadores del mes. */
+.tabla-lft { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.tabla-lft div { border: 1px solid var(--borde); border-radius: 10px; padding: 8px; display: grid; gap: 2px; text-align: center; font-size: 12.5px; background: var(--superficie); transition: all .3s; }
+.tabla-lft div b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.tabla-lft div.on { border-color: var(--marca); background: var(--marca-suave); transform: translateY(-3px); box-shadow: var(--sombra); }
+.tabla-lft div.on b { color: var(--marca-texto); }
+.dias { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.dias span { font-size: 11px; text-align: center; padding: 6px 0; border-radius: 6px; border: 1px solid var(--borde); background: var(--superficie); font-variant-numeric: tabular-nums; }
+.dias span.cab { border: 0; background: transparent; color: var(--tenue); font-weight: 600; }
+.dias span.habil { background: var(--marca-suave); border-color: transparent; color: var(--marca-texto); font-weight: 600; }
+.dias span.feriado { background: var(--aviso-suave); color: var(--aviso); border-color: transparent; }
+.dias span.descanso { color: var(--tenue); opacity: .6; }
+.dias span.vacio { border: 0; background: transparent; }
+.cadena { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.cadena .paso { flex: 1 1 150px; border: 1px solid var(--borde); border-radius: 12px; padding: 12px; background: var(--superficie); display: grid; gap: 4px; font-size: 13.5px; position: relative; transition: all .3s; cursor: pointer; text-align: left; }
+.cadena .paso span { font-size: 12px; color: var(--tenue); }
+.cadena .paso[aria-pressed="true"] { border-color: var(--marca); background: var(--marca-suave); }
+.cadena .paso .n { font-family: var(--f-mono); font-size: 11px; color: var(--marca-texto); }
+.indicador { display: grid; grid-template-columns: minmax(0, 1fr) 150px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--borde); font-size: 14px; }
+.indicador:last-child { border-bottom: 0; }
+.indicador span.regla { display: block; font-size: 12px; color: var(--tenue); }
+.indicador input[type="range"] { width: 100%; accent-color: var(--marca); }
+.indicador b { text-align: right; font-variant-numeric: tabular-nums; }
+.medidor-grande { height: 14px; border-radius: 99px; background: var(--fondo); border: 1px solid var(--borde); overflow: hidden; }
+.medidor-grande i { display: block; height: 100%; border-radius: 99px; background: var(--ok); transition: width .5s cubic-bezier(.4, 0, .2, 1), background .3s; }
+.lineas { display: grid; gap: 4px; font-size: 14px; }
+.lineas div { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; border-bottom: 1px dashed var(--borde); }
+.lineas div:last-child { border-bottom: 0; }
+.lineas div b { font-variant-numeric: tabular-nums; }
+.lineas .total { font-size: 17px; font-weight: 700; border-top: 1px solid var(--borde); border-bottom: 0; padding-top: 8px; }
+.tipos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.tipos div { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; display: grid; gap: 4px; font-size: 13.5px; }
+.tipos div span { color: var(--tenue); font-size: 13px; }
+@media (max-width: 720px) {
+  .tabla-lft { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .indicador { grid-template-columns: minmax(0, 1fr) 110px 56px; }
+}
+@media (prefers-reduced-motion: reduce) { .tabla-lft div, .cadena .paso, .medidor-grande i { transition: none; } }
+</style>
+
+<div class="envoltura" style="padding-bottom: 0;">
+  <header class="cabecera">
+    <span class="etiqueta">ERP Hegamex · Manual de uso</span>
+    <h1>Recursos Humanos: personal, vacaciones, objetivos y prenómina</h1>
+    <p class="lectura">Lo que vivía en DATOS COLABORADORES, CONTROL VACACIONES, REGISTRO CELULARES Y OBJETIVOS y NOMINAS ahora está en una sola parte del ERP. El sistema cuenta los días hábiles, aplica la ley a las vacaciones y a las horas extra, y deja registrado quién hizo cada cosa. Las herramientas de práctica usan las mismas reglas y no guardan nada.</p>
+    <div class="quienes">
+      <span class="insignia t-marca">Para: Recursos Humanos</span>
+      <span class="insignia">Dirección: aprueba objetivos</span>
+      <span class="insignia">Jefes: califican a su gente</span>
+      <span class="insignia">Finanzas: ve la prenómina</span>
+    </div>
+  </header>
+</div>
+
+<div class="indice">
+  <div class="envoltura" style="padding-block: 0;">
+    <nav id="indice" aria-label="Secciones">
+      <a href="#mapa">Qué hay</a>
+      <a href="#personal">Personal</a>
+      <a href="#vacaciones">Vacaciones e incidencias</a>
+      <a href="#objetivos">Objetivos y bonos</a>
+      <a href="#checklist">Checklist diario</a>
+      <a href="#prenomina">Prenómina</a>
+      <a href="#mensajes">Si el sistema dice…</a>
+      <a href="#permisos">Quién ve qué</a>
+    </nav>
+  </div>
+</div>
+
+<main class="envoltura">
+
+  <section class="bloque" id="mapa">
+    <header>
+      <span class="etiqueta">Menú → Administración</span>
+      <h2>Qué hay y para qué</h2>
+    </header>
+    <div class="mapa">
+      <a class="tarjeta lugar" href="#personal"><span class="dir entra">PERSONAL</span><h3>Personal</h3><p>Quién trabaja aquí, en qué área, su antigüedad y cuántas vacaciones le quedan. El expediente sensible aparte.</p><span class="ruta">/rrhh/empleados</span></a>
+      <a class="tarjeta lugar" href="#vacaciones"><span class="dir caja">AUSENCIAS</span><h3>Vacaciones e incidencias</h3><p>Vacaciones, permisos, faltas, incapacidades, retardos y horas extra; por aprobar, calendario y saldos.</p><span class="ruta">/rrhh/incidencias</span></a>
+      <a class="tarjeta lugar" href="#objetivos"><span class="dir usd">OBJETIVOS</span><h3>Objetivos y bonos</h3><p>La evaluación del mes por puesto: el jefe califica, RRHH revisa y dirección aprueba. El checklist diario la alimenta.</p><span class="ruta">/rrhh/objetivos</span></a>
+      <a class="tarjeta lugar" href="#prenomina"><span class="dir sale">$ SEMANA</span><h3>Prenómina</h3><p>La semana de viernes a jueves: días pagados, horas extra, prima, bonos, préstamos y conceptos. Se cierra y se exporta.</p><span class="ruta">/rrhh/prenomina</span></a>
+    </div>
+    <div class="nota"><b class="m">✓</b><p>Cada trabajador con usuario del ERP ve <b>Mi desempeño</b>: sus objetivos de cada mes con la evidencia, sin montos. Ahí puede dejar comentarios.</p></div>
+  </section>
+
+  <!-- PERSONAL -->
+  <section class="bloque" id="personal">
+    <header>
+      <span class="etiqueta"><span class="ruta">/rrhh/empleados</span></span>
+      <h2>Personal</h2>
+      <p class="lectura tenue">«Quién trabaja en Hegamex, en qué área y cuántas vacaciones le quedan.» Arriba: «Personal activo», «Ausentes hoy», «Solicitudes por aprobar» y «Cumpleaños del mes». La lista se filtra por activos, bajas o departamento y se exporta a CSV.</p>
+    </header>
+    <div class="fases">
+      <details class="fase" open>
+        <summary><div><h3>Dar de alta a alguien</h3><p>«Nuevo empleado» → pestaña «Datos generales».</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>Obligatorios: <b>Nombre completo</b> y <b>Fecha de ingreso</b> («Con ella se calculan antigüedad y vacaciones»).</li>
+            <li>Lo demás: número de empleado (sugiere el siguiente), puesto, departamento, área de piso, fecha de nacimiento, teléfono, correo y contacto de emergencia. Los teléfonos de 10 dígitos se acomodan solos («33 1263 7588»).</li>
+            <li><b>Usuario del ERP</b>: si la persona entra al sistema, liga su cuenta para que vea su desempeño.</li>
+            <li><span class="btn-ui">Dar de alta</span>: «Empleado dado de alta».</li>
+          </ol>
+          <div class="nota ojo"><b class="m">!</b><p>El puesto con objetivos y el jefe directo <b>no</b> van en la ficha: se asignan en Objetivos y bonos → «Personas y jefes». Sin eso, la persona no entra a la evaluación del mes.</p></div>
+        </div>
+      </details>
+      <details class="fase">
+        <summary><div><h3>Datos sensibles y expediente</h3><p>Tercera pestaña de la ficha. Solo RRHH con nivel de administración y dirección.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ul>
+            <li>CURP, RFC, NSS (IMSS), salario diario (te dice cuánto es al mes), cuenta o CLABE para nómina y domicilio.</li>
+            <li>Salud: tipo de sangre y alergias o condiciones médicas. Infonavit: número de crédito y descuento.</li>
+            <li>Contratos de trabajo, de confidencialidad y adicional: «Sin revisar», «Firmado» o «Pendiente de firma». Se registra el estado; el archivo sigue en su carpeta.</li>
+            <li>Cada cambio queda en la bitácora con quién lo hizo. Ni el propio trabajador ve estos datos.</li>
+          </ul>
+        </div>
+      </details>
+      <details class="fase">
+        <summary><div><h3>Baja y reingreso</h3><p>Al pie de la ficha.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ul>
+            <li><span class="btn-ui">Dar de baja</span>: último día laborado, motivo (renuncia voluntaria, término de contrato, despido justificado o injustificado, abandono, jubilación, fallecimiento, otro) y detalle. Sistemas desactiva su cuenta del ERP.</li>
+            <li><span class="btn-ui">Reactivar</span>: un reingreso es una relación nueva y la antigüedad cuenta desde la nueva fecha. Si la baja fue un error de captura, marca «conservar su fecha de ingreso original».</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- VACACIONES -->
+  <section class="bloque" id="vacaciones">
+    <header>
+      <span class="etiqueta"><span class="ruta">/rrhh/incidencias</span></span>
+      <h2>Vacaciones e incidencias</h2>
+      <p class="lectura tenue">Pestañas «Por aprobar», «Calendario», «Saldos de vacaciones» e «Historial». RRHH registra y aprueba; la gerencia de producción también puede registrar, y lo suyo queda como solicitud.</p>
+    </header>
+    <div class="tipos">
+      <div><b>Vacaciones</b><span>Se descuentan del saldo en días hábiles.</span></div>
+      <div><b>Permiso con goce</b><span>Se paga el día; no toca las vacaciones.</span></div>
+      <div><b>Permiso sin goce</b><span>No se paga el día.</span></div>
+      <div><b>Falta</b><span>Sin aviso o sin justificar. No se paga.</span></div>
+      <div><b>Incapacidad</b><span>Del IMSS: días naturales, con folio en el motivo. Los paga el IMSS.</span></div>
+      <div><b>Retardo</b><span>Un solo día; anota cuánto tarde (en horas).</span></div>
+      <div><b>Horas extra</b><span>Un solo día; anota cuántas horas.</span></div>
+    </div>
+    <div class="fases">
+      <details class="fase" open>
+        <summary><div><h3>Registrar y aprobar</h3><p>«Registrar», o desde la ficha, o con clic en un día del calendario.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>Elige persona, tipo, fechas y motivo. Debajo te dice cuántos días hábiles son y el saldo: «Saldo actual: X días. Se pasa por N días.»</li>
+            <li>Como RRHH, «Ya está autorizada» viene marcada y queda aprobada. Si la registra otra persona, queda «Por aprobar» y te llega a la campana «{Nombre} pide {tipo}».</li>
+            <li>En «Por aprobar» cada solicitud dice «Saldo X días → quedarían Y», si aún no cumple un año («sería adelanto») y quién más falta esos días. <span class="btn-ui">Aprobar</span> o <span class="btn-ui">Rechazar</span> (pide el porqué, que la persona verá en su historial).</li>
+          </ol>
+          <div class="nota ojo"><b class="m">!</b><p>El ERP no impide aprobar más días de los que hay: lo advierte y el saldo queda negativo, en rojo. Tampoco deja encimar dos ausencias de la misma persona.</p></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="tarjeta practica">
+      <div>
+        <h3>¿Cuántas vacaciones le tocan?</h3>
+        <p class="tenue" style="font-size:13.5px">Ley Federal del Trabajo (reforma 2023), como la calcula el ERP. Cambia la fecha de ingreso y lo que ya tomó en este periodo.</p>
+        <label class="campo">Fecha de ingreso<input type="date" id="v-ingreso" value="2021-03-15"></label>
+        <label class="campo">Días ya tomados en este periodo (aprobados)<input type="number" id="v-tomados" value="4" min="0"></label>
+        <div class="tabla-lft" id="v-tabla"></div>
+      </div>
+      <div class="lado" id="v-res" aria-live="polite"></div>
+    </div>
+
+    <div class="tarjeta practica">
+      <div>
+        <h3>¿Cuántos días hábiles son?</h3>
+        <p class="tenue" style="font-size:13.5px">Semana laboral de lunes a sábado (la de Configuración por omisión) y sin los feriados de ley del artículo 74. Una incapacidad cuenta días naturales.</p>
+        <div class="fila-campos" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+          <label class="campo">Desde<input type="date" id="h-desde" value="2026-11-12"></label>
+          <label class="campo">Hasta<input type="date" id="h-hasta" value="2026-11-21"></label>
+        </div>
+        <div class="dias" id="h-cal"></div>
+        <div class="chips" style="display:flex;gap:6px;flex-wrap:wrap;font-size:12px"><span class="insignia t-marca">Hábil</span><span class="insignia t-aviso">Feriado</span><span class="insignia">Domingo</span></div>
+      </div>
+      <div class="lado" id="h-res" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- OBJETIVOS -->
+  <section class="bloque" id="objetivos">
+    <header>
+      <span class="etiqueta"><span class="ruta">/rrhh/objetivos</span></span>
+      <h2>Objetivos y bonos</h2>
+      <p class="lectura tenue">Antes era una pestaña por persona con el % escrito a mano, sin evidencia, sin tope (un mes llegó a 109 %) y el evaluado podía editar su calificación. Ahora cada puesto tiene su plantilla de indicadores, cada calificación su evidencia, y el mes pasa por tres personas distintas.</p>
+    </header>
+    <div class="cadena" id="o-cadena" role="group" aria-label="Estados de la evaluación"></div>
+    <div class="explica-paso tarjeta" id="o-explica" style="padding:14px 16px;font-size:14px" aria-live="polite"></div>
+
+    <div class="tarjeta practica">
+      <div>
+        <h3>Califica un mes de ejemplo</h3>
+        <p class="tenue" style="font-size:13.5px">Plantilla de ejemplo para un soldador. Los pesos suman 100; mueve cada indicador.</p>
+        <div id="o-indicadores"></div>
+      </div>
+      <div class="lado">
+        <span class="etiqueta">Resultado del mes</span>
+        <span class="saldo-grande" id="o-total">0 %</span>
+        <div class="medidor-grande"><i id="o-barra" style="width:0"></i></div>
+        <div id="o-nota"></div>
+        <div class="lineas" id="o-lineas"></div>
+        <div class="nota"><b class="m">✓</b><p>Bono = base mensual del puesto × resultado. Si el puesto aún no tiene base, el ERP dice «Falta definir la base del bono» y no se paga nada. Los montos solo los ve quien tiene nómina; un jefe ve el %.</p></div>
+      </div>
+    </div>
+
+    <div class="fases">
+      <details class="fase">
+        <summary><div><h3>Armar el mes, impugnar y ajustar</h3><p>Lo que RRHH hace cada mes.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ul>
+            <li>El mes se arma solo entre el día 1 y el 3 (o con <span class="btn-ui">Armar y medir {mes}</span>). Solo entra quien tiene puesto asignado y plantilla vigente; los demás salen en «Sin plantilla vigente».</li>
+            <li>Los indicadores que mide el sistema (o el checklist) se llenan solos. Si una incidencia no aplica, el jefe la impugna con el motivo y otra persona de RRHH la resuelve: «Sí cuenta» / «No cuenta».</li>
+            <li>Un mes aprobado no se modifica: se pide un ajuste («Resultado corregido (%)» y motivo) y lo autoriza otra persona.</li>
+            <li>Plantillas por puesto, personas y jefes, e indicadores se administran en sus pestañas.</li>
+          </ul>
+          <div class="nota ojo"><b class="m">!</b><p>Nadie califica, revisa y aprueba lo mismo: si RRHH califica a alguien sin jefe, otra persona de RRHH lo revisa. Con una sola persona en RRHH, asígnale jefe a todos para que el flujo no se detenga.</p></div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- CHECKLIST -->
+  <section class="bloque" id="checklist">
+    <header>
+      <span class="etiqueta"><span class="ruta">/rrhh/checklist</span></span>
+      <h2>Checklist diario</h2>
+      <p class="lectura tenue">Cuatro listas pensadas para el celular: <b>Celular</b> (entrada, break 1, break 2), <b>EPP</b>, <b>Limpieza</b> por área y <b>Vehículos</b>. Un toque ✓ o ✗; con la ✗ anotas qué pasó, y «Los N restantes cumplieron» marca al resto.</p>
+    </header>
+    <div class="dos">
+      <div class="tarjeta" style="padding:16px;display:grid;gap:8px"><h3>Cómo cuenta para los objetivos</h3><ul style="margin:0;padding-left:18px;display:grid;gap:5px;font-size:14px"><li>Un día con cualquier falla es un incumplimiento; un día sin marcar no cuenta en contra.</li><li>Celular es llave: 3 días con falla en el mes y el bono total es 0 (en todos los puestos menos Calidad).</li><li>Una marca de limpieza cuenta para todos los que comparten el área.</li></ul></div>
+      <div class="tarjeta" style="padding:16px;display:grid;gap:8px"><h3>Reglas</h3><ul style="margin:0;padding-left:18px;display:grid;gap:5px;font-size:14px"><li>Nadie se marca a sí mismo, ni marca un día que no ha llegado.</li><li>Días de hace más de una semana solo los corrige RRHH.</li><li>Si el mes ya se calificó, la corrección se pide como ajuste.</li></ul></div>
+    </div>
+  </section>
+
+  <!-- PRENÓMINA -->
+  <section class="bloque" id="prenomina">
+    <header>
+      <span class="etiqueta"><span class="ruta">/rrhh/prenomina</span></span>
+      <h2>Prenómina</h2>
+      <p class="lectura tenue">La semana va de <b>viernes a jueves</b> y se paga el viernes siguiente. El ERP arma cada renglón con el sueldo, las incidencias aprobadas, las horas extra, la prima vacacional, los bonos aprobados, los préstamos y los conceptos. ISR, IMSS y timbrado los hace el contador con el CSV.</p>
+    </header>
+    <div class="tarjeta practica">
+      <div>
+        <h3>Calcula una semana</h3>
+        <p class="tenue" style="font-size:13.5px">Cifras de ejemplo. Solo cuentan las incidencias aprobadas.</p>
+        <div class="fila-campos">
+          <label class="campo">Sueldo semanal<input type="number" id="n-sueldo" value="3500" min="0" step="50"></label>
+          <label class="campo">Horas extra<input type="number" id="n-extra" value="12" min="0"></label>
+          <label class="campo">Faltas y días sin goce<input type="number" id="n-faltas" value="1" min="0" max="7"></label>
+          <label class="campo">Días de incapacidad<input type="number" id="n-incap" value="0" min="0" max="7"></label>
+          <label class="campo">Horas de retardo<input type="number" id="n-retardo" value="0" min="0"></label>
+          <label class="campo">Días de vacaciones<input type="number" id="n-vac" value="0" min="0" max="7"></label>
+          <label class="campo">Préstamo (descuento semanal)<input type="number" id="n-prestamo" value="300" min="0"></label>
+          <label class="campo">Otros pagos (conceptos)<input type="number" id="n-otros" value="0" min="0"></label>
+          <label class="campo">Otros descuentos<input type="number" id="n-desc" value="0" min="0"></label>
+        </div>
+      </div>
+      <div class="lado">
+        <span class="etiqueta">A pagar</span>
+        <span class="saldo-grande" id="n-total">$0</span>
+        <div class="lineas" id="n-lineas"></div>
+      </div>
+    </div>
+    <div class="fases">
+      <details class="fase" open>
+        <summary><div><h3>La semana, paso a paso</h3><p>Pestañas «Semana», «Préstamos» y «Sueldos».</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ol>
+            <li>Revisa la semana: indicadores «Total a pagar», «Horas extra», «Días sin goce» y «Otros pagos»; un renglón por persona con sus avisos (por ejemplo «12 h extra: 9 dobles y 3 triples (LFT art. 68)»).</li>
+            <li><span class="btn-ui">Agregar concepto</span> para lo que no sale de las incidencias. Pagos: servicio fuera de planta, gratificación por entrega o flete, apoyo, bono por carta compromiso, bono por referir personal, incentivo por proyecto especial. Descuentos: herramienta dañada, caja de ahorro, otro.</li>
+            <li><span class="btn-ui">Cerrar semana</span>: congela los renglones, abona los préstamos y marca pagados los bonos. Una semana cerrada no se modifica: lo que falte va como concepto en la semana abierta.</li>
+            <li><span class="btn-ui">Exportar CSV</span> para el contador.</li>
+          </ol>
+          <ul>
+            <li><b>Préstamos:</b> monto, descuento por semana, semana de inicio y motivo. Nadie se autoriza un préstamo a sí mismo; no se borra, se cancela con motivo.</li>
+            <li><b>Sueldos:</b> <span class="btn-ui">Registrar sueldo</span> con su fecha y motivo («Aumento anual»). El historial no se edita. Si alguien no tiene sueldo registrado, se toma el salario diario de su ficha × 7 y la prenómina lo avisa.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- MENSAJES -->
+  <section class="bloque" id="mensajes">
+    <header>
+      <span class="etiqueta">La base revisa cada captura</span>
+      <h2>Si el sistema dice…</h2>
+      <p class="lectura tenue">Escribe una palabra para buscar.</p>
+    </header>
+    <div class="tarjeta">
+      <div class="buscador"><input type="text" id="m-buscar" placeholder="Buscar: feriado, jefe, CURP, semana…" aria-label="Buscar mensaje"></div>
+      <div class="tabla-env"><table class="reglas"><thead><tr><th>Mensaje</th><th>Qué hacer</th></tr></thead><tbody id="m-tabla"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- PERMISOS -->
+  <section class="bloque" id="permisos">
+    <header>
+      <span class="etiqueta">Nivel 1 ve · 2 captura · 3 administra</span>
+      <h2>Quién ve qué</h2>
+    </header>
+    <div class="tarjeta tabla-env">
+      <table>
+        <thead><tr><th>Quién</th><th>Personal</th><th>Datos sensibles</th><th>Objetivos</th><th>Prenómina</th></tr></thead>
+        <tbody>
+          <tr><td><b>Recursos Humanos</b></td><td>Todo</td><td>Sí</td><td>Arma, revisa, plantillas</td><td>Todo: conceptos, préstamos, sueldos, cierre</td></tr>
+          <tr><td><b>Dirección</b></td><td>Todo</td><td>Sí</td><td>Aprueba y cierra el mes</td><td>Todo</td></tr>
+          <tr><td><b>Gerencia de producción</b></td><td>Ve; registra incidencias (quedan por aprobar)</td><td>No</td><td>Califica a su gente</td><td>No</td></tr>
+          <tr><td><b>Gerencia de ventas, compras, almacén</b></td><td>No</td><td>No</td><td>Califican a su gente; marcan el checklist</td><td>No</td></tr>
+          <tr><td><b>Finanzas y gerencia administrativa</b></td><td>No</td><td>No</td><td>No</td><td>Ve los montos y exporta</td></tr>
+          <tr><td><b>Cada trabajador</b></td><td>Su ficha</td><td>No</td><td>Mi desempeño, sin montos</td><td>No</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="pie">
+    <span>Manual de Recursos Humanos · ERP Hegamex · octubre 2026</span>
+    <span>Ver también: <a href="https://claude.ai/artifact/QmgwqhqZRrr2cCT999aDrg">Manual del ERP Hegamex</a></span>
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var mx = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 2 });
+  var MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  var f = function (d) { return String(d.getDate()).padStart(2, "0") + " " + MESES[d.getMonth()] + " " + d.getFullYear(); };
+  var aFecha = function (s) { var p = s.split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); };
+  var hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+
+  // ---------- Vacaciones (LFT 2023, como dias_vacaciones() en la base) ----------
+  var diasVacaciones = function (a) { return a < 1 ? 0 : a <= 5 ? 10 + 2 * a : 20 + 2 * Math.ceil((a - 5) / 5); };
+  var TABLA = [["1 año", 1], ["2", 2], ["3", 3], ["4", 4], ["5", 5], ["6–10", 6], ["11–15", 11], ["16–20", 16], ["21–25", 21], ["26–30", 26], ["31–35", 31]];
+  var aniversario = function (ing, anio) { return new Date(anio, ing.getMonth(), ing.getDate()); };
+  var vac = function () {
+    var v = $("v-ingreso").value; if (!v) return;
+    var ing = aFecha(v), tom = Math.max(0, Number($("v-tomados").value) || 0);
+    var anios = hoy.getFullYear() - ing.getFullYear(); if (aniversario(ing, hoy.getFullYear()) > hoy) anios--;
+    anios = Math.max(0, anios);
+    var toca = diasVacaciones(anios), ult = aniversario(ing, ing.getFullYear() + anios), prox = aniversario(ing, ing.getFullYear() + anios + 1);
+    var antesDe = new Date(ult); antesDe.setMonth(antesDe.getMonth() + 6);
+    var saldo = toca - tom, diasPlazo = Math.round((antesDe - hoy) / 86400000);
+    $("v-tabla").innerHTML = TABLA.map(function (t) { var d = diasVacaciones(t[1]); var on = anios >= 1 && diasVacaciones(anios) === d && (anios === t[1] || (t[1] >= 6 && anios >= t[1] && anios < t[1] + 5)); return '<div class="' + (on ? "on" : "") + '"><span>' + t[0] + "</span><b>" + d + "</b></div>"; }).join("");
+    var h = '<span class="etiqueta">Antigüedad</span><b style="font-size:18px">' + (anios === 0 ? "Aún no cumple un año" : anios + (anios === 1 ? " año" : " años")) + "</b>";
+    if (anios === 0) h += '<p style="font-size:14px">Le tocan vacaciones al cumplir un año, el <b>' + f(prox) + "</b>: " + diasVacaciones(1) + " días. Si las pide antes, «Por aprobar» lo marca como adelanto.</p>";
+    else {
+      h += '<div class="lineas"><div><span>Le tocan en este periodo</span><b>' + toca + ' días</b></div><div><span>Ya tomó (aprobadas)</span><b>' + tom + '</b></div><div class="total"><span>Saldo</span><b style="color:' + (saldo < 0 ? "var(--peligro)" : "inherit") + '">' + saldo + " días</b></div></div>" +
+        '<p style="font-size:14px">El periodo corre desde su aniversario del ' + f(ult) + ". Debe disfrutarlas antes del <b>" + f(antesDe) + "</b> (6 meses, art. 81)." +
+        (saldo > 0 && diasPlazo < 0 ? ' <span class="insignia t-peligro">Plazo vencido</span>' : saldo > 0 && diasPlazo <= 45 ? ' <span class="insignia t-aviso">Faltan ' + diasPlazo + " días</span>" : "") + "</p>" +
+        '<p class="tenue" style="font-size:13.5px">El ' + f(prox) + " cumple " + (anios + 1) + " años y le tocarán " + diasVacaciones(anios + 1) + " días. Prima vacacional: al menos 25 %, se paga en la prenómina de la semana en que las toma.</p>";
+    }
+    if (saldo < 0 && anios > 0) h += '<div class="nota ojo"><b class="m">!</b><p>Saldo negativo: el ERP te deja aprobar pero lo marca en rojo.</p></div>';
+    $("v-res").innerHTML = h;
+  };
+  ["v-ingreso", "v-tomados"].forEach(function (id) { $(id).addEventListener("input", vac); });
+  vac();
+
+  // ---------- Días hábiles: lunes a sábado sin feriados del art. 74 ----------
+  var lunes = function (anio, mes, n) { var d = new Date(anio, mes, 1); var c = 0; while (true) { if (d.getDay() === 1 && ++c === n) return d; d.setDate(d.getDate() + 1); } };
+  var feriados = function (anio) {
+    var l = [[new Date(anio, 0, 1), "Año nuevo"], [lunes(anio, 1, 1), "Constitución"], [lunes(anio, 2, 3), "Natalicio de Benito Juárez"], [new Date(anio, 4, 1), "Día del trabajo"], [new Date(anio, 8, 16), "Independencia"], [lunes(anio, 10, 3), "Revolución"], [new Date(anio, 11, 25), "Navidad"]];
+    if ((anio - 2024) % 6 === 0 && anio >= 2024) l.push([new Date(anio, 9, 1), "Cambio de Poder Ejecutivo"]);
+    return l;
+  };
+  var esFeriado = function (d) { var r = null; feriados(d.getFullYear()).forEach(function (x) { if (x[0].getTime() === d.getTime()) r = x[1]; }); return r; };
+  var habiles = function () {
+    var a = $("h-desde").value, b = $("h-hasta").value; if (!a || !b) return;
+    var d0 = aFecha(a), d1 = aFecha(b);
+    if (d1 < d0) { $("h-res").innerHTML = '<span class="toast mal">La fecha final es antes de la inicial</span>'; $("h-cal").innerHTML = ""; return; }
+    var dias = Math.round((d1 - d0) / 86400000) + 1;
+    if (dias > 62) { $("h-res").innerHTML = '<span class="toast mal">Elige un rango de hasta dos meses</span>'; $("h-cal").innerHTML = ""; return; }
+    var cab = ["L", "M", "M", "J", "V", "S", "D"].map(function (x) { return '<span class="cab">' + x + "</span>"; }).join("");
+    var pre = (d0.getDay() + 6) % 7, celdas = "", n = 0, fer = [];
+    for (var i = 0; i < pre; i++) celdas += '<span class="vacio"></span>';
+    for (var k = 0; k < dias; k++) {
+      var d = new Date(d0); d.setDate(d0.getDate() + k);
+      var fe = esFeriado(d), dom = d.getDay() === 0;
+      if (fe) fer.push(f(d) + " · " + fe);
+      if (!fe && !dom) n++;
+      celdas += '<span class="' + (fe ? "feriado" : dom ? "descanso" : "habil") + '" title="' + (fe || "") + '">' + d.getDate() + "</span>";
+    }
+    $("h-cal").innerHTML = cab + celdas;
+    $("h-res").innerHTML = '<span class="etiqueta">Del ' + f(d0) + " al " + f(d1) + '</span><div class="lineas"><div><span>Días hábiles (vacaciones, permisos, faltas)</span><b>' + n + '</b></div><div><span>Días naturales (incapacidad)</span><b>' + dias + "</b></div></div>" +
+      (fer.length ? '<p style="font-size:14px">Feriados en el rango: ' + fer.map(esc).join("; ") + ". No se descuentan.</p>" : "") +
+      (n === 0 ? '<div class="nota ojo"><b class="m">!</b><p>«Entre esas fechas no hay días hábiles (fin de semana o feriado)»: el ERP no lo registra.</p></div>' : "") +
+      '<p class="tenue" style="font-size:13px">Los descansos de la empresa que se capturen en Configuración tampoco cuentan.</p>';
+  };
+  ["h-desde", "h-hasta"].forEach(function (id) { $(id).addEventListener("input", habiles); });
+  habiles();
+
+  // ---------- Objetivos: estados ----------
+  var ESTADOS = [
+    ["Por calificar", "El jefe directo", "El mes se arma solo del 1 al 3. El jefe califica cada indicador con su evidencia y da «Enviar a RRHH». Si no hay jefe, califica RRHH. Nadie se califica a sí mismo."],
+    ["Por revisar", "Recursos Humanos", "RRHH revisa: «Marcar revisada» o «Devolver al jefe». Quien calificó no puede revisar lo mismo. Resuelve antes las impugnaciones pendientes."],
+    ["Por aprobar", "Dirección", "«Aprobar y cerrar el mes». Quien revisó no puede aprobarlo. A la persona le llega el aviso con liga a Mi desempeño."],
+    ["Cerrada", "Nadie la cambia", "Solo se corrige con un ajuste que pide RRHH y autoriza otra persona. El bono aprobado entra a la siguiente prenómina."]
+  ];
+  var oSel = 0;
+  var pintaEstados = function () {
+    $("o-cadena").innerHTML = ESTADOS.map(function (e, i) { return '<button type="button" class="paso" data-e="' + i + '" aria-pressed="' + (i === oSel) + '"><span class="n">' + (i + 1) + "</span><b>" + e[0] + "</b><span>" + e[1] + "</span></button>"; }).join("");
+    $("o-explica").innerHTML = "<b>" + ESTADOS[oSel][0] + ":</b> " + ESTADOS[oSel][2];
+  };
+  $("o-cadena").addEventListener("click", function (ev) { var b = ev.target.closest("[data-e]"); if (!b) return; oSel = Number(b.getAttribute("data-e")); pintaEstados(); });
+  pintaEstados();
+
+  // ---------- Objetivos: calificar un mes ----------
+  var IND = [
+    { n: "Asistencia y puntualidad", regla: "Meta: todo el peso o 0", peso: 25, tipo: "meta", min: 0, max: 1, val: 1, et: function (v) { return v ? "Cumplió" : "No cumplió"; } },
+    { n: "Uso de EPP", regla: "Descuento: −5 por incidencia", peso: 20, tipo: "desc", min: 0, max: 6, val: 1, d: 5, et: function (v) { return v + " incid."; } },
+    { n: "Calidad del trabajo", regla: "Proporcional: el jefe califica de 0 a 10", peso: 35, tipo: "prop", min: 0, max: 10, val: 8, et: function (v) { return v + " / 10"; } },
+    { n: "Orden y limpieza del área", regla: "Escalón: 95 % → todo, 85 % → la mitad", peso: 20, tipo: "esc", min: 70, max: 100, val: 92, et: function (v) { return v + " %"; } },
+    { n: "Celular (checklist)", regla: "Llave: 3 días con falla = bono total 0", peso: 0, tipo: "llave", min: 0, max: 6, val: 1, et: function (v) { return v + (v === 1 ? " día" : " días"); } }
+  ];
+  var calif = function (i) {
+    if (i.tipo === "meta") return i.val ? i.peso : 0;
+    if (i.tipo === "desc") return Math.max(0, i.peso - i.val * i.d);
+    if (i.tipo === "prop") return i.peso * i.val / 10;
+    if (i.tipo === "esc") return i.val >= 95 ? i.peso : i.val >= 85 ? i.peso / 2 : 0;
+    return 0;
+  };
+  $("o-indicadores").innerHTML = IND.map(function (x, k) {
+    return '<div class="indicador"><span><b>' + esc(x.n) + "</b>" + (x.peso ? " · " + x.peso + " %" : "") + '<span class="regla">' + esc(x.regla) + '</span></span><input type="range" min="' + x.min + '" max="' + x.max + '" value="' + x.val + '" data-i="' + k + '" aria-label="' + esc(x.n) + '"><b id="o-et' + k + '">' + x.et(x.val) + "</b></div>";
+  }).join("");
+  var objetivos = function () {
+    var suma = 0, lin = "";
+    IND.forEach(function (x, k) { $("o-et" + k).textContent = x.et(x.val); if (x.tipo !== "llave") { var c = calif(x); suma += c; lin += "<div><span>" + esc(x.n) + "</span><b>" + (Math.round(c * 10) / 10) + " de " + x.peso + "</b></div>"; } });
+    var llave = IND[4].val >= 3, total = llave ? 0 : Math.min(100, Math.round(suma * 10) / 10);
+    $("o-total").textContent = total + " %";
+    $("o-barra").style.width = total + "%"; $("o-barra").style.background = llave ? "var(--peligro)" : total >= 80 ? "var(--ok)" : "var(--aviso)";
+    $("o-nota").innerHTML = llave ? '<span class="insignia t-peligro punto">Llave del bono: ' + IND[4].val + " días con falla de celular → bono 0</span>" : "";
+    $("o-lineas").innerHTML = lin + '<div class="total"><span>Total (tope 100 %)</span><b>' + total + " %</b></div>";
+  };
+  $("o-indicadores").addEventListener("input", function (ev) { var k = ev.target.getAttribute("data-i"); if (k === null) return; IND[Number(k)].val = Number(ev.target.value); objetivos(); });
+  objetivos();
+
+  // ---------- Prenómina ----------
+  var nom = function () {
+    var g = function (id) { return Math.max(0, Number($(id).value) || 0); };
+    var s = g("n-sueldo"), ex = g("n-extra"), fa = g("n-faltas"), inc = g("n-incap"), ret = g("n-retardo"), va = g("n-vac"), pr = g("n-prestamo"), ot = g("n-otros"), de = g("n-desc");
+    var dias = Math.max(0, 7 - inc - fa - ret / 8), diario = s / 7, hora = s / 56;
+    var dob = Math.min(ex, 9), tri = Math.max(0, ex - 9);
+    var sueldo = diario * dias, hext = hora * 2 * dob + hora * 3 * tri, prima = diario * va * 0.25;
+    var total = sueldo + hext + prima + ot - pr - de;
+    $("n-total").textContent = mx.format(total);
+    $("n-lineas").innerHTML =
+      "<div><span>Días pagados (7 − incapacidad − faltas − retardos ÷ 8)</span><b>" + (Math.round(dias * 100) / 100) + "</b></div>" +
+      "<div><span>Sueldo</span><b>" + mx.format(sueldo) + "</b></div>" +
+      (ex ? "<div><span>Horas extra: " + dob + " dobles" + (tri ? " y " + tri + " triples" : "") + " (hora = sueldo ÷ 56)</span><b>" + mx.format(hext) + "</b></div>" : "") +
+      (va ? "<div><span>Prima vacacional (25 %)</span><b>" + mx.format(prima) + "</b></div>" : "") +
+      (ot ? "<div><span>Otros pagos</span><b>" + mx.format(ot) + "</b></div>" : "") +
+      (pr ? "<div><span>Préstamo</span><b>−" + mx.format(pr) + "</b></div>" : "") +
+      (de ? "<div><span>Otros descuentos</span><b>−" + mx.format(de) + "</b></div>" : "") +
+      '<div class="total"><span>A pagar</span><b>' + mx.format(total) + "</b></div>" +
+      (inc ? '<p class="tenue" style="font-size:13px">Los días de incapacidad los paga el IMSS.</p>' : "") +
+      '<p class="tenue" style="font-size:13px">Vacaciones y permisos con goce sí se pagan. Las horas extra arriba de 9 en la semana se pagan triples (LFT art. 68).</p>';
+  };
+  document.querySelectorAll("#prenomina input").forEach(function (el) { el.addEventListener("input", nom); });
+  nom();
+
+  // ---------- Mensajes ----------
+  var MSG = [
+    ["Entre el % y el % no hay días hábiles (fin de semana o feriado)", "Revisa las fechas: el rango cae completo en domingo o feriado."],
+    ["Esa persona ya tiene otra ausencia registrada en esas fechas", "Revisa su historial: dos ausencias no se enciman. Corrige o rechaza la anterior."],
+    ["Indica cuántas horas extra fueron", "Las horas extra llevan su número de horas."],
+    ["La CURP no tiene la forma correcta (18 caracteres: …)", "Cópiala de su constancia o acta, sin espacios."],
+    ["El RFC de una persona son 13 caracteres: 4 letras, fecha AAMMDD y homoclave", "Con homoclave."],
+    ["El NSS son 11 dígitos", "El número de seguridad social del IMSS."],
+    ["El salario diario debe ser mayor a cero", "Captura el salario diario."],
+    ["Para dar de baja a alguien se necesita la fecha y el motivo", "Llena «Último día laborado» y «Motivo»."],
+    ["La fecha de baja no puede ser antes del ingreso", "Revisa la fecha."],
+    ["Nadie califica su propio objetivo", "Lo califica su jefe directo o RRHH."],
+    ["Solo su jefe directo o RRHH califican a esta persona", "Revisa en «Personas y jefes» quién es su jefe."],
+    ["Calificaste esta evaluación: que la revise otra persona", "Quien califica no revisa lo mismo."],
+    ["Revisaste esta evaluación: que la apruebe otra persona de dirección", "Quien revisa no aprueba lo mismo."],
+    ["Resuelve primero % impugnación(es) pendiente(s)", "Resuelve «Sí cuenta» / «No cuenta» antes de revisar."],
+    ["Faltan % indicador(es) por calificar", "Califica todos los indicadores antes de enviar."],
+    ["Este indicador lo mide el sistema: si una incidencia no aplica, impúgnala con el motivo", "No se cambia a mano; se impugna."],
+    ["El mes ya está aprobado y cerrado: no se modifica. Si hay un error, solicita un ajuste.", "«Pedir un ajuste» con el resultado corregido y el motivo."],
+    ["Los pesos de la plantilla suman % y deben sumar 100", "Ajusta los pesos de la plantilla del puesto."],
+    ["Nadie se marca a sí mismo", "El checklist lo marca otra persona."],
+    ["Solo RRHH marca o corrige días de hace más de una semana", "Pídeselo a RRHH."],
+    ["La semana de nómina empieza en viernes y el % no lo es", "Elige la semana desde el selector."],
+    ["La semana termina el jueves %: se cierra a partir de ese día", "Espera a que termine la semana."],
+    ["Una semana cerrada no se modifica: corrígelo en la semana abierta con otro concepto", "«Agregar concepto» en la semana abierta."],
+    ["Nadie se autoriza un préstamo a sí mismo", "Que lo registre otra persona con nómina."],
+    ["Un préstamo no se borra: cancélalo con el motivo", "Cancélalo; queda el registro."],
+    ["El historial de sueldos no se edita ni se borra: registra el sueldo nuevo con su fecha", "«Registrar sueldo» con la fecha desde la que aplica."]
+  ];
+  var qn = function (s) { return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); };
+  var pintarMsg = function () {
+    var q = qn($("m-buscar").value.trim());
+    var fil = MSG.filter(function (m) { return !q || qn(m[0] + " " + m[1]).indexOf(q) >= 0; });
+    $("m-tabla").innerHTML = fil.length ? fil.map(function (m) { return '<tr><td class="msg">«' + esc(m[0]).replace(/%/g, "…") + "»</td><td>" + esc(m[1]) + "</td></tr>"; }).join("") : '<tr><td colspan="2" class="tenue">Ningún mensaje con esa palabra.</td></tr>';
+  };
+  $("m-buscar").addEventListener("input", pintarMsg);
+  pintarMsg();
+
+  // ---------- Índice ----------
+  var enlaces = Array.prototype.slice.call(document.querySelectorAll("#indice a"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (es) { es.forEach(function (en) { if (en.isIntersecting) enlaces.forEach(function (a) { a.classList.toggle("activo", a.getAttribute("href") === "#" + en.target.id); }); }); }, { rootMargin: "-30% 0px -60% 0px" });
+    document.querySelectorAll("section.bloque").forEach(function (s) { obs.observe(s); });
+  }
+})();
+</script>

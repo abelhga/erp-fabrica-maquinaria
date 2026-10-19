@@ -2,7 +2,7 @@
 // como artefactos), y `npm run manuales` arma la copia que sirve el ERP en public/manuales.
 // Sin React: lo usan la pantalla, el script que arma las copias y su prueba.
 
-export type ClaveManual = "general" | "importaciones" | "finanzas" | "susana";
+export type ClaveManual = "general" | "importaciones" | "finanzas" | "susana" | "rrhh";
 
 export interface Manual {
   clave: ClaveManual;
@@ -33,6 +33,11 @@ export const MANUALES: Manual[] = [
     clave: "susana", titulo: "Gerencia administrativa", para: "Susana",
     descripcion: "Lo que cambia de la hoja al ERP: ingresos, egresos y caja chica, la venta de un equipo de la cotización al último pago, refacciones y números de serie.",
     artefacto: "RieLcpSnJCnCJ6soYgJSA9",
+  },
+  {
+    clave: "rrhh", titulo: "Recursos Humanos", para: "RRHH, jefes que califican objetivos y nómina",
+    descripcion: "Personal y expediente, vacaciones con la ley 2023 y días hábiles, objetivos y bonos del mes, checklist diario y la prenómina de viernes a jueves.",
+    artefacto: "2QLqd8qsyobRWwevksD4ju",
   },
 ];
 

@@ -13,7 +13,7 @@ export const GENERAL: Record<string, AyudaPantalla> = {
     "La fecha sale en ámbar si vence hoy y en rojo si ya venció; mientras siga vencido, el sistema les recuerda a los dos. Para pedir algo nuevo usa “Pedir algo a alguien”: qué hay que hacer, quién y para cuándo.",
   ],
   "/ayuda": [
-    "Aquí están los manuales de uso del ERP. Ves el general y los de tu área: importaciones, finanzas o el de la gerencia administrativa.",
+    "Aquí están los manuales de uso del ERP. Ves el general y los de tu área: importaciones, finanzas, recursos humanos o el de la gerencia administrativa.",
     "Cada manual explica el flujo paso a paso con los mismos nombres de botones de las pantallas, y trae prácticas que se comportan como el ERP pero no guardan nada. Dale clic a uno para abrirlo.",
   ],
   "/ayuda/:manual": [

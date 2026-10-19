@@ -1,18 +1,20 @@
 // Los manuales de uso, dentro del ERP. Cada quien ve los de su trabajo; el menú los filtra
 // por comodidad (los archivos no llevan nada que no deba leer cualquiera con sesión).
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, Ship, UserRound, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowRight, BookOpen, Ship, UserRound, Users, Wallet, type LucideIcon } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { useSesion } from "@/lib/sesion";
 import { MANUALES, type ClaveManual, type Manual } from "./manuales";
 
-export const ICONO_MANUAL: Record<ClaveManual, LucideIcon> = { general: BookOpen, importaciones: Ship, finanzas: Wallet, susana: UserRound };
+export const ICONO_MANUAL: Record<ClaveManual, LucideIcon> = { general: BookOpen, importaciones: Ship, finanzas: Wallet, susana: UserRound, rrhh: Users };
 
 /** Quién ve cada manual en la lista. Mismo criterio que el menú de cada módulo. */
 export function veManual(m: Manual, s: Pick<ReturnType<typeof useSesion>, "puede" | "tieneRol">) {
   if (m.clave === "importaciones") return s.puede("importaciones", 1);
   if (m.clave === "finanzas") return s.puede("finanzas", 1);
   if (m.clave === "susana") return s.tieneRol("administracion") || s.tieneRol("direccion");
+  // Los jefes que califican objetivos y quien ve la prenómina también lo usan.
+  if (m.clave === "rrhh") return s.puede("rrhh", 1) || s.puede("objetivos", 1) || s.puede("nomina", 1);
   return true;
 }
 
