@@ -5,6 +5,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
+import pg from "pg";
 import { API_ML, atender, normalizarOrden, normalizarPregunta, normalizarReclamo } from "./nucleo.ts";
 
 describe("traducciones de ML", () => {
@@ -47,7 +48,10 @@ const env = existsSync(ruta) ? Object.fromEntries(
 ) : {};
 const URL_SB = process.env.VITE_SUPABASE_URL ?? env.VITE_SUPABASE_URL, ANON = process.env.VITE_SUPABASE_ANON_KEY ?? env.VITE_SUPABASE_ANON_KEY;
 const SERVICIO = process.env.SUPABASE_SERVICE_ROLE_KEY ?? env.SUPABASE_SERVICE_ROLE_KEY;
-const hayBase = !!SERVICIO && await fetch(`${URL_SB}/auth/v1/health`, { headers: { apikey: ANON } }).then((r) => r.ok).catch(() => false);
+// La historia del envío no se deja borrar (a propósito): la limpieza va directo a Postgres con
+// los disparadores apagados. Sin DATABASE_URL esta parte no corre, para no ensuciar la base.
+const URL_PG = process.env.DATABASE_URL ?? env.DATABASE_URL;
+const hayBase = !!SERVICIO && !!URL_PG && await fetch(`${URL_SB}/auth/v1/health`, { headers: { apikey: ANON } }).then((r) => r.ok).catch(() => false);
 
 // La API de ML falsa: responde según la ruta y anota lo que se le mandó.
 const enviados: { ruta: string; cuerpo: unknown }[] = [];
@@ -73,22 +77,26 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
 
   afterAll(async () => {
     if (!hayBase) return;
-    const { data: ped } = await admin.from("pedidos").select("id").eq("canal", "mercadolibre").eq("id_externo", String(ORDEN)).maybeSingle();
-    if (ped) {
-      const { data: envs } = await admin.from("envios").select("id").eq("pedido_id", ped.id);
-      for (const e of envs ?? []) {
-        await admin.from("eventos_envio").delete().eq("envio_id", e.id);
-        await admin.from("envio_lineas").delete().eq("envio_id", e.id);
-        await admin.from("envios").delete().eq("id", e.id);
+    const c = new pg.Client({ connectionString: URL_PG });
+    await c.connect();
+    try {
+      await c.query("begin");
+      await c.query("set local session_replication_role = replica");
+      await c.query(`create temp table _p on commit drop as select id from public.pedidos where canal = 'mercadolibre' and id_externo = $1`, [String(ORDEN)]);
+      for (const t of ["eventos_envio", "envio_lineas", "envio_bultos"]) {
+        await c.query(`delete from public.${t} where envio_id in (select id from public.envios where pedido_id in (select id from _p))`);
       }
-      await admin.from("ml_ventas").delete().eq("pedido_id", ped.id);
-      await admin.from("pedidos").delete().eq("id", ped.id);
-    }
-    await admin.from("ml_preguntas").delete().eq("id", 880001);
-    await admin.from("ml_avisos").delete().in("resource", [`/orders/${ORDEN}`, "/questions/880001"]);
-    await admin.from("publicaciones").delete().eq("id_externo", "MLM-T-ML");
-    if (articulo) await admin.from("articulos").delete().eq("id", articulo);
-    await admin.from("ml_cuenta").delete().eq("id", 1);
+      await c.query("delete from public.envios where pedido_id in (select id from _p)");
+      await c.query("delete from public.ml_ventas where pedido_id in (select id from _p)");
+      await c.query("delete from public.pedido_lineas where pedido_id in (select id from _p)");
+      await c.query("delete from public.pedidos where id in (select id from _p)");
+      await c.query("delete from public.ml_preguntas where id = 880001");
+      await c.query("delete from public.ml_avisos where resource = any($1)", [[`/orders/${ORDEN}`, "/questions/880001"]]);
+      await c.query("delete from public.publicaciones where id_externo = 'MLM-T-ML'");
+      if (articulo) await c.query("delete from public.articulos where id = $1", [articulo]);
+      await c.query("delete from public.ml_cuenta where id = 1");
+      await c.query("commit");
+    } finally { await c.end(); }
   });
 
   it("un aviso de venta termina en pedido con envío Full, ligado por SKU", async () => {

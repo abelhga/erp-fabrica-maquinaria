@@ -15,6 +15,7 @@ import { dinero, fecha, hace, numero } from "@/lib/formato";
 import { diasDesde, rutaArticulo, useCatalogo, type ArticuloCatalogo, type TipoArticulo } from "./componentes/comun";
 import { cn } from "@/lib/utilidades";
 import { NuevoArticulo } from "./componentes/NuevoArticulo";
+import { ActivoArticulo } from "./componentes/Activo";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 const FABRICADOS: TipoArticulo[] = ["equipo", "subensamble"];
@@ -35,7 +36,7 @@ function CostoMasViejo({ f }: { f: string | null | undefined }) {
     {viejo && <span className="inline-block h-1.5 w-1.5 rounded-full bg-current mr-1.5 align-middle" />}{fecha(f).slice(3)}</span>;
 }
 
-type FiltroEq = "todos" | "alertas" | "sin_lista";
+type FiltroEq = "todos" | "alertas" | "sin_lista" | "inactivos";
 
 function TablaFabricados({ filas, cargando, error, tipo }: {
   filas: ArticuloCatalogo[] | undefined; cargando: boolean; error: unknown; tipo: "equipo" | "subensamble";
@@ -48,9 +49,12 @@ function TablaFabricados({ filas, cargando, error, tipo }: {
 
   const categorias = useMemo(() => [...new Set((filas ?? []).map((a) => a.categoria).filter(Boolean) as string[])].sort(), [filas]);
   const conAlerta = (a: ArticuloCatalogo) => (a.sin_costo ?? 0) > 0;
-  const visibles = useMemo(() => (filas ?? []).filter((a) =>
+  // Los inhabilitados solo salen en su filtro: en los demás estorbarían.
+  const activos = useMemo(() => (filas ?? []).filter((a) => a.activo), [filas]);
+  const inactivos = (filas?.length ?? 0) - activos.length;
+  const visibles = useMemo(() => (filtro === "inactivos" ? (filas ?? []).filter((a) => !a.activo) : activos).filter((a) =>
     (!categoria || a.categoria === categoria) &&
-    (filtro === "todos" || (filtro === "alertas" ? conAlerta(a) : !a.lineas_bom))), [filas, filtro, categoria]);
+    (filtro === "todos" || filtro === "inactivos" || (filtro === "alertas" ? conAlerta(a) : !a.lineas_bom))), [filas, activos, filtro, categoria]);
 
   const columnas: Columna<ArticuloCatalogo>[] = [
     { clave: "clave", titulo: "Clave", clase: "whitespace-nowrap font-medium cifra" },
@@ -74,12 +78,14 @@ function TablaFabricados({ filas, cargando, error, tipo }: {
     { clave: "sin_costo", titulo: "Sin costo", oculta: !costos, sinBusqueda: true, valor: (a) => a.sin_costo ?? 0, celda: (a) => <SinCosto a={a} />, explica: GLOSARIO.piezasSinCosto },
     { clave: "costo_mas_viejo", titulo: "Más viejo", oculta: !costos, sinBusqueda: true, valor: (a) => a.costo_mas_viejo ?? null, explica: GLOSARIO.costoMasViejo,
       celda: (a) => <CostoMasViejo f={a.costo_mas_viejo} /> },
+    { clave: "activo", titulo: "Activo", sinBusqueda: true, alinear: "centro", oculta: !puede("costeo", 2) && filtro !== "inactivos",
+      valor: (a) => (a.activo ? "sí" : "no"), explica: GLOSARIO.articuloInhabilitado, celda: (a) => <ActivoArticulo a={a} forma="interruptor" /> },
   ];
 
   return (
     <TablaDatos
       filas={visibles} columnas={columnas} cargando={cargando} error={error} claveFila={(a) => a.id}
-      alClicFila={(a) => ir(rutaArticulo(a))} exportarComo={tipo === "equipo" ? "equipos" : "subensambles"}
+      alClicFila={(a) => ir(rutaArticulo(a))} exportarComo={tipo === "equipo" ? "equipos" : "subensambles"} claseFila={(a) => (a.activo ? undefined : "opacity-70")}
       placeholder={tipo === "equipo" ? 'Buscar: "banda 18", E-315, dosificadora…' : "Buscar subensamble…"}
       filtros={
         <>
@@ -90,9 +96,10 @@ function TablaFabricados({ filas, cargando, error, tipo }: {
             </Seleccion>
           )}
           <Filtro<FiltroEq> valor={filtro} alCambiar={setFiltro} opciones={[
-            { valor: "todos", texto: "Todos" },
-            ...(costos ? [{ valor: "alertas" as const, texto: "Con piezas sin costo", cuenta: (filas ?? []).filter(conAlerta).length }] : []),
-            { valor: "sin_lista", texto: "Sin lista de materiales", cuenta: (filas ?? []).filter((a) => !a.lineas_bom).length },
+            { valor: "todos", texto: "Activos" },
+            ...(costos ? [{ valor: "alertas" as const, texto: "Con piezas sin costo", cuenta: activos.filter(conAlerta).length }] : []),
+            { valor: "sin_lista", texto: "Sin lista de materiales", cuenta: activos.filter((a) => !a.lineas_bom).length },
+            ...(inactivos ? [{ valor: "inactivos" as const, texto: "Inhabilitados", cuenta: inactivos, explica: GLOSARIO.articuloInhabilitado }] : []),
           ]} />
         </>
       }
@@ -207,7 +214,7 @@ export default function Equipos() {
   const [params, setParams] = useSearchParams();
   const [nuevo, setNuevo] = useState<"equipo" | "subensamble" | null>(null);
   const vista = params.get("vista") ?? "equipos";
-  const cat = useCatalogo(FABRICADOS);
+  const cat = useCatalogo(FABRICADOS, { inactivos: true });
   // Las correcciones de piso son asunto de ingeniería y producción; un vendedor no las necesita.
   const verSolicitudes = puede("costeo", 2) || puede("produccion", 2);
   const solicitudes = useQuery({
@@ -222,6 +229,8 @@ export default function Equipos() {
 
   const equipos = cat.data?.filter((a) => a.tipo === "equipo");
   const subensambles = cat.data?.filter((a) => a.tipo === "subensamble");
+  // Las pestañas cuentan lo activo: lo inhabilitado está en su filtro.
+  const cuenta = (xs?: ArticuloCatalogo[]) => xs?.filter((a) => a.activo).length;
   const pendientes = solicitudes.data?.filter((s) => s.estado === "pendiente").length;
 
   return (
@@ -237,8 +246,8 @@ export default function Equipos() {
     >
       <Pestanas value={vista} onValueChange={(v) => setParams(v === "equipos" ? {} : { vista: v }, { replace: true })}>
         <ListaPestanas opciones={[
-          { valor: "equipos", texto: "Equipos", cuenta: equipos?.length },
-          { valor: "subensambles", texto: "Subensambles", cuenta: subensambles?.length, explica: GLOSARIO.subensamble },
+          { valor: "equipos", texto: "Equipos", cuenta: cuenta(equipos) },
+          { valor: "subensambles", texto: "Subensambles", cuenta: cuenta(subensambles), explica: GLOSARIO.subensamble },
           ...(verSolicitudes ? [{ valor: "solicitudes", texto: "Solicitudes de cambio", cuenta: pendientes || undefined, explica: GLOSARIO.solicitudCambio }] : []),
         ]} />
         <ContenidoPestana value="equipos" className="pt-4">

@@ -142,12 +142,12 @@ export function TablaDatos<T>({
 
 /** Botones de filtro tipo "pastilla" para la barra de la tabla. */
 export function Filtro<T extends string>({ opciones, valor, alCambiar }: {
-  opciones: { valor: T; texto: string; cuenta?: number }[]; valor: T; alCambiar: (v: T) => void;
+  opciones: { valor: T; texto: string; cuenta?: number; explica?: string }[]; valor: T; alCambiar: (v: T) => void;
 }) {
   return (
     <div className="flex flex-wrap gap-1">
       {opciones.map((o) => (
-        <button key={o.valor} onClick={() => alCambiar(o.valor)}
+        <button key={o.valor} onClick={() => alCambiar(o.valor)} data-explain={o.explica} data-explain-title={o.explica ? o.texto : undefined}
           className={cn("h-8 rounded-full px-3 text-xs font-medium border transition",
             valor === o.valor ? "bg-marca text-white border-marca" : "border-borde text-tenue hover:text-texto hover:bg-fondo")}>
           {o.texto}{o.cuenta != null && <span className="ml-1 opacity-75 cifra">{o.cuenta}</span>}
