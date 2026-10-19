@@ -21,6 +21,8 @@ import { DialogoDuplicar } from "./componentes/Duplicar";
 import { FichaComponente } from "./componentes/FichaComponente";
 import { EmpaqueArticulo } from "@/modulos/almacen/envios/EmpaqueArticulo";
 import { ActivoArticulo } from "./componentes/Activo";
+import { EditarDatos } from "./componentes/EditarDatos";
+import { FotosArticulo } from "./componentes/FotosArticulo";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 function Cifra({ etiqueta, valor, detalle, tono, explica }: { etiqueta: string; valor: ReactNode; detalle?: ReactNode; tono?: "ok" | "aviso" | "peligro"; explica?: string }) {
@@ -134,6 +136,7 @@ export default function DetalleArticulo() {
     { valor: "horas", texto: "Horas por etapa", explica: GLOSARIO.horasEtapa },
     ...(costos ? [{ valor: "costo", texto: puede("margenes") ? "Costo y precio" : "Costo", explica: puede("margenes") ? GLOSARIO.formulaPrecio : GLOSARIO.costoArticulo }, { valor: "historial", texto: "Historial", explica: GLOSARIO.historialCosteo }] : []),
     ...(a.tipo === "subensamble" || a.usado_en > 0 ? [{ valor: "usos", texto: "Dónde se usa", cuenta: a.usado_en, explica: GLOSARIO.usadoEnListas }] : []),
+    { valor: "fotos", texto: "Fotos", explica: GLOSARIO.fotosEquipo },
     { valor: "planos", texto: "Planos" },
   ] : [];
   const pestana = pestanas.some((p) => p.valor === params.get("pestana")) ? params.get("pestana")! : "lista";
@@ -161,6 +164,7 @@ export default function DetalleArticulo() {
       acciones={fab && puede("costeo", 2) && (
         <>
           <ActivoArticulo a={a} forma="boton" />
+          <EditarDatos a={a} />
           <Boton variante="secundario" onClick={() => setDuplicando(true)} data-explain={GLOSARIO.duplicarConParametros}><Copy className="h-4 w-4" /> Duplicar con otros parámetros</Boton>
         </>
       )}
@@ -177,6 +181,7 @@ export default function DetalleArticulo() {
           {costos && <ContenidoPestana value="costo" className="pt-4"><CostoPrecio articulo={a} /></ContenidoPestana>}
           {costos && <ContenidoPestana value="historial" className="pt-4"><Historial id={a.id} /></ContenidoPestana>}
           <ContenidoPestana value="usos" className="pt-4"><DondeSeUsa id={a.id} unidad={a.unidad} /></ContenidoPestana>
+          <ContenidoPestana value="fotos" className="pt-4"><FotosArticulo articuloId={a.id} /></ContenidoPestana>
           <ContenidoPestana value="planos" className="pt-4"><PlanosArticulo articuloId={a.id} /></ContenidoPestana>
         </Pestanas>
       ) : (

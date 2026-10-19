@@ -52,6 +52,8 @@ export function ConfigSkydropx() {
             <Fila titulo="Sale de">{c?.origen ? textoDireccion(c.origen) : <span className="text-tenue">Sin elegir: prueba la conexión y elige la plantilla de la planta.</span>}</Fila>
             <Fila titulo="Carta porte" explica={GLOSARIO.cartaPorte}>{c?.carta_porte ? <span className="cifra">{c.carta_porte}</span> : <span className="text-tenue">Sin clave: no se puede generar guía.</span>}</Fila>
             <Fila titulo="Empaque"><span className="cifra">{c?.tipo_empaque ?? "4G"}</span></Fila>
+            <Fila titulo="Recargo al flete" explica={GLOSARIO.fleteCotizacion}><span className="cifra">{Math.round((c?.recargo_flete ?? 0) * 100)} %</span>
+              <span className="text-tenue"> sobre lo que cobra Skydropx, al cotizar el flete en una cotización</span></Fila>
           </dl>
 
           {admin && (
@@ -86,6 +88,13 @@ export function ConfigSkydropx() {
                 alElegir={(clave) => fijar.mutate({ carta_porte: clave })} />
               <BuscarClave tipo="empaque" etiqueta="Tipo de empaque" actual={c?.tipo_empaque ?? "4G"} ayuda="4G es caja de cartón."
                 alElegir={(clave) => fijar.mutate({ tipo_empaque: clave })} />
+              <Campo etiqueta="Recargo al flete en cotizaciones" ayuda="Se suma a lo que cobra Skydropx cuando un vendedor cotiza el flete antes de la venta (sobrepesos, empaque). Enter guarda.">
+                {/* Se guarda al salir o con Enter, no con cada tecla: cada cambio de configuración recalcula costos. */}
+                <Entrada key={c?.recargo_flete ?? 0} type="number" min={0} max={200} step={1} className="w-28 cifra" aria-label="Recargo al flete en %"
+                  defaultValue={Math.round((c?.recargo_flete ?? 0) * 100)}
+                  onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                  onBlur={(e) => { const n = Number(e.target.value) / 100; if (Number.isFinite(n) && Math.abs(n - (c?.recargo_flete ?? 0)) > 0.0001) fijar.mutate({ recargo_flete: n }); }} />
+              </Campo>
               <Campo etiqueta="Formato de la guía">
                 <Seleccion value={c?.formato ?? "standard"} onChange={(e) => fijar.mutate({ formato: e.target.value as "standard" | "thermal" })} disabled={fijar.isPending}>
                   <option value="standard">Hoja carta (impresora normal)</option>

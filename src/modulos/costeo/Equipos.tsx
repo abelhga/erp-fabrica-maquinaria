@@ -16,6 +16,7 @@ import { diasDesde, rutaArticulo, useCatalogo, type ArticuloCatalogo, type TipoA
 import { cn } from "@/lib/utilidades";
 import { NuevoArticulo } from "./componentes/NuevoArticulo";
 import { ActivoArticulo } from "./componentes/Activo";
+import { BotonReemplazarComponente } from "./componentes/ReemplazarComponente";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 const FABRICADOS: TipoArticulo[] = ["equipo", "subensamble"];
@@ -239,6 +240,7 @@ export default function Equipos() {
       descripcion="Listas de materiales, horas y precio de cada equipo. Los subensambles se capturan una vez y se comparten."
       acciones={puede("costeo", 2) && (
         <>
+          <BotonReemplazarComponente />
           <Boton variante="secundario" onClick={() => setNuevo("subensamble")}><Plus className="h-4 w-4" /> Nuevo subensamble</Boton>
           <Boton onClick={() => setNuevo("equipo")}><Plus className="h-4 w-4" /> Nuevo equipo</Boton>
         </>

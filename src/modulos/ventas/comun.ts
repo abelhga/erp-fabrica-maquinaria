@@ -69,7 +69,7 @@ export interface Cotizacion {
 }
 export interface Partida {
   id: string; cotizacion_id: string; orden: number; articulo_id: string | null; titulo: string; descripcion: string | null;
-  imagen_url: string | null; unidad: string; cantidad: number; precio_unitario: number; precio_lista: number | null;
+  imagen_url: string | null; imagenes_extra?: string[] | null; unidad: string; cantidad: number; precio_unitario: number; precio_lista: number | null;
   descuento_pct: number; opcional: boolean; bajo_minimo: boolean; importe: number;
 }
 export interface VCotizacion {
@@ -102,6 +102,8 @@ export interface VCliente {
 export interface Contacto {
   id: string; cliente_id: string; nombre: string; puesto: string | null; telefono: string | null; whatsapp: string | null;
   correo: string | null; domicilio: string | null; principal: boolean; notas: string | null;
+  /** Por campos: lo guarda el envío de Skydropx y lo usa la cotización del flete. */
+  domicilio_cp?: string | null; domicilio_estado?: string | null; domicilio_municipio?: string | null; domicilio_colonia?: string | null;
 }
 export interface Actividad {
   id: string; cliente_id: string | null; oportunidad_id: string | null; tipo: "llamada" | "whatsapp" | "correo" | "visita" | "nota" | "tarea";
