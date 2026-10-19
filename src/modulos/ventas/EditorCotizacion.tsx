@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronDown, Cloud, CloudOff, Copy, CopyPlus, FileText, Loader2, MessageCircle,
+  AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronDown, Cloud, CloudOff, Copy, CopyPlus, Eye, FileText, Loader2, MessageCircle,
   MoreHorizontal, PackageCheck, Plus, Printer, Send, ShieldCheck, ThumbsDown, Trash2, Truck, X,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -15,7 +15,7 @@ import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando, Vacio } from "@/components/ui/estados";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
-import { Lateral } from "@/components/ui/dialogo";
+import { Dialogo, Lateral } from "@/components/ui/dialogo";
 import { BuscadorArticulo } from "@/components/datos/BuscadorArticulo";
 import {
   EDITABLES, ESTADO_COT, dineroEn, folioCot, mensualidad, useAncho, usePlanesMeses, useTextosComerciales, venceEl, hoyMx,
@@ -24,6 +24,7 @@ import {
 import { CampoNumero, MenuAcciones, OpcionMenu, SelectorTexto, SeparadorMenu } from "./componentes/campos";
 import { TablaPartidas, importeLocal } from "./componentes/TablaPartidas";
 import { FichaVenta } from "./componentes/FichaVenta";
+import { DialogoFleteSkydropx } from "./componentes/FleteSkydropx";
 import { DialogoCliente, DialogoMotivo, ElegirCliente, MOTIVOS_PERDIDA, type ClienteNuevo } from "./componentes/dialogos";
 import { DialogoConvertir, DialogoEnviar, DialogoPedirAutorizacion } from "./componentes/DialogosCotizacion";
 import { useFichas } from "./componentes/Fichas";
@@ -84,8 +85,8 @@ function Editor({ id }: { id: string }) {
   const clienteId = cot.data?.cliente_id;
   const cliente = useQuery({
     queryKey: ["cliente", clienteId], enabled: !!clienteId,
-    queryFn: () => q<{ id: string; nombre: string; razon_social: string | null; vendedor_id: string | null; vendedor: { nombre: string } | null }>(
-      supabase.from("clientes").select("id, nombre, razon_social, vendedor_id, vendedor:perfiles!clientes_vendedor_id_fkey(nombre)").eq("id", clienteId!).single()),
+    queryFn: () => q<{ id: string; nombre: string; razon_social: string | null; vendedor_id: string | null; vendedor: { nombre: string } | null; estado: string | null; ciudad: string | null }>(
+      supabase.from("clientes").select("id, nombre, razon_social, vendedor_id, estado, ciudad, vendedor:perfiles!clientes_vendedor_id_fkey(nombre)").eq("id", clienteId!).single()),
   });
   const contactos = useQuery({
     queryKey: ["contactos", clienteId], enabled: !!clienteId,
@@ -241,7 +242,7 @@ function Editor({ id }: { id: string }) {
   const vencida = !!c && ["borrador", "por_autorizar", "autorizada", "enviada"].includes(c.estado) && !!vence && vence < hoyMx();
 
   // ---------------------------------------------------------------- acciones
-  const [dlg, setDlg] = useState<null | "enviar" | "convertir" | "rechazar" | "autorizacion" | "cliente">(null);
+  const [dlg, setDlg] = useState<null | "enviar" | "convertir" | "rechazar" | "autorizacion" | "cliente" | "flete">(null);
   const [nombreCliente, setNombreCliente] = useState("");
 
   const agregar = useAccion(
@@ -262,6 +263,19 @@ function Editor({ id }: { id: string }) {
       return nid;
     },
     { invalidar: [["cotizacion", id], ["cotizacion_lineas", id]], alTerminar: (nid) => setSeleccion(nid) },
+  );
+  // El flete cotizado con Skydropx entra como partida libre con su precio ya puesto.
+  const agregarFlete = useAccion(
+    async (a: { titulo: string; precio: number }) => {
+      await guardar();
+      const nid = crypto.randomUUID();
+      await q(supabase.from("cotizacion_lineas").insert({
+        id: nid, cotizacion_id: id, orden: Math.max(0, ...lineas.map((l) => l.orden)) + 1, titulo: a.titulo,
+        unidad: "servicio", cantidad: 1, precio_unitario: a.precio,
+      }));
+      return nid;
+    },
+    { exito: "Flete agregado", invalidar: [["cotizacion", id], ["cotizacion_lineas", id]], alTerminar: (nid) => setSeleccion(nid) },
   );
   const eliminarLinea = useAccion(
     async (lid: string) => {
@@ -381,6 +395,10 @@ function Editor({ id }: { id: string }) {
     { exito: "Borrador eliminado", invalidar: [["v_cotizaciones"]], alTerminar: () => ir("/ventas/cotizaciones") },
   );
   const abrirPdf = async () => { await guardar(); window.open(`/ventas/cotizaciones/${id}/imprimir`, "_blank"); };
+  // Vista previa: la misma hoja que recibe el cliente, sin salir del editor. Se guarda antes
+  // para que muestre lo último que se escribió; la llave obliga a recargarla cada vez.
+  const [vista, setVista] = useState(0);
+  const abrirVista = async () => { await guardar(); setVista(Date.now()); };
 
   // El cliente se guarda al momento (no con el resto): con la regla de cartera
   // encendida la base puede negarse ("Este cliente es de X hasta…") y ese
@@ -447,6 +465,7 @@ function Editor({ id }: { id: string }) {
 
   const menuMas = (
     <MenuAcciones disparador={<Boton variante="secundario" tamano="icono" aria-label="Más acciones"><MoreHorizontal className="h-4 w-4" /></Boton>}>
+      <OpcionMenu icono={Eye} alElegir={abrirVista}>Vista previa</OpcionMenu>
       <OpcionMenu icono={Printer} alElegir={abrirPdf}>Imprimir / PDF</OpcionMenu>
       <OpcionMenu icono={MessageCircle} alElegir={() => setDlg("enviar")} deshabilitado={!["enviada", "aceptada"].includes(c.estado) && !puedeEnviar}>Compartir por WhatsApp</OpcionMenu>
       <SeparadorMenu />
@@ -541,6 +560,7 @@ function Editor({ id }: { id: string }) {
         </div>
         <div className="ml-auto flex items-center gap-2">
           {indicador}
+          <Boton variante="secundario" className="hidden sm:inline-flex" onClick={abrirVista}><Eye className="h-4 w-4" />Vista previa</Boton>
           <Boton variante="secundario" className="hidden sm:inline-flex" onClick={abrirPdf}><Printer className="h-4 w-4" />PDF</Boton>
           {dosColumnas && botonPrincipal}
           {menuMas}
@@ -684,7 +704,8 @@ function Editor({ id }: { id: string }) {
                     alNoEncontrar={(texto) => setPedirPara({ descripcion: texto, cantidad: 1, cotizacionId: id, nuevaPartida: true,
                       para: `${c.folio}${cliente.data ? " · " + cliente.data.nombre : ""} (se agrega como partida)` })} />
                   <MenuAcciones alinear="end" disparador={<Boton variante="secundario"><Plus className="h-4 w-4" />Partida libre<ChevronDown className="h-3.5 w-3.5" /></Boton>}>
-                    <OpcionMenu alElegir={() => agregarLibre.mutate("Flete a ")}>Flete</OpcionMenu>
+                    <OpcionMenu alElegir={() => { guardar().then(() => setDlg("flete"), () => setDlg("flete")); }}>Flete con Skydropx (cotizar)</OpcionMenu>
+                    <OpcionMenu alElegir={() => agregarLibre.mutate("Flete a ")}>Flete a mano</OpcionMenu>
                     <OpcionMenu alElegir={() => agregarLibre.mutate("Instalación y puesta en marcha")}>Instalación</OpcionMenu>
                     <OpcionMenu alElegir={() => agregarLibre.mutate("Servicio de ")}>Servicio</OpcionMenu>
                     <OpcionMenu alElegir={() => agregarLibre.mutate("Partida")}>Otra (texto libre)</OpcionMenu>
@@ -786,6 +807,16 @@ function Editor({ id }: { id: string }) {
       {/* Diálogos */}
       <DialogoCliente abierto={dlg === "cliente"} alCambiar={(v) => setDlg(v ? "cliente" : null)} nombreInicial={nombreCliente}
         alCrear={(n: ClienteNuevo) => cambiarCliente(n, n.contacto ?? null)} />
+      <Dialogo abierto={vista > 0} alCambiar={(v) => !v && setVista(0)} ancho="max-w-[9.5in]" titulo={`Vista previa · ${c.folio}`}
+        descripcion="Así la recibe el cliente. Para mandarla usa Enviar; para guardarla en PDF, el botón PDF."
+        pie={<><Boton variante="secundario" onClick={() => setVista(0)}>Cerrar</Boton><Boton onClick={abrirPdf}><Printer className="h-4 w-4" />PDF</Boton></>}>
+        {vista > 0 && <iframe key={vista} title={`Vista previa de ${c.folio}`} src={`/ventas/cotizaciones/${id}/imprimir?vista=1`}
+          className="w-full h-[70vh] rounded-lg border border-borde bg-white" />}
+      </Dialogo>
+      {editable && <DialogoFleteSkydropx abierto={dlg === "flete"} alCambiar={(v) => setDlg(v ? "flete" : null)} cotizacionId={id!}
+        contacto={contactoSel} cliente={cliente.data ?? null}
+        moneda={{ moneda: c.moneda, tipo_cambio: Number(c.tipo_cambio), precios_con_iva: c.precios_con_iva, tasa_iva: Number(c.tasa_iva) }}
+        alAgregar={(titulo, precio) => agregarFlete.mutateAsync({ titulo, precio })} />}
       <DialogoEnviar abierto={dlg === "enviar"} alCambiar={(v) => setDlg(v ? "enviar" : null)} c={{ ...c, ...(tot ?? {}) }} partidas={lineas}
         contacto={contactoSel} vendedor={vendedor.data} plan={plan} yaEnviada={!["borrador", "autorizada"].includes(c.estado)}
         alMarcarEnviada={() => cambiarEstado.mutateAsync("enviada")} alAbrirPdf={abrirPdf} enviando={cambiarEstado.isPending} fichas={ligasFichas} />

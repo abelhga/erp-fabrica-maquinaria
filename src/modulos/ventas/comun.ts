@@ -102,6 +102,8 @@ export interface VCliente {
 export interface Contacto {
   id: string; cliente_id: string; nombre: string; puesto: string | null; telefono: string | null; whatsapp: string | null;
   correo: string | null; domicilio: string | null; principal: boolean; notas: string | null;
+  /** Por campos: lo guarda el envío de Skydropx y lo usa la cotización del flete. */
+  domicilio_cp?: string | null; domicilio_estado?: string | null; domicilio_municipio?: string | null; domicilio_colonia?: string | null;
 }
 export interface Actividad {
   id: string; cliente_id: string | null; oportunidad_id: string | null; tipo: "llamada" | "whatsapp" | "correo" | "visita" | "nota" | "tarea";

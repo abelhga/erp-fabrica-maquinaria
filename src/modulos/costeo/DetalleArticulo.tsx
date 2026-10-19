@@ -21,6 +21,7 @@ import { DialogoDuplicar } from "./componentes/Duplicar";
 import { FichaComponente } from "./componentes/FichaComponente";
 import { EmpaqueArticulo } from "@/modulos/almacen/envios/EmpaqueArticulo";
 import { ActivoArticulo } from "./componentes/Activo";
+import { EditarDatos } from "./componentes/EditarDatos";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 function Cifra({ etiqueta, valor, detalle, tono, explica }: { etiqueta: string; valor: ReactNode; detalle?: ReactNode; tono?: "ok" | "aviso" | "peligro"; explica?: string }) {
@@ -161,6 +162,7 @@ export default function DetalleArticulo() {
       acciones={fab && puede("costeo", 2) && (
         <>
           <ActivoArticulo a={a} forma="boton" />
+          <EditarDatos a={a} />
           <Boton variante="secundario" onClick={() => setDuplicando(true)} data-explain={GLOSARIO.duplicarConParametros}><Copy className="h-4 w-4" /> Duplicar con otros parámetros</Boton>
         </>
       )}
