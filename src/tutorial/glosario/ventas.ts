@@ -1,4 +1,10 @@
 export const VENTAS = {
+  // --- Leads ---
+  lead: "Alguien que llamó o escribió interesado y todavía no es oportunidad: quién es, cómo contactarlo y qué busca. Lo registra recepción (o cualquier vendedor) y se vuelve oportunidad cuando un vendedor lo atiende.",
+  modoLeads: "A quién le llega un lead nuevo. Hay tres formas, se escoge en Configuración: bandeja (se avisa a los vendedores y el primero que lo toma se lo queda), la gerencia de ventas lo asigna, o quien lo registra escoge al vendedor. En las tres, si ya es cliente y tiene vendedor vigente, le llega directo a su vendedor.",
+  estadoLead: "Por tomar (o por asignar): nadie lo tiene todavía. Con…: ya tiene vendedor y está pendiente de que lo atienda. Oportunidad: el vendedor ya lo volvió oportunidad; junto sale en qué etapa va (cotizado, ganada, perdida…). Descartado: no se siguió, con su motivo. Si nadie lo toma o nadie lo atiende a tiempo, se avisa a la gerencia.",
+  yaEsCliente: "Mientras escribes el teléfono, la empresa o el nombre, se busca entre los clientes. Solo dice el nombre, la ciudad y de qué vendedor es; nada de ventas ni saldos. Si escoges «Es este» y tiene vendedor vigente, el lead le llega directo a él.",
+  convertirLead: "Atenderlo es volverlo oportunidad: si ya era cliente va a su cuenta; si no, eliges la empresa si ya existe o se da de alta como cliente nuevo con este contacto. La oportunidad nace en Prospecto, a tu nombre, y quien registró el lead ve en qué etapa va.",
   // --- Oportunidades ---
   embudo: "Las oportunidades abiertas por etapa: prospecto → contactado → cotizado → negociación. Al enviar una cotización, su oportunidad pasa sola a “cotizado” (y si no había, se abre); al convertirla en pedido, a “ganada”.",
   etapaOportunidad: "En qué va la venta: Prospecto (apenas lo conoces), Contactado, Cotizado, Negociación, Ganada o Perdida. La cambias arrastrando la tarjeta en el tablero o desde el detalle.",

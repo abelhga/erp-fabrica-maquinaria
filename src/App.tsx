@@ -67,6 +67,7 @@ const ReportarFalla = p(() => import("./modulos/servicio/ReportarFalla"));
 const Resguardos = p(() => import("./modulos/servicio/Resguardos"));
 const SolicitudesPrecio = p(() => import("./modulos/compras/Solicitudes"));
 const MisSolicitudesPrecio = p(() => import("./modulos/ventas/solicitudes/MisSolicitudes"));
+const Leads = p(() => import("./modulos/ventas/Leads"));
 const Envios = p(() => import("./modulos/almacen/Envios"));
 const Devoluciones = p(() => import("./modulos/ventas/Devoluciones"));
 const MercadoLibre = p(() => import("./modulos/ventas/MercadoLibre"));
@@ -140,6 +141,7 @@ export function App() {
           <Route path="ventas/comisiones" element={<Con m="ventas"><Comisiones /></Con>} />
           {/* La piden ventas e ingeniería (costeo 3): la pantalla revisa los dos permisos; la RLS decide qué ve cada quien. */}
           <Route path="ventas/solicitudes" element={<MisSolicitudesPrecio />} />
+          <Route path="ventas/leads" element={<Con m="leads"><Leads /></Con>} />
           <Route path="compras/precios" element={<Con m="compras" n={2}><Precios /></Con>} />
           <Route path="compras/solicitudes" element={<Con m="compras" n={2}><SolicitudesPrecio /></Con>} />
           <Route path="compras/ordenes" element={<Con m="compras"><OrdenesCompra /></Con>} />

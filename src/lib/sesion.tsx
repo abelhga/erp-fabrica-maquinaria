@@ -6,13 +6,13 @@ import { EN_VISTA_PREVIA, supabase } from "./supabase";
 export type Rol =
   | "direccion" | "admin" | "gerente_ventas" | "ventas" | "ingenieria" | "compras" | "almacen"
   | "gerente_produccion" | "produccion" | "rrhh" | "finanzas" | "pantalla"
-  | "importaciones" | "administracion";
+  | "importaciones" | "administracion" | "recepcion";
 
 export const NOMBRE_ROL: Record<Rol, string> = {
   direccion: "Dirección", admin: "Sistemas", gerente_ventas: "Gerencia de ventas", ventas: "Ventas",
   ingenieria: "Ingeniería", compras: "Compras", almacen: "Almacén", gerente_produccion: "Gerencia de producción",
   produccion: "Producción", rrhh: "Recursos humanos", finanzas: "Finanzas", pantalla: "Pantalla de piso",
-  importaciones: "Importaciones", administracion: "Gerencia administrativa",
+  importaciones: "Importaciones", administracion: "Gerencia administrativa", recepcion: "Recepción",
 };
 
 export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" | "produccion" | "rrhh" | "finanzas" | "admin" | "asistente"
@@ -28,7 +28,9 @@ export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" |
   | "comisiones"
   // margenes: 1 = ver utilidad, políticas y la fórmula del precio · 2 = fijar el margen o precio de un artículo
   // · 3 = cambiar políticas e ISR. Aparte de "costos" para que compras capture costos sin ver márgenes.
-  | "margenes";
+  | "margenes"
+  // leads: 1 ver los suyos · 2 capturar y tomar · 3 asignar, ver todos y configurar a quién le llegan.
+  | "leads";
 
 export interface Perfil { id: string; nombre: string; correo: string; puesto: string | null; iniciales: string | null; activo: boolean; telefono: string | null }
 /** "Ver como": esta sesión es de otra persona, abierta por dirección o sistemas, solo para ver. */

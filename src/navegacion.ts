@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Award, Banknote, Coins, Hash, ListChecks, Target } from "lucide-react";
 import { AlertTriangle, CalendarDays, CalendarRange, Hand, Wrench } from "lucide-react";
-import { MessageSquareQuote, PackageCheck, Store, Undo2 } from "lucide-react";
+import { Inbox, MessageSquareQuote, PackageCheck, Store, Undo2 } from "lucide-react";
 import { Map as MapaIcono } from "lucide-react";
 import type { Modulo } from "./lib/sesion";
 
@@ -20,6 +20,7 @@ export const MENU: SeccionMenu[] = [
   {
     titulo: "Ventas",
     entradas: [
+      { ruta: "/ventas/leads", texto: "Leads", icono: Inbox, modulo: "leads" },
       { ruta: "/ventas/para-llamar", texto: "A quién llamar hoy", icono: PhoneCall, modulo: "ventas" },
       { ruta: "/ventas/oportunidades", texto: "Oportunidades", icono: KanbanSquare, modulo: "ventas" },
       { ruta: "/ventas/cotizaciones", texto: "Cotizaciones", icono: FileText, modulo: "ventas" },

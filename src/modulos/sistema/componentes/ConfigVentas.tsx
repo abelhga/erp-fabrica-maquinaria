@@ -12,6 +12,7 @@ import { dinero } from "@/lib/formato";
 import { CeldaCheck, CeldaTexto, SoloLectura } from "./Editables";
 import { TarjetaForm, useConfiguracion, useGuardarConfig } from "./ConfigEmpresa";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { ConfigLeads } from "@/modulos/ventas/leads/ConfigLeads";
 
 interface Texto { id: number; tipo: "pago" | "entrega" | "vigencia" | "nota"; texto: string; por_defecto: boolean; orden: number; activo: boolean }
 interface Plan { meses: number; etiqueta: string; tasa: number; activo: boolean }
@@ -37,6 +38,7 @@ export function ConfigVentas() {
         {cfg.data ? <MesesTope inicial={Number(cfg.data.meses_tope?.valor ?? 0)} editable={puede("admin", 3)} /> : <Cargando />}
       </div>
       {cfg.data && <Cartera inicial={(cfg.data.propiedad_clientes?.valor ?? {}) as Propiedad} editable={puede("admin", 3)} />}
+      <ConfigLeads editable={puede("leads", 3)} />
       <TextosComerciales editable={puede("ventas", 3) || puede("admin", 3)} />
       <div className="grid gap-4 xl:grid-cols-2 items-start">
         <PlanesMeses editable={puede("ventas", 3)} />

@@ -9,18 +9,18 @@ import type { Rol } from "@/lib/sesion";
  */
 export type Tarjeta =
   | "ventas" | "cotizaciones" | "cobranza" | "por_pagar" | "taller" | "compras" | "valor_inventario" | "personal" | "embarques"
-  | "grafica_ventas" | "ordenes_por_vencer";
+  | "grafica_ventas" | "ordenes_por_vencer" | "leads";
 export type Pendiente =
   | "por_autorizar" | "tareas_vencidas" | "ajustes" | "faltantes" | "oc_atrasadas" | "requisiciones" | "costos_viejos" | "incidencias"
-  | "docs_embarque";
+  | "docs_embarque" | "leads_por_tomar" | "leads_mios" | "leads_sin_atender";
 
 interface Contenido { tarjetas: Tarjeta[]; pendientes: Pendiente[] }
 
 export const INICIO_POR_ROL: Partial<Record<Rol, Contenido>> = {
   gerente_ventas: { tarjetas: ["ventas", "cotizaciones", "cobranza", "taller", "grafica_ventas", "ordenes_por_vencer"],
-    pendientes: ["por_autorizar", "tareas_vencidas"] },
+    pendientes: ["por_autorizar", "leads_por_tomar", "leads_sin_atender", "tareas_vencidas"] },
   // El taller: para ver cómo van los equipos de sus clientes.
-  ventas: { tarjetas: ["ventas", "cotizaciones", "taller", "grafica_ventas", "ordenes_por_vencer"], pendientes: ["tareas_vencidas"] },
+  ventas: { tarjetas: ["ventas", "cotizaciones", "taller", "grafica_ventas", "ordenes_por_vencer"], pendientes: ["leads_por_tomar", "leads_mios", "tareas_vencidas"] },
   ingenieria: { tarjetas: ["taller", "ordenes_por_vencer"], pendientes: [] },
   compras: { tarjetas: ["compras", "valor_inventario", "taller"], pendientes: ["requisiciones", "oc_atrasadas", "faltantes", "costos_viejos"] },
   almacen: { tarjetas: ["compras", "taller", "ordenes_por_vencer"], pendientes: ["ajustes", "faltantes", "oc_atrasadas"] },
@@ -30,6 +30,8 @@ export const INICIO_POR_ROL: Partial<Record<Rol, Contenido>> = {
   finanzas: { tarjetas: ["ventas", "cobranza", "por_pagar", "valor_inventario", "grafica_ventas"], pendientes: [] },
   administracion: { tarjetas: ["ventas", "cobranza", "por_pagar", "valor_inventario", "grafica_ventas"], pendientes: [] },
   importaciones: { tarjetas: ["embarques", "compras"], pendientes: ["docs_embarque", "oc_atrasadas"] },
+  // Recepción: lo que registró hoy y si alguien lo está atendiendo.
+  recepcion: { tarjetas: ["leads"], pendientes: [] },
   // Sistemas: sus pendientes llegan por la campana; en Inicio no le van cifras del negocio.
   admin: { tarjetas: [], pendientes: [] },
 };
@@ -40,6 +42,7 @@ const SECCION: Record<Tarjeta | Pendiente, string | string[] | null> = {
   valor_inventario: ["costos", "inventario"], personal: "rrhh", embarques: "importaciones", grafica_ventas: null, ordenes_por_vencer: null,
   por_autorizar: "ventas", tareas_vencidas: "ventas", ajustes: "inventario", faltantes: "produccion", oc_atrasadas: "compras",
   requisiciones: "compras", costos_viejos: "costos", incidencias: "rrhh", docs_embarque: "importaciones",
+  leads: "leads", leads_por_tomar: "leads", leads_mios: "leads", leads_sin_atender: "leads",
 };
 
 export function contenidoInicio(tieneRol: (r: Rol) => boolean) {

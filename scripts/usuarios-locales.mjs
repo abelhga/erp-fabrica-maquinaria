@@ -28,6 +28,7 @@ export const USUARIOS = [
   ["sistemas@hegamex.com", "Sistemas Hegamex", ["admin"]],
   ["tv@hegamex.com", "Pantalla del taller", ["pantalla"]],
   ["importaciones@hegamex.com", "Alondra (prueba)", ["importaciones"]],
+  ["recepcion@hegamex.com", "Recepción Hegamex", ["recepcion"]],
 ];
 
 for (const [correo, nombre, roles] of USUARIOS) {
