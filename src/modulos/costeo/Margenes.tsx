@@ -305,7 +305,7 @@ function TarjetaIsr({ isr, editar }: { isr: number | undefined; editar: boolean 
 
 interface TipoCambio { fecha: string; moneda: "USD" | "EUR"; valor: number; fuente: string | null }
 
-function TarjetaTipoCambio() {
+export function TarjetaTipoCambio() {
   const { puede } = useSesion();
   const qc = useQueryClient();
   const editar = puede("compras", 2) || puede("finanzas", 2);
@@ -431,7 +431,9 @@ function UltimosCambios({ politicas }: { politicas: Politica[] }) {
 
 export default function Margenes() {
   const { puede, tieneRol } = useSesion();
-  const editar = puede("costos", 3);
+  // Utilidad, recargos e ISR: márgenes 3. Las tarifas de mano de obra son costo: costos 3.
+  const editar = puede("margenes", 3);
+  const editarTarifas = puede("costos", 3);
   const [editando, setEditando] = useState<Politica | null>(null);
   const pol = useQuery({
     queryKey: ["costeo", "politicas"],
@@ -463,7 +465,7 @@ export default function Margenes() {
               <TarjetaIsr isr={isr.data} editar={editar} />
               <TarjetaTipoCambio />
             </div>
-            <TarjetaTarifas editar={editar} />
+            <TarjetaTarifas editar={editarTarifas} />
           </div>
           <div>
             <h2 className="font-semibold flex items-center gap-2 mb-3" data-explain={GLOSARIO.formulaPrecio}><Hammer className="h-4 w-4 text-tenue" /> Equipos y subensambles <span className="text-sm font-normal text-tenue">· utilidad neta de ISR, como en Nuevo Costeo</span></h2>

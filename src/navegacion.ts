@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Award, Banknote, Coins, Hash, ListChecks, Target } from "lucide-react";
 import { AlertTriangle, CalendarDays, CalendarRange, Hand, Wrench } from "lucide-react";
-import { MessageSquareQuote, PackageCheck, Undo2 } from "lucide-react";
+import { MessageSquareQuote, PackageCheck, Store, Undo2 } from "lucide-react";
 import { Map as MapaIcono } from "lucide-react";
 import type { Modulo } from "./lib/sesion";
 
@@ -28,6 +28,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/ventas/clientes", texto: "Clientes", icono: Users, modulo: "ventas" },
       { ruta: "/ventas/comisiones", texto: "Comisiones", icono: Trophy, modulo: "ventas" },
       { ruta: "/ventas/devoluciones", texto: "Devoluciones y reclamos", icono: Undo2, modulo: "envios" },
+      { ruta: "/ventas/mercadolibre", texto: "Mercado Libre", icono: Store, modulo: "ventas" },
     ],
   },
   {
@@ -44,8 +45,8 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/costeo/equipos", texto: "Equipos y subensambles", icono: Layers, modulo: "costeo" },
       { ruta: "/costeo/componentes", texto: "Componentes", icono: Boxes, modulo: "costeo" },
       { ruta: "/costeo/planos", texto: "Planos", icono: FileStack, modulo: "costeo" },
-      { ruta: "/costeo/margenes", texto: "Márgenes y precios", icono: Percent, modulo: "costos", nivel: 2 },
-      { ruta: "/costeo/precios-ventas", texto: "Precios vs ventas", icono: LineChart, modulo: "costos" },
+      { ruta: "/costeo/margenes", texto: "Márgenes y precios", icono: Percent, modulo: "margenes" },
+      { ruta: "/costeo/precios-ventas", texto: "Precios vs ventas", icono: LineChart, modulo: "margenes" },
     ],
   },
   {

@@ -1,12 +1,14 @@
 import type { AyudaPantalla } from "./index";
 
 // Equipos, Componentes y Planos los ven también ventas y producción (costeo nivel 1): su texto no
-// habla de costos ni de cómo sale el precio. Márgenes y Precios vs ventas son del módulo de costos.
+// habla de costos ni de cómo sale el precio. Márgenes y Precios vs ventas son del módulo de márgenes
+// (compras tiene costos pero no márgenes: tampoco ahí se explica la utilidad).
 export const COSTEO: Record<string, AyudaPantalla> = {
   "/costeo/equipos": [
     "Aquí viven los equipos que fabricamos y sus subensambles: qué lleva cada uno y cuántas horas toma hacerlo. Ingeniería los da de alta y los mantiene; ventas y producción los consultan.",
     "Busca por clave o nombre y dale clic a un renglón para abrir su ficha. Las pestañas separan Equipos, Subensambles y Solicitudes de cambio (las correcciones que manda producción desde una orden). El filtro «Sin lista de materiales» te dice qué falta capturar, y el botón CSV baja la tabla para Excel.",
     "Un subensamble se captura una vez y se comparte: si lo cambias, cambia en todos los equipos que lo usan. Para armar uno, abre un equipo, marca las líneas que siempre van juntas y usa «Convertir en subensamble».",
+    "Lo que ya no se fabrica ni se vende se inhabilita con el interruptor de la columna «Activo» (lo cambia ingeniería o compras): deja de salir en el cotizador y en pedidos nuevos, pero no cambia en los equipos que ya lo usan. Antes de inhabilitar te dice en cuántos equipos activos y pedidos abiertos está. Los inhabilitados se ven en el filtro «Inhabilitados», y ahí mismo se reactivan.",
     "Quien tiene permiso de costos ve además columnas y alertas de costo; al pasar el mouse por ellas se explica cada una.",
   ],
   "/costeo/equipos/:id": [
@@ -14,6 +16,7 @@ export const COSTEO: Record<string, AyudaPantalla> = {
     "En la lista de materiales escribe la clave o el nombre de un componente y Enter: entra con cantidad 1 y el cursor queda en la cantidad. Enter guarda y baja, Tab avanza, Esc deshace y Alt+↑/↓ mueve la línea; todo se guarda solo. Marca varias líneas para volverlas subensamble o moverlas a un grupo.",
     "Lo de adentro de un subensamble sale en gris y no se edita aquí: se cambia en el propio subensamble, porque el cambio llega a todos los equipos que lo usan.",
     "Si una cantidad depende de una medida (largo, ancho), defínela en la pestaña Parámetros. Para la misma banda con otra medida sin tocar esta, usa «Duplicar con otros parámetros».",
+    "«Inhabilitar» lo saca del cotizador y de pedidos nuevos cuando ya no se fabrica; arriba sale la marca «Inhabilitado» y el botón cambia a «Reactivar».",
   ],
   "/costeo/componentes": [
     "Todo lo que se compra: componentes, materia prima y servicios, con su precio de lista y lo que hay en planta. Ingeniería y compras lo dan de alta; los demás lo consultan.",
@@ -23,7 +26,7 @@ export const COSTEO: Record<string, AyudaPantalla> = {
   ],
   "/costeo/componentes/:id": [
     "La ficha de lo que se compra: datos generales, existencias por almacén, precios por canal en línea, planos y en qué equipos se usa. Lo que ves depende de tu permiso.",
-    "Si puedes editar, cada campo se guarda solo al salir de él (o con Enter). La descripción sale en la cotización: una viñeta por renglón. Marcarlo como importado pide 6 meses de cobertura en lugar de 1, y el stock de seguridad se suma al punto de reorden.",
+    "Si puedes editar, cada campo se guarda solo al salir de él (o con Enter). La descripción sale en la cotización: una viñeta por renglón. Para la foto, pega la liga de Drive o de una imagen, o súbela con «Subir foto». Marcarlo como importado pide 6 meses de cobertura en lugar de 1, y el stock de seguridad se suma al punto de reorden.",
     "«Canales en línea» compara el precio sugerido de cada canal contra lo que está publicado y avisa si una publicación quedó abajo.",
     "Quien tiene permiso de costos ve aquí el costo con su historial (cada cambio con su origen) y lo puede actualizar; al guardarlo se recalcula todo lo que depende de él.",
   ],
@@ -33,13 +36,13 @@ export const COSTEO: Record<string, AyudaPantalla> = {
     "Para ligar un plano, entra al equipo (Equipos y subensambles), pestaña Planos, y liga el archivo de Drive: el ERP le da folio y revisión. Si hay equipos en producción sin plano vigente, ingeniería los ve arriba en un aviso.",
   ],
   "/costeo/margenes": [
-    "El panel de utilidad, antes la pestaña Reglas de Nuevo Costeo: de aquí sale el precio de lista de todo el catálogo. Lo consultan ingeniería y compras; solo dirección lo cambia.",
+    "El panel de utilidad, antes la pestaña Reglas de Nuevo Costeo: de aquí sale el precio de lista de todo el catálogo. Lo consultan ingeniería, finanzas y la gerencia administrativa; solo dirección lo cambia.",
     "Cada tarjeta es una política de precio: utilidad, recargos sobre costo y sobre precio, medida especial, redondeo y descuento máximo. «Editar» abre el simulador: antes de guardar ves cuántos precios se mueven y cuáles más. Cada cambio queda en la bitácora con quién y cuándo.",
     "El precio de un equipo es: costo × (1 + recargos sobre costo + medida especial) ÷ (1 − utilidad ÷ (1 − ISR) − recargos sobre precio), redondeado hacia arriba. Lo que se revende usa el margen sobre precio de su política, sin compensar ISR: costo ÷ (1 − margen).",
-    "El ISR de compensación, la mano de obra por etapa y el tipo de cambio también mueven precios: al cambiarlos se recalcula todo lo que depende de ellos. El tipo de cambio lo capturan compras o finanzas: escribe el valor y Enter.",
+    "El ISR de compensación, la mano de obra por etapa y el tipo de cambio también mueven precios: al cambiarlos se recalcula todo lo que depende de ellos. El tipo de cambio lo capturan compras (en Actualizar precios) o finanzas: escribe el valor y Enter.",
   ],
   "/costeo/precios-ventas": [
-    "Para ver si los cambios de costo y de precio de una familia de equipos se notaron en lo que se vende: el costo y el precio de lista mes a mes, junto a lo vendido de esa familia. Lo ve quien tiene costos.",
+    "Para ver si los cambios de costo y de precio de una familia de equipos se notaron en lo que se vende: el costo y el precio de lista mes a mes, junto a lo vendido de esa familia. Lo ve quien tiene permiso de márgenes.",
     "Arriba eliges la familia y desde qué año. La primera gráfica es un índice (100 al inicio del periodo) y la segunda son pesos; van separadas a propósito, porque mezclar índice y pesos en un mismo eje engaña.",
     "El precio de lista se registra desde el arranque del ERP (la hoja no guardaba la utilidad aplicada), por eso su línea empieza después. Las ventas de antes del arranque salen del libro de la hoja (ventas desde $40,000, clasificadas por su descripción); después, de los pedidos.",
     "La relación costo ↔ ventas se mide por trimestre, porque con pocas ventas al mes el mes a mes es puro ruido. Es orientativa: no prueba que una cosa cause la otra.",

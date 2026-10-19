@@ -59,14 +59,18 @@ export async function enTrozos<T>(ids: string[], pedir: (trozo: string[]) => Pro
   return res;
 }
 
-export function useCatalogo(tipos: TipoArticulo[]) {
+/** Con `inactivos`, también los inhabilitados (para poder encontrarlos y reactivarlos). */
+export function useCatalogo(tipos: TipoArticulo[], opciones: { inactivos?: boolean } = {}) {
   const { puede } = useSesion();
   const conCostos = puede("costos");
+  const inactivos = !!opciones.inactivos;
   return useQuery({
-    queryKey: ["costeo", "catalogo", tipos.join(","), conCostos],
-    queryFn: () => traerTodas<ArticuloCatalogo>((d, h) =>
-      supabase.from("v_catalogo").select(columnasCatalogo(conCostos)).in("tipo", tipos).eq("activo", true)
-        .order("clave").range(d, h) as unknown as PromiseLike<{ data: ArticuloCatalogo[] | null; error: { message: string } | null }>),
+    queryKey: ["costeo", "catalogo", tipos.join(","), conCostos, inactivos],
+    queryFn: () => traerTodas<ArticuloCatalogo>((d, h) => {
+      const c = supabase.from("v_catalogo").select(columnasCatalogo(conCostos)).in("tipo", tipos);
+      return (inactivos ? c : c.eq("activo", true))
+        .order("clave").range(d, h) as unknown as PromiseLike<{ data: ArticuloCatalogo[] | null; error: { message: string } | null }>;
+    }),
     staleTime: 30_000,
   });
 }

@@ -20,6 +20,7 @@ import { DondeSeUsa } from "./componentes/DondeSeUsa";
 import { DialogoDuplicar } from "./componentes/Duplicar";
 import { FichaComponente } from "./componentes/FichaComponente";
 import { EmpaqueArticulo } from "@/modulos/almacen/envios/EmpaqueArticulo";
+import { ActivoArticulo } from "./componentes/Activo";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 function Cifra({ etiqueta, valor, detalle, tono, explica }: { etiqueta: string; valor: ReactNode; detalle?: ReactNode; tono?: "ok" | "aviso" | "peligro"; explica?: string }) {
@@ -54,6 +55,7 @@ function ComparacionCopia({ origen, copia }: { origen: string; copia: ArticuloCa
 function Encabezado({ a }: { a: ArticuloCatalogo }) {
   const { puede } = useSesion();
   const costos = puede("costos");
+  const margenes = puede("margenes");
   const d = useDesglose(a.id);
   const fab = esFabricado(a.tipo);
   const x = d.data;
@@ -75,10 +77,18 @@ function Encabezado({ a }: { a: ArticuloCatalogo }) {
             <Cifra etiqueta="Costo" valor={dinero(a.costo_total)} explica={GLOSARIO.costoArticulo}
               detalle={fab ? <>material {dinero(a.costo_material)} · mano de obra {dinero(a.costo_mano_obra)}</>
                 : a.moneda_costo && a.moneda_costo !== "MXN" ? `${a.moneda_costo} ${numero(a.costo_capturado)}` : a.costo_actualizado_en ? `al ${fecha(a.costo_actualizado_en)}` : undefined} />
-            <Cifra etiqueta="Utilidad neta" valor={neto == null ? "—" : pct(neto)} explica={GLOSARIO.utilidadNeta}
-              tono={neto == null ? undefined : x && neto < x.utilidad - 0.005 ? "aviso" : undefined}
-              detalle={x ? <>política {x.politica.nombre}: {pct(x.utilidad)}{x.politica.compensar_isr ? " después de ISR" : ""}</> : undefined} />
-            <Cifra etiqueta="Precio ÷ costo" explica={GLOSARIO.precioEntreCosto} valor={x?.factor ? `${(Math.round(x.factor * 100) / 100).toLocaleString("es-MX")}×` : "—"} detalle="antes del redondeo" />
+            {margenes ? <>
+              <Cifra etiqueta="Utilidad neta" valor={neto == null ? "—" : pct(neto)} explica={GLOSARIO.utilidadNeta}
+                tono={neto == null ? undefined : x && neto < x.utilidad - 0.005 ? "aviso" : undefined}
+                detalle={x ? <>política {x.politica.nombre}: {pct(x.utilidad)}{x.politica.compensar_isr ? " después de ISR" : ""}</> : undefined} />
+              <Cifra etiqueta="Precio ÷ costo" explica={GLOSARIO.precioEntreCosto} valor={x?.factor ? `${(Math.round(x.factor * 100) / 100).toLocaleString("es-MX")}×` : "—"} detalle="antes del redondeo" />
+            </> : <>
+              {/* Sin márgenes: lo que sí le sirve a compras en lugar de la utilidad. */}
+              <Cifra etiqueta="Costo actualizado" valor={a.costo_actualizado_en ? hace(a.costo_actualizado_en) : fab && a.costo_mas_viejo ? hace(a.costo_mas_viejo) : "—"}
+                detalle={fab ? "su costo más viejo" : a.proveedor ?? undefined} explica={GLOSARIO.costoViejo} />
+              <Cifra etiqueta={fab ? "Piezas sin costo" : "Tiempo de entrega"} valor={fab ? numero(a.sin_costo ?? 0) : a.tiempo_entrega_dias != null ? `${a.tiempo_entrega_dias} días` : "—"}
+                tono={fab && (a.sin_costo ?? 0) > 0 ? "aviso" : undefined} />
+            </>}
             {fab ? <Cifra etiqueta="Horas hombre" valor={numero(a.horas)} detalle="con las de sus subensambles" explica={GLOSARIO.horasEtapa} />
               : <Cifra etiqueta="Existencia en planta" valor={`${numero(a.existencia ?? 0)}`} detalle={a.unidad} explica={GLOSARIO.enPlanta} />}
           </>
@@ -109,7 +119,7 @@ export default function DetalleArticulo() {
   if (!a) {
     return (
       <Pagina titulo="Artículo no encontrado">
-        <div className="tarjeta"><Vacio icono={PackageSearch} titulo="No existe o ya no está activo"
+        <div className="tarjeta"><Vacio icono={PackageSearch} titulo="Ese artículo no existe"
           texto="Búscalo por clave o nombre con Ctrl K." accion={<Link to="/costeo/equipos" className="text-marca-texto">Ir a equipos</Link>} /></div>
       </Pagina>
     );
@@ -122,7 +132,7 @@ export default function DetalleArticulo() {
     { valor: "lista", texto: "Lista de materiales", cuenta: a.lineas_bom, explica: GLOSARIO.listaMateriales },
     { valor: "parametros", texto: "Parámetros", cuenta: parametros.length || undefined, explica: GLOSARIO.parametroEquipo },
     { valor: "horas", texto: "Horas por etapa", explica: GLOSARIO.horasEtapa },
-    ...(costos ? [{ valor: "costo", texto: "Costo y precio", explica: GLOSARIO.formulaPrecio }, { valor: "historial", texto: "Historial", explica: GLOSARIO.historialCosteo }] : []),
+    ...(costos ? [{ valor: "costo", texto: puede("margenes") ? "Costo y precio" : "Costo", explica: puede("margenes") ? GLOSARIO.formulaPrecio : GLOSARIO.costoArticulo }, { valor: "historial", texto: "Historial", explica: GLOSARIO.historialCosteo }] : []),
     ...(a.tipo === "subensamble" || a.usado_en > 0 ? [{ valor: "usos", texto: "Dónde se usa", cuenta: a.usado_en, explica: GLOSARIO.usadoEnListas }] : []),
     { valor: "planos", texto: "Planos" },
   ] : [];
@@ -139,6 +149,7 @@ export default function DetalleArticulo() {
           <span className="text-borde">|</span>
           <span className="cifra font-medium text-texto">{a.clave}</span>
           <Insignia tono={fab ? "marca" : "neutro"}>{NOMBRE_TIPO[a.tipo]}</Insignia>
+          {fab && !a.activo && <span data-explain={GLOSARIO.articuloInhabilitado} data-explain-title="Inhabilitado"><Insignia tono="aviso" punto>Inhabilitado</Insignia></span>}
           {a.categoria && <Insignia>{a.categoria}</Insignia>}
           {a.medida_especial && <span data-explain={GLOSARIO.medidaEspecial}><Insignia tono="info">medida especial</Insignia></span>}
           {a.es_importado && <Insignia tono="info">importado</Insignia>}
@@ -148,7 +159,10 @@ export default function DetalleArticulo() {
         </span>
       }
       acciones={fab && puede("costeo", 2) && (
-        <Boton variante="secundario" onClick={() => setDuplicando(true)} data-explain={GLOSARIO.duplicarConParametros}><Copy className="h-4 w-4" /> Duplicar con otros parámetros</Boton>
+        <>
+          <ActivoArticulo a={a} forma="boton" />
+          <Boton variante="secundario" onClick={() => setDuplicando(true)} data-explain={GLOSARIO.duplicarConParametros}><Copy className="h-4 w-4" /> Duplicar con otros parámetros</Boton>
+        </>
       )}
     >
       {state?.origen && state.origen !== a.id && <ComparacionCopia origen={state.origen} copia={a} />}

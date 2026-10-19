@@ -1,12 +1,13 @@
-// Ingeniería y costeo. Las llaves de costo, utilidad y fórmula de precio son confidenciales:
-// solo se conectan a elementos que la pantalla dibuja para quien tiene "costos" (columnas con
-// `oculta: !costos`, pestaña Costo y precio, Márgenes, Precios vs ventas). Un vendedor ve
+// Ingeniería y costeo. Las llaves de costo son de quien tiene "costos" (columnas con `oculta: !costos`);
+// las de utilidad y fórmula de precio, solo de quien tiene "márgenes" (pestaña Costo y precio,
+// Márgenes, Precios vs ventas, las cifras de utilidad de la ficha): compras ve costos y no márgenes. Un vendedor ve
 // Equipos y Componentes, así que lo que esas pantallas muestran a todos usa las llaves sin dinero.
 export const COSTEO = {
   // --- Lo que ve cualquiera que entra a ingeniería (sin costos) ---
   listaMateriales: "La receta del artículo: cada componente, materia prima o subensamble que lleva y en qué cantidad. Producción surte cada orden con esta lista, así que lo que no está aquí no llega al taller.",
   subensamble: "Un grupo de piezas que siempre van juntas (cabezal motriz, tambor de cola…) capturado una sola vez y usado en varios equipos. No se copia: si lo cambias, cambia en todos los equipos que lo usan.",
   usadoEnListas: "En cuántas listas de materiales aparece directamente. Un subensamble en ninguna lista todavía no se usa en ningún equipo.",
+  articuloInhabilitado: "Un equipo o subensamble que ya no se fabrica ni se vende: deja de salir en el cotizador, en pedidos nuevos y al armar listas de materiales, y no tiene precio de lista. Lo que ya existe no cambia: dentro de los equipos que lo usan sigue igual, y las cotizaciones y pedidos abiertos conservan sus partidas. Se reactiva con el mismo interruptor y regresa con su precio.",
   lineasLista: "Cuántos renglones tiene su lista de materiales (un subensamble cuenta como un renglón). Cero quiere decir que ingeniería todavía no lo captura.",
   parametroEquipo: "Una medida del equipo (largo_m, ancho…) de la que dependen algunas cantidades u horas: cantidad = fija + por parámetro × valor. Así la banda de 22 m es la de 20 m con otro largo.",
   cantidadEfectiva: "Lo que de verdad lleva el equipo: la cantidad fija más lo que suma el parámetro, redondeada hacia arriba si está marcado, y con la merma. Pasa el mouse sobre la cifra para ver la cuenta.",
@@ -40,8 +41,9 @@ export const COSTEO = {
   precioFijo: "Precio capturado a mano: manda sobre la fórmula de su política y no se mueve cuando cambia el costo.",
   simuladorPrecios: "Antes de guardar un cambio de utilidad, recargo o ISR, ves cuántos precios se mueven, cuánto en promedio y los diez que más cambian. Respeta precios fijos y utilidades propias, igual que el cálculo real.",
   tipoCambioCosteo: "Pesos por dólar y por euro con que se costea lo importado. No cambia todos los días: sigue al del día solo cuando éste se aleja 3% o más, o cuando alguien lo captura aquí. Cada vez que cambia se recalculan esos costos y sus precios.",
-  historialCosteo: "Una foto del costo y del precio cada vez que cambian. La línea «a utilidad de hoy» dice qué precio habría tenido con la utilidad actual: si se separa del precio real, la diferencia vino de cambiar la utilidad, no el costo.",
+  historialCosteo: "Una foto del costo y del precio cada vez que cambian. Con permiso de márgenes también ves la línea «a utilidad de hoy», que dice qué precio habría tenido con la utilidad actual: si se separa del precio real, la diferencia vino de cambiar la utilidad, no el costo.",
   confiabilidadCosto: "Lo que puede hacer que el costo esté mal: piezas sin costo (cuentan como $0) y costos de hace más de 6 meses. Corrígelos y el precio se recalcula solo.",
   indiceCostoFamilia: "Cómo se movió el costo (y el precio de lista) de la familia, con 100 al inicio del periodo: 112 quiere decir 12 % más caro. Cada mes compara solo los equipos que ya existían el mes anterior, así un equipo nuevo en el catálogo no mueve el índice.",
   relacionCostoVentas: "Qué tanto se mueven juntos el costo de la familia y lo vendido, por trimestre. Cerca de 1: suben juntos; cerca de −1: uno sube cuando el otro baja; cerca de 0: no hay relación. Es orientativa: no dice que una cosa cause la otra.",
+  imagenArticulo: "La foto del artículo: sale en el buscador, en la ficha de venta y en la cotización que recibe el cliente. Puedes pegar la liga de Drive tal cual (el archivo tiene que estar compartido con «Cualquier persona con el enlace») o la de cualquier imagen, o subir la foto desde la computadora o el celular. La subida no depende de Drive: si alguien mueve o deja de compartir el archivo, sigue viéndose.",
 } satisfies Record<string, string>;

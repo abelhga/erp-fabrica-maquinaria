@@ -27,7 +27,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
   ],
   "/ventas/cotizaciones/:id": [
     "El editor de la cotización: la plantilla de la hoja, pero cada versión se guarda y no pisa la anterior. Se guarda solo mientras escribes; arriba dice “Guardado” con la hora.",
-    "Agrega partidas escribiendo parte del nombre o la clave y Enter: precio de lista, descripción y foto se llenan solos. Para fletes, instalación o servicios usa “Partida libre”; si algo no tiene precio, “Pedir precio a compras” y aquí ves cuando contestan. Clic en una partida muestra su ficha de venta: precio mínimo, existencia y entrega.",
+    "Agrega partidas escribiendo parte del nombre o la clave y Enter: precio de lista, descripción y foto se llenan solos (clic en la foto para pegar otra liga o subir una). Para fletes, instalación o servicios usa “Partida libre”; si algo no tiene precio, “Pedir precio a compras” y aquí ves cuando contestan. Clic en una partida muestra su ficha de venta: precio mínimo, existencia y entrega.",
     "Si un precio queda abajo del mínimo, la partida se marca en rojo y la cotización pasa a “Por autorizar”: pide la autorización a la gerencia antes de enviarla. Ya enviada no se edita; para cambiarla saca una nueva versión.",
     "El botón principal cambia según el estado: Enviar (por WhatsApp o PDF; la deja como enviada), Convertir a pedido (eliges partidas y fecha compromiso) o Nueva versión. En el menú “···” están imprimir, duplicar y marcar rechazada con su motivo.",
     "Abajo de “Tiempo de entrega” ves cuándo sale de verdad con el taller como está hoy: lo que tarda el equipo o lo que tarda la fila del taller, lo que sea más tarde. Con “Usar” lo pones en la cotización; si prometes menos días, se pone en amarillo. Al convertir a pedido, la fecha compromiso ya viene con esa fecha.",
@@ -65,6 +65,11 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     "Casi siempre pides un precio desde la partida de tu cotización (o desde el buscador cuando algo no aparece). Aquí ves todas juntas y puedes pedir una suelta con “Pedir precio”.",
     "“Sin tomar”: nadie de compras la ha agarrado. “Cotizando”: ya la tiene alguien. “Con precio”: ya contestaron. En rojo las que pasaron su plazo, que corre en horas hábiles (las urgentes tienen menos).",
     "Cuando llega el precio, “Aplicar a COT-…” lo pone en la partida de esa cotización. Ves el precio de lista y la entrega en días hábiles, nunca el costo. Si ya no hace falta, “Ya no la necesito” la cancela y compras deja de cotizarla.",
+  ],
+  "/ventas/mercadolibre": [
+    "Lo de Mercado Libre que necesita a alguien: las preguntas de compradores por contestar y las publicaciones vendidas que falta ligar a su artículo. Las ventas no se capturan aquí: entran solas a Pedidos. La usa quien atiende Mercado Libre.",
+    "En «Preguntas», escribe la respuesta y da «Contestar» (o Ctrl+Enter): se publica en Mercado Libre tal cual. Cada pregunta dice cuánto lleva esperando; arriba ves el tiempo de respuesta de los últimos 30 días.",
+    "En «Por ligar», busca qué artículo es cada publicación y elígelo: sus ventas toman ese artículo y se pide el envío que estaba esperando. Si la publicación trae como SKU la clave del ERP, se liga sola.",
   ],
   "/ventas/devoluciones": [
     "Aquí se registran y se siguen las devoluciones, reclamos y cancelaciones de cada venta, sobre todo de Mercado Libre, para que el código y la hora límite no se pierdan en el chat. La usan quien atiende las ventas en línea y almacén.",

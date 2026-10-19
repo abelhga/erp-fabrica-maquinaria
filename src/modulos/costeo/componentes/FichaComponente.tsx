@@ -17,6 +17,7 @@ import { GraficaEscalonada } from "./Graficas";
 import { FormulaEnPalabras, useDesglose } from "./CostoPrecio";
 import { DondeSeUsa } from "./DondeSeUsa";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { BotonSubirFoto } from "@/components/datos/SubirFoto";
 
 type Moneda = "MXN" | "USD" | "EUR";
 const enMoneda = (v: number | null | undefined, m: Moneda | null | undefined) =>
@@ -65,6 +66,8 @@ function DatosGenerales({ a }: { a: ArticuloCatalogo }) {
   const cats = useCategorias();
   const provs = useProveedores(verProveedor);
   const { guardar, estado } = useGuardarCampo(a.id);
+  const [fotoRota, setFotoRota] = useState(false);
+  useEffect(() => setFotoRota(false), [a.imagen_url]);
 
   const indicador = estado === "guardando" ? <span className="inline-flex items-center gap-1 text-xs text-tenue"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Guardando</span>
     : estado === "ok" ? <span className="inline-flex items-center gap-1 text-xs text-ok"><Check className="h-3.5 w-3.5" /> Guardado</span> : null;
@@ -125,12 +128,20 @@ function DatosGenerales({ a }: { a: ArticuloCatalogo }) {
         <Campo etiqueta={`Kilos por ${a.unidad}`} ayuda="Para reportar consumo de acero en kg.">
           <TextoAuto numerico valor={a.kg_por_unidad} placeholder="—" alGuardar={(v) => guardar({ kg_por_unidad: v == null ? null : Number(v) })} />
         </Campo>
-        <Campo etiqueta="Imagen (URL)" className="sm:col-span-2">
-          <div className="flex gap-3 items-start">
-            <TextoAuto valor={a.imagen_url} placeholder="https://…" alGuardar={(v) => guardar({ imagen_url: v == null ? null : String(v) })} className="flex-1" />
-            {a.imagen_url
-              ? <img src={a.imagen_url} alt="Vista previa" className="h-16 w-16 rounded-lg object-cover border border-borde bg-fondo shrink-0"
-                  onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} />
+        <Campo etiqueta="Imagen" className="sm:col-span-2"
+          ayuda={fotoRota ? <span className="text-aviso">No se pudo ver la imagen. Si es de Drive, compártela con «Cualquier persona con el enlace», o súbela aquí.</span>
+            : "Pega la liga de Drive o de una imagen, o sube la foto. Sale en el buscador y en la cotización."}>
+          <div className="flex gap-3 items-start" data-explain={GLOSARIO.imagenArticulo} data-explain-title="Imagen">
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <TextoAuto valor={a.imagen_url} placeholder="https://drive.google.com/file/d/… o https://…" alGuardar={(v) => guardar({ imagen_url: v == null ? null : String(v) })} />
+              <div className="flex gap-4">
+                <BotonSubirFoto carpeta={`articulos/${a.id}`} alSubir={(url) => guardar({ imagen_url: url })} />
+                {a.imagen_url && <button type="button" className="text-sm text-peligro hover:underline" onClick={() => guardar({ imagen_url: null })}>Quitar</button>}
+              </div>
+            </div>
+            {a.imagen_url && !fotoRota
+              ? <img key={a.imagen_url} src={a.imagen_url} alt="Vista previa" className="h-16 w-16 rounded-lg object-cover border border-borde bg-fondo shrink-0"
+                  onError={() => setFotoRota(true)} />
               : <div className="h-16 w-16 rounded-lg border border-dashed border-borde flex items-center justify-center text-tenue shrink-0"><ImageOff className="h-5 w-5" /></div>}
           </div>
         </Campo>

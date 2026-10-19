@@ -71,4 +71,7 @@ export const VENTAS = {
   venceDevolucion: "Lo que corre: en un reclamo, la hora límite para responder; en una devolución, cuándo debe llegar. Rojo si ya pasó, ámbar si falta menos de un día.",
   codigoAutorizacion: "El código que da Mercado Libre para esa devolución o reclamo. Queda aquí y no en el chat.",
   estadoDevolucion: "Abierta → Respondido (reclamo) o Llegó: por decidir (devolución, ya en almacén) → Resuelta con su resultado. O Cancelada, con motivo.",
+  conexionML: "Con la cuenta de Mercado Libre conectada, cada venta pagada entra sola como pedido (a nombre del responsable de ML) y se pide su envío: si es Full sale de la bodega de Mercado Libre; si no, se surte en planta con la guía de Mercado Envíos. Una cancelación en ML cancela el pedido; los reclamos y devoluciones se abren solos con su hora límite, y las preguntas llegan con aviso.",
+  publicacionPorLigar: "Una publicación de Mercado Libre que se vendió y el ERP no sabe qué artículo es (no tiene SKU, o su SKU no es una clave del catálogo). Se liga una sola vez: desde ese momento sus ventas entran con su artículo, y las que estaban esperando piden su envío. Para no tener que ligar, pon la clave del ERP como SKU en la publicación.",
+  tiempoRespuestaML: "Cuánto se tardan en contestar las preguntas de Mercado Libre (la mediana de los últimos 30 días) y qué parte se contestó en menos de una hora. Es lo que mide el bono de tiempo de respuesta y lo que ML toma en cuenta para la reputación.",
 } satisfies Record<string, string>;

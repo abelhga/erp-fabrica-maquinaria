@@ -261,12 +261,18 @@ describe.skipIf(!hayBase)("leer documentos de importación", () => {
     const c = await (await pedir(compras.token, { tipo: "cotizacion_proveedor", media_type: "application/pdf", datos: pdf })).json();
     expect(c.simulado).toBe(true);
     expect(c.campos.partidas.length).toBeGreaterThan(0);
-    // La constancia fiscal la leen ventas (alta de cliente) y compras (alta de proveedor); almacén no.
-    for (const s of [await sesion("isaac@hegamex.com"), compras]) {
+    // La constancia fiscal la leen ventas (alta de cliente), compras (alta de proveedor) y finanzas
+    // (pone al día los datos fiscales del proveedor); almacén no.
+    for (const s of [await sesion("isaac@hegamex.com"), compras, await sesion("finanzas@hegamex.com")]) {
       const k = await (await pedir(s.token, { tipo: "constancia_fiscal", media_type: "application/pdf", datos: pdf })).json();
       expect(k.campos.rfc).toBe("CBA160202AB1");
     }
     expect((await pedir(almacen.token, { tipo: "constancia_fiscal", media_type: "application/pdf", datos: pdf })).status).toBe(403);
+    // La factura de un proveedor en PDF la lee finanzas para registrarla; compras y almacén no.
+    const fin = await sesion("finanzas@hegamex.com");
+    const fp = await (await pedir(fin.token, { tipo: "factura_proveedor", media_type: "application/pdf", datos: pdf })).json();
+    expect(fp.campos.total).toBeGreaterThan(0);
+    expect((await pedir(almacen.token, { tipo: "factura_proveedor", media_type: "application/pdf", datos: pdf })).status).toBe(403);
   });
 });
 

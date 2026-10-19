@@ -10,6 +10,7 @@ export const COMPRAS: Record<string, AyudaPantalla> = {
     "Reemplaza la hoja ACTUALIZACIONES: aquí compras pone al día el costo de lo que compra cuando un proveedor cambia sus precios.",
     "Escribe el costo nuevo y Enter: se guarda esa fila y bajas a la siguiente. Con ↑ ↓ te mueves sin guardar (lo escrito queda en amarillo hasta «Guardar cambios») y Esc deshace la fila. Filtra los costos de más de 6 meses o los que no tienen, o elige un proveedor para pasar su lista completa.",
     "La columna Cambio compara en pesos, con los dólares al tipo de cambio de hoy; un triángulo avisa si el cambio pasa de 50 %, casi siempre por unidad o moneda equivocada. Al guardar te dice a cuántos equipos les cambia el precio, y a la derecha quedan los últimos cambios con quién y cuándo.",
+    "Arriba a la derecha está el tipo de cambio con que se costea lo importado: si el del día no te sirve, captúralo ahí y Enter.",
   ],
   "/compras/ordenes": [
     "Todas las órdenes de compra, de la requisición al proveedor y del proveedor al almacén. Compras las arma y las envía, almacén las recibe y finanzas registra los pagos.",
@@ -28,12 +29,12 @@ export const COMPRAS: Record<string, AyudaPantalla> = {
   ],
   "/compras/proveedores": [
     "El directorio de proveedores: a quién se le compra, en qué moneda, con cuánto crédito y en cuántos días entrega.",
-    "De entrada ves solo los que surten algún artículo o tienen órdenes abiertas, porque el directorio de las hojas mezclaba acreedores (nómina, casetas, hoteles); «Todo el directorio» los muestra todos. Clic en un renglón abre su ficha; CSV baja la lista para Excel.",
+    "«Nuevo proveedor» lo da de alta compras, o finanzas con sus datos fiscales (si ya existe uno con ese RFC, le pone al día los datos en lugar de duplicarlo). De entrada ves solo los que surten algún artículo o tienen órdenes abiertas, porque el directorio de las hojas mezclaba acreedores (nómina, casetas, hoteles); «Todo el directorio» los muestra todos. Clic en un renglón abre su ficha; CSV baja la lista para Excel.",
     "«OC abiertas» cuenta las órdenes enviadas que esperan mercancía, con las atrasadas en rojo. Lo comprado en 12 meses solo lo ve quien tiene costos o finanzas.",
   ],
   "/compras/proveedores/:id": [
     "La ficha de un proveedor: sus datos, lo que nos surte, sus órdenes de compra y cómo se han movido sus precios.",
-    "Desde aquí haces una «Nueva orden» ya con este proveedor, o editas sus datos. Clic en una orden de la derecha la abre. Un artículo con la nota «su costo vigente es de otro proveedor» también se le compra a otro, y el costo de hoy viene de aquel.",
+    "Desde aquí haces una «Nueva orden» ya con este proveedor, o editas sus datos. Compras edita todo; finanzas y la gerencia administrativa ponen al día lo fiscal, lo bancario, el crédito y el contacto, y pueden llenarlo subiendo su constancia de situación fiscal. Si cambian los datos bancarios, dirección recibe un aviso. Clic en una orden de la derecha la abre. Un artículo con la nota «su costo vigente es de otro proveedor» también se le compra a otro, y el costo de hoy viene de aquel.",
     "Con permiso de costos ves el índice de precios del proveedor (100 en el primer mes con datos) y el cambio de sus precios en el último año; los costos en amarillo tienen más de 6 meses.",
   ],
 };
