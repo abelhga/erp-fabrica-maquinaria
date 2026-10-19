@@ -20,6 +20,7 @@ import { DondeSeUsa } from "./componentes/DondeSeUsa";
 import { DialogoDuplicar } from "./componentes/Duplicar";
 import { FichaComponente } from "./componentes/FichaComponente";
 import { EmpaqueArticulo } from "@/modulos/almacen/envios/EmpaqueArticulo";
+import { ActivoArticulo } from "./componentes/Activo";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 function Cifra({ etiqueta, valor, detalle, tono, explica }: { etiqueta: string; valor: ReactNode; detalle?: ReactNode; tono?: "ok" | "aviso" | "peligro"; explica?: string }) {
@@ -118,7 +119,7 @@ export default function DetalleArticulo() {
   if (!a) {
     return (
       <Pagina titulo="Artículo no encontrado">
-        <div className="tarjeta"><Vacio icono={PackageSearch} titulo="No existe o ya no está activo"
+        <div className="tarjeta"><Vacio icono={PackageSearch} titulo="Ese artículo no existe"
           texto="Búscalo por clave o nombre con Ctrl K." accion={<Link to="/costeo/equipos" className="text-marca-texto">Ir a equipos</Link>} /></div>
       </Pagina>
     );
@@ -148,6 +149,7 @@ export default function DetalleArticulo() {
           <span className="text-borde">|</span>
           <span className="cifra font-medium text-texto">{a.clave}</span>
           <Insignia tono={fab ? "marca" : "neutro"}>{NOMBRE_TIPO[a.tipo]}</Insignia>
+          {fab && !a.activo && <span data-explain={GLOSARIO.articuloInhabilitado} data-explain-title="Inhabilitado"><Insignia tono="aviso" punto>Inhabilitado</Insignia></span>}
           {a.categoria && <Insignia>{a.categoria}</Insignia>}
           {a.medida_especial && <span data-explain={GLOSARIO.medidaEspecial}><Insignia tono="info">medida especial</Insignia></span>}
           {a.es_importado && <Insignia tono="info">importado</Insignia>}
@@ -157,7 +159,10 @@ export default function DetalleArticulo() {
         </span>
       }
       acciones={fab && puede("costeo", 2) && (
-        <Boton variante="secundario" onClick={() => setDuplicando(true)} data-explain={GLOSARIO.duplicarConParametros}><Copy className="h-4 w-4" /> Duplicar con otros parámetros</Boton>
+        <>
+          <ActivoArticulo a={a} forma="boton" />
+          <Boton variante="secundario" onClick={() => setDuplicando(true)} data-explain={GLOSARIO.duplicarConParametros}><Copy className="h-4 w-4" /> Duplicar con otros parámetros</Boton>
+        </>
       )}
     >
       {state?.origen && state.origen !== a.id && <ComparacionCopia origen={state.origen} copia={a} />}

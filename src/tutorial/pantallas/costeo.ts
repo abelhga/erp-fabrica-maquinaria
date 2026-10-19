@@ -8,6 +8,7 @@ export const COSTEO: Record<string, AyudaPantalla> = {
     "Aquí viven los equipos que fabricamos y sus subensambles: qué lleva cada uno y cuántas horas toma hacerlo. Ingeniería los da de alta y los mantiene; ventas y producción los consultan.",
     "Busca por clave o nombre y dale clic a un renglón para abrir su ficha. Las pestañas separan Equipos, Subensambles y Solicitudes de cambio (las correcciones que manda producción desde una orden). El filtro «Sin lista de materiales» te dice qué falta capturar, y el botón CSV baja la tabla para Excel.",
     "Un subensamble se captura una vez y se comparte: si lo cambias, cambia en todos los equipos que lo usan. Para armar uno, abre un equipo, marca las líneas que siempre van juntas y usa «Convertir en subensamble».",
+    "Lo que ya no se fabrica ni se vende se inhabilita con el interruptor de la columna «Activo» (lo cambia ingeniería o compras): deja de salir en el cotizador y en pedidos nuevos, pero no cambia en los equipos que ya lo usan. Antes de inhabilitar te dice en cuántos equipos activos y pedidos abiertos está. Los inhabilitados se ven en el filtro «Inhabilitados», y ahí mismo se reactivan.",
     "Quien tiene permiso de costos ve además columnas y alertas de costo; al pasar el mouse por ellas se explica cada una.",
   ],
   "/costeo/equipos/:id": [
@@ -15,6 +16,7 @@ export const COSTEO: Record<string, AyudaPantalla> = {
     "En la lista de materiales escribe la clave o el nombre de un componente y Enter: entra con cantidad 1 y el cursor queda en la cantidad. Enter guarda y baja, Tab avanza, Esc deshace y Alt+↑/↓ mueve la línea; todo se guarda solo. Marca varias líneas para volverlas subensamble o moverlas a un grupo.",
     "Lo de adentro de un subensamble sale en gris y no se edita aquí: se cambia en el propio subensamble, porque el cambio llega a todos los equipos que lo usan.",
     "Si una cantidad depende de una medida (largo, ancho), defínela en la pestaña Parámetros. Para la misma banda con otra medida sin tocar esta, usa «Duplicar con otros parámetros».",
+    "«Inhabilitar» lo saca del cotizador y de pedidos nuevos cuando ya no se fabrica; arriba sale la marca «Inhabilitado» y el botón cambia a «Reactivar».",
   ],
   "/costeo/componentes": [
     "Todo lo que se compra: componentes, materia prima y servicios, con su precio de lista y lo que hay en planta. Ingeniería y compras lo dan de alta; los demás lo consultan.",
