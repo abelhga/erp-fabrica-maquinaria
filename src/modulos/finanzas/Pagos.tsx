@@ -20,6 +20,7 @@ import { METODOS, TipoCambioDia, iso, lunesDe, enMoneda, nombreMetodo, type Mone
 import { diasPara, useCuentasProveedor, useFacturasPendientes, Vencimiento, type FacturaPendiente } from "./componentes/cuentas";
 import { CuentasProveedores, PanelProveedor } from "./componentes/CuentasProveedores";
 import { RegistrarCompra } from "./componentes/RegistrarCompra";
+import { PagosHechos } from "./componentes/PagosHechos";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 interface PorPagar {
@@ -32,7 +33,7 @@ type Factura = FacturaPendiente & { nombre: string; dias: number };
 /** Lo que entra en la agenda: una orden del ERP o una factura de la cuenta de un proveedor. */
 interface Pendiente { grupo: string; proveedor: string; vence: string | null; dias: number | null; monto: number; abrir: () => void }
 
-type Pestana = "facturas" | "proveedores" | "ordenes";
+type Pestana = "facturas" | "proveedores" | "ordenes" | "pagados";
 
 export default function Pagos() {
   const { puede } = useSesion();
@@ -177,6 +178,7 @@ export default function Pagos() {
           { valor: "facturas", texto: "Facturas por pagar", cuenta: facturas.length, explica: GLOSARIO.facturasPendientes },
           { valor: "proveedores", texto: "Por proveedor", cuenta: new Set(facturas.map((f) => f.proveedor_llave)).size, explica: GLOSARIO.saldoProveedor },
           { valor: "ordenes", texto: "Órdenes de compra", cuenta: ordenes.length },
+          { valor: "pagados", texto: "Pagos hechos", explica: GLOSARIO.pagosHechos },
         ]} />}
         {verCuentas && <ContenidoPestana value="facturas" className="pt-4">
           <TablaDatos
@@ -191,6 +193,7 @@ export default function Pagos() {
         {verCuentas && <ContenidoPestana value="proveedores" className="pt-4">
           <CuentasProveedores cuentas={cuentas.data ?? []} cargando={cuentas.isLoading} error={cuentas.error} alAbrir={setLlave} vistaInicial={vistaProveedores} />
         </ContenidoPestana>}
+        {verCuentas && <ContenidoPestana value="pagados" className="pt-4"><PagosHechos alAbrirProveedor={setLlave} /></ContenidoPestana>}
         <ContenidoPestana value="ordenes" className="pt-4">
           <TablaDatos
             filas={filasOrdenes} columnas={columnasOrdenes} cargando={datos.isLoading} error={datos.error}
