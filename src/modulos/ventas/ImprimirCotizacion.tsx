@@ -295,6 +295,28 @@ export default function ImprimirCotizacion() {
           );
         })()}
 
+        {/* Hoja de fotos: las del equipo después de la principal, copiadas al cotizar. */}
+        {(() => {
+          const conFotos = partidas.map((p, i) => ({ n: i + 1, p, fotos: p.imagenes_extra ?? [] })).filter((x) => x.fotos.length);
+          if (!conFotos.length) return null;
+          return (
+            <section className="mt-6 space-y-4">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-tenue">Fotos</p>
+              {conFotos.map((x) => (
+                <div key={x.p.id} className="bloque">
+                  <p className="mb-1.5 text-[11.5px]"><span className="text-tenue tabular-nums">Partida {x.n} · </span><b className="text-texto">{x.p.titulo}</b></p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {x.fotos.map((u, j) => (
+                      <img key={u + j} src={u} alt="" className="aspect-[4/3] w-full rounded object-cover border border-borde"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </section>
+          );
+        })()}
+
         <footer className="bloque mt-6 pt-3 border-t border-borde flex items-start justify-between gap-6 text-[10px] text-tenue">
           <span>{fis?.razon_social ?? "Hegamex"} · Fabricantes de bandas transportadoras, dosificadoras, cribadoras, tolvas, silos y elevadores</span>
           <span className="tabular-nums shrink-0">{c.folio}{iniciales ? ` · ${iniciales}` : ""}</span>

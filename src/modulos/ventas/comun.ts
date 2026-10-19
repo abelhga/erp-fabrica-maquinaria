@@ -69,7 +69,7 @@ export interface Cotizacion {
 }
 export interface Partida {
   id: string; cotizacion_id: string; orden: number; articulo_id: string | null; titulo: string; descripcion: string | null;
-  imagen_url: string | null; unidad: string; cantidad: number; precio_unitario: number; precio_lista: number | null;
+  imagen_url: string | null; imagenes_extra?: string[] | null; unidad: string; cantidad: number; precio_unitario: number; precio_lista: number | null;
   descuento_pct: number; opcional: boolean; bajo_minimo: boolean; importe: number;
 }
 export interface VCotizacion {

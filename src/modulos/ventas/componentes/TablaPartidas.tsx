@@ -184,6 +184,7 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
                     </label>
                     {opcional(l)}{insignias(l)}
                   </div>
+                  <FotosExtra l={l} editable={editable} alCambiar={(v) => acciones.editar(l.id, { imagenes_extra: v })} />
                 </div>
               </div>
               <span />
@@ -238,6 +239,7 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
               </div>
             </details>
             <div className="flex flex-wrap items-center gap-2">{opcional(l)}{insignias(l)}</div>
+            <FotosExtra l={l} editable={editable} alCambiar={(v) => acciones.editar(l.id, { imagenes_extra: v })} />
           </div>
         );
       })}
@@ -266,6 +268,27 @@ function AreaAuto({ valor, alCambiar, deshabilitado, placeholder, className, tit
 }
 
 /** Foto de la partida: viene del catálogo; se puede pegar otra liga (la de Drive se convierte sola) o subirla. */
+/** Las fotos del equipo después de la principal: salen en la hoja de fotos del PDF. Se pueden quitar de esta partida. */
+function FotosExtra({ l, editable, alCambiar }: { l: Partida; editable: boolean; alCambiar: (v: string[] | null) => void }) {
+  const fotos = l.imagenes_extra ?? [];
+  if (!fotos.length) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-1.5" data-explain={GLOSARIO.fotosEquipo} data-explain-title="Hoja de fotos">
+      {fotos.map((u, i) => (
+        <span key={u + i} className="group relative">
+          <img src={u} alt={`Foto ${i + 2}`} className="h-10 w-10 rounded border border-borde object-cover bg-fondo" loading="lazy" />
+          {editable && (
+            <button type="button" onClick={() => { const r = fotos.filter((_, j) => j !== i); alCambiar(r.length ? r : null); }}
+              className="absolute -right-1.5 -top-1.5 hidden h-4 w-4 items-center justify-center rounded-full bg-peligro text-[10px] leading-none text-white group-hover:flex focus:flex"
+              aria-label={`Quitar la foto ${i + 2} de esta partida`}>×</button>
+          )}
+        </span>
+      ))}
+      <span className="text-xs text-tenue">+{fotos.length} en la hoja de fotos</span>
+    </div>
+  );
+}
+
 function ImagenPartida({ l, editable, alCambiar, chica }: { l: Partida; editable: boolean; alCambiar: (url: string | null) => void; chica?: boolean }) {
   const [url, setUrl] = useState(l.imagen_url ?? "");
   const [abierto, setAbierto] = useState(false);
