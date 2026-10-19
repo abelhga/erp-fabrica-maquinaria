@@ -232,7 +232,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
       <a href="#rutina">Tu rutina</a>
       <a href="#cobranza">Cobranza</a>
       <a href="#pagos">Pagos a proveedores</a>
-      <a href="#xml">¿Qué hago con este XML?</a>
+      <a href="#xml">¿Qué hago con esta factura?</a>
       <a href="#aplicar">Cómo se aplica un pago</a>
       <a href="#caja">Caja chica</a>
       <a href="#otros">Comisiones y más</a>
@@ -252,7 +252,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
     </header>
     <div class="mapa">
       <a class="tarjeta lugar" href="#cobranza"><span class="dir entra">+ ENTRA</span><h3>Cobranza</h3><p>Lo que nos deben los clientes por pedido, con antigüedad, y los saldos que venían de la hoja.</p><span class="ruta">/finanzas/cobranza</span></a>
-      <a class="tarjeta lugar" href="#pagos"><span class="dir sale">− SALE</span><h3>Pagos a proveedores</h3><p>Facturas por pagar, cuenta de cada proveedor, préstamos de socios y bancos aparte, y órdenes de compra.</p><span class="ruta">/finanzas/pagos</span></a>
+      <a class="tarjeta lugar" href="#pagos"><span class="dir sale">− SALE</span><h3>Pagos a proveedores</h3><p>Facturas por pagar, cuenta de cada proveedor, préstamos de socios y bancos aparte, órdenes de compra y el historial de pagos hechos.</p><span class="ruta">/finanzas/pagos</span></a>
       <a class="tarjeta lugar" href="#caja"><span class="dir caja">$ EFECTIVO</span><h3>Caja chica</h3><p>Cada gasto y reposición en efectivo, con su saldo después de cada uno, y el arqueo.</p><span class="ruta">/finanzas/caja-chica</span></a>
       <a class="tarjeta lugar" href="#otros"><span class="dir usd">US$ DÓLARES</span><h3>Importaciones · Dinero</h3><p>Pagos al extranjero con su tipo de cambio real, y saldos a favor y garantías por recuperar.</p><span class="ruta">/importaciones/dinero</span></a>
     </div>
@@ -273,7 +273,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
     <header>
       <span class="etiqueta">Lo que nos deben</span>
       <h2>Cobranza</h2>
-      <p class="lectura tenue">«Lo que nos deben los clientes, desde cuándo, y lo que se ha cobrado mes a mes.» Arriba, «Por cobrar» y un indicador por rango de antigüedad; al darles clic filtran la tabla. «Los más atrasados» te dice por dónde empezar a llamar.</p>
+      <p class="lectura tenue">«Lo que nos deben los clientes (pedidos y lo que ya se debía en la hoja), desde cuándo, y lo que se ha cobrado mes a mes.» «Por cobrar» suma los pedidos del ERP y los saldos de la hoja: el detalle dice «$X de la hoja (N clientes) · $Y de N pedidos». Cada rango de antigüedad también suma su parte de la hoja; al darle clic filtra la tabla, o abre «Saldos de arranque (hoja)» si ningún pedido cae ahí. Mientras ningún pedido del ERP deba, Cobranza abre directo en los saldos de la hoja. «Cobrado por mes» junta los cobros del ERP y los pagos de la hoja, sin repetirlos.</p>
     </header>
     <div class="fases">
       <details class="fase" open>
@@ -285,6 +285,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
             <li><b>Monto (MXN)</b>: debajo te dice «Queda un saldo de…» o «Liquida el pedido». Un monto negativo es devolución al cliente.</li>
             <li><b>Fecha en que entró</b> (no acepta fechas futuras), <b>Método</b> (Transferencia, Efectivo, Tarjeta, Cheque, Mercado Pago, Otro), <b>Referencia</b> (SPEI, número de cheque…) y en <b>Notas</b> la cuenta donde entró y si es anticipo o liquidación.</li>
             <li>Listo: «Cobro registrado en PED-…». El vendedor recibe el aviso «Pago de {cliente}».</li>
+            <li><b>Ventas de Mercado Libre:</b> entran solas como pedido de «Público General (Mercadolibre)» con «Pagado en Mercado Libre», pero sin cobro. Aparecen con saldo en Cobranza hasta que registras el cobro con método «Mercado Pago».</li>
             <li><b>Si el cliente pagó una factura a crédito</b>, no captures el cobro a mano: sube el complemento de pago (ver abajo).</li>
           </ol>
           <div class="nota"><b class="m">✓</b><p>El anticipo no es un campo aparte: es un cobro más. La captura a mano también se puede hacer desde la página del pedido (tarjetas «Facturas» y «Cobros»); subir XML solo se puede en Cobranza. Un cobro mal capturado se borra desde el pedido con el bote de basura.</p></div>
@@ -318,7 +319,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
         <div class="cuerpo">
           <ul>
             <li><span class="btn-ui">Por cliente</span> y <span class="btn-ui">Por vendedor</span>: saldo por rango (0–30, 31–60, 61–90, +90) y el más antiguo. Al dar clic en un renglón filtras «Por pedido».</li>
-            <li><span class="btn-ui">Saldos de arranque (hoja)</span>: lo que cada cliente debía según el libro de ventas de la hoja hasta el arranque del ERP. No se suma a los saldos de pedidos para no contarlo dos veces.</li>
+            <li><span class="btn-ui">Saldos de arranque (hoja)</span>: lo que cada cliente debía según el libro de ventas de la hoja hasta el arranque del ERP. Sí cuenta en «Por cobrar». Los pedidos que vienen de la hoja (y siguen en el taller) se cobran contra este saldo, no aparte, para no contarlos dos veces.</li>
             <li>Para cobrar un saldo de la hoja: clic en el cliente → «Registrar cobro» con <b>Monto (con IVA)</b> (botón «Todo»), <b>Entró a la cuenta</b>, <b>Fecha</b> y <b>Referencia</b>. No deja cobrar más que el saldo.</li>
           </ul>
         </div>
@@ -328,7 +329,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
     <div class="tarjeta practica">
       <div>
         <h3>¿En qué rango cae y cuándo vence?</h3>
-        <p class="tenue" style="font-size:14px;">La antigüedad cuenta desde la primera factura (o desde el pedido si aún no se factura). El vencimiento es esa fecha más los días de crédito del cliente.</p>
+        <p class="tenue" style="font-size:14px;">En un pedido del ERP, la antigüedad cuenta desde la primera factura (o desde el pedido si aún no se factura) y vence con los días de crédito del cliente. En un saldo de la hoja cuenta desde la venta, primeras entradas, primeras salidas: los pagos tapan las ventas más viejas, así que lo que se debe son las más recientes.</p>
         <div class="fila-campos">
           <label class="campo">Días desde la factura<input type="number" id="a-dias" value="47" min="0"></label>
           <label class="campo">Crédito del cliente (días)<input type="number" id="a-credito" value="30" min="0"></label>
@@ -344,7 +345,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
     <header>
       <span class="etiqueta">Lo que debemos</span>
       <h2>Pagos a proveedores</h2>
-      <p class="lectura tenue">«Lo que debemos: lo vencido primero y lo que viene en las próximas 4 semanas.» Aquí se registra cada compra o gasto (con su XML) y cada pago. Cifras de ejemplo.</p>
+      <p class="lectura tenue">«Lo que debemos: lo vencido primero y lo que viene en las próximas 4 semanas.» Aquí se registra cada compra o gasto (con su XML, o su PDF o una foto si no hay XML) y cada pago. Cifras de ejemplo.</p>
     </header>
     <div class="tarjeta" style="padding:16px; display:grid; gap:14px;">
       <div class="kpis">
@@ -373,13 +374,14 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
         <summary><div><h3>Registrar una compra o gasto</h3><p>Material, servicios, fletes, luz: todo lo que se le debe (o ya se le pagó) a un proveedor.</p></div><span class="flecha">›</span></summary>
         <div class="cuerpo">
           <ol>
-            <li>Botón <span class="btn-ui">Registrar compra o gasto</span> → «Sube el XML de la factura». Puedes elegir varios a la vez; pasas de una a otra con «Factura N de M» o <span class="btn-ui">Saltar</span>.</li>
+            <li>Botón <span class="btn-ui">Registrar compra o gasto</span> → «Sube el XML de la factura». Puedes elegir varios a la vez, y mezclar XML, PDF y fotos; pasas de una a otra con «Factura N de M» o <span class="btn-ui">Saltar</span>.</li>
+            <li><b>Sin XML:</b> sube el PDF o una foto (JPG o PNG). Claude la lee («Claude está leyendo la factura…», unos segundos por archivo) y llena lo mismo que el XML. Sale el aviso azul «Leída por Claude de un PDF: revisa total, fecha, folio y proveedor antes de registrar»; con «Ver archivo» lo comparas al lado.</li>
             <li>Se llena solo: proveedor por su RFC, folio («Serie Folio»), fecha, total con IVA y concepto. Si viene en dólares, el total se pasa a pesos con el tipo de cambio de la factura.</li>
             <li>Revisa <b>Categoría</b> (Material, Fletes, Luz, Nómina… la del proveedor si la dejas igual), <b>Concepto</b> y <b>Vence el</b> (fecha de la factura más los días de crédito del proveedor).</li>
             <li>Si es de contado (PUE) viene marcado <b>Ya se pagó (de contado)</b>: elige la cuenta de donde salió.</li>
             <li><span class="btn-ui">Registrar compra</span> o <span class="btn-ui">Registrar compra y pago</span>.</li>
           </ol>
-          <div class="nota"><b class="m">✓</b><p>Sin XML también se puede: captura a mano abajo de la zona para soltar archivos. Prueba qué pasa con cada tipo de XML en <a href="#xml">¿Qué hago con este XML?</a></p></div>
+          <div class="nota"><b class="m">✓</b><p>Si Claude no leyó el folio fiscal (UUID), el ERP te avisa que no puede revisar si ya estaba registrada: búscala en la cuenta del proveedor antes de guardar. Una factura en dólares leída sin tipo de cambio queda en dólares: corrígela a pesos. Sin XML ni PDF, captura a mano abajo de la zona. Prueba cada caso en <a href="#xml">¿Qué hago con esta factura?</a></p></div>
         </div>
       </details>
       <details class="fase">
@@ -395,14 +397,25 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
         </div>
       </details>
       <details class="fase">
-        <summary><div><h3>Las tres pestañas</h3><p>Facturas por pagar · Por proveedor · Órdenes de compra</p></div><span class="flecha">›</span></summary>
+        <summary><div><h3>Las cuatro pestañas</h3><p>Facturas por pagar · Por proveedor · Órdenes de compra · Pagos hechos</p></div><span class="flecha">›</span></summary>
         <div class="cuerpo">
           <ul>
             <li><span class="btn-ui">Facturas por pagar</span>: cada factura con saldo y su vencimiento («Vencida hace N días», «Vence hoy», «En N días»). Filtros «Todas», «Vencidas», «Próximos 7 días».</li>
             <li><span class="btn-ui">Por proveedor</span>: lo que se le debe a cada uno. Filtros «Les debemos», «Socios y bancos» (préstamos de socios y créditos bancarios, aparte para no mezclarlos con proveedores), «A nuestro favor» (saldos negativos: anticipos y notas de crédito) y «Todos».</li>
             <li><span class="btn-ui">Órdenes de compra</span>: las órdenes recibidas con saldo. Se pagan desde la orden (diálogo «Registrar pago» con «Pagos anteriores»). Su vencimiento es la fecha de la primera recepción más los días de crédito.</li>
+            <li><span class="btn-ui">Pagos hechos</span>: todo lo que se pagó en una sola lista: lo registrado en el ERP, los pagos de la hoja desde 2022 (sin repetir los que también están en el ERP) y los pagos a órdenes de compra. Filtra por periodo («Este mes», «Mes pasado», «Este año», «Todo» o fechas), por cuenta y por «Solo proveedores» / «Socios y bancos» / «Todos». Abajo, el total por cuenta; se exporta a CSV. Aquí no se borra nada: un pago mal capturado se borra en la cuenta del proveedor.</li>
           </ul>
           <div class="nota ojo"><b class="m">!</b><p>Una compra registrada con XML no se liga a ninguna orden de compra. Si la misma compra ya tiene orden de compra recibida, págala desde «Órdenes de compra» y no registres su XML como compra aparte, o se contará dos veces.</p></div>
+        </div>
+      </details>
+      <details class="fase">
+        <summary><div><h3>Datos fiscales y bancarios del proveedor</h3><p>Compras → Proveedores → el proveedor → Editar.</p></div><span class="flecha">›</span></summary>
+        <div class="cuerpo">
+          <ul>
+            <li>Finanzas puede dar de alta proveedores (<span class="btn-ui">Nuevo proveedor</span>) y poner al día razón social, RFC, régimen fiscal, CP fiscal, domicilio fiscal, días de crédito, contacto y datos bancarios. El nombre, la categoría, la moneda y la entrega los cambia compras.</li>
+            <li>«¿Tienes su constancia de situación fiscal?» → <span class="btn-ui">Subir constancia</span> (PDF o foto) y Claude llena los datos fiscales.</li>
+            <li>Si cambias los datos bancarios, dirección recibe el aviso «Cambiaron los datos bancarios de {nombre}» para revisarlos antes del siguiente pago. Cada cambio queda con tu nombre.</li>
+          </ul>
         </div>
       </details>
       <details class="fase">
@@ -422,8 +435,8 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
   <section class="bloque" id="xml">
     <header>
       <span class="etiqueta">Práctica · Registrar compra o gasto</span>
-      <h2>¿Qué hago con este XML?</h2>
-      <p class="lectura tenue">Elige qué te llegó y mira qué hace el ERP al subirlo.</p>
+      <h2>¿Qué hago con esta factura?</h2>
+      <p class="lectura tenue">Elige qué te llegó (XML, PDF o foto) y mira qué hace el ERP al subirlo.</p>
     </header>
     <div class="tarjeta practica">
       <div><div class="opciones" id="x-opciones" role="group" aria-label="Tipo de XML"></div></div>
@@ -503,7 +516,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
       </div>
       <div class="tarjeta" style="padding:16px; display:grid; gap:8px;">
         <h3>Recargas de paquetería · Envíos</h3>
-        <p style="font-size:14px;">Cuando llega el aviso «Saldo bajo en {paquetería}», registra la recarga con <span class="btn-ui">Recarga</span> en <span class="ruta">/almacen/envios</span>. Un cargo o corrección (monto negativo) lleva su explicación.</p>
+        <p style="font-size:14px;">Cuando llega el aviso «Saldo bajo en {paquetería}», registra la recarga con <span class="btn-ui">Recarga</span> en <span class="ruta">/almacen/envios</span>. Un cargo o corrección (monto negativo) lleva su explicación. Las guías de Skydropx que se generan desde el envío se descuentan solas de su saldo; si «Skydropx reporta $X» sale en ámbar, falta registrar una recarga o un cargo (un sobrepeso, por ejemplo).</p>
       </div>
       <div class="tarjeta" style="padding:16px; display:grid; gap:8px;">
         <h3>Prenómina · <span class="ruta">/rrhh/prenomina</span></h3>
@@ -513,7 +526,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
     <div class="tarjeta" style="padding:16px; display:grid; gap:8px;">
       <h3>Lo que te avisa el ERP</h3>
       <ul style="margin:0; padding-left:18px; display:grid; gap:6px; font-size:14px;">
-        <li><b>En Inicio:</b> «Por cobrar» y «Por pagar a proveedores» (con lo vencido), y el resumen de tu área: «$X con más de 90 días sin cobrar», «$X por pagar a N proveedores ($Y vencido)», «Caja chica en $X: abajo del mínimo de $1,000».</li>
+        <li><b>En Inicio:</b> «Por cobrar» (con lo de la hoja: «$X de la hoja (N clientes) · N pedidos del ERP») y «Por pagar a proveedores» (con lo vencido), y el resumen de tu área: «$X con más de 90 días sin cobrar», «$X por pagar a N proveedores ($Y vencido)», «Caja chica en $X: abajo del mínimo de $1,000».</li>
         <li><b>En la campana:</b> «Saldo bajo en {paquetería}» (a finanzas y a gerencia administrativa) y el resumen del lunes, «Tu semana en Hegamex».</li>
         <li>Registrar cobros, pagos, compras o caja chica no le manda aviso a nadie, salvo el cobro a un pedido, que le avisa a su vendedor «Pago de {cliente}».</li>
       </ul>
@@ -546,7 +559,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
       <table>
         <thead><tr><th>Rol</th><th>Cobranza</th><th>Pagos a proveedores</th><th>Caja chica</th><th>Comisiones</th></tr></thead>
         <tbody>
-          <tr><td><b>Finanzas</b></td><td>Registra cobros, facturas y complementos</td><td>Todo: compras con XML, pagos, cuentas, socios y bancos</td><td>Anota y hace arqueo</td><td>Ve todas y marca pagadas</td></tr>
+          <tr><td><b>Finanzas</b></td><td>Registra cobros, facturas y complementos</td><td>Todo: compras con XML, PDF o foto, pagos, cuentas, pagos hechos, socios y bancos, datos fiscales y bancarios de proveedores</td><td>Anota y hace arqueo</td><td>Ve todas y marca pagadas</td></tr>
           <tr><td><b>Gerencia administrativa</b></td><td>Igual que finanzas</td><td>Igual que finanzas</td><td>Anota y hace arqueo</td><td>Ve solo la suya; no marca pagadas</td></tr>
           <tr><td><b>Dirección</b></td><td>Todo</td><td>Todo</td><td>Todo</td><td>Ajustes y todo</td></tr>
           <tr><td><b>Compras</b></td><td>Ve</td><td>Solo «Órdenes de compra»</td><td>—</td><td>—</td></tr>
@@ -621,7 +634,7 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
       '<div style="display:grid;gap:4px"><span class="etiqueta">Vencimiento</span><b>' + (c === 0 ? "De contado: venció el mismo día" : vencido ? "Vencido hace " + (-falta) + " días" : falta === 0 ? "Vence hoy" : "Vence en " + falta + " días") + "</b></div>" +
       '<p class="tenue" style="font-size:13.5px">«Antigüedad: ' + d + " días " + (f ? "desde la factura" : "desde el pedido (aún sin factura)") + "». " +
       (f ? "" : "Mientras no se facture, cuenta desde la fecha del pedido. ") +
-      "Los pedidos en «Confirmado» o «En taller» no cuentan como vencidos en el indicador «Por cobrar».</p>";
+      "Los pedidos en «Confirmado» o «En taller» no cuentan en «vencido según crédito».</p>";
   };
   ["a-dias", "a-credito", "a-fact"].forEach(function (id) { $(id).addEventListener("input", antig); });
   antig();
@@ -649,7 +662,17 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
     { t: "Factura a nombre de otro RFC", s: "El receptor no es la empresa", rechazo: "Es para otro RFC (X), no para la empresa." },
     { t: "Recibo de nómina", s: "CFDI tipo N", rechazo: "Es un recibo de nómina, no una compra." },
     { t: "Factura que ya subiste", s: "Mismo folio fiscal (UUID)", rechazo: "Ya está registrada (factura del {fecha}).", nota: "La base tampoco deja guardarla dos veces: «Esa factura (folio fiscal …) ya está registrada»." },
-    { t: "Un PDF u otro archivo", s: "No es CFDI", rechazo: "Este archivo no es una factura electrónica (CFDI): no trae el comprobante del SAT.", nota: "Sin XML, captura la compra a mano abajo de la zona para soltar archivos." }
+    { t: "PDF o foto, sin XML", s: "Claude la lee", insignia: ["A crédito (PPD)", "t-info"],
+      aviso: "Leída por Claude de un PDF: revisa total, fecha, folio y proveedor antes de registrar.", accion: "Ver archivo",
+      campos: [["Proveedor", "Por el RFC que leyó Claude"], ["Factura (serie y folio)", "A 3354"], ["Total (con IVA)", "$18,560.00"], ["Vence el", "Fecha + días de crédito"]],
+      boton: "Registrar compra", toast: ["Compra registrada", ""], despues: "Compara con el archivo antes de registrar: lo leído puede tener errores. Lo demás funciona igual que con el XML." },
+    { t: "PDF sin folio fiscal legible", s: "Claude no leyó el UUID", insignia: ["A crédito (PPD)", "t-info"],
+      aviso: "No se leyó el folio fiscal (UUID): no se puede revisar si esta factura ya estaba registrada.", accion: "Ver archivo",
+      campos: [["Factura (serie y folio)", "B 0712"], ["Total (con IVA)", "$6,960.00"]],
+      boton: "Registrar compra", toast: ["Compra registrada", ""], despues: "Antes de guardar, busca esa factura en la cuenta del proveedor: sin UUID el ERP no puede saber si ya estaba." },
+    { t: "PDF junto con su XML", s: "Los dos en la misma subida", rechazo: "Ya viene en el XML que subiste: se registra con ese." },
+    { t: "Otro tipo de archivo", s: "Word, Excel, ZIP…", rechazo: "Sube el XML, un PDF o una foto (JPG o PNG)." },
+    { t: "Un XML que no es factura", s: "No es CFDI", rechazo: "Este archivo no es una factura electrónica (CFDI): no trae el comprobante del SAT." }
   ];
   var xSel = 0;
   var pintarXml = function () {
@@ -761,7 +784,15 @@ td.der, th.der { text-align: right; font-variant-numeric: tabular-nums; }
     ["La factura necesita folio", "Escribe el folio de la factura (por ejemplo A 3350)."],
     ["El pago (%) es mayor que lo que se le debe (%): si es un anticipo, márcalo como anticipo", "Marca «Es un anticipo: lo que sobra queda a nuestro favor» o baja el monto."],
     ["Di de qué cuenta salió el pago", "Elige la cuenta en «Sale de la cuenta» (o «Entró a la cuenta» en un cobro)."],
-    ["Esa factura (folio fiscal %) ya está registrada", "Ese XML ya se subió. Búscala en la cuenta del proveedor."],
+    ["Esa factura (folio fiscal %) ya está registrada", "Ese XML (o un PDF de la misma factura cuyo UUID se leyó) ya se subió. Búscala en la cuenta del proveedor."],
+    ["Ya viene en el XML que subiste: se registra con ese.", "Subiste el PDF y el XML de la misma factura: se queda el XML."],
+    ["No se leyó el folio fiscal (UUID): no se puede revisar si esta factura ya estaba registrada.", "Revisa en la cuenta del proveedor que no esté ya antes de registrarla."],
+    ["Sube el XML, un PDF o una foto (JPG o PNG).", "Ese tipo de archivo no se lee. Exporta la factura a PDF o tómale foto."],
+    ["El archivo pesa más de 15 MB: sube solo las páginas que importan.", "Recorta el PDF a la página de la factura."],
+    ["Leer facturas de proveedores para registrarlas es de finanzas.", "Tu usuario no tiene finanzas nivel 2."],
+    ["Solo finanzas cambia los datos de pago del proveedor", "Igual: editar datos fiscales y bancarios pide finanzas nivel 2."],
+    ["Ese RFC no tiene la forma del SAT (3 o 4 letras, 6 números de fecha y 3 de homoclave)", "Revisa el RFC en la constancia; mejor súbela y que Claude lo llene."],
+    ["El código postal son 5 números", "El CP fiscal de la constancia, sin espacios."],
     ["Con este pago la orden % quedaría pagada de más: total %, pagado %", "Pago a una orden de compra mayor a su saldo. Revisa «Pagos anteriores» en el diálogo."],
     ["La orden % está en %: no se le registran pagos", "La orden está en borrador o cancelada. Pide a compras que la envíe o revisa si es otra orden."],
     ["La fecha no puede ser futura", "Cobros, pagos, compras y caja chica llevan la fecha en que pasó, hoy o antes."],
