@@ -32,3 +32,21 @@ begin
   select count(*) into v_n from v_pagos_hechos where proveedor = 'T125 Aceros';
   assert v_n = 1 and (select origen from v_pagos_hechos where proveedor = 'T125 Aceros') = 'orden', format('compras ve %s pagos (solo debería ver el de la orden)', v_n);
 end $$;
+
+-- Recién capturados: un pago con fecha de hace meses, capturado hoy, se encuentra por su
+-- fecha de captura; los de la hoja no tienen.
+do $$
+declare v_fin uuid; v_prov uuid;
+begin
+  perform pg_temp.como_postgres();
+  v_fin := pg_temp.usuario('fin125b@hegamex.com', '{finanzas}');
+  insert into proveedores (nombre) values ('T125b Posadas') returning id into v_prov;
+  insert into movimientos_proveedor (proveedor_id, proveedor_llave, tipo, fecha, monto, cuenta)
+  values (v_prov, 'erp:t125b', 'pago', '2026-09-06', 23983.34, 'santander_fiscal');
+  insert into historial_compras_hoja (fecha, proveedor_id, proveedor_nombre, proveedor_llave, tipo, monto, cuenta)
+  values ('2026-09-06', v_prov, 'T125b Posadas', 'erp:t125b-hoja', 'Pago', 100, 'NO FISCAL');
+  perform pg_temp.como(v_fin);
+  assert exists (select 1 from v_pagos_hechos where proveedor = 'T125b Posadas' and origen = 'erp'
+                 and fecha = '2026-09-06' and registrado_en > now() - interval '7 days'), 'el pago capturado hoy no trae su fecha de captura';
+  assert (select registrado_en from v_pagos_hechos where proveedor = 'T125b Posadas' and origen = 'hoja') is null, 'la hoja no tiene fecha de captura';
+end $$;
