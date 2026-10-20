@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FilePlus2, Pencil, Trash2, Undo2, Users, Wallet } from "lucide-react";
+import { Ban, FilePlus2, Link2, Pencil, Trash2, Undo2, Users, Wallet } from "lucide-react";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { Lateral } from "@/components/ui/dialogo";
 import { Insignia } from "@/components/ui/insignia";
@@ -17,7 +17,8 @@ import {
   INVALIDAR_PROVEEDORES, SelectorCuenta, TIPO_ACREEDOR, Vencimiento, diasPara, esPrestamo, useCuentasDinero,
   type CuentaProveedor, type FacturaPendiente,
 } from "./cuentas";
-import { BotonRepetida, InsigniaRepetida } from "./Repetida";
+import { BotonRepetida, DialogoNoCuenta, InsigniaRepetida, type Ignorada } from "./Repetida";
+import { SelectorProveedor } from "@/modulos/compras/componentes/comun";
 
 /**
  * Cuenta de cada proveedor: lo que venía en el libro de compras de la hoja más lo que se
@@ -74,7 +75,7 @@ interface MovErp {
 interface MovHoja { id: number; fecha: string; tipo: string; monto: number; cuenta: string | null; descripcion: string | null; factura: string | null }
 interface Renglon {
   clave: string; fecha: string; tipo: string; resta: boolean; monto: number; cuenta: string | null; factura: string | null; descripcion: string | null; erp?: MovErp;
-  hojaId?: number; repetida?: { motivo: string; marcada_en: string };
+  hojaId?: number; repetida?: Ignorada;
 }
 const TIPO_ERP: Record<MovErp["tipo"], string> = { compra: "Compra", pago: "Pago", reembolso_pendiente: "Reembolso pendiente", reembolso_realizado: "Reembolso realizado" };
 const RESTA_HOJA = new Set(["Pago", "Reembolso Pend."]);
@@ -109,12 +110,16 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
     queryFn: () => q<MovHoja[]>(supabase.from("historial_compras_hoja").select("id, fecha, tipo, monto, cuenta, descripcion, factura")
       .eq("proveedor_llave", llave!).order("fecha", { ascending: false }).order("id", { ascending: false }).limit(200)),
   });
-  // Compras de la hoja que finanzas marcó como repetidas: se ven tachadas y no cuentan.
+  // Renglones de la hoja que finanzas marcó como repetidos o cancelados: se ven tachados y no cuentan.
   const repetidas = useQuery({
     queryKey: ["v_compras_hoja_ignoradas", llave, hoja.data?.length], enabled: editable && !!hoja.data?.length,
-    queryFn: () => q<{ id: number; motivo: string; marcada_en: string }[]>(supabase.from("v_compras_hoja_ignoradas").select("id, motivo, marcada_en")
-      .in("id", (hoja.data ?? []).filter((m) => m.tipo === "Compra").map((m) => m.id))),
+    queryFn: () => q<Ignorada[]>(supabase.from("v_compras_hoja_ignoradas").select("id, motivo, marcada_en, razon")
+      .in("id", (hoja.data ?? []).filter((m) => m.tipo === "Compra" || m.tipo === "Pago").map((m) => m.id))),
   });
+  const [noCuenta, setNoCuenta] = useState<Renglon | null>(null);
+  const [ligarA, setLigarA] = useState<{ id: string; nombre: string } | null>(null);
+  const ligar = useAccion(() => q<number>(supabase.rpc("ligar_hoja_proveedor", { p_llave: llave, p_proveedor: ligarA!.id })),
+    { exito: (n) => `Ligada: ${n} renglones de la hoja quedaron con su proveedor`, invalidar: INVALIDAR_PROVEEDORES, alTerminar: () => setLigarA(null) });
   const porRepetida = new Map((repetidas.data ?? []).map((r) => [r.id, r]));
   const borrar = useAccion((id: string) => q(supabase.from("movimientos_proveedor").delete().eq("id", id)), { exito: "Movimiento borrado", invalidar: INVALIDAR_PROVEEDORES });
   const desmarcar = useAccion((id: number) => q(supabase.rpc("desmarcar_compra_repetida", { p_hoja_id: id })), { exito: "Vuelve a contar en el saldo", invalidar: INVALIDAR_PROVEEDORES });
@@ -138,7 +143,17 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
         {cuenta.tipo_acreedor !== "proveedor" && <Insignia tono="info">{TIPO_ACREEDOR[cuenta.tipo_acreedor]}</Insignia>}
         {cuenta.proveedor_id && prov.data && <Credito proveedorId={cuenta.proveedor_id} dias={prov.data.dias_credito} editable={editable} />}
       </div>}>
-      {cuenta && editable && (pagando
+      {cuenta && editable && !cuenta.proveedor_id && (
+        <div className="mb-5 rounded-lg border border-aviso/30 bg-aviso-suave p-3 text-sm space-y-2" data-explain={GLOSARIO.cuentaHojaSinLigar} data-explain-title="Sin proveedor del catálogo">
+          <p className="text-aviso"><b>Esta cuenta de la hoja no está ligada a un proveedor del catálogo</b>, así que no se le puede registrar pago. Elige cuál es:</p>
+          <div className="flex flex-wrap gap-2 items-center">
+            <SelectorProveedor valor={ligarA} alCambiar={(p) => setLigarA({ id: p.id, nombre: p.nombre })} className="flex-1 min-w-[220px]" />
+            <Boton tamano="sm" disabled={!ligarA} cargando={ligar.isPending} onClick={() => ligar.mutate(undefined)}><Link2 className="h-4 w-4" /> Ligar</Boton>
+          </div>
+          <p className="text-xs text-tenue">Si no está, dalo de alta en Compras → Proveedores con el mismo nombre y se liga solo.</p>
+        </div>
+      )}
+      {cuenta && editable && cuenta.proveedor_id && (pagando
         ? <RegistrarPagoProveedor cuenta={cuenta} vencido={Number(cuenta.vencido)} facturas={facturas} banco={prov.data?.datos_bancarios ?? null} alTerminar={() => setPagando(false)} />
         : Number(cuenta.saldo) > 0.5 && <Boton className="mb-5 w-full sm:w-auto" onClick={() => setPagando(true)}><Wallet className="h-4 w-4" /> Registrar pago</Boton>)}
 
@@ -176,7 +191,9 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
                   <Insignia tono={m.resta ? "ok" : m.tipo === "Compra" || m.tipo === "Adeudo 2021" ? "neutro" : "info"}>{m.tipo}</Insignia>
                   {m.erp ? <Insignia tono="marca">ERP</Insignia> : <span className="text-xs text-tenue">Hoja</span>}
                   {m.erp?.en_hoja && <span data-explain={GLOSARIO.tambienEnHoja} data-explain-title="También en la hoja"><Insignia tono="info">También en la hoja</Insignia></span>}
-                  {m.repetida && <span data-explain={GLOSARIO.compraRepetidaHoja} data-explain-title="Repetida" title={m.repetida.motivo}><Insignia tono="aviso">Repetida · no cuenta</Insignia></span>}
+                  {m.repetida && <span data-explain={GLOSARIO.renglonHojaNoCuenta} data-explain-title="No cuenta" title={m.repetida.motivo}>
+                    <Insignia tono="aviso">{m.repetida.razon === "cancelada" ? "Cancelada" : "Repetida"} · no cuenta</Insignia></span>}
+                  {m.repetida && <span className="text-xs text-tenue">{m.repetida.motivo}</span>}
                   {m.erp?.metodo_pago && <span className="text-xs text-tenue">{m.erp.metodo_pago}</span>}
                   {m.factura && <span className="text-tenue">Fact. {m.factura}</span>}
                   {m.cuenta && <span className="text-tenue">{m.cuenta}</span>}
@@ -191,11 +208,16 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
                 </button>
               ) : editable && m.repetida && m.hojaId ? (
                 <button type="button" onClick={() => desmarcar.mutate(m.hojaId!)} className="shrink-0 p-1 rounded text-tenue hover:text-texto hover:bg-fondo"
-                  aria-label="Ya no es repetida" title="Deshacer: vuelve a contar en el saldo"><Undo2 className="h-4 w-4" /></button>
+                  aria-label="Vuelve a contar" title="Deshacer: vuelve a contar en el saldo"><Undo2 className="h-4 w-4" /></button>
+              ) : editable && m.hojaId && (m.tipo === "Compra" || m.tipo === "Pago") ? (
+                <button type="button" onClick={() => setNoCuenta(m)} className="shrink-0 p-1 rounded text-tenue hover:text-peligro hover:bg-fondo"
+                  aria-label="No cuenta" title="Está repetido o la factura se canceló: que no cuente"><Ban className="h-4 w-4" /></button>
               ) : editable && <span className="w-6 shrink-0" />}
             </div>
           ))}
           {hoja.data?.length === 200 && <p className="py-2 text-xs text-tenue">De la hoja se muestran los 200 más recientes.</p>}
+          {noCuenta && <DialogoNoCuenta hojaId={noCuenta.hojaId!} tipo={noCuenta.tipo as "Compra" | "Pago"}
+            resumen={`${noCuenta.tipo} del ${fecha(noCuenta.fecha)}${noCuenta.factura ? ` · Fact. ${noCuenta.factura}` : ""} · ${dinero(noCuenta.monto)}`} alCerrar={() => setNoCuenta(null)} />}
         </div>
       )}
     </Lateral>

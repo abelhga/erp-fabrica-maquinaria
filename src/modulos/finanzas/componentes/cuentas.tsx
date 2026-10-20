@@ -45,10 +45,12 @@ export function useCuentasProveedor(habilitado = true) {
     queryFn: () => todasLasFilas<CuentaProveedor>((d, h) => supabase.from("v_saldo_arranque_proveedores").select("*").order("proveedor_llave").range(d, h)),
   });
 }
+// Menos de $1 no se enseña como por pagar: son centavos de diferencia entre la factura y su
+// pago (la base los lleva exactos para que lo pendiente sume el saldo).
 export function useFacturasPendientes(habilitado = true) {
   return useQuery({
     queryKey: ["v_compras_proveedor_pendientes"], enabled: habilitado,
-    queryFn: () => q<FacturaPendiente[]>(supabase.from("v_compras_proveedor_pendientes").select("*").gt("restante", 0.005).order("vence_el")),
+    queryFn: () => q<FacturaPendiente[]>(supabase.from("v_compras_proveedor_pendientes").select("*").gte("restante", 1).order("vence_el")),
   });
 }
 
