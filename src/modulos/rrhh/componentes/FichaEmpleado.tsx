@@ -476,6 +476,20 @@ function DialogoBaja({ empleado: e, abierto, alCambiar }: { empleado: Empleado; 
   const { puede } = useSesion();
   const [f, setF] = useState({ fecha: hoyISO(), tipo: MOTIVOS_BAJA[0], detalle: "", desactivar: true });
   useEffect(() => { if (abierto) setF({ fecha: hoyISO(), tipo: MOTIVOS_BAJA[0], detalle: "", desactivar: true }); }, [abierto]);
+  // Lo que queda pendiente en su finiquito: el saldo del préstamo se descuenta y el ahorro se le entrega.
+  const pendientes = useQuery({
+    queryKey: ["nomina", "pendientes_baja", e.id], enabled: abierto && puede("nomina", 1),
+    queryFn: async () => {
+      const [pr, ah] = await Promise.all([
+        q<{ empleado_id: string; estado: string; saldo: number }[]>(supabase.rpc("prestamos_nomina")),
+        q<{ empleado_id: string; saldo: number }[]>(supabase.rpc("ahorro_nomina")),
+      ]);
+      return {
+        prestamo: pr.filter((x) => x.empleado_id === e.id && x.estado === "activo").reduce((t, x) => t + Number(x.saldo), 0),
+        ahorro: Number(ah.find((x) => x.empleado_id === e.id)?.saldo ?? 0),
+      };
+    },
+  });
   const dar = useAccion(async () => {
     const motivo = f.detalle.trim() ? `${f.tipo}: ${f.detalle.trim()}` : f.tipo;
     await q(supabase.from("empleados").update({ activo: false, baja_en: f.fecha, motivo_baja: motivo }).eq("id", e.id));
@@ -493,6 +507,12 @@ function DialogoBaja({ empleado: e, abierto, alCambiar }: { empleado: Empleado; 
         <Boton variante="peligro" cargando={dar.isPending} onClick={() => dar.mutate(undefined)}>Dar de baja</Boton>
       </>}>
       <form className="space-y-4" onSubmit={(ev) => { ev.preventDefault(); dar.mutate(undefined); }}>
+        {(Number(pendientes.data?.prestamo) > 0 || Number(pendientes.data?.ahorro) > 0) && (
+          <div className="rounded-lg border border-aviso/30 bg-aviso-suave p-3 text-sm text-aviso space-y-1">
+            {Number(pendientes.data?.prestamo) > 0 && <p><b>Debe {dinero(pendientes.data!.prestamo)} de préstamo.</b> Se descuenta completo en la prenómina de su última semana (su finiquito).</p>}
+            {Number(pendientes.data?.ahorro) > 0 && <p><b>Tiene {dinero(pendientes.data!.ahorro)} en la caja de ahorro.</b> Entrégaselo con su finiquito y registra el retiro en Prenómina → Ahorro.</p>}
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo etiqueta="Último día laborado">
             <Entrada type="date" value={f.fecha} min={e.fecha_ingreso} onChange={(ev) => setF({ ...f, fecha: ev.target.value })} />

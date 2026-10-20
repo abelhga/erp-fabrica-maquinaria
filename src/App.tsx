@@ -43,6 +43,7 @@ const Incidencias = p(() => import("./modulos/rrhh/Incidencias"));
 const Objetivos = p(() => import("./modulos/rrhh/Objetivos"));
 const Checklist = p(() => import("./modulos/rrhh/Checklist"));
 const Prenomina = p(() => import("./modulos/rrhh/Prenomina"));
+const DocumentoNomina = p(() => import("./modulos/rrhh/DocumentoNomina"));
 const MiDesempeno = p(() => import("./modulos/rrhh/MiDesempeno"));
 const Cobranza = p(() => import("./modulos/finanzas/Cobranza"));
 const Pagos = p(() => import("./modulos/finanzas/Pagos"));
@@ -117,6 +118,7 @@ export function App() {
           <Route path="/servicio/reportar" element={<Con m="servicio" n={2}><ReportarFalla /></Con>} />
           <Route path="/ventas/cotizaciones/:id/imprimir" element={<Con m="ventas"><ImprimirCotizacion /></Con>} />
           <Route path="/importaciones/oc/:id/imprimir" element={<Con m="compras" n={2}><ImprimirOCImportacion /></Con>} />
+          <Route path="/rrhh/documento/:tipo/:id" element={<Con m="nomina"><DocumentoNomina /></Con>} />
         </Route>
         <Route element={<Shell />}>
           <Route index element={<Inicio />} />

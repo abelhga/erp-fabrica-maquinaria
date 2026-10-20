@@ -20,6 +20,7 @@ import { dinero, fecha, fechaYHora, hoyISO, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { nombreMes, puntos } from "./componentes/objetivos";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { Ahorro, DialogoAbonar, DialogoPagare, DialogoReglas, InsigniaPagare, abrirDocumento } from "./componentes/AhorroPrestamos";
 import { INVALIDAR_PROVEEDORES, SelectorCuenta } from "@/modulos/finanzas/componentes/cuentas";
 
 interface Semana { inicio: string; fin: string; pago: string; estado: "abierta" | "cerrada"; cerrada_en: string | null; cerrada_por: string | null; personas: number; neto: number | null;
@@ -36,8 +37,9 @@ interface Renglon {
   total_percepciones: number; total_deducciones: number; neto: number; conceptos: Concepto[]; avisos: string[];
 }
 interface Prestamo {
-  id: string; empleado_id: string; nombre: string; monto: number; descuento_semanal: number; primera_semana: string; motivo: string;
-  autorizado_por: string | null; autorizado_en: string; estado: "activo" | "cancelado"; cancelado_motivo: string | null; abonado: number; saldo: number; semanas_restantes: number;
+  id: string; folio: string; empleado_id: string; nombre: string; activo_empleado: boolean; monto: number; descuento_semanal: number; primera_semana: string; motivo: string;
+  autorizado_por: string | null; autorizado_en: string; estado: "activo" | "cancelado"; cancelado_motivo: string | null; abonado: number; pagado_aparte: number;
+  saldo: number; semanas_restantes: number; pagare_firmado_el: string | null; pagos: { id: string; folio: string; fecha: string; importe: number }[];
 }
 interface Sueldo { empleado_id: string; numero: string | null; nombre: string; puesto: string | null; activo: boolean; sueldo_semanal: number | null; desde: string | null; origen: string | null; historial: { sueldo: number; desde: string; motivo: string; por: string | null; en: string }[] }
 
@@ -72,11 +74,12 @@ export default function Prenomina() {
       )}
     >
       <Pestanas value={vista} onValueChange={(v) => { const p = new URLSearchParams(params); if (v === "semana") p.delete("vista"); else p.set("vista", v); setParams(p, { replace: true }); }}>
-        <ListaPestanas opciones={[{ valor: "semana", texto: "Semana", explica: GLOSARIO.semanaNomina }, { valor: "prestamos", texto: "Préstamos", explica: GLOSARIO.prestamoNomina }, { valor: "sueldos", texto: "Sueldos", explica: GLOSARIO.sueldoSemanal }]} />
+        <ListaPestanas opciones={[{ valor: "semana", texto: "Semana", explica: GLOSARIO.semanaNomina }, { valor: "prestamos", texto: "Préstamos", explica: GLOSARIO.prestamoNomina }, { valor: "ahorro", texto: "Ahorro", explica: GLOSARIO.saldoAhorro }, { valor: "sueldos", texto: "Sueldos", explica: GLOSARIO.sueldoSemanal }]} />
         <ContenidoPestana value="semana" className="pt-4">
           {semanas.error ? <ErrorCarga error={semanas.error} /> : !semana ? <Cargando /> : <VistaSemana semana={semana} />}
         </ContenidoPestana>
         <ContenidoPestana value="prestamos" className="pt-4"><Prestamos semanas={lista} puedeCapturar={puede("nomina", 3)} /></ContenidoPestana>
+        <ContenidoPestana value="ahorro" className="pt-4"><Ahorro semanas={lista} puedeCapturar={puede("nomina", 3)} /></ContenidoPestana>
         <ContenidoPestana value="sueldos" className="pt-4"><Sueldos puedeCapturar={puede("nomina", 3)} /></ContenidoPestana>
       </Pestanas>
     </Pagina>
@@ -347,21 +350,39 @@ function exportarCsv(s: Semana, filas: Renglon[]) {
 function Prestamos({ semanas, puedeCapturar }: { semanas: Semana[]; puedeCapturar: boolean }) {
   const prestamos = useQuery({ queryKey: ["nomina", "prestamos"], queryFn: () => q<Prestamo[]>(supabase.rpc("prestamos_nomina")) });
   const [nuevo, setNuevo] = useState(false);
+  const [reglas, setReglas] = useState(false);
   const [cancelar, setCancelar] = useState<Prestamo | null>(null);
+  const [abonar, setAbonar] = useState<Prestamo | null>(null);
+  const [pagare, setPagare] = useState<Prestamo | null>(null);
   const activos = (prestamos.data ?? []).filter((p) => p.estado === "activo" && n(p.saldo) > 0);
   const columnas: Columna<Prestamo>[] = [
-    { clave: "nombre", titulo: "Persona", celda: (p) => <div><p className="font-medium">{p.nombre}</p><p className="text-xs text-tenue">{p.motivo}</p></div>, valor: (p) => `${p.nombre} ${p.motivo}` },
+    { clave: "nombre", titulo: "Persona", celda: (p) => <div><p className="font-medium">{p.nombre}{!p.activo_empleado && <span className="text-xs text-tenue font-normal"> · baja</span>}</p><p className="text-xs text-tenue">{p.folio} · {p.motivo}</p></div>, valor: (p) => `${p.nombre} ${p.folio} ${p.motivo}` },
     { clave: "monto", titulo: "Prestado", alinear: "der", sinBusqueda: true, valor: (p) => n(p.monto), celda: (p) => dinero(p.monto) },
     { clave: "descuento_semanal", titulo: "Por semana", alinear: "der", sinBusqueda: true, valor: (p) => n(p.descuento_semanal), celda: (p) => dinero(p.descuento_semanal) },
-    { clave: "abonado", titulo: "Descontado", alinear: "der", sinBusqueda: true, valor: (p) => n(p.abonado), celda: (p) => dinero(p.abonado) },
+    {
+      clave: "abonado", titulo: "Abonado", explica: GLOSARIO.abonoPrestamo, alinear: "der", sinBusqueda: true, valor: (p) => n(p.abonado),
+      celda: (p) => <span>{dinero(p.abonado)}{n(p.pagado_aparte) > 0 && <span className="block text-[11px] text-tenue">{dinero(p.pagado_aparte)} en efectivo</span>}</span>,
+    },
     { clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, valor: (p) => n(p.saldo), celda: (p) => <b className={n(p.saldo) > 0 ? "" : "text-ok"}>{dinero(p.saldo)}</b> },
     {
       clave: "estado", titulo: "Estado", valor: (p) => p.estado,
       celda: (p) => p.estado === "cancelado" ? <Insignia tono="neutro">Cancelado</Insignia> : n(p.saldo) <= 0 ? <Insignia tono="ok">Liquidado</Insignia>
         : <Insignia tono="info">{p.semanas_restantes} semana{p.semanas_restantes === 1 ? "" : "s"} más</Insignia>,
     },
+    {
+      clave: "pagare", titulo: "Pagaré", explica: GLOSARIO.pagarePrestamo, valor: (p) => p.pagare_firmado_el ?? "",
+      celda: (p) => <button type="button" onClick={(e) => { e.stopPropagation(); setPagare(p); }}><InsigniaPagare firmado={p.pagare_firmado_el} /></button>,
+    },
     { clave: "autorizado_por", titulo: "Autorizó", valor: (p) => p.autorizado_por, celda: (p) => <span className="text-xs">{p.autorizado_por ?? "—"}<span className="block text-tenue">{fecha(p.autorizado_en)}</span></span> },
-    { clave: "acciones", titulo: "", sinBusqueda: true, celda: (p) => puedeCapturar && p.estado === "activo" && n(p.saldo) > 0 && <Boton variante="fantasma" tamano="sm" onClick={(e) => { e.stopPropagation(); setCancelar(p); }}>Cancelar</Boton> },
+    {
+      clave: "acciones", titulo: "", sinBusqueda: true,
+      celda: (p) => puedeCapturar && p.estado === "activo" && n(p.saldo) > 0 && (
+        <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+          <Boton variante="secundario" tamano="sm" onClick={() => setAbonar(p)}>Abonar</Boton>
+          <Boton variante="fantasma" tamano="sm" onClick={() => setCancelar(p)}>Cancelar</Boton>
+        </div>
+      ),
+    },
   ];
   return (
     <div className="space-y-3">
@@ -370,10 +391,16 @@ function Prestamos({ semanas, puedeCapturar }: { semanas: Semana[]; puedeCaptura
       </div>
       <TablaDatos filas={prestamos.data} columnas={columnas} cargando={prestamos.isLoading} error={prestamos.error} claveFila={(p) => p.id}
         exportarComo="prestamos-nomina" placeholder="Buscar persona o motivo…"
-        filtros={puedeCapturar && <Boton tamano="sm" onClick={() => setNuevo(true)}><Plus className="h-4 w-4" /> Nuevo préstamo</Boton>}
+        filtros={puedeCapturar && <div className="flex gap-2">
+          <Boton tamano="sm" onClick={() => setNuevo(true)}><Plus className="h-4 w-4" /> Nuevo préstamo</Boton>
+          <Boton variante="fantasma" tamano="sm" onClick={() => setReglas(true)}>Interés y reglas</Boton>
+        </div>}
         vacio={{ icono: Banknote, titulo: "Sin préstamos", texto: "Registra el préstamo con su descuento semanal: la prenómina lo descuenta sola y lleva el saldo." }} />
+      {reglas && <DialogoReglas alCerrar={() => setReglas(false)} />}
       {nuevo && <DialogoPrestamo semanas={semanas.filter((s) => s.estado === "abierta")} alCerrar={() => setNuevo(false)} />}
       {cancelar && <DialogoCancelarPrestamo p={cancelar} alCerrar={() => setCancelar(null)} />}
+      {abonar && <DialogoAbonar p={abonar} semanas={semanas.filter((s) => s.estado === "abierta")} alCerrar={() => setAbonar(null)} />}
+      {pagare && <DialogoPagare p={pagare} alCerrar={() => setPagare(null)} />}
     </div>
   );
 }
@@ -386,9 +413,12 @@ function DialogoPrestamo({ semanas, alCerrar }: { semanas: Semana[]; alCerrar: (
   const personas = usePersonasNomina();
   const { perfil } = useSesion();
   const [f, setF] = useState({ empleado_id: "", monto: "", descuento: "", semana: [...semanas].sort((a, b) => a.inicio.localeCompare(b.inicio)).find((s) => s.fin >= hoyISO())?.inicio ?? semanas[0]?.inicio ?? "", motivo: "" });
-  const guardar = useAccion(() => q(supabase.from("nomina_prestamos").insert({
+  const guardar = useAccion(() => q<{ id: string }>(supabase.from("nomina_prestamos").insert({
     empleado_id: f.empleado_id, monto: Number(f.monto), descuento_semanal: Number(f.descuento), primera_semana: f.semana, motivo: f.motivo.trim(),
-  })), { exito: "Préstamo registrado", invalidar: [["nomina"]], alTerminar: alCerrar });
+  }).select("id").single()), {
+    exito: "Préstamo registrado: imprime el pagaré para que lo firme", invalidar: [["nomina"]],
+    alTerminar: (r) => { abrirDocumento("pagare", (r as { id: string }).id); alCerrar(); },
+  });
   const valido = f.empleado_id && Number(f.monto) > 0 && Number(f.descuento) > 0 && f.semana && f.motivo.trim().length >= 3;
   const semanasN = Number(f.monto) > 0 && Number(f.descuento) > 0 ? Math.ceil(Number(f.monto) / Number(f.descuento)) : null;
   return (
