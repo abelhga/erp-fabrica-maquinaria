@@ -31,7 +31,7 @@ export const COMPRAS = {
   creditoProveedor: "Días que da el proveedor para pagar. El vencimiento de cada orden se fija al recibirla: fecha de recepción más estos días. Sin crédito, es de contado.",
   entregaProveedor: "Días hábiles que tarda en entregar desde que se le manda la orden. Sin dato se usa 7. De aquí sale la fecha de entrega de sus órdenes.",
   ordenesAbiertasProveedor: "Órdenes enviadas o recibidas en parte que todavía esperan mercancía. «Tarde» cuenta las que ya pasaron su fecha de entrega.",
-  compradoDoceMeses: "Suma de sus órdenes de compra de los últimos 12 meses (sin canceladas), en pesos y con IVA.",
+  compradoDoceMeses: "Lo que se le compró en los últimos 12 meses, en pesos y con IVA: sus facturas (las de la hoja y las registradas en el ERP, sin las repetidas) más sus órdenes de compra no canceladas. Una orden se paga desde la orden y no tiene factura aparte, así que nada se cuenta dos veces.",
   indicePreciosProveedor: "Cómo se han movido sus precios, con 100 en el primer mes con datos. Cada mes promedia cuánto cambió el costo de cada artículo que nos vende (los que no cambiaron cuentan como 0 %): 110 quiere decir 10 % más caro.",
   quienCambioQue: "Cada alta o cambio del proveedor queda registrado con el nombre de quien lo hizo, la fecha y qué datos cambió. Solo dirección y sistemas ven esta lista.",
   datosBancariosProveedor: "La cuenta donde se le paga. Si alguien la cambia, dirección recibe un aviso para revisarla antes del siguiente pago: un correo de «cambiamos de cuenta» es el engaño más común.",

@@ -27,6 +27,8 @@ interface Archivo {
   deClaude?: boolean; advertencias?: string[]; simulado?: boolean; url?: string;
 }
 const esXml = (a: File) => /\.xml$/i.test(a.name) || /xml/.test(a.type);
+/** El folio como lo compara la base (llave_factura): "A-0896" y "A896" son la misma factura. */
+const llaveFolio = (f: string | null | undefined) => (f ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^0+/, "") || null;
 
 const VACIO = { fecha: hoyISO(), monto: "", factura: "", descripcion: "", categoria: "", vence: "", pagada: false, cuenta: "" };
 
@@ -48,6 +50,7 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
   const [tocoVence, setTocoVence] = useState(false);
   const [leyendo, setLeyendo] = useState(0);
   const [verArchivo, setVerArchivo] = useState(false);
+  const [esOtra, setEsOtra] = useState(false);
   const archivo = useRef<HTMLInputElement>(null);
   const actual = cola[idx] ?? null;
   const cfdi = actual?.cfdi ?? null;
@@ -144,11 +147,38 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
         if (r && !l.error) l.error = `Ya está registrada (factura del ${fecha(r.fecha)}).`;
       }
     }
+    // Y por folio del mismo proveedor (por su RFC): la base la rechazaría igual, mejor saberlo
+    // antes de capturar la carpeta entera.
+    const rfcs = [...new Set(leidos.filter((l) => !l.error && l.cfdi?.emisor.rfc && folioCfdi(l.cfdi)).map((l) => l.cfdi!.emisor.rfc!.toUpperCase()))];
+    if (rfcs.length) {
+      const provs = await q<{ id: string; rfc: string }[]>(supabase.from("proveedores").select("id, rfc").in("rfc", rfcs));
+      const ids = provs.map((p) => p.id);
+      const ya = ids.length ? await q<{ proveedor_id: string; factura: string | null; fecha: string }[]>(
+        supabase.from("movimientos_proveedor").select("proveedor_id, factura, fecha").eq("tipo", "compra").in("proveedor_id", ids)) : [];
+      for (const l of leidos) {
+        const c = l.cfdi;
+        if (l.error || !c) continue;
+        const suyos = provs.filter((p) => p.rfc?.toUpperCase() === c.emisor.rfc?.toUpperCase()).map((p) => p.id);
+        const r = ya.find((y) => suyos.includes(y.proveedor_id) && llaveFolio(y.factura) && llaveFolio(y.factura) === llaveFolio(folioCfdi(c)));
+        if (r) l.error = `La factura ${folioCfdi(c)} ya está registrada (compra del ${fecha(r.fecha)}).`;
+      }
+    }
     setCola(leidos); setIdx(0); setVerArchivo(false);
   }
 
   const notaCredito = cfdi?.tipo === "E";
   const monto = Number(f.monto) || 0;
+  // Mismo proveedor, mismo monto, a una semana y con otro folio o sin folio: puede ser la
+  // misma compra capturada otra vez. No se bloquea (dos cargas iguales de Google Ads existen):
+  // se pide confirmar.
+  const parecidas = useQuery({
+    queryKey: ["compras_parecidas", prov?.id, monto, f.fecha, llaveFolio(f.factura)], enabled: !!prov && monto > 0 && !notaCredito && !!f.fecha,
+    staleTime: 30_000,
+    queryFn: () => q<{ origen: "erp" | "hoja"; fecha: string; monto: number; factura: string | null; descripcion: string | null }[]>(
+      supabase.rpc("compras_parecidas", { p_proveedor: prov!.id, p_monto: monto, p_fecha: f.fecha, p_factura: f.factura || null })),
+  });
+  const hayParecidas = (parecidas.data?.length ?? 0) > 0;
+  useEffect(() => setEsOtra(false), [prov?.id, monto, f.fecha, f.factura, idx]);
   const venceCalculado = prov ? sumarDias(f.fecha, prov.dias_credito ?? 0) : null;
   const vence = tocoVence ? f.vence : venceCalculado ?? "";
   const siguiente = () => { setVerArchivo(false); if (idx + 1 < cola.length) setIdx(idx + 1); else alCerrar(); };
@@ -180,7 +210,7 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
 
   function enviar(e: FormEvent) {
     e.preventDefault();
-    if (prov && monto > 0 && !actual?.error && (!f.pagada || f.cuenta)) guardar.mutate(undefined);
+    if (prov && monto > 0 && !actual?.error && (!f.pagada || f.cuenta) && (!hayParecidas || esOtra)) guardar.mutate(undefined);
   }
 
   const categorias = useCategorias();
@@ -194,7 +224,7 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
         {cola.length > 1 && <span className="mr-auto text-sm text-tenue">Factura {idx + 1} de {cola.length}</span>}
         {cola.length > 1 && <Boton variante="secundario" type="button" onClick={siguiente}>Saltar</Boton>}
         <Boton variante="secundario" type="button" onClick={alCerrar}>Cerrar</Boton>
-        <Boton type="submit" form="registrar-compra" cargando={guardar.isPending} disabled={!prov || monto <= 0 || bloqueado || (f.pagada && !f.cuenta)}>
+        <Boton type="submit" form="registrar-compra" cargando={guardar.isPending} disabled={!prov || monto <= 0 || bloqueado || (f.pagada && !f.cuenta) || (hayParecidas && !esOtra)}>
           {notaCredito ? "Registrar nota de crédito" : f.pagada ? "Registrar compra y pago" : "Registrar compra"}
         </Boton>
       </>}>
@@ -264,6 +294,21 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
           <Campo etiqueta="Fecha de la factura">
             <Entrada type="date" value={f.fecha} max={hoyISO()} onChange={(e) => setF({ ...f, fecha: e.target.value })} required />
           </Campo>
+          {hayParecidas && (
+            <div className="sm:col-span-2 rounded-lg border border-aviso/30 bg-aviso-suave px-3 py-2 text-sm space-y-1.5"
+              data-explain={GLOSARIO.facturaRepetida} data-explain-title="¿Ya está registrada?">
+              <p className="flex items-start gap-2 font-medium"><AlertTriangle className="h-4 w-4 mt-0.5 text-aviso shrink-0" />
+                {parecidas.data!.length === 1 ? "Hay una compra igual de este proveedor:" : "Hay compras iguales de este proveedor:"}</p>
+              {parecidas.data!.map((p, i) => (
+                <p key={i} className="pl-6 text-tenue">{dinero(p.monto)} del {fecha(p.fecha)}{p.factura ? ` · Fact. ${p.factura}` : " · sin folio"}
+                  {p.descripcion ? ` · ${p.descripcion}` : ""} · {p.origen === "hoja" ? "en la hoja" : "en el ERP"}</p>
+              ))}
+              <label className="flex items-center gap-2 pl-6 pt-1">
+                <input type="checkbox" checked={esOtra} onChange={(e) => setEsOtra(e.target.checked)} className="h-4 w-4 accent-[hsl(var(--marca))]" />
+                Sí, es otra compra: registrarla
+              </label>
+            </div>
+          )}
           <Campo etiqueta="Factura (serie y folio)">
             <Entrada value={f.factura} onChange={(e) => setF({ ...f, factura: e.target.value })} placeholder="A 3354" />
           </Campo>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Globe2, Plus, Truck } from "lucide-react";
@@ -8,6 +8,7 @@ import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/insignia";
 import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
+import { q } from "@/lib/consultas";
 import { dineroCompacto, fecha, numero } from "@/lib/formato";
 import { todasLasFilas } from "@/modulos/almacen/componentes/comun";
 import { DialogoProveedor } from "./componentes/DialogoProveedor";
@@ -39,11 +40,20 @@ export default function Proveedores() {
       .select("id, nombre, razon_social, categoria, pais, es_importacion, moneda, dias_credito, dias_entrega, activo, articulos, oc_abiertas, oc_atrasadas, comprado_12m, ultima_compra")
       .order("nombre").order("id").range(d, h)),
   });
-  const filas = datos.data ?? [];
+  // Lo comprado sale de las facturas (hoja y ERP) más las órdenes de compra: con solo
+  // órdenes, casi todos decían $0 (lo de antes del ERP vive en la hoja).
+  const comprado = useQuery({
+    queryKey: ["compras_proveedores_12m"], enabled: verDinero,
+    queryFn: () => q<{ proveedor_id: string; comprado_12m: number }[]>(supabase.rpc("compras_proveedores_12m")),
+  });
+  const filas = useMemo(() => {
+    const m = new Map((comprado.data ?? []).map((c) => [c.proveedor_id, Number(c.comprado_12m)]));
+    return (datos.data ?? []).map((p) => ({ ...p, comprado_12m: m.get(p.id) ?? null }));
+  }, [datos.data, comprado.data]);
   const pasa = (p: FilaProveedor, v: Vista) => {
     if (v === "inactivos") return !p.activo;
     if (!p.activo) return false;
-    if (v === "surten") return p.articulos > 0 || p.oc_abiertas > 0;
+    if (v === "surten") return p.articulos > 0 || p.oc_abiertas > 0 || (p.comprado_12m ?? 0) > 0;
     if (v === "importacion") return p.es_importacion;
     if (v === "abiertas") return p.oc_abiertas > 0;
     return true;

@@ -54,6 +54,10 @@ export default function DetalleProveedor() {
     queryFn: () => q<{ articulos: number; oc_abiertas: number; oc_atrasadas: number; comprado_12m: number | null; ultima_compra: string | null }>(
       supabase.from("v_proveedores").select("articulos, oc_abiertas, oc_atrasadas, comprado_12m, ultima_compra").eq("id", id!).single()),
   });
+  const comprado = useQuery({
+    queryKey: ["compras_proveedores_12m", id], enabled: verDinero,
+    queryFn: () => q<{ comprado_12m: number; ultima_compra: string | null }[]>(supabase.rpc("compras_proveedores_12m", { p_proveedor: id })),
+  });
   const articulos = useQuery({
     queryKey: ["v_precios_compra", "proveedor", id],
     queryFn: () => todasLasFilas<ArticuloSurtido>((d, h) => supabase.from("v_precios_compra")
@@ -103,8 +107,9 @@ export default function DetalleProveedor() {
       <div className={cn("grid gap-3 sm:grid-cols-2", verCuenta && verCostos ? "xl:grid-cols-5" : "xl:grid-cols-4")}>
         <Kpi titulo="Artículos que surte" valor={numero(resumen.data?.articulos ?? 0)} icono={Boxes} tono="marca" detalle={`${p.dias_entrega ?? 7} días hábiles de entrega`} />
         <Kpi titulo="Órdenes abiertas" explica={GLOSARIO.ordenesAbiertasProveedor} valor={numero(resumen.data?.oc_abiertas ?? 0)} icono={ClipboardList} tono={resumen.data?.oc_atrasadas ? "peligro" : "info"}
-          detalle={resumen.data?.oc_atrasadas ? `${resumen.data.oc_atrasadas} atrasada(s)` : resumen.data?.ultima_compra ? `última el ${fecha(resumen.data.ultima_compra)}` : "sin compras registradas"} />
-        {verDinero && <Kpi titulo="Comprado en 12 meses" explica={GLOSARIO.compradoDoceMeses} valor={dineroCompacto(resumen.data?.comprado_12m ?? 0)} icono={Wallet} tono="neutro"
+          detalle={resumen.data?.oc_atrasadas ? `${resumen.data.oc_atrasadas} atrasada(s)`
+            : (comprado.data?.[0]?.ultima_compra ?? resumen.data?.ultima_compra) ? `última compra el ${fecha(comprado.data?.[0]?.ultima_compra ?? resumen.data?.ultima_compra)}` : "sin órdenes de compra"} />
+        {verDinero && <Kpi titulo="Comprado en 12 meses" explica={GLOSARIO.compradoDoceMeses} valor={dineroCompacto(comprado.data?.[0]?.comprado_12m ?? 0)} icono={Wallet} tono="neutro"
           detalle={p.dias_credito ? `${p.dias_credito} días de crédito · ${p.moneda}` : `de contado · ${p.moneda}`} />}
         {verCuenta && <Kpi titulo="Le debemos" explica={GLOSARIO.saldoProveedor} valor={dinero(debe)} icono={Wallet}
           tono={vencido > 1 ? "peligro" : debe > 1 ? "aviso" : "ok"}
