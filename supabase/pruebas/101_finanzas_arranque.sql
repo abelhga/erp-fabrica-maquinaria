@@ -160,8 +160,8 @@ begin
   exception when insufficient_privilege then v_estado := 'negado';
   end;
   assert v_estado = 'negado', 'compras cambió el crédito por la función de finanzas';
-  -- Compras ve en Inicio lo que se debe por órdenes, pero no las cuentas (salen en cero, no se filtran).
-  assert (indicadores()->'por_pagar'->>'total')::numeric = coalesce((select sum(saldo) from v_cuentas_por_pagar where saldo > 0 and moneda = 'MXN'), 0), 'compras vio la cuenta de proveedores en Inicio';
+  -- Compras ya no tiene finanzas (migración 129): lo que se debe a proveedores no le llega a Inicio.
+  assert not (indicadores() ? 'por_pagar'), 'compras vio la cuenta de proveedores en Inicio';
 
   -- El vendedor ve el cobro de su cliente (su saldo baja) pero no registra cobros.
   perform pg_temp.como(v_ven);

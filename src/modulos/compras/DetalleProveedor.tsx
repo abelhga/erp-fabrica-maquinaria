@@ -39,6 +39,15 @@ export default function DetalleProveedor() {
   const verCostos = puede("costos", 1);
   const verDinero = verCostos || puede("finanzas", 1);
 
+  // Lo que le debemos: solo finanzas (la cuenta trae pagos y facturas de la hoja).
+  const verCuenta = puede("finanzas", 2);
+  const cuenta = useQuery({
+    queryKey: ["v_saldo_arranque_proveedores", "proveedor", id], enabled: verCuenta,
+    queryFn: () => q<{ proveedor_llave: string; saldo: number; vencido: number; proximo_vence: string | null; ultimo_pago: string | null }[]>(
+      supabase.from("v_saldo_arranque_proveedores").select("proveedor_llave, saldo, vencido, proximo_vence, ultimo_pago").eq("proveedor_id", id!)),
+  });
+  const debe = (cuenta.data ?? []).reduce((s, c) => s + Number(c.saldo), 0);
+  const vencido = (cuenta.data ?? []).reduce((s, c) => s + Number(c.vencido), 0);
   const prov = useQuery({ queryKey: ["proveedor", id], queryFn: () => q<ProveedorCompleto>(supabase.from("proveedores").select("*").eq("id", id!).single()) });
   const resumen = useQuery({
     queryKey: ["v_proveedores", id],
@@ -91,12 +100,16 @@ export default function DetalleProveedor() {
         {puede("compras", 2) && <Boton onClick={() => ir(`/compras/ordenes/nueva?proveedor=${p.id}`)}><Plus className="h-4 w-4" /> Nueva orden</Boton>}
       </>}
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className={cn("grid gap-3 sm:grid-cols-2", verCuenta && verCostos ? "xl:grid-cols-5" : "xl:grid-cols-4")}>
         <Kpi titulo="Artículos que surte" valor={numero(resumen.data?.articulos ?? 0)} icono={Boxes} tono="marca" detalle={`${p.dias_entrega ?? 7} días hábiles de entrega`} />
         <Kpi titulo="Órdenes abiertas" explica={GLOSARIO.ordenesAbiertasProveedor} valor={numero(resumen.data?.oc_abiertas ?? 0)} icono={ClipboardList} tono={resumen.data?.oc_atrasadas ? "peligro" : "info"}
           detalle={resumen.data?.oc_atrasadas ? `${resumen.data.oc_atrasadas} atrasada(s)` : resumen.data?.ultima_compra ? `última el ${fecha(resumen.data.ultima_compra)}` : "sin compras registradas"} />
         {verDinero && <Kpi titulo="Comprado en 12 meses" explica={GLOSARIO.compradoDoceMeses} valor={dineroCompacto(resumen.data?.comprado_12m ?? 0)} icono={Wallet} tono="neutro"
           detalle={p.dias_credito ? `${p.dias_credito} días de crédito · ${p.moneda}` : `de contado · ${p.moneda}`} />}
+        {verCuenta && <Kpi titulo="Le debemos" explica={GLOSARIO.saldoProveedor} valor={dinero(debe)} icono={Wallet}
+          tono={vencido > 1 ? "peligro" : debe > 1 ? "aviso" : "ok"}
+          detalle={vencido > 1 ? `${dinero(vencido)} vencido · ver su cuenta` : cuenta.data?.[0]?.ultimo_pago ? `último pago el ${fecha(cuenta.data[0].ultimo_pago)} · ver su cuenta` : "ver su cuenta y sus movimientos"}
+          alClic={cuenta.data?.[0] ? () => ir(`/finanzas/pagos?proveedor=${encodeURIComponent(cuenta.data![0].proveedor_llave)}`) : undefined} />}
         {verCostos && <Kpi titulo="Sus precios en 12 meses" explica={GLOSARIO.indicePreciosProveedor} valor={variacion12 == null ? "—" : `${variacion12 >= 0 ? "+" : "−"}${porcentaje(Math.abs(variacion12))}`}
           icono={TrendingUp} tono={variacion12 == null ? "neutro" : variacion12 > 0.1 ? "peligro" : variacion12 > 0 ? "aviso" : "ok"}
           detalle="índice de precios de lo que nos vende" />}
