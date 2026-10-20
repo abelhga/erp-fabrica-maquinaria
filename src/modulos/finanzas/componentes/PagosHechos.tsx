@@ -14,9 +14,9 @@ import { TIPO_ACREEDOR, type TipoAcreedor } from "./cuentas";
 interface Pago {
   id: string; origen: "erp" | "hoja" | "orden"; fecha: string; proveedor_llave: string | null; proveedor: string | null;
   tipo_acreedor: TipoAcreedor; monto: number; moneda: string; monto_mxn: number; cuenta: string | null; cuenta_nombre: string | null;
-  referencia: string | null; descripcion: string | null; registrado_por: string | null;
+  referencia: string | null; descripcion: string | null; registrado_por: string | null; registrado_en: string | null;
 }
-type Periodo = "mes" | "mes_pasado" | "anio" | "todo" | "rango";
+type Periodo = "capturados" | "mes" | "mes_pasado" | "anio" | "todo" | "rango";
 const ORIGEN: Record<Pago["origen"], string> = { erp: "ERP", hoja: "Hoja", orden: "Orden de compra" };
 
 function rangoDe(p: Periodo, desde: string, hasta: string): [string | null, string | null] {
@@ -26,6 +26,7 @@ function rangoDe(p: Periodo, desde: string, hasta: string): [string | null, stri
   if (p === "mes_pasado") { const y = m === 1 ? a - 1 : a, mm = m === 1 ? 12 : m - 1; return [iso(y, mm, 1), iso(y, mm, new Date(y, mm, 0).getDate())]; }
   if (p === "anio") return [iso(a, 1, 1), hoy];
   if (p === "rango") return [desde || null, hasta || null];
+  if (p === "capturados") return [null, null];
   return [null, null];
 }
 
@@ -42,12 +43,16 @@ export function PagosHechos({ alAbrirProveedor }: { alAbrirProveedor: (llave: st
   const [ini, fin] = rangoDe(periodo, desde, hasta);
 
   const pagos = useQuery({
-    queryKey: ["v_pagos_hechos", ini, fin],
+    queryKey: ["v_pagos_hechos", periodo === "capturados" ? "capturados" : ini, fin],
     queryFn: () => traerTodas<Pago>((d, h) => {
       let c = supabase.from("v_pagos_hechos").select("*");
+      // Lo capturado en los últimos 7 días, sea cual sea la fecha del pago: lo primero que
+      // busca quien acaba de registrar un pago de hace semanas.
+      if (periodo === "capturados") c = c.gte("registrado_en", new Date(Date.now() - 7 * 86_400_000).toISOString());
       if (ini) c = c.gte("fecha", ini);
       if (fin) c = c.lte("fecha", fin);
-      return c.order("fecha", { ascending: false }).order("id").range(d, h) as unknown as PromiseLike<{ data: Pago[] | null; error: { message: string } | null }>;
+      return (periodo === "capturados" ? c.order("registrado_en", { ascending: false }) : c.order("fecha", { ascending: false }))
+        .order("id").range(d, h) as unknown as PromiseLike<{ data: Pago[] | null; error: { message: string } | null }>;
     }),
   });
   const cuentas = useQuery({ queryKey: ["cuentas_dinero"], staleTime: Infinity,
@@ -74,16 +79,16 @@ export function PagosHechos({ alAbrirProveedor }: { alAbrirProveedor: (llave: st
     { clave: "monto_mxn", titulo: "Monto", alinear: "der", sinBusqueda: true, valor: (p) => Number(p.monto_mxn),
       celda: (p) => <span className="font-medium">{dinero(p.monto_mxn)}{p.moneda !== "MXN" && <span className="block text-xs text-tenue">{p.moneda} {numero(p.monto)}</span>}</span> },
     { clave: "origen", titulo: "Se registró en", clase: "whitespace-nowrap text-tenue", valor: (p) => ORIGEN[p.origen], explica: GLOSARIO.pagosHechos,
-      celda: (p) => <>{ORIGEN[p.origen]}{p.registrado_por && <span className="block text-xs">{p.registrado_por}</span>}</> },
+      celda: (p) => <>{ORIGEN[p.origen]}{p.registrado_por && <span className="block text-xs">{p.registrado_por}{p.registrado_en && ` · capturado el ${fecha(p.registrado_en)}`}</span>}</> },
   ];
 
   return (
     <TablaDatos filas={filas} columnas={columnas} cargando={pagos.isLoading} error={pagos.error} claveFila={(p) => p.id}
       alClicFila={(p) => { if (p.proveedor_llave) alAbrirProveedor(p.proveedor_llave); }}
-      exportarComo={`pagos-${ini ?? "inicio"}-a-${fin ?? hoyISO()}`} placeholder="Buscar proveedor, factura o concepto…"
+      exportarComo={periodo === "capturados" ? `pagos-capturados-${hoyISO()}` : `pagos-${ini ?? "inicio"}-a-${fin ?? hoyISO()}`} placeholder="Buscar proveedor, factura o concepto…"
       filtros={<>
         <Filtro<Periodo> valor={periodo} alCambiar={setPeriodo} opciones={[
-          { valor: "mes", texto: "Este mes" }, { valor: "mes_pasado", texto: "Mes pasado" }, { valor: "anio", texto: "Este año" },
+          { valor: "capturados", texto: "Recién capturados", explica: GLOSARIO.recienCapturados }, { valor: "mes", texto: "Este mes" }, { valor: "mes_pasado", texto: "Mes pasado" }, { valor: "anio", texto: "Este año" },
           { valor: "todo", texto: "Todo" }, { valor: "rango", texto: "Fechas…" },
         ]} />
         {periodo === "rango" && <span className="flex items-center gap-1 text-xs text-tenue">
@@ -107,7 +112,7 @@ export function PagosHechos({ alAbrirProveedor }: { alAbrirProveedor: (llave: st
           <span><span className="text-tenue">{numero(filas.length)} {filas.length === 1 ? "pago" : "pagos"} · total </span><b className="cifra">{dinero(total)}</b></span>
         </div>
       )}
-      vacio={{ icono: HandCoins, titulo: "Sin pagos en este periodo", texto: "Prueba con «Este año» o «Todo»: la lista va por la fecha del pago, no por el día en que se capturó. Los pagos se registran en la cuenta de cada proveedor o desde su orden de compra." }}
+      vacio={{ icono: HandCoins, titulo: periodo === "capturados" ? "Nadie ha capturado pagos en los últimos 7 días" : "Sin pagos en este periodo", texto: "La lista va por la fecha del pago, no por el día en que se capturó: lo que acabas de registrar está en «Recién capturados». Para otras fechas prueba «Este año» o «Todo». Los pagos se registran en la cuenta de cada proveedor o desde su orden de compra." }}
     />
   );
 }
