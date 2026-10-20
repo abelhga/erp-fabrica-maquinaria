@@ -56,6 +56,7 @@ const hayBase = !!SERVICIO && !!URL_PG && await fetch(`${URL_SB}/auth/v1/health`
 // La API de ML falsa: responde según la ruta y anota lo que se le mandó.
 const enviados: { ruta: string; cuerpo: unknown }[] = [];
 const ORDEN = 7000000000 + Math.floor(Math.random() * 1e6);
+const VIEJA = ORDEN + 1;
 const falsa: typeof fetch = async (entrada, init) => {
   const u = new URL(String(entrada));
   const r = (d: unknown, status = 200) => new Response(JSON.stringify(d), { status, headers: { "Content-Type": "application/json" } });
@@ -68,7 +69,10 @@ const falsa: typeof fetch = async (entrada, init) => {
   // Lo que ya estaba en ML al conectar (sincronizar).
   if (u.pathname === "/questions/search") return r({ questions: [{ id: 880002 }] });
   if (u.pathname === "/questions/880002") return r({ id: 880002, item_id: "MLM-T-ML", text: "¿Hacen envíos a Monterrey?", status: "UNANSWERED", date_created: "2026-10-10T11:00:00Z" });
-  if (u.pathname === "/post-purchase/v1/claims/search") return r({ data: [] });
+  // Un reclamo de una venta de antes de conectar: no está en el ERP y nunca va a llegar sola.
+  if (u.pathname === "/post-purchase/v1/claims/search") return r({ data: [{ id: 5009 }] });
+  if (u.pathname === "/post-purchase/v1/claims/5009") return r({ id: 5009, resource: "order", resource_id: VIEJA, type: "mediations", status: "opened", players: [] });
+  if (u.pathname === `/orders/${VIEJA}`) return r({ id: VIEJA, status: "paid", date_closed: "2026-09-01T10:00:00Z", order_items: [] });
   if (u.pathname === "/orders/search") return r({ results: [{ id: ORDEN }] });
   if (u.pathname === "/users/4242/items/search") return r({ paging: { total: 37 } });
   if (u.pathname === "/answers") { enviados.push({ ruta: "/answers", cuerpo: JSON.parse(String(init?.body)) }); return r({ id: 1 }); }
@@ -97,6 +101,8 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
       await c.query("delete from public.pedido_lineas where pedido_id in (select id from _p)");
       await c.query("delete from public.pedidos where id in (select id from _p)");
       await c.query("delete from public.ml_preguntas where id in (880001, 880002)");
+      await c.query("delete from public.avisos where tipo = 'ml_reclamo_sin_venta' and registro_id = '5009'");
+      await c.query("delete from public.ml_avisos where resource = '/post-purchase/v1/claims/5009'");
       await c.query("delete from public.ml_avisos where resource = any($1)", [[`/orders/${ORDEN}`, "/questions/880001", "/questions/880002"]]);
       await c.query("delete from public.publicaciones where id_externo = 'MLM-T-ML'");
       if (articulo) await c.query("delete from public.articulos where id = $1", [articulo]);
@@ -151,7 +157,7 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
       { method: "POST", headers: { Authorization: `Bearer ${s.session!.access_token}` }, body: JSON.stringify(cuerpo) }), entorno);
     const r = await pedir({});
     expect(r.status).toBe(200);
-    expect(await r.json()).toMatchObject({ publicaciones: 37, preguntas: 1, reclamos: 0, ventas: 0, errores: 0 });
+    expect(await r.json()).toMatchObject({ publicaciones: 37, preguntas: 1, reclamos: 1, ventas: 0, errores: 0 });
     const { data: p } = await admin.from("ml_preguntas").select("estado, texto").eq("id", 880002).single();
     expect(p).toMatchObject({ estado: "pendiente", texto: "¿Hacen envíos a Monterrey?" });
     // Con fecha trae ventas; la que ya existía no se duplica.
@@ -159,6 +165,13 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
     expect(r2).toMatchObject({ ventas: 1, errores: 0 });
     const { count } = await admin.from("ml_ventas").select("*", { count: "exact", head: true }).eq("order_id", String(ORDEN));
     expect(count).toBe(1);
+    // El reclamo de la venta vieja no se queda reintentando: se avisa una sola vez a quien atiende ML.
+    const { data: av } = await admin.from("ml_avisos").select("procesado_en, error").eq("resource", "/post-purchase/v1/claims/5009");
+    expect(av!.every((a) => a.procesado_en && !a.error)).toBe(true);
+    // Se trajo dos veces (las dos llamadas de arriba) y cada persona tiene un solo aviso.
+    const { data: avisos } = await admin.from("avisos").select("usuario_id").eq("tipo", "ml_reclamo_sin_venta").eq("registro_id", "5009");
+    expect(avisos!.length).toBeGreaterThan(0);
+    expect(new Set(avisos!.map((a) => a.usuario_id)).size).toBe(avisos!.length);
   });
 
   it("sin sesión no se contesta ni se conecta", async () => {
