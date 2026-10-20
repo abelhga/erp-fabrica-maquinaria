@@ -61,12 +61,13 @@ export function useCuentasDinero() {
     queryFn: () => q<{ clave: string; nombre: string }[]>(supabase.from("cuentas_dinero").select("clave, nombre").eq("activa", true).order("orden")),
   });
 }
-export function SelectorCuenta({ valor, alCambiar, sinCaja, requerido = true }: { valor: string; alCambiar: (v: string) => void; sinCaja?: boolean; requerido?: boolean }) {
+/** `soloDinero` quita la nota de crédito: para lo que de verdad sale o entra de una cuenta. */
+export function SelectorCuenta({ valor, alCambiar, sinCaja, soloDinero, requerido = true }: { valor: string; alCambiar: (v: string) => void; sinCaja?: boolean; soloDinero?: boolean; requerido?: boolean }) {
   const cuentas = useCuentasDinero();
   return (
     <Seleccion value={valor} onChange={(e) => alCambiar(e.target.value)} required={requerido}>
       <option value="">Elegir cuenta…</option>
-      {(cuentas.data ?? []).filter((c) => !sinCaja || c.clave !== "caja_chica").map((c) => <option key={c.clave} value={c.clave}>{c.nombre}</option>)}
+      {(cuentas.data ?? []).filter((c) => (!sinCaja || c.clave !== "caja_chica") && (!soloDinero || c.clave !== "nota_credito")).map((c) => <option key={c.clave} value={c.clave}>{c.nombre}</option>)}
     </Seleccion>
   );
 }

@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, hoyISO, numero } from "@/lib/formato";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { SelectorCuenta } from "@/modulos/finanzas/componentes/cuentas";
 
 const n = (x: number | string | null | undefined) => Number(x ?? 0);
 const sumarDias = (f: string, d: number) => { const x = new Date(f + "T12:00:00"); x.setDate(x.getDate() + d); return x.toLocaleDateString("en-CA"); };
@@ -143,24 +144,29 @@ function DialogoAportacion({ f, semanas, alCerrar }: { f: FilaAhorro; semanas: {
 }
 
 function DialogoRetiro({ f, dias, alCerrar }: { f: FilaAhorro; dias: number; alCerrar: () => void }) {
-  const [v, setV] = useState({ importe: String(n(f.saldo)), solicitado: hoyISO(), entrega: sumarDias(hoyISO(), dias), nota: "" });
+  // Se registra el día que se le entrega el dinero (así queda en la cuenta de donde salió):
+  // por eso la entrega es hoy y lo que se pregunta es cuándo lo pidió.
+  const [v, setV] = useState({ importe: String(n(f.saldo)), solicitado: sumarDias(hoyISO(), -dias), entrega: hoyISO(), cuenta: "", nota: "" });
   const minimo = sumarDias(v.solicitado || hoyISO(), dias);
-  const guardar = useAccion(() => q<string>(supabase.rpc("retirar_ahorro", { p_empleado: f.empleado_id, p_importe: Number(v.importe), p_solicitado_el: v.solicitado, p_entrega: v.entrega, p_nota: v.nota || null })),
-    { exito: "Retiro registrado: imprime el recibo para que lo firme", invalidar: [["nomina"]], alTerminar: (id) => { abrirDocumento("retiro", id as string); alCerrar(); } });
-  const valido = Number(v.importe) > 0 && Number(v.importe) <= n(f.saldo) && v.solicitado && v.entrega >= minimo;
+  const guardar = useAccion(() => q<string>(supabase.rpc("retirar_ahorro", { p_empleado: f.empleado_id, p_importe: Number(v.importe), p_solicitado_el: v.solicitado, p_entrega: v.entrega, p_cuenta: v.cuenta, p_nota: v.nota || null })),
+    { exito: "Retiro registrado (también en finanzas): imprime el recibo para que lo firme", invalidar: [["nomina"]], alTerminar: (id) => { abrirDocumento("retiro", id as string); alCerrar(); } });
+  const valido = Number(v.importe) > 0 && Number(v.importe) <= n(f.saldo) && v.solicitado && v.entrega >= minimo && v.entrega <= hoyISO() && !!v.cuenta;
   return (
-    <Dialogo abierto alCambiar={(x) => !x && alCerrar()} titulo={`Retiro de ahorro de ${f.nombre}`} descripcion={`Saldo: ${dinero(f.saldo)}. Al registrarlo sale el recibo con folio para que lo firme.`}
+    <Dialogo abierto alCambiar={(x) => !x && alCerrar()} titulo={`Retiro de ahorro de ${f.nombre}`} descripcion={`Saldo: ${dinero(f.saldo)}. Regístralo el día que se le entrega: sale el recibo con folio para que lo firme.`}
       pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton cargando={guardar.isPending} disabled={!valido} onClick={() => guardar.mutate(undefined)}><Printer className="h-4 w-4" /> Registrar y ver recibo</Boton></>}>
       <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (valido) guardar.mutate(undefined); }}>
         <Campo etiqueta="Importe" ayuda={Number(v.importe) > n(f.saldo) ? `No puede pasar de ${dinero(f.saldo)}` : undefined}>
           <Entrada autoFocus type="number" min={0.01} max={n(f.saldo)} step="0.01" className="cifra" value={v.importe} onChange={(e) => setV({ ...v, importe: e.target.value })} />
         </Campo>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Campo etiqueta="Lo pidió el"><Entrada type="date" max={hoyISO()} value={v.solicitado} onChange={(e) => setV({ ...v, solicitado: e.target.value, entrega: v.entrega < sumarDias(e.target.value, dias) ? sumarDias(e.target.value, dias) : v.entrega })} /></Campo>
-          <Campo etiqueta="Se le entrega el" ayuda={dias ? `Con ${dias} días de anticipación: desde el ${fecha(minimo)}.` : undefined}>
-            <Entrada type="date" min={minimo} value={v.entrega} onChange={(e) => setV({ ...v, entrega: e.target.value })} />
+          <Campo etiqueta="Lo pidió el" ayuda={v.entrega < minimo ? `Con ${dias} días de anticipación se le puede entregar desde el ${fecha(minimo)}.` : undefined}>
+            <Entrada type="date" max={hoyISO()} value={v.solicitado} onChange={(e) => setV({ ...v, solicitado: e.target.value })} />
           </Campo>
+          <Campo etiqueta="Se le entrega el"><Entrada type="date" min={minimo} max={hoyISO()} value={v.entrega} onChange={(e) => setV({ ...v, entrega: e.target.value })} /></Campo>
         </div>
+        <Campo etiqueta="Sale de la cuenta" ayuda="Queda en Pagos hechos de finanzas; si es caja chica, también en su libro.">
+          <span data-explain={GLOSARIO.cuentaNomina} className="block"><SelectorCuenta soloDinero valor={v.cuenta} alCambiar={(c) => setV({ ...v, cuenta: c })} /></span>
+        </Campo>
         <Campo etiqueta="Nota (opcional)"><Entrada value={v.nota} onChange={(e) => setV({ ...v, nota: e.target.value })} placeholder="Para inscripción escolar…" /></Campo>
       </form>
     </Dialogo>
@@ -215,13 +221,13 @@ export interface PrestamoAbono { id: string; folio: string; nombre: string; sald
 export function DialogoAbonar({ p, semanas, alCerrar }: { p: PrestamoAbono; semanas: { inicio: string; pago: string }[]; alCerrar: () => void }) {
   const ordenadas = [...semanas].sort((a, b) => a.inicio.localeCompare(b.inicio));
   const [modo, setModo] = useState<"efectivo" | "nomina">("efectivo");
-  const [v, setV] = useState({ importe: "", fecha: hoyISO(), semana: ordenadas.find((s) => sumarDias(s.inicio, 6) >= hoyISO())?.inicio ?? ordenadas[0]?.inicio ?? "", nota: "" });
-  const efectivo = useAccion(() => q<string>(supabase.rpc("abonar_prestamo", { p_prestamo: p.id, p_importe: Number(v.importe), p_fecha: v.fecha, p_nota: v.nota || null })),
-    { exito: "Abono registrado: imprime el recibo", invalidar: [["nomina"]], alTerminar: (id) => { abrirDocumento("abono", id as string); alCerrar(); } });
+  const [v, setV] = useState({ importe: "", fecha: hoyISO(), cuenta: "", semana: ordenadas.find((s) => sumarDias(s.inicio, 6) >= hoyISO())?.inicio ?? ordenadas[0]?.inicio ?? "", nota: "" });
+  const efectivo = useAccion(() => q<string>(supabase.rpc("abonar_prestamo", { p_prestamo: p.id, p_importe: Number(v.importe), p_fecha: v.fecha, p_cuenta: v.cuenta, p_nota: v.nota || null })),
+    { exito: "Abono registrado (también en finanzas): imprime el recibo", invalidar: [["nomina"]], alTerminar: (id) => { abrirDocumento("abono", id as string); alCerrar(); } });
   const nomina = useAccion(() => q(supabase.rpc("fijar_abono_semana", { p_prestamo: p.id, p_semana: v.semana, p_importe: Number(v.importe) })),
     { exito: "Esa semana se descuenta lo que pusiste", invalidar: [["nomina"]], alTerminar: alCerrar });
   const importe = Number(v.importe);
-  const valido = importe > 0 && importe <= n(p.saldo) && (modo === "efectivo" ? !!v.fecha : !!v.semana);
+  const valido = importe > 0 && importe <= n(p.saldo) && (modo === "efectivo" ? !!v.fecha && !!v.cuenta : !!v.semana);
   const enviar = () => valido && (modo === "efectivo" ? efectivo.mutate(undefined) : nomina.mutate(undefined));
   return (
     <Dialogo abierto alCambiar={(x) => !x && alCerrar()} titulo={`Abonar al préstamo ${p.folio}`} descripcion={`${p.nombre} · saldo ${dinero(p.saldo)} · descuento normal ${dinero(p.descuento_semanal)} por semana.`}
@@ -245,6 +251,9 @@ export function DialogoAbonar({ p, semanas, alCerrar }: { p: PrestamoAbono; sema
                 </Seleccion>
               </Campo>}
         </div>
+        {modo === "efectivo" && <Campo etiqueta="Entra a la cuenta" ayuda="Si lo recibes en efectivo y se queda en la caja chica, elige caja chica: entra a su libro.">
+          <span data-explain={GLOSARIO.cuentaNomina} className="block"><SelectorCuenta soloDinero valor={v.cuenta} alCambiar={(c) => setV({ ...v, cuenta: c })} /></span>
+        </Campo>}
         {modo === "efectivo" && <Campo etiqueta="Nota (opcional)"><Entrada value={v.nota} onChange={(e) => setV({ ...v, nota: e.target.value })} placeholder="Abonó de su aguinaldo…" /></Campo>}
         <p className="text-xs text-tenue">{modo === "efectivo"
           ? "Baja el saldo hoy; las semanas que faltan se recalculan con el mismo descuento semanal."
