@@ -56,6 +56,8 @@ export function normalizarOrden(orden: Obj, envio?: Obj | null) {
     pack_id: txt(orden.pack_id),
     // Full: la mercancía sale de la bodega de ML, no de planta.
     full: txt(o(envio).logistic_type) === "fulfillment",
+    // shipped / delivered: ML ya lo mandó (una venta traída de días anteriores) y no se pide envío.
+    envio_estado: txt(o(envio).status),
     items: (Array.isArray(orden.order_items) ? orden.order_items : []).map((x) => {
       const it = o(o(x).item);
       return { item_id: txt(it.id), titulo: txt(it.title), sku: txt(it.seller_sku), cantidad: num(o(x).quantity) ?? 1, precio: num(o(x).unit_price) ?? 0 };
@@ -93,7 +95,7 @@ export function normalizarPregunta(q: Obj, titulo?: string | null) {
 // -----------------------------------------------------------------------------
 // La cuenta y sus tokens (solo con la llave de servicio)
 // -----------------------------------------------------------------------------
-interface Cuenta { ml_user_id: number; nickname: string | null; access_token: string; refresh_token: string; expira_en: string }
+interface Cuenta { ml_user_id: number; nickname: string | null; access_token: string; refresh_token: string; expira_en: string; conectada_en?: string | null }
 
 async function pedirToken(e: Entorno, cuerpo: Record<string, string>) {
   if (!e.clientId || !e.clientSecret) throw new ErrorML("Faltan ML_CLIENT_ID y ML_CLIENT_SECRET en los secretos de Supabase.");
@@ -109,7 +111,7 @@ async function pedirToken(e: Entorno, cuerpo: Record<string, string>) {
 
 /** El token vigente; lo renueva si le quedan menos de 10 minutos (ML lo da por 6 horas). */
 async function token(e: Entorno, admin: SupabaseClient): Promise<{ cuenta: Cuenta; access: string }> {
-  const { data } = await admin.from("ml_cuenta").select("ml_user_id, nickname, access_token, refresh_token, expira_en").eq("id", 1).maybeSingle();
+  const { data } = await admin.from("ml_cuenta").select("ml_user_id, nickname, access_token, refresh_token, expira_en, conectada_en").eq("id", 1).maybeSingle();
   const c = data as Cuenta | null;
   if (!c) throw new ErrorML("Mercado Libre no está conectado.");
   if (new Date(c.expira_en).getTime() - Date.now() > 10 * 60_000) return { cuenta: c, access: c.access_token };
@@ -134,7 +136,7 @@ async function apiML(e: Entorno, access: string, ruta: string, init?: RequestIni
 // -----------------------------------------------------------------------------
 // Procesar avisos
 // -----------------------------------------------------------------------------
-async function procesarUno(e: Entorno, admin: SupabaseClient, access: string, topic: string, resource: string) {
+async function procesarUno(e: Entorno, admin: SupabaseClient, access: string, topic: string, resource: string, conectadaEn?: string | null) {
   const rpc = async (fn: string, p: unknown) => {
     const { error } = await admin.rpc(fn, { p });
     if (error) throw new ErrorML(error.message);
@@ -148,7 +150,26 @@ async function procesarUno(e: Entorno, admin: SupabaseClient, access: string, to
     const reclamo = await apiML(e, access, resource);
     const razonId = txt(reclamo.reason_id);
     const razon = razonId ? await apiML(e, access, `/post-purchase/v1/claims/reasons/${razonId}`).then((x) => txt(x.name) ?? txt(x.detail)).catch(() => null) : null;
-    await rpc("ml_registrar_reclamo", normalizarReclamo(reclamo, razon));
+    const datos = normalizarReclamo(reclamo, razon);
+    try {
+      await rpc("ml_registrar_reclamo", datos);
+    } catch (err) {
+      // La venta no está en el ERP. Si es de después de conectar, su aviso solo viene atrasado:
+      // se registra aquí y luego el reclamo. Si es de antes, nunca va a llegar sola: se avisa una
+      // vez para atenderlo en ML en lugar de reintentarlo para siempre.
+      if (!(err instanceof ErrorML) || !/todavía no está en el ERP/.test(err.message) || !datos.order_id) throw err;
+      const orden = await apiML(e, access, `/orders/${datos.order_id}`);
+      const fecha = txt(orden.date_closed) ?? txt(orden.date_created);
+      if (fecha && conectadaEn && new Date(fecha) >= new Date(conectadaEn)) {
+        const envioId = txt(o(orden.shipping).id);
+        const envio = envioId ? await apiML(e, access, `/shipments/${envioId}`, { headers: { "x-format-new": "true" } }).catch(() => null) : null;
+        await rpc("ml_registrar_orden", normalizarOrden(orden, envio));
+        // Una venta sin pagar no se registra: entonces tampoco hay dónde colgar el reclamo.
+        await rpc("ml_registrar_reclamo", datos).catch(() => rpc("ml_reclamo_sin_venta", { ...datos, fecha_venta: fecha }));
+      } else {
+        await rpc("ml_reclamo_sin_venta", { ...datos, fecha_venta: fecha });
+      }
+    }
   } else if (topic === "questions") {
     let pregunta: Obj;
     try { pregunta = await apiML(e, access, resource); } catch (err) {
@@ -167,11 +188,11 @@ export async function procesarPendientes(e: Entorno, admin: SupabaseClient, limi
     .is("procesado_en", null).lt("intentos", MAX_INTENTOS).order("recibido_en").limit(limite);
   const avisos = (data ?? []) as { id: number; topic: string; resource: string; intentos: number }[];
   if (!avisos.length) return { procesados: 0, errores: 0 };
-  const { access } = await token(e, admin);
+  const { cuenta, access } = await token(e, admin);
   let errores = 0;
   for (const a of avisos) {
     try {
-      await procesarUno(e, admin, access, a.topic, a.resource);
+      await procesarUno(e, admin, access, a.topic, a.resource, cuenta.conectada_en);
       await admin.from("ml_avisos").update({ procesado_en: new Date().toISOString(), error: null, intentos: a.intentos + 1 }).eq("id", a.id);
     } catch (err) {
       errores++;
@@ -202,6 +223,9 @@ export async function sincronizar(e: Entorno, admin: SupabaseClient, ventasDesde
   }
   let ventas = 0;
   if (ventasDesde) {
+    // Con las ventas apagadas la base no las registraría: mejor decirlo que contarlas como traídas.
+    const { data: activas } = await admin.rpc("ml_ventas_activas");
+    if (activas === false) throw new ErrorML("Las ventas de Mercado Libre están apagadas: préndelas en Configuración → Integraciones antes de traerlas.");
     for (let offset = 0; offset < 500; offset += 50) {
       const r = await apiML(e, access, `/orders/search?seller=${vendedor}&order.date_created.from=${ventasDesde}T00:00:00.000-06:00&sort=date_asc&limit=50&offset=${offset}`);
       const lista = (Array.isArray(r.results) ? r.results : []) as Obj[];
@@ -209,8 +233,12 @@ export async function sincronizar(e: Entorno, admin: SupabaseClient, ventasDesde
       if (lista.length < 50) break;
     }
   }
-  if (avisos.length) {
-    const { error } = await admin.from("ml_avisos").insert(avisos);
+  // Lo que ya está en la fila sin procesar no se vuelve a formar (el índice lo rechazaría todo).
+  const { data: enFila } = await admin.from("ml_avisos").select("topic, resource").is("procesado_en", null);
+  const ya = new Set(((enFila ?? []) as { topic: string; resource: string }[]).map((a) => `${a.topic} ${a.resource}`));
+  const nuevos = avisos.filter((a) => { const k = `${a.topic} ${a.resource}`; if (ya.has(k)) return false; ya.add(k); return true; });
+  if (nuevos.length) {
+    const { error } = await admin.from("ml_avisos").insert(nuevos);
     if (error) throw new ErrorML(error.message);
   }
   // Cuántas publicaciones activas tiene la cuenta: la prueba de que es la cuenta correcta.

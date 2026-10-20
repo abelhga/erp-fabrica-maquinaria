@@ -19,7 +19,11 @@ export interface EstadoML {
   conectada: boolean; nickname: string | null; conectada_en: string | null; conectada_por: string | null;
   responsable_id: string | null; responsable: string | null;
   /** El que eligió dirección; sin elegir, los avisos van a dirección (responsable_id). */
-  responsable_elegido_id: string | null; atienden: { id: string; nombre: string }[];
+  responsable_elegido_id: string | null; atienden: { id: string | null; nombre: string; correo: string | null; pendiente: boolean }[];
+  /** Invitados que todavía no entran: se pueden elegir para atender ML (solo dirección los recibe). */
+  invitados: { correo: string; nombre: string }[];
+  /** Si las ventas de ML entran como pedidos. Apagado, solo entran preguntas y reclamos. */
+  ventas_activas: boolean;
   avisos_pendientes: number; avisos_con_error: number; ultimo_error: string | null; ultimo_aviso: string | null;
   ventas_30d: number; sin_ligar: number; preguntas_pendientes: number;
 }

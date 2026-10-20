@@ -60,10 +60,10 @@ export function ConfigIntegraciones() {
   // ML solo avisa lo que pasa después de conectar: lo que ya estaba (preguntas sin contestar,
   // reclamos abiertos y, si se pide, ventas desde una fecha) se trae con esto.
   async function sincronizar() {
-    if (ventasDesde && !confirm(`Se van a registrar como pedidos las ventas de Mercado Libre desde el ${fecha(ventasDesde)}. Si alguna ya la capturaron a mano en Pedidos, quedaría repetida. ¿Seguir?`)) return;
+    if (ventasDesde && estado.data?.ventas_activas && !confirm(`Se van a registrar como pedidos las ventas de Mercado Libre desde el ${fecha(ventasDesde)}. Si alguna ya la capturaron a mano en Pedidos, quedaría repetida. ¿Seguir?`)) return;
     setOcupado("sincronizar");
     try {
-      const r = await llamarML<ResultadoSincronizar>("sincronizar", ventasDesde ? { ventas_desde: ventasDesde } : {});
+      const r = await llamarML<ResultadoSincronizar>("sincronizar", ventasDesde && estado.data?.ventas_activas ? { ventas_desde: ventasDesde } : {});
       setTraido(r);
       toast.success(`Traído de Mercado Libre: ${numero(r.preguntas)} preguntas, ${numero(r.reclamos)} reclamos, ${numero(r.ventas)} ventas`);
       qc.invalidateQueries();
@@ -76,8 +76,13 @@ export function ConfigIntegraciones() {
   const responsable = useAccion((id: string) => q(supabase.rpc("fijar_responsable_ml", { p_usuario: id || null })), {
     exito: "Guardado: las ventas de ML van a su nombre", invalidar: [["estado_mercadolibre"]],
   });
-  const atienden = useAccion((ids: string[]) => q(supabase.rpc("fijar_atienden_ml", { p_usuarios: ids })), {
-    exito: "Guardado: les llegan los avisos de Mercado Libre", invalidar: [["estado_mercadolibre"]],
+  // Los que ya tienen cuenta van por id; los invitados que no entran, por correo (les llega al entrar).
+  const atienden = useAccion((lista: { id: string | null; correo: string | null }[]) => q(supabase.rpc("fijar_atienden_ml", {
+    p_usuarios: lista.filter((x) => x.id).map((x) => x.id), p_correos: lista.filter((x) => !x.id && x.correo).map((x) => x.correo),
+  })), { exito: "Guardado: les llegan los avisos de Mercado Libre", invalidar: [["estado_mercadolibre"]] });
+  const ventasML = useAccion((activas: boolean) => q(supabase.rpc("fijar_ventas_ml", { p_activas: activas })), {
+    exito: "Guardado: ventas de Mercado Libre",
+    invalidar: [["estado_mercadolibre"]],
   });
 
   if (estado.error) return <ErrorCarga error={estado.error} />;
@@ -112,11 +117,13 @@ export function ConfigIntegraciones() {
           {e.conectada && traer && (
             <div className="rounded-lg border border-borde px-3 py-3 space-y-2" data-explain={GLOSARIO.traerPendienteML} data-explain-title="Traer lo pendiente">
               <p className="font-medium">Traer lo que ya estaba en Mercado Libre</p>
-              <p className="text-xs text-tenue">Mercado Libre solo avisa lo que pasa después de conectar. Esto trae las preguntas sin contestar y los reclamos abiertos; las ventas, solo si eliges desde cuándo.</p>
+              <p className="text-xs text-tenue">Mercado Libre solo avisa lo que pasa después de conectar. Esto trae las preguntas sin contestar y los reclamos abiertos{e.ventas_activas ? "; las ventas, solo si eliges desde cuándo" : ""}.</p>
               <div className="flex flex-wrap items-end gap-2">
-                <Campo etiqueta="Traer también ventas desde (opcional)">
-                  <Entrada type="date" className="w-44 block" value={ventasDesde} max={new Date().toISOString().slice(0, 10)} onChange={(x) => setVentasDesde(x.target.value)} />
-                </Campo>
+                {e.ventas_activas && (
+                  <Campo etiqueta="Traer también ventas desde (opcional)">
+                    <Entrada type="date" className="w-44 block" value={ventasDesde} max={new Date().toISOString().slice(0, 10)} onChange={(x) => setVentasDesde(x.target.value)} />
+                  </Campo>
+                )}
                 <Boton variante="secundario" onClick={sincronizar} cargando={ocupado === "sincronizar"}><DownloadCloud className="h-4 w-4" /> Traer lo pendiente</Boton>
               </div>
               {traido && (
@@ -128,22 +135,42 @@ export function ConfigIntegraciones() {
               )}
             </div>
           )}
+          {direccion && e.conectada && (
+            <label className="flex items-start gap-2 rounded-lg border border-borde px-3 py-2" data-explain={GLOSARIO.ventasMLActivas} data-explain-title="Ventas de Mercado Libre">
+              <input type="checkbox" className="mt-0.5 h-4 w-4" checked={e.ventas_activas} disabled={ventasML.isPending}
+                onChange={(x) => ventasML.mutate(x.target.checked)} />
+              <span><b>Registrar las ventas de Mercado Libre como pedidos</b>
+                <span className="block text-xs text-tenue">{e.ventas_activas
+                  ? "Cada venta pagada entra sola a Pedidos y pide su envío."
+                  : "Apagado: las ventas no entran al ERP. Las preguntas y los reclamos sí. Al prenderlo puedes traer las ventas desde una fecha."}</span></span>
+            </label>
+          )}
           {direccion && <>
             {/* Varias personas atienden ML (preguntas, reclamos, ventas por ligar); las ventas, en
                 cambio, van a nombre de una sola por la comisión. */}
             <Campo etiqueta="Quiénes atienden Mercado Libre" ayuda="A todos les llegan los avisos de preguntas, reclamos y ventas por ligar. Si no eliges a nadie, le llegan a dirección.">
               <div className="flex flex-wrap gap-2 pt-1" data-explain={GLOSARIO.atiendenML} data-explain-title="Quiénes atienden Mercado Libre">
                 {e.atienden.map((p) => (
-                  <span key={p.id} className="inline-flex items-center gap-1 rounded-full border border-borde bg-fondo px-2.5 py-1 text-xs">
-                    {p.nombre}
+                  <span key={p.id ?? p.correo} className="inline-flex items-center gap-1 rounded-full border border-borde bg-fondo px-2.5 py-1 text-xs"
+                    title={p.pendiente ? "Todavía no acepta su invitación: le empiezan a llegar los avisos en cuanto entre." : undefined}>
+                    {p.nombre}{p.pendiente && <span className="text-tenue">(invitación pendiente)</span>}
                     <button type="button" className="text-tenue hover:text-peligro" aria-label={`Quitar a ${p.nombre}`} disabled={atienden.isPending}
-                      onClick={() => atienden.mutate(e.atienden.filter((x) => x.id !== p.id).map((x) => x.id))}>×</button>
+                      onClick={() => atienden.mutate(e.atienden.filter((x) => x !== p))}>×</button>
                   </span>
                 ))}
                 <Seleccion value="" className="h-8 w-auto text-xs" aria-label="Agregar a alguien" disabled={atienden.isPending}
-                  onChange={(x) => x.target.value && atienden.mutate([...e.atienden.map((p) => p.id), x.target.value])}>
+                  onChange={(x) => {
+                    const v = x.target.value;
+                    if (!v) return;
+                    atienden.mutate([...e.atienden, v.startsWith("correo:") ? { id: null, correo: v.slice(7) } : { id: v, correo: null }]);
+                  }}>
                   <option value="">+ Agregar a alguien…</option>
                   {(personas.data ?? []).filter((p) => !e.atienden.some((a) => a.id === p.id)).map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                  {e.invitados.filter((i) => !e.atienden.some((a) => a.correo === i.correo)).length > 0 && (
+                    <optgroup label="Invitados que todavía no entran">
+                      {e.invitados.filter((i) => !e.atienden.some((a) => a.correo === i.correo)).map((i) => <option key={i.correo} value={`correo:${i.correo}`}>{i.nombre}</option>)}
+                    </optgroup>
+                  )}
                 </Seleccion>
               </div>
             </Campo>

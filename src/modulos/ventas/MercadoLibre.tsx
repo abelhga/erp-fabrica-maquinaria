@@ -10,11 +10,11 @@ import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { Pestanas, ListaPestanas, ContenidoPestana } from "@/components/ui/pestanas";
-import { BuscadorArticulo } from "@/components/datos/BuscadorArticulo";
+import { Ligar, PublicacionesLigadas, type SinLigar } from "./componentes/PublicacionesML";
 import { supabase } from "@/lib/supabase";
-import { mensajeError, q, useAccion, useTiempoReal } from "@/lib/consultas";
+import { mensajeError, q, useTiempoReal } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
-import { dinero, fechaYHora, hace, numero } from "@/lib/formato";
+import { fechaYHora, hace, numero } from "@/lib/formato";
 import { llamarML, type EstadoML } from "@/lib/mercadolibre";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -22,7 +22,6 @@ interface Pregunta {
   id: number; item_id: string; articulo_id: string | null; titulo_publicacion: string | null; texto: string;
   estado: "pendiente" | "contestada" | "borrada"; recibida_en: string; respuesta: string | null; contestada_en: string | null;
 }
-interface SinLigar { item_id: string; titulo: string | null; sku: string | null; precio: number | null; veces: number; visto_en: string }
 
 const minutos = (p: Pregunta) => p.contestada_en ? (new Date(p.contestada_en).getTime() - new Date(p.recibida_en).getTime()) / 60_000 : null;
 const duracion = (m: number) => m < 60 ? `${Math.round(m)} min` : m < 48 * 60 ? `${(m / 60).toFixed(1)} h` : `${Math.round(m / 1440)} días`;
@@ -70,6 +69,7 @@ export default function MercadoLibre() {
         <ListaPestanas opciones={[
           { valor: "preguntas", texto: "Preguntas", cuenta: pendientes.length },
           { valor: "ligar", texto: "Por ligar", cuenta: sinLigar.data?.length, explica: GLOSARIO.publicacionPorLigar },
+          { valor: "ligadas", texto: "Ligadas", explica: GLOSARIO.publicacionLigada },
         ]} />
         <ContenidoPestana value="preguntas" className="pt-4 space-y-3">
           {preguntas.error ? <ErrorCarga error={preguntas.error} /> : preguntas.isLoading ? <Cargando filas={4} /> : todas.length === 0 ? (
@@ -99,6 +99,9 @@ export default function MercadoLibre() {
               <ul className="divide-y divide-borde">{sinLigar.data!.map((s) => <Ligar key={s.item_id} s={s} editable={puede("ventas", 2) || puede("compras", 2)} />)}</ul>
             </Tarjeta>
           )}
+        </ContenidoPestana>
+        <ContenidoPestana value="ligadas" className="pt-4">
+          <PublicacionesLigadas editable={puede("ventas", 2) || puede("compras", 2)} />
         </ContenidoPestana>
       </Pestanas>
     </Pagina>
@@ -140,21 +143,5 @@ function PreguntaPendiente({ p, editable }: { p: Pregunta; editable: boolean }) 
         </form>
       )}
     </Tarjeta>
-  );
-}
-
-function Ligar({ s, editable }: { s: SinLigar; editable: boolean }) {
-  const ligar = useAccion((articulo: string) => q<number>(supabase.rpc("ml_ligar_publicacion", { p_item: s.item_id, p_articulo: articulo })), {
-    exito: "Publicación ligada: sus ventas ya tienen artículo y el envío se pidió",
-    invalidar: [["ml_publicaciones_sin_ligar"], ["estado_mercadolibre"], ["pedidos"], ["envios"]],
-  });
-  return (
-    <li className="px-5 py-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center">
-      <div className="min-w-0">
-        <p className="font-medium truncate">{s.titulo ?? s.item_id}</p>
-        <p className="text-xs text-tenue">{s.item_id}{s.sku ? ` · SKU ${s.sku}` : " · sin SKU"}{s.precio != null ? ` · ${dinero(s.precio)}` : ""} · se vendió {s.veces} {s.veces === 1 ? "vez" : "veces"}, la última {hace(s.visto_en)}</p>
-      </div>
-      {editable && <BuscadorArticulo placeholder="¿Qué artículo es? Busca por clave o nombre…" mostrarPrecio={false} alElegir={(a) => ligar.mutate(a.id)} />}
-    </li>
   );
 }
