@@ -116,6 +116,27 @@ describe.skipIf(!hayBase)("asistente contra la base local", () => {
     expect(res.content).toMatch(/no permitidas/);
   });
 
+  it("pulir una descripción: manda el texto con su nombre, regresa la propuesta y las dudas, y cuenta como consulta", async () => {
+    const propuesta = { texto: "• Tornillería galvanizada\n• Banda de 20 m", dudas: ["«20 m» no coincide con el nombre (22 m)"] };
+    const { falso, recibido } = claudeFalso([{ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(propuesta), citations: null }] as Anthropic.Beta.BetaContentBlock[] }]);
+    const antes = (await isaac.db.from("asistente_uso").select("id", { count: "exact", head: true })).count ?? 0;
+    const pedir = (cuerpo: object, f?: Pick<Anthropic, "beta">) => atender(new Request("http://x/", {
+      method: "POST", headers: { Authorization: `Bearer ${isaac.token}` }, body: JSON.stringify({ modo: "pulir_descripcion", ...cuerpo }),
+    }), { supabaseUrl: URL_SB, supabaseAnonKey: ANON, ...(f ? { crearAnthropic: () => f } : {}) });
+    const r = await pedir({ texto: "- tornilleria galvanisada\n- banda de 20 m", nombre: "Banda 22 m", tipo: "equipo" }, falso);
+    expect(r.status).toBe(200);
+    expect(await r.json()).toMatchObject(propuesta);
+    const enviado = JSON.stringify(recibido[0].messages);
+    expect(enviado).toContain("tornilleria galvanisada");
+    expect(enviado).toContain("Banda 22 m");
+    expect((recibido[0].output_config as { format?: { type: string } }).format?.type).toBe("json_schema");
+    const despues = (await isaac.db.from("asistente_uso").select("id", { count: "exact", head: true })).count ?? 0;
+    expect(despues).toBe(antes + 1);
+    // Sin texto no se gasta una consulta; sin Claude solo se limpian viñetas y espacios.
+    expect((await pedir({ texto: "  " }, falso)).status).toBe(400);
+    expect(await (await pedir({ texto: "- uno\n*  dos  tres" })).json()).toMatchObject({ texto: "• uno\n• dos tres", simulado: true });
+  });
+
   it("almacén no lee el libro de ventas aunque Claude lo pida", async () => {
     const alm = await sesion("almacen@hegamex.com");
     const r = await ejecutarHerramienta(alm.db, "consultar", {

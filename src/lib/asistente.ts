@@ -77,6 +77,11 @@ export async function pedirSemana(forzar = false): Promise<Semana> {
   return (await llamar({ modo: "semana", forzar })).json();
 }
 
+/** Claude corrige ortografía y estilo de una descripción de catálogo. No guarda: devuelve el texto propuesto. */
+export async function pulirDescripcion(texto: string, nombre: string, tipo: string) {
+  return (await llamar({ modo: "pulir_descripcion", texto, nombre, tipo })).json() as Promise<{ texto: string; dudas: string[]; simulado?: boolean }>;
+}
+
 export async function redactarMensaje(cliente_id: string, canal: "whatsapp" | "correo", motivo: string) {
   return (await llamar({ modo: "redactar", cliente_id, canal, motivo })).json() as Promise<{ asunto: string; mensaje: string; simulado?: boolean }>;
 }

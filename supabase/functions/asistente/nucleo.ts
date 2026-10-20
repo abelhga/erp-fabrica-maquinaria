@@ -773,6 +773,56 @@ export async function redactar(opts: {
 }
 
 // -----------------------------------------------------------------------------
+// Pulir la descripción de un equipo o componente: ortografía, acentos, puntuación y
+// estilo. Sale tal cual en las cotizaciones, y en el catálogo hay textos capturados de
+// prisa ("tornilleria galvanisada", medidas sin unidad pegada). No guarda nada: quien edita
+// ve el antes y el después y decide.
+// -----------------------------------------------------------------------------
+const ESQUEMA_PULIDO = {
+  type: "object",
+  properties: {
+    texto: { type: "string", description: "La descripción corregida, lista para la cotización" },
+    dudas: { type: "array", items: { type: "string" }, description: "Lo que parece un error de dato y NO se cambió (medida rara, dato que se contradice); vacío si nada" },
+  },
+  required: ["texto", "dudas"],
+  additionalProperties: false,
+};
+
+export async function pulirDescripcion(opts: {
+  anthropic: Pick<Anthropic, "beta">; config: Config; texto: string; nombre: string; tipo: string;
+}) {
+  const flujo = opts.anthropic.beta.messages.stream({
+    model: opts.config.modelo,
+    max_tokens: 4000,
+    betas: BETAS,
+    fallbacks: "default",
+    output_config: { effort: "low", format: { type: "json_schema", schema: ESQUEMA_PULIDO } },
+    system: "Corriges la redacción de descripciones de catálogo de Hegamex, fábrica mexicana de maquinaria para manejo de " +
+      "materiales a granel (bandas transportadoras, elevadores de cangilones, tolvas, silos) que también vende componentes. " +
+      "La descripción sale tal cual en las cotizaciones que reciben los clientes.\n" +
+      "- Corrige ortografía, acentos, mayúsculas, puntuación y redacción, en español de México y con tono técnico y comercial.\n" +
+      "- Conserva exactamente cada dato técnico: números, medidas, unidades, marcas, modelos, claves y materiales. No agregues " +
+      "características que no estén en el texto ni quites información; si algo parece un error de dato, déjalo y anótalo en dudas.\n" +
+      "- Respeta la estructura: una viñeta por renglón, empezando con «• ». Si el texto original no tiene viñetas y es una lista, " +
+      "ponlas; si es un párrafo, déjalo como párrafo. Unidades con espacio (20 m, 1/2 in, 3 HP) como ya se usen en el texto.\n" +
+      "- Sin comentarios, saludos ni comillas alrededor: solo la descripción.",
+    messages: [{ role: "user", content: `${opts.tipo === "equipo" ? "Equipo" : "Artículo"}: ${opts.nombre}\nDescripción:\n${opts.texto}` }],
+  });
+  const r = await flujo.finalMessage();
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso corregir este texto.");
+  const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
+  if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("No salió el texto corregido; intenta de nuevo.");
+  const salida = JSON.parse(bloque.text) as { texto: string; dudas: string[] };
+  return { texto: salida.texto.trim(), dudas: salida.dudas, modelo: r.model,
+    entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+}
+
+/** Sin Claude (pruebas locales): solo limpia espacios y viñetas, para que la pantalla funcione igual. */
+export function pulirSinIA(texto: string) {
+  return texto.split("\n").map((l) => l.trim().replace(/\s{2,}/g, " ").replace(/^[-*•·]\s*/, "• ")).filter(Boolean).join("\n");
+}
+
+// -----------------------------------------------------------------------------
 // Leer un documento de importación (PI, factura, packing list, BL, pedimento o
 // cuenta de gastos) y devolver sus campos con un esquema estricto por tipo. No
 // guarda nada: la pantalla lo muestra junto al archivo y Alondra lo confirma.
@@ -1223,6 +1273,15 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
       const r = await redactar({ anthropic, db, perfil, config, clienteId: cuerpo.cliente_id as string, canal, motivo });
       await registrar(r);
       return json({ asunto: r.asunto, mensaje: r.mensaje, modelo: r.modelo });
+    }
+
+    if (modo === "pulir_descripcion") {
+      const original = texto(cuerpo.texto).slice(0, 6000);
+      if (!original.trim()) return json({ error: "No hay texto que pulir" }, 400);
+      if (!anthropic) return json({ texto: pulirSinIA(original), dudas: [], simulado: true });
+      const r = await pulirDescripcion({ anthropic, config, texto: original, nombre: texto(cuerpo.nombre).slice(0, 300), tipo: texto(cuerpo.tipo) });
+      await registrar(r);
+      return json({ texto: r.texto, dudas: r.dudas, modelo: r.modelo });
     }
 
     if (modo === "leer_documento") {
