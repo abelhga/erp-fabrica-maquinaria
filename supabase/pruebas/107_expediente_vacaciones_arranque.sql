@@ -40,9 +40,10 @@ begin
 
   -- Lo aprobado antes de la fecha de arranque ya venía descontado en la hoja; lo de después se resta.
   insert into incidencias (empleado_id, tipo, inicio, fin, estado, dias) values
-    (v_emp, 'vacaciones', current_date - 20, current_date - 20, 'aprobada', 1),
+    -- De dos días: uno solo cae en domingo según el día que se corra y se rechaza (sin días hábiles).
+    (v_emp, 'vacaciones', current_date - 20, current_date - 19, 'aprobada', 2),
     (v_emp, 'vacaciones', current_date - 5, current_date - 4, 'aprobada', 2),
-    (v_emp, 'vacaciones', current_date + 5, current_date + 5, 'solicitada', 1);
+    (v_emp, 'vacaciones', current_date + 5, current_date + 6, 'solicitada', 2);
   -- Los días se cuentan en días hábiles: depende de qué día caiga hoy.
   select sum(dias) into v_d from incidencias where empleado_id = v_emp and estado = 'aprobada' and inicio >= current_date - 10;
   select * into r from v_vacaciones where empleado_id = v_emp;

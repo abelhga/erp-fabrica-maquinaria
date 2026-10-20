@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Brush, Check, ChevronLeft, ChevronRight, HardHat, Smartphone, Truck, X, type LucideIcon } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
@@ -36,7 +36,6 @@ export default function Checklist() {
   const tipo = (params.get("tipo") as Tipo) ?? "celular";
   const [dia, setDia] = useState(hoyISO());
   const [momento, setMomento] = useState<Momento>(momentoAhora);
-  const [todos, setTodos] = useState(false);
   const mom: Momento = tipo === "celular" ? momento : "";
   const clave = ["checklist", tipo, dia];
   useTiempoReal("objetivo_marcas", [clave]);
@@ -45,9 +44,8 @@ export default function Checklist() {
     queryKey: clave,
     queryFn: () => q<Fila[]>(supabase.rpc("checklist_del_dia", { p_tipo: tipo, p_fecha: dia })),
   });
-  const filas = lista.data ?? [];
-  const principales = filas.filter((f) => f.en_plantilla);
-  const visibles = todos || principales.length === 0 ? filas : principales;
+  // Ya llegan solo quienes lo tienen palomeado en su ficha (o, en limpieza, las áreas).
+  const visibles = lista.data ?? [];
   const marcaDe = (f: Fila) => f.marcas.find((m) => m.momento === mom);
   const marcados = visibles.filter((f) => marcaDe(f)).length;
   const fallas = visibles.filter((f) => marcaDe(f)?.cumplio === false).length;
@@ -99,8 +97,12 @@ export default function Checklist() {
         <p className="text-xs text-tenue flex gap-1.5"><Icono className="h-4 w-4 shrink-0" />{TIPOS[tipo].ayuda}</p>
       </div>
 
-      {lista.error ? <ErrorCarga error={lista.error} /> : lista.isLoading ? <Cargando /> : filas.length === 0 ? (
-        <div className="tarjeta"><Vacio icono={Icono} titulo="Nadie que marcar" texto="Cuando RRHH asigne puestos con este indicador, aquí aparece la gente. Las áreas de limpieza se dan de alta en Objetivos." /></div>
+      {lista.error ? <ErrorCarga error={lista.error} /> : lista.isLoading ? <Cargando /> : visibles.length === 0 ? (
+        <div className="tarjeta">{tipo === "limpieza"
+          ? <Vacio icono={Icono} titulo="Sin áreas de limpieza" texto="Pídele a sistemas que dé de alta las áreas que se revisan (pintura, comedor, plasma…)." />
+          : <Vacio icono={Icono} titulo={`Nadie tiene palomeado ${{ epp: "el EPP", celular: "la entrega de celular", vehiculo: "la revisión de vehículo" }[tipo as "epp"]}`}
+              texto="Recursos Humanos lo palomea en la ficha de cada persona (Personal → la persona → Checklist diario). Solo salen aquí a quienes les aplica."
+              accion={<Boton asChild variante="secundario"><Link to="/rrhh/empleados">Ir a Personal</Link></Boton>} />}</div>
       ) : (
         <>
           <div className="flex items-center justify-between gap-2 text-sm">
@@ -115,11 +117,6 @@ export default function Checklist() {
           <ul className="space-y-2 pb-20">
             {visibles.map((f) => <FilaMarca key={f.empleado_id ?? `a${f.area_id}`} f={f} marca={marcaDe(f)} marcar={marcar} />)}
           </ul>
-          {principales.length > 0 && principales.length < filas.length && (
-            <button className="w-full py-2 text-sm text-marca-texto" onClick={() => setTodos(!todos)}>
-              {todos ? "Solo quienes lo tienen en sus objetivos" : `Mostrar a todos (${filas.length - principales.length} más, p. ej. el taller)`}
-            </button>
-          )}
         </>
       )}
     </Pagina>

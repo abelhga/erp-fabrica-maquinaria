@@ -79,6 +79,11 @@ cross join (values ('entrada', 0), ('break1', 1), ('break2', 2)) m(momento, n)
 where exists (select 1 from public.empleados e where e.id = pg_temp.emp(n.num))
 on conflict do nothing;
 
+-- Qué puntos le aplican a cada quien (su ficha): sin palomear no sale en el checklist.
+update public.empleados set checklist = array['celular'] where id in (select pg_temp.emp(x) from unnest(array['1001','1006','1015','1016','1017','1018','1023','1026']) x);
+update public.empleados set checklist = checklist || array['epp'] where id in (select pg_temp.emp(x) from unnest(array['1002','1003','1006','1013','1015','1016','1018','1023']) x)
+  and not ('epp' = any(checklist));
+
 -- EPP: lo marca la gerencia de producción (calidad), también al taller.
 insert into public.objetivo_marcas (id, tipo, fecha, empleado_id, cumplio, nota, marcado_por, marcado_en)
 select pg_temp.id('epp:' || n.num || ':' || d.fecha), 'epp', d.fecha, pg_temp.emp(n.num),

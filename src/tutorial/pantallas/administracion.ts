@@ -4,6 +4,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
   "/rrhh/empleados": [
     "Aquí está la plantilla de la empresa: cada persona con su puesto, departamento, área del taller, antigüedad y vacaciones. La usa Recursos Humanos para dar altas, bajas y llevar la ficha de cada quien.",
     "Dale clic a un renglón para abrir su ficha a la derecha sin perder la lista. Ahí cambias sus datos (Enter guarda), ves su historial de vacaciones e incidencias y, al final, la das de baja o registras un reingreso. Con «Nuevo empleado» das de alta a alguien.",
+    "En la ficha, debajo de su inicial, «Subir foto» le pone foto (en el celular abre la cámara); la ven solo Recursos Humanos, la gerencia de producción y la propia persona. En «Checklist diario» palomeas qué se le revisa cada día (EPP, entrega de celular, revisión de vehículo): sin palomear no sale en ese checklist. La columna «Checklist» de la lista te dice a quién te falta.",
     "Arriba filtras activos, bajas o todos, y por departamento. Los indicadores de ausentes y solicitudes te llevan directo a Vacaciones e incidencias. El botón CSV baja la lista para Excel.",
     "La antigüedad y las vacaciones salen solas de la fecha de ingreso; quien venía del control de vacaciones en Excel arranca con el saldo que tenía ahí, y en su ficha puedes corregirlo. Una baja no borra a nadie: su historial se conserva. Si la persona tenía cuenta en el ERP, desactívala al darla de baja para que ya no pueda entrar.",
   ],
@@ -22,7 +23,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
   "/rrhh/checklist": [
     "Aquí se marca, día por día, si cada persona cumplió: entrega del celular, equipo de protección, limpieza de su área y revisión de vehículos. Está hecho para el celular de quien supervisa: un toque por persona.",
     "Arriba eliges qué revisas y el día (con las flechas o la fecha). El celular se revisa tres veces: entrada, break 1 y break 2. Toca la palomita si cumplió o la X si no; con la X puedes anotar qué pasó (Enter guarda). «Los restantes cumplieron» marca de un jalón a quienes falten.",
-    "Primero salen quienes tienen ese punto en sus objetivos; abajo puedes mostrar a todos. A ti no te puedes marcar: te marca otra persona. La limpieza se marca por área y cuenta para todos los que comparten esa área.",
+    "Solo salen las personas que tienen ese punto palomeado en su ficha (Personal): el EPP, por ejemplo, al personal de taller. Si no sale alguien, pídele a Recursos Humanos que lo palomee. A ti no te puedes marcar: te marca otra persona. La limpieza se marca por área y cuenta para todos los que comparten esa área.",
     "Estas marcas alimentan los objetivos del mes. Un día sin marca no cuenta en contra. Puedes corregir hasta una semana atrás; después solo Recursos Humanos, y nunca en un mes ya calificado.",
   ],
   "/rrhh/prenomina": [
