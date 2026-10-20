@@ -10,9 +10,19 @@ export interface Empleado {
   departamento_id: number | null; etapa_id: number | null; fecha_ingreso: string; fecha_nacimiento: string | null;
   telefono: string | null; correo: string | null; contacto_emergencia: string | null; foto_url: string | null;
   usuario_id: string | null; activo: boolean; baja_en: string | null; motivo_baja: string | null;
+  /** Puntos del checklist diario que le aplican (limpieza es por área, no va aquí). */
+  checklist: PuntoChecklist[];
   departamento: { nombre: string } | null; etapa: { nombre: string; color: string } | null;
   usuario: { nombre: string; correo: string } | null;
 }
+
+export type PuntoChecklist = "epp" | "celular" | "vehiculo";
+/** En el orden en que salen en la ficha y en la lista de Personal. */
+export const PUNTOS_CHECKLIST: { valor: PuntoChecklist; texto: string; corto: string }[] = [
+  { valor: "epp", texto: "EPP (casco, botas, guantes)", corto: "EPP" },
+  { valor: "celular", texto: "Entrega de celular", corto: "Celular" },
+  { valor: "vehiculo", texto: "Revisión de vehículo", corto: "Vehículo" },
+];
 
 export interface Vacaciones {
   empleado_id: string; nombre: string; fecha_ingreso: string; anios: number; dias_periodo: number; inicio_periodo: string;
@@ -79,9 +89,28 @@ export function mesesDeAntiguedad(desde: string) {
   return (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth()) - (b.getDate() < a.getDate() ? 1 : 0);
 }
 
+/**
+ * La foto del personal vive en un bucket privado: foto_url guarda su ruta y se pide una liga
+ * firmada que dura una hora (se reutiliza mientras tanto). Una liga completa (las de antes)
+ * se usa tal cual.
+ */
+export function useFotoPersonal(foto: string | null | undefined) {
+  const ruta = foto && !/^https?:/i.test(foto) ? foto : null;
+  const firmada = useQuery({
+    queryKey: ["foto_personal", ruta], enabled: !!ruta, staleTime: 50 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.storage.from("personal").createSignedUrl(ruta!, 3600);
+      if (error) throw error;
+      return data.signedUrl;
+    },
+  });
+  return ruta ? firmada.data ?? null : foto ?? null;
+}
+
 export function Avatar({ nombre, foto, tamano = "md", inactivo }: { nombre: string; foto?: string | null; tamano?: "sm" | "md" | "lg"; inactivo?: boolean }) {
   const t = tamano === "lg" ? "h-14 w-14 text-lg" : tamano === "sm" ? "h-7 w-7 text-[10px]" : "h-9 w-9 text-xs";
-  if (foto) return <img src={foto} alt="" className={cn("rounded-full object-cover shrink-0", t, inactivo && "grayscale opacity-60")} />;
+  const url = useFotoPersonal(foto);
+  if (url) return <img src={url} alt="" className={cn("rounded-full object-cover shrink-0", t, inactivo && "grayscale opacity-60")} />;
   return (
     <span className={cn("rounded-full flex items-center justify-center font-semibold shrink-0",
       inactivo ? "bg-fondo text-tenue border border-borde" : "bg-marca-suave text-marca-texto", t)}>

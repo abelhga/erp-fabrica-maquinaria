@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { CalendarPlus, LockKeyhole, RotateCcw, Save, ShieldAlert, UserX } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { BotonSubirFoto, subirImagen } from "@/components/datos/SubirFoto";
+import { AlertTriangle, CalendarPlus, LockKeyhole, RotateCcw, Save, ShieldAlert, UserX } from "lucide-react";
 import { Lateral, Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { Campo, Entrada, Seleccion, AreaTexto } from "@/components/ui/campo";
@@ -9,10 +11,10 @@ import { Pestanas, ListaPestanas, ContenidoPestana } from "@/components/ui/pesta
 import { Cargando, Vacio } from "@/components/ui/estados";
 import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
-import { q, useAccion } from "@/lib/consultas";
+import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, hoyISO, numero } from "@/lib/formato";
 import {
-  Avatar, ESTADOS, TIPOS, antiguedad, useCatalogosRrhh, type Empleado, type Incidencia, type Vacaciones,
+  Avatar, ESTADOS, PUNTOS_CHECKLIST, TIPOS, antiguedad, useCatalogosRrhh, type Empleado, type Incidencia, type PuntoChecklist, type Vacaciones,
 } from "./comun";
 import { NuevaIncidencia } from "./NuevaIncidencia";
 import { GLOSARIO } from "@/tutorial/glosario";
@@ -70,7 +72,10 @@ function Contenido({ empleado: e, empleados, usuarios, alCrear }: {
     <div className="space-y-5">
       {e && (
         <div className="flex items-center gap-4">
-          <Avatar nombre={e.nombre} foto={e.foto_url} tamano="lg" inactivo={!e.activo} />
+          <div className="flex flex-col items-center gap-1 shrink-0">
+            <Avatar nombre={e.nombre} foto={e.foto_url} tamano="lg" inactivo={!e.activo} />
+            {puede("rrhh", 2) && <FotoEmpleado empleado={e} />}
+          </div>
           <div className="text-sm">
             <p><span className="text-tenue">Antigüedad:</span> <b>{antiguedad(e.fecha_ingreso, e.activo ? null : e.baja_en)}</b> <span className="text-tenue">(desde {fecha(e.fecha_ingreso)})</span></p>
             {e.etapa && <p className="mt-0.5"><span className="text-tenue">Área de piso:</span> <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ background: e.etapa.color }} />{e.etapa.nombre}</span></p>}
@@ -104,6 +109,31 @@ function Contenido({ empleado: e, empleados, usuarios, alCrear }: {
   );
 }
 
+/**
+ * Subir o quitar la foto de la ficha. Va al bucket privado del personal (no al catálogo
+ * público) y se borra la anterior para no dejar fotos sueltas de nadie.
+ */
+function FotoEmpleado({ empleado: e }: { empleado: Empleado }) {
+  const qc = useQueryClient();
+  async function fijar(ruta: string | null) {
+    try {
+      await q(supabase.from("empleados").update({ foto_url: ruta }).eq("id", e.id));
+      if (e.foto_url && !/^https?:/i.test(e.foto_url)) await supabase.storage.from("personal").remove([e.foto_url]);
+      toast.success(ruta ? "Foto guardada" : "Foto quitada");
+      qc.invalidateQueries({ queryKey: ["empleados"] });
+    } catch (err) {
+      toast.error(mensajeError(err));
+    }
+  }
+  return (
+    <div className="flex flex-col items-center text-xs">
+      <BotonSubirFoto carpeta={`empleados/${e.id}`} texto={e.foto_url ? "Cambiar" : "Subir foto"} className="text-xs"
+        subir={(carpeta, archivo) => subirImagen("personal", carpeta, archivo)} alSubir={(ruta) => fijar(ruta)} />
+      {e.foto_url && <button type="button" className="text-tenue hover:text-peligro" onClick={() => fijar(null)}>Quitar</button>}
+    </div>
+  );
+}
+
 function DatosGenerales({ empleado: e, empleados, usuarios, alCrear }: {
   empleado: Empleado | null; empleados: Empleado[]; usuarios: Usuario[]; alCrear: (id: string) => void;
 }) {
@@ -119,7 +149,14 @@ function DatosGenerales({ empleado: e, empleados, usuarios, alCrear }: {
     departamento_id: e?.departamento_id ? String(e.departamento_id) : "", etapa_id: e?.etapa_id ? String(e.etapa_id) : "",
     fecha_ingreso: e?.fecha_ingreso ?? hoyISO(), fecha_nacimiento: e?.fecha_nacimiento ?? "", telefono: e?.telefono ?? "",
     correo: e?.correo ?? "", contacto_emergencia: e?.contacto_emergencia ?? "", usuario_id: e?.usuario_id ?? "",
+    checklist: e?.checklist ?? ([] as PuntoChecklist[]),
   }));
+  const palomear = (p: PuntoChecklist) => setF((x) => ({ ...x, checklist: x.checklist.includes(p) ? x.checklist.filter((y) => y !== p) : [...x.checklist, p] }));
+  // Lo que sus objetivos miden con el checklist pero aquí no está palomeado: nadie lo podría marcar.
+  const sinPalomear = useQuery({
+    queryKey: ["checklist_sin_palomear", e?.id, e?.checklist], enabled: !!e,
+    queryFn: () => q<PuntoChecklist[]>(supabase.rpc("checklist_sin_palomear", { p_empleado: e!.id })),
+  });
   const cambiar = (k: keyof typeof f) => (ev: { target: { value: string } }) => setF((x) => ({ ...x, [k]: ev.target.value }));
   const ligados = new Set(empleados.filter((x) => x.usuario_id && x.id !== e?.id).map((x) => x.usuario_id));
 
@@ -129,6 +166,7 @@ function DatosGenerales({ empleado: e, empleados, usuarios, alCrear }: {
       departamento_id: f.departamento_id ? Number(f.departamento_id) : null, etapa_id: f.etapa_id ? Number(f.etapa_id) : null,
       fecha_ingreso: f.fecha_ingreso, fecha_nacimiento: f.fecha_nacimiento || null, telefono: f.telefono.trim() || null,
       correo: f.correo.trim().toLowerCase() || null, contacto_emergencia: f.contacto_emergencia.trim() || null, usuario_id: f.usuario_id || null,
+      checklist: PUNTOS_CHECKLIST.map((p) => p.valor).filter((p) => f.checklist.includes(p)),
     };
     if (e) {
       await q(supabase.from("empleados").update(datos).eq("id", e.id));
@@ -138,7 +176,7 @@ function DatosGenerales({ empleado: e, empleados, usuarios, alCrear }: {
     return r.id;
   }, {
     exito: e ? "Cambios guardados" : "Empleado dado de alta",
-    invalidar: [["empleados"], ["v_vacaciones"]],
+    invalidar: [["empleados"], ["v_vacaciones"], ["checklist"], ["checklist_sin_palomear"]],
     alTerminar: (nuevo) => { if (!e) alCrear(nuevo as string); },
   });
 
@@ -195,6 +233,23 @@ function DatosGenerales({ empleado: e, empleados, usuarios, alCrear }: {
               <option key={u.id} value={u.id}>{u.nombre} · {u.correo}{u.activo ? "" : " (desactivado)"}</option>
             ))}
           </Seleccion>
+        </Campo>
+        <Campo etiqueta="Checklist diario" className="sm:col-span-2"
+          ayuda="Lo que se le revisa cada día. Sin palomear, no sale en ese checklist y no se le puede marcar. La limpieza se marca por área.">
+          <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1" data-explain={GLOSARIO.checklistAplica} data-explain-title="Checklist diario">
+            {PUNTOS_CHECKLIST.map((p) => (
+              <label key={p.valor} className="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" className="h-4 w-4" checked={f.checklist.includes(p.valor)} onChange={() => palomear(p.valor)} />{p.texto}
+              </label>
+            ))}
+          </div>
+          {(sinPalomear.data ?? []).filter((p) => !f.checklist.includes(p)).length > 0 && (
+            <p className="mt-2 rounded-lg border border-aviso/30 bg-aviso-suave px-3 py-2 text-xs text-aviso flex gap-1.5">
+              <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span>Sus objetivos miden {(sinPalomear.data ?? []).filter((p) => !f.checklist.includes(p))
+                .map((p) => PUNTOS_CHECKLIST.find((x) => x.valor === p)?.corto).join(" y ")}: palomealo o ese objetivo se queda sin dato.</span>
+            </p>
+          )}
         </Campo>
       </fieldset>
       {editable && (

@@ -90,6 +90,8 @@ begin
   -- ---------------------------------------------------------------------------
   -- Checklist: 3 días sin entregar el celular (la llave). Nadie se marca solo.
   -- ---------------------------------------------------------------------------
+  -- A quien su ficha dice que le aplica la entrega de celular (135).
+  update empleados set checklist = '{celular}' where id in (e_sup, e_comp, e_aux);
   perform registrar_marca('celular', '2025-01-06', e_sup, null, 'entrada', false, 'Lo traía en la bolsa');
   perform registrar_marca('celular', '2025-01-07', e_sup, null, 'break1', false, null);
   perform registrar_marca('celular', '2025-01-08', e_sup, null, 'entrada', false, null);

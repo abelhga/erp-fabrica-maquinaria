@@ -34,6 +34,7 @@ export const ADMINISTRACION = {
   plantillaPuesto: "Lo que se le pide a un puesto: sus indicadores, el peso de cada uno (siempre suman 100) y la regla. Cuando cambian los objetivos se crea una versión nueva desde un mes; los meses ya calificados no cambian.",
   datoFaltante: "Lo que haría falta capturar en el ERP para que ese indicador se mida solo en vez de calificarlo a mano.",
   armarMes: "Crea el borrador del mes para cada persona con puesto asignado y vuelve a medir los borradores con los datos de hoy. Lo ya calificado no se toca. Al empezar cada mes se hace solo para el mes que terminó.",
+  checklistAplica: "Los puntos del checklist diario que le revisan a esta persona: EPP (casco, botas y guantes, normalmente el personal de taller), entrega de celular y revisión de vehículo (quien maneja). Los palomea Recursos Humanos en su ficha. Sin palomear, la persona no sale en ese checklist y no se le puede marcar. Si sus objetivos miden uno de esos puntos, palomealo, o ese objetivo se queda sin dato. La limpieza no va aquí: se marca por área.",
   marcaChecklist: "Cada marca guarda a quién, quién marcó y a qué hora. Se puede corregir hasta una semana atrás (después, solo Recursos Humanos) y nunca en un mes ya calificado. Un día sin marca no cuenta en contra.",
 
   // --- Prenómina ---

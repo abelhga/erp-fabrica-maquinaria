@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { fecha, numero } from "@/lib/formato";
 import {
-  Avatar, TIPOS, antiguedad, mesesDeAntiguedad, useAusentesHoy, useCatalogosRrhh, useEmpleados, useVacaciones, type Empleado,
+  Avatar, PUNTOS_CHECKLIST, TIPOS, antiguedad, mesesDeAntiguedad, useAusentesHoy, useCatalogosRrhh, useEmpleados, useVacaciones, type Empleado,
 } from "./componentes/comun";
 import { FichaEmpleado } from "./componentes/FichaEmpleado";
 import { GLOSARIO } from "@/tutorial/glosario";
@@ -77,6 +77,13 @@ export default function Empleados() {
       clave: "etapa", titulo: "Área de piso", explica: GLOSARIO.areaPiso, valor: (e) => e.etapa?.nombre,
       celda: (e) => e.etapa ? (
         <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: e.etapa.color }} />{e.etapa.nombre}</span>
+      ) : <span className="text-tenue">—</span>,
+    },
+    {
+      clave: "checklist", titulo: "Checklist", explica: GLOSARIO.checklistAplica, sinBusqueda: true,
+      valor: (e) => PUNTOS_CHECKLIST.filter((p) => e.checklist.includes(p.valor)).map((p) => p.corto).join(", "),
+      celda: (e) => e.checklist.length ? (
+        <span className="flex flex-wrap gap-1">{PUNTOS_CHECKLIST.filter((p) => e.checklist.includes(p.valor)).map((p) => <Insignia key={p.valor} tono="neutro">{p.corto}</Insignia>)}</span>
       ) : <span className="text-tenue">—</span>,
     },
     {
