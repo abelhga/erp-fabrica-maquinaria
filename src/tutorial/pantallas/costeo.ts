@@ -18,7 +18,7 @@ export const COSTEO: Record<string, AyudaPantalla> = {
     "Lo de adentro de un subensamble sale en gris y no se edita aquí: se cambia en el propio subensamble, porque el cambio llega a todos los equipos que lo usan.",
     "Si una cantidad depende de una medida (largo, ancho), defínela en la pestaña Parámetros. Para la misma banda con otra medida sin tocar esta, usa «Duplicar con otros parámetros».",
     "En «Fotos» se suben una o varias fotos (o se pega la liga de Drive). La primera es la principal y sale junto a la partida de la cotización; las demás, en la hoja de fotos del PDF. Con las flechas o «Hacerla principal» cambias el orden.",
-    "Para cambiar una pieza por otra con la misma cantidad, usa el botón de flechas de su línea. «Editar datos» cambia el nombre, el tipo de equipo y la descripción; las cotizaciones que ya existen conservan el nombre anterior.",
+    "Para cambiar una pieza por otra con la misma cantidad, usa el botón de flechas de su línea. «Editar datos» cambia el nombre, el tipo de equipo y la descripción; las cotizaciones que ya existen conservan el nombre anterior. Junto a la descripción, «Pulir redacción» le pide al asistente que corrija ortografía y estilo: ves la propuesta y decides si la usas.",
     "«Inhabilitar» lo saca del cotizador y de pedidos nuevos cuando ya no se fabrica; arriba sale la marca «Inhabilitado» y el botón cambia a «Reactivar».",
   ],
   "/costeo/componentes": [
@@ -29,7 +29,7 @@ export const COSTEO: Record<string, AyudaPantalla> = {
   ],
   "/costeo/componentes/:id": [
     "La ficha de lo que se compra: datos generales, existencias por almacén, precios por canal en línea, planos y en qué equipos se usa. Lo que ves depende de tu permiso.",
-    "Si puedes editar, cada campo se guarda solo al salir de él (o con Enter). La descripción sale en la cotización: una viñeta por renglón. Para la foto, pega la liga de Drive o de una imagen, o súbela con «Subir foto». Marcarlo como importado pide 6 meses de cobertura en lugar de 1, y el stock de seguridad se suma al punto de reorden.",
+    "Si puedes editar, cada campo se guarda solo al salir de él (o con Enter). La descripción sale en la cotización: una viñeta por renglón. «Pulir redacción» la corrige (ortografía, acentos, estilo) sin tocar medidas ni marcas; ves la propuesta y decides si la usas. Para la foto, pega la liga de Drive o de una imagen, o súbela con «Subir foto». Marcarlo como importado pide 6 meses de cobertura en lugar de 1, y el stock de seguridad se suma al punto de reorden.",
     "Junto a «Dónde se usa», «Reemplazar componente» (ingeniería) la cambia por otra pieza en las listas que elijas, con las mismas cantidades; esta pieza se queda en el catálogo con su precio.",
     "«Canales en línea» compara el precio sugerido de cada canal contra lo que está publicado y avisa si una publicación quedó abajo.",
     "Quien tiene permiso de costos ve aquí el costo con su historial (cada cambio con su origen) y lo puede actualizar; al guardarlo se recalcula todo lo que depende de él.",

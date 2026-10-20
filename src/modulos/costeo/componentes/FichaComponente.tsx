@@ -18,6 +18,7 @@ import { FormulaEnPalabras, useDesglose } from "./CostoPrecio";
 import { DondeSeUsa } from "./DondeSeUsa";
 import { BotonReemplazarComponente } from "./ReemplazarComponente";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { PulirDescripcion } from "./PulirDescripcion";
 import { BotonSubirFoto } from "@/components/datos/SubirFoto";
 
 type Moneda = "MXN" | "USD" | "EUR";
@@ -54,6 +55,19 @@ function TextoAuto({ valor, alGuardar, numerico, multilinea, ...p }: {
     ? <AreaTexto value={t} onChange={(e) => setT(e.target.value)} onBlur={salir} rows={6} {...p} />
     : <Entrada value={t} onChange={(e) => setT(e.target.value)} onBlur={salir} inputMode={numerico ? "decimal" : undefined}
         onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} className={cn(numerico && "text-right cifra", p.className)} placeholder={p.placeholder} aria-label={p["aria-label"]} />;
+}
+
+/** La descripción se guarda al salir del campo, como los demás; «Pulir redacción» lee lo que está escrito aunque no se haya guardado. */
+function DescripcionAuto({ a, editable, alGuardar }: { a: ArticuloCatalogo; editable: boolean; alGuardar: (v: string | null) => void }) {
+  const [t, setT] = useState(a.descripcion ?? "");
+  useEffect(() => setT(a.descripcion ?? ""), [a.descripcion]);
+  const salir = () => { const nuevo = t.trim() || null; if (nuevo !== (a.descripcion || null)) alGuardar(nuevo); };
+  return (
+    <div className="space-y-1">
+      <AreaTexto value={t} onChange={(e) => setT(e.target.value)} onBlur={salir} rows={6} placeholder={"• Medida…\n• Material…"} />
+      {editable && <PulirDescripcion leer={() => t} nombre={a.nombre} tipo={a.tipo} alUsar={(v) => { setT(v); alGuardar(v || null); }} />}
+    </div>
+  );
 }
 
 function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
@@ -147,7 +161,7 @@ function DatosGenerales({ a }: { a: ArticuloCatalogo }) {
           </div>
         </Campo>
         <Campo etiqueta="Descripción y ficha técnica" className="sm:col-span-2" ayuda="Sale en la cotización. Una viñeta por renglón.">
-          <TextoAuto multilinea valor={a.descripcion} placeholder="• Medida…&#10;• Material…" alGuardar={(v) => guardar({ descripcion: v == null ? null : String(v) })} />
+          <DescripcionAuto a={a} editable={editar} alGuardar={(v) => guardar({ descripcion: v })} />
         </Campo>
       </div>
     </Tarjeta>

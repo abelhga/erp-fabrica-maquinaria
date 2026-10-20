@@ -6,6 +6,7 @@ import { Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { useTiposEquipo, type ArticuloCatalogo } from "./comun";
+import { PulirDescripcion } from "./PulirDescripcion";
 
 /**
  * Nombre, tipo de equipo y descripción de un equipo o subensamble. Los componentes ya se
@@ -42,7 +43,10 @@ export function EditarDatos({ a }: { a: ArticuloCatalogo }) {
             </Campo>
           )}
           <Campo etiqueta="Descripción" ayuda="Sale en la cotización debajo del nombre: una viñeta por renglón.">
-            <textarea className="campo min-h-24 py-2" value={f.descripcion} onChange={(e) => setF({ ...f, descripcion: e.target.value })} />
+            <div className="space-y-1">
+              <textarea className="campo min-h-24 py-2" value={f.descripcion} onChange={(e) => setF({ ...f, descripcion: e.target.value })} />
+              <PulirDescripcion leer={() => f.descripcion} nombre={f.nombre || a.nombre} tipo={a.tipo} alUsar={(v) => setF((x) => ({ ...x, descripcion: v }))} />
+            </div>
           </Campo>
           <button type="submit" className="hidden" />
         </form>
