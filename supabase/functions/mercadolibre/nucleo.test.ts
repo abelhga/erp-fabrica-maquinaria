@@ -146,4 +146,16 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
     const c = await atender(new Request("http://x/functions/v1/mercadolibre/iniciar", { method: "POST", headers: { Authorization: `Bearer ${s.session!.access_token}` } }), entorno);
     expect(c.status).toBe(403);
   });
+
+  // Dirección sí conecta. Antes la revisión llamaba a tiene_rol con un parámetro que no
+  // existe (p_rol), la consulta fallaba y a dirección también le decía que no era suyo.
+  it("dirección inicia la conexión y recibe el enlace de Mercado Libre", async () => {
+    const db = createClient(URL_SB, ANON, { auth: { persistSession: false } });
+    const { data: s } = await db.auth.signInWithPassword({ email: "direccion@hegamex.com", password: "hegamex-local" });
+    const c = await atender(new Request("http://x/functions/v1/mercadolibre/iniciar", { method: "POST", headers: { Authorization: `Bearer ${s.session!.access_token}` } }), entorno);
+    expect(c.status).toBe(200);
+    const { url } = await c.json() as { url: string };
+    expect(url).toContain("client_id=APP-PRUEBA");
+    expect(url).toContain(encodeURIComponent(`${URL_SB}/functions/v1/mercadolibre/autorizar`));
+  });
 });

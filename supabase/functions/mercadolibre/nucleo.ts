@@ -192,7 +192,7 @@ async function quien(req: Request, e: Entorno) {
   return data.user ? { id: data.user.id, db: yo } : null;
 }
 const puede = async (db: SupabaseClient, modulo: string, nivel: number) => (await db.rpc("puede", { p_modulo: modulo, p_nivel: nivel })).data === true;
-const esDireccion = async (db: SupabaseClient) => (await db.rpc("tiene_rol", { p_rol: "direccion" })).data === true;
+const esDireccion = async (db: SupabaseClient) => (await db.rpc("tiene_rol", { r: "direccion" })).data === true;
 
 export async function atender(req: Request, e: Entorno): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
