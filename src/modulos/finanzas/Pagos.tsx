@@ -18,7 +18,7 @@ import { dinero, dineroCompacto, fecha, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { METODOS, TipoCambioDia, iso, lunesDe, enMoneda, nombreMetodo, type Moneda } from "./componentes/comun";
 import { InsigniaRepetida } from "./componentes/Repetida";
-import { diasPara, useCuentasProveedor, useFacturasPendientes, Vencimiento, type FacturaPendiente } from "./componentes/cuentas";
+import { diasPara, esPrestamo, useCuentasProveedor, useFacturasPendientes, Vencimiento, type FacturaPendiente } from "./componentes/cuentas";
 import { CuentasProveedores, PanelProveedor } from "./componentes/CuentasProveedores";
 import { RegistrarCompra } from "./componentes/RegistrarCompra";
 import { PagosHechos } from "./componentes/PagosHechos";
@@ -58,11 +58,12 @@ export default function Pagos() {
   const cuentas = useCuentasProveedor(verCuentas);
   const pendientes = useFacturasPendientes(verCuentas);
   const porLlave = useMemo(() => new Map((cuentas.data ?? []).map((c) => [c.proveedor_llave, c])), [cuentas.data]);
-  // Solo proveedores: lo que se debe a socios y bancos no entra a la agenda (va en su filtro).
+  // Lo que se debe a socios y bancos no entra a la agenda (va en su filtro); nómina e
+  // impuestos sí, porque vencen como cualquier factura.
   const facturas: Factura[] = useMemo(() => (pendientes.data ?? [])
-    .filter((x) => (porLlave.get(x.proveedor_llave)?.tipo_acreedor ?? "proveedor") === "proveedor")
+    .filter((x) => !esPrestamo(porLlave.get(x.proveedor_llave)?.tipo_acreedor))
     .map((x) => ({ ...x, nombre: porLlave.get(x.proveedor_llave)?.nombre ?? x.proveedor_llave, dias: diasPara(x.vence_el) ?? 0 })), [pendientes.data, porLlave]);
-  const socios = (cuentas.data ?? []).filter((c) => c.tipo_acreedor !== "proveedor" && Number(c.saldo) > 1);
+  const socios = (cuentas.data ?? []).filter((c) => esPrestamo(c.tipo_acreedor) && Number(c.saldo) > 1);
 
   const ordenes = [...(datos.data ?? [])].sort((a, b) => (a.dias_para_vencer ?? 1e9) - (b.dias_para_vencer ?? 1e9));
   const todo: Pendiente[] = [

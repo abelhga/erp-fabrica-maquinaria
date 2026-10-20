@@ -14,7 +14,7 @@ import { dinero, fecha, hace, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import {
-  INVALIDAR_PROVEEDORES, SelectorCuenta, TIPO_ACREEDOR, Vencimiento, diasPara, useCuentasDinero,
+  INVALIDAR_PROVEEDORES, SelectorCuenta, TIPO_ACREEDOR, Vencimiento, diasPara, esPrestamo, useCuentasDinero,
   type CuentaProveedor, type FacturaPendiente,
 } from "./cuentas";
 import { BotonRepetida, InsigniaRepetida } from "./Repetida";
@@ -30,8 +30,8 @@ export function CuentasProveedores({ cuentas, cargando, error, alAbrir, vistaIni
   const [vista, setVista] = useState(vistaInicial);
   useEffect(() => setVista(vistaInicial), [vistaInicial]);
   // Préstamos de socios y créditos de banco van aparte: no son deuda con proveedores.
-  const debemos = cuentas.filter((f) => Number(f.saldo) > 1 && f.tipo_acreedor === "proveedor");
-  const socios = cuentas.filter((f) => Number(f.saldo) > 1 && f.tipo_acreedor !== "proveedor");
+  const debemos = cuentas.filter((f) => Number(f.saldo) > 1 && !esPrestamo(f.tipo_acreedor));
+  const socios = cuentas.filter((f) => Number(f.saldo) > 1 && esPrestamo(f.tipo_acreedor));
   const favor = cuentas.filter((f) => Number(f.saldo) < -1);
   const suma = (fs: CuentaProveedor[]) => fs.reduce((s, f) => s + Number(f.saldo), 0);
   const filas = (vista === "debemos" ? debemos : vista === "socios" ? socios : vista === "favor" ? favor : cuentas).slice()

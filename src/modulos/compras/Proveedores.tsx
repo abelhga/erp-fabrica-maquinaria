@@ -18,7 +18,7 @@ import { GLOSARIO } from "@/tutorial/glosario";
 interface FilaProveedor {
   id: string; nombre: string; razon_social: string | null; categoria: string | null; pais: string; es_importacion: boolean; moneda: Moneda;
   dias_credito: number; dias_entrega: number | null; activo: boolean; articulos: number; oc_abiertas: number; oc_atrasadas: number;
-  comprado_12m: number | null; ultima_compra: string | null;
+  comprado_12m: number | null; ultima_compra: string | null; tipo_acreedor: string;
 }
 type Vista = "surten" | "importacion" | "abiertas" | "todos" | "inactivos";
 
@@ -37,7 +37,7 @@ export default function Proveedores() {
   const datos = useQuery({
     queryKey: ["v_proveedores"],
     queryFn: () => todasLasFilas<FilaProveedor>((d, h) => supabase.from("v_proveedores")
-      .select("id, nombre, razon_social, categoria, pais, es_importacion, moneda, dias_credito, dias_entrega, activo, articulos, oc_abiertas, oc_atrasadas, comprado_12m, ultima_compra")
+      .select("id, nombre, razon_social, categoria, pais, es_importacion, moneda, dias_credito, dias_entrega, activo, articulos, oc_abiertas, oc_atrasadas, comprado_12m, ultima_compra, tipo_acreedor")
       .order("nombre").order("id").range(d, h)),
   });
   // Lo comprado sale de las facturas (hoja y ERP) más las órdenes de compra: con solo
@@ -48,7 +48,8 @@ export default function Proveedores() {
   });
   const filas = useMemo(() => {
     const m = new Map((comprado.data ?? []).map((c) => [c.proveedor_id, Number(c.comprado_12m)]));
-    return (datos.data ?? []).map((p) => ({ ...p, comprado_12m: m.get(p.id) ?? null }));
+    // Nómina, impuestos, socios y bancos son de finanzas: en el directorio de compras no van.
+    return (datos.data ?? []).filter((p) => p.tipo_acreedor === "proveedor").map((p) => ({ ...p, comprado_12m: m.get(p.id) ?? null }));
   }, [datos.data, comprado.data]);
   const pasa = (p: FilaProveedor, v: Vista) => {
     if (v === "inactivos") return !p.activo;
