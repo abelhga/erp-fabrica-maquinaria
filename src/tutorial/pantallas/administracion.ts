@@ -27,7 +27,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
   ],
   "/rrhh/prenomina": [
     "Aquí se arma la nómina de cada semana, de viernes a jueves, para pagarla el viernes siguiente. La usa Recursos Humanos: revisa, agrega conceptos, cierra la semana y le pasa el CSV al contador.",
-    "Elige la semana arriba; por omisión abre la que ya terminó y falta cerrar. Dale clic a una persona para ver su renglón desglosado. «Agregar concepto» registra pagos o descuentos fuera del sueldo con su motivo, y «Cerrar semana» la congela. Las pestañas Préstamos y Sueldos llevan los préstamos con su saldo y el historial de sueldos.",
+    "Elige la semana arriba; por omisión abre la que ya terminó y falta cerrar. Dale clic a una persona para ver su renglón desglosado. «Agregar concepto» registra pagos o descuentos fuera del sueldo con su motivo, y «Cerrar semana» la congela. Ya cerrada, finanzas da «Registrar pago» con la fecha y la cuenta de donde salió el dinero, y la semana dice «Pagada el…» para que sepas que ya se pagó. Las pestañas Préstamos y Sueldos llevan los préstamos con su saldo y el historial de sueldos.",
     "Todo sale de lo aprobado en Vacaciones e incidencias: las faltas y los permisos sin goce descuentan días, el retardo descuenta su tiempo, las vacaciones pagan prima, y las horas extra se pagan dobles hasta 9 a la semana y triples después. El bono sale de los objetivos aprobados y se paga cuando dirección define su base.",
     "Es lo que se le paga a cada quien antes de lo fiscal: ISR, IMSS y timbrado los calcula el contador con el CSV. Una semana cerrada ya no cambia; un error se corrige en la semana abierta con otro concepto.",
   ],

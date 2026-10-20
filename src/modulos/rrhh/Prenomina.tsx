@@ -20,8 +20,10 @@ import { dinero, fecha, fechaYHora, hoyISO, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { nombreMes, puntos } from "./componentes/objetivos";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { INVALIDAR_PROVEEDORES, SelectorCuenta } from "@/modulos/finanzas/componentes/cuentas";
 
-interface Semana { inicio: string; fin: string; pago: string; estado: "abierta" | "cerrada"; cerrada_en: string | null; cerrada_por: string | null; personas: number; neto: number | null }
+interface Semana { inicio: string; fin: string; pago: string; estado: "abierta" | "cerrada"; cerrada_en: string | null; cerrada_por: string | null; personas: number; neto: number | null;
+  pagada_el: string | null; pagada_cuenta: string | null; pagada_monto: number | null; pagada_por: string | null }
 interface Concepto { clave: string; concepto: string; tipo: "percepcion" | "deduccion"; importe: number; nota: string | null; referencia: string | null; id?: string }
 interface Renglon {
   semana: string; empleado_id: string; numero: string | null; nombre: string; puesto: string | null;
@@ -85,7 +87,7 @@ function VistaSemana({ semana }: { semana: Semana }) {
   const { puede } = useSesion();
   const filas = useQuery({ queryKey: ["nomina", "prenomina", semana.inicio], queryFn: () => q<Renglon[]>(supabase.rpc("prenomina", { p_semana: semana.inicio })) });
   const [abierto, setAbierto] = useState<string | null>(null);
-  const [dialogo, setDialogo] = useState<null | "concepto" | "cerrar">(null);
+  const [dialogo, setDialogo] = useState<null | "concepto" | "cerrar" | "pagar">(null);
   const datos = filas.data ?? [];
   const cerrada = semana.estado === "cerrada";
   const terminada = semana.fin < hoyISO();
@@ -147,8 +149,13 @@ function VistaSemana({ semana }: { semana: Semana }) {
           ? <Insignia tono="ok"><Lock className="h-3 w-3" /> Cerrada {semana.cerrada_por && `por ${semana.cerrada_por}`} el {fechaYHora(semana.cerrada_en)}</Insignia>
           : terminada ? <Insignia tono="aviso">Lista para cerrar: terminó el jueves {fecha(semana.fin)}</Insignia>
           : <Insignia tono="info">En curso: termina el jueves {fecha(semana.fin)}, se paga el {fecha(semana.pago)}</Insignia>}</span>
+        {/* Lo pone finanzas al registrar la salida del banco: RRHH ve que ya se pagó sin ver la cuenta por pagar. */}
+        {cerrada && (semana.pagada_el
+          ? <span data-explain={GLOSARIO.nominaPagada} data-explain-title="Pagada"><Insignia tono="ok"><Banknote className="h-3 w-3" /> Pagada el {fecha(semana.pagada_el)}{semana.pagada_cuenta && `, de ${semana.pagada_cuenta}`}{semana.pagada_monto != null && ` · ${dinero(semana.pagada_monto)}`}</Insignia></span>
+          : <span data-explain={GLOSARIO.nominaPagada} data-explain-title="Pago de la semana"><Insignia tono="neutro">Sin pago registrado</Insignia></span>)}
         <div className="ml-auto flex flex-wrap gap-2">
           <Boton variante="secundario" disabled={!datos.length} onClick={() => exportarCsv(semana, datos)}><Download className="h-4 w-4" /> Exportar CSV</Boton>
+          {cerrada && !semana.pagada_el && puede("finanzas", 2) && <Boton onClick={() => setDialogo("pagar")}><Banknote className="h-4 w-4" /> Registrar pago</Boton>}
           {!cerrada && puede("nomina", 2) && <Boton variante="secundario" onClick={() => setDialogo("concepto")}><Plus className="h-4 w-4" /> Agregar concepto</Boton>}
           {!cerrada && puede("nomina", 3) && (
             <Boton disabled={!terminada} title={!terminada ? "Se cierra cuando termina la semana" : undefined} onClick={() => setDialogo("cerrar")}><Lock className="h-4 w-4" /> Cerrar semana</Boton>
@@ -184,6 +191,7 @@ function VistaSemana({ semana }: { semana: Semana }) {
       </Lateral>
       {dialogo === "concepto" && <DialogoConcepto semana={semana.inicio} personas={datos} alCerrar={() => setDialogo(null)} />}
       {dialogo === "cerrar" && <DialogoCerrar semana={semana} total={total} personas={datos.length} alCerrar={() => setDialogo(null)} />}
+      {dialogo === "pagar" && <DialogoPagar semana={semana} total={total} alCerrar={() => setDialogo(null)} />}
     </div>
   );
 }
@@ -285,6 +293,30 @@ function DialogoCerrar({ semana, total, personas, alCerrar }: { semana: Semana; 
         <p>Se congelan {personas} renglones por <b className="cifra">{dinero(total)}</b>, se descuentan los préstamos y se marcan como pagados los bonos que ya tienen base.</p>
         <p className="text-tenue">Después ya no se modifica: un error se corrige en la semana abierta con otro concepto.</p>
       </div>
+    </Dialogo>
+  );
+}
+
+/**
+ * Finanzas registra la salida de la nómina: queda como pago en finanzas (proveedor «Nómina», aparte
+ * de proveedores) y la semana dice cuándo y de qué cuenta se pagó, para que RRHH no tenga que preguntar.
+ */
+function DialogoPagar({ semana, total, alCerrar }: { semana: Semana; total: number; alCerrar: () => void }) {
+  const [f, setF] = useState({ fecha: semana.pago <= hoyISO() ? semana.pago : hoyISO(), cuenta: "", monto: String(Math.round(total * 100) / 100) });
+  const pagar = useAccion(() => q(supabase.rpc("pagar_semana_nomina", { p_semana: semana.inicio, p_fecha: f.fecha, p_cuenta: f.cuenta, p_monto: Number(f.monto) })),
+    { exito: "Pago de nómina registrado", invalidar: [["nomina"], ...INVALIDAR_PROVEEDORES], alTerminar: alCerrar });
+  const listo = f.fecha && f.cuenta && Number(f.monto) > 0;
+  return (
+    <Dialogo abierto alCambiar={(v) => !v && alCerrar()} titulo="Registrar pago de la nómina" descripcion={`Semana del ${rango(semana)}`}
+      pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton form="pagar-nomina" type="submit" disabled={!listo} cargando={pagar.isPending}><Banknote className="h-4 w-4" /> Registrar pago</Boton></>}>
+      <form id="pagar-nomina" className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (listo) pagar.mutate(undefined); }}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Campo etiqueta="Fecha del pago"><Entrada type="date" value={f.fecha} max={hoyISO()} required onChange={(e) => setF({ ...f, fecha: e.target.value })} /></Campo>
+          <Campo etiqueta="Monto" ayuda={`La prenómina suma ${dinero(total)}`}><Entrada type="number" step="0.01" min="0.01" className="cifra" value={f.monto} required onChange={(e) => setF({ ...f, monto: e.target.value })} /></Campo>
+        </div>
+        <Campo etiqueta="Salió de la cuenta"><SelectorCuenta valor={f.cuenta} alCambiar={(cuenta) => setF({ ...f, cuenta })} /></Campo>
+        <p className="text-xs text-tenue">Queda en Finanzas → Pagos como pago de nómina (aparte de proveedores) y RRHH ve en esta semana que ya se pagó.</p>
+      </form>
     </Dialogo>
   );
 }
