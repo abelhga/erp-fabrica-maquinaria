@@ -27,9 +27,9 @@ begin
   insert into nomina_prestamos (empleado_id, monto, descuento_semanal, primera_semana, motivo) values (e_b, 1000, 100, s1, 'Préstamo de prueba')
   returning id into v_pres;
   assert (select folio from nomina_prestamos where id = v_pres) like 'PR-%', 'el préstamo lleva folio';
-  v_id := abonar_prestamo(v_pres, 300, s1 + 2, 'Abonó de su aguinaldo');
+  v_id := abonar_prestamo(v_pres, 300, s1 + 2, 'no_fiscal', 'Abonó de su aguinaldo');
   assert (select saldo from prestamos_nomina() where id = v_pres) = 700 and (select pagado_aparte from prestamos_nomina() where id = v_pres) = 300, 'el abono baja el saldo';
-  begin perform abonar_prestamo(v_pres, 701, s1 + 2); v_ok := true; exception when raise_exception then v_ok := false; end;
+  begin perform abonar_prestamo(v_pres, 701, s1 + 2, 'no_fiscal'); v_ok := true; exception when raise_exception then v_ok := false; end;
   assert not v_ok, 'no se abona más que el saldo';
   d := documento_nomina('abono', v_id);
   assert d->>'folio' like 'RC-%' and (d->>'saldo_despues')::numeric = 700 and d->'empleado'->>'nombre' = 'Deudor Prueba136', format('recibo del abono: %s', d);
@@ -50,11 +50,11 @@ begin
   assert not v_ok, 'el saldo inicial es uno solo';
 
   -- Retiro: con su anticipación, sin pasarse del saldo, con folio y recibo.
-  begin perform retirar_ahorro(e_a, 5000, hoy_planta() - 20, hoy_planta() - 5); v_ok := true; exception when raise_exception then v_ok := false; end;
+  begin perform retirar_ahorro(e_a, 5000, hoy_planta() - 20, hoy_planta() - 5, 'no_fiscal'); v_ok := true; exception when raise_exception then v_ok := false; end;
   assert not v_ok, 'no se retira más que el saldo';
-  begin perform retirar_ahorro(e_a, 100, hoy_planta() - 3, hoy_planta()); v_ok := true; exception when raise_exception then v_ok := sqlerrm not like '%10 días%'; end;
+  begin perform retirar_ahorro(e_a, 100, hoy_planta() - 3, hoy_planta(), 'no_fiscal'); v_ok := true; exception when raise_exception then v_ok := sqlerrm not like '%10 días%'; end;
   assert not v_ok, 'sin los 10 días de anticipación no se registra';
-  v_id := retirar_ahorro(e_a, 500, hoy_planta() - 15, hoy_planta() - 5, 'Para útiles');
+  v_id := retirar_ahorro(e_a, 500, hoy_planta() - 15, hoy_planta() - 5, 'no_fiscal', 'Para útiles');
   d := documento_nomina('retiro', v_id);
   assert d->>'folio' like 'AH-%' and (d->>'saldo_despues')::numeric = 700 and (d->>'importe')::numeric = 500, format('recibo del retiro: %s', d);
   assert (select saldo from ahorro_nomina() where empleado_id = e_a) = 700, 'el retiro baja el saldo';
@@ -91,7 +91,7 @@ begin
   assert not v_ok, 'un abono no se borra';
   perform pg_temp.como(v_fin);
   assert exists (select 1 from ahorro_nomina() where empleado_id = e_a), 'finanzas ve el ahorro';
-  begin perform retirar_ahorro(e_a, 10, hoy_planta() - 15, hoy_planta()); v_ok := true; exception when insufficient_privilege then v_ok := false; end;
+  begin perform retirar_ahorro(e_a, 10, hoy_planta() - 15, hoy_planta(), 'no_fiscal'); v_ok := true; exception when insufficient_privilege then v_ok := false; end;
   assert not v_ok, 'finanzas no registra retiros';
   assert (documento_nomina('pagare', v_pres)->'empleado'->>'domicilio') is null, 'el domicilio no sale para quien no ve datos sensibles';
   perform pg_temp.como(v_ven);
