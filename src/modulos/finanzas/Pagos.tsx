@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, CalendarDays, CalendarRange, ExternalLink, FilePlus2, Landmark, Receipt, Wallet } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
@@ -17,6 +17,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { dinero, dineroCompacto, fecha, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { METODOS, TipoCambioDia, iso, lunesDe, enMoneda, nombreMetodo, type Moneda } from "./componentes/comun";
+import { InsigniaRepetida } from "./componentes/Repetida";
 import { diasPara, useCuentasProveedor, useFacturasPendientes, Vencimiento, type FacturaPendiente } from "./componentes/cuentas";
 import { CuentasProveedores, PanelProveedor } from "./componentes/CuentasProveedores";
 import { RegistrarCompra } from "./componentes/RegistrarCompra";
@@ -42,7 +43,9 @@ export default function Pagos() {
   const verCuentas = puede("finanzas", 2);
   const [vista, setVista] = useState<"todas" | "vencidas" | "semana">("todas");
   const [abierta, setAbierta] = useState<PorPagar | null>(null);
-  const [llave, setLlave] = useState<string | null>(null);
+  // ?proveedor=<llave> abre su cuenta (viene de la ficha del proveedor en Compras).
+  const [params] = useSearchParams();
+  const [llave, setLlave] = useState<string | null>(params.get("proveedor"));
   const [compra, setCompra] = useState<{ abierto: boolean; proveedor: { id: string; nombre: string } | null }>({ abierto: false, proveedor: null });
   const [pestanaElegida, setPestana] = useState<Pestana>("facturas");
   const [vistaProveedores, setVistaProveedores] = useState<"debemos" | "socios">("debemos");
@@ -118,7 +121,7 @@ export default function Pagos() {
     { clave: "vence_el", titulo: "Vence", explica: GLOSARIO.vencePago, sinBusqueda: true, valor: (f) => f.dias, celda: (f) => <Vencimiento vence={f.vence_el} /> },
     { clave: "nombre", titulo: "Proveedor", clase: "min-w-[180px] max-w-[300px]", celda: (f) => <div><p className="font-medium break-words">{f.nombre}</p>{f.categoria && <p className="text-xs text-tenue">{f.categoria}</p>}</div> },
     { clave: "factura", titulo: "Factura", clase: "max-w-[320px]", valor: (f) => `${f.factura ?? ""} ${f.descripcion ?? ""}`,
-      celda: (f) => <div>{f.factura ? <p>{f.factura}</p> : null}{f.descripcion && <p className="text-xs text-tenue line-clamp-2 break-words">{f.descripcion}</p>}{!f.factura && !f.descripcion && <span className="text-tenue">—</span>}</div> },
+      celda: (f) => <div>{f.factura ? <p>{f.factura}</p> : null}{f.posible_repetida && <InsigniaRepetida />}{f.descripcion && <p className="text-xs text-tenue line-clamp-2 break-words">{f.descripcion}</p>}{!f.factura && !f.descripcion && <span className="text-tenue">—</span>}</div> },
     { clave: "fecha", titulo: "Fecha", sinBusqueda: true, celda: (f) => <span className="whitespace-nowrap text-tenue">{fecha(f.fecha)}</span> },
     { clave: "monto", titulo: "Monto", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.monto), celda: (f) => dinero(f.monto) },
     { clave: "restante", titulo: "Por pagar", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.restante), explica: GLOSARIO.facturasPendientes, celda: (f) => <b>{dinero(f.restante)}</b> },

@@ -107,7 +107,7 @@ export function PagosHechos({ alAbrirProveedor }: { alAbrirProveedor: (llave: st
           <span><span className="text-tenue">{numero(filas.length)} {filas.length === 1 ? "pago" : "pagos"} · total </span><b className="cifra">{dinero(total)}</b></span>
         </div>
       )}
-      vacio={{ icono: HandCoins, titulo: "Sin pagos en este periodo", texto: "Prueba con «Este año» o «Todo». Los pagos se registran en la cuenta de cada proveedor o desde su orden de compra." }}
+      vacio={{ icono: HandCoins, titulo: "Sin pagos en este periodo", texto: "Prueba con «Este año» o «Todo»: la lista va por la fecha del pago, no por el día en que se capturó. Los pagos se registran en la cuenta de cada proveedor o desde su orden de compra." }}
     />
   );
 }

@@ -23,11 +23,13 @@ export interface CuentaProveedor {
 export interface FacturaPendiente {
   id: string; proveedor_llave: string; proveedor_id: string | null; fecha: string; factura: string | null; descripcion: string | null;
   categoria: string | null; monto: number; vence_el: string; origen: "hoja" | "erp"; restante: number;
+  /** Renglón del libro de la hoja y si parece capturado dos veces (otro igual a una semana). */
+  hoja_id: number | null; posible_repetida: boolean;
 }
 
 /** Lo que invalida cualquier movimiento a la cuenta de un proveedor. */
 export const INVALIDAR_PROVEEDORES = [
-  ["v_saldo_arranque_proveedores"], ["v_compras_proveedor_pendientes"], ["v_movimientos_proveedor"], ["tablero_direccion"], ["hallazgos"],
+  ["v_saldo_arranque_proveedores"], ["v_compras_proveedor_pendientes"], ["v_movimientos_proveedor"], ["tablero_direccion"], ["hallazgos"], ["v_compras_hoja_ignoradas"],
 ];
 
 export function useCuentasProveedor(habilitado = true) {

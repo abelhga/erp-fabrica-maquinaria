@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FilePlus2, Pencil, Trash2, Users, Wallet } from "lucide-react";
+import { FilePlus2, Pencil, Trash2, Undo2, Users, Wallet } from "lucide-react";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { Lateral } from "@/components/ui/dialogo";
 import { Insignia } from "@/components/ui/insignia";
@@ -11,11 +11,13 @@ import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, hace, hoyISO } from "@/lib/formato";
+import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import {
   INVALIDAR_PROVEEDORES, SelectorCuenta, TIPO_ACREEDOR, Vencimiento, diasPara, useCuentasDinero,
   type CuentaProveedor, type FacturaPendiente,
 } from "./cuentas";
+import { BotonRepetida, InsigniaRepetida } from "./Repetida";
 
 /**
  * Cuenta de cada proveedor: lo que venía en el libro de compras de la hoja más lo que se
@@ -70,7 +72,10 @@ interface MovErp {
   factura: string | null; descripcion: string | null; categoria: string | null; vence_el: string | null; metodo_pago: string | null; en_hoja: boolean;
 }
 interface MovHoja { id: number; fecha: string; tipo: string; monto: number; cuenta: string | null; descripcion: string | null; factura: string | null }
-interface Renglon { clave: string; fecha: string; tipo: string; resta: boolean; monto: number; cuenta: string | null; factura: string | null; descripcion: string | null; erp?: MovErp }
+interface Renglon {
+  clave: string; fecha: string; tipo: string; resta: boolean; monto: number; cuenta: string | null; factura: string | null; descripcion: string | null; erp?: MovErp;
+  hojaId?: number; repetida?: { motivo: string; marcada_en: string };
+}
 const TIPO_ERP: Record<MovErp["tipo"], string> = { compra: "Compra", pago: "Pago", reembolso_pendiente: "Reembolso pendiente", reembolso_realizado: "Reembolso realizado" };
 const RESTA_HOJA = new Set(["Pago", "Reembolso Pend."]);
 
@@ -104,12 +109,21 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
     queryFn: () => q<MovHoja[]>(supabase.from("historial_compras_hoja").select("id, fecha, tipo, monto, cuenta, descripcion, factura")
       .eq("proveedor_llave", llave!).order("fecha", { ascending: false }).order("id", { ascending: false }).limit(200)),
   });
+  // Compras de la hoja que finanzas marcó como repetidas: se ven tachadas y no cuentan.
+  const repetidas = useQuery({
+    queryKey: ["v_compras_hoja_ignoradas", llave, hoja.data?.length], enabled: editable && !!hoja.data?.length,
+    queryFn: () => q<{ id: number; motivo: string; marcada_en: string }[]>(supabase.from("v_compras_hoja_ignoradas").select("id, motivo, marcada_en")
+      .in("id", (hoja.data ?? []).filter((m) => m.tipo === "Compra").map((m) => m.id))),
+  });
+  const porRepetida = new Map((repetidas.data ?? []).map((r) => [r.id, r]));
   const borrar = useAccion((id: string) => q(supabase.from("movimientos_proveedor").delete().eq("id", id)), { exito: "Movimiento borrado", invalidar: INVALIDAR_PROVEEDORES });
+  const desmarcar = useAccion((id: number) => q(supabase.rpc("desmarcar_compra_repetida", { p_hoja_id: id })), { exito: "Vuelve a contar en el saldo", invalidar: INVALIDAR_PROVEEDORES });
 
   const renglones: Renglon[] = [
     ...(erp.data ?? []).map((m) => ({ clave: m.id, fecha: m.fecha, tipo: TIPO_ERP[m.tipo], resta: m.tipo === "pago" || m.tipo === "reembolso_pendiente",
       monto: Number(m.monto), cuenta: nombreCuenta(m.cuenta), factura: m.factura, descripcion: m.descripcion, erp: m })),
-    ...(hoja.data ?? []).map((m) => ({ clave: `h${m.id}`, fecha: m.fecha, tipo: m.tipo, resta: RESTA_HOJA.has(m.tipo), monto: Number(m.monto), cuenta: m.cuenta, factura: m.factura, descripcion: m.descripcion })),
+    ...(hoja.data ?? []).map((m) => ({ clave: `h${m.id}`, fecha: m.fecha, tipo: m.tipo, resta: RESTA_HOJA.has(m.tipo), monto: Number(m.monto), cuenta: m.cuenta,
+      factura: m.factura, descripcion: m.descripcion, hojaId: m.id, repetida: porRepetida.get(m.id) })),
   ].sort((a, b) => b.fecha.localeCompare(a.fecha));
   const vencidas = facturas.filter((x) => (diasPara(x.vence_el) ?? 0) < 0);
 
@@ -136,7 +150,8 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
               <div key={x.id} className="py-2 flex items-start gap-3 text-sm">
                 <span className="w-20 shrink-0 text-tenue whitespace-nowrap">{fecha(x.fecha)}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="flex flex-wrap items-center gap-2"><Vencimiento vence={x.vence_el} />{x.factura && <span>Fact. {x.factura}</span>}</p>
+                  <p className="flex flex-wrap items-center gap-2"><Vencimiento vence={x.vence_el} />{x.factura && <span>Fact. {x.factura}</span>}
+                    {x.posible_repetida && <InsigniaRepetida />}{x.posible_repetida && editable && <BotonRepetida factura={x} />}</p>
                   {x.descripcion && <p className="text-tenue mt-0.5 break-words line-clamp-2">{x.descripcion}</p>}
                 </div>
                 <span className="shrink-0 text-right">
@@ -154,25 +169,29 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
         <div className="divide-y divide-borde">
           {renglones.length === 0 && <p className="py-2 text-sm text-tenue">Sin movimientos todavía.</p>}
           {renglones.map((m) => (
-            <div key={m.clave} className="py-2 flex items-start gap-3 text-sm">
+            <div key={m.clave} className={cn("py-2 flex items-start gap-3 text-sm", m.repetida && "opacity-60")}>
               <span className="w-20 shrink-0 text-tenue whitespace-nowrap">{fecha(m.fecha)}</span>
               <div className="flex-1 min-w-0">
                 <p className="flex flex-wrap items-center gap-2">
                   <Insignia tono={m.resta ? "ok" : m.tipo === "Compra" || m.tipo === "Adeudo 2021" ? "neutro" : "info"}>{m.tipo}</Insignia>
                   {m.erp ? <Insignia tono="marca">ERP</Insignia> : <span className="text-xs text-tenue">Hoja</span>}
                   {m.erp?.en_hoja && <span data-explain={GLOSARIO.tambienEnHoja} data-explain-title="También en la hoja"><Insignia tono="info">También en la hoja</Insignia></span>}
+                  {m.repetida && <span data-explain={GLOSARIO.compraRepetidaHoja} data-explain-title="Repetida" title={m.repetida.motivo}><Insignia tono="aviso">Repetida · no cuenta</Insignia></span>}
                   {m.erp?.metodo_pago && <span className="text-xs text-tenue">{m.erp.metodo_pago}</span>}
                   {m.factura && <span className="text-tenue">Fact. {m.factura}</span>}
                   {m.cuenta && <span className="text-tenue">{m.cuenta}</span>}
                 </p>
                 {m.descripcion && <p className="text-tenue mt-0.5 whitespace-pre-line break-words">{m.descripcion}</p>}
               </div>
-              <span className="cifra shrink-0 font-medium">{m.resta ? "−" : ""}{dinero(m.monto)}</span>
+              <span className={cn("cifra shrink-0 font-medium", m.repetida && "line-through")}>{m.resta ? "−" : ""}{dinero(m.monto)}</span>
               {editable && m.erp ? (
                 <button type="button" onClick={() => { if (confirm(`¿Borrar ${m.tipo.toLowerCase()} de ${dinero(m.monto)} del ${fecha(m.fecha)}?`)) borrar.mutate(m.erp!.id); }}
                   className="shrink-0 p-1 rounded text-tenue hover:text-peligro hover:bg-fondo" aria-label="Borrar movimiento" title="Borrar (mal capturado)">
                   <Trash2 className="h-4 w-4" />
                 </button>
+              ) : editable && m.repetida && m.hojaId ? (
+                <button type="button" onClick={() => desmarcar.mutate(m.hojaId!)} className="shrink-0 p-1 rounded text-tenue hover:text-texto hover:bg-fondo"
+                  aria-label="Ya no es repetida" title="Deshacer: vuelve a contar en el saldo"><Undo2 className="h-4 w-4" /></button>
               ) : editable && <span className="w-6 shrink-0" />}
             </div>
           ))}

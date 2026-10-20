@@ -1,6 +1,5 @@
 -- Inicio: la base calcula solo las secciones que pide la pantalla, y nunca una que el rol
--- no pueda ver aunque la pida. Importaciones tiene "Finanzas: ver", pero su Inicio no pide
--- la cobranza; si alguien la pidiera a mano, la vería (es su permiso, no su Inicio).
+-- no pueda ver aunque la pida.
 do $$
 declare v_imp uuid; v_ven uuid; r jsonb;
 begin
@@ -12,8 +11,8 @@ begin
   assert r ? 'importaciones' and r ? 'compras', format('importaciones no recibió sus secciones: %s', r);
   assert not (r ? 'cobranza' or r ? 'por_pagar' or r ? 'valor_inventario'), format('importaciones recibió algo que no pidió: %s', r);
   assert (r->'importaciones') ?& array['activos', 'en_camino', 'llegan_semana', 'docs_pendientes'], 'faltan cifras de embarques';
-  -- Sin secciones, como antes: todo lo que su rol puede leer.
-  assert indicadores() ? 'cobranza', 'sin secciones debería calcular todo lo permitido';
+  -- Sin secciones, como antes: todo lo que su rol puede leer (y ya no tiene finanzas).
+  assert indicadores() ? 'importaciones' and not (indicadores() ? 'cobranza'), 'sin secciones debería calcular todo lo permitido, y solo eso';
 
   perform pg_temp.como(v_ven);
   r := indicadores(array['ventas', 'produccion', 'cobranza', 'importaciones', 'rrhh']);
