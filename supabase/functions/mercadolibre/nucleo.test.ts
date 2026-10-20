@@ -65,6 +65,12 @@ const falsa: typeof fetch = async (entrada, init) => {
   if (u.pathname === "/shipments/99") return r({ id: 99, logistic_type: "fulfillment" });
   if (u.pathname === "/questions/880001") return r({ id: 880001, item_id: "MLM-T-ML", text: "¿Tienen factura?", status: "UNANSWERED", date_created: "2026-10-16T11:00:00Z" });
   if (u.pathname === "/items/MLM-T-ML") return r({ title: "Polea prueba ML" });
+  // Lo que ya estaba en ML al conectar (sincronizar).
+  if (u.pathname === "/questions/search") return r({ questions: [{ id: 880002 }] });
+  if (u.pathname === "/questions/880002") return r({ id: 880002, item_id: "MLM-T-ML", text: "¿Hacen envíos a Monterrey?", status: "UNANSWERED", date_created: "2026-10-10T11:00:00Z" });
+  if (u.pathname === "/post-purchase/v1/claims/search") return r({ data: [] });
+  if (u.pathname === "/orders/search") return r({ results: [{ id: ORDEN }] });
+  if (u.pathname === "/users/4242/items/search") return r({ paging: { total: 37 } });
   if (u.pathname === "/answers") { enviados.push({ ruta: "/answers", cuerpo: JSON.parse(String(init?.body)) }); return r({ id: 1 }); }
   return r({ message: "not_found" }, 404);
 };
@@ -90,8 +96,8 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
       await c.query("delete from public.ml_ventas where pedido_id in (select id from _p)");
       await c.query("delete from public.pedido_lineas where pedido_id in (select id from _p)");
       await c.query("delete from public.pedidos where id in (select id from _p)");
-      await c.query("delete from public.ml_preguntas where id = 880001");
-      await c.query("delete from public.ml_avisos where resource = any($1)", [[`/orders/${ORDEN}`, "/questions/880001"]]);
+      await c.query("delete from public.ml_preguntas where id in (880001, 880002)");
+      await c.query("delete from public.ml_avisos where resource = any($1)", [[`/orders/${ORDEN}`, "/questions/880001", "/questions/880002"]]);
       await c.query("delete from public.publicaciones where id_externo = 'MLM-T-ML'");
       if (articulo) await c.query("delete from public.articulos where id = $1", [articulo]);
       await c.query("delete from public.ml_cuenta where id = 1");
@@ -136,6 +142,23 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
     expect(r.status).toBe(200);
     expect(enviados).toContainEqual({ ruta: "/answers", cuerpo: { question_id: 880001, text: "Sí, facturamos." } });
     expect((await admin.from("ml_preguntas").select("estado").eq("id", 880001).single()).data!.estado).toBe("contestada");
+  });
+
+  it("sincronizar trae lo que ya estaba: la pregunta pendiente y, si se pide, las ventas desde una fecha", async () => {
+    const db = createClient(URL_SB, ANON, { auth: { persistSession: false } });
+    const { data: s } = await db.auth.signInWithPassword({ email: "isaac@hegamex.com", password: "hegamex-local" });
+    const pedir = (cuerpo: object) => atender(new Request("http://x/functions/v1/mercadolibre/sincronizar",
+      { method: "POST", headers: { Authorization: `Bearer ${s.session!.access_token}` }, body: JSON.stringify(cuerpo) }), entorno);
+    const r = await pedir({});
+    expect(r.status).toBe(200);
+    expect(await r.json()).toMatchObject({ publicaciones: 37, preguntas: 1, reclamos: 0, ventas: 0, errores: 0 });
+    const { data: p } = await admin.from("ml_preguntas").select("estado, texto").eq("id", 880002).single();
+    expect(p).toMatchObject({ estado: "pendiente", texto: "¿Hacen envíos a Monterrey?" });
+    // Con fecha trae ventas; la que ya existía no se duplica.
+    const r2 = await (await pedir({ ventas_desde: "2026-10-01" })).json();
+    expect(r2).toMatchObject({ ventas: 1, errores: 0 });
+    const { count } = await admin.from("ml_ventas").select("*", { count: "exact", head: true }).eq("order_id", String(ORDEN));
+    expect(count).toBe(1);
   });
 
   it("sin sesión no se contesta ni se conecta", async () => {

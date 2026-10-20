@@ -38,6 +38,7 @@ export const ADMINISTRACION = {
 
   // --- Prenómina ---
   semanaNomina: "La semana de nómina va de viernes a jueves y se paga el viernes siguiente. Se calcula sola con las incidencias aprobadas hasta que alguien la cierra.",
+  nominaPagada: "Cuando finanzas registra la salida del dinero de una semana cerrada, la semana dice la fecha, la cuenta de donde salió y el monto. Mientras diga «Sin pago registrado», finanzas todavía no la anota como pagada.",
   cerrarSemana: "Al cerrar la semana se congelan los renglones, se descuentan los préstamos y se marcan pagados los bonos que ya tienen base. Después ya no cambia: un error se corrige en una semana abierta con otro concepto.",
   diasPagados: "De los 7 días de la semana, cuántos se le pagan. Restan las faltas, los permisos sin goce, la incapacidad, los días antes de entrar o después de la baja y el tiempo de retardo. Vacaciones y permisos con goce sí se pagan.",
   horasDoblesTriples: "Las horas extra aprobadas de la semana. Las primeras 9 se pagan al doble y de la décima en adelante al triple (LFT arts. 67 y 68). En amarillo si alguien tiene triples.",

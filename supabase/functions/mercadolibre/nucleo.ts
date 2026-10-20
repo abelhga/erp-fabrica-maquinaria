@@ -181,6 +181,51 @@ export async function procesarPendientes(e: Entorno, admin: SupabaseClient, limi
   return { procesados: avisos.length - errores, errores };
 }
 
+/**
+ * Traer lo que ya estaba en ML al conectar: los avisos solo llegan de lo que pasa después,
+ * así que una pregunta sin contestar o un reclamo abierto de antes no aparecían nunca. Se
+ * forman en la misma fila de avisos (mismo procesamiento, sin lógica nueva). Las ventas solo
+ * desde la fecha que se pida: las de antes se capturaron a mano y se duplicarían.
+ */
+export async function sincronizar(e: Entorno, admin: SupabaseClient, ventasDesde: string | null) {
+  const { cuenta, access } = await token(e, admin);
+  const vendedor = cuenta.ml_user_id;
+  const avisos: { topic: string; resource: string; ml_user_id: number }[] = [];
+
+  const preguntas = await apiML(e, access, `/questions/search?seller_id=${vendedor}&status=UNANSWERED&api_version=4&limit=50`);
+  for (const q of (Array.isArray(preguntas.questions) ? preguntas.questions : []) as Obj[]) {
+    const id = num(q.id); if (id) avisos.push({ topic: "questions", resource: `/questions/${id}`, ml_user_id: vendedor });
+  }
+  const reclamos = await apiML(e, access, `/post-purchase/v1/claims/search?status=opened&limit=50`).catch(() => ({} as Obj));
+  for (const c of (Array.isArray(reclamos.data) ? reclamos.data : []) as Obj[]) {
+    const id = num(c.id); if (id) avisos.push({ topic: "claims", resource: `/post-purchase/v1/claims/${id}`, ml_user_id: vendedor });
+  }
+  let ventas = 0;
+  if (ventasDesde) {
+    for (let offset = 0; offset < 500; offset += 50) {
+      const r = await apiML(e, access, `/orders/search?seller=${vendedor}&order.date_created.from=${ventasDesde}T00:00:00.000-06:00&sort=date_asc&limit=50&offset=${offset}`);
+      const lista = (Array.isArray(r.results) ? r.results : []) as Obj[];
+      for (const v of lista) { const id = num(v.id); if (id) { avisos.push({ topic: "orders_v2", resource: `/orders/${id}`, ml_user_id: vendedor }); ventas++; } }
+      if (lista.length < 50) break;
+    }
+  }
+  if (avisos.length) {
+    const { error } = await admin.from("ml_avisos").insert(avisos);
+    if (error) throw new ErrorML(error.message);
+  }
+  // Cuántas publicaciones activas tiene la cuenta: la prueba de que es la cuenta correcta.
+  const publicaciones = await apiML(e, access, `/users/${vendedor}/items/search?status=active&limit=1`)
+    .then((x) => num(o(x.paging).total) ?? 0).catch(() => null);
+  let procesados = 0, errores = 0;
+  for (let i = 0; i < 10; i++) {
+    const r = await procesarPendientes(e, admin, 50);
+    procesados += r.procesados; errores += r.errores;
+    if (r.procesados + r.errores < 50) break;
+  }
+  return { cuenta: cuenta.nickname, publicaciones, preguntas: avisos.filter((a) => a.topic === "questions").length,
+    reclamos: avisos.filter((a) => a.topic === "claims").length, ventas, procesados, errores };
+}
+
 // -----------------------------------------------------------------------------
 // Rutas
 // -----------------------------------------------------------------------------
@@ -265,6 +310,14 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
     // Lo que se agotó en intentos vuelve a la fila cuando alguien lo pide a mano.
     await admin.from("ml_avisos").update({ intentos: 0 }).is("procesado_en", null).gte("intentos", MAX_INTENTOS);
     try { return json(await procesarPendientes(e, admin, 50)); } catch (err) { return json({ error: err instanceof Error ? err.message : String(err) }, 502); }
+  }
+
+  if (accion === "sincronizar") {
+    if (!(await puede(u.db, "ventas", 2)) && !(await esDireccion(u.db))) return json({ error: "Sin permiso" }, 403);
+    const b = o(await req.json().catch(() => ({})));
+    const desde = txt(b.ventas_desde);
+    if (desde && !/^\d{4}-\d{2}-\d{2}$/.test(desde)) return json({ error: "La fecha va como AAAA-MM-DD" }, 400);
+    try { return json(await sincronizar(e, admin, desde ?? null)); } catch (err) { return json({ error: err instanceof Error ? err.message : String(err) }, 502); }
   }
 
   if (accion === "responder") {

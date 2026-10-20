@@ -2,24 +2,25 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { CheckCircle2, Copy, Link2, RefreshCw, Unlink } from "lucide-react";
+import { CheckCircle2, Copy, DownloadCloud, Link2, RefreshCw, Unlink } from "lucide-react";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/insignia";
-import { Campo, Seleccion } from "@/components/ui/campo";
+import { Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { Cargando, ErrorCarga } from "@/components/ui/estados";
 import { supabase } from "@/lib/supabase";
 import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { fecha, fechaYHora, hace, numero } from "@/lib/formato";
-import { llamarML, URL_ML, type EstadoML } from "@/lib/mercadolibre";
+import { llamarML, URL_ML, type EstadoML, type ResultadoSincronizar } from "@/lib/mercadolibre";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { ConfigSkydropx } from "./ConfigSkydropx";
 
 /** Mercado Libre (conectar la cuenta, a quién le llegan las ventas, si los avisos entran) y Skydropx (guías). */
 export function ConfigIntegraciones() {
-  const { tieneRol } = useSesion();
+  const { tieneRol, puede } = useSesion();
   const direccion = tieneRol("direccion");
+  const traer = direccion || puede("ventas", 2);
   const qc = useQueryClient();
   const [params, setParams] = useSearchParams();
   const estado = useQuery({ queryKey: ["estado_mercadolibre"], queryFn: () => q<EstadoML>(supabase.rpc("estado_mercadolibre")) });
@@ -28,6 +29,8 @@ export function ConfigIntegraciones() {
     queryFn: () => q<{ id: string; nombre: string }[]>(supabase.from("perfiles").select("id, nombre").eq("activo", true).order("nombre")),
   });
   const [ocupado, setOcupado] = useState<string | null>(null);
+  const [ventasDesde, setVentasDesde] = useState("");
+  const [traido, setTraido] = useState<ResultadoSincronizar | null>(null);
 
   // Regreso del permiso de ML: avisa una vez y limpia la URL.
   useEffect(() => {
@@ -54,8 +57,27 @@ export function ConfigIntegraciones() {
       setOcupado(null);
     }
   }
+  // ML solo avisa lo que pasa después de conectar: lo que ya estaba (preguntas sin contestar,
+  // reclamos abiertos y, si se pide, ventas desde una fecha) se trae con esto.
+  async function sincronizar() {
+    if (ventasDesde && !confirm(`Se van a registrar como pedidos las ventas de Mercado Libre desde el ${fecha(ventasDesde)}. Si alguna ya la capturaron a mano en Pedidos, quedaría repetida. ¿Seguir?`)) return;
+    setOcupado("sincronizar");
+    try {
+      const r = await llamarML<ResultadoSincronizar>("sincronizar", ventasDesde ? { ventas_desde: ventasDesde } : {});
+      setTraido(r);
+      toast.success(`Traído de Mercado Libre: ${numero(r.preguntas)} preguntas, ${numero(r.reclamos)} reclamos, ${numero(r.ventas)} ventas`);
+      qc.invalidateQueries();
+    } catch (e) {
+      toast.error(mensajeError(e));
+    } finally {
+      setOcupado(null);
+    }
+  }
   const responsable = useAccion((id: string) => q(supabase.rpc("fijar_responsable_ml", { p_usuario: id || null })), {
-    exito: "Responsable guardado", invalidar: [["estado_mercadolibre"]],
+    exito: "Guardado: las ventas de ML van a su nombre", invalidar: [["estado_mercadolibre"]],
+  });
+  const atienden = useAccion((ids: string[]) => q(supabase.rpc("fijar_atienden_ml", { p_usuarios: ids })), {
+    exito: "Guardado: les llegan los avisos de Mercado Libre", invalidar: [["estado_mercadolibre"]],
   });
 
   if (estado.error) return <ErrorCarga error={estado.error} />;
@@ -87,14 +109,51 @@ export function ConfigIntegraciones() {
               {e.ultimo_error && <p className="text-peligro text-xs break-words">{e.ultimo_error}</p>}
             </div>
           )}
-          {direccion && (
-            <Campo etiqueta="Responsable de Mercado Libre" ayuda="Las ventas quedan a su nombre y a esta persona le llegan los avisos de ventas por ligar, reclamos y preguntas.">
+          {e.conectada && traer && (
+            <div className="rounded-lg border border-borde px-3 py-3 space-y-2" data-explain={GLOSARIO.traerPendienteML} data-explain-title="Traer lo pendiente">
+              <p className="font-medium">Traer lo que ya estaba en Mercado Libre</p>
+              <p className="text-xs text-tenue">Mercado Libre solo avisa lo que pasa después de conectar. Esto trae las preguntas sin contestar y los reclamos abiertos; las ventas, solo si eliges desde cuándo.</p>
+              <div className="flex flex-wrap items-end gap-2">
+                <Campo etiqueta="Traer también ventas desde (opcional)">
+                  <Entrada type="date" className="w-44 block" value={ventasDesde} max={new Date().toISOString().slice(0, 10)} onChange={(x) => setVentasDesde(x.target.value)} />
+                </Campo>
+                <Boton variante="secundario" onClick={sincronizar} cargando={ocupado === "sincronizar"}><DownloadCloud className="h-4 w-4" /> Traer lo pendiente</Boton>
+              </div>
+              {traido && (
+                <p className="text-xs">
+                  Cuenta <b>{traido.cuenta ?? "de Mercado Libre"}</b>{traido.publicaciones != null ? <> · {numero(traido.publicaciones)} publicaciones activas</> : null}
+                  {" "}· {numero(traido.preguntas)} preguntas · {numero(traido.reclamos)} reclamos · {numero(traido.ventas)} ventas
+                  {traido.errores ? <span className="text-peligro"> · {numero(traido.errores)} con error</span> : null}
+                </p>
+              )}
+            </div>
+          )}
+          {direccion && <>
+            {/* Varias personas atienden ML (preguntas, reclamos, ventas por ligar); las ventas, en
+                cambio, van a nombre de una sola por la comisión. */}
+            <Campo etiqueta="Quiénes atienden Mercado Libre" ayuda="A todos les llegan los avisos de preguntas, reclamos y ventas por ligar. Si no eliges a nadie, le llegan a dirección.">
+              <div className="flex flex-wrap gap-2 pt-1" data-explain={GLOSARIO.atiendenML} data-explain-title="Quiénes atienden Mercado Libre">
+                {e.atienden.map((p) => (
+                  <span key={p.id} className="inline-flex items-center gap-1 rounded-full border border-borde bg-fondo px-2.5 py-1 text-xs">
+                    {p.nombre}
+                    <button type="button" className="text-tenue hover:text-peligro" aria-label={`Quitar a ${p.nombre}`} disabled={atienden.isPending}
+                      onClick={() => atienden.mutate(e.atienden.filter((x) => x.id !== p.id).map((x) => x.id))}>×</button>
+                  </span>
+                ))}
+                <Seleccion value="" className="h-8 w-auto text-xs" aria-label="Agregar a alguien" disabled={atienden.isPending}
+                  onChange={(x) => x.target.value && atienden.mutate([...e.atienden.map((p) => p.id), x.target.value])}>
+                  <option value="">+ Agregar a alguien…</option>
+                  {(personas.data ?? []).filter((p) => !e.atienden.some((a) => a.id === p.id)).map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                </Seleccion>
+              </div>
+            </Campo>
+            <Campo etiqueta="Las ventas de Mercado Libre quedan a nombre de" ayuda="Una sola persona: es a quien se le cuentan para la comisión. «Nadie» = quedan sin vendedor.">
               <Seleccion value={e.responsable_elegido_id ?? ""} onChange={(x) => responsable.mutate(x.target.value)} disabled={responsable.isPending}>
-                <option value="">Dirección (nadie elegido)</option>
+                <option value="">Nadie (sin vendedor)</option>
                 {(personas.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
               </Seleccion>
             </Campo>
-          )}
+          </>}
           <div className="flex flex-wrap gap-2">
             {direccion && !e.conectada && <Boton onClick={() => hacer("iniciar")} cargando={ocupado === "iniciar"}><Link2 className="h-4 w-4" /> Conectar Mercado Libre</Boton>}
             {e.conectada && <Boton variante="secundario" onClick={() => hacer("procesar")} cargando={ocupado === "procesar"}><RefreshCw className="h-4 w-4" /> Revisar ahora</Boton>}
