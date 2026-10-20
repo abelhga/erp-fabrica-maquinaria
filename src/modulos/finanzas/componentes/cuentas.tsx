@@ -8,8 +8,14 @@ import { fecha, hoyISO } from "@/lib/formato";
 
 // Lo que comparten Pagos, Cobranza y Caja chica desde que Finanzas captura aquí y no en la hoja.
 
-export type TipoAcreedor = "proveedor" | "socio" | "financiamiento";
-export const TIPO_ACREEDOR: Record<TipoAcreedor, string> = { proveedor: "Proveedor", socio: "Préstamo de socio", financiamiento: "Crédito bancario" };
+export type TipoAcreedor = "proveedor" | "socio" | "financiamiento" | "nomina" | "impuestos";
+export const TIPO_ACREEDOR: Record<TipoAcreedor, string> = {
+  proveedor: "Proveedor", socio: "Préstamo de socio", financiamiento: "Crédito bancario", nomina: "Nómina", impuestos: "Impuestos",
+};
+/** Préstamos de socios y créditos: se deben, pero no van en la agenda de pagos. */
+export const esPrestamo = (t: TipoAcreedor | null | undefined) => t === "socio" || t === "financiamiento";
+/** Nómina e impuestos: sí se pagan en la agenda, pero no son compras a un proveedor. */
+export const esNominaImpuestos = (t: TipoAcreedor | null | undefined) => t === "nomina" || t === "impuestos";
 
 /** Un renglón de la cuenta de un proveedor: lo de la hoja más lo del ERP. */
 export interface CuentaProveedor {

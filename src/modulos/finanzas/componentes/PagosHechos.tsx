@@ -9,7 +9,7 @@ import { q } from "@/lib/consultas";
 import { dinero, fecha, hoyISO, numero } from "@/lib/formato";
 import { traerTodas } from "@/modulos/costeo/componentes/comun";
 import { GLOSARIO } from "@/tutorial/glosario";
-import { TIPO_ACREEDOR, type TipoAcreedor } from "./cuentas";
+import { TIPO_ACREEDOR, esNominaImpuestos, esPrestamo, type TipoAcreedor } from "./cuentas";
 
 interface Pago {
   id: string; origen: "erp" | "hoja" | "orden"; fecha: string; proveedor_llave: string | null; proveedor: string | null;
@@ -39,7 +39,7 @@ export function PagosHechos({ alAbrirProveedor }: { alAbrirProveedor: (llave: st
   const [periodo, setPeriodo] = useState<Periodo>("mes");
   const [desde, setDesde] = useState(""), [hasta, setHasta] = useState("");
   const [cuenta, setCuenta] = useState("");
-  const [tipo, setTipo] = useState<"proveedores" | "todos" | "socios">("proveedores");
+  const [tipo, setTipo] = useState<"proveedores" | "todos" | "socios" | "nomina">("proveedores");
   const [ini, fin] = rangoDe(periodo, desde, hasta);
 
   const pagos = useQuery({
@@ -60,7 +60,8 @@ export function PagosHechos({ alAbrirProveedor }: { alAbrirProveedor: (llave: st
 
   const filas = useMemo(() => (pagos.data ?? []).filter((p) =>
     (!cuenta || (cuenta === "sin" ? !p.cuenta : p.cuenta === cuenta)) &&
-    (tipo === "todos" || (tipo === "proveedores" ? p.tipo_acreedor === "proveedor" : p.tipo_acreedor !== "proveedor"))), [pagos.data, cuenta, tipo]);
+    (tipo === "todos" || (tipo === "proveedores" ? p.tipo_acreedor === "proveedor"
+      : tipo === "nomina" ? esNominaImpuestos(p.tipo_acreedor) : esPrestamo(p.tipo_acreedor)))), [pagos.data, cuenta, tipo]);
   const total = filas.reduce((s, p) => s + Number(p.monto_mxn), 0);
   // Cuánto salió de cada cuenta en lo que se ve: lo primero que pregunta el contador.
   const porCuenta = useMemo(() => {
@@ -102,6 +103,7 @@ export function PagosHechos({ alAbrirProveedor }: { alAbrirProveedor: (llave: st
         </Seleccion>
         <Seleccion value={tipo} onChange={(e) => setTipo(e.target.value as typeof tipo)} className="h-8 w-auto text-xs" aria-label="A quién">
           <option value="proveedores">Solo proveedores</option>
+          <option value="nomina">Nómina e impuestos</option>
           <option value="socios">Socios y bancos</option>
           <option value="todos">Todos</option>
         </Seleccion>
