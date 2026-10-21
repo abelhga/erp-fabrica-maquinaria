@@ -3,7 +3,7 @@
 import { EN_VISTA_PREVIA, supabase } from "./supabase";
 
 export type Area = "direccion" | "ventas" | "compras" | "almacen" | "produccion" | "finanzas" | "importaciones"
-  | "servicio" | "rrhh" | "ingenieria";
+  | "servicio" | "rrhh" | "ingenieria" | "mantenimiento";
 export type Tono = "riesgo" | "atencion" | "bueno" | "info";
 
 export interface Resumen {

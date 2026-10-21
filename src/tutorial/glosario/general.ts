@@ -11,7 +11,8 @@ export const GENERAL = {
   alcanceRol: "Los números salen con tus permisos: un vendedor ve lo de sus clientes; la gerencia y dirección ven toda la empresa. Por eso dos personas pueden ver cifras distintas en la misma pantalla.",
 
   // --- Inicio ---
-  loQueImportaHoy: "Resumen del día de tu área. En rojo los riesgos, en ámbar lo que pide atención, en verde lo que va bien. Si Claude está conectado lo redacta él con los datos del ERP; si no, salen los hallazgos calculados por reglas (dice “Reglas de la base · sin IA”). Cada tarjeta lleva a donde se atiende.",
+  loQueImportaHoy: "Resumen del día de tu área. En rojo los riesgos, en ámbar lo que pide atención, en verde lo que va bien. Si tu puesto tiene el Asistente y Claude está conectado, lo redacta él con los datos del ERP; si no, salen los avisos calculados por reglas (dice “Reglas de la base · sin IA”). Cada tarjeta lleva a donde se atiende.",
+  avisosDeReglas: "Estos avisos los calcula el ERP con reglas fijas (órdenes atrasadas, máquinas paradas, preventivos vencidos…), sin Claude. Así salen en puestos que no usan el Asistente, como los supervisores de piso y mantenimiento.",
   ventasDelMes: "Pedidos no cancelados con fecha de este mes, sin IVA y en pesos. La flecha compara contra el mismo tramo del mes pasado (del día 1 al día de hoy), no contra el mes completo.",
   cotizacionesVivas: "Cotizaciones abiertas (de borrador a enviada) que todavía no vencen. El monto es lo ya enviado y vigente, sin IVA. El cierre es qué parte de las cotizaciones de los últimos 90 días que ya se cerraron se ganó.",
   tasaCierre: "De las cotizaciones emitidas en los últimos 90 días que ya se cerraron (aceptadas, rechazadas o vencidas), qué porcentaje se aceptó. Más alto es mejor.",

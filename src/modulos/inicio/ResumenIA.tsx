@@ -31,12 +31,14 @@ async function resumenDeRespaldo(area: Area): Promise<Resumen> {
   };
 }
 
-export function ResumenIA({ area = "direccion" }: { area?: Area }) {
+/** Sin `conClaude` (puestos sin el Asistente) salen solo los avisos de reglas: no gasta en la API. */
+export function ResumenIA({ area = "direccion", conClaude = true }: { area?: Area; conClaude?: boolean }) {
   const qc = useQueryClient();
-  const clave = ["resumen_ia", area];
+  const clave = ["resumen_ia", area, conClaude];
+  const pedir = (forzar = false) => conClaude ? pedirResumen(area, forzar).catch(() => resumenDeRespaldo(area)) : resumenDeRespaldo(area);
   const r = useQuery({
     queryKey: clave,
-    queryFn: () => pedirResumen(area).catch(() => resumenDeRespaldo(area)),
+    queryFn: () => pedir(),
     staleTime: 10 * 60_000,
   });
   // Si el resumen ya estaba guardado llega en ~1 s: esperar un poco antes de mostrar
@@ -54,7 +56,7 @@ export function ResumenIA({ area = "direccion" }: { area?: Area }) {
 
   const actualizar = async () => {
     qc.setQueryData(clave, undefined);
-    await qc.fetchQuery({ queryKey: clave, queryFn: () => pedirResumen(area, true).catch(() => resumenDeRespaldo(area)) });
+    await qc.fetchQuery({ queryKey: clave, queryFn: () => pedir(true) });
   };
 
   return (
@@ -79,7 +81,7 @@ export function ResumenIA({ area = "direccion" }: { area?: Area }) {
             {analizando
               ? <Insignia tono="marca"><Sparkles className="h-3 w-3 animate-pulse" />Claude está analizando…</Insignia>
               : datos && (datos.simulado
-                ? <Insignia tono="neutro">Reglas de la base · sin IA</Insignia>
+                ? <span data-explain={GLOSARIO.avisosDeReglas} data-explain-title="Sin IA"><Insignia tono="neutro">Reglas de la base · sin IA</Insignia></span>
                 : <Insignia tono="marca"><Sparkles className="h-3 w-3" />Claude · {hace(datos.generado_en)}</Insignia>)}
             <button onClick={actualizar} disabled={r.isFetching} title="Volver a analizar"
               className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo disabled:opacity-50">
