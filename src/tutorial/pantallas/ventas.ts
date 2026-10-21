@@ -67,6 +67,11 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma o nadie lo atiende a tiempo, se le avisa a la gerencia.",
     "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. El vendedor que lo tiene lo vuelve oportunidad con «Crear oportunidad» (si no era cliente, se da de alta) o lo descarta con el motivo. Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad.",
   ],
+  "/catalogo": [
+    "Lo que vendemos, para contestar el teléfono: cada equipo y componente con su foto, descripción, precio de lista y lo que hay en planta. Lo usa recepción.",
+    "Escribe la clave, el nombre o una palabra de la descripción para encontrarlo; los filtros de arriba separan equipos, componentes y lo que tiene existencia. Clic en un renglón abre la ficha con la foto grande.",
+    "El precio es el de lista, en pesos y sin IVA. Si dice «Pregunta a ventas» o el cliente quiere cotización, descuento o algo a la medida, regístralo como lead para que lo atienda un vendedor.",
+  ],
   "/ventas/solicitudes": [
     "Casi siempre pides un precio desde la partida de tu cotización (o desde el buscador cuando algo no aparece). Aquí ves todas juntas y puedes pedir una suelta con “Pedir precio”.",
     "“Sin tomar”: nadie de compras la ha agarrado. “Cotizando”: ya la tiene alguien. “Con precio”: ya contestaron. En rojo las que pasaron su plazo, que corre en horas hábiles (las urgentes tienen menos).",

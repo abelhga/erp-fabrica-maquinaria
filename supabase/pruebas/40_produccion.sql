@@ -35,7 +35,7 @@ begin
   select id into v_op1 from ordenes_produccion where pedido_id = v_ped order by folio limit 1;
   select id into v_op2 from ordenes_produccion where pedido_id = v_ped order by folio desc limit 1;
   assert (select sum(horas_estimadas) from op_operaciones where orden_id = v_op1) = 36, 'horas por orden';
-  assert (select estado::text from pedidos where id = v_ped) = 'en_produccion', 'pedido en producción';
+  assert (select estado::text from pedidos_basicos() where id = v_ped) = 'en_produccion', 'pedido en producción';
 
   -- Apartar: la primera toma 14 m, la segunda solo encuentra 4 → faltan 10 (lo que la hoja escondía).
   perform apartar_material(v_op1);
@@ -90,7 +90,7 @@ begin
     perform avanzar_operacion(v_oper, 'fin');
   end loop;
   assert (select estado::text from ordenes_produccion where id = v_op1) = 'terminada', 'orden terminada';
-  assert (select estado::text from pedidos where id = v_ped) = 'en_produccion', 'el pedido sigue en producción (falta la otra bazuca)';
+  assert (select estado::text from pedidos_basicos() where id = v_ped) = 'en_produccion', 'el pedido sigue en producción (falta la otra bazuca)';
 
   -- La TV ve el tablero pero no puede mover nada.
   perform pg_temp.como(v_tv);

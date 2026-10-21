@@ -102,13 +102,15 @@ begin
     if sqlerrm not like '%ya tiene pedido%' then raise; end if;
   end;
 
-  -- Producción ve el pedido (de ahí sale su trabajo), Juan no.
+  -- Producción ve el pedido sin montos (de ahí sale su trabajo), Juan no lo ve.
   perform pg_temp.como(v_prod);
-  select count(*) into v_n from pedidos where id = v_ped;
+  select count(*) into v_n from pedidos_basicos() where id = v_ped;
   assert v_n = 1, 'producción debería ver el pedido';
+  assert not exists (select 1 from pedidos where id = v_ped), 'producción vio los montos del pedido';
   perform pg_temp.como(v_juan);
   select count(*) into v_n from pedidos where id = v_ped;
   assert v_n = 0, 'Juan ve pedidos de Isaac';
+  assert not exists (select 1 from pedidos_basicos() where id = v_ped), 'Juan ve pedidos de Isaac sin montos';
 
   -- ---------------------------------------------------------------------------
   -- Comisiones: septiembre 2026 de Isaac en la hoja = 57,140 + 10,000 + 6,400 = 73,540

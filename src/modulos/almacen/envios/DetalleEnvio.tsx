@@ -209,7 +209,9 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
       )}
 
       {e.pedido_id && puede("ventas") && (
-        <p className="text-sm"><Link to={`/ventas/pedidos/${e.pedido_id}`} className="text-marca-texto hover:underline">Ver el pedido {e.pedido_folio}</Link></p>
+        <p className="text-sm">{puede("ventas")
+          ? <Link to={`/ventas/pedidos/${e.pedido_id}`} className="text-marca-texto hover:underline">Ver el pedido {e.pedido_folio}</Link>
+          : <>Pedido {e.pedido_folio}</>}</p>
       )}
 
       {skydropx && <DialogoSkydropx envio={e} abierto={dlg === "skydropx"} alCambiar={(v) => setDlg(v ? "skydropx" : null)} />}
