@@ -20,7 +20,7 @@ import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Pregunta {
   id: number; item_id: string; articulo_id: string | null; titulo_publicacion: string | null; texto: string;
-  estado: "pendiente" | "contestada" | "borrada"; recibida_en: string; respuesta: string | null; contestada_en: string | null;
+  estado: "pendiente" | "contestada" | "borrada" | "sin_publicacion"; recibida_en: string; respuesta: string | null; contestada_en: string | null;
 }
 
 const minutos = (p: Pregunta) => p.contestada_en ? (new Date(p.contestada_en).getTime() - new Date(p.recibida_en).getTime()) / 60_000 : null;
@@ -77,6 +77,11 @@ export default function MercadoLibre() {
           ) : <>
             {pendientes.map((p) => <PreguntaPendiente key={p.id} p={p} editable={puede("ventas", 2)} />)}
             {pendientes.length === 0 && <p className="text-sm text-tenue">No hay preguntas sin contestar.</p>}
+            {todas.some((p) => p.estado === "sin_publicacion") && (
+              <p className="text-xs text-tenue" data-explain={GLOSARIO.preguntaSinPublicacion} data-explain-title="Sin publicación activa">
+                {todas.filter((p) => p.estado === "sin_publicacion").length} preguntas de publicaciones pausadas o cerradas no se muestran: Mercado Libre ya no deja contestarlas.
+              </p>
+            )}
             <h3 className="font-semibold pt-2">Contestadas</h3>
             {!todas.some((p) => p.estado === "contestada") ? <p className="text-sm text-tenue">Todavía ninguna: las que contestes aquí o en Mercado Libre quedan con su tiempo de respuesta.</p> : <Tarjeta>
               <ul className="divide-y divide-borde">

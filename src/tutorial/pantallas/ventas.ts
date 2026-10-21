@@ -74,7 +74,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
   ],
   "/ventas/mercadolibre": [
     "Lo de Mercado Libre que necesita a alguien: las preguntas de compradores por contestar y las publicaciones vendidas que falta ligar a su artículo. Las ventas no se capturan aquí: entran solas a Pedidos. La usa quien atiende Mercado Libre.",
-    "En «Preguntas», escribe la respuesta y da «Contestar» (o Ctrl+Enter): se publica en Mercado Libre tal cual. Cada pregunta dice cuánto lleva esperando; arriba ves el tiempo de respuesta de los últimos 30 días.",
+    "En «Preguntas», escribe la respuesta y da «Contestar» (o Ctrl+Enter): se publica en Mercado Libre tal cual. Solo salen las de publicaciones activas: Mercado Libre no deja contestar las de una publicación pausada o cerrada, y esas se quitan de la lista. Cada pregunta dice cuánto lleva esperando; arriba ves el tiempo de respuesta de los últimos 30 días.",
     "En «Por ligar», busca qué artículo es cada publicación y elígelo: sus ventas toman ese artículo y se pide el envío que estaba esperando. Si la publicación es un paquete (24 cangilones), pon en «Piezas por venta» cuántas trae: cada venta entra como esas piezas al precio de cada una. Si la publicación trae como SKU la clave del ERP, se liga sola.",
     "En «Ligadas» ves cada publicación con su artículo. Si se ligó mal, «Corregir» cambia el artículo o las piezas y rehace las ventas abiertas que todavía no tienen guía; «Desligar» la regresa a «Por ligar».",
   ],
