@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft, Ban, CheckCircle2, ClipboardX, MessageSquarePlus, PackageOpen, Pause, Pencil, Play, PlayCircle, Truck,
+  ArrowLeft, Ban, CheckCircle2, Hourglass, ClipboardX, MessageSquarePlus, PackageOpen, Pause, Pencil, Play, PlayCircle, Truck,
 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
@@ -19,14 +19,20 @@ import { CLAVE, consulta, useEventos, useProduccionEnVivo, type EstadoOP, type E
 import { BarraAvance, IconoEvento, InsigniaCompromiso } from "./componentes/piezas";
 import { PasosValidacion, type AccionPaso } from "./componentes/Validacion";
 import { DialogoSurtir, MaterialOrden } from "./componentes/MaterialOrden";
-import { DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, type OrdenBasica } from "./componentes/DialogosOrden";
+import { DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, DialogoEnEspera, type OrdenBasica } from "./componentes/DialogosOrden";
 import { ESTADO_OP, ESTADO_OPERACION, PRIORIDAD, horas, textoEvento } from "./componentes/util";
 import { GLOSARIO } from "@/tutorial/glosario";
+
+interface HorasHombre {
+  operacion_id: string; horas_estimadas: number; horas_reales: number; horas_sin_nombre: number;
+  personas: { tiempo_id: string; nombre: string; horas: number; abierto: boolean }[];
+}
 
 interface Orden {
   id: string; folio: string; numero_serie: string | null; estado: EstadoOP; prioridad: number; cantidad: number;
   fecha_compromiso: string | null; inicio_plan: string | null; notas: string | null; pedido_id: string | null;
   articulo_id: string; motivo_cancelacion: string | null; terminada_en: string | null; entregada_en: string | null; creado_en: string;
+  en_espera_motivo: string | null; en_espera_desde: string | null;
   articulo: { clave: string; nombre: string; imagen_url: string | null };
 }
 interface Operacion {
@@ -65,6 +71,9 @@ export default function DetalleOrden() {
     queryKey: [...CLAVE, "material", id],
     queryFn: () => q<MaterialOP[]>(supabase.from("v_op_material").select("*").eq("orden_id", id).order("nombre")),
   });
+  // Horas hombre reales por etapa (cada persona su tramo; la terminal los anota).
+  const horasHombre = useQuery({ queryKey: [...CLAVE, "horas_hombre", id], refetchInterval: 60_000,
+    queryFn: () => q<HorasHombre[]>(supabase.rpc("horas_hombre_orden", { p_orden: id })) });
   const operaciones = useQuery({
     queryKey: [...CLAVE, "orden", id, "operaciones"],
     queryFn: async () => (await consulta<Operacion[]>(supabase.from("op_operaciones").select("*, etapa:etapas(nombre, color, orden)").eq("orden_id", id)))
@@ -78,7 +87,7 @@ export default function DetalleOrden() {
       .eq("orden_id", id).order("solicitado_en", { ascending: false })),
   });
 
-  const [dialogo, setDialogo] = useState<null | "editar" | "cancelar" | "surtir" | "cambio">(null);
+  const [dialogo, setDialogo] = useState<null | "editar" | "cancelar" | "surtir" | "cambio" | "espera">(null);
   const abrir = (d: typeof dialogo) => (v: boolean) => setDialogo(v ? d : null);
 
   const inv = { invalidar: [CLAVE] };
@@ -93,6 +102,7 @@ export default function DetalleOrden() {
   // Una orden de equipo que nació sin serie (su equipo no tenía código): se asigna al capturarlo.
   const asignarSerie = useAccion(() => q<string>(supabase.rpc("asignar_numero_serie", { p_orden: id })), { ...inv, invalidar: [CLAVE, ["numeros_serie"]], exito: (s) => `Número de serie ${s}` });
   const entregar = useAccion(() => q(supabase.rpc("entregar_orden", { p_op: id })), { ...inv, exito: "Orden entregada" });
+  const reactivar = useAccion(() => q(supabase.rpc("reactivar_orden", { p_op: id })), { ...inv, exito: "Orden reactivada: vuelve a la carga del taller" });
   const avanzar = useAccion((a: { op: string; accion: string }) => q(supabase.rpc("avanzar_operacion", { p_operacion: a.op, p_accion: a.accion })), inv);
   const resolver = useAccion((a: { id: string; estado: string }) => q(supabase.rpc("responder_solicitud_cambio", { p_id: a.id, p_estado: a.estado })),
     { ...inv, exito: "Solicitud resuelta" });
@@ -142,16 +152,25 @@ export default function DetalleOrden() {
         <span className="cifra">{o.folio}</span>
         <Insignia tono={ESTADO_OP[o.estado].tono} className="text-sm">{ESTADO_OP[o.estado].texto}</Insignia>
         {o.prioridad !== 2 && <Insignia tono={PRIORIDAD[o.prioridad].tono} className="text-sm">{PRIORIDAD[o.prioridad].texto}</Insignia>}
-        {t?.pausada && <Insignia tono="aviso" className="text-sm">Pausada</Insignia>}
+        {t?.pausada && !o.en_espera_motivo && <Insignia tono="aviso" className="text-sm">Pausada</Insignia>}
+        {o.en_espera_motivo && <span data-explain={GLOSARIO.ordenEnEspera}><Insignia tono="aviso" className="text-sm"><Hourglass className="h-3.5 w-3.5" />En espera</Insignia></span>}
       </span>}
       descripcion={<>{o.articulo.nombre}{o.cantidad > 1 && ` × ${o.cantidad}`}</>}
       acciones={<>
         {p.solicitar && <Boton variante="secundario" onClick={() => setDialogo("cambio")}><MessageSquarePlus className="h-4 w-4" />Solicitar cambio a ingeniería</Boton>}
         {p.gerencia && o.estado !== "entregada" && o.estado !== "cancelada" && <Boton variante="secundario" onClick={() => setDialogo("editar")}><Pencil className="h-4 w-4" />Editar</Boton>}
         {o.estado === "terminada" && (p.gerencia || p.almacen) && <Boton onClick={() => entregar.mutate(undefined)} cargando={entregar.isPending}><Truck className="h-4 w-4" />Marcar entregada</Boton>}
+        {p.gerencia && abierta && (o.en_espera_motivo
+          ? <Boton onClick={() => reactivar.mutate(undefined)} cargando={reactivar.isPending}><Play className="h-4 w-4" />Reactivar</Boton>
+          : <Boton variante="secundario" onClick={() => setDialogo("espera")}><Hourglass className="h-4 w-4" />Poner en espera</Boton>)}
         {p.gerencia && abierta && <Boton variante="fantasma" className="text-peligro" onClick={() => setDialogo("cancelar")}><Ban className="h-4 w-4" />Cancelar</Boton>}
       </>}
     >
+      {o.en_espera_motivo && abierta && (
+        <div className="rounded-lg border border-aviso/40 bg-aviso-suave p-3 text-sm" data-explain={GLOSARIO.ordenEnEspera}>
+          <b>En espera desde el {fecha(o.en_espera_desde)}:</b> {o.en_espera_motivo}. No cuenta en la carga del taller ni se trabaja en la terminal hasta que se reactive.
+        </div>
+      )}
       {o.estado === "cancelada" && (
         <div className="rounded-lg border border-peligro/30 bg-peligro-suave p-3 text-sm text-peligro">Orden cancelada: {o.motivo_cancelacion}</div>
       )}
@@ -213,7 +232,7 @@ export default function DetalleOrden() {
             <div className="px-5 pb-5"><PlanosOrden ordenId={id} /></div>
           </Tarjeta>
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Etapas" descripcion="Horas estimadas del costeo y quién la trabaja" />
+            <EncabezadoTarjeta titulo="Etapas" explica={GLOSARIO.horasHombre} descripcion="Horas estimadas del costeo contra las horas hombre reales, y quién la trabajó" />
             <ul className="px-3 pb-3 space-y-1">
               {(operaciones.data ?? []).length === 0 && !operaciones.isLoading && <li className="text-sm text-tenue px-2 py-4">Este equipo no tiene horas por etapa en el costeo.</li>}
               {(operaciones.data ?? []).map((x) => (
@@ -228,7 +247,7 @@ export default function DetalleOrden() {
                     <p className="text-xs text-tenue flex-1 min-w-0 truncate">
                       {[x.responsable, x.inicio && `inició ${fechaYHora(x.inicio)}`, x.fin && `terminó ${fechaYHora(x.fin)}`].filter(Boolean).join(" · ") || "Sin empezar"}
                     </p>
-                    {p.taller && enTaller && x.estado !== "terminada" && (
+                    {p.taller && enTaller && !o.en_espera_motivo && x.estado !== "terminada" && (
                       <div className="flex gap-1">
                         {x.estado === "pendiente" && <MiniAccion icono={Play} texto="Iniciar" alClic={() => avanzar.mutate({ op: x.id, accion: "inicio" })} />}
                         {x.estado === "en_proceso" && <MiniAccion icono={Pause} texto="Pausar" alClic={() => avanzar.mutate({ op: x.id, accion: "pausa" })} />}
@@ -237,6 +256,7 @@ export default function DetalleOrden() {
                       </div>
                     )}
                   </div>
+                  <HorasDeEtapa h={horasHombre.data?.find((y) => y.operacion_id === x.id)} />
                 </li>
               ))}
             </ul>
@@ -290,6 +310,7 @@ export default function DetalleOrden() {
       {p.gerencia && <>
         <DialogoEditarOrden abierto={dialogo === "editar"} alCambiar={abrir("editar")} o={basica} />
         <DialogoCancelar abierto={dialogo === "cancelar"} alCambiar={abrir("cancelar")} o={basica} />
+        <DialogoEnEspera abierto={dialogo === "espera"} alCambiar={abrir("espera")} o={basica} />
       </>}
       {p.almacen && <DialogoSurtir abierto={dialogo === "surtir"} alCambiar={abrir("surtir")} ordenId={id} folio={o.folio} material={lista} />}
       {p.solicitar && <DialogoCambioIngenieria abierto={dialogo === "cambio"} alCambiar={abrir("cambio")} o={basica} material={lista} />}
@@ -312,5 +333,25 @@ function MiniAccion({ icono: I, texto, alClic }: { icono: typeof Play; texto: st
             className="h-7 w-7 rounded-md border border-borde flex items-center justify-center text-tenue hover:text-texto hover:bg-fondo">
       <I className="h-3.5 w-3.5" />
     </button>
+  );
+}
+
+/** "12.5 h hombre de 10 estimadas · Ana 6 h, Beto 4 h, 2 sin nombre 2.5 h" */
+function HorasDeEtapa({ h }: { h?: HorasHombre }) {
+  if (!h || h.personas.length === 0) return null;
+  const reales = Number(h.horas_reales), est = Number(h.horas_estimadas);
+  const porNombre = new Map<string, { horas: number; abierto: boolean }>();
+  for (const x of h.personas) {
+    const a = porNombre.get(x.nombre) ?? { horas: 0, abierto: false };
+    porNombre.set(x.nombre, { horas: a.horas + Number(x.horas), abierto: a.abierto || x.abierto });
+  }
+  return (
+    <div className="pl-5 mt-1 text-xs" data-explain={GLOSARIO.horasHombre} data-explain-title="Horas hombre">
+      <p className={cn("cifra font-medium", est > 0 && reales > est ? "text-aviso" : "text-texto")}>
+        {horas(reales)} hombre{est > 0 && ` de ${horas(est)} estimadas`}
+        {Number(h.horas_sin_nombre) > 0 && <span className="text-tenue font-normal"> · {horas(Number(h.horas_sin_nombre))} sin nombre</span>}
+      </p>
+      <p className="text-tenue">{[...porNombre].map(([n, v]) => `${n} ${horas(v.horas)}${v.abierto ? " (trabajando)" : ""}`).join(" · ")}</p>
+    </div>
   );
 }

@@ -26,6 +26,7 @@ export interface OrdenTablero {
   ultimo_movimiento: string | null; pedido_id: string | null; para_stock: boolean; etapas_activas: EtapaActiva[];
   siguiente_etapa_id: number | null; siguiente_etapa_color: string | null; horas_pendientes: number;
   material_apartado: boolean; faltantes_sin_pedir: number; terminada_en: string | null; creado_en: string; notas: string | null;
+  en_espera_motivo: string | null; en_espera_desde: string | null;
 }
 
 export interface Etapa { id: number; nombre: string; orden: number; color: string; activa: boolean; capacidad_horas_semana: number }

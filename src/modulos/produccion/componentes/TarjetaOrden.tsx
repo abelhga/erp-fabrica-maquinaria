@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import * as P from "@radix-ui/react-popover";
-import { AlertTriangle, CalendarDays, ChevronDown, ChevronUp, Flame, PauseCircle, PackageX, Truck, Unlock } from "lucide-react";
+import { AlertTriangle, CalendarDays, ChevronDown, ChevronUp, Flame, Hourglass, PauseCircle, PackageX, Truck, Unlock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
@@ -62,7 +62,9 @@ export function TarjetaOrden({ o, puedeGestionar }: { o: OrdenTablero; puedeGest
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        <InsigniaCompromiso dias={o.dias_restantes} fechaCompromiso={o.fecha_compromiso} cerrada={cerrada} />
+        {o.en_espera_motivo
+          ? <span data-explain={GLOSARIO.ordenEnEspera} title={o.en_espera_motivo}><Insignia tono="aviso"><Hourglass className="h-3 w-3" />En espera</Insignia></span>
+          : <InsigniaCompromiso dias={o.dias_restantes} fechaCompromiso={o.fecha_compromiso} cerrada={cerrada} />}
         {o.materiales_faltantes > 0 && (
           <span data-explain={GLOSARIO.faltanteMaterial}>
             <Insignia tono={o.faltantes_sin_pedir > 0 ? "peligro" : "aviso"}>
@@ -70,7 +72,7 @@ export function TarjetaOrden({ o, puedeGestionar }: { o: OrdenTablero; puedeGest
             </Insignia>
           </span>
         )}
-        {o.pausada && <span data-explain={GLOSARIO.etapaPausada}><Insignia tono="aviso"><PauseCircle className="h-3 w-3" />Pausada</Insignia></span>}
+        {o.pausada && !o.en_espera_motivo && <span data-explain={GLOSARIO.etapaPausada}><Insignia tono="aviso"><PauseCircle className="h-3 w-3" />Pausada</Insignia></span>}
         {o.estado === "planeada" && !o.revisada_ingenieria && <span data-explain={GLOSARIO.revisionIngenieria}><Insignia><AlertTriangle className="h-3 w-3" />Sin revisión de ingeniería</Insignia></span>}
       </div>
 

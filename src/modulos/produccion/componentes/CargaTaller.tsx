@@ -70,7 +70,7 @@ function FilaCarga({ f, maximo, marcas, esCuello }: {
   maximo: number; marcas: number[]; esCuello: boolean;
 }) {
   const ancho = (s: number) => `${Math.min(100, (s / maximo) * 100)}%`;
-  const detalle = `${f.nombre}: ${horas(f.horas_pendientes)} en el taller (${sem(f.semTaller)} sem) · ${horas(f.horas_planeadas)} planeadas (${sem(f.semPlan)} sem) · capacidad ${horas(f.cap)}/semana · ${f.en_proceso} en proceso, ${f.pausadas} pausadas, ${f.en_espera} en espera`;
+  const detalle = `${f.nombre}: ${horas(f.horas_pendientes)} en el taller (${sem(f.semTaller)} sem) · ${horas(f.horas_planeadas)} planeadas (${sem(f.semPlan)} sem) · capacidad ${horas(f.cap)}/semana · ${f.en_proceso} en proceso, ${f.pausadas} pausadas, ${f.en_espera} por empezar`;
   return (
     <>
       <div className="flex items-center gap-2 py-2 min-w-0">

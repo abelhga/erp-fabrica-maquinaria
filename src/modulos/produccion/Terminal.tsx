@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, HardHat, LayoutGrid, Loader2, PackageX, Pause, Play, PlayCircle, X,
+  AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, HardHat, LayoutGrid, Loader2, LogOut, Minus, PackageX, Pause, Play, PlayCircle, Plus, UserPlus, Users, X,
 } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { supabase } from "@/lib/supabase";
@@ -12,13 +12,27 @@ import { fecha } from "@/lib/formato";
 import { CLAVE, useEtapas, usePiso, useProduccionEnVivo, type Etapa, type OperacionPiso } from "./componentes/datos";
 import { abreviarEquipo, folioCorto, haceRato, textoDias, tonoCompromiso } from "./componentes/util";
 import { useSesion } from "@/lib/sesion";
+import { GLOSARIO } from "@/tutorial/glosario";
+import { Explicacion } from "@/tutorial/Explicacion";
+import { PANTALLAS } from "@/tutorial/pantallas";
 
 // La tablet se queda en su estación: etapa y nombres se recuerdan en el aparato.
-const LS = { etapa: "terminal.etapa", nombre: "terminal.nombre", recientes: "terminal.recientes" };
+const LS = { etapa: "terminal.etapa", nombre: "terminal.nombre", recientes: "terminal.recientes", cuadrilla: "terminal.cuadrilla." };
 const leer = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
 const guardar = (k: string, v: string | null) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch { /* modo privado */ } };
 
 type Accion = "inicio" | "pausa" | "reanudar" | "fin" | "problema";
+/** Quiénes trabajan una etapa: personas con nombre más las que no se sabe quiénes son. */
+interface Cuadrilla { empleados: string[]; sinNombre: number }
+interface PersonaPiso { id: string; nombre: string; etapa_id: number | null; trabajando_en: string | null; tiempo_id: string | null }
+interface TramoAbierto { tiempo_id: string; operacion_id: string; empleado_id: string | null; nombre: string; personas: number; inicio: string }
+
+function usePersonalPiso() {
+  return useQuery({ queryKey: [...CLAVE, "personal_piso"], staleTime: 30_000, queryFn: () => q<PersonaPiso[]>(supabase.rpc("personal_de_piso")) });
+}
+function useCuadrillas() {
+  return useQuery({ queryKey: [...CLAVE, "cuadrillas"], queryFn: () => q<TramoAbierto[]>(supabase.rpc("cuadrillas_abiertas")) });
+}
 const ACCIONES: Record<Accion, { texto: string; verbo: string; hecho: string; icono: typeof Play; clase: string }> = {
   inicio: { texto: "Iniciar", verbo: "Iniciar", hecho: "iniciada", icono: Play, clase: "bg-ok text-white" },
   pausa: { texto: "Pausar", verbo: "Pausar", hecho: "pausada", icono: Pause, clase: "bg-aviso text-white" },
@@ -41,7 +55,7 @@ function tintaSobre(hex: string) {
  * la pantalla (sin el menú) para que no se toque nada más por accidente.
  */
 export default function Terminal() {
-  useProduccionEnVivo();
+  useProduccionEnVivo(["op_eventos", "ordenes_produccion", "op_tiempos"]);
   const etapas = useEtapas();
   const { puede } = useSesion();
   const piso = usePiso({ intervalo: 60_000 });
@@ -68,9 +82,12 @@ export default function Terminal() {
 
   const qc = useQueryClient();
   const marcar = useMutation({
-    mutationFn: (a: { op: OperacionPiso; accion: Accion; nota: string }) =>
-      q(supabase.rpc("avanzar_operacion", { p_operacion: a.op.id, p_accion: a.accion, p_nota: a.nota || null, p_responsable: nombre || null })),
+    mutationFn: (a: { op: OperacionPiso; accion: Accion; nota: string; cuadrilla?: Cuadrilla }) =>
+      q(supabase.rpc("avanzar_operacion", { p_operacion: a.op.id, p_accion: a.accion, p_nota: a.nota || null, p_responsable: nombre || null,
+        p_empleados: a.cuadrilla?.empleados ?? null, p_sin_nombre: a.cuadrilla?.sinNombre ?? 0 })),
     onSuccess: (_, a) => {
+      // La cuadrilla se recuerda por etapa: mañana suele ser la misma gente.
+      if (a.cuadrilla) guardar(LS.cuadrilla + a.op.etapa_id, JSON.stringify(a.cuadrilla));
       setPendiente(null);
       setAviso({ tono: "ok", texto: `${a.op.etapa} ${ACCIONES[a.accion].hecho}`, folio: folioCorto(a.op.folio) });
       qc.invalidateQueries({ queryKey: CLAVE });
@@ -123,6 +140,7 @@ export default function Terminal() {
           <ElegirEtapa etapas={etapas.data ?? []} cargando={etapas.isLoading} piso={todas} alElegir={elegirEtapa} />
         ) : (
           <div className="max-w-5xl mx-auto p-3 sm:p-5 space-y-6">
+            <Explicacion className="text-base">{PANTALLAS["/produccion/terminal"].map((t) => <p key={t}>{t}</p>)}</Explicacion>
             <div className="flex items-center gap-3">
               <span className="h-10 w-2.5 rounded-full" style={{ background: etapa.color }} />
               <h1 className="text-3xl font-bold">{etapa.nombre}</h1>
@@ -154,7 +172,7 @@ export default function Terminal() {
       )}
       {pendiente && nombre && !eligiendoNombre && (
         <Confirmar p={pendiente} nombre={nombre} cargando={marcar.isPending} alCambiarNombre={() => setEligiendoNombre(true)}
-                   alCancelar={() => setPendiente(null)} alConfirmar={(nota) => marcar.mutate({ ...pendiente, nota })} />
+                   alCancelar={() => setPendiente(null)} alConfirmar={(nota, cuadrilla) => marcar.mutate({ ...pendiente, nota, cuadrilla })} />
       )}
       {aviso && (
         <div role="status" aria-live="assertive" onClick={() => setAviso(null)}
@@ -232,7 +250,8 @@ function TarjetaPiso({ o, pedir, ahora, tenue }: { o: OperacionPiso; pedir: (o: 
       </div>
 
       <div className="text-lg space-y-1">
-        {o.estado === "en_proceso" && <p className="font-medium text-marca-texto">● En proceso{o.responsable && ` · ${o.responsable}`}{o.inicio && ` · empezó ${haceRato(o.inicio, ahora)}`}</p>}
+        {o.estado === "en_proceso" && <p className="font-medium text-marca-texto">● En proceso{o.inicio && ` · empezó ${haceRato(o.inicio, ahora)}`}</p>}
+        {o.estado === "en_proceso" && <CuadrillaEnEtapa o={o} ahora={ahora} />}
         {o.estado === "pausada" && <p className="font-semibold text-aviso">❚❚ Pausada{o.responsable && ` · ${o.responsable}`}</p>}
         {o.estado === "pendiente" && (o.lista ? <p className="text-ok font-medium">Lista para empezar</p> : <p className="text-tenue">Todavía en {o.espera_a}</p>)}
         {o.ultimo_problema && o.estado !== "pendiente" && (
@@ -316,11 +335,20 @@ function ElegirNombre({ actual, recientes, alElegir, alCerrar }: { actual: strin
 
 function Confirmar({ p, nombre, cargando, alConfirmar, alCancelar, alCambiarNombre }: {
   p: { op: OperacionPiso; accion: Accion }; nombre: string; cargando: boolean;
-  alConfirmar: (nota: string) => void; alCancelar: () => void; alCambiarNombre: () => void;
+  alConfirmar: (nota: string, cuadrilla?: Cuadrilla) => void; alCancelar: () => void; alCambiarNombre: () => void;
 }) {
   const [nota, setNota] = useState("");
   const A = ACCIONES[p.accion];
   const obligatoria = p.accion === "problema";
+  const conCuadrilla = p.accion === "inicio" || p.accion === "reanudar";
+  const personal = usePersonalPiso();
+  const [cuadrilla, setCuadrilla] = useState<Cuadrilla>(() => {
+    try { return JSON.parse(leer(LS.cuadrilla + p.op.etapa_id) ?? "") as Cuadrilla; } catch { return { empleados: [], sinNombre: 0 }; }
+  });
+  // Quien ya está en otra etapa no se preselecciona (la base no lo deja estar en dos).
+  const libres = new Set((personal.data ?? []).filter((x) => !x.trabajando_en).map((x) => x.id));
+  const elegidos = { ...cuadrilla, empleados: cuadrilla.empleados.filter((id) => libres.has(id)) };
+  const cuantos = elegidos.empleados.length + elegidos.sinNombre;
   return (
     <Modal titulo={`${A.verbo} ${p.op.etapa}`} alCerrar={alCancelar}>
       <div className="rounded-xl bg-fondo p-4 mb-4">
@@ -332,15 +360,127 @@ function Confirmar({ p, nombre, cargando, alConfirmar, alCancelar, alCambiarNomb
         <HardHat className="h-6 w-6 text-tenue" />Lo marca <b>{nombre}</b>
         <button onClick={alCambiarNombre} className="text-marca-texto underline underline-offset-4 min-h-[44px] px-1">No soy yo</button>
       </p>
+      {conCuadrilla && (
+        <div className="mb-5" data-explain={GLOSARIO.cuadrillaEtapa} data-explain-title="Cuadrilla">
+          <p className="font-medium mb-2 flex items-center gap-2"><Users className="h-6 w-6 text-tenue" />¿Quiénes trabajan? <span className="text-tenue font-normal">{cuantos} {cuantos === 1 ? "persona" : "personas"}</span></p>
+          <ElegirPersonas etapaId={p.op.etapa_id} personal={personal.data ?? []} cargando={personal.isLoading} valor={elegidos} alCambiar={setCuadrilla} />
+        </div>
+      )}
       <label className="block font-medium mb-2" htmlFor="nota-piso">{obligatoria ? "¿Cuál es el problema?" : "Nota (opcional)"}</label>
       <textarea id="nota-piso" value={nota} onChange={(e) => setNota(e.target.value)} rows={3} autoFocus={obligatoria}
                 className="w-full rounded-xl border-2 border-borde bg-superficie p-3 text-xl focus:outline-none focus:border-marca"
                 placeholder={obligatoria ? "Falta lámina, la máquina no prende…" : ""} />
       <div className="grid grid-cols-2 gap-3 mt-5">
         <button onClick={alCancelar} className="min-h-[64px] rounded-xl border-2 border-borde bg-superficie text-xl font-semibold">Cancelar</button>
-        <button onClick={() => alConfirmar(nota.trim())} disabled={cargando || (obligatoria && !nota.trim())}
+        <button onClick={() => alConfirmar(nota.trim(), conCuadrilla ? elegidos : undefined)} disabled={cargando || (obligatoria && !nota.trim()) || (conCuadrilla && cuantos === 0)}
                 className={cn("min-h-[64px] rounded-xl text-xl font-bold flex items-center justify-center gap-2 disabled:opacity-40", A.clase)}>
           {cargando ? <Loader2 className="h-7 w-7 animate-spin" /> : <A.icono className="h-7 w-7" />}{A.texto}
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+/**
+ * Botones grandes con el personal: primero los de esta etapa (según su ficha), luego los
+ * demás. Quien ya está en otra etapa sale apagado con dónde está. "Sin nombre" es para el
+ * ayudante de paso o alguien sin alta: cuenta igual en las horas hombre.
+ */
+function ElegirPersonas({ etapaId, personal, cargando, valor, alCambiar, uno }: {
+  etapaId: number; personal: PersonaPiso[]; cargando: boolean; valor: Cuadrilla; alCambiar: (c: Cuadrilla) => void; uno?: boolean;
+}) {
+  const [todos, setTodos] = useState(false);
+  const deEtapa = personal.filter((x) => x.etapa_id === etapaId);
+  const lista = todos || deEtapa.length === 0 ? [...deEtapa, ...personal.filter((x) => x.etapa_id !== etapaId)] : deEtapa;
+  const cambiar = (id: string) => alCambiar(uno ? { empleados: [id], sinNombre: 0 }
+    : { ...valor, empleados: valor.empleados.includes(id) ? valor.empleados.filter((x) => x !== id) : [...valor.empleados, id] });
+  if (cargando) return <Loader2 className="h-8 w-8 animate-spin text-tenue" />;
+  return (
+    <div className="space-y-3">
+      {personal.length === 0 && <p className="text-tenue">No hay personal activo dado de alta: usa «Sin nombre» y pide a Recursos Humanos que los registre.</p>}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {lista.map((x) => {
+          const sel = valor.empleados.includes(x.id);
+          return (
+            <button key={x.id} type="button" disabled={!!x.trabajando_en} onClick={() => cambiar(x.id)}
+                    className={cn("min-h-[56px] rounded-xl border-2 px-3 text-left flex items-center gap-3 disabled:opacity-50",
+                      sel ? "border-marca bg-marca-suave" : "border-borde bg-superficie")}>
+              <HardHat className={cn("h-6 w-6 shrink-0", sel ? "text-marca-texto" : "text-tenue")} />
+              <span className="min-w-0"><span className="block truncate text-lg font-medium">{x.nombre}</span>
+                {x.trabajando_en && <span className="block text-sm text-tenue truncate">En {x.trabajando_en}</span>}</span>
+            </button>
+          );
+        })}
+      </div>
+      {!todos && deEtapa.length > 0 && deEtapa.length < personal.length && (
+        <button type="button" onClick={() => setTodos(true)} className="text-marca-texto underline underline-offset-4 min-h-[44px]">Ver a todo el personal</button>
+      )}
+      <div className="flex items-center gap-3 rounded-xl border-2 border-dashed border-borde px-3 py-2">
+        <span className="flex-1">Sin nombre <span className="text-tenue text-base">(ayudante de paso)</span></span>
+        {!uno && <button type="button" aria-label="Uno menos sin nombre" disabled={valor.sinNombre === 0} onClick={() => alCambiar({ ...valor, sinNombre: valor.sinNombre - 1 })}
+                className="h-12 w-12 rounded-xl border-2 border-borde flex items-center justify-center disabled:opacity-40"><Minus className="h-6 w-6" /></button>}
+        {!uno && <span className="w-8 text-center text-2xl font-bold cifra">{valor.sinNombre}</span>}
+        <button type="button" aria-label="Uno más sin nombre" disabled={valor.sinNombre >= 10}
+                onClick={() => alCambiar(uno ? { empleados: [], sinNombre: 1 } : { ...valor, sinNombre: valor.sinNombre + 1 })}
+                className={cn("h-12 rounded-xl border-2 flex items-center justify-center gap-1 px-3 disabled:opacity-40",
+                  uno && valor.sinNombre > 0 ? "border-marca bg-marca-suave" : "border-borde")}><Plus className="h-6 w-6" />{uno && "1"}</button>
+      </div>
+    </div>
+  );
+}
+
+/** Quién está ahorita en la etapa, con «Sale» para cada uno y «Se une» para alguien más. */
+function CuadrillaEnEtapa({ o, ahora }: { o: OperacionPiso; ahora: number }) {
+  const cuadrillas = useCuadrillas();
+  const qc = useQueryClient();
+  const [uniendo, setUniendo] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const tramos = (cuadrillas.data ?? []).filter((t) => t.operacion_id === o.id);
+  const salir = useMutation({
+    mutationFn: (id: string) => q(supabase.rpc("salir_de_etapa", { p_tiempo: id })),
+    onSuccess: () => { setError(null); qc.invalidateQueries({ queryKey: CLAVE }); },
+    onError: (e) => setError(mensajeError(e)),
+  });
+  return (
+    <div className="space-y-2" data-explain={GLOSARIO.cuadrillaEtapa} data-explain-title="Cuadrilla">
+      <div className="flex flex-wrap gap-2">
+        {tramos.length === 0 && <span className="text-tenue">Nadie anotado{o.responsable ? ` (marcó ${o.responsable})` : ""}</span>}
+        {tramos.map((t) => (
+          <span key={t.tiempo_id} className="inline-flex items-center gap-2 rounded-xl bg-fondo border border-borde pl-3 pr-1 py-1">
+            <span>{t.nombre} <span className="text-tenue text-base">· {haceRato(t.inicio, ahora)}</span></span>
+            <button type="button" onClick={() => salir.mutate(t.tiempo_id)} disabled={salir.isPending} aria-label={`${t.nombre} sale`}
+                    className="h-10 rounded-lg px-2 flex items-center gap-1 text-base text-tenue hover:text-texto"><LogOut className="h-5 w-5" />Sale</button>
+          </span>
+        ))}
+        <button type="button" onClick={() => setUniendo(true)} className="h-12 rounded-xl border-2 border-borde px-3 flex items-center gap-2 font-medium">
+          <UserPlus className="h-6 w-6" />Se une
+        </button>
+      </div>
+      {error && <p className="text-peligro">{error}</p>}
+      {uniendo && <UnirAEtapa o={o} alCerrar={() => setUniendo(false)} />}
+    </div>
+  );
+}
+
+function UnirAEtapa({ o, alCerrar }: { o: OperacionPiso; alCerrar: () => void }) {
+  const personal = usePersonalPiso();
+  const qc = useQueryClient();
+  const [eleccion, setEleccion] = useState<Cuadrilla>({ empleados: [], sinNombre: 0 });
+  const unir = useMutation({
+    mutationFn: () => q(supabase.rpc("unir_a_etapa", { p_operacion: o.id, p_empleado: eleccion.empleados[0] ?? null, p_sin_nombre: eleccion.sinNombre })),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: CLAVE }); alCerrar(); },
+  });
+  const listo = eleccion.empleados.length > 0 || eleccion.sinNombre > 0;
+  return (
+    <Modal titulo={`¿Quién se une a ${o.etapa}?`} alCerrar={alCerrar}>
+      <p className="text-tenue mb-3 cifra">{folioCorto(o.folio)} · {abreviarEquipo(o.equipo)}</p>
+      <ElegirPersonas etapaId={o.etapa_id} personal={personal.data ?? []} cargando={personal.isLoading} valor={eleccion} alCambiar={setEleccion} uno />
+      {unir.error && <p className="text-peligro mt-3">{mensajeError(unir.error)}</p>}
+      <div className="grid grid-cols-2 gap-3 mt-5">
+        <button onClick={alCerrar} className="min-h-[64px] rounded-xl border-2 border-borde bg-superficie text-xl font-semibold">Cancelar</button>
+        <button onClick={() => unir.mutate()} disabled={!listo || unir.isPending}
+                className="min-h-[64px] rounded-xl bg-ok text-white text-xl font-bold flex items-center justify-center gap-2 disabled:opacity-40">
+          {unir.isPending ? <Loader2 className="h-7 w-7 animate-spin" /> : <UserPlus className="h-7 w-7" />}Se une
         </button>
       </div>
     </Modal>

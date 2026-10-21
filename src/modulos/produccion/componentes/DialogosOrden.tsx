@@ -65,6 +65,27 @@ export function DialogoCancelar({ abierto, alCambiar, o }: { abierto: boolean; a
 }
 
 /**
+ * Cliente ausente, o lo que sea que detenga el equipo sin cancelarlo: la orden sale de la
+ * carga del taller y de las atrasadas hasta que se reactive.
+ */
+export function DialogoEnEspera({ abierto, alCambiar, o }: { abierto: boolean; alCambiar: (v: boolean) => void; o: OrdenBasica }) {
+  const [motivo, setMotivo] = useState("Cliente ausente: dio anticipo, se fabrica cuando regrese");
+  const poner = useAccion(() => q(supabase.rpc("poner_en_espera", { p_op: o.id, p_motivo: motivo })), {
+    exito: `${o.folio} en espera`, invalidar: [CLAVE], alTerminar: () => alCambiar(false),
+  });
+  return (
+    <Dialogo abierto={abierto} alCambiar={alCambiar} titulo={`Poner en espera ${o.folio}`}
+             descripcion="Deja de contar en la carga del taller y en los tiempos de entrega, no sale atrasada y no se puede trabajar en la terminal. Lo que estaba en proceso se pausa. Se reactiva con un clic."
+             pie={<><Boton variante="secundario" onClick={() => alCambiar(false)}>No</Boton>
+               <Boton onClick={() => poner.mutate(undefined)} disabled={motivo.trim().length < 5} cargando={poner.isPending}>Poner en espera</Boton></>}>
+      <Campo etiqueta="¿Por qué?">
+        <AreaTexto value={motivo} onChange={(e) => setMotivo(e.target.value)} autoFocus />
+      </Campo>
+    </Dialogo>
+  );
+}
+
+/**
  * "Son de 14 pulgadas", "DEBE SER 4X3": lo que hoy se queda en una nota de la
  * hoja llega a ingeniería como pendiente, ligado al material y a la orden.
  */
