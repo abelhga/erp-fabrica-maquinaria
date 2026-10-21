@@ -98,7 +98,9 @@ export default function Ordenes() {
       celda: (o) => (
         <div className="whitespace-nowrap">
           <p className="cifra">{fecha(o.fecha_compromiso)}</p>
-          {o.estado !== "terminada" && <InsigniaCompromiso dias={o.dias_restantes} fechaCompromiso={o.fecha_compromiso} corta />}
+          {o.en_espera_motivo
+            ? <span data-explain={GLOSARIO.ordenEnEspera} title={o.en_espera_motivo}><Insignia tono="aviso">En espera</Insignia></span>
+            : o.estado !== "terminada" && <InsigniaCompromiso dias={o.dias_restantes} fechaCompromiso={o.fecha_compromiso} corta />}
         </div>
       ),
     },
