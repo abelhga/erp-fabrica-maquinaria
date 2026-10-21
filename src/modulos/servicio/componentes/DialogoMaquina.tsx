@@ -5,7 +5,8 @@ import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
-import { CLAVE, TIPO_MAQUINA, type Maquina } from "../datos";
+import { CLAVE, CRITICIDAD, ESPECIALIDAD, TIPO_EQUIPO, TIPO_MAQUINA, TIPO_MTTO, usePersonal, type Maquina } from "../datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const CATEGORIAS = ["soldadora", "rectificador", "taladro", "esmeril", "mototool", "compresor", "torno", "roladora", "dobladora",
   "cortadora", "montacargas", "conmutador", "motor", "pinzas", "otra"];
@@ -22,13 +23,18 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
     marca: m?.marca ?? "", modelo: m?.modelo ?? "", numero_serie: m?.numero_serie ?? "", etapa_id: m?.etapa_id ? String(m.etapa_id) : "",
     ubicacion: m?.ubicacion ?? "", critica: m?.critica ?? false, prestable: m?.prestable ?? false, usa_horometro: m?.usa_horometro ?? false,
     horas_uso: m ? String(m.horas_uso) : "0", notas: m?.notas ?? "",
+    criticidad: m?.criticidad ?? "", tipo_mantenimiento: m?.tipo_mantenimiento ?? "", especialidad: m?.especialidad ?? "",
+    tipo_equipo: m?.tipo_equipo ?? "", asignada_a: m?.asignada_a ?? "",
   });
+  const personal = usePersonal();
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
   const guardar = useAccion(async () => {
     const fila = {
       numero: f.numero.trim().toUpperCase(), nombre: f.nombre.trim(), tipo: f.tipo, categoria: f.categoria,
       marca: f.marca.trim() || null, modelo: f.modelo.trim() || null, numero_serie: f.numero_serie.trim() || null,
       etapa_id: f.etapa_id ? Number(f.etapa_id) : null, ubicacion: f.ubicacion.trim() || null, critica: f.critica,
+      criticidad: f.criticidad || null, tipo_mantenimiento: f.tipo_mantenimiento || null, especialidad: f.especialidad || null,
+      tipo_equipo: f.tipo_equipo || null, asignada_a: f.asignada_a || null,
       prestable: f.prestable || f.tipo === "herramienta", usa_horometro: f.usa_horometro, notas: f.notas.trim() || null,
       ...(m ? {} : { horas_uso: Number(f.horas_uso) || 0 }),
     };
@@ -70,10 +76,46 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
           <Campo etiqueta="Modelo"><Entrada value={f.modelo} onChange={(e) => set("modelo", e.target.value)} /></Campo>
           <Campo etiqueta="Número de serie"><Entrada value={f.numero_serie} onChange={(e) => set("numero_serie", e.target.value)} /></Campo>
           <Campo etiqueta="Ubicación" className="sm:col-span-2"><Entrada value={f.ubicacion} onChange={(e) => set("ubicacion", e.target.value)} placeholder="Nave 1, mesa 3" /></Campo>
+          <Campo etiqueta="Criticidad" ayuda="Muy alta o alta: si se para, se para el área.">
+            <span data-explain={GLOSARIO.criticidadMaquina} className="block">
+              <Seleccion value={f.criticidad} onChange={(e) => set("criticidad", e.target.value)}>
+                <option value="">Sin calificar</option>
+                {Object.entries(CRITICIDAD).map(([k, v]) => <option key={k} value={k}>{v.texto}</option>)}
+              </Seleccion>
+            </span>
+          </Campo>
+          <Campo etiqueta="Tipo de mantenimiento">
+            <span data-explain={GLOSARIO.tipoMantenimiento} className="block">
+              <Seleccion value={f.tipo_mantenimiento} onChange={(e) => set("tipo_mantenimiento", e.target.value)}>
+                <option value="">—</option>
+                {Object.entries(TIPO_MTTO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </Seleccion>
+            </span>
+          </Campo>
+          <Campo etiqueta="Lo hace">
+            <Seleccion value={f.especialidad} onChange={(e) => set("especialidad", e.target.value)}>
+              <option value="">—</option>
+              {Object.entries(ESPECIALIDAD).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </Seleccion>
+          </Campo>
+          <Campo etiqueta="Tipo de equipo">
+            <Seleccion value={f.tipo_equipo} onChange={(e) => set("tipo_equipo", e.target.value)}>
+              <option value="">—</option>
+              {Object.entries(TIPO_EQUIPO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </Seleccion>
+          </Campo>
+          <Campo etiqueta="Asignada a" className="sm:col-span-2" ayuda="Para la herramienta que siempre trae la misma persona (su soldadora). Un préstamo de días va en Resguardos.">
+            <span data-explain={GLOSARIO.herramientaAsignada} className="block">
+              <Seleccion value={f.asignada_a} onChange={(e) => set("asignada_a", e.target.value)}>
+                <option value="">Nadie (es del taller)</option>
+                {(personal.data ?? []).map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
+              </Seleccion>
+            </span>
+          </Campo>
           {!m && f.usa_horometro && <Campo etiqueta="Horas de uso hoy"><Entrada type="number" min="0" step="0.1" value={f.horas_uso} onChange={(e) => set("horas_uso", e.target.value)} /></Campo>}
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          {([["critica", "Crítica (si se para, se para el área)"], ["prestable", "Se presta con resguardo"], ["usa_horometro", "Tiene horómetro"]] as const).map(([k, t]) => (
+          {([...(f.criticidad ? [] : [["critica", "Crítica (si se para, se para el área)"]] as const), ["prestable", "Se presta con resguardo"], ["usa_horometro", "Tiene horómetro"]] as const).map(([k, t]) => (
             <label key={k} className="inline-flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={f[k] || (k === "prestable" && f.tipo === "herramienta")} disabled={k === "prestable" && f.tipo === "herramienta"}
                      onChange={(e) => set(k, e.target.checked)} className="accent-[hsl(var(--marca))]" />{t}

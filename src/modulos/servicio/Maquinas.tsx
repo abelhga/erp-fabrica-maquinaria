@@ -32,7 +32,7 @@ const SITUACION = {
 export default function Maquinas() {
   useServicioEnVivo(["maquinas", "ordenes_mantenimiento", "resguardos", "servicio_materiales"]);
   const ir = useNavigate();
-  const p = usePermisosServicio();
+  const p = usePermisosServicio(true);
   const [params, setParams] = useSearchParams();
   const pestana = params.get("pestana") ?? "maquinas";
   const [vista, setVista] = useState<Vista>("todas");

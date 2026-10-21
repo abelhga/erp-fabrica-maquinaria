@@ -6,13 +6,14 @@ import { EN_VISTA_PREVIA, supabase } from "./supabase";
 export type Rol =
   | "direccion" | "admin" | "gerente_ventas" | "ventas" | "ingenieria" | "compras" | "almacen"
   | "gerente_produccion" | "produccion" | "rrhh" | "finanzas" | "pantalla"
-  | "importaciones" | "administracion" | "recepcion";
+  | "importaciones" | "administracion" | "recepcion" | "mantenimiento";
 
 export const NOMBRE_ROL: Record<Rol, string> = {
   direccion: "Dirección", admin: "Sistemas", gerente_ventas: "Gerencia de ventas", ventas: "Ventas",
   ingenieria: "Ingeniería", compras: "Compras", almacen: "Almacén", gerente_produccion: "Gerencia de producción",
   produccion: "Producción", rrhh: "Recursos humanos", finanzas: "Finanzas", pantalla: "Pantalla de piso",
   importaciones: "Importaciones", administracion: "Gerencia administrativa", recepcion: "Recepción",
+  mantenimiento: "Mantenimiento",
 };
 
 export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" | "produccion" | "rrhh" | "finanzas" | "admin" | "asistente"
@@ -21,7 +22,10 @@ export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" |
   | "objetivos" | "nomina" | "mi_desempeno"
   | "importaciones"
   | "envios"
+  // servicio: servicio postventa a clientes (cuadrillas, garantías).
   | "servicio"
+  // mantenimiento: máquinas y herramienta del taller. 1 ver · 2 reportar fallas · 3 administrar y cerrar.
+  | "mantenimiento"
   // analisis: el BI de dirección (mapa, tendencias, clientes, producto, metas). Sin costos.
   | "analisis"
   // comisiones: 1 = ver las de todos los vendedores (cada vendedor ve la suya sin él) · 2 = marcarlas pagadas.

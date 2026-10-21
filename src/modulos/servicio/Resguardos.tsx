@@ -26,7 +26,7 @@ type Vista = "prestadas" | "vencidas" | "historial";
 export default function Resguardos() {
   useServicioEnVivo(["resguardos", "maquinas"]);
   const ir = useNavigate();
-  const p = usePermisosServicio();
+  const p = usePermisosServicio(true);
   const [params, setParams] = useSearchParams();
   const cfg = useQuery({
     queryKey: ["configuracion", "servicio"],

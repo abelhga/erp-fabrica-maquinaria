@@ -102,7 +102,21 @@ export interface Maquina {
   preventivo_fecha: string | null; preventivo_horas: number | null; preventivo: string | null;
   preventivo_situacion: "vencido" | "por_vencer" | "al_dia" | null;
   resguardo_id: string | null; prestada_a: string | null; prestada_desde: string | null;
+  criticidad: Criticidad | null; tipo_mantenimiento: TipoMtto | null; especialidad: Especialidad | null; tipo_equipo: TipoEquipo | null;
+  asignada_a: string | null; asignada_nombre: string | null;
 }
+
+export type Criticidad = "muy_alta" | "alta" | "media" | "baja" | "muy_baja";
+export type TipoMtto = "preventivo" | "predictivo" | "autonomo";
+export type Especialidad = "tecnico" | "externo" | "operador" | "jefe";
+export type TipoEquipo = "electrico" | "neumatico" | "hidraulico" | "mecanico";
+export const CRITICIDAD: Record<Criticidad, { texto: string; tono: "peligro" | "aviso" | "info" | "neutro" }> = {
+  muy_alta: { texto: "Muy alta", tono: "peligro" }, alta: { texto: "Alta", tono: "aviso" }, media: { texto: "Media", tono: "info" },
+  baja: { texto: "Baja", tono: "neutro" }, muy_baja: { texto: "Muy baja", tono: "neutro" },
+};
+export const TIPO_MTTO: Record<TipoMtto, string> = { preventivo: "Preventivo", predictivo: "Predictivo", autonomo: "Autónomo" };
+export const ESPECIALIDAD: Record<Especialidad, string> = { tecnico: "Técnico de mantenimiento", externo: "Externo", operador: "Operador", jefe: "Jefe de mantenimiento" };
+export const TIPO_EQUIPO: Record<TipoEquipo, string> = { electrico: "Eléctrico", neumatico: "Neumático", hidraulico: "Hidráulico", mecanico: "Mecánico" };
 
 export const TIPO_MAQUINA: Record<Maquina["tipo"], string> = {
   maquina: "Máquina", herramienta: "Herramienta", vehiculo: "Vehículo", instalacion: "Instalación",
@@ -116,13 +130,18 @@ export interface OrdenMto {
   inicio_en: string | null; cerrada_en: string | null; cerrada_por_nombre: string | null; fuera_desde: string | null;
   fuera_hasta: string | null; horas_paro: number | null; horas_uso_al_cerrar: number | null; motivo_cancelacion: string | null;
   abierta: boolean; vencida: boolean; refacciones: number; refacciones_pendientes: number; fotos: number;
+  horas_trabajadas: number | null; puntos: number; puntos_revisados: number; puntos_con_falla: number;
 }
+
+/** Un punto del checklist de un preventivo: null = sin revisar. */
+export interface PuntoChecklist { id: string; orden: number; seccion: string | null; texto: string; bien: boolean | null; nota: string | null }
 
 export interface Plan {
   id: string; maquina_id: string; numero: string; maquina: string; horas_actuales: number; nombre: string; tareas: string | null;
   cada_dias: number | null; cada_horas: number | null; ultima_fecha: string; ultima_horas: number; anticipacion_dias: number;
   activo: boolean; proxima_fecha: string | null; proximas_horas: number | null; dias_restantes: number | null;
   horas_restantes: number | null; situacion: "vencido" | "por_vencer" | "al_dia"; orden_id: string | null; orden_folio: string | null;
+  rutina_id: string | null; rutina: string | null; rutina_puntos: number | null;
 }
 
 export interface Resguardo {
