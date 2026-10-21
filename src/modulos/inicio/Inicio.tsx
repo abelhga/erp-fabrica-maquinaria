@@ -62,6 +62,9 @@ export default function Inicio() {
 function areaDeRoles(tieneRol: (r: Rol) => boolean): Area | null {
   if (tieneRol("gerente_ventas") || tieneRol("ventas")) return "ventas";
   if (tieneRol("gerente_produccion")) return "produccion";
+  // Supervisores de piso y mantenimiento: sin Claude, con los avisos de reglas de su área.
+  if (tieneRol("produccion")) return "produccion";
+  if (tieneRol("mantenimiento")) return "mantenimiento";
   if (tieneRol("almacen")) return "almacen";
   if (tieneRol("compras")) return "compras";
   if (tieneRol("finanzas") || tieneRol("administracion")) return "finanzas";
@@ -73,7 +76,7 @@ function areaDeRoles(tieneRol: (r: Rol) => boolean): Area | null {
 
 function InicioPorArea() {
   const { perfil, puede, tieneRol } = useSesion();
-  const area = puede("asistente") ? areaDeRoles(tieneRol) : null;
+  const area = areaDeRoles(tieneRol);
   const ir = useNavigate();
   // Solo lo que le importa a su puesto, aunque pueda leer más (ver porRol.ts).
   const { tarjetas: ver, pendientes: avisar, secciones } = contenidoInicio(tieneRol);
@@ -132,7 +135,7 @@ function InicioPorArea() {
       titulo={`${saludo()}, ${perfil?.nombre.split(" ")[0] ?? ""}`}
       descripcion={new Date().toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
     >
-      {area && <ResumenIA area={area} />}
+      {area && <ResumenIA area={area} conClaude={puede("asistente")} />}
       {ind.isLoading ? <Cargando filas={4} /> : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

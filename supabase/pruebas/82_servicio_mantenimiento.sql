@@ -299,13 +299,14 @@ begin
   assert (select estado from ordenes_mantenimiento where id = v_mto) = 'pendiente', 'el taller cerró la orden escribiendo la tabla';
 
   perform pg_temp.como(v_gp);
-  assert exists (select 1 from hallazgos_servicio('servicio') where titulo like '%fuera de servicio' and detalle like '%T82-SOL3 Soldadora 3 T82 (desde hoy)%'),
+  -- Las máquinas son de mantenimiento (148), ya no de servicio.
+  assert exists (select 1 from hallazgos_mantenimiento('mantenimiento') where titulo like '%fuera de servicio' and detalle like '%T82-SOL3 Soldadora 3 T82 (desde hoy)%'),
     'hallazgo de máquina parada';
   -- hallazgos() los junta solo (despachador de 20261003000068).
-  assert exists (select 1 from hallazgos('servicio') where area = 'servicio' and titulo like '%fuera de servicio'),
-    'hallazgos() no trae los de servicio';
+  assert exists (select 1 from hallazgos('mantenimiento') where area = 'mantenimiento' and titulo like '%fuera de servicio'),
+    'hallazgos() no trae los de mantenimiento';
   -- La gerencia entra a Inicio con el área "produccion": ahí también los ve.
-  assert exists (select 1 from hallazgos('produccion') where area = 'servicio'), 'la gerencia no ve los hallazgos de servicio en su inicio';
+  assert exists (select 1 from hallazgos('produccion') where area = 'mantenimiento'), 'la gerencia no ve las máquinas en su inicio';
   perform pg_temp.como_postgres();
   assert exists (select 1 from avisos where usuario_id = v_gp and tipo = 'falla_reportada' and registro_id = v_mto::text),
     'la gerencia no recibió aviso de la falla';
@@ -413,7 +414,7 @@ begin
   assert exists (select 1 from avisos where usuario_id = v_gp and tipo = 'preventivo_por_hacer' and registro_id = r.id::text),
     'la gerencia no recibió aviso del preventivo';
   perform pg_temp.como(v_gp);
-  assert exists (select 1 from hallazgos_servicio('servicio') where titulo like '%preventivo%vencido%'), 'hallazgo de preventivos vencidos';
+  assert exists (select 1 from hallazgos_mantenimiento('mantenimiento') where titulo like '%preventivo%vencido%'), 'hallazgo de preventivos vencidos';
 
   -- Por horas: al pasar el horómetro de 250 h, la orden sale en ese momento.
   perform pg_temp.como(v_taller);
@@ -462,7 +463,7 @@ begin
   select * into r from v_resguardos where id = v_res;
   assert r.vencido and r.dias = 12 and r.quien = 'Ingeniería (Miguel)', format('resguardo vencido: %s', row_to_json(r));
   perform pg_temp.como(v_gp);
-  assert exists (select 1 from hallazgos_servicio('servicio') where titulo like '%sin regresar' and detalle like '%Pinzas de presión T82 la tiene Ingeniería (Miguel) desde hace 12 días%'),
+  assert exists (select 1 from hallazgos_mantenimiento('mantenimiento') where titulo like '%sin regresar' and detalle like '%Pinzas de presión T82 la tiene Ingeniería (Miguel) desde hace 12 días%'),
     'hallazgo de herramienta sin regresar';
   perform pg_temp.como_postgres();
   perform avisos_servicio();
@@ -487,6 +488,6 @@ begin
   -- Fuera de su área no se calcula; y almacén no recibe hallazgos de servicio ni nada con dinero.
   assert not exists (select 1 from hallazgos_servicio('ventas')), 'hallazgos de servicio en el área de ventas';
   perform pg_temp.como(v_alm);
-  assert not exists (select 1 from hallazgos('almacen') where area = 'servicio' or titulo || detalle like '%$%'), 'hallazgos de almacén';
+  assert not exists (select 1 from hallazgos('almacen') where area in ('servicio', 'mantenimiento') or titulo || detalle like '%$%'), 'hallazgos de almacén';
   perform pg_temp.como_postgres();
 end $$;

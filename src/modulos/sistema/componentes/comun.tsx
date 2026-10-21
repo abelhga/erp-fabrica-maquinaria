@@ -40,6 +40,8 @@ export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; ale
   { modulo: "mantenimiento", nombre: "Mantenimiento", descripcion: "Máquinas y herramienta del taller. 1: ver · 2: reportar fallas y subir fotos (con Producción 2 también atiende y presta herramienta) · 3: administrar el programa y cerrar órdenes." },
   { modulo: "catalogo", nombre: "Catálogo", descripcion: "1: ver lo que se vende con foto, descripción, precio de lista y existencia. Sin listas de materiales, planos, proveedores ni costos (eso es Ingeniería)." },
   { modulo: "leads", nombre: "Leads", descripcion: "Recados de gente interesada que capturan recepción y ventas. 1: ver los suyos · 2: capturar y tomar · 3: asignar, ver todos y decidir a quién le llegan." },
+  { modulo: "asistente", nombre: "Asistente (Claude)", descripcion: "1: Claude escribe su resumen «Lo que importa hoy» y puede hacerle preguntas con «Pregúntale al ERP» (solo sobre lo que su puesto ya puede ver) · 3: además lee las conversaciones de los demás. Sin este permiso, el resumen sale con reglas fijas y sin chat.",
+    alerta: "Cada pregunta y cada resumen de Claude gasta crédito de la API." },
   { modulo: "admin", nombre: "Sistema", descripcion: "1: ver la bitácora · 3: usuarios, roles, invitaciones y configuración." },
   { modulo: "importaciones", nombre: "Importaciones", descripcion: "1: ver embarques y cuándo llegan (montos solo con compras, finanzas o costos) · 2: capturar · 3: administrar." },
 ];
