@@ -34,7 +34,9 @@ export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" |
   // · 3 = cambiar políticas e ISR. Aparte de "costos" para que compras capture costos sin ver márgenes.
   | "margenes"
   // leads: 1 ver los suyos · 2 capturar y tomar · 3 asignar, ver todos y configurar a quién le llegan.
-  | "leads";
+  | "leads"
+  // catalogo: lo que se vende con precio de lista y existencia, sin costeo (recepción).
+  | "catalogo";
 
 export interface Perfil { id: string; nombre: string; correo: string; puesto: string | null; iniciales: string | null; activo: boolean; telefono: string | null }
 /** "Ver como": esta sesión es de otra persona, abierta por dirección o sistemas, solo para ver. */

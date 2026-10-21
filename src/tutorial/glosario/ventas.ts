@@ -19,6 +19,7 @@ export const VENTAS = {
   vigenciaCotizacion: "Días que vale la cotización desde su emisión. Si pasa la fecha “Vence” sin cerrarse, se marca Vencida en rojo.",
   nuevaVersion: "Copia la cotización con el mismo folio y “-v2”, “-v3”… para seguir la misma negociación sin tocar lo que ya se mandó. “Duplicar” en cambio le da un folio nuevo.",
   precioLista: "El precio oficial del catálogo, en pesos y sin IVA. Al agregar una partida se llena solo y se convierte a la moneda de la cotización (y con IVA si la cotizas con IVA incluido).",
+  precioListaCatalogo: "El precio oficial de cada artículo, en pesos y sin IVA: el que se da por teléfono. Descuentos, fletes y condiciones de pago los ve el vendedor con el cliente.",
   precioMinimo: "Lo más bajo a lo que puedes dejar una pieza del catálogo sin pedir permiso: el precio de lista menos el descuento máximo autorizado para ese artículo. Se compara con el precio ya con todos los descuentos, en pesos y sin IVA.",
   bajoMinimo: "La partida quedó abajo del precio mínimo (o en $0). La cotización pasa a “Por autorizar” y no se puede enviar ni convertir en pedido hasta que la gerencia de ventas la autorice.",
   autorizacionPrecios: "Cuando hay partidas abajo del mínimo, terminas de capturar y das “Pedir autorización” (con una nota del porqué, si quieres). La gerencia de ventas la ve en su cola y autoriza. Si después cambias las partidas, el descuento, la moneda o el IVA, la autorización se pierde y hay que pedirla otra vez.",
