@@ -17,6 +17,15 @@ import { cn } from "@/lib/utilidades";
 import { ROLES, contrasenaNueva } from "./comun";
 import { GLOSARIO } from "@/tutorial/glosario";
 
+/** Un correo no admite acentos ni espacios: el navegador lo rechaza (en inglés) y no deja guardar. Se limpian al escribir. */
+const correoLimpio = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").toLowerCase();
+/** "Pantalla de pailería" → tv.paileria@…: el correo de la TV sale del nombre mientras nadie lo cambie a mano. */
+const correoDePantalla = (nombre: string) => {
+  const base = correoLimpio(nombre.replace(/^\s*pantalla\s+(de(l)?\s+)?/i, "").replace(/[^\p{L}\p{N}]+/gu, "."))
+    .replace(/[^a-z0-9.]/g, "").replace(/^\.+|\.+$/g, "");
+  return `tv.${base || "taller"}@${DOMINIO_EMPRESA}`;
+};
+
 interface Invitacion { correo: string; nombre: string | null; roles: Rol[]; creado_en: string; invitado_por: string | null }
 
 export function SelectorRoles({ valor, alCambiar, deshabilitados = [] }: { valor: Rol[]; alCambiar: (r: Rol[]) => void; deshabilitados?: Rol[] }) {
@@ -69,7 +78,7 @@ export function Invitaciones({ usuarios }: { usuarios: { id: string; nombre: str
           <form onSubmit={enviar} className="px-5 pb-5 space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <Campo etiqueta="Correo" ayuda={externo ? "Correo externo: solo podrá entrar con esta invitación." : undefined}>
-                <Entrada type="email" required value={f.correo} onChange={(e) => setF({ ...f, correo: e.target.value })} placeholder={`nombre@${DOMINIO_EMPRESA}`} />
+                <Entrada type="email" required value={f.correo} onChange={(e) => setF({ ...f, correo: correoLimpio(e.target.value) })} placeholder={`nombre@${DOMINIO_EMPRESA}`} />
               </Campo>
               <Campo etiqueta="Nombre">
                 <Entrada value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} placeholder="Como aparecerá en el ERP" />
@@ -137,7 +146,8 @@ export function Invitaciones({ usuarios }: { usuarios: { id: string; nombre: str
 
 function CrearPantalla({ abierto, alCambiar }: { abierto: boolean; alCambiar: (v: boolean) => void }) {
   const qc = useQueryClient();
-  const [f, setF] = useState(() => ({ nombre: "Pantalla de pintura", correo: `tv.pintura@${DOMINIO_EMPRESA}`, clave: contrasenaNueva() }));
+  const [f, setF] = useState(() => ({ nombre: "Pantalla de pintura", correo: correoDePantalla("Pantalla de pintura"), clave: contrasenaNueva() }));
+  const [correoAMano, setCorreoAMano] = useState(false);
   const [estado, setEstado] = useState<"captura" | "creando" | { listo: boolean; confirmar: boolean }>("captura");
 
   async function crear(e: FormEvent) {
@@ -168,7 +178,7 @@ function CrearPantalla({ abierto, alCambiar }: { abierto: boolean; alCambiar: (v
   }
   function cerrar(v: boolean) {
     alCambiar(v);
-    if (!v) { setEstado("captura"); setF({ nombre: "Pantalla de pintura", correo: `tv.pintura@${DOMINIO_EMPRESA}`, clave: contrasenaNueva() }); }
+    if (!v) { setEstado("captura"); setCorreoAMano(false); setF({ nombre: "Pantalla de pintura", correo: correoDePantalla("Pantalla de pintura"), clave: contrasenaNueva() }); }
   }
   const copiar = (t: string) => { navigator.clipboard?.writeText(t); toast.success("Copiado"); };
 
@@ -194,10 +204,10 @@ function CrearPantalla({ abierto, alCambiar }: { abierto: boolean; alCambiar: (v
       ) : (
         <form id="crear-pantalla" onSubmit={crear} className="space-y-4">
           <Campo etiqueta="Nombre" ayuda="Para reconocerla en la lista de usuarios.">
-            <Entrada autoFocus required value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} />
+            <Entrada autoFocus required value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value, correo: correoAMano ? f.correo : correoDePantalla(e.target.value) })} />
           </Campo>
-          <Campo etiqueta="Correo de la cuenta" ayuda="No necesita ser un buzón real si el servidor no pide confirmación.">
-            <Entrada type="email" required value={f.correo} onChange={(e) => setF({ ...f, correo: e.target.value })} />
+          <Campo etiqueta="Correo de la cuenta" ayuda="Sale del nombre, sin acentos ni espacios. No necesita ser un buzón real si el servidor no pide confirmación.">
+            <Entrada type="email" required value={f.correo} onChange={(e) => { setCorreoAMano(true); setF({ ...f, correo: correoLimpio(e.target.value) }); }} />
           </Campo>
           <Campo etiqueta="Contraseña" ayuda="Generada para dictarla fácil en la TV (sin 0/O ni 1/l).">
             <div className="flex gap-2">

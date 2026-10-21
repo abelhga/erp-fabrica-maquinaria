@@ -7,7 +7,7 @@ export const SISTEMA = {
   bajaConAcceso: "Personas que Recursos Humanos ya dio de baja pero que todavía pueden entrar al ERP. Desactiva su cuenta hoy mismo.",
   ligaEmpleado: "La ficha de Personal ligada a esta cuenta. Con ella la persona ve su saldo de vacaciones y su desempeño, y aquí se avisa si la dieron de baja.",
   invitacion: "Deja lista la cuenta de alguien antes de que entre: al entrar por primera vez recibe los roles de la invitación. Un correo de fuera de la empresa solo puede entrar si está invitado. No se manda ningún correo: avísale tú.",
-  cuentaPantalla: "Cuenta con correo y contraseña para la TV del taller, con el rol Pantalla de piso: entra directo al tablero de piso y no ve nada más.",
+  cuentaPantalla: "Cuenta con correo y contraseña para la TV del taller, con el rol Pantalla de piso: entra directo al tablero de piso y no ve nada más. El correo se arma solo con el nombre de la pantalla (sin acentos ni espacios, que un correo no admite) y no necesita ser un buzón real.",
   verComo: "Dirección puede ver el ERP con los permisos de otro rol para revisar qué ve esa gente; lo que guarde mientras tanto es real y queda a su nombre. Dirección y sistemas también pueden abrir la sesión de una persona en otra pestaña, solo para ver: no deja guardar nada y queda registrado.",
   accionBitacora: "Alta: se creó el registro. Cambio: se modificó (se ve el antes y el después). Baja: se borró (se ve lo que tenía).",
   bitacoraSistema: "Quién hizo el cambio. «Sistema» es un proceso automático del ERP, no una persona.",
