@@ -115,7 +115,7 @@ export default function Terminal() {
         <span className="hidden lg:inline text-tenue">Terminal de piso</span>
         <div className="ml-auto flex items-center gap-2 min-w-0">
           {/* Una máquina descompuesta se reporta desde aquí mismo, con foto (antes: foto al chat). */}
-          {puede("servicio", 2) && (
+          {puede("mantenimiento", 2) && (
             <Link to={`/servicio/reportar?volver=/produccion/terminal${etapaId ? `&etapa=${etapaId}` : ""}`}
                   className="h-12 rounded-xl px-3 sm:px-4 flex items-center gap-2 border-2 border-peligro/60 bg-superficie text-peligro font-semibold shrink-0" aria-label="Reportar falla de una máquina">
               <AlertTriangle className="h-6 w-6 shrink-0" /><span className="hidden sm:inline">Reportar falla</span>

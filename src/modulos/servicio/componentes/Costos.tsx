@@ -25,7 +25,7 @@ export function Costos({ servicioId, mantenimientoId, conceptos }: {
   servicioId?: string; mantenimientoId?: string; conceptos: Costo["concepto"][];
 }) {
   const { puede } = useSesion();
-  const capturar = puede("servicio", 3);
+  const capturar = puede(mantenimientoId ? "mantenimiento" : "servicio", 3);
   const lista = useQuery({
     queryKey: [...CLAVE, "costos", servicioId ?? mantenimientoId],
     queryFn: () => {

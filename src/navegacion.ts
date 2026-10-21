@@ -86,13 +86,17 @@ export const MENU: SeccionMenu[] = [
   },
   {
     titulo: "Servicio",
-    // Máquinas, falla y resguardos son del personal de producción (nivel 2): un vendedor
-    // tiene "servicio" para pedir servicios a sus clientes, no para el mantenimiento del taller.
     entradas: [
       { ruta: "/servicio", texto: "Servicios y cuadrillas", icono: CalendarRange, modulo: "servicio" },
-      { ruta: "/servicio/maquinas", texto: "Máquinas y herramienta", icono: Wrench, modulo: "produccion", nivel: 2 },
-      { ruta: "/servicio/reportar", texto: "Reportar falla", icono: AlertTriangle, modulo: "produccion", nivel: 2 },
-      { ruta: "/servicio/resguardos", texto: "Resguardo de herramienta", icono: Hand, modulo: "produccion", nivel: 2 },
+    ],
+  },
+  {
+    // El taller por dentro: su propio módulo, aparte del servicio a clientes.
+    titulo: "Mantenimiento",
+    entradas: [
+      { ruta: "/servicio/maquinas", texto: "Máquinas y herramienta", icono: Wrench, modulo: "mantenimiento" },
+      { ruta: "/servicio/reportar", texto: "Reportar falla", icono: AlertTriangle, modulo: "mantenimiento", nivel: 2 },
+      { ruta: "/servicio/resguardos", texto: "Resguardo de herramienta", icono: Hand, modulo: "mantenimiento", nivel: 2 },
     ],
   },
   {

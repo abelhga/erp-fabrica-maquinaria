@@ -55,7 +55,7 @@ export function Entregar({ m }: { m: Material }) {
  * compras como requisición. Aquí no hay costos: los ve quien tiene "costos".
  */
 export function Materiales({ servicioId, mantenimientoId, abierto }: { servicioId?: string; mantenimientoId?: string; abierto: boolean }) {
-  const p = usePermisosServicio();
+  const p = usePermisosServicio(!!mantenimientoId);
   const lista = useMateriales({ servicioId, mantenimientoId });
   const [art, setArt] = useState<ArticuloEncontrado | null>(null);
   const [cant, setCant] = useState("1");

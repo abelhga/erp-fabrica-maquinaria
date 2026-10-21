@@ -348,7 +348,8 @@ begin
   assert not exists (select 1 from costos_servicio), 'ventas vio costos de servicio o mantenimiento';
   assert not exists (select 1 from v_costos_maquina), 'ventas vio el costo acumulado de una máquina';
   assert not exists (select 1 from v_costos_servicio), 'ventas vio costos por orden';
-  assert exists (select 1 from v_maquinas where id = v_maq and estado = 'en_mantenimiento'), 'ventas sí ve la máquina (sin costos)';
+  -- Desde 145 las máquinas son del módulo mantenimiento: ventas ya no las ve.
+  assert not exists (select 1 from v_maquinas where id = v_maq), 'ventas ya no ve las máquinas del taller';
   begin
     insert into costos_servicio (mantenimiento_id, concepto, descripcion, monto) values (v_mto, 'otro', 'Propina', 1);
     assert false, 'ventas capturó un costo';

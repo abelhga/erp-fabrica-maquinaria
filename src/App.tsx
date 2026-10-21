@@ -115,7 +115,7 @@ export function App() {
         <Route element={<SinMarco />}>
           <Route path="/piso" element={<Con m="produccion"><PantallaPiso /></Con>} />
           <Route path="/produccion/terminal" element={<Con m="produccion" n={2}><Terminal /></Con>} />
-          <Route path="/servicio/reportar" element={<Con m="servicio" n={2}><ReportarFalla /></Con>} />
+          <Route path="/servicio/reportar" element={<Con m="mantenimiento" n={2}><ReportarFalla /></Con>} />
           <Route path="/ventas/cotizaciones/:id/imprimir" element={<Con m="ventas"><ImprimirCotizacion /></Con>} />
           <Route path="/importaciones/oc/:id/imprimir" element={<Con m="compras" n={2}><ImprimirOCImportacion /></Con>} />
           <Route path="/rrhh/documento/:tipo/:id" element={<Con m="nomina"><DocumentoNomina /></Con>} />
@@ -161,9 +161,9 @@ export function App() {
           <Route path="produccion/ordenes/:id" element={<Con m="produccion"><DetalleOrden /></Con>} />
           <Route path="produccion/seriales" element={<Con m="produccion"><NumerosSerie /></Con>} />
           <Route path="servicio" element={<Con m="servicio"><Servicios /></Con>} />
-          <Route path="servicio/maquinas" element={<Con m="servicio"><Maquinas /></Con>} />
-          <Route path="servicio/maquinas/:id" element={<Con m="servicio"><FichaMaquina /></Con>} />
-          <Route path="servicio/resguardos" element={<Con m="servicio"><Resguardos /></Con>} />
+          <Route path="servicio/maquinas" element={<Con m="mantenimiento"><Maquinas /></Con>} />
+          <Route path="servicio/maquinas/:id" element={<Con m="mantenimiento"><FichaMaquina /></Con>} />
+          <Route path="servicio/resguardos" element={<Con m="mantenimiento" n={2}><Resguardos /></Con>} />
           <Route path="servicio/:id" element={<Con m="servicio"><DetalleServicio /></Con>} />
           <Route path="rrhh/empleados" element={<Con m="rrhh"><Empleados /></Con>} />
           <Route path="rrhh/incidencias" element={<Con m="rrhh"><Incidencias /></Con>} />

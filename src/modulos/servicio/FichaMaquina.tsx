@@ -7,14 +7,14 @@ import { Pagina } from "@/components/layout/Shell";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Boton } from "@/components/ui/boton";
 import { Dialogo } from "@/components/ui/dialogo";
-import { AreaTexto, Campo, Entrada } from "@/components/ui/campo";
+import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { Insignia } from "@/components/ui/insignia";
 import { Kpi } from "@/components/ui/kpi";
 import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { supabase } from "@/lib/supabase";
 import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, fechaYHora, hace, numero } from "@/lib/formato";
-import { CLAVE, TIPO_MAQUINA, comprimirImagen, horas, subirArchivo, useServicioEnVivo, useUrlsFirmadas, type Maquina, type OrdenMto, type Plan, type Resguardo } from "./datos";
+import { CLAVE, CRITICIDAD, ESPECIALIDAD, TIPO_EQUIPO, TIPO_MAQUINA, TIPO_MTTO, comprimirImagen, horas, subirArchivo, useServicioEnVivo, useUrlsFirmadas, type Maquina, type OrdenMto, type Plan, type Resguardo } from "./datos";
 import { Dato, EnlaceBoton, InsigniaMaquina, InsigniaMto, usePermisosServicio } from "./componentes/piezas";
 import { LateralMantenimiento } from "./componentes/LateralMantenimiento";
 import { DialogoMaquina } from "./componentes/DialogoMaquina";
@@ -26,7 +26,7 @@ interface CostoOrden { mantenimiento_id: string; material: number | null; servic
 export default function FichaMaquina() {
   const { id = "" } = useParams();
   useServicioEnVivo(["maquinas", "ordenes_mantenimiento", "resguardos", "planes_preventivos"]);
-  const p = usePermisosServicio();
+  const p = usePermisosServicio(true);
   const qc = useQueryClient();
   const maq = useQuery({ queryKey: [...CLAVE, "maquina", id], queryFn: () => q<Maquina | null>(supabase.from("v_maquinas").select("*").eq("id", id).maybeSingle()) });
   const historial = useQuery({
@@ -43,6 +43,20 @@ export default function FichaMaquina() {
     queryKey: [...CLAVE, "maquina", id, "costos"],
     enabled: p.costos,
     queryFn: () => q<CostoOrden[]>(supabase.from("v_costos_servicio").select("mantenimiento_id, material, servicio_externo, mano_obra, otro, total").eq("maquina_id", id)),
+  });
+  // Las piezas de este tipo de máquina (y de su modelo) con lo que hay en planta.
+  const refacciones = useQuery({
+    queryKey: [...CLAVE, "maquina", id, "refacciones", maq.data?.categoria, maq.data?.modelo],
+    enabled: !!maq.data,
+    queryFn: async () => {
+      const r = await q<{ modelo: string | null; articulo: { id: string; clave: string; nombre: string; unidad: string } }[]>(
+        supabase.from("refacciones_maquina").select("modelo, articulo:articulos(id, clave, nombre, unidad)").eq("categoria", maq.data!.categoria) as unknown as
+          PromiseLike<{ data: { modelo: string | null; articulo: { id: string; clave: string; nombre: string; unidad: string } }[] | null; error: { message: string } | null }>);
+      const propias = r.filter((x) => !x.modelo || !maq.data!.modelo || x.modelo === maq.data!.modelo);
+      const ids = propias.map((x) => x.articulo.id);
+      const ex = ids.length ? await q<{ articulo_id: string; en_planta: number }[]>(supabase.from("v_existencias").select("articulo_id, en_planta").in("articulo_id", ids)) : [];
+      return propias.map((x) => ({ ...x.articulo, disponible: Number(ex.find((e) => e.articulo_id === x.articulo.id)?.en_planta ?? 0) }));
+    },
   });
   const foto = useUrlsFirmadas(maq.data?.foto_ruta ? [maq.data.foto_ruta] : []);
   const [orden, setOrden] = useState<string | null>(null);
@@ -105,7 +119,12 @@ export default function FichaMaquina() {
             <Dato etiqueta="Serie">{m.numero_serie ?? "—"}</Dato>
             <Dato etiqueta="Horas de uso" explica={GLOSARIO.horometro}>{m.usa_horometro ? <>{horas(m.horas_uso)}<span className="block text-xs text-tenue">{m.horas_actualizado_en ? hace(m.horas_actualizado_en) : ""}</span></> : "Sin horómetro"}</Dato>
             <Dato etiqueta="Alta">{fecha(m.fecha_alta)}</Dato>
-            {m.critica && <Dato etiqueta="Importancia" explica={GLOSARIO.maquinaCritica}><Insignia tono="aviso">Crítica: si se para, se para el área</Insignia></Dato>}
+            {m.criticidad ? (
+              <Dato etiqueta="Criticidad" explica={GLOSARIO.criticidadMaquina}><Insignia tono={CRITICIDAD[m.criticidad].tono}>{CRITICIDAD[m.criticidad].texto}</Insignia></Dato>
+            ) : m.critica && <Dato etiqueta="Importancia" explica={GLOSARIO.maquinaCritica}><Insignia tono="aviso">Crítica: si se para, se para el área</Insignia></Dato>}
+            {m.tipo_mantenimiento && <Dato etiqueta="Mantenimiento" explica={GLOSARIO.tipoMantenimiento}>{TIPO_MTTO[m.tipo_mantenimiento]}{m.especialidad && <span className="block text-xs text-tenue">Lo hace: {ESPECIALIDAD[m.especialidad]}</span>}</Dato>}
+            {m.tipo_equipo && <Dato etiqueta="Tipo de equipo">{TIPO_EQUIPO[m.tipo_equipo]}</Dato>}
+            {m.asignada_nombre && <Dato etiqueta="Asignada a" explica={GLOSARIO.herramientaAsignada}>{m.asignada_nombre}</Dato>}
             {m.notas && <Dato etiqueta="Notas" className="col-span-2">{m.notas}</Dato>}
           </div>
         </Tarjeta>
@@ -169,6 +188,7 @@ export default function FichaMaquina() {
                         último {fecha(x.ultima_fecha)} · toca {x.proxima_fecha ? fecha(x.proxima_fecha) : `a las ${horas(x.proximas_horas)}`}
                         {x.orden_folio && ` · ${x.orden_folio}`}
                       </p>
+                      {x.rutina && <p className="text-xs text-tenue" data-explain={GLOSARIO.rutinaMantenimiento}>Rutina: {x.rutina} · {x.rutina_puntos} puntos</p>}
                     </button>
                   ))}
               </div>
@@ -193,6 +213,24 @@ export default function FichaMaquina() {
           </div>
         </div>
       </div>
+
+      {(refacciones.data ?? []).length > 0 && (
+        <Tarjeta className="mt-4">
+          <EncabezadoTarjeta titulo="Refacciones de este tipo de máquina" explica={GLOSARIO.refaccionesMaquina}
+            descripcion={`${refacciones.data!.length} piezas · se piden desde una orden de mantenimiento`} />
+          <div className="overflow-x-auto">
+            <table className="tabla">
+              <thead><tr><th>Clave</th><th>Pieza</th><th className="text-right">En planta</th></tr></thead>
+              <tbody>
+                {refacciones.data!.map((x) => (
+                  <tr key={x.id}><td className="cifra">{x.clave}</td><td>{x.nombre}</td>
+                    <td className={`text-right cifra ${x.disponible > 0 ? "" : "text-tenue"}`}>{numero(x.disponible)} {x.unidad}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Tarjeta>
+      )}
 
       <LateralMantenimiento id={orden} alCerrar={() => setOrden(null)} />
       {dialogo === "editar" && <DialogoMaquina m={m} alCerrar={() => setDialogo(null)} />}
@@ -222,14 +260,17 @@ function DialogoPlan({ maquinaId, plan, horasActuales, alCerrar }: { maquinaId: 
     nombre: plan?.nombre ?? "", tareas: plan?.tareas ?? "", cada_dias: plan?.cada_dias ? String(plan.cada_dias) : "",
     cada_horas: plan?.cada_horas ? String(plan.cada_horas) : "", ultima_fecha: plan?.ultima_fecha ?? new Date().toLocaleDateString("en-CA"),
     ultima_horas: plan ? String(plan.ultima_horas) : String(horasActuales), anticipacion_dias: plan ? String(plan.anticipacion_dias) : "7",
-    activo: plan?.activo ?? true,
+    activo: plan?.activo ?? true, rutina_id: plan?.rutina_id ?? "",
   });
+  const rutinas = useQuery({ queryKey: [...CLAVE, "rutinas"], staleTime: 5 * 60_000,
+    queryFn: () => q<{ id: string; nombre: string; puntos: unknown[] }[]>(supabase.from("rutinas_mantenimiento").select("id, nombre, puntos").eq("activa", true).order("nombre")) });
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
   const guardar = useAccion(async () => {
     const fila = {
       maquina_id: maquinaId, nombre: f.nombre.trim(), tareas: f.tareas.trim() || null,
       cada_dias: f.cada_dias ? Number(f.cada_dias) : null, cada_horas: f.cada_horas ? Number(f.cada_horas) : null,
       ultima_fecha: f.ultima_fecha, ultima_horas: Number(f.ultima_horas) || 0, anticipacion_dias: Number(f.anticipacion_dias) || 0, activo: f.activo,
+      rutina_id: f.rutina_id || null,
     };
     if (plan) await q(supabase.from("planes_preventivos").update(fila).eq("id", plan.id));
     else await q(supabase.from("planes_preventivos").insert(fila));
@@ -243,6 +284,14 @@ function DialogoPlan({ maquinaId, plan, horasActuales, alCerrar }: { maquinaId: 
       pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton type="submit" form="form-plan" disabled={!listo} cargando={guardar.isPending}>Guardar</Boton></>}>
       <form id="form-plan" className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (listo) guardar.mutate(); }}>
         <Campo etiqueta="Nombre"><Entrada value={f.nombre} onChange={(e) => set("nombre", e.target.value)} placeholder="Cambio de aceite y filtros" autoFocus /></Campo>
+        <Campo etiqueta="Rutina (checklist)" ayuda="Sus puntos salen en cada orden para palomearlos.">
+          <span data-explain={GLOSARIO.rutinaMantenimiento} className="block">
+            <Seleccion value={f.rutina_id} onChange={(e) => set("rutina_id", e.target.value)}>
+              <option value="">Sin checklist (solo las tareas de abajo)</option>
+              {(rutinas.data ?? []).map((x) => <option key={x.id} value={x.id}>{x.nombre} · {x.puntos.length} puntos</option>)}
+            </Seleccion>
+          </span>
+        </Campo>
         <Campo etiqueta="Tareas"><AreaTexto rows={2} value={f.tareas} onChange={(e) => set("tareas", e.target.value)} placeholder="Aceite, filtro, purga del tanque…" /></Campo>
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
           <Campo etiqueta="Cada (días)"><Entrada type="number" min="1" value={f.cada_dias} onChange={(e) => set("cada_dias", e.target.value)} /></Campo>

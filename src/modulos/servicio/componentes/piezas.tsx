@@ -61,16 +61,21 @@ export function EnlaceBoton({ a, children, variante = "secundario", className }:
   );
 }
 
-/** Quién hace qué en servicio, igual que en la base (es_personal_servicio, puede). */
-export function usePermisosServicio() {
+/**
+ * Quién hace qué, igual que en la base. Con `planta` (máquinas, mantenimiento y
+ * herramienta) manda el módulo "mantenimiento" (es_personal_mantenimiento); sin él, el
+ * servicio a clientes (es_personal_servicio).
+ */
+export function usePermisosServicio(planta = false) {
   const { puede } = useSesion();
+  const m = planta ? "mantenimiento" : "servicio";
   return {
-    ver: puede("servicio", 1),
-    pedir: puede("servicio", 2),
-    gerencia: puede("servicio", 3),
-    personal: puede("servicio", 3) || (puede("servicio", 2) && puede("produccion", 2)),
+    ver: puede(m, 1),
+    pedir: puede(m, 2),
+    gerencia: puede(m, 3),
+    personal: puede(m, 3) || (puede(m, 2) && puede("produccion", 2)),
     almacen: puede("inventario", 2),
-    costos: puede("servicio", 3) || puede("costos", 1),
+    costos: puede(m, 3) || puede("costos", 1),
     // El costo de una refacción de almacén es el costo del artículo: solo con "costos".
     costosArticulo: puede("costos", 1),
   };

@@ -16,6 +16,7 @@ export const ROLES: { rol: Rol; descripcion: string }[] = [
   { rol: "administracion", descripcion: "Gerencia administrativa: lo mismo que finanzas (cobranza, pagos, caja chica), sin ver las comisiones de los vendedores." },
   { rol: "pantalla", descripcion: "TV del taller: entra directo al tablero de piso y no ve nada más." },
   { rol: "recepcion", descripcion: "Contesta el teléfono: registra leads para ventas, ve si quien llama ya es cliente y de quién, y ve el catálogo con precios de lista. No ve clientes, ventas ni costos." },
+  { rol: "mantenimiento", descripcion: "Máquinas y herramienta del taller: programa preventivo, fallas, checklist, refacciones y préstamo de herramienta. Ve el avance del taller y las existencias; no ve ventas, clientes ni costos de equipos." },
   { rol: "importaciones", descripcion: "Embarques, documentos con el agente aduanal, pagos en dólares y costo puesto en planta." },
 ];
 
@@ -35,6 +36,8 @@ export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; ale
   { modulo: "objetivos", nombre: "Objetivos", descripcion: "1: ve y califica solo a su gente (jefe directo) · 3: todos, plantillas, revisión y ajustes. Sin montos." },
   { modulo: "nomina", nombre: "Nómina", descripcion: "Sueldos, prenómina, préstamos y el bono en pesos. 2: captura conceptos · 3: cierra la semana y registra sueldos.",
     alerta: "Quien tenga Nómina, aunque sea en nivel 1, ve lo que gana cada persona. Los jefes califican con Objetivos sin necesitarla." },
+  { modulo: "servicio", nombre: "Servicio", descripcion: "Servicio postventa a clientes: instalaciones, garantías y cuadrillas. 2: pedir servicios · 3: programar y cerrar." },
+  { modulo: "mantenimiento", nombre: "Mantenimiento", descripcion: "Máquinas y herramienta del taller. 1: ver · 2: reportar fallas y subir fotos (con Producción 2 también atiende y presta herramienta) · 3: administrar el programa y cerrar órdenes." },
   { modulo: "leads", nombre: "Leads", descripcion: "Recados de gente interesada que capturan recepción y ventas. 1: ver los suyos · 2: capturar y tomar · 3: asignar, ver todos y decidir a quién le llegan." },
   { modulo: "admin", nombre: "Sistema", descripcion: "1: ver la bitácora · 3: usuarios, roles, invitaciones y configuración." },
   { modulo: "importaciones", nombre: "Importaciones", descripcion: "1: ver embarques y cuándo llegan (montos solo con compras, finanzas o costos) · 2: capturar · 3: administrar." },

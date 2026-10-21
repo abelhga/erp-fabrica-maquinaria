@@ -83,12 +83,16 @@ export function normalizarReclamo(r: Obj, razon?: string | null) {
   };
 }
 
-/** Una pregunta (GET /questions/{id}). */
-export function normalizarPregunta(q: Obj, titulo?: string | null) {
+/**
+ * Una pregunta (GET /questions/{id}). itemActivo: si su publicación sigue activa; ML no
+ * deja contestar las de publicaciones pausadas o cerradas ("Item must be active").
+ */
+export function normalizarPregunta(q: Obj, titulo?: string | null, itemActivo?: boolean | null) {
   const resp = o(q.answer);
   return {
     id: num(q.id), item_id: txt(q.item_id), titulo: titulo ?? null, texto: txt(q.text) ?? "",
     estado: txt(q.status), fecha: txt(q.date_created), respuesta: txt(resp.text), fecha_respuesta: txt(resp.date_created),
+    item_activo: itemActivo ?? null,
   };
 }
 
@@ -177,8 +181,8 @@ async function procesarUno(e: Entorno, admin: SupabaseClient, access: string, to
       throw err;
     }
     const item = txt(pregunta.item_id);
-    const titulo = item ? await apiML(e, access, `/items/${item}?attributes=title`).then((x) => txt(x.title)).catch(() => null) : null;
-    await rpc("ml_registrar_pregunta", normalizarPregunta(pregunta, titulo));
+    const pub = item ? await apiML(e, access, `/items/${item}?attributes=title,status`).catch(() => null) : null;
+    await rpc("ml_registrar_pregunta", normalizarPregunta(pregunta, pub ? txt(pub.title) : null, pub ? txt(pub.status) === "active" : null));
   }
   // Otros tópicos (items, mensajes…) todavía no se usan: se marcan como vistos.
 }
@@ -216,6 +220,11 @@ export async function sincronizar(e: Entorno, admin: SupabaseClient, ventasDesde
   const preguntas = await apiML(e, access, `/questions/search?seller_id=${vendedor}&status=UNANSWERED&api_version=4&limit=50`);
   for (const q of (Array.isArray(preguntas.questions) ? preguntas.questions : []) as Obj[]) {
     const id = num(q.id); if (id) avisos.push({ topic: "questions", resource: `/questions/${id}`, ml_user_id: vendedor });
+  }
+  // Las que el ERP tiene pendientes se revisan otra vez: su publicación pudo pausarse o cerrarse.
+  const { data: pendientes } = await admin.from("ml_preguntas").select("id").eq("estado", "pendiente");
+  for (const p of (pendientes ?? []) as { id: number }[]) {
+    if (!avisos.some((a) => a.resource === `/questions/${p.id}`)) avisos.push({ topic: "questions", resource: `/questions/${p.id}`, ml_user_id: vendedor });
   }
   const reclamos = await apiML(e, access, `/post-purchase/v1/claims/search?status=opened&limit=50`).catch(() => ({} as Obj));
   for (const c of (Array.isArray(reclamos.data) ? reclamos.data : []) as Obj[]) {
@@ -356,7 +365,15 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
     if (texto.length > 2000) return json({ error: "Mercado Libre acepta respuestas de hasta 2,000 caracteres" }, 400);
     try {
       const { access } = await token(e, admin);
-      await apiML(e, access, "/answers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question_id: id, text: texto }) });
+      try {
+        await apiML(e, access, "/answers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question_id: id, text: texto }) });
+      } catch (err) {
+        if (err instanceof ErrorML && /must be active/i.test(err.message)) {
+          await admin.rpc("ml_pregunta_sin_publicacion", { p_pregunta: id });
+          return json({ error: "La publicación está pausada o cerrada en Mercado Libre: ya no deja contestar esta pregunta. La quité de la lista." }, 409);
+        }
+        throw err;
+      }
       const { error } = await admin.rpc("ml_marcar_contestada", { p_pregunta: id, p_texto: texto, p_usuario: u.id });
       if (error) throw new ErrorML(error.message);
       return json({ ok: true });

@@ -37,6 +37,8 @@ describe("traducciones de ML", () => {
     expect(normalizarPregunta({ id: 77, item_id: "MLM1", text: "¿Hay?", status: "UNANSWERED", date_created: "2026-10-16T09:00:00Z" }, "Polea"))
       .toMatchObject({ id: 77, item_id: "MLM1", titulo: "Polea", texto: "¿Hay?", estado: "UNANSWERED", respuesta: null });
     expect(normalizarPregunta({ id: 78, status: "ANSWERED", answer: { text: "Sí", date_created: "2026-10-16T10:00:00Z" } }).respuesta).toBe("Sí");
+    // Publicación pausada o cerrada: la base la deja fuera de las pendientes.
+    expect(normalizarPregunta({ id: 79, status: "UNANSWERED" }, "Polea", false).item_activo).toBe(false);
   });
 });
 
