@@ -1,9 +1,11 @@
 import { useMemo, useState, type DragEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowDown, ArrowUp, ChevronRight, ExternalLink, GripVertical, HardHat, Tablet, UserMinus, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowDown, ArrowUp, ChevronRight, ExternalLink, GripVertical, HardHat, Tablet, UserCog, UserMinus, Users } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Boton } from "@/components/ui/boton";
 import { Seleccion } from "@/components/ui/campo";
+import { Interruptor } from "@/components/ui/interruptor";
 import { Filtro } from "@/components/datos/TablaDatos";
 import { Dialogo, Lateral } from "@/components/ui/dialogo";
 import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
@@ -56,6 +58,7 @@ export default function Cuadrillas() {
   const [sobre, setSobre] = useState<string | null>(null);
   const [cambio, setCambio] = useState<Cambio | null>(null);
   const [abierto, setAbierto] = useState<string | null>(null);
+  const [personalAbierto, setPersonalAbierto] = useState(false);
   const [params, setParams] = useSearchParams();
   const vista: Vista = params.get("vista") === "cuadrilla" ? "cuadrilla" : "etapa";
   // Etapas con «Más adelante» abierto (por omisión cerrado: es la misma orden que ya sale en su etapa actual).
@@ -199,7 +202,10 @@ export default function Cuadrillas() {
   return (
     <Pagina titulo="Cuadrillas" ancho="max-w-[1800px]"
       descripcion={`Quién trabaja qué en cada etapa y quién sigue · ${trabajaEn.size} personas trabajando ahorita`}
-      acciones={<BotonLink a="/produccion/terminal"><Tablet className="h-4 w-4" />Terminal de piso</BotonLink>}>
+      acciones={<>
+        {gestionar && <Boton variante="secundario" onClick={() => setPersonalAbierto(true)}><UserCog className="h-4 w-4" />Personal de piso</Boton>}
+        <BotonLink a="/produccion/terminal"><Tablet className="h-4 w-4" />Terminal de piso</BotonLink>
+      </>}>
       {error ? <ErrorCarga error={error} /> : cargando ? <Cargando filas={6} /> : (
         <>
           <PanelPersonal personal={personal.data ?? []} etapas={etapas.data ?? []} trabajaEn={trabajaEn} carga={veFabricacion ? carga : null}
@@ -309,6 +315,11 @@ export default function Cuadrillas() {
           {cambio?.texto.map((x) => <p key={x}>{x}</p>)}
         </div>
       </Dialogo>
+
+      <Lateral abierto={personalAbierto} alCambiar={setPersonalAbierto} ancho="max-w-xl" titulo="Personal de piso"
+        subtitulo="La gente de Producción: su área y si entra a cuadrillas">
+        {personalAbierto && <PersonalPiso etapas={etapas.data ?? []} />}
+      </Lateral>
 
       <Lateral abierto={!!detalle} alCambiar={(v) => !v && setAbierto(null)} ancho="max-w-md"
         titulo={detalle ? `${detalle.etapa} · ${folioCorto(detalle.folio)}` : ""} subtitulo={detalle && abreviarEquipo(detalle.equipo)}
@@ -468,6 +479,52 @@ function DetalleTrabajo({ t, personal, trabajaEn, gestionar, veHoras, alAgregar,
         </div>
       )}
       <p className="text-xs text-tenue">Iniciar, pausar y terminar se marca en la terminal de piso: el tablero solo dice quién va.</p>
+    </div>
+  );
+}
+
+/**
+ * La gente de Producción para que la gerencia la acomode: su área de piso y si entra a
+ * cuadrillas (solo esa sale en la terminal y en el tablero). Altas, bajas, departamento y
+ * datos personales siguen siendo de Recursos Humanos.
+ */
+interface PersonaProduccion { id: string; nombre: string; puesto: string | null; etapa_id: number | null; en_cuadrillas: boolean; trabajando_en: string | null }
+function PersonalPiso({ etapas }: { etapas: Etapa[] }) {
+  const lista = useQuery({ queryKey: [...CLAVE, "personal_produccion"], queryFn: () => q<PersonaProduccion[]>(supabase.rpc("personal_produccion")) });
+  const ajustar = useAccion((a: { p: PersonaProduccion; etapa: number | null; cuadrillas: boolean }) =>
+    q(supabase.rpc("ajustar_personal_piso", { p_empleado: a.p.id, p_etapa: a.etapa, p_en_cuadrillas: a.cuadrillas })),
+  { invalidar: [CLAVE], exito: "Guardado" });
+  if (lista.error) return <ErrorCarga error={lista.error} />;
+  if (lista.isLoading) return <Cargando filas={6} />;
+  const gente = lista.data ?? [];
+  const dentro = gente.filter((p) => p.en_cuadrillas).length;
+  return (
+    <div className="space-y-3 text-sm">
+      <p className="text-tenue" data-explain={GLOSARIO.enCuadrillas} data-explain-title="Entra a cuadrillas">
+        {dentro} de {gente.length} entran a cuadrillas. Quien no entra no sale en la terminal ni aquí para asignarle trabajo.
+        Para dar de alta o de baja, o cambiar a alguien de departamento, pídeselo a Recursos Humanos.
+      </p>
+      {gente.length === 0 && <Vacio icono={Users} titulo="No hay personal de Producción" texto="Recursos Humanos da de alta al personal con el departamento Producción; aquí aparece para acomodarlo." />}
+      <ul className="divide-y divide-borde">
+        {gente.map((p) => (
+          <li key={p.id} className="py-2 flex flex-wrap items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="font-medium truncate">{p.nombre}</p>
+              <p className="text-xs text-tenue truncate">{p.puesto ?? "Sin puesto"}{p.trabajando_en && ` · trabajando en ${p.trabajando_en}`}</p>
+            </div>
+            <Seleccion className="w-36" value={p.etapa_id ?? ""} aria-label={`Área de ${p.nombre}`}
+              onChange={(e) => ajustar.mutate({ p, etapa: e.target.value ? Number(e.target.value) : null, cuadrillas: p.en_cuadrillas })}>
+              <option value="">Sin área</option>
+              {etapas.map((et) => <option key={et.id} value={et.id}>{et.nombre}</option>)}
+            </Seleccion>
+            <label className="flex items-center gap-2 text-xs text-tenue">
+              <Interruptor activo={p.en_cuadrillas} cargando={ajustar.isPending} aria-label={`${p.nombre} entra a cuadrillas`}
+                alCambiar={(v) => ajustar.mutate({ p, etapa: p.etapa_id, cuadrillas: v })} />
+              Cuadrillas
+            </label>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

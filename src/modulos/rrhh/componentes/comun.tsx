@@ -7,7 +7,7 @@ import type { Tono } from "@/components/ui/insignia";
 
 export interface Empleado {
   id: string; numero: string | null; nombre: string; puesto: string | null;
-  departamento_id: number | null; etapa_id: number | null; fecha_ingreso: string; fecha_nacimiento: string | null;
+  departamento_id: number | null; etapa_id: number | null; en_cuadrillas?: boolean; fecha_ingreso: string; fecha_nacimiento: string | null;
   telefono: string | null; correo: string | null; contacto_emergencia: string | null; foto_url: string | null;
   usuario_id: string | null; activo: boolean; baja_en: string | null; motivo_baja: string | null;
   /** Puntos del checklist diario que le aplican (limpieza es por área, no va aquí). */

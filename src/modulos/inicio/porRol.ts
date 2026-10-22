@@ -34,6 +34,8 @@ export const INICIO_POR_ROL: Partial<Record<Rol, Contenido>> = {
   recepcion: { tarjetas: ["leads"], pendientes: [] },
   // Mantenimiento: sus pendientes (fallas, preventivos) llegan por la campana; ve cómo va el taller.
   mantenimiento: { tarjetas: ["taller"], pendientes: [] },
+  // Ingeniería de procesos: el taller y lo que vence; sus números están en Métricas.
+  ingenieria_procesos: { tarjetas: ["taller", "ordenes_por_vencer"], pendientes: ["faltantes"] },
   // Sistemas: sus pendientes llegan por la campana; en Inicio no le van cifras del negocio.
   admin: { tarjetas: [], pendientes: [] },
 };

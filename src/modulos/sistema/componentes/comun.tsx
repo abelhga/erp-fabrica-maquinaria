@@ -17,6 +17,7 @@ export const ROLES: { rol: Rol; descripcion: string }[] = [
   { rol: "pantalla", descripcion: "TV del taller: entra directo al tablero de piso y no ve nada más." },
   { rol: "recepcion", descripcion: "Contesta el teléfono: registra leads para ventas, ve si quien llama ya es cliente y de quién, y ve el catálogo con precios de lista. No ve clientes, ventas ni costos." },
   { rol: "mantenimiento", descripcion: "Máquinas y herramienta del taller: programa preventivo, fallas, checklist, refacciones y préstamo de herramienta. Ve el avance del taller y las existencias; no ve ventas, clientes ni costos de equipos." },
+  { rol: "ingenieria_procesos", descripcion: "Ingeniería de procesos (lean): métricas de la planta, el taller, las cuadrillas y las horas de cada etapa. Ve costos para medir el costo del desperdicio; no ve márgenes ni precios de venta." },
   { rol: "importaciones", descripcion: "Embarques, documentos con el agente aduanal, pagos en dólares y costo puesto en planta." },
 ];
 
@@ -41,6 +42,7 @@ export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; ale
   { modulo: "catalogo", nombre: "Catálogo", descripcion: "1: ver lo que se vende con foto, descripción, precio de lista y existencia (recepción y ventas). Sin listas de materiales, planos, proveedores ni costos (eso es Ingeniería).",
     alerta: "Los precios de venta los ve quien tiene Ventas, Catálogo, Márgenes o Finanzas; ningún otro puesto." },
   { modulo: "leads", nombre: "Leads", descripcion: "Recados de gente interesada que capturan recepción y ventas. 1: ver los suyos · 2: capturar y tomar · 3: asignar, ver todos y decidir a quién le llegan." },
+  { modulo: "procesos", nombre: "Ingeniería de procesos", descripcion: "Métricas de la planta (entregas a tiempo, lead time, eficiencia del flujo, horas reales contra estimadas, paros y mantenimiento). Los costos dentro de las métricas solo los ve quien además tiene Costos. 3: administrar las herramientas lean cuando se habiliten." },
   { modulo: "asistente", nombre: "Asistente (Claude)", descripcion: "1: Claude escribe su resumen «Lo que importa hoy» y puede hacerle preguntas con «Pregúntale al ERP» (solo sobre lo que su puesto ya puede ver) · 3: además lee las conversaciones de los demás. Sin este permiso, el resumen sale con reglas fijas y sin chat.",
     alerta: "Cada pregunta y cada resumen de Claude gasta crédito de la API." },
   { modulo: "admin", nombre: "Sistema", descripcion: "1: ver la bitácora · 3: usuarios, roles, invitaciones y configuración." },

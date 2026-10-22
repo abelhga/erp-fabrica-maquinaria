@@ -61,7 +61,7 @@ export default function Inicio() {
 // ventas del año. Sin área propia no hay resumen.
 function areaDeRoles(tieneRol: (r: Rol) => boolean): Area | null {
   if (tieneRol("gerente_ventas") || tieneRol("ventas")) return "ventas";
-  if (tieneRol("gerente_produccion")) return "produccion";
+  if (tieneRol("gerente_produccion") || tieneRol("ingenieria_procesos")) return "produccion";
   // Supervisores de piso y mantenimiento: sin Claude, con los avisos de reglas de su área.
   if (tieneRol("produccion")) return "produccion";
   if (tieneRol("mantenimiento")) return "mantenimiento";

@@ -9,6 +9,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
 import { fecha } from "@/lib/formato";
+import { cn } from "@/lib/utilidades";
 import { CLAVE, useProduccionEnVivo, useTablero, type OrdenTablero } from "./componentes/datos";
 import { BarraAvance, ChipEtapa, InsigniaCompromiso } from "./componentes/piezas";
 import { DialogoDesdePedido, DialogoOrdenStock } from "./componentes/DialogosCrear";
@@ -84,11 +85,13 @@ export default function Ordenes() {
       ),
     },
     {
-      clave: "cliente", titulo: "Cliente", valor: (o) => (o.para_stock ? "Para stock" : o.cliente),
+      clave: "cliente", titulo: "Pedido y cliente", valor: (o) => (o.para_stock ? "Para stock" : `${o.pedido_folio ?? ""} ${o.cliente ?? ""}`),
       celda: (o) => (
-        <div className="max-w-[150px]">
-          <p className="truncate">{o.para_stock ? <span className="text-tenue">Para stock</span> : o.cliente ?? "—"}</p>
-          {o.pedido_folio && <p className="text-xs text-tenue">{o.pedido_folio}</p>}
+        <div className="max-w-[170px]">
+          {o.para_stock ? <p className="text-tenue">Para stock</p> : <>
+            {o.pedido_folio && <p className="font-medium cifra whitespace-nowrap">{o.pedido_folio}</p>}
+            <p className={cn("truncate", o.pedido_folio && "text-xs text-tenue")}>{o.cliente ?? "—"}</p>
+          </>}
         </div>
       ),
     },

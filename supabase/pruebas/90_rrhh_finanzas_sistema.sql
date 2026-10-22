@@ -32,9 +32,9 @@ begin
   -- Personal y datos sensibles
   -- ---------------------------------------------------------------------------
   perform pg_temp.como(v_rrhh);
-  insert into empleados (nombre, fecha_ingreso, usuario_id) values (' Prueba Soldador ', (current_date - interval '3 years 2 months')::date, v_trab)
+  insert into empleados (nombre, fecha_ingreso, usuario_id, departamento_id) values (' Prueba Soldador ', (current_date - interval '3 years 2 months')::date, v_trab, departamento_produccion())
     returning id into v_emp;
-  insert into empleados (nombre, fecha_ingreso) values ('Prueba Nuevo', current_date - 100) returning id into v_emp2;
+  insert into empleados (nombre, fecha_ingreso, departamento_id) values ('Prueba Nuevo', current_date - 100, departamento_produccion()) returning id into v_emp2;
   assert (select nombre from empleados where id = v_emp) = 'Prueba Soldador', 'nombre sin espacios de más';
   insert into empleado_datos (empleado_id, curp, rfc, nss, salario_diario)
     values (v_emp, 'pena920127hjcrvc05', 'PENA920127AB1', '123-4567-8901', 520);

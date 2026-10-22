@@ -7,6 +7,7 @@ import { Lateral, Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { Campo, Entrada, Seleccion, AreaTexto } from "@/components/ui/campo";
 import { Insignia } from "@/components/ui/insignia";
+import { Interruptor } from "@/components/ui/interruptor";
 import { Pestanas, ListaPestanas, ContenidoPestana } from "@/components/ui/pestanas";
 import { Cargando, Vacio } from "@/components/ui/estados";
 import { useSesion } from "@/lib/sesion";
@@ -150,6 +151,8 @@ function DatosGenerales({ empleado: e, empleados, usuarios, alCrear }: {
     fecha_ingreso: e?.fecha_ingreso ?? hoyISO(), fecha_nacimiento: e?.fecha_nacimiento ?? "", telefono: e?.telefono ?? "",
     correo: e?.correo ?? "", contacto_emergencia: e?.contacto_emergencia ?? "", usuario_id: e?.usuario_id ?? "",
     checklist: e?.checklist ?? ([] as PuntoChecklist[]),
+    // Al dar de alta en Producción con área entra de una vez (así lo hace también la base).
+    en_cuadrillas: e ? !!e.en_cuadrillas : true,
   }));
   const palomear = (p: PuntoChecklist) => setF((x) => ({ ...x, checklist: x.checklist.includes(p) ? x.checklist.filter((y) => y !== p) : [...x.checklist, p] }));
   // Lo que sus objetivos miden con el checklist pero aquí no está palomeado: nadie lo podría marcar.
@@ -158,6 +161,7 @@ function DatosGenerales({ empleado: e, empleados, usuarios, alCrear }: {
     queryFn: () => q<PuntoChecklist[]>(supabase.rpc("checklist_sin_palomear", { p_empleado: e!.id })),
   });
   const cambiar = (k: keyof typeof f) => (ev: { target: { value: string } }) => setF((x) => ({ ...x, [k]: ev.target.value }));
+  const esProduccion = deptos.find((d) => String(d.id) === f.departamento_id)?.nombre === "Producción";
   const ligados = new Set(empleados.filter((x) => x.usuario_id && x.id !== e?.id).map((x) => x.usuario_id));
 
   const guardar = useAccion(async () => {
@@ -167,6 +171,7 @@ function DatosGenerales({ empleado: e, empleados, usuarios, alCrear }: {
       fecha_ingreso: f.fecha_ingreso, fecha_nacimiento: f.fecha_nacimiento || null, telefono: f.telefono.trim() || null,
       correo: f.correo.trim().toLowerCase() || null, contacto_emergencia: f.contacto_emergencia.trim() || null, usuario_id: f.usuario_id || null,
       checklist: PUNTOS_CHECKLIST.map((p) => p.valor).filter((p) => f.checklist.includes(p)),
+      en_cuadrillas: esProduccion && f.en_cuadrillas,
     };
     if (e) {
       await q(supabase.from("empleados").update(datos).eq("id", e.id));
@@ -210,6 +215,14 @@ function DatosGenerales({ empleado: e, empleados, usuarios, alCrear }: {
             {etapas.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
           </Seleccion>
         </Campo>
+        {esProduccion && (
+          <Campo etiqueta="Entra a cuadrillas" ayuda="Sale en la terminal y en el tablero para asignarle trabajo.">
+            <span className="flex items-center gap-2 h-9" data-explain={GLOSARIO.enCuadrillas} data-explain-title="Entra a cuadrillas">
+              {editable && <Interruptor activo={f.en_cuadrillas} alCambiar={(v) => setF((x) => ({ ...x, en_cuadrillas: v }))} aria-label="Entra a cuadrillas" />}
+              <span className="text-sm">{f.en_cuadrillas ? "Sí" : "No"}</span>
+            </span>
+          </Campo>
+        )}
         <Campo etiqueta="Fecha de ingreso" ayuda="Con ella se calculan antigüedad y vacaciones.">
           <Entrada type="date" required value={f.fecha_ingreso} onChange={cambiar("fecha_ingreso")} max={hoyISO()} />
         </Campo>
