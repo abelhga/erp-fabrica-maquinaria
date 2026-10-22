@@ -10,7 +10,7 @@ repite: cuenta los procesos completos, que cruzan varias pantallas y varias pers
 
 | Área | Página | Qué trae |
 |---|---|---|
-| Ventas | [ventas.md](ventas.md) | Números de pedido (PED-26-799, Mercado Libre y web) · Entregar un pedido y la hoja de salida · Cuándo sale un equipo |
+| Ventas | [ventas.md](ventas.md) | Números de pedido (PED-26-799, Mercado Libre y web) · Entregar un pedido y la hoja de salida · Cuándo sale un equipo · Ventas de Mercado Libre (pago, lo que se queda ML, envío) |
 | Producción | [produccion.md](produccion.md) | Equipos de stock: fabricarlos y venderlos · Cuadrillas y terminal de piso · Gantt (también en la ficha del pedido y la orden) · La TV del taller · Personal de piso · Métricas |
 
 **Manual visual del taller** (para Luis y los encargados de piso): [`docs/manuales/produccion.html`](../manuales/produccion.html),

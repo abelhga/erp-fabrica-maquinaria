@@ -67,3 +67,25 @@ solo cuando algo se atrasa o se adelanta, sin que nadie lo capture.
 - Clic en un equipo abre su orden de producción con sus etapas y su historia.
 - Si el rombo sale rojo, avísale a la gerencia de producción antes que al cliente: quizá se puede
   subir en la fila o ponerle más gente. Si no, se acuerda otra fecha.
+
+---
+
+## Ventas de Mercado Libre
+
+Las ventas de Mercado Libre entran solas como pedido (cuando dirección prende las ventas en
+Configuración → Integraciones). Nadie las captura, y el pedido dice todo lo que pasa en ML:
+
+- **Pagado.** En cuanto Mercado Pago aprueba el pago, entra el cobro por Mercado Pago con su fecha:
+  el pedido queda sin saldo. Si ML le regresa el dinero al comprador, entra el reembolso en negativo.
+- **Lo que se queda ML.** En el recuadro «Mercado Libre» del pedido sale, tal cual lo da Mercado Pago:
+  lo que pagó el comprador, la comisión, el envío que pagamos, la retención de IVA (8 % del precio sin
+  IVA), la de ISR (2.5 %) y lo que llega a Mercado Pago, con el día en que queda disponible.
+  Ejemplo real: $1,480 − 177.60 comisión − 84.50 envío − 102.07 IVA − 31.90 ISR = $1,083.93.
+- **El envío al día.** Cuando ML hace la guía, el envío del ERP pasa a «guía lista» con ese número;
+  cuando ML lo lleva, a «enviado» (y sale del inventario, aunque no se haya marcado aquí: queda
+  anotado si no se registró el empaque); cuando lo entrega, a «entregado» y el pedido queda entregado.
+
+Las retenciones no son gasto: ML se las entrega al SAT a nombre de Hegamex y se acreditan. Para
+conciliar la cuenta de Mercado Pago, en Ventas → Mercado Libre → **Dinero** está cada pago del mes
+con sus totales, y se baja a Excel.
+

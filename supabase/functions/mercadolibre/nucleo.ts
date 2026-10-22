@@ -25,6 +25,7 @@ export interface Entorno {
 }
 
 export const API_ML = "https://api.mercadolibre.com";
+export const API_MP = "https://api.mercadopago.com";
 const AUTORIZACION_ML = "https://auth.mercadolibre.com.mx/authorization";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -46,18 +47,62 @@ const o = (v: unknown): Obj => (v && typeof v === "object" && !Array.isArray(v) 
 const txt = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : typeof v === "number" ? String(v) : null);
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && v.trim() && Number.isFinite(Number(v)) ? Number(v) : null);
 
-/** Una venta (GET /orders/{id}) y, si se pidió, su envío (GET /shipments/{id}). */
-export function normalizarOrden(orden: Obj, envio?: Obj | null) {
+/**
+ * Un pago de la venta con su detalle de Mercado Pago (GET /v1/payments/{id}). charges_details
+ * trae lo que se le cobra al vendedor: meli_fee (comisión), shp_* (el envío que pagamos) y
+ * tax_withholding-iva / -isr (retenciones). Lo que paga el comprador (from ≠ collector) no
+ * cuenta. Sin el detalle de Mercado Pago queda la comisión de la orden y «completo» en falso.
+ */
+export function normalizarPago(pago: Obj, mp?: Obj | null) {
+  const det = mp && !mp._error ? mp : null;
+  const cargos = (Array.isArray(det?.charges_details) ? det!.charges_details as unknown[] : [])
+    .map((c) => o(c)).filter((c) => (txt(o(c.accounts).from) ?? "collector") === "collector")
+    .map((c) => ({ nombre: txt(c.name) ?? "", tipo: txt(c.type) ?? "", monto: num(o(c.amounts).original) ?? 0, reembolsado: num(o(c.amounts).refunded) ?? 0 }));
+  const suma = (f: (c: { nombre: string; tipo: string }) => boolean) => Math.round(cargos.filter(f).reduce((t, c) => t + c.monto, 0) * 100) / 100;
+  const esComision = (c: { nombre: string; tipo: string }) => c.nombre === "meli_fee";
+  const esEnvio = (c: { tipo: string }) => c.tipo === "shipping";
+  const esIva = (c: { nombre: string }) => c.nombre === "tax_withholding-iva";
+  const esIsr = (c: { nombre: string }) => c.nombre === "tax_withholding-isr";
+  return {
+    id: txt(pago.id),
+    estado: txt(det?.status) ?? txt(pago.status),
+    pagado_en: txt(det?.date_approved) ?? txt(pago.date_approved),
+    metodo: txt(det?.payment_method_id) ?? txt(pago.payment_method_id) ?? txt(pago.payment_type),
+    total: num(det?.transaction_amount) ?? num(pago.transaction_amount) ?? 0,
+    comision: det ? suma(esComision) : num(pago.marketplace_fee) ?? 0,
+    envio: suma(esEnvio),
+    retencion_iva: suma(esIva),
+    retencion_isr: suma(esIsr),
+    otros: suma((c) => !esComision(c) && !esEnvio(c) && !esIva(c) && !esIsr(c)),
+    reembolsado: num(det?.transaction_amount_refunded) ?? num(pago.transaction_amount_refunded) ?? 0,
+    neto: num(o(det?.transaction_details).net_received_amount),
+    libera_en: txt(det?.money_release_date),
+    liberado: txt(det?.money_release_status) === "released",
+    completo: !!det,
+    cargos: det ? cargos : null,
+  };
+}
+
+/** Una venta (GET /orders/{id}), su envío (GET /shipments/{id}) y sus pagos en Mercado Pago. */
+export function normalizarOrden(orden: Obj, envio?: Obj | null, pagosMP?: Obj[] | null) {
+  const mp = new Map((pagosMP ?? []).map((x) => [txt(x.id), x]));
+  const logistica = txt(o(o(envio).logistic).type) ?? txt(o(envio).logistic_type);
   return {
     id: txt(orden.id),
     estado: txt(orden.status),
     fecha: txt(orden.date_closed) ?? txt(orden.date_created),
     comprador: txt(o(orden.buyer).nickname),
     pack_id: txt(orden.pack_id),
-    // Full: la mercancía sale de la bodega de ML, no de planta.
-    full: txt(o(envio).logistic_type) === "fulfillment",
+    // Full: la mercancía sale de la bodega de ML, no de planta. El formato nuevo del envío lo
+    // trae en logistic.type; el viejo, en logistic_type.
+    full: logistica === "fulfillment",
     // shipped / delivered: ML ya lo mandó (una venta traída de días anteriores) y no se pide envío.
     envio_estado: txt(o(envio).status),
+    envio_sub: txt(o(envio).substatus),
+    envio_id: txt(o(orden.shipping).id) ?? txt(o(envio).id),
+    envio_tipo: logistica,
+    guia: txt(o(envio).tracking_number),
+    pagos: (Array.isArray(orden.payments) ? orden.payments as unknown[] : []).map((x) => normalizarPago(o(x), mp.get(txt(o(x).id)))),
     items: (Array.isArray(orden.order_items) ? orden.order_items : []).map((x) => {
       const it = o(o(x).item);
       return { item_id: txt(it.id), titulo: txt(it.title), sku: txt(it.seller_sku), cantidad: num(o(x).quantity) ?? 1, precio: num(o(x).unit_price) ?? 0 };
@@ -137,6 +182,46 @@ async function apiML(e: Entorno, access: string, ruta: string, init?: RequestIni
   return o(d);
 }
 
+/**
+ * Lo que regresa ML de una venta, tal cual (ml_crudo): la orden con sus pagos, el envío, lo
+ * que costó el envío y el pago en Mercado Pago. Sirve para ver de qué campo sale cada cosa
+ * (comisión, retenciones, envío) con las ventas de verdad. Nunca frena el aviso: lo que ML no
+ * deje leer queda anotado como «_error» (así se sabe qué permiso falta).
+ */
+async function guardarCrudo(e: Entorno, admin: SupabaseClient, access: string, orden: Obj, envio: Obj | null, pagos: Obj[]) {
+  const id = txt(orden.id);
+  if (!id) return;
+  try {
+    const envioId = txt(o(orden.shipping).id);
+    const costos = envioId ? await apiML(e, access, `/shipments/${envioId}/costs`).catch((err) => ({ _error: String(err.message ?? err).slice(0, 300) })) : null;
+    await admin.from("ml_crudo").upsert({ order_id: id, orden, envio, costos_envio: costos, pagos, actualizado_en: new Date().toISOString() });
+  } catch { /* lo crudo es para revisar: si falla, la venta sigue igual */ }
+}
+
+/** El detalle de cada pago en Mercado Pago (el mismo token de la cuenta de ML lo lee). */
+async function pagosMP(e: Entorno, access: string, orden: Obj): Promise<Obj[]> {
+  const pagos: Obj[] = [];
+  for (const p of (Array.isArray(orden.payments) ? orden.payments : []) as Obj[]) {
+    const pid = txt(o(p).id);
+    if (!pid) continue;
+    const r = await (e.fetch ?? fetch)(`${API_MP}/v1/payments/${pid}`, { headers: { Authorization: `Bearer ${access}`, Accept: "application/json" } })
+      .then(async (x) => ({ ok: x.ok, status: x.status, d: o(await x.json().catch(() => ({}))) }))
+      .catch((err) => ({ ok: false, status: 0, d: { _error: String(err) } as Obj }));
+    pagos.push(r.ok ? r.d : { id: pid, _error: `Mercado Pago ${r.status}: ${txt(r.d.message) ?? txt(r.d.error) ?? txt(r.d._error) ?? "sin detalle"}` });
+  }
+  return pagos;
+}
+
+/** Una venta completa: la orden, su envío y sus pagos; la deja guardada tal cual y traducida. */
+async function leerVenta(e: Entorno, admin: SupabaseClient, access: string, ruta: string) {
+  const orden = await apiML(e, access, ruta);
+  const envioId = txt(o(orden.shipping).id);
+  const envio = envioId ? await apiML(e, access, `/shipments/${envioId}`, { headers: { "x-format-new": "true" } }).catch(() => null) : null;
+  const pagos = await pagosMP(e, access, orden);
+  await guardarCrudo(e, admin, access, orden, envio, pagos);
+  return { orden, datos: normalizarOrden(orden, envio, pagos) };
+}
+
 // -----------------------------------------------------------------------------
 // Procesar avisos
 // -----------------------------------------------------------------------------
@@ -146,10 +231,12 @@ async function procesarUno(e: Entorno, admin: SupabaseClient, access: string, to
     if (error) throw new ErrorML(error.message);
   };
   if (topic === "orders_v2" || topic === "orders") {
-    const orden = await apiML(e, access, resource);
-    const envioId = txt(o(orden.shipping).id);
-    const envio = envioId ? await apiML(e, access, `/shipments/${envioId}`, { headers: { "x-format-new": "true" } }).catch(() => null) : null;
-    await rpc("ml_registrar_orden", normalizarOrden(orden, envio));
+    await rpc("ml_registrar_orden", (await leerVenta(e, admin, access, resource)).datos);
+  } else if (topic === "shipments") {
+    // Cambió el envío (guía, en camino, entregado): el del ERP lo sigue. El aviso de la venta no
+    // llega por esto. Un envío puede llevar varias ventas del mismo carrito: se busca por envío.
+    const envio = await apiML(e, access, resource, { headers: { "x-format-new": "true" } });
+    await rpc("ml_sincronizar_envio", { envio_id: txt(envio.id), estado: txt(envio.status), subestado: txt(envio.substatus), guia: txt(envio.tracking_number) });
   } else if (topic === "claims") {
     const reclamo = await apiML(e, access, resource);
     const razonId = txt(reclamo.reason_id);
@@ -162,12 +249,10 @@ async function procesarUno(e: Entorno, admin: SupabaseClient, access: string, to
       // se registra aquí y luego el reclamo. Si es de antes, nunca va a llegar sola: se avisa una
       // vez para atenderlo en ML en lugar de reintentarlo para siempre.
       if (!(err instanceof ErrorML) || !/todavía no está en el ERP/.test(err.message) || !datos.order_id) throw err;
-      const orden = await apiML(e, access, `/orders/${datos.order_id}`);
-      const fecha = txt(orden.date_closed) ?? txt(orden.date_created);
+      const venta = await leerVenta(e, admin, access, `/orders/${datos.order_id}`);
+      const fecha = txt(venta.orden.date_closed) ?? txt(venta.orden.date_created);
       if (fecha && conectadaEn && new Date(fecha) >= new Date(conectadaEn)) {
-        const envioId = txt(o(orden.shipping).id);
-        const envio = envioId ? await apiML(e, access, `/shipments/${envioId}`, { headers: { "x-format-new": "true" } }).catch(() => null) : null;
-        await rpc("ml_registrar_orden", normalizarOrden(orden, envio));
+        await rpc("ml_registrar_orden", venta.datos);
         // Una venta sin pagar no se registra: entonces tampoco hay dónde colgar el reclamo.
         await rpc("ml_registrar_reclamo", datos).catch(() => rpc("ml_reclamo_sin_venta", { ...datos, fecha_venta: fecha }));
       } else {

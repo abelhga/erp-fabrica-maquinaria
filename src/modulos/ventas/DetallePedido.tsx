@@ -19,6 +19,7 @@ import { Barra, CampoNumero, Dato } from "./componentes/campos";
 import { DialogoMotivo } from "./componentes/dialogos";
 import { CANAL, ESTADO_PEDIDO, LINEA, dineroEn, hoyMx, useVendedores, type EstadoPedido, type Linea, type VPedido } from "./comun";
 import { TarjetaEnvio } from "@/modulos/almacen/envios/TarjetaEnvio";
+import { TarjetaMercadoLibre } from "./componentes/DineroML";
 import { BotonEntregar, RecuadroEntrega, abrirHojaSalida, useHojaSalida } from "./componentes/EntregaPedido";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { GanttCompacto } from "@/modulos/produccion/Gantt";
@@ -267,6 +268,7 @@ export default function DetallePedido() {
         </div>
 
         <div className="space-y-4">
+          {p.canal === "mercadolibre" && <TarjetaMercadoLibre pedidoId={p.id} />}
           <TarjetaEnvio pedido={p} />
           <Tarjeta>
             <EncabezadoTarjeta titulo="Datos del pedido" />
@@ -314,7 +316,7 @@ export default function DetallePedido() {
               {(cobros.data?.length ?? 0) === 0 ? <p className="text-tenue">Sin cobros registrados.{!puede("finanzas", 2) && " Los captura finanzas."}</p>
                 : cobros.data!.map((c) => (
                   <div key={c.id} className="flex items-center justify-between gap-2">
-                    <span><Receipt className="inline h-3.5 w-3.5 text-tenue mr-1" />{fecha(c.fecha)} · {c.metodo}{c.referencia ? ` · ${c.referencia}` : ""}</span>
+                    <span><Receipt className="inline h-3.5 w-3.5 text-tenue mr-1" />{fecha(c.fecha)} · {c.metodo === "mercadopago" ? "Mercado Pago" : c.metodo}{c.referencia ? ` · ${c.referencia.replace(/^Mercado Pago /, "pago ")}` : ""}</span>
                     <span className="flex items-center gap-1">
                       <span className="cifra font-medium">{dineroEn(Number(c.monto), p.moneda)}</span>
                       {puede("finanzas", 2) && <button className="text-tenue hover:text-peligro" aria-label="Borrar cobro" onClick={() => { if (confirm("¿Borrar este cobro?")) borrarCobro.mutate(c.id); }}><Trash2 className="h-3.5 w-3.5" /></button>}
