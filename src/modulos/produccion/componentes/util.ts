@@ -78,8 +78,9 @@ export function haceRato(f: string | null | undefined, ahora = Date.now()) {
 }
 
 /** Una línea legible por evento, la misma en la gerencia, el detalle y la TV. */
-export function textoEvento(e: Evento, conFolio = true) {
-  const op = conFolio ? folioCorto(e.folio) : "la orden";
+export function textoEvento(e: Evento, conFolio = true, etiqueta?: string) {
+  // En la TV se habla del equipo («la Zar 4T»), no del folio: ahí llega `etiqueta`.
+  const op = etiqueta ?? (conFolio ? folioCorto(e.folio) : "la orden");
   const quien = e.responsable ? ` (${e.responsable})` : "";
   switch (e.tipo) {
     case "creada": return `Se creó ${op}`;
