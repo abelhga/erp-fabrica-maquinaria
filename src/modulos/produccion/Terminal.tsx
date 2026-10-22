@@ -11,6 +11,7 @@ import { cn } from "@/lib/utilidades";
 import { fecha } from "@/lib/formato";
 import { CLAVE, useAsignaciones, useCuadrillas, useEtapas, usePersonalPiso, usePiso, useProduccionEnVivo, type Etapa, type OperacionPiso, type PersonaPiso } from "./componentes/datos";
 import { abreviarEquipo, folioCorto, haceRato, textoDias, tonoCompromiso } from "./componentes/util";
+import { AvanceEtapa } from "./componentes/AvanceEtapa";
 import { useSesion } from "@/lib/sesion";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { Explicacion } from "@/tutorial/Explicacion";
@@ -260,6 +261,7 @@ function TarjetaPiso({ o, pedir, ahora, tenue }: { o: OperacionPiso; pedir: (o: 
         {o.estado === "en_proceso" && <CuadrillaEnEtapa o={o} ahora={ahora} />}
         {o.estado === "pausada" && <p className="font-semibold text-aviso">❚❚ Pausada{o.responsable && ` · ${o.responsable}`}</p>}
         {o.estado !== "en_proceso" && <LeToca o={o} />}
+        {(o.estado === "en_proceso" || o.estado === "pausada") && <AvanceEtapa operacion={o.id} avance={o.avance_etapa} grande />}
         {o.estado === "pendiente" && (o.lista ? <p className="text-ok font-medium">Lista para empezar</p> : <p className="text-tenue">Todavía en {o.espera_a}</p>)}
         {o.ultimo_problema && o.estado !== "pendiente" && (
           <p className="text-peligro flex gap-2"><AlertTriangle className="h-6 w-6 shrink-0" /><span>{o.ultimo_problema} <span className="text-tenue">({haceRato(o.ultimo_problema_en, ahora)})</span></span></p>

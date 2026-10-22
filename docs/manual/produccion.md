@@ -104,6 +104,8 @@ Hay dos vistas, con el selector de arriba:
    cámbiala ahí: manda lo que se hizo, y el tablero queda como arrancó.
 3. **Se une** y **Sale** cambian la cuadrilla sin detener la etapa.
 4. **Pausar** cierra los tiempos de todos, pero la cuadrilla se queda para reanudar.
+5. **¿Cuánto lleva?** (¼, ½, ¾, casi) en lo que ya empezó: el tablero, la TV y el Gantt cuentan ese
+   avance. También lo puede poner la gerencia desde la orden.
 
 ### Reglas que conviene saber
 
@@ -134,7 +136,8 @@ Nadie las captura. El ERP simula el taller día por día, de lunes a viernes:
   está trabajando); sin cuadrilla, cuenta 2 personas;
 - una etapa empieza al día siguiente de que acaba la anterior de la misma orden; lo que ya está en
   proceso o pausado sigue desde hoy;
-- de una etapa empezada falta lo estimado menos las horas hombre ya marcadas en la terminal;
+- de una etapa empezada falta lo que el piso reportó en «¿Cuánto lleva?» (¼, ½, ¾, casi); si nadie
+  lo ha reportado, lo estimado menos las horas hombre ya marcadas en la terminal;
 - va primero lo que ya se trabaja, luego la fila, luego lo urgente y la fecha compromiso.
 
 Las órdenes en espera no entran al plan. Cada vez que el piso marca algo (inicia, termina, se une

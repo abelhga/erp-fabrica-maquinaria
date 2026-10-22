@@ -246,8 +246,8 @@ function TarjetaTV({ t }: { t: Tarjeta }) {
         {o.estado === "pausada" && !t.sigue && <Pause className="h-8 w-8 shrink-0 text-aviso" />}
         <p className={cn("text-[30px] font-semibold truncate", t.sigue ? "text-tenue" : o.estado === "pausada" ? "text-aviso" : "text-marca-texto")}>
           {t.sigue ? "Sigue · lista para empezar"
-            : o.estado === "pausada" ? `Pausada${o.ultimo_problema ? `: ${o.ultimo_problema}` : o.responsable ? ` · ${o.responsable}` : ""}`
-            : `● ${o.responsable ?? "Trabajando"}`}
+            : o.estado === "pausada" ? `Pausada${o.ultimo_problema ? `: ${o.ultimo_problema}` : (o.cuadrilla ?? o.responsable) ? ` · ${o.cuadrilla ?? o.responsable}` : ""}`
+            : `● ${o.cuadrilla ?? o.responsable ?? "Trabajando"}`}
         </p>
       </div>
     </article>

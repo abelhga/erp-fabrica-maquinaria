@@ -46,6 +46,7 @@ export const PRODUCCION: Record<string, AyudaPantalla> = {
     "Al iniciar o reanudar, toca quiénes trabajan: vienen marcados los que planeó la gerencia en Cuadrillas (en lo que no ha empezado dice «Le toca»); si no hay, la última cuadrilla de esa tablet. Primero sale la gente de esa etapa. Si alguien no está dado de alta o es un ayudante de paso, súmalo en «Sin nombre». En cada orden en proceso, «Se une» agrega a alguien y «Sale» lo quita, sin detener la etapa. Una persona no puede estar en dos etapas a la vez.",
     "Con eso salen las horas hombre de cada etapa: el tiempo de cada persona sumado. Se ven en el detalle de la orden contra las horas estimadas del costeo. Al pausar o terminar la etapa salen todos.",
     "¿Terminaste una por error? El aviso verde trae «Deshacer» unos segundos: la etapa regresa a pausada. Tienes 15 minutos; después, pídeselo a la gerencia de producción.",
+    "En lo que ya empezó, «¿Cuánto lleva?» (¼, ½, ¾, casi) dice cómo va la etapa: con eso el tablero, la TV y el plan saben cuánto falta aunque las horas no se hayan marcado desde el principio.",
   ],
   "/produccion/ordenes": [
     "La lista de todas las órdenes de producción con su material: qué está apartado, qué falta y si ya se pidió a compras. La usan la gerencia, almacén e ingeniería para preparar cada orden antes de que entre al taller.",

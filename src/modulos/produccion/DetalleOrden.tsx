@@ -20,6 +20,7 @@ import { PasosValidacion, type AccionPaso } from "./componentes/Validacion";
 import { DialogoSurtir, MaterialOrden } from "./componentes/MaterialOrden";
 import { DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, DialogoEnEspera, DialogoReabrir, type OrdenBasica } from "./componentes/DialogosOrden";
 import { ESTADO_OP, ESTADO_OPERACION, PRIORIDAD, horas, textoEvento } from "./componentes/util";
+import { AvanceEtapa } from "./componentes/AvanceEtapa";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 interface HorasHombre {
@@ -37,6 +38,7 @@ interface Orden {
 interface Operacion {
   id: string; etapa_id: number; horas_estimadas: number; estado: EstadoOperacion; inicio: string | null; fin: string | null;
   responsable: string | null; etapa: { nombre: string; color: string; orden: number };
+  avance: number | null;
 }
 interface Solicitud {
   id: string; descripcion: string; estado: "pendiente" | "aplicada" | "descartada"; solicitado_en: string; resuelto_en: string | null;
@@ -252,7 +254,7 @@ export default function DetalleOrden() {
                   </div>
                   <div className="flex items-center gap-2 pl-5 mt-1">
                     <p className="text-xs text-tenue flex-1 min-w-0 truncate">
-                      {[x.responsable, x.inicio && `inició ${fechaYHora(x.inicio)}`, x.fin && `terminó ${fechaYHora(x.fin)}`].filter(Boolean).join(" · ") || "Sin empezar"}
+                      {[x.estado !== "terminada" && x.avance != null && `lleva ${Math.round(x.avance * 100)} %`, x.responsable, x.inicio && `inició ${fechaYHora(x.inicio)}`, x.fin && `terminó ${fechaYHora(x.fin)}`].filter(Boolean).join(" · ") || "Sin empezar"}
                     </p>
                     {p.taller && enTaller && !o.en_espera_motivo && x.estado !== "terminada" && (
                       <div className="flex gap-1">
@@ -268,6 +270,9 @@ export default function DetalleOrden() {
                       </span>
                     )}
                   </div>
+                  {p.taller && enTaller && !o.en_espera_motivo && (x.estado === "en_proceso" || x.estado === "pausada") && (
+                    <div className="pl-5 mt-1.5"><AvanceEtapa operacion={x.id} avance={x.avance} /></div>
+                  )}
                   {veFabricacion && <HorasDeEtapa h={horasHombre.data?.find((y) => y.operacion_id === x.id)} />}
                 </li>
               ))}
