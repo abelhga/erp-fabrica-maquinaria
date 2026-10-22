@@ -634,7 +634,8 @@ with sinc as (
   select orden_id, min(en) en from public.op_eventos
   where tipo = 'nota' and nota like 'Actualizada con la hoja de Luis%' group by orden_id
 )
-update public.op_operaciones x set inicio = s.en
+-- (Si la etapa ya venía terminada desde la carga del 16-oct, el inicio no pasa de su fin.)
+update public.op_operaciones x set inicio = least(s.en, coalesce(x.fin, s.en))
 from sinc s
 where s.orden_id = x.orden_id and x.inicio > s.en
   and (x.inicio at time zone 'America/Mexico_City')::time = '18:00'
