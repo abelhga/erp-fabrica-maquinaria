@@ -59,6 +59,7 @@ const Bitacora = p(() => import("./modulos/sistema/Bitacora"));
 const Configuracion = p(() => import("./modulos/sistema/Configuracion"));
 const ParaLlamar = p(() => import("./modulos/asistente/ParaLlamar"));
 const Semana = p(() => import("./modulos/asistente/Semana"));
+const HojaSalida = p(() => import("./modulos/ventas/HojaSalida"));
 const Pendientes = p(() => import("./modulos/pendientes/Pendientes"));
 const Planos = p(() => import("./modulos/costeo/Planos"));
 const Embarques = p(() => import("./modulos/importaciones/Embarques"));
@@ -123,6 +124,8 @@ export function App() {
           <Route path="/produccion/terminal" element={<Con m="produccion" n={2}><Terminal /></Con>} />
           <Route path="/servicio/reportar" element={<Con m="mantenimiento" n={2}><ReportarFalla /></Con>} />
           <Route path="/ventas/cotizaciones/:id/imprimir" element={<Con m="ventas"><ImprimirCotizacion /></Con>} />
+          {/* La hoja de salida la imprime quien ve el pedido, almacén incluido: el permiso lo revisa la base. */}
+          <Route path="/pedidos/:id/salida" element={<HojaSalida />} />
           <Route path="/importaciones/oc/:id/imprimir" element={<Con m="compras" n={2}><ImprimirOCImportacion /></Con>} />
           <Route path="/rrhh/documento/:tipo/:id" element={<Con m="nomina"><DocumentoNomina /></Con>} />
         </Route>

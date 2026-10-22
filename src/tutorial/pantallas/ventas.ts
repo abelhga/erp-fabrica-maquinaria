@@ -41,7 +41,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
   "/ventas/pedidos/:id": [
     "Todo lo de un pedido en una página: partidas, avance de producción, envío, facturas, cobros y a quién le cuenta la venta. La línea de arriba marca por dónde va: confirmado, en producción, listo y entregado.",
     "Mientras está Confirmado se pueden ajustar las partidas; se guardan al salir del campo (Enter o Tab). Los precios que vienen de una cotización ya pasaron por la autorización: solo la gerencia los cambia, o sacas una nueva versión de la cotización.",
-    "Arriba: “Mandar a producción” (lo usa producción) crea una orden por cada equipo con lista de materiales; “Marcar listo” y “Entregar” avanzan el estado; “Cancelar” pide el motivo. Facturas y cobros los registra finanzas, y el saldo se recalcula solo.",
+    "Arriba: “Mandar a producción” (lo usa producción) crea una orden por cada equipo con lista de materiales; “Marcar listo” avanza el estado; “Cancelar” pide el motivo. “Hoja de salida” imprime lo que firma el cliente (sin precios). “Entregar” pide quién recibió y la foto de la hoja firmada (la puedes subir después); si te equivocaste, el aviso trae “Deshacer” por 15 minutos, y después la reabre la gerencia de ventas con el motivo. Entregan almacén, el vendedor sus pedidos, la gerencia de ventas y dirección. Facturas y cobros los registra finanzas, y el saldo se recalcula solo.",
     "“Crédito de la venta” dice qué vendedor cobra comisión por este pedido; si la cerraron entre varios, la gerencia lo comparte en porcentajes que suman 100 %.",
   ],
   "/ventas/clientes": [

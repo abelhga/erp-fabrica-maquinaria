@@ -481,6 +481,8 @@ function CuadrillaEnEtapa({ o, ahora }: { o: OperacionPiso; ahora: number }) {
           <UserPlus className="h-6 w-6" />Se une
         </button>
       </div>
+      {/* Empezó sin que nadie abriera su tiempo (se cargó de la hoja): a quién le toca, para darle «Se une». */}
+      {tramos.length === 0 && <LeToca o={o} />}
       {error && <p className="text-peligro">{error}</p>}
       {uniendo && <UnirAEtapa o={o} alCerrar={() => setUniendo(false)} />}
     </div>

@@ -42,7 +42,7 @@ begin
 
   -- Y se entrega desde el ERP como cualquier otro.
   perform pg_temp.como(v_vend);
-  perform entregar_pedido(v_ped);
+  perform entregar_pedido(v_ped, 'Cliente de prueba');
   perform pg_temp.como_postgres();
   assert (select estado from pedidos where id = v_ped) = 'entregado', 'no se pudo entregar el pedido de la hoja';
 end $$;

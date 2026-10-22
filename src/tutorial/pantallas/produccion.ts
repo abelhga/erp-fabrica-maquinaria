@@ -11,6 +11,7 @@ export const PRODUCCION: Record<string, AyudaPantalla> = {
     "Los pedidos vistos desde la planta: qué se vendió, a quién, para cuándo y cómo va cada equipo en el taller. No trae montos. La usan la gerencia de producción, los supervisores y almacén.",
     "«Activos» son los confirmados, en producción y listos para entregar; «Sin orden», los que tienen equipos que nadie está fabricando todavía. Dale clic a un pedido para ver sus partidas y las órdenes de cada una, con su avance; el folio de la orden te lleva a su detalle.",
     "La gerencia crea desde aquí las órdenes que faltan. Si hay un equipo igual hecho (o en proceso) para stock, sale «Usar OP-…»: se asigna al pedido y ya no se fabrica otro. Así se reemplaza la «S-» de la hoja.",
+    "Almacén entrega desde aquí: en el pedido, «Hoja de salida» imprime lo que firma el cliente (sin precios) y «Entregar» pide quién recibió y la foto de la hoja firmada. Si fue un error, «Deshacer» en el aviso durante 15 minutos.",
   ],
   "/produccion/cuadrillas": [
     "El taller por etapas con la gente adentro: quién trabaja qué ahorita, qué está pausado y qué sigue en cada etapa. No es otra captura: lo que se marca en la terminal de piso sale aquí al momento, y lo que se mueve aquí lo ve la terminal. La usan la gerencia de producción y los supervisores.",
