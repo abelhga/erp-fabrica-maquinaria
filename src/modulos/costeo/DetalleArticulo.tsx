@@ -37,7 +37,7 @@ function Cifra({ etiqueta, valor, detalle, tono, explica }: { etiqueta: string; 
 
 /** La copia recién hecha contra su original: lo primero que se quiere saber después de duplicar. */
 function ComparacionCopia({ origen, copia }: { origen: string; copia: ArticuloCatalogo }) {
-  const { puede } = useSesion();
+  const { puede, vePrecios } = useSesion();
   const o = useArticulo(origen).data;
   if (!o) return null;
   const dif = (a: number | null | undefined, b: number | null | undefined) => (a == null || b == null || !b ? null : a / b - 1);
@@ -48,14 +48,14 @@ function ComparacionCopia({ origen, copia }: { origen: string; copia: ArticuloCa
       <span>Copia de <Link to={`/costeo/equipos/${o.id}`} className="font-medium hover:underline cifra">{o.clave}</Link> {o.nombre}</span>
       {puede("costos") && <span>Costo <b className="cifra">{dinero(o.costo_total)}</b> <ArrowRight className="inline h-3.5 w-3.5" /> <b className="cifra">{dinero(copia.costo_total)}</b>
         {dc != null && <span className="ml-1 text-tenue cifra">{flecha(dc)} {dinero(Math.abs((copia.costo_total ?? 0) - (o.costo_total ?? 0)))} ({porcentaje(Math.abs(dc))})</span>}</span>}
-      <span>Precio de lista <b className="cifra">{dinero(o.precio)}</b> <ArrowRight className="inline h-3.5 w-3.5" /> <b className="cifra">{dinero(copia.precio)}</b>
-        {dp != null && <span className="ml-1 text-tenue cifra">{flecha(dp)} {dinero(Math.abs((copia.precio ?? 0) - (o.precio ?? 0)))} ({porcentaje(Math.abs(dp))})</span>}</span>
+      {vePrecios && <span>Precio de lista <b className="cifra">{dinero(o.precio)}</b> <ArrowRight className="inline h-3.5 w-3.5" /> <b className="cifra">{dinero(copia.precio)}</b>
+        {dp != null && <span className="ml-1 text-tenue cifra">{flecha(dp)} {dinero(Math.abs((copia.precio ?? 0) - (o.precio ?? 0)))} ({porcentaje(Math.abs(dp))})</span>}</span>}
     </div>
   );
 }
 
 function Encabezado({ a }: { a: ArticuloCatalogo }) {
-  const { puede } = useSesion();
+  const { puede, vePrecios } = useSesion();
   const costos = puede("costos");
   const margenes = puede("margenes");
   const d = useDesglose(a.id);
@@ -67,11 +67,20 @@ function Encabezado({ a }: { a: ArticuloCatalogo }) {
       <div className="flex items-center gap-4">
         {a.imagen_url && <img src={a.imagen_url} alt="" className="hidden sm:block h-16 w-16 rounded-lg object-cover border border-borde bg-fondo shrink-0"
           onError={(e) => { e.currentTarget.style.display = "none"; }} />}
-        <div>
-          <p className="text-xs text-tenue">Precio de lista sin IVA</p>
-          <p className="text-3xl sm:text-4xl font-semibold cifra tracking-tight leading-tight">{a.precio == null ? <span className="text-tenue text-2xl">sin precio</span> : dinero(a.precio)}</p>
-          <p className="text-xs text-tenue mt-0.5">{a.precio != null ? <>Con IVA {dinero(a.precio * 1.16)} · calculado {hace(a.precio_calculado_en)}</> : "Sale solo en cuanto tenga costo."}</p>
-        </div>
+        {/* El precio de venta es de quien vende (ventas, catálogo, márgenes, finanzas). */}
+        {vePrecios ? (
+          <div>
+            <p className="text-xs text-tenue">Precio de lista sin IVA</p>
+            <p className="text-3xl sm:text-4xl font-semibold cifra tracking-tight leading-tight">{a.precio == null ? <span className="text-tenue text-2xl">sin precio</span> : dinero(a.precio)}</p>
+            <p className="text-xs text-tenue mt-0.5">{a.precio != null ? <>Con IVA {dinero(a.precio * 1.16)} · calculado {hace(a.precio_calculado_en)}</> : "Sale solo en cuanto tenga costo."}</p>
+          </div>
+        ) : (
+          <div>
+            <p className="text-xs text-tenue">Categoría</p>
+            <p className="text-xl font-semibold leading-tight">{a.categoria ?? "Sin categoría"}</p>
+            <p className="text-xs text-tenue mt-0.5">{NOMBRE_TIPO[a.tipo]} · {a.unidad}</p>
+          </div>
+        )}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:border-l md:pl-6 border-borde">
         {costos ? (

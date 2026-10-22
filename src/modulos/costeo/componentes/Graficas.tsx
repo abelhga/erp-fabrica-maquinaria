@@ -64,7 +64,7 @@ function TooltipCosteo({ active, payload }: { active?: boolean; payload?: { payl
  * Lo reconstruido hacia atrás va punteado y solo se muestra antes de la primera
  * foto real: cuando hay foto, la estimación sobra.
  */
-export function GraficaCosteo({ puntos, conMargenes = true }: { puntos: PuntoCosteo[]; conMargenes?: boolean }) {
+export function GraficaCosteo({ puntos, conMargenes = true, conPrecios = true }: { puntos: PuntoCosteo[]; conMargenes?: boolean; conPrecios?: boolean }) {
   const [rango, setRango] = useState<Rango>("todo");
   const [verTabla, setVerTabla] = useState(false);
 
@@ -113,7 +113,8 @@ export function GraficaCosteo({ puntos, conMargenes = true }: { puntos: PuntoCos
         {/* "A utilidad de hoy" separa cuánto vino de cambiar la utilidad: es de márgenes. */}
         <Leyenda series={[
           { nombre: "Costo", color: SERIE(1) },
-          { nombre: "Precio de lista real", color: SERIE(2) },
+          // El precio de venta solo para quien lo ve (ingeniería ve el costo nada más).
+          ...(conPrecios ? [{ nombre: "Precio de lista real", color: SERIE(2) }] : []),
           ...(conMargenes ? [{ nombre: "Precio a utilidad de hoy", color: SERIE(3) }] : []),
         ]} />
         <div className="flex items-center gap-3">
@@ -144,14 +145,14 @@ export function GraficaCosteo({ puntos, conMargenes = true }: { puntos: PuntoCos
       {verTabla ? (
         <div className="overflow-x-auto max-h-[360px] border border-borde rounded-lg">
           <table className="tabla">
-            <thead><tr><th>Fecha</th><th className="text-right">Costo</th><th className="text-right">Precio real</th>
+            <thead><tr><th>Fecha</th><th className="text-right">Costo</th>{conPrecios && <th className="text-right">Precio real</th>}
               {conMargenes && <><th className="text-right">A utilidad de hoy</th><th className="text-right">Utilidad</th></>}<th></th></tr></thead>
             <tbody>
               {[...filas].reverse().map((f) => (
                 <tr key={f.t}>
                   <td>{fecha(new Date(f.t))}</td>
                   <td className="text-right cifra">{dinero(f.costo ?? f.costoEst)}</td>
-                  <td className="text-right cifra">{dinero(f.real)}</td>
+                  {conPrecios && <td className="text-right cifra">{dinero(f.real)}</td>}
                   {conMargenes && <><td className="text-right cifra">{dinero(f.constante ?? f.constanteEst)}</td>
                   <td className="text-right cifra">{f.utilidad == null ? "—" : porcentaje(f.utilidad, 0)}</td></>}
                   <td className="text-xs text-tenue">{f.estimado ? "estimado" : ""}</td>
@@ -175,8 +176,8 @@ export function GraficaCosteo({ puntos, conMargenes = true }: { puntos: PuntoCos
                 activeDot={{ r: 4, strokeWidth: 2, stroke: "hsl(var(--superficie))" }} isAnimationActive={false} connectNulls />
               <Line dataKey="constante" name="Precio a utilidad de hoy" type="stepAfter" stroke={SERIE(3)} strokeWidth={2} dot={false}
                 activeDot={{ r: 4, strokeWidth: 2, stroke: "hsl(var(--superficie))" }} isAnimationActive={false} connectNulls />
-              <Line dataKey="real" name="Precio de lista real" type="stepAfter" stroke={SERIE(2)} strokeWidth={2} dot={false}
-                activeDot={{ r: 4, strokeWidth: 2, stroke: "hsl(var(--superficie))" }} isAnimationActive={false} connectNulls />
+              {conPrecios && <Line dataKey="real" name="Precio de lista real" type="stepAfter" stroke={SERIE(2)} strokeWidth={2} dot={false}
+                activeDot={{ r: 4, strokeWidth: 2, stroke: "hsl(var(--superficie))" }} isAnimationActive={false} connectNulls />}
             </LineChart>
           </ResponsiveContainer>
         </div>

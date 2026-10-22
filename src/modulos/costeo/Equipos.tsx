@@ -42,7 +42,7 @@ type FiltroEq = "todos" | "alertas" | "sin_lista" | "inactivos";
 function TablaFabricados({ filas, cargando, error, tipo }: {
   filas: ArticuloCatalogo[] | undefined; cargando: boolean; error: unknown; tipo: "equipo" | "subensamble";
 }) {
-  const { puede } = useSesion();
+  const { puede, vePrecios } = useSesion();
   const ir = useNavigate();
   const costos = puede("costos");
   const [filtro, setFiltro] = useState<FiltroEq>("todos");
@@ -74,7 +74,7 @@ function TablaFabricados({ filas, cargando, error, tipo }: {
       celda: (a) => a.usado_en ? <span>{a.usado_en} {a.usado_en === 1 ? "lista" : "listas"}</span> : <span className="text-tenue">en ninguna</span> },
     { clave: "horas", titulo: "Horas", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (a) => a.horas ?? null, celda: (a) => numero(a.horas), explica: GLOSARIO.horasEtapa },
     { clave: "costo_total", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (a) => a.costo_total ?? null, celda: (a) => dinero(a.costo_total), explica: GLOSARIO.costoArticulo },
-    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (a) => a.precio, explica: GLOSARIO.precioLista,
+    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, oculta: !vePrecios, valor: (a) => a.precio, explica: GLOSARIO.precioLista,
       celda: (a) => a.precio == null ? <span className="text-tenue">sin precio</span> : <span className="font-medium">{dinero(a.precio)}</span> },
     { clave: "sin_costo", titulo: "Sin costo", oculta: !costos, sinBusqueda: true, valor: (a) => a.sin_costo ?? 0, celda: (a) => <SinCosto a={a} />, explica: GLOSARIO.piezasSinCosto },
     { clave: "costo_mas_viejo", titulo: "Más viejo", oculta: !costos, sinBusqueda: true, valor: (a) => a.costo_mas_viejo ?? null, explica: GLOSARIO.costoMasViejo,
@@ -211,7 +211,7 @@ function AvisoSugerencias() {
 }
 
 export default function Equipos() {
-  const { puede } = useSesion();
+  const { puede, vePrecios } = useSesion();
   const [params, setParams] = useSearchParams();
   const [nuevo, setNuevo] = useState<"equipo" | "subensamble" | null>(null);
   const vista = params.get("vista") ?? "equipos";
@@ -237,7 +237,7 @@ export default function Equipos() {
   return (
     <Pagina
       titulo="Equipos y subensambles"
-      descripcion="Listas de materiales, horas y precio de cada equipo. Los subensambles se capturan una vez y se comparten."
+      descripcion={`Listas de materiales, horas${vePrecios ? " y precio" : ""} de cada equipo. Los subensambles se capturan una vez y se comparten.`}
       acciones={puede("costeo", 2) && (
         <>
           <BotonReemplazarComponente />

@@ -58,6 +58,8 @@ interface Sesion {
   /** ¿Puede el usuario actual hacer esto? 1 = ver, 2 = editar, 3 = administrar. Espejo de public.puede() en la base. */
   puede: (m: Modulo, nivel?: number) => boolean;
   tieneRol: (r: Rol) => boolean;
+  /** ¿Ve precios de venta? Espejo de public.ve_precios_venta(): ventas, catálogo, márgenes o finanzas. */
+  vePrecios: boolean;
   /** Solo dirección. null regresa a la vista propia. */
   verComo: (r: Rol | null) => Promise<void>;
   recargar: () => Promise<void>;
@@ -117,6 +119,7 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
     cargando, session, ...datos,
     puede: (m, nivel = 1) => (datos.permisos[m] ?? 0) >= nivel,
     tieneRol: (r) => datos.roles.includes(r),
+    vePrecios: ["ventas", "catalogo", "margenes", "finanzas"].some((m) => (datos.permisos[m as Modulo] ?? 0) >= 1),
     verComo: async (r) => {
       // Lo que se está pidiendo con el rol de ahora llegaría a la base ya con el nuevo
       // y la RLS lo rechazaría (el mapa del tablero de dirección daba 403 si se cambiaba

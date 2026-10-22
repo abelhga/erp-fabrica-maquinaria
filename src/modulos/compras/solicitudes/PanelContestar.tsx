@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { useSesion } from "@/lib/sesion";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { BuscadorArticulo } from "@/components/datos/BuscadorArticulo";
@@ -26,6 +27,7 @@ interface CostoActual { costo: number | null; moneda: Moneda | null; proveedor_i
  * vendedor le llega el precio de lista y la entrega, no el costo.
  */
 export function PanelContestar({ s, alCerrar }: { s: Solicitud; alCerrar: () => void }) {
+  const { vePrecios } = useSesion();
   const [modo, setModo] = useState<"catalogo" | "nuevo">(s.articulo_id ? "catalogo" : "nuevo");
   const [articulo, setArticulo] = useState<{ id: string; clave: string; nombre: string } | null>(
     s.articulo_id ? { id: s.articulo_id, clave: s.clave ?? "", nombre: s.articulo ?? "" } : null);
@@ -76,7 +78,7 @@ export function PanelContestar({ s, alCerrar }: { s: Solicitud; alCerrar: () => 
     return () => clearTimeout(t);
   }, [costo, moneda, modo, articulo?.id]);
   const estimado = useQuery({
-    queryKey: ["precio_lista_estimado", estimarCon], enabled: !!estimarCon,
+    queryKey: ["precio_lista_estimado", estimarCon], enabled: !!estimarCon && vePrecios,
     queryFn: () => q<number | null>(supabase.rpc("precio_lista_estimado", { p_articulo: estimarCon!.a, p_costo: estimarCon!.c, p_moneda: estimarCon!.m })),
   });
 
@@ -95,7 +97,7 @@ export function PanelContestar({ s, alCerrar }: { s: Solicitud; alCerrar: () => 
       }));
     },
     {
-      exito: (r) => `${s.folio} contestada: ${r.clave} queda en ${dinero(r.precio_lista)} de lista. ${s.solicitante.split(" ")[0]} ya lo ve.`,
+      exito: (r) => `${s.folio} contestada${r.precio_lista != null ? `: ${r.clave} queda en ${dinero(r.precio_lista)} de lista` : ` (${r.clave})`}. ${s.solicitante.split(" ")[0]} ya lo ve.`,
       invalidar, alTerminar: alCerrar,
     },
   );
@@ -204,10 +206,13 @@ export function PanelContestar({ s, alCerrar }: { s: Solicitud; alCerrar: () => 
           </Campo>
         </div>
 
-        <div className="rounded-lg bg-fondo px-3 py-2 text-sm flex flex-wrap items-baseline justify-between gap-2">
-          <span className="text-tenue">Precio de lista que verá el vendedor</span>
-          <span className="font-semibold cifra">{estimarCon ? (estimado.isFetching ? "…" : estimado.data != null ? <>{dinero(Number(estimado.data))} <span className="text-xs font-normal text-tenue">+ IVA</span></> : "sin política de precio") : "—"}</span>
-        </div>
+        {/* El precio de venta es de ventas: compras solo lo ve si además tiene ese permiso. */}
+        {vePrecios && (
+          <div className="rounded-lg bg-fondo px-3 py-2 text-sm flex flex-wrap items-baseline justify-between gap-2">
+            <span className="text-tenue">Precio de lista que verá el vendedor</span>
+            <span className="font-semibold cifra">{estimarCon ? (estimado.isFetching ? "…" : estimado.data != null ? <>{dinero(Number(estimado.data))} <span className="text-xs font-normal text-tenue">+ IVA</span></> : "sin política de precio") : "—"}</span>
+          </div>
+        )}
 
         {sinPrecio ? (
           <div className="rounded-lg border border-peligro/30 bg-peligro-suave/50 p-3 space-y-2">

@@ -86,7 +86,7 @@ export default function Gerencia() {
 
   return (
     <Pagina
-      titulo="Gerencia de producción"
+      titulo="Tablero de producción"
       descripcion={`${new Date().toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" })} · ${abiertas.length} órdenes abiertas`}
       ancho="max-w-[1600px]"
       acciones={<>

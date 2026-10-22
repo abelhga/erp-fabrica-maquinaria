@@ -17,7 +17,7 @@ import { GLOSARIO } from "@/tutorial/glosario";
  * ventas". Tres series en pesos y, si se ve ventas, lo que se vendió de este equipo.
  */
 export function Historial({ id }: { id: string }) {
-  const { puede } = useSesion();
+  const { puede, vePrecios } = useSesion();
   const serie = useQuery({
     queryKey: ["costeo", "serie", id],
     queryFn: async () => {
@@ -50,14 +50,14 @@ export function Historial({ id }: { id: string }) {
   return (
     <div className="space-y-4">
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Costo y precio en el tiempo" explica={GLOSARIO.historialCosteo}
+        <EncabezadoTarjeta titulo={vePrecios ? "Costo y precio en el tiempo" : "Costo en el tiempo"} explica={GLOSARIO.historialCosteo}
           descripcion={puede("margenes") ? "Costo de fabricarlo, precio de lista que regía y el que habría tenido con la utilidad de hoy: si las dos líneas de precio se separan, la diferencia vino de cambiar la utilidad."
-            : "Costo de fabricarlo y precio de lista que regía en cada momento."} />
+            : vePrecios ? "Costo de fabricarlo y precio de lista que regía en cada momento." : "Costo de fabricarlo en cada momento."} />
         <div className="px-5 pb-5">
           {puntos.filter((p) => (p.costo ?? 0) > 0).length < 2 ? (
             <Vacio icono={IconoGrafica} titulo="Todavía no hay historia suficiente"
               texto="Cada vez que cambia el costo o el precio queda una foto. Con el historial de costos de compras se puede reconstruir hacia atrás (Sistema → Importar)." />
-          ) : <GraficaCosteo puntos={puntos} conMargenes={puede("margenes")} />}
+          ) : <GraficaCosteo puntos={puntos} conMargenes={puede("margenes")} conPrecios={vePrecios} />}
         </div>
       </Tarjeta>
       {puede("ventas") && (

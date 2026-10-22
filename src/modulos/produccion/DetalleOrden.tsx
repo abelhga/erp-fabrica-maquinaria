@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft, Ban, CheckCircle2, Hourglass, ClipboardX, MessageSquarePlus, PackageOpen, Pause, Pencil, Play, PlayCircle, Truck,
-} from "lucide-react";
+  ArrowLeft, Ban, CheckCircle2, Hourglass, ClipboardX, MessageSquarePlus, PackageOpen, Pause, Pencil, Play, PlayCircle, Truck, Undo2 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { PlanosOrden } from "@/components/planos/PlanosArticulo";
@@ -19,7 +18,7 @@ import { CLAVE, consulta, useEventos, useProduccionEnVivo, type EstadoOP, type E
 import { BarraAvance, IconoEvento, InsigniaCompromiso } from "./componentes/piezas";
 import { PasosValidacion, type AccionPaso } from "./componentes/Validacion";
 import { DialogoSurtir, MaterialOrden } from "./componentes/MaterialOrden";
-import { DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, DialogoEnEspera, type OrdenBasica } from "./componentes/DialogosOrden";
+import { DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, DialogoEnEspera, DialogoReabrir, type OrdenBasica } from "./componentes/DialogosOrden";
 import { ESTADO_OP, ESTADO_OPERACION, PRIORIDAD, horas, textoEvento } from "./componentes/util";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -104,6 +103,12 @@ export default function DetalleOrden() {
   const entregar = useAccion(() => q(supabase.rpc("entregar_orden", { p_op: id })), { ...inv, exito: "Orden entregada" });
   const reactivar = useAccion(() => q(supabase.rpc("reactivar_orden", { p_op: id })), { ...inv, exito: "Orden reactivada: vuelve a la carga del taller" });
   const avanzar = useAccion((a: { op: string; accion: string }) => q(supabase.rpc("avanzar_operacion", { p_operacion: a.op, p_accion: a.accion })), inv);
+  // Terminar es un clic: el aviso trae "Deshacer" (quien la terminó tiene 15 minutos; la gerencia, siempre con "Reabrir").
+  const terminar = useAccion((a: { op: string; etapa: string }) => q(supabase.rpc("avanzar_operacion", { p_operacion: a.op, p_accion: "fin" })), {
+    ...inv, exito: "Etapa terminada",
+    deshacer: (_r, a) => q(supabase.rpc("reabrir_etapa", { p_operacion: a.op })),
+  });
+  const [reabrir, setReabrir] = useState<{ id: string; etapa: string } | null>(null);
   const resolver = useAccion((a: { id: string; estado: string }) => q(supabase.rpc("responder_solicitud_cambio", { p_id: a.id, p_estado: a.estado })),
     { ...inv, exito: "Solicitud resuelta" });
 
@@ -252,8 +257,13 @@ export default function DetalleOrden() {
                         {x.estado === "pendiente" && <MiniAccion icono={Play} texto="Iniciar" alClic={() => avanzar.mutate({ op: x.id, accion: "inicio" })} />}
                         {x.estado === "en_proceso" && <MiniAccion icono={Pause} texto="Pausar" alClic={() => avanzar.mutate({ op: x.id, accion: "pausa" })} />}
                         {x.estado === "pausada" && <MiniAccion icono={PlayCircle} texto="Reanudar" alClic={() => avanzar.mutate({ op: x.id, accion: "reanudar" })} />}
-                        <MiniAccion icono={CheckCircle2} texto="Terminar" alClic={() => avanzar.mutate({ op: x.id, accion: "fin" })} />
+                        <MiniAccion icono={CheckCircle2} texto="Terminar" alClic={() => terminar.mutate({ op: x.id, etapa: x.etapa.nombre })} />
                       </div>
+                    )}
+                    {p.gerencia && x.estado === "terminada" && !["entregada", "cancelada"].includes(o.estado) && (
+                      <span data-explain={GLOSARIO.reabrirEtapa} data-explain-title="Reabrir">
+                        <MiniAccion icono={Undo2} texto="Reabrir" alClic={() => setReabrir({ id: x.id, etapa: x.etapa.nombre })} />
+                      </span>
                     )}
                   </div>
                   <HorasDeEtapa h={horasHombre.data?.find((y) => y.operacion_id === x.id)} />
@@ -311,6 +321,7 @@ export default function DetalleOrden() {
         <DialogoEditarOrden abierto={dialogo === "editar"} alCambiar={abrir("editar")} o={basica} />
         <DialogoCancelar abierto={dialogo === "cancelar"} alCambiar={abrir("cancelar")} o={basica} />
         <DialogoEnEspera abierto={dialogo === "espera"} alCambiar={abrir("espera")} o={basica} />
+        <DialogoReabrir etapa={reabrir} alCerrar={() => setReabrir(null)} o={basica} />
       </>}
       {p.almacen && <DialogoSurtir abierto={dialogo === "surtir"} alCambiar={abrir("surtir")} ordenId={id} folio={o.folio} material={lista} />}
       {p.solicitar && <DialogoCambioIngenieria abierto={dialogo === "cambio"} alCambiar={abrir("cambio")} o={basica} material={lista} />}

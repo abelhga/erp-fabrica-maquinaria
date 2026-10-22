@@ -46,7 +46,7 @@ export interface OperacionPiso {
 }
 
 export type TipoEvento = "creada" | "liberada" | "inicio" | "pausa" | "reanudar" | "fin" | "problema" | "nota" | "surtido"
-  | "cambio_material" | "terminada" | "entregada";
+  | "cambio_material" | "terminada" | "entregada" | "reabierta";
 
 export interface Evento {
   id: number; orden_id: string; operacion_id: string | null; tipo: TipoEvento; nota: string | null; en: string;

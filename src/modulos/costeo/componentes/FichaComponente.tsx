@@ -355,10 +355,11 @@ function Publicaciones({ a }: { a: ArticuloCatalogo }) {
 
 /** Ficha de lo que se compra: datos, costo con su historia, existencias, canales y dónde se usa. */
 export function FichaComponente({ articulo }: { articulo: ArticuloCatalogo }) {
-  const { puede } = useSesion();
+  const { puede, vePrecios } = useSesion();
   const costos = puede("costos");
   const verExistencias = puede("inventario") || puede("ventas");
-  const verCanales = puede("ventas") || puede("inventario");
+  // Precio en Mercado Libre y en el sitio: es precio de venta (ingeniería y la planta no).
+  const verCanales = vePrecios;
   return (
     <div className="grid gap-4 lg:grid-cols-5">
       <div className="lg:col-span-3"><DatosGenerales a={articulo} /></div>

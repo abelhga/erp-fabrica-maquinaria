@@ -5,6 +5,7 @@ import { Boxes, Layers, Loader2, MessageSquareQuote, Search } from "lucide-react
 import { supabase } from "@/lib/supabase";
 import { dinero, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { useSesion } from "@/lib/sesion";
 
 export interface ArticuloEncontrado {
   id: string; clave: string; nombre: string; tipo: "componente" | "materia_prima" | "subensamble" | "equipo" | "servicio";
@@ -24,6 +25,9 @@ export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo
   alElegir: (a: ArticuloEncontrado) => void; tipos?: ArticuloEncontrado["tipo"][]; placeholder?: string;
   autoFocus?: boolean; className?: string; mostrarPrecio?: boolean; alNoEncontrar?: (texto: string) => void;
 }) {
+  // El precio de venta solo a quien lo ve (la base ya no se lo manda a los demás).
+  const { vePrecios } = useSesion();
+  mostrarPrecio = mostrarPrecio && vePrecios;
   const [q, setQ] = useState("");
   const [abierto, setAbierto] = useState(false);
   const [res, setRes] = useState<ArticuloEncontrado[]>([]);

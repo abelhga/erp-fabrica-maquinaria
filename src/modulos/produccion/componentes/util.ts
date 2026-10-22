@@ -88,6 +88,7 @@ export function textoEvento(e: Evento, conFolio = true) {
     case "pausa": return `${e.etapa} pausó ${op}${quien}`;
     case "reanudar": return `${e.etapa} reanudó ${op}${quien}`;
     case "fin": return `${e.etapa} terminó ${op}${quien}`;
+    case "reabierta": return `${e.etapa} reabierta en ${op}${e.nota ? `: ${e.nota}` : ""}`;
     case "problema": return `Problema en ${e.etapa ?? "el taller"} · ${op}: ${e.nota ?? ""}`;
     case "surtido": return `Almacén surtió material a ${op}${e.nota ? ` (${e.nota})` : ""}`;
     case "terminada": return `${conFolio ? op : "Orden"} terminada`;

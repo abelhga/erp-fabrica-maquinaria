@@ -64,10 +64,11 @@ export default function Terminal() {
   const [recientes, setRecientes] = useState<string[]>(() => { try { return JSON.parse(leer(LS.recientes) ?? "[]"); } catch { return []; } });
   const [eligiendoNombre, setEligiendoNombre] = useState(false);
   const [pendiente, setPendiente] = useState<{ op: OperacionPiso; accion: Accion } | null>(null);
-  const [aviso, setAviso] = useState<{ texto: string; folio?: string; tono: "ok" | "peligro" } | null>(null);
+  // `deshacer`: la etapa que se acaba de terminar, por si fue un toque sin querer.
+  const [aviso, setAviso] = useState<{ texto: string; folio?: string; tono: "ok" | "peligro"; deshacer?: OperacionPiso } | null>(null);
   const [ahora, setAhora] = useState(Date.now());
   useEffect(() => { const t = setInterval(() => setAhora(Date.now()), 30_000); return () => clearInterval(t); }, []);
-  useEffect(() => { if (!aviso) return; const t = setTimeout(() => setAviso(null), aviso.tono === "ok" ? 3000 : 6000); return () => clearTimeout(t); }, [aviso]);
+  useEffect(() => { if (!aviso) return; const t = setTimeout(() => setAviso(null), aviso.deshacer ? 10000 : aviso.tono === "ok" ? 3000 : 6000); return () => clearTimeout(t); }, [aviso]);
 
   const etapa = etapas.data?.find((e) => e.id === etapaId) ?? null;
   const elegirEtapa = (id: number | null) => { setEtapaId(id); guardar(LS.etapa, id ? String(id) : null); };
@@ -89,10 +90,17 @@ export default function Terminal() {
       // La cuadrilla se recuerda por etapa: mañana suele ser la misma gente.
       if (a.cuadrilla) guardar(LS.cuadrilla + a.op.etapa_id, JSON.stringify(a.cuadrilla));
       setPendiente(null);
-      setAviso({ tono: "ok", texto: `${a.op.etapa} ${ACCIONES[a.accion].hecho}`, folio: folioCorto(a.op.folio) });
+      setAviso({ tono: "ok", texto: `${a.op.etapa} ${ACCIONES[a.accion].hecho}`, folio: folioCorto(a.op.folio), deshacer: a.accion === "fin" ? a.op : undefined });
       qc.invalidateQueries({ queryKey: CLAVE });
     },
     onError: (e) => { setPendiente(null); setAviso({ tono: "peligro", texto: mensajeError(e) }); qc.invalidateQueries({ queryKey: CLAVE }); },
+  });
+
+  // Quien la terminó la regresa en los primeros 15 minutos; queda pausada para reanudarla con su gente.
+  const deshacer = useMutation({
+    mutationFn: (op: OperacionPiso) => q(supabase.rpc("reabrir_etapa", { p_operacion: op.id })),
+    onSuccess: (_, op) => { setAviso({ tono: "ok", texto: `${op.etapa} regresó a pausada`, folio: folioCorto(op.folio) }); qc.invalidateQueries({ queryKey: CLAVE }); },
+    onError: (e) => setAviso({ tono: "peligro", texto: mensajeError(e) }),
   });
 
   const pedir = (op: OperacionPiso, accion: Accion) => {
@@ -179,7 +187,12 @@ export default function Terminal() {
              className={cn("fixed inset-x-3 top-20 z-[70] mx-auto max-w-3xl rounded-2xl px-6 py-5 shadow-2xl flex items-center gap-4 text-2xl font-semibold",
                aviso.tono === "ok" ? "bg-ok text-white" : "bg-peligro text-white")}>
           {aviso.tono === "ok" ? <CheckCircle2 className="h-10 w-10 shrink-0" /> : <AlertTriangle className="h-10 w-10 shrink-0" />}
-          <span>{aviso.texto}{aviso.folio && <> · <span className="whitespace-nowrap">{aviso.folio}</span></>}</span>
+          <span className="flex-1">{aviso.texto}{aviso.folio && <> · <span className="whitespace-nowrap">{aviso.folio}</span></>}</span>
+          {aviso.deshacer && (
+            <button onClick={(e) => { e.stopPropagation(); deshacer.mutate(aviso.deshacer!); }} disabled={deshacer.isPending}
+                    data-explain={GLOSARIO.reabrirEtapa} data-explain-title="Deshacer"
+                    className="shrink-0 rounded-xl bg-white/20 hover:bg-white/30 px-5 py-3 text-xl font-semibold">Deshacer</button>
+          )}
         </div>
       )}
     </div>

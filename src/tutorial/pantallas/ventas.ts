@@ -68,7 +68,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. El vendedor que lo tiene lo vuelve oportunidad con «Crear oportunidad» (si no era cliente, se da de alta) o lo descarta con el motivo. Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad.",
   ],
   "/catalogo": [
-    "Lo que vendemos, para contestar el teléfono: cada equipo y componente con su foto, descripción, precio de lista y lo que hay en planta. Lo usa recepción.",
+    "Lo que vendemos: cada equipo y componente con su foto, descripción, precio de lista y lo que hay en planta. Lo usan recepción, para contestar el teléfono, y ventas. El buscador de arriba también te trae aquí cuando buscas un artículo.",
     "Escribe la clave, el nombre o una palabra de la descripción para encontrarlo; los filtros de arriba separan equipos, componentes y lo que tiene existencia. Clic en un renglón abre la ficha con la foto grande.",
     "El precio es el de lista, en pesos y sin IVA. Si dice «Pregunta a ventas» o el cliente quiere cotización, descuento o algo a la medida, regístralo como lead para que lo atienda un vendedor.",
   ],

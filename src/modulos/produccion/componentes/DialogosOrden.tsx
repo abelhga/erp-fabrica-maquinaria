@@ -85,6 +85,24 @@ export function DialogoEnEspera({ abierto, alCambiar, o }: { abierto: boolean; a
   );
 }
 
+/** Reabrir una etapa terminada por error (gerencia): queda pausada y se anota por qué. */
+export function DialogoReabrir({ etapa, alCerrar, o }: { etapa: { id: string; etapa: string } | null; alCerrar: () => void; o: OrdenBasica }) {
+  const [motivo, setMotivo] = useState("");
+  const reabrir = useAccion(() => q(supabase.rpc("reabrir_etapa", { p_operacion: etapa!.id, p_motivo: motivo })), {
+    exito: `${etapa?.etapa ?? "La etapa"} de ${o.folio} reabierta`, invalidar: [CLAVE], alTerminar: () => { setMotivo(""); alCerrar(); },
+  });
+  return (
+    <Dialogo abierto={!!etapa} alCambiar={(v) => !v && alCerrar()} titulo={`Reabrir ${etapa?.etapa ?? ""} de ${o.folio}`}
+             descripcion="La etapa regresa a pausada: el taller la reanuda en la terminal eligiendo quién la trabaja. Si era la última, la orden deja de estar terminada (y su pedido de estar listo). Queda en la historia de la orden."
+             pie={<><Boton variante="secundario" onClick={alCerrar}>No</Boton>
+               <Boton onClick={() => reabrir.mutate(undefined)} disabled={motivo.trim().length < 5} cargando={reabrir.isPending}>Reabrir</Boton></>}>
+      <Campo etiqueta="¿Por qué?">
+        <AreaTexto value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Se marcó terminada por error; falta soldar la tolva 3…" autoFocus />
+      </Campo>
+    </Dialogo>
+  );
+}
+
 /**
  * "Son de 14 pulgadas", "DEBE SER 4X3": lo que hoy se queda en una nota de la
  * hoja llega a ingeniería como pendiente, ligado al material y a la orden.
