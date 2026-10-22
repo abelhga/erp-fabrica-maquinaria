@@ -44,7 +44,7 @@ function comparar(a: OrdenTablero, b: OrdenTablero) {
 }
 
 export default function Gerencia() {
-  const { puede } = useSesion();
+  const { puede, veFabricacion } = useSesion();
   const ir = useNavigate();
   useProduccionEnVivo();
   const tablero = useTablero();
@@ -158,7 +158,7 @@ export default function Gerencia() {
                         <h2 className="font-semibold text-sm" data-explain={EXPLICA_COLUMNA[c.estado]} data-explain-title={c.titulo}>{c.titulo} <span className="text-tenue font-normal cifra">{lista.length}</span></h2>
                         <p className="text-xs text-tenue">{c.ayuda}</p>
                       </div>
-                      {c.estado !== "terminada" && lista.length > 0 && (
+                      {veFabricacion && c.estado !== "terminada" && lista.length > 0 && (
                         <span className="text-xs text-tenue cifra" title="Horas pendientes de estas órdenes">
                           {horas(lista.reduce((s, o) => s + Number(o.horas_pendientes), 0))}
                         </span>

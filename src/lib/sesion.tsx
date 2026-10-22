@@ -60,6 +60,8 @@ interface Sesion {
   tieneRol: (r: Rol) => boolean;
   /** ¿Ve precios de venta? Espejo de public.ve_precios_venta(): ventas, catálogo, márgenes o finanzas. */
   vePrecios: boolean;
+  /** ¿Ve cómo se fabrica (material, horas, planos)? Planta, almacén, ingeniería y compras; no quien solo sigue el avance. */
+  veFabricacion: boolean;
   /** Solo dirección. null regresa a la vista propia. */
   verComo: (r: Rol | null) => Promise<void>;
   recargar: () => Promise<void>;
@@ -120,6 +122,8 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
     puede: (m, nivel = 1) => (datos.permisos[m] ?? 0) >= nivel,
     tieneRol: (r) => datos.roles.includes(r),
     vePrecios: ["ventas", "catalogo", "margenes", "finanzas"].some((m) => (datos.permisos[m as Modulo] ?? 0) >= 1),
+    veFabricacion: (datos.permisos.produccion ?? 0) >= 2 || (datos.permisos.inventario ?? 0) >= 2 || (datos.permisos.costeo ?? 0) >= 1
+      || (datos.permisos.compras ?? 0) >= 1,
     verComo: async (r) => {
       // Lo que se está pidiendo con el rol de ahora llegaría a la base ya con el nuevo
       // y la RLS lo rechazaría (el mapa del tablero de dirección daba 403 si se cambiaba

@@ -45,7 +45,7 @@ interface Solicitud {
 
 export default function DetalleOrden() {
   const { id = "" } = useParams();
-  const { puede } = useSesion();
+  const { puede, veFabricacion } = useSesion();
   // Todo lo de la orden deja evento (incluido lo que hace almacén o ingeniería), así que basta con escucharlos.
   useProduccionEnVivo(["op_eventos", "ordenes_produccion", "existencias"]);
 
@@ -209,7 +209,7 @@ export default function DetalleOrden() {
         <Dato titulo="Avance" explica={GLOSARIO.avanceOrden}>
           {t ? (
             <div className="space-y-1">
-              <p className="cifra">{t.avance}% <span className="text-xs text-tenue font-normal">· {horas(t.horas_terminadas)} de {horas(t.horas_totales)}</span></p>
+              <p className="cifra">{t.avance}% {veFabricacion && <span className="text-xs text-tenue font-normal">· {horas(t.horas_terminadas)} de {horas(t.horas_totales)}</span>}</p>
               <BarraAvance valor={t.avance} />
             </div>
           ) : <span className="text-tenue">—</span>}
@@ -223,21 +223,23 @@ export default function DetalleOrden() {
       </section>
 
       <div className="grid gap-4 2xl:grid-cols-3 items-start">
-        <div className="2xl:col-span-2 space-y-4">
+        {/* Material, planos y horas: de quien fabrica; quien sigue el avance (ventas) ve etapas y fechas. */}
+        {veFabricacion && <div className="2xl:col-span-2 space-y-4">
           <MaterialOrden ordenId={id} equipo={o.articulo.nombre} material={material.data} cargando={material.isLoading} error={material.error}
             editable={abierta && p.ing}
             acciones={abierta && p.almacen && (
               <Boton tamano="sm" onClick={() => setDialogo("surtir")}><PackageOpen className="h-3.5 w-3.5" />Surtir</Boton>
             )} />
-        </div>
+        </div>}
 
         <div className="grid gap-4 lg:grid-cols-3 2xl:grid-cols-1 items-start">
-          <Tarjeta>
+          {veFabricacion && <Tarjeta>
             <EncabezadoTarjeta titulo="Planos" descripcion="Con qué revisión se fabrica esta orden" />
             <div className="px-5 pb-5"><PlanosOrden ordenId={id} /></div>
-          </Tarjeta>
+          </Tarjeta>}
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Etapas" explica={GLOSARIO.horasHombre} descripcion="Horas estimadas del costeo contra las horas hombre reales, y quién la trabajó" />
+            <EncabezadoTarjeta titulo="Etapas" explica={veFabricacion ? GLOSARIO.horasHombre : undefined}
+              descripcion={veFabricacion ? "Horas estimadas del costeo contra las horas hombre reales, y quién la trabajó" : "En qué va cada etapa del taller"} />
             <ul className="px-3 pb-3 space-y-1">
               {(operaciones.data ?? []).length === 0 && !operaciones.isLoading && <li className="text-sm text-tenue px-2 py-4">Este equipo no tiene horas por etapa en el costeo.</li>}
               {(operaciones.data ?? []).map((x) => (
@@ -245,7 +247,7 @@ export default function DetalleOrden() {
                   <div className="flex items-center gap-2">
                     <span className="h-3 w-3 rounded-full shrink-0" style={{ background: x.etapa.color }} />
                     <span className="font-medium text-sm flex-1">{x.etapa.nombre}</span>
-                    <span className="text-xs text-tenue cifra">{horas(x.horas_estimadas)}</span>
+                    {veFabricacion && <span className="text-xs text-tenue cifra">{horas(x.horas_estimadas)}</span>}
                     <Insignia tono={ESTADO_OPERACION[x.estado].tono}>{ESTADO_OPERACION[x.estado].texto}</Insignia>
                   </div>
                   <div className="flex items-center gap-2 pl-5 mt-1">
@@ -266,7 +268,7 @@ export default function DetalleOrden() {
                       </span>
                     )}
                   </div>
-                  <HorasDeEtapa h={horasHombre.data?.find((y) => y.operacion_id === x.id)} />
+                  {veFabricacion && <HorasDeEtapa h={horasHombre.data?.find((y) => y.operacion_id === x.id)} />}
                 </li>
               ))}
             </ul>

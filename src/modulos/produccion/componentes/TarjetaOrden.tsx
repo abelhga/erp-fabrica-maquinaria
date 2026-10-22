@@ -11,6 +11,7 @@ import { CLAVE, type OrdenTablero } from "./datos";
 import { BarraAvance, ChipEtapa, InsigniaCompromiso } from "./piezas";
 import { abreviarEquipo, horas } from "./util";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { useSesion } from "@/lib/sesion";
 
 /**
  * Tarjeta del kanban del gerente: lo que necesita para decidir sin abrir la
@@ -18,6 +19,7 @@ import { GLOSARIO } from "@/tutorial/glosario";
  * Sin permiso de gerencia (vendedores, ingeniería) se ve igual pero sin botones.
  */
 export function TarjetaOrden({ o, puedeGestionar }: { o: OrdenTablero; puedeGestionar: boolean }) {
+  const { veFabricacion } = useSesion();
   const liberar = useAccion((id: string) => q(supabase.rpc("liberar_orden", { p_op: id })),
     { exito: `${o.folio} liberada al taller`, invalidar: [CLAVE] });
   const editar = useAccion((a: { p_prioridad?: number; p_fecha_compromiso?: string }) =>
@@ -56,7 +58,7 @@ export function TarjetaOrden({ o, puedeGestionar }: { o: OrdenTablero; puedeGest
       <div className="space-y-1" data-explain={GLOSARIO.avanceOrden} data-explain-title="Avance">
         <div className="flex justify-between text-xs text-tenue cifra">
           <span>{o.avance}%</span>
-          <span>{horas(o.horas_terminadas)} de {horas(o.horas_totales)}</span>
+          {veFabricacion && <span>{horas(o.horas_terminadas)} de {horas(o.horas_totales)}</span>}
         </div>
         <BarraAvance valor={o.avance} />
       </div>

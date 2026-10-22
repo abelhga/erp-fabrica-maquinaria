@@ -12,6 +12,7 @@ import { dinero, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { traerTodas } from "@/modulos/costeo/componentes/comun";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { FichasTecnicas } from "@/modulos/ventas/componentes/Fichas";
 
 /**
  * Lo que recepción necesita para contestar el teléfono: qué vendemos, cómo es, cuánto
@@ -140,6 +141,10 @@ export default function Catalogo() {
             <div>
               <p className="text-xs text-tenue">Descripción</p>
               <p className="whitespace-pre-line">{abierto.descripcion ?? "Sin descripción. Si el cliente pide detalles, pásaselo a un vendedor."}</p>
+            </div>
+            {/* Lo que se le puede mandar al cliente: ficha técnica y fotos vigentes (no los planos de fabricación). */}
+            <div data-explain={GLOSARIO.fichaTecnica} data-explain-title="Fichas técnicas y fotos">
+              <FichasTecnicas articuloId={abierto.id} tipo={abierto.tipo} />
             </div>
           </div>
         )}
