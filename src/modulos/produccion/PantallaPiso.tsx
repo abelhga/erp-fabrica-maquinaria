@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, PackageX, Pause, WifiOff } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
@@ -13,6 +13,8 @@ import { abreviarEquipo, folioCorto, haceRato, textoDias, textoEvento } from "./
 const ANCHO = 1920, ALTO = 1080;
 // A 6 metros manda el tamaño de letra: 3 columnas de 2 tarjetas, y si hay más, se rota.
 const POR_COLUMNA = 2, COLUMNAS = 3, ROTAR_MS = 15_000, REFRESCO_MS = 60_000;
+// La cinta de abajo, en px de la medida de diseño por segundo: un evento cruza la tele en unos 10 s.
+const VELOCIDAD_CINTA = 180;
 
 interface Tarjeta { op: OperacionPiso; sigue: boolean }
 interface Columna { etapa: string; color: string; parte: number; partes: number; total: number; tarjetas: Tarjeta[] }
@@ -255,15 +257,21 @@ function TarjetaTV({ t }: { t: Tarjeta }) {
 function Ticker({ eventos, ahora }: { eventos: Evento[]; ahora: number }) {
   const textos = eventos.map((e) => `${textoEvento(e)} · ${haceRato(e.en, ahora)}`);
   const linea = textos.join("     ●     ");
-  // Velocidad constante sin importar cuánto texto haya (unos 120 px por segundo).
-  const duracion = Math.max(30, Math.round(linea.length * 0.15));
+  // La duración sale del ancho medido, no de contar letras: los espacios del separador se
+  // juntan en uno al dibujarse y el mínimo de 30 s frenaba la cinta cuando había poco texto.
+  const copia = useRef<HTMLSpanElement>(null);
+  const [ancho, setAncho] = useState(0);
+  useLayoutEffect(() => { setAncho(copia.current?.offsetWidth ?? 0); }, [linea]);
+  const duracion = Math.max(ancho / VELOCIDAD_CINTA, 6);
   return (
     <footer className="h-[86px] shrink-0 border-t-2 border-borde bg-superficie flex items-center overflow-hidden">
       <span className="h-full shrink-0 px-8 flex items-center bg-marca text-white text-[28px] font-extrabold tracking-wide">ÚLTIMO</span>
       <div className="flex-1 overflow-hidden relative">
         {textos.length === 0 ? <p className="px-8 text-[30px] text-tenue">Sin movimientos todavía.</p> : (
-          <div className="flex whitespace-nowrap text-[32px] font-medium" style={{ animation: `ticker-piso ${duracion}s linear infinite` }}>
-            <span className="px-8">{linea}</span><span className="px-8" aria-hidden>{linea}</span>
+          // w-max: sin él, la cinta medía lo de la pantalla y no lo del texto, así que el -50 % de la
+          // animación recorría media pantalla en minutos (unos 7 px/s) y nunca llegaba a los últimos.
+          <div className="flex w-max whitespace-nowrap text-[32px] font-medium" style={{ animation: `ticker-piso ${duracion}s linear infinite` }}>
+            <span ref={copia} className="px-8">{linea}</span><span className="px-8" aria-hidden>{linea}</span>
           </div>
         )}
       </div>
