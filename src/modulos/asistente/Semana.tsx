@@ -5,19 +5,19 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle, ArrowRight, CalendarDays, CheckCircle2, Factory, FileText, HandCoins, Info, ListTodo, PackageCheck,
-  RefreshCw, Ship, Siren, Sparkles, TrendingDown, TrendingUp, Truck, Wrench,
+  RefreshCw, Siren, Sparkles, TrendingDown, TrendingUp,
 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
 import { Insignia } from "@/components/ui/insignia";
-import { ErrorCarga, Vacio } from "@/components/ui/estados";
+import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { pedirSemana, type NumerosSemana, type Semana, type Tono } from "@/lib/asistente";
 import { dinero, dineroCompacto, fecha, hace, hoyISO, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
-import { TIPOS as TIPOS_SERVICIO } from "@/modulos/servicio/datos";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { Renglon, lunesDe, masDias, ordenDelDia, useCalendario } from "@/modulos/calendario/comun";
 
 const TONOS: Record<Tono, { icono: typeof Info; clase: string }> = {
   riesgo: { icono: Siren, clase: "bg-peligro-suave text-peligro" },
@@ -29,12 +29,6 @@ const TONOS: Record<Tono, { icono: typeof Info; clase: string }> = {
 // "martes 29" y no "mar 29": en una agenda, "mar" se lee como marzo.
 const dia = new Intl.DateTimeFormat("es-MX", { weekday: "long", day: "numeric", timeZone: "America/Mexico_City" });
 const diaDe = (f: string) => dia.format(new Date(f + "T12:00:00-06:00"));
-const ESTADOS: Record<string, string> = {
-  confirmado: "confirmado", en_produccion: "en producción", listo: "listo para entregar",
-  planeada: "planeada", liberada: "liberada", en_proceso: "en proceso",
-};
-const estado = (v: string) => ESTADOS[v] ?? v.replace(/_/g, " ");
-
 /** Sin función desplegada todavía: los números, leídos directo de la base. */
 async function semanaDeRespaldo(): Promise<Semana> {
   const numeros = await q<NumerosSemana>(supabase.rpc("semana_en_numeros"));
@@ -52,25 +46,6 @@ function Cambio({ a, b }: { a: number; b: number }) {
   );
 }
 
-type Evento = { fecha: string; tipo: string; icono: typeof Truck; titulo: string; detalle: string; ruta: string };
-
-function agenda(n: NumerosSemana): Evento[] {
-  const ev: Evento[] = [];
-  const t = (v: unknown) => (v == null ? "" : String(v));
-  for (const e of n.ventas?.entregas_comprometidas ?? [])
-    ev.push({ fecha: t(e.fecha), tipo: "Entrega", icono: Truck, titulo: `${t(e.folio)} · ${t(e.cliente)}`, detalle: estado(t(e.estado)), ruta: "/ventas/pedidos" });
-  for (const o of n.produccion?.comprometidas ?? [])
-    ev.push({ fecha: t(o.fecha), tipo: "Producción", icono: Factory, titulo: `${t(o.folio)} · ${t(o.equipo)}`, detalle: estado(t(o.estado)), ruta: "/produccion/ordenes" });
-  for (const o of n.compras?.por_llegar ?? [])
-    ev.push({ fecha: t(o.fecha), tipo: "Llega", icono: PackageCheck, titulo: `${t(o.folio)} · ${t(o.proveedor)}`, detalle: "orden de compra", ruta: "/compras/ordenes" });
-  for (const e of n.importaciones?.llegan ?? [])
-    ev.push({ fecha: t(e.eta), tipo: "Embarque", icono: Ship, titulo: `${t(e.folio)} · ${t(e.descripcion)}`, detalle: "llega a puerto", ruta: "/importaciones" });
-  for (const s of n.servicio?.programados ?? [])
-    ev.push({ fecha: t(s.inicio), tipo: TIPOS_SERVICIO[t(s.tipo) as keyof typeof TIPOS_SERVICIO]?.texto ?? "Servicio", icono: Wrench,
-      titulo: `${t(s.folio)}${s.equipo ? ` · ${t(s.equipo)}` : ""}`, detalle: t(s.lugar), ruta: "/servicio" });
-  return ev.sort((a, b) => a.fecha.localeCompare(b.fecha));
-}
-
 export default function SemanaPagina() {
   const qc = useQueryClient();
   const r = useQuery({ queryKey: ["semana"], queryFn: () => pedirSemana().catch(semanaDeRespaldo), staleTime: 10 * 60_000 });
@@ -81,7 +56,10 @@ export default function SemanaPagina() {
   const n = r.data?.numeros;
   const s = n?.semana;
   const hoy = hoyISO();
-  const eventos = n ? agenda(n) : [];
+  // La agenda sale del calendario: lo mismo que ahí, de lunes a domingo, con tus permisos.
+  const lunes = lunesDe(hoy);
+  const cal = useCalendario(lunes, masDias(lunes, 6));
+  const eventos = [...(cal.data ?? [])].sort((a, b) => (a.fecha < lunes ? lunes : a.fecha).localeCompare(b.fecha < lunes ? lunes : b.fecha) || ordenDelDia(a, b));
 
   return (
     <Pagina titulo="Tu semana"
@@ -179,30 +157,15 @@ export default function SemanaPagina() {
                 <div className="px-4 py-3 border-b border-borde flex flex-wrap items-center gap-x-2 gap-y-0.5">
                   <CalendarDays className="h-4 w-4 text-tenue" />
                   <h2 className="font-semibold" data-explain={GLOSARIO.agendaSemana} data-explain-title="Esta semana">Esta semana</h2>
-                  <span className="text-xs text-tenue hidden sm:inline">entregas, producción, lo que llega y servicios</span>
+                  <span className="text-xs text-tenue hidden sm:inline">lo que tiene fecha de lunes a domingo</span>
+                  <Link to="/calendario" className="ml-auto text-sm text-marca-texto inline-flex items-center gap-1">Abrir el calendario<ArrowRight className="h-3.5 w-3.5" /></Link>
                 </div>
-                {eventos.length === 0 ? (
+                {cal.error ? <ErrorCarga error={cal.error} /> : cal.isLoading ? <Cargando filas={4} /> : eventos.length === 0 ? (
                   <Vacio icono={CalendarDays} titulo="Nada con fecha esta semana"
-                    texto="Cuando un pedido tenga fecha compromiso, una orden de compra fecha de entrega o un servicio esté programado, aparece aquí." />
+                    texto="Cuando un pedido tenga fecha compromiso, una compra fecha de llegada, un servicio esté programado o te asignen un pendiente, aparece aquí." />
                 ) : (
                   <ul className="divide-y divide-borde">
-                    {eventos.map((e, i) => {
-                      const atrasado = e.fecha < hoy; // con fecha de esta semana, ya pasó y sigue abierto
-                      return (
-                        <li key={i}>
-                          <Link to={e.ruta} className="flex items-center gap-3 px-4 py-2.5 hover:bg-fondo">
-                            <span className={cn("w-[4.5rem] shrink-0 text-xs font-medium cifra first-letter:uppercase", atrasado ? "text-peligro" : "text-tenue")}>{diaDe(e.fecha)}</span>
-                            <e.icono className="h-4 w-4 shrink-0 text-tenue" />
-                            <span className="min-w-0 flex-1">
-                              <span className="block text-sm truncate">{e.titulo}</span>
-                              <span className="block text-xs text-tenue truncate">{e.tipo}{e.detalle && ` · ${e.detalle}`}</span>
-                            </span>
-                            {/* En celular basta la fecha en rojo; la insignia le quitaba espacio al nombre. */}
-                            {atrasado && <span className="hidden sm:inline-flex"><Insignia tono="peligro">Atrasada</Insignia></span>}
-                          </Link>
-                        </li>
-                      );
-                    })}
+                    {eventos.map((e) => <li key={e.clave}><Renglon e={e} conDia={diaDe(e.fecha < lunes ? lunes : e.fecha)} /></li>)}
                   </ul>
                 )}
               </section>
