@@ -67,7 +67,8 @@ pausar, terminar, quién entra y quién sale).
 ### Cómo se conectan
 
 - Mientras una etapa está **en proceso**, su cuadrilla es la gente que tiene su tiempo
-  contando en la terminal. No hay otra lista.
+  contando en la terminal. Si nadie lo ha abierto (por ejemplo, lo que se cargó de la hoja de
+  Luis), se ve la cuadrilla planeada en línea punteada; en la terminal, «Se une» empieza a contar.
 - Antes de empezar, o cuando está **pausada**, la cuadrilla es la que **planeó la gerencia**.
 - Lo que se hace en un lado se ve en el otro al momento.
 

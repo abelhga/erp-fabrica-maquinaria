@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ClipboardPlus, PackageCheck, ShoppingCart } from "lucide-react";
+import { ClipboardPlus, PackageCheck, Printer, ShoppingCart } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { Lateral } from "@/components/ui/dialogo";
@@ -12,6 +12,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { fecha, numero } from "@/lib/formato";
 import { ESTADO_PEDIDO, CANAL, type EstadoPedido, type Canal } from "@/modulos/ventas/comun";
+import { BotonEntregar, RecuadroEntrega, abrirHojaSalida, useHojaSalida } from "@/modulos/ventas/componentes/EntregaPedido";
 import { BarraAvance, InsigniaCompromiso } from "./componentes/piezas";
 import { ESTADO_OP, abreviarEquipo } from "./componentes/util";
 import { CLAVE } from "./componentes/datos";
@@ -154,8 +155,24 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
     exito: "Equipo de stock asignado al pedido", invalidar: [CLAVE_PED, CLAVE],
   });
   const activo = ACTIVOS.includes(p.estado);
+  // Almacén entrega desde aquí: quién puede lo dice la base.
+  const hoja = useHojaSalida(p.id);
   return (
     <div className="space-y-4">
+      {p.estado !== "cancelado" && !hoja.data?.salidas.some((s) => !s.anulada_en) && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Boton variante="secundario" tamano="sm" onClick={() => abrirHojaSalida(p.id)} data-explain={GLOSARIO.hojaSalida} data-explain-title="Hoja de salida">
+            <Printer className="h-3.5 w-3.5" />Hoja de salida
+          </Boton>
+          {activo && hoja.data?.puede_entregar && (
+            <BotonEntregar pedido={p.id} invalidar={[CLAVE_PED, CLAVE]} antes={() => {
+              const pendientes = p.ordenes - p.ordenes_terminadas;
+              return pendientes <= 0 || confirm(`Hay ${pendientes} orden(es) de producción sin terminar. ¿Entregar de todos modos?`);
+            }} />
+          )}
+        </div>
+      )}
+      {hoja.data && <RecuadroEntrega hoja={hoja.data} invalidar={[CLAVE_PED, CLAVE]} />}
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <span className="text-tenue">Compromiso</span>
         {p.fecha_compromiso ? <InsigniaCompromiso dias={p.dias_restantes} fechaCompromiso={p.fecha_compromiso} cerrada={!activo} /> : <span>sin fecha</span>}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Ban, Check, Factory, FileText, PackageCheck, Plus, Receipt, ShoppingCart, Trash2, Truck, Users, Wallet } from "lucide-react";
+import { Ban, Check, Factory, FileText, PackageCheck, Plus, Printer, Receipt, ShoppingCart, Trash2, Users, Wallet } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/insignia";
@@ -19,6 +19,7 @@ import { Barra, CampoNumero, Dato } from "./componentes/campos";
 import { DialogoMotivo } from "./componentes/dialogos";
 import { CANAL, ESTADO_PEDIDO, LINEA, dineroEn, hoyMx, useVendedores, type EstadoPedido, type Linea, type VPedido } from "./comun";
 import { TarjetaEnvio } from "@/modulos/almacen/envios/TarjetaEnvio";
+import { BotonEntregar, RecuadroEntrega, abrirHojaSalida, useHojaSalida } from "./componentes/EntregaPedido";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Pedido {
@@ -65,7 +66,8 @@ export default function DetallePedido() {
 
   const inv = [["pedido", id], ["v_pedidos"], ["pedido_lineas", id], ["indicadores"]];
   const actualizar = useAccion((cambios: Partial<Pedido>) => q(supabase.from("pedidos").update(cambios).eq("id", id!)), { exito: "Pedido actualizado", invalidar: inv });
-  const entregar = useAccion(() => q(supabase.rpc("entregar_pedido", { p_id: id })), { exito: "Pedido entregado", invalidar: inv });
+  // Quién entrega lo dice la base (almacén, el vendedor lo suyo, gerencia de ventas, dirección).
+  const hoja = useHojaSalida(id);
   const producir = useAccion(() => q<number>(supabase.rpc("ordenes_desde_pedido", { p_pedido: id })), {
     exito: (n) => (n ? `Se crearon ${n} orden(es) de producción` : "No hay equipos con lista de materiales sin orden en este pedido"),
     invalidar: [...inv, ["ordenes_pedido", id], ["v_tablero_produccion"]],
@@ -122,17 +124,23 @@ export default function DetallePedido() {
         {puedeCambiar && ["confirmado", "en_produccion"].includes(p.estado) && (
           <Boton variante="secundario" onClick={() => actualizar.mutate({ estado: "listo" })}><PackageCheck className="h-4 w-4" />Marcar listo</Boton>
         )}
-        {abierto && (puedeCambiar || puede("inventario", 2)) && (
-          <Boton variante="exito" onClick={() => {
+        {/* Ya entregado, la hoja sale en el recuadro de la entrega. */}
+        {p.estado !== "cancelado" && !hoja.data?.salidas.some((s) => !s.anulada_en) && (
+          <Boton variante="secundario" onClick={() => abrirHojaSalida(p.id)} data-explain={GLOSARIO.hojaSalida} data-explain-title="Hoja de salida">
+            <Printer className="h-4 w-4" />Hoja de salida
+          </Boton>
+        )}
+        {abierto && hoja.data?.puede_entregar && (
+          <BotonEntregar pedido={p.id} invalidar={inv} antes={() => {
             const pendientes = (ordenes.data ?? []).filter((o) => !["terminada", "entregada", "cancelada"].includes(o.estado)).length;
-            if (pendientes && !confirm(`Hay ${pendientes} orden(es) de producción sin terminar. ¿Entregar de todos modos?`)) return;
-            entregar.mutate(undefined);
-          }} cargando={entregar.isPending}><Truck className="h-4 w-4" />Entregar</Boton>
+            return !pendientes || confirm(`Hay ${pendientes} orden(es) de producción sin terminar. ¿Entregar de todos modos?`);
+          }} />
         )}
         {abierto && puedeCambiar && <Boton variante="fantasma" className="text-peligro" onClick={() => setDlg("cancelar")}><Ban className="h-4 w-4" />Cancelar</Boton>}
       </>}>
 
       {p.estado === "cancelado" && <p className="rounded-xl border border-peligro/30 bg-peligro-suave px-4 py-3 text-sm text-peligro">Cancelado: {p.motivo_cancelacion}</p>}
+      {hoja.data && <RecuadroEntrega hoja={hoja.data} invalidar={inv} />}
       {p.historico && <p className="rounded-xl border border-borde bg-fondo px-4 py-3 text-sm text-tenue">{abierto
         ? "Pedido que venía de la hoja y sigue en el taller: su avance, su entrega y sus números de serie se llevan aquí. El cobro sigue en el saldo de arranque del cliente (Cobranza → Saldos de arranque), no en este pedido."
         : "Venta importada de las hojas. Cuenta para el historial y las comisiones, pero no es una cuenta por cobrar del ERP."}</p>}

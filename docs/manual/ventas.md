@@ -22,3 +22,34 @@ la orden con «Usar OP-…» (ver [produccion.md](produccion.md)).
 renumeraron con el número de su PDF de pedido. El folio anterior sale como «antes …» en la lista y
 en el pedido, y el buscador los sigue encontrando por él. Los registros de la hoja de comisiones
 que no tuvieron hoja de pedido (ventas de refacciones) conservan su folio HIS.
+
+---
+
+## Entregar un pedido y la hoja de salida
+
+**Para qué:** que quede quién recibió cada pedido, con la hoja firmada por el cliente, y que un
+clic equivocado se pueda deshacer.
+
+**Quién entrega:** almacén (quien despacha), el vendedor sus propios pedidos, la gerencia de ventas
+y dirección. La planta termina las órdenes, pero no entrega al cliente.
+
+### Pasos
+
+1. Con el pedido listo, abre **Hoja de salida** (en el pedido, en Ventas o en Producción → Pedidos).
+   Trae el cliente, la dirección de entrega, lo que se entrega con sus números de serie y los
+   renglones de firma. No lleva precios. Imprime dos: una se queda el cliente.
+2. El cliente (o quien recoge) firma.
+3. En el pedido, **Entregar**: anota quién recibió, una nota si hace falta (flete, recogió en
+   planta…) y sube la foto o el PDF de la hoja firmada. La hoja se puede subir después, desde el
+   mismo pedido («Subir hoja firmada»); mientras falte, el pedido lo avisa.
+4. El pedido queda **entregado** y en su recuadro de entrega se ve quién entregó, quién recibió y
+   la hoja firmada para descargarla.
+
+### Si fue un error
+
+- **Durante 15 minutos**, quien lo marcó lo deshace con **Deshacer** en el aviso.
+- **Después**, la gerencia de ventas o dirección usa **Reabrir entrega** y escribe el motivo. El
+  pedido regresa a como estaba (estado y lo entregado de cada partida) y la entrega anulada queda
+  anotada con su motivo.
+- Los pedidos entregados con un envío de paquetería, o antes de que existiera la hoja de salida,
+  no se reabren desde aquí: los regresa sistemas.

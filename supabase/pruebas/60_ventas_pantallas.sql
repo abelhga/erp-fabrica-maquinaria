@@ -262,7 +262,7 @@ begin
   assert r.cobrado = 100000 and r.saldo = r.total - 100000, 'saldo del pedido';
 
   perform pg_temp.como(v_isaac);
-  perform entregar_pedido(v_ped);
+  perform entregar_pedido(v_ped, 'Cliente de prueba');
   assert (select estado::text from pedidos where id = v_ped) = 'entregado', 'pedido entregado';
   assert not exists (select 1 from pedido_lineas where pedido_id = v_ped and cantidad_entregada <> cantidad), 'partidas entregadas';
   assert (select saldo from v_clientes where id = v_cli) = (select total - 100000 from pedidos where id = v_ped), 'Isaac ve el saldo de su cliente';

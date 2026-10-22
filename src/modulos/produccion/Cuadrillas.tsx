@@ -90,7 +90,9 @@ export default function Cuadrillas() {
       const planeados: Persona[] = (asignaciones.data ?? []).filter((a) => a.operacion_id === o.id && !trabajando.some((p) => p.id === a.empleado_id))
         .map((a) => ({ id: a.empleado_id, nombre: nombres.get(a.empleado_id) ?? "—", trabajando: false }));
       const sinNombre = abiertos.filter((t) => !t.empleado_id).reduce((s, t) => s + t.personas, 0);
-      const personas = o.estado === "en_proceso" ? trabajando : [...trabajando, ...planeados];
+      // En proceso manda quien tiene su tiempo abierto; si nadie lo abrió todavía (lo que se cargó
+      // de la hoja de Luis), se ve la cuadrilla planeada para que la columna no salga vacía.
+      const personas = o.estado === "en_proceso" && abiertos.length ? trabajando : [...trabajando, ...planeados];
       return {
         ...o, personas, sinNombre,
         desde: abiertos.length ? abiertos.map((t) => t.inicio).sort()[0] : null,

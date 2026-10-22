@@ -35,6 +35,8 @@ export const VENTAS = {
 
   // --- Pedidos ---
   estadoPedido: "Confirmado → En producción → Listo para entregar → Entregado. Cancelado lleva su motivo y deja de contar para comisiones y cobranza.",
+  hojaSalida: "La hoja que firma el cliente al recibir: qué se le entrega con sus números de serie, sin precios, y los renglones de firma. Se imprime desde el pedido (también almacén); al entregar se anota quién recibió y se sube la foto o el PDF de la hoja firmada, que queda en el pedido para descargarla. Entregan almacén, el vendedor sus pedidos, la gerencia de ventas y dirección.",
+  reabrirEntrega: "Regresa el pedido a como estaba antes de entregarlo (estado y lo entregado de cada partida). Quien marcó la entrega la deshace en los primeros 15 minutos con «Deshacer»; después, solo la gerencia de ventas o dirección, con el motivo.",
   pedidoAtrasado: "La fecha compromiso ya pasó y el pedido todavía no se entrega.",
   entregaRealista: "Cuándo sale de verdad lo que vas a vender: lo que tarda el equipo, o lo que tarda el taller en acabar todo lo que ya tiene antes que este pedido, lo que sea más tarde. Cambia todos los días con lo que entra y sale del taller. Si prometes menos, el pedido nace atrasado.",
   fechaCompromisoPedido: "El día que se le prometió la entrega al cliente. Con ella se marca el pedido como atrasado y sale en la agenda de la semana.",
