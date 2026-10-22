@@ -66,6 +66,7 @@ const ImprimirOCImportacion = p(() => import("./modulos/importaciones/ImprimirOC
 const Servicios = p(() => import("./modulos/servicio/Servicios"));
 const DetalleServicio = p(() => import("./modulos/servicio/DetalleServicio"));
 const Maquinas = p(() => import("./modulos/servicio/Maquinas"));
+const MetricasMantenimiento = p(() => import("./modulos/servicio/MetricasMantenimiento"));
 const FichaMaquina = p(() => import("./modulos/servicio/FichaMaquina"));
 const ReportarFalla = p(() => import("./modulos/servicio/ReportarFalla"));
 const Resguardos = p(() => import("./modulos/servicio/Resguardos"));
@@ -170,6 +171,7 @@ export function App() {
           <Route path="produccion/seriales" element={<Con m="produccion"><NumerosSerie /></Con>} />
           <Route path="servicio" element={<Con m="servicio"><Servicios /></Con>} />
           <Route path="servicio/maquinas" element={<Con m="mantenimiento"><Maquinas /></Con>} />
+          <Route path="servicio/metricas" element={<Con m="mantenimiento"><MetricasMantenimiento /></Con>} />
           <Route path="servicio/maquinas/:id" element={<Con m="mantenimiento"><FichaMaquina /></Con>} />
           <Route path="servicio/resguardos" element={<Con m="mantenimiento" n={2}><Resguardos /></Con>} />
           <Route path="servicio/:id" element={<Con m="servicio"><DetalleServicio /></Con>} />
