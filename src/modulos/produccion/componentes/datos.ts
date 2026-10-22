@@ -43,7 +43,15 @@ export interface OperacionPiso {
   prioridad: number; fecha_compromiso: string | null; dias_restantes: number | null; atrasada: boolean; avance: number;
   materiales_faltantes: number; orden_estado: EstadoOP; lista: boolean; espera_a: string | null;
   ultimo_problema: string | null; ultimo_problema_en: string | null;
+  turno: number | null; horas_reales: number;
 }
+
+/** El personal para elegir en la terminal y el tablero: nombre, su área y dónde está ahorita. */
+export interface PersonaPiso { id: string; nombre: string; etapa_id: number | null; trabajando_en: string | null; tiempo_id: string | null }
+/** Un tiempo abierto: alguien (o "N sin nombre") trabajando una etapa desde `inicio`. */
+export interface TramoAbierto { tiempo_id: string; operacion_id: string; empleado_id: string | null; nombre: string; personas: number; inicio: string }
+/** La cuadrilla de una etapa: la que trabaja (en proceso) o la que la va a trabajar. */
+export interface Asignacion { operacion_id: string; empleado_id: string }
 
 export type TipoEvento = "creada" | "liberada" | "inicio" | "pausa" | "reanudar" | "fin" | "problema" | "nota" | "surtido"
   | "cambio_material" | "terminada" | "entregada" | "reabierta";
@@ -109,6 +117,16 @@ export function usePiso(opciones: { etapa?: number | null; intervalo?: number } 
       return q<OperacionPiso[]>(c);
     },
   });
+}
+
+export function usePersonalPiso() {
+  return useQuery({ queryKey: [...CLAVE, "personal_piso"], staleTime: 30_000, queryFn: () => q<PersonaPiso[]>(supabase.rpc("personal_de_piso")) });
+}
+export function useCuadrillas() {
+  return useQuery({ queryKey: [...CLAVE, "cuadrillas"], queryFn: () => q<TramoAbierto[]>(supabase.rpc("cuadrillas_abiertas")) });
+}
+export function useAsignaciones() {
+  return useQuery({ queryKey: [...CLAVE, "asignaciones"], queryFn: () => q<Asignacion[]>(supabase.from("op_asignaciones").select("operacion_id, empleado_id")) });
 }
 
 /**

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  AlarmClock, CheckCircle2, ClipboardList, Factory, Inbox, Monitor, PackageX, Plus, Search, Wrench, X,
+  AlarmClock, CheckCircle2, ClipboardList, Factory, HardHat, Inbox, Monitor, PackageX, Plus, Search, Wrench, X,
 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
@@ -90,6 +90,7 @@ export default function Gerencia() {
       descripcion={`${new Date().toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" })} · ${abiertas.length} órdenes abiertas`}
       ancho="max-w-[1600px]"
       acciones={<>
+        {puede("produccion", 2) && <BotonLink a="/produccion/cuadrillas"><HardHat className="h-4 w-4" />Cuadrillas</BotonLink>}
         <BotonLink a="/piso" externo><Monitor className="h-4 w-4" />Pantalla de piso</BotonLink>
         <BotonLink a="/produccion/ordenes"><ClipboardList className="h-4 w-4" />Órdenes y material</BotonLink>
         {puede("produccion", 2) && <BotonLink a="/produccion/ordenes?nueva=pedido" variante="primario"><Plus className="h-4 w-4" />Nueva orden</BotonLink>}
