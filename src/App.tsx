@@ -34,6 +34,7 @@ const Existencias = p(() => import("./modulos/almacen/Existencias"));
 const Movimientos = p(() => import("./modulos/almacen/Movimientos"));
 const Reabasto = p(() => import("./modulos/almacen/Reabasto"));
 const Gerencia = p(() => import("./modulos/produccion/Gerencia"));
+const PedidosPlanta = p(() => import("./modulos/produccion/Pedidos"));
 const OrdenesProduccion = p(() => import("./modulos/produccion/Ordenes"));
 const DetalleOrden = p(() => import("./modulos/produccion/DetalleOrden"));
 const Terminal = p(() => import("./modulos/produccion/Terminal"));
@@ -159,6 +160,7 @@ export function App() {
           <Route path="ventas/devoluciones" element={<Con m="envios"><Devoluciones /></Con>} />
           <Route path="ventas/mercadolibre" element={<Con m="ventas"><MercadoLibre /></Con>} />
           <Route path="produccion/gerencia" element={<Con m="produccion"><Gerencia /></Con>} />
+          <Route path="produccion/pedidos" element={<Con m="produccion" n={2}><PedidosPlanta /></Con>} />
           <Route path="produccion/ordenes" element={<Con m="produccion"><OrdenesProduccion /></Con>} />
           <Route path="produccion/ordenes/:id" element={<Con m="produccion"><DetalleOrden /></Con>} />
           <Route path="produccion/seriales" element={<Con m="produccion"><NumerosSerie /></Con>} />

@@ -7,6 +7,11 @@ export const PRODUCCION: Record<string, AyudaPantalla> = {
     "En cada tarjeta: el avance (el personal de planta, almacén, ingeniería y compras ven también las horas), la fecha compromiso en verde, ámbar (3 días o menos) o rojo (ya pasó) y los faltantes de material, en rojo si alguno no se ha pedido a compras. La gerencia libera, sube o baja la prioridad y cambia la fecha desde la tarjeta; una orden no se libera sin la revisión de ingeniería.",
     "Una orden con la insignia \"En espera\" (cliente ausente, por ejemplo) no cuenta en los atrasos ni en la carga hasta que se reactive desde su detalle. Abajo, \"Carga del taller\" dice cuántas semanas de trabajo tiene cada etapa contra lo que puede trabajar por semana, y \"Actividad reciente\" muestra en vivo lo que marcan el taller, almacén e ingeniería; clic en una línea abre su orden.",
   ],
+  "/produccion/pedidos": [
+    "Los pedidos vistos desde la planta: qué se vendió, a quién, para cuándo y cómo va cada equipo en el taller. No trae montos. La usan la gerencia de producción, los supervisores y almacén.",
+    "«Activos» son los confirmados, en producción y listos para entregar; «Sin orden», los que tienen equipos que nadie está fabricando todavía. Dale clic a un pedido para ver sus partidas y las órdenes de cada una, con su avance; el folio de la orden te lleva a su detalle.",
+    "La gerencia crea desde aquí las órdenes que faltan. Si hay un equipo igual hecho (o en proceso) para stock, sale «Usar OP-…»: se asigna al pedido y ya no se fabrica otro. Así se reemplaza la «S-» de la hoja.",
+  ],
   "/produccion/seriales": [
     "Aquí está cada equipo que hemos hecho con su número de serie: los del libro de seriales de la hoja (desde 2015) y los que numera el ERP. Sirve para saber de quién es un equipo, de qué pedido y factura, y qué tiene cada cliente. La usan producción, servicio y ventas.",
     "Busca por serie, cliente, equipo, pedido o factura; filtra por familia o por lo que sigue en taller. Clic en un renglón abre su ficha, con la orden de producción y los servicios que ha tenido.",

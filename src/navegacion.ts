@@ -79,6 +79,7 @@ export const MENU: SeccionMenu[] = [
     titulo: "Producción",
     entradas: [
       { ruta: "/produccion/gerencia", texto: "Tablero de producción", icono: Factory, modulo: "produccion" },
+      { ruta: "/produccion/pedidos", texto: "Pedidos", icono: ShoppingCart, modulo: "produccion", nivel: 2 },
       { ruta: "/produccion/ordenes", texto: "Órdenes y material", icono: ClipboardCheck, modulo: "produccion" },
       { ruta: "/produccion/seriales", texto: "Números de serie", icono: Hash, modulo: "produccion" },
       { ruta: "/produccion/terminal", texto: "Terminal de piso", icono: Tablet, modulo: "produccion", nivel: 2 },
