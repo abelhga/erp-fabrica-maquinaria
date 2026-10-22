@@ -74,7 +74,7 @@ export function DialogoAlta({ abierto, alCambiar, alCrear }: { abierto: boolean;
         <form className="relative" onSubmit={(e) => { e.preventDefault(); buscar(); }}>
           {buscando ? <Loader2 className="h-4 w-4 text-tenue absolute left-3 top-1/2 -translate-y-1/2 animate-spin" />
             : <Search className="h-4 w-4 text-tenue absolute left-3 top-1/2 -translate-y-1/2" />}
-          <input ref={entrada} autoFocus className="campo pl-9 cifra" value={texto} placeholder="2000012345678 o PED-2026-00123"
+          <input ref={entrada} autoFocus className="campo pl-9 cifra" value={texto} placeholder="2000012345678 o PED-26-799"
             onChange={(e) => { setTexto(e.target.value); setVenta(null); setVentas(null); }} />
         </form>
         {ventas && ventas.length === 0 && <p className="text-sm text-tenue">No encontré esa venta. Revisa el número, o puede ser de otro vendedor o no estar capturada todavía.</p>}

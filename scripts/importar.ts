@@ -458,6 +458,8 @@ async function main() {
       cross join lateral rows from (jsonb_to_recordset(x.contactos) as (nombre text, correo text, telefono text)) with ordinality k(nombre, correo, telefono, ord)
       where not exists (select 1 from contactos o where o.cliente_id = c.id)`, [json(clientes)]);
 
+    // Ojo: la migración 153 renumeró a PED-26-NNN los HIS que tenían PDF (folio_anterior = HIS-…);
+    // volver a importar los duplicaría. Este borrado es solo para una base nueva.
     await db.query(`delete from pedidos where historico and folio like 'HIS-%'`);
     let n = 0;
     for (const p of paneles) {

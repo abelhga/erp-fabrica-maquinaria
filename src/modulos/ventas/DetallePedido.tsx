@@ -26,7 +26,7 @@ interface Pedido {
   id_externo: string | null; fecha: string; fecha_compromiso: string | null; estado: EstadoPedido; moneda: "MXN" | "USD" | "EUR";
   tipo_cambio: number; tasa_iva: number; subtotal: number; iva: number; total: number; condiciones_pago: string | null;
   direccion_entrega: string | null; notas: string | null; motivo_cancelacion: string | null; entregado_en: string | null; creado_en: string;
-  historico?: boolean;
+  historico?: boolean; folio_anterior?: string | null;
 }
 interface LineaPedido {
   id: string; orden: number; articulo_id: string | null; titulo: string; descripcion: string | null; unidad: string; cantidad: number;
@@ -104,7 +104,7 @@ export default function DetallePedido() {
 
   return (
     <Pagina ancho="max-w-[1400px]"
-      titulo={<span className="inline-flex flex-wrap items-center gap-2"><span className="cifra">{p.folio}</span><Insignia tono={ESTADO_PEDIDO[p.estado].tono} punto>{ESTADO_PEDIDO[p.estado].texto}</Insignia>
+      titulo={<span className="inline-flex flex-wrap items-center gap-2"><span className="cifra">{p.folio}</span>{p.folio_anterior && <span className="text-sm font-normal text-tenue cifra" data-explain={GLOSARIO.folioPedido} data-explain-title="Folio">antes {p.folio_anterior}</span>}<Insignia tono={ESTADO_PEDIDO[p.estado].tono} punto>{ESTADO_PEDIDO[p.estado].texto}</Insignia>
         {r?.atrasado && <span data-explain={GLOSARIO.pedidoAtrasado}><Insignia tono="peligro">atrasado</Insignia></span>}{p.historico && <span data-explain={GLOSARIO.pedidoHistorico}><Insignia>de la hoja</Insignia></span>}</span>}
       descripcion={<span>
         <Link to={`/ventas/clientes/${p.cliente_id}`} className="text-marca-texto hover:underline">{cliente.data?.nombre ?? "…"}</Link>

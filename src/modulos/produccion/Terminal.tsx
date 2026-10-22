@@ -243,7 +243,7 @@ function TarjetaPiso({ o, pedir, ahora, tenue }: { o: OperacionPiso; pedir: (o: 
         <div className="min-w-0">
           <p className="text-lg text-tenue cifra">{folioCorto(o.folio)}{o.numero_serie && ` · ${o.numero_serie}`}</p>
           <p className="text-2xl font-bold leading-tight">{abreviarEquipo(o.equipo)}</p>
-          <p className="text-lg text-tenue">{o.cliente ?? (o.pedido_folio ? o.pedido_folio : "Para stock")}</p>
+          <p className="text-lg text-tenue">{o.pedido_folio ? <><b className="text-texto cifra">{o.pedido_folio}</b> · {o.cliente ?? "—"}</> : "Para stock"}</p>
         </div>
         <div className="text-right">
           <span className={cn("inline-block rounded-xl px-3 py-1 text-lg font-semibold",

@@ -1,9 +1,10 @@
 import { useMemo, useState, type DragEvent } from "react";
-import { Link } from "react-router-dom";
-import { ArrowDown, ArrowUp, ExternalLink, GripVertical, HardHat, Tablet, UserMinus, Users } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { ArrowDown, ArrowUp, ChevronRight, ExternalLink, GripVertical, HardHat, Tablet, UserMinus, Users } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Boton } from "@/components/ui/boton";
 import { Seleccion } from "@/components/ui/campo";
+import { Filtro } from "@/components/datos/TablaDatos";
 import { Dialogo, Lateral } from "@/components/ui/dialogo";
 import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { useSesion } from "@/lib/sesion";
@@ -28,6 +29,7 @@ import { abreviarEquipo, folioCorto, haceRato, horas, textoDias, tonoCompromiso 
 
 interface Persona { id: string; nombre: string; trabajando: boolean; tiempo_id?: string }
 interface Trabajo extends OperacionPiso { personas: Persona[]; sinNombre: number; desde: string | null; restante: number; gente: number }
+type Vista = "etapa" | "cuadrilla";
 type Arrastre = { tipo: "persona"; empleado: string; desde: string | null } | { tipo: "tarjeta"; operacion: string; etapa: number };
 interface Cambio { titulo: string; texto: string[]; correr: () => void }
 
@@ -54,6 +56,18 @@ export default function Cuadrillas() {
   const [sobre, setSobre] = useState<string | null>(null);
   const [cambio, setCambio] = useState<Cambio | null>(null);
   const [abierto, setAbierto] = useState<string | null>(null);
+  const [params, setParams] = useSearchParams();
+  const vista: Vista = params.get("vista") === "cuadrilla" ? "cuadrilla" : "etapa";
+  // Etapas con «Más adelante» abierto (por omisión cerrado: es la misma orden que ya sale en su etapa actual).
+  const [masAdelante, setMasAdelante] = useState<Set<number>>(new Set());
+  const tarjeta = (t: Trabajo, conEtapa = false) => (
+    <TarjetaTrabajo key={t.id} t={t} ahora={ahora} gestionar={gestionar} veHoras={veFabricacion} sobre={sobre === t.id} conEtapa={conEtapa}
+      alAbrir={() => setAbierto(t.id)}
+      alPasar={permitir(t.id)} alSalir={() => setSobre(null)} alSoltar={alSoltar(t)}
+      alArrastrarTarjeta={() => setArrastre({ tipo: "tarjeta", operacion: t.id, etapa: t.etapa_id })}
+      alArrastrarPersona={(emp) => setArrastre({ tipo: "persona", empleado: emp, desde: t.id })}
+      alTerminar={() => { setArrastre(null); setSobre(null); }} />
+  );
   const ahora = Date.now();
 
   const asignar = useAccion((a: { op: string; emp: string; desde: string | null }) =>
@@ -152,6 +166,33 @@ export default function Cuadrillas() {
   };
   const permitir = (id: string) => (e: DragEvent) => { if (gestionar && arrastre) { e.preventDefault(); setSobre(id); } };
 
+  // Por cuadrilla: la gente que tiene exactamente el mismo trabajo (lo de ahorita y su fila) es
+  // una cuadrilla, como «Isidro y César» en el tablero de Luis. Se arma sola de lo asignado.
+  const cuadrillas = useMemo(() => {
+    const rango = (t: Trabajo) => (t.estado === "en_proceso" ? 0 : t.estado === "pausada" ? 1 : 2);
+    const porPersona = new Map<string, Trabajo[]>();
+    for (const t of trabajos) for (const p of t.personas) porPersona.set(p.id, [...(porPersona.get(p.id) ?? []), t]);
+    const grupos = new Map<string, { gente: string[]; lista: Trabajo[] }>();
+    for (const [emp, lista] of porPersona) {
+      const orden = [...lista].sort((a, b) => rango(a) - rango(b) || enCola(a, b));
+      const clave = orden.map((t) => t.id).join(",");
+      const g = grupos.get(clave) ?? { gente: [], lista: orden };
+      g.gente.push(emp);
+      grupos.set(clave, g);
+    }
+    const primero = (id: string) => (nombres.get(id) ?? "—").split(" ")[0];
+    return [...grupos.entries()].map(([clave, g]) => {
+      const n = g.gente.map(primero).sort((a, b) => a.localeCompare(b, "es"));
+      return {
+        clave, lista: g.lista, trabajando: g.lista.some((t) => t.estado === "en_proceso"),
+        titulo: n.length === 1 ? n[0] : `${n.slice(0, -1).join(", ")} y ${n[n.length - 1]}`,
+        horas: g.lista.reduce((s, t) => s + t.restante / Math.max(t.gente, 1), 0),
+      };
+    }).sort((a, b) => Number(b.trabajando) - Number(a.trabajando) || a.titulo.localeCompare(b.titulo, "es"));
+  }, [trabajos, nombres]);
+  const sinCuadrilla = trabajos.filter((t) => t.gente === 0 && (t.estado !== "pendiente" || t.lista))
+    .sort((a, b) => a.etapa_orden - b.etapa_orden || enCola(a, b));
+
   const visibles = (etapas.data ?? []).filter((e) => trabajos.some((t) => t.etapa_id === e.id) || (personal.data ?? []).some((p) => p.etapa_id === e.id));
   const detalle = trabajos.find((t) => t.id === abierto) ?? null;
 
@@ -168,46 +209,92 @@ export default function Cuadrillas() {
             alPasar={(e) => { if (gestionar && arrastre?.tipo === "persona" && arrastre.desde) { e.preventDefault(); setSobre("personal"); } }}
             alSoltar={(e) => { e.preventDefault(); setSobre(null); if (arrastre?.tipo === "persona" && arrastre.desde) sacarPersona(arrastre.desde, arrastre.empleado); setArrastre(null); }} />
 
+          <div className="flex flex-wrap items-center gap-3">
+            <Filtro opciones={[
+              { valor: "etapa" as Vista, texto: "Por etapa", explica: GLOSARIO.vistaPorEtapa },
+              { valor: "cuadrilla" as Vista, texto: "Por cuadrilla", explica: GLOSARIO.vistaPorCuadrilla },
+            ]} valor={vista} alCambiar={(v) => setParams(v === "etapa" ? {} : { vista: v }, { replace: true })} />
+            <p className="text-xs text-tenue">{vista === "etapa"
+              ? "Cada etapa con lo que se trabaja y lo que ya puede empezar."
+              : "Cada cuadrilla con lo que trabaja ahorita y lo que le sigue, como el tablero de Luis."}</p>
+          </div>
+
           {visibles.length === 0 ? (
             <div className="tarjeta"><Vacio icono={Users} titulo="No hay trabajo liberado en el taller"
               texto="Cuando la gerencia libere una orden, sus etapas aparecen aquí para armar las cuadrillas." /></div>
-          ) : (
+          ) : vista === "etapa" ? (
             <div className="flex gap-3 overflow-x-auto pb-2 items-start">
               {visibles.map((et) => {
                 const deEtapa = trabajos.filter((t) => t.etapa_id === et.id);
+                const despues = deEtapa.filter((t) => t.estado === "pendiente" && !t.lista).sort(enCola);
                 const grupos: { titulo: string; lista: Trabajo[]; explica?: string }[] = [
                   { titulo: "Trabajando", lista: deEtapa.filter((t) => t.estado === "en_proceso") },
                   { titulo: "Pausadas", lista: deEtapa.filter((t) => t.estado === "pausada") },
-                  { titulo: "En cola", lista: deEtapa.filter((t) => t.estado === "pendiente").sort(enCola), explica: GLOSARIO.colaEtapa },
+                  { titulo: "Listas para empezar", lista: deEtapa.filter((t) => t.estado === "pendiente" && t.lista).sort(enCola), explica: GLOSARIO.colaEtapa },
                 ];
+                const abierta = masAdelante.has(et.id);
                 return (
                   <section key={et.id} className="w-[19rem] shrink-0 rounded-xl bg-fondo border border-borde/70 p-2" aria-label={et.nombre}>
                     <header className="flex items-center gap-2 px-1.5 pt-1 pb-2">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: et.color }} />
                       <h2 className="font-semibold text-sm">{et.nombre}</h2>
-                      <span className="ml-auto text-xs text-tenue cifra">{deEtapa.length}</span>
+                      <span className="ml-auto text-xs text-tenue cifra">{deEtapa.length - despues.length}</span>
                     </header>
-                    <div className="space-y-3 xl:max-h-[calc(100vh-19rem)] overflow-y-auto pr-0.5">
+                    <div className="space-y-3 xl:max-h-[calc(100vh-21rem)] overflow-y-auto pr-0.5">
                       {grupos.map((g) => g.lista.length > 0 && (
                         <div key={g.titulo} className="space-y-2">
                           <p className="px-1 text-[11px] font-medium uppercase tracking-wide text-tenue" data-explain={g.explica} data-explain-title={g.explica && g.titulo}>
                             {g.titulo} <span className="cifra">{g.lista.length}</span>
                           </p>
-                          {g.lista.map((t) => (
-                            <TarjetaTrabajo key={t.id} t={t} ahora={ahora} gestionar={gestionar} veHoras={veFabricacion} sobre={sobre === t.id}
-                              alAbrir={() => setAbierto(t.id)}
-                              alPasar={permitir(t.id)} alSalir={() => setSobre(null)} alSoltar={alSoltar(t)}
-                              alArrastrarTarjeta={() => setArrastre({ tipo: "tarjeta", operacion: t.id, etapa: t.etapa_id })}
-                              alArrastrarPersona={(emp) => setArrastre({ tipo: "persona", empleado: emp, desde: t.id })}
-                              alTerminar={() => { setArrastre(null); setSobre(null); }} />
-                          ))}
+                          {g.lista.map((t) => tarjeta(t))}
                         </div>
                       ))}
-                      {deEtapa.length === 0 && <p className="text-xs text-tenue text-center py-6">Sin trabajo en esta etapa</p>}
+                      {deEtapa.length === despues.length && <p className="text-xs text-tenue text-center py-4">Nada que se pueda trabajar ahorita</p>}
+                      {despues.length > 0 && (
+                        <div className="space-y-2">
+                          {/* Lo que todavía está en una etapa anterior: cerrado, para no repetir la misma orden en cada columna. */}
+                          <button type="button" onClick={() => setMasAdelante((m) => { const n = new Set(m); if (n.has(et.id)) n.delete(et.id); else n.add(et.id); return n; })}
+                            className="w-full flex items-center gap-1 px-1 text-[11px] font-medium uppercase tracking-wide text-tenue hover:text-texto"
+                            data-explain={GLOSARIO.masAdelante} data-explain-title="Más adelante">
+                            <ChevronRight className={cn("h-3.5 w-3.5 transition", abierta && "rotate-90")} />Más adelante <span className="cifra">{despues.length}</span>
+                          </button>
+                          {abierta && despues.map((t) => tarjeta(t))}
+                        </div>
+                      )}
                     </div>
                   </section>
                 );
               })}
+            </div>
+          ) : (
+            <div className="flex gap-3 overflow-x-auto pb-2 items-start">
+              {cuadrillas.map((c) => (
+                <section key={c.clave} className="w-[17rem] shrink-0 rounded-xl bg-fondo border border-borde/70 p-2" aria-label={c.titulo}>
+                  <header className="px-1.5 pt-1 pb-2">
+                    <h2 className="font-semibold text-sm leading-snug">{c.titulo}</h2>
+                    <p className="text-[11px] text-tenue">{c.trabajando ? "Trabajando ahorita" : "Sin nada en proceso"}{veFabricacion && c.horas > 0 ? ` · ≈ ${horas(Math.round(c.horas))} encima` : ""}</p>
+                  </header>
+                  <div className="space-y-2 xl:max-h-[calc(100vh-21rem)] overflow-y-auto pr-0.5">
+                    {c.lista.map((t, k) => (
+                      <div key={t.id}>
+                        {k === 1 && <p className="px-1 pb-1 text-[11px] font-medium uppercase tracking-wide text-tenue">Después</p>}
+                        {tarjeta(t, true)}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ))}
+              <section className="w-[17rem] shrink-0 rounded-xl border border-dashed border-borde p-2" aria-label="Sin cuadrilla"
+                data-explain={GLOSARIO.sinCuadrilla} data-explain-title="Sin cuadrilla">
+                <header className="px-1.5 pt-1 pb-2">
+                  <h2 className="font-semibold text-sm">Sin cuadrilla</h2>
+                  <p className="text-[11px] text-tenue">En proceso o listo para empezar, y nadie asignado</p>
+                </header>
+                <div className="space-y-2 xl:max-h-[calc(100vh-21rem)] overflow-y-auto pr-0.5">
+                  {sinCuadrilla.length === 0 && <p className="text-xs text-tenue text-center py-6">Todo tiene quién lo haga</p>}
+                  {sinCuadrilla.map((t) => tarjeta(t, true))}
+                </div>
+              </section>
             </div>
           )}
         </>
@@ -278,8 +365,8 @@ function PanelPersonal({ personal, etapas, trabajaEn, carga, gestionar, sobre, a
   );
 }
 
-function TarjetaTrabajo({ t, ahora, gestionar, veHoras, sobre, alAbrir, alPasar, alSalir, alSoltar, alArrastrarTarjeta, alArrastrarPersona, alTerminar }: {
-  t: Trabajo; ahora: number; gestionar: boolean; veHoras: boolean; sobre: boolean; alAbrir: () => void;
+function TarjetaTrabajo({ t, ahora, gestionar, veHoras, sobre, conEtapa, alAbrir, alPasar, alSalir, alSoltar, alArrastrarTarjeta, alArrastrarPersona, alTerminar }: {
+  t: Trabajo; ahora: number; gestionar: boolean; veHoras: boolean; sobre: boolean; conEtapa?: boolean; alAbrir: () => void;
   alPasar: (e: DragEvent) => void; alSalir: () => void; alSoltar: (e: DragEvent) => void;
   alArrastrarTarjeta: () => void; alArrastrarPersona: (emp: string) => void; alTerminar: () => void;
 }) {
@@ -295,9 +382,10 @@ function TarjetaTrabajo({ t, ahora, gestionar, veHoras, sobre, alAbrir, alPasar,
       <div className="flex items-start gap-1.5">
         {gestionar && deCola && <GripVertical className="h-4 w-4 text-tenue shrink-0 mt-0.5 cursor-grab" aria-hidden />}
         <div className="min-w-0 flex-1">
+          {conEtapa && <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: t.color }}>{t.etapa}{t.estado === "pausada" ? " · pausada" : ""}</p>}
           <p className="text-xs text-tenue cifra">{folioCorto(t.folio)}{t.numero_serie && ` · ${t.numero_serie}`}{t.prioridad === 1 && <b className="text-peligro"> · Urgente</b>}</p>
           <p className="text-sm font-medium leading-snug">{abreviarEquipo(t.equipo)}</p>
-          <p className="text-xs text-tenue truncate">{t.cliente ?? "Para stock"}</p>
+          <p className="text-xs text-tenue truncate">{t.pedido_folio ? <><span className="text-texto cifra">{t.pedido_folio}</span> · {t.cliente ?? "—"}</> : "Para stock"}</p>
         </div>
         <span className={cn("text-[11px] cifra whitespace-nowrap", tono === "peligro" ? "text-peligro font-medium" : tono === "aviso" ? "text-aviso font-medium" : "text-tenue")}
           title={`Compromiso ${fecha(t.fecha_compromiso)}`}>{textoDias(t.dias_restantes)}</span>
