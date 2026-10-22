@@ -29,7 +29,7 @@ export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; ale
     alerta: "Quien tenga Márgenes ve cuánto se gana en cada equipo. Ni ventas ni compras lo necesitan." },
   { modulo: "compras", nombre: "Compras", descripcion: "Proveedores, órdenes de compra y requisiciones. 2: captura · 3: autoriza." },
   { modulo: "inventario", nombre: "Almacén", descripcion: "Existencias y movimientos. 2: entradas y salidas · 3: autoriza ajustes." },
-  { modulo: "produccion", nombre: "Producción", descripcion: "1: ver el avance (lo tienen los vendedores) · 2: personal de piso, ve todos los pedidos sin montos · 3: gerencia." },
+  { modulo: "produccion", nombre: "Producción", descripcion: "1: ver el avance de las órdenes, sin lista de materiales, horas ni planos (lo tienen los vendedores) · 2: personal de piso: también cómo se fabrica, y todos los pedidos sin montos · 3: gerencia." },
   { modulo: "rrhh", nombre: "Recursos humanos", descripcion: "Personal y vacaciones. 3: además CURP, RFC, NSS, salario y cuenta bancaria." },
   { modulo: "finanzas", nombre: "Finanzas", descripcion: "Cobranza y pagos. 2: registra cobros, facturas y pagos." },
   { modulo: "comisiones", nombre: "Comisiones", descripcion: "1: ve las comisiones de todos los vendedores (cada vendedor ve la suya sin este permiso) · 2: las marca pagadas." },

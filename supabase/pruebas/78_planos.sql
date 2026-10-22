@@ -38,7 +38,8 @@ begin
   perform pg_temp.como(v_alm);
   assert exists (select 1 from documentos_tecnicos where id = v_doc and estado = 'vigente'), 'almacén no ve el plano vigente';
   perform pg_temp.como(v_vend);
-  assert exists (select 1 from documentos_tecnicos where id = v_doc), 'ventas no ve el plano vigente (para la ficha)';
+  -- Ventas ve fichas técnicas y fotos para el cliente, no los planos de fabricación (150).
+  assert not exists (select 1 from documentos_tecnicos where id = v_doc), 'ventas vio un plano de fabricación';
 
   -- Un plano aprobado no se edita ni se borra.
   perform pg_temp.como_postgres();
