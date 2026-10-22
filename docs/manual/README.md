@@ -12,3 +12,8 @@ repite: cuenta los procesos completos, que cruzan varias pantallas y varias pers
 |---|---|---|
 | Ventas | [ventas.md](ventas.md) | Números de pedido (PED-26-799, Mercado Libre y web) · Entregar un pedido y la hoja de salida · Cuándo sale un equipo |
 | Producción | [produccion.md](produccion.md) | Equipos de stock: fabricarlos y venderlos · Cuadrillas y terminal de piso · Gantt (también en la ficha del pedido y la orden) · La TV del taller · Personal de piso · Métricas |
+
+**Manual visual del taller** (para Luis y los encargados de piso): [`docs/manuales/produccion.html`](../manuales/produccion.html),
+una página interactiva con la terminal, cuándo pausar, cuadrillas, el Gantt y la TV que se pueden tocar. Se publica
+como artefacto: https://claude.ai/artifact/Y1QRgDT8s6dRcmP7u8pG4r (si cambia una regla de producción, se corrige
+ahí también).
