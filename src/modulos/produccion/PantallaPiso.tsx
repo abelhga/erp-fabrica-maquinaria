@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, PackageX, Pause, WifiOff } from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, HardHat, PackageX, Pause, WifiOff } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
@@ -12,7 +12,10 @@ import { abreviarEquipo, folioCorto, haceRato, textoDias, textoEvento } from "./
 // igual en la tele del taller que en la laptop del gerente.
 const ANCHO = 1920, ALTO = 1080;
 // A 6 metros manda el tamaño de letra: 3 columnas de 2 tarjetas, y si hay más, se rota.
-const POR_COLUMNA = 2, COLUMNAS = 3, ROTAR_MS = 15_000, REFRESCO_MS = 60_000;
+// 10 s por pantalla: con 15 s, en el piso se sentía que no cambiaba.
+const POR_COLUMNA = 2, COLUMNAS = 3, ROTAR_MS = 10_000, REFRESCO_MS = 60_000;
+// Después de las etapas, dos pantallas más: quién trabaja qué y lo que se entrega pronto.
+const EXTRAS = ["cuadrillas", "entregas"] as const;
 // La cinta de abajo, en px de la medida de diseño por segundo: un evento cruza la tele en unos 10 s.
 const VELOCIDAD_CINTA = 180;
 
@@ -74,7 +77,7 @@ export default function PantallaPiso() {
   const tablero = useQuery({
     queryKey: [...CLAVE, "tablero", "tv"], refetchInterval: REFRESCO_MS,
     queryFn: () => q<OrdenTablero[]>(supabase.from("v_tablero_produccion")
-      .select("id, folio, numero_serie, equipo, estado, atrasada, dias_restantes, materiales_faltantes, faltantes_sin_pedir, prioridad")),
+      .select("id, folio, numero_serie, equipo, estado, atrasada, dias_restantes, materiales_faltantes, faltantes_sin_pedir, prioridad, fecha_compromiso, avance, pedido_folio, cliente, para_stock, en_espera_motivo")),
   });
   const eventos = useQuery({
     queryKey: [...CLAVE, "eventos", "tv"], refetchInterval: REFRESCO_MS,
@@ -105,7 +108,8 @@ export default function PantallaPiso() {
     }
     return r;
   }, [piso.data, etapas.data]);
-  const paginas = Math.max(1, Math.ceil(columnas.length / COLUMNAS));
+  const paginasEtapas = Math.max(1, Math.ceil(columnas.length / COLUMNAS));
+  const paginas = paginasEtapas + EXTRAS.length;
   const [pagina, setPagina] = useState(0);
   useEffect(() => {
     if (paginas <= 1) { setPagina(0); return; }
@@ -113,6 +117,7 @@ export default function PantallaPiso() {
     return () => clearInterval(t);
   }, [paginas]);
   const visibles = columnas.slice(pagina * COLUMNAS, pagina * COLUMNAS + COLUMNAS);
+  const extra = pagina >= paginasEtapas ? EXTRAS[pagina - paginasEtapas] : null;
 
   const enTaller = (tablero.data ?? []).filter((o) => o.estado !== "terminada");
   const atrasadas = enTaller.filter((o) => o.atrasada).sort((a, b) => (a.dias_restantes ?? 0) - (b.dias_restantes ?? 0));
@@ -156,9 +161,11 @@ export default function PantallaPiso() {
                   vacio="Todo el material completo" detalle={(o) => `${o.materiales_faltantes} material${o.materiales_faltantes === 1 ? "" : "es"}`} />
         </section>
 
-        {/* Columnas por etapa */}
+        {/* Columnas por etapa (y, al final de la vuelta, cuadrillas y entregas) */}
         <main className="flex-1 min-h-0 px-12 pb-5">
-          {piso.isLoading ? null : columnas.length === 0 ? (
+          {extra === "cuadrillas" ? <PantallaCuadrillas ops={piso.data ?? []} etapas={etapas.data ?? []} />
+          : extra === "entregas" ? <PantallaEntregas ordenes={enTaller} hoy={ahora} />
+          : piso.isLoading ? null : columnas.length === 0 ? (
             <div className="h-full rounded-3xl border-2 border-dashed border-borde flex flex-col items-center justify-center gap-4 text-tenue">
               <CheckCircle2 className="h-24 w-24" />
               <p className="text-[48px] font-semibold text-texto">Sin órdenes en el taller</p>
@@ -205,7 +212,7 @@ function Franja({ tono, icono: I, titulo, lista, vacio, detalle }: {
         {!hay ? <p className="text-[28px] text-tenue">{vacio}</p> : (
           <p className="text-[28px] leading-snug truncate">
             {lista.slice(0, 3).map((o, k) => (
-              <span key={o.id}>{k > 0 && <span className="text-tenue"> · </span>}<b className="cifra">{folioCorto(o.folio)}</b> <span className="text-tenue">({detalle(o)})</span></span>
+              <span key={o.id}>{k > 0 && <span className="text-tenue"> · </span>}<b>{abreviarEquipo(o.equipo)}</b> <span className="text-tenue">({detalle(o)})</span></span>
             ))}
             {lista.length > 3 && <span className="text-tenue"> y {lista.length - 3} más</span>}
           </p>
@@ -223,18 +230,18 @@ function TarjetaTV({ t }: { t: Tarjeta }) {
     <article className={cn("min-h-0 rounded-2xl px-6 py-4 flex flex-col justify-between border-[3px] overflow-hidden",
       t.sigue ? "border-dashed border-borde bg-fondo/60" : o.estado === "pausada" ? "border-aviso bg-aviso-suave" : "border-borde bg-fondo",
       o.prioridad === 1 && !t.sigue && o.estado !== "pausada" && "border-peligro")}>
-      <div className="flex items-center gap-4">
-        <p className="text-[50px] font-extrabold leading-none cifra whitespace-nowrap shrink-0">{folioCorto(o.folio)}</p>
-        <span className={cn("ml-auto rounded-xl px-3 py-1 text-[31px] font-bold whitespace-nowrap cifra shrink-0",
+      {/* El taller reconoce el equipo por su nombre, no por el folio: el nombre va grande y arriba. */}
+      <p className="text-[40px] font-extrabold leading-[1.1] line-clamp-2">{abreviarEquipo(o.equipo)}</p>
+      <div className="flex items-center gap-3 min-w-0">
+        <p className="text-[28px] text-tenue truncate min-w-0">
+          <span className="cifra">{folioCorto(o.folio)}</span>
+          {o.pedido_folio ? <> · <b className="text-texto cifra">{o.pedido_folio}</b> · {o.cliente ?? "—"}</> : " · Para stock"}
+        </p>
+        <span className={cn("ml-auto rounded-xl px-3 py-0.5 text-[28px] font-bold whitespace-nowrap cifra shrink-0",
           tarde ? "bg-peligro text-white" : cerca ? "bg-aviso text-black" : "text-tenue")}>
           {textoDias(dias)}
         </span>
       </div>
-      <p className="text-[38px] font-semibold leading-tight truncate">{abreviarEquipo(o.equipo)}</p>
-      {/* El número de pedido es como el taller habla de un equipo ("el 798"): va primero y resaltado. */}
-      <p className="text-[30px] text-tenue truncate">
-        {o.pedido_folio ? <><b className="text-texto cifra">{o.pedido_folio}</b> · {o.cliente ?? "—"}</> : "Para stock"}
-      </p>
       <div className="flex items-center gap-4">
         <div className="flex-1 h-6 rounded-full bg-borde overflow-hidden">
           <div className={cn("h-full rounded-full", o.avance >= 100 ? "bg-ok" : "bg-marca")} style={{ width: `${Math.max(0, Math.min(100, Number(o.avance)))}%` }} />
@@ -255,7 +262,7 @@ function TarjetaTV({ t }: { t: Tarjeta }) {
 }
 
 function Ticker({ eventos, ahora }: { eventos: Evento[]; ahora: number }) {
-  const textos = eventos.map((e) => `${textoEvento(e)} · ${haceRato(e.en, ahora)}`);
+  const textos = eventos.map((e) => `${textoEvento(e, true, abreviarEquipo(e.equipo))} · ${haceRato(e.en, ahora)}`);
   const linea = textos.join("     ●     ");
   // La duración sale del ancho medido, no de contar letras: los espacios del separador se
   // juntan en uno al dibujarse y el mínimo de 30 s frenaba la cinta cuando había poco texto.
@@ -277,5 +284,108 @@ function Ticker({ eventos, ahora }: { eventos: Evento[]; ahora: number }) {
       </div>
       <style>{`@keyframes ticker-piso { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
     </footer>
+  );
+}
+
+const CUARTOS: [number, string][] = [[0.25, "¼"], [0.5, "½"], [0.75, "¾"], [0.9, "casi"]];
+const enCuartos = (a: number | null) =>
+  a == null ? null : CUARTOS.reduce((m, c) => (Math.abs(c[0] - a) < Math.abs(m[0] - a) ? c : m))[1];
+
+/** Quién trabaja qué ahorita: una tarjeta por cuadrilla, como el pizarrón de Luis. */
+function PantallaCuadrillas({ ops, etapas }: { ops: OperacionPiso[]; etapas: { id: number; orden: number }[] }) {
+  const ordenEtapa = new Map(etapas.map((e) => [e.id, e.orden]));
+  const activas = ops.filter((o) => o.estado === "en_proceso" || o.estado === "pausada");
+  const grupos = new Map<string, OperacionPiso[]>();
+  for (const o of activas) {
+    const k = o.cuadrilla ?? "Sin cuadrilla anotada";
+    grupos.set(k, [...(grupos.get(k) ?? []), o]);
+  }
+  const lista = [...grupos.entries()]
+    .map(([quien, trabajos]) => ({ quien, trabajos: trabajos.sort((a, b) => Number(a.estado === "pausada") - Number(b.estado === "pausada")) }))
+    .sort((a, b) => (ordenEtapa.get(a.trabajos[0].etapa_id) ?? 99) - (ordenEtapa.get(b.trabajos[0].etapa_id) ?? 99) || a.quien.localeCompare(b.quien, "es"))
+    .slice(0, 12);
+  return (
+    <div className="h-full flex flex-col gap-4">
+      <h2 className="flex items-center gap-4 text-[44px] font-extrabold"><HardHat className="h-12 w-12 text-marca" />Cuadrillas ahora</h2>
+      {lista.length === 0 ? (
+        <p className="flex-1 rounded-3xl border-2 border-dashed border-borde grid place-items-center text-[40px] text-tenue">Nadie trabajando en este momento</p>
+      ) : (
+        <div className="flex-1 min-h-0 grid grid-cols-4 grid-rows-3 gap-4">
+          {lista.map(({ quien, trabajos }) => (
+            <article key={quien} className="min-h-0 overflow-hidden rounded-2xl border-2 border-borde bg-superficie px-5 py-3 flex flex-col gap-2">
+              <p className="text-[34px] font-extrabold leading-tight truncate">{quien}</p>
+              {trabajos.slice(0, 2).map((o) => (
+                <div key={o.id} className="min-w-0">
+                  <p className="text-[28px] font-semibold leading-tight truncate">{abreviarEquipo(o.equipo)}</p>
+                  <p className="flex items-center gap-2 text-[24px] text-tenue truncate">
+                    <span className="h-4 w-4 rounded-full shrink-0" style={{ background: o.color }} />
+                    {o.etapa}{o.estado === "pausada" ? " · pausada" : ""}{enCuartos(o.avance_etapa) ? ` · va a ${enCuartos(o.avance_etapa)}` : ""}
+                  </p>
+                </div>
+              ))}
+              {trabajos.length > 2 && <p className="text-[22px] text-tenue">y {trabajos.length - 2} más</p>}
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Lo que tiene que estar listo en las próximas dos semanas, día por día (lunes a viernes). */
+function PantallaEntregas({ ordenes, hoy }: { ordenes: OrdenTablero[]; hoy: number }) {
+  const dia = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" });
+  const hoyIso = dia(new Date(hoy));
+  const base = new Date(hoyIso + "T12:00:00-06:00");
+  base.setDate(base.getDate() - ((base.getDay() + 6) % 7));
+  const dias: string[] = [];
+  let limite = "";
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(base); d.setDate(base.getDate() + i);
+    if (d.getDay() !== 0 && d.getDay() !== 6) dias.push(dia(d));
+    limite = dia(d);
+  }
+  // Lo de fin de semana se pinta el viernes anterior (la entrega se prepara antes).
+  const casilla = (f: string) => dias.filter((d) => d <= f).pop() ?? null;
+  const porDia = new Map<string, OrdenTablero[]>();
+  for (const o of ordenes) {
+    if (!o.fecha_compromiso || o.en_espera_motivo || o.fecha_compromiso < dias[0] || o.fecha_compromiso > limite) continue;
+    const k = casilla(o.fecha_compromiso);
+    if (k) porDia.set(k, [...(porDia.get(k) ?? []), o]);
+  }
+  // «lun 26 oct», no «Lun 26 De Oct».
+  const nombreDia = (f: string) => {
+    const d = new Date(f + "T12:00:00-06:00");
+    const p = (o: Intl.DateTimeFormatOptions) => d.toLocaleDateString("es-MX", { ...o, timeZone: "America/Mexico_City" }).replace(".", "");
+    return `${p({ weekday: "short" })} ${p({ day: "numeric" })} ${p({ month: "short" })}`;
+  };
+  return (
+    <div className="h-full flex flex-col gap-4">
+      <h2 className="flex items-center gap-4 text-[44px] font-extrabold"><CalendarDays className="h-12 w-12 text-marca" />Entregas de las próximas dos semanas</h2>
+      <div className="flex-1 min-h-0 grid grid-cols-5 grid-rows-2 gap-4">
+        {dias.map((d) => {
+          const lista = (porDia.get(d) ?? []).sort((a, b) => a.avance - b.avance);
+          const pasado = d < hoyIso;
+          return (
+            <section key={d} className={cn("min-h-0 overflow-hidden rounded-2xl border-2 px-4 py-3 flex flex-col gap-2",
+              d === hoyIso ? "border-marca bg-marca/10" : "border-borde bg-superficie", pasado && "opacity-50")}>
+              <p className={cn("text-[28px] font-bold first-letter:uppercase", d === hoyIso ? "text-marca-texto" : "text-tenue")}>{d === hoyIso ? "Hoy" : nombreDia(d)}</p>
+              {lista.slice(0, 3).map((o) => (
+                <div key={o.id} className="min-w-0">
+                  <p className="text-[26px] font-semibold leading-tight truncate">{abreviarEquipo(o.equipo)}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-3 rounded-full bg-borde overflow-hidden">
+                      <div className={cn("h-full rounded-full", o.avance >= 100 ? "bg-ok" : o.atrasada ? "bg-peligro" : "bg-marca")} style={{ width: `${Math.min(100, Number(o.avance))}%` }} />
+                    </div>
+                    <span className="text-[22px] text-tenue cifra">{o.pedido_folio ?? "stock"}</span>
+                  </div>
+                </div>
+              ))}
+              {lista.length > 3 && <p className="text-[22px] text-tenue">y {lista.length - 3} más</p>}
+            </section>
+          );
+        })}
+      </div>
+    </div>
   );
 }

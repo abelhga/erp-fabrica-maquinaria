@@ -331,10 +331,17 @@ interface PropsDiagrama {
   carga: { etapa_id: number; capacidad_horas_semana: number; horas_pendientes: number; horas_planeadas: number }[];
   buscar: string; ver: Ver; cuadrillas: Map<string, { nombres: string[]; trabajando: boolean }>;
   arrastrable: boolean; alAbrir: (id: string) => void; alReordenar: (ids: string[]) => void;
+  /** En la ficha de un pedido u orden: alto según los renglones, sin la fila. */
+  compacto?: boolean;
+  /** Horas y cuadrilla en el globo: solo para la planta (el vendedor ve fechas). */
+  detalleTaller?: boolean;
+  /** Px por día a la medida de la ficha, en lugar de los del zoom. */
+  pxDia?: number;
 }
 
-function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, ver, cuadrillas, arrastrable, alAbrir, alReordenar }: PropsDiagrama) {
-  const px = PX[zoom];
+function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, ver, cuadrillas, arrastrable, alAbrir, alReordenar,
+  compacto = false, detalleTaller = true, pxDia }: PropsDiagrama) {
+  const px = pxDia ?? PX[zoom];
   const caja = useRef<HTMLDivElement>(null);
   const [sobre, setSobre] = useState<{ b: Barra; g: OrdenGantt; x: number; y: number } | null>(null);
   const [resaltada, setResaltada] = useState<string | null>(null);
@@ -350,9 +357,11 @@ function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, 
   const todas = [...visibles, ...esperaVisibles];
   const desdes = todas.flatMap((g) => g.barras.map((b) => b.desde)).filter((d): d is number => d != null);
   const hastas = todas.flatMap((g) => [...g.barras.map((b) => b.hasta), g.compromiso]).filter((d): d is number => d != null);
-  let ini = Math.max(Math.min(hoy - 7, ...desdes), hoy - (zoom === "mes" ? 120 : 42));
-  ini = zoom === "mes" ? aDia(deDia(ini).slice(0, 8) + "01") : ini - diaSemana(ini);
-  const fin = Math.min(Math.max(hoy + (zoom === "dia" ? 42 : zoom === "semana" ? 120 : 330), ...hastas) + 10, hoy + 760);
+  // En una ficha cabe poco: sin el colchón de semanas vacías que trae el Gantt completo.
+  let ini = Math.max(Math.min(hoy - (compacto ? 3 : 7), ...desdes), hoy - (compacto ? 21 : zoom === "mes" ? 120 : 42));
+  ini = zoom === "mes" && !compacto ? aDia(deDia(ini).slice(0, 8) + "01") : ini - diaSemana(ini);
+  const fin = compacto ? Math.min(Math.max(hoy + 7, ...hastas) + 5, hoy + 760)
+    : Math.min(Math.max(hoy + (zoom === "dia" ? 42 : zoom === "semana" ? 120 : 330), ...hastas) + 10, hoy + 760);
   const ancho = (fin - ini + 1) * px;
   const xDe = (d: number) => (d - ini) * px;
   const ahoraMx = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Mexico_City" }));
@@ -459,11 +468,12 @@ function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, 
 
   return (
     <div ref={caja} onDragOver={(e) => arrastrando && e.preventDefault()} onDrop={alSoltar}
-      className="relative overflow-auto rounded-xl border border-borde bg-superficie shadow-tarjeta [--izq:9.5rem] sm:[--izq:17rem] max-h-[calc(100vh-17rem)] min-h-[420px]">
+      className={cn("relative overflow-auto rounded-xl border border-borde bg-superficie shadow-tarjeta [--izq:9.5rem]",
+        compacto ? "sm:[--izq:13rem] max-h-[28rem]" : "sm:[--izq:17rem] max-h-[calc(100vh-17rem)] min-h-[420px]")}>
       <div className="relative" style={{ width: `calc(var(--izq) + ${ancho}px)` }}>
         <div className="sticky top-0 z-30 flex border-b border-borde bg-superficie/95 backdrop-blur" style={{ height: ALTO_REGLA }}>
           <div data-izq className="sticky left-0 z-10 w-[var(--izq)] shrink-0 border-r border-borde bg-superficie px-3 flex items-end pb-2 text-xs font-medium text-tenue">
-            {vista === "area" ? "Área" : vista === "pedido" ? "Pedido y orden" : "Orden (en el orden de la fila)"}
+            {vista === "area" ? "Área" : vista === "pedido" ? "Pedido y orden" : compacto ? "Orden" : "Orden (en el orden de la fila)"}
           </div>
           <Regla zoom={zoom} ini={ini} fin={fin} px={px} hoy={hoy} xHoy={xHoy} />
         </div>
@@ -572,7 +582,7 @@ function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, 
           })}
         </div>
       </div>
-      {sobre && <Globo b={sobre.b} g={sobre.g} x={sobre.x} y={sobre.y} hoy={hoy} cuadrilla={cuadrillas.get(sobre.b.id)} />}
+      {sobre && <Globo b={sobre.b} g={sobre.g} x={sobre.x} y={sobre.y} hoy={hoy} cuadrilla={cuadrillas.get(sobre.b.id)} detalleTaller={detalleTaller} />}
     </div>
   );
 }
@@ -630,7 +640,9 @@ function Fondo({ zoom, ini, fin, px, xHoy }: { zoom: Zoom; ini: number; fin: num
 }
 
 /** Lo que dice una etapa al pasarle el mouse: qué es, cuándo, cuánto falta y quién la trabaja. */
-function Globo({ b, g, x, y, hoy, cuadrilla }: { b: Barra; g: OrdenGantt; x: number; y: number; hoy: number; cuadrilla?: { nombres: string[]; trabajando: boolean } }) {
+function Globo({ b, g, x, y, hoy, cuadrilla, detalleTaller }: {
+  b: Barra; g: OrdenGantt; x: number; y: number; hoy: number; cuadrilla?: { nombres: string[]; trabajando: boolean }; detalleTaller: boolean;
+}) {
   const ancho = 290;
   const izquierda = x + 16 + ancho > window.innerWidth ? x - ancho - 12 : x + 16;
   const arriba = Math.min(y + 16, window.innerHeight - 190);
@@ -655,7 +667,7 @@ function Globo({ b, g, x, y, hoy, cuadrilla }: { b: Barra; g: OrdenGantt; x: num
         {b.estado !== "terminada" && b.horasEst > 0 && (
           <p className="cifra">Faltan ≈ {horas(b.horasRest)} de {horas(b.horasEst)}</p>
         )}
-        {b.estado !== "terminada" && (
+        {b.estado !== "terminada" && detalleTaller && (
           <p>{cuadrilla?.nombres.length
             ? `${cuadrilla.trabajando ? "Trabajando" : "Cuadrilla planeada"}: ${cuadrilla.nombres.join(", ")}`
             : "Sin cuadrilla: el plan cuenta 2 personas"}</p>
@@ -743,6 +755,61 @@ function Dato({ titulo, valor, explica }: { titulo: string; valor: string; expli
     <div className="rounded-lg border border-borde p-2.5" data-explain={explica} data-explain-title={titulo}>
       <p className="text-[11px] text-tenue">{titulo}</p>
       <p className="mt-0.5 text-sm font-semibold cifra">{valor}</p>
+    </div>
+  );
+}
+
+/**
+ * El Gantt de unas cuantas órdenes, para la ficha de un pedido o de una orden. El mismo plan
+ * (la misma consulta que el Gantt completo): el vendedor ve fechas; la planta, también horas
+ * y cuadrilla.
+ */
+export function GanttCompacto({ ordenes, alAbrir }: { ordenes: string[]; alAbrir?: (id: string) => void }) {
+  const { puede } = useSesion();
+  return puede("produccion", 2) ? <GanttCompactoTaller ordenes={ordenes} alAbrir={alAbrir} /> : <GanttCompactoBase ordenes={ordenes} alAbrir={alAbrir} />;
+}
+function GanttCompactoTaller(p: { ordenes: string[]; alAbrir?: (id: string) => void }) {
+  return <GanttCompactoBase {...p} cuadrillas={useCuadrillaPorEtapa()} detalleTaller />;
+}
+function GanttCompactoBase({ ordenes, alAbrir, cuadrillas, detalleTaller = false }: {
+  ordenes: string[]; alAbrir?: (id: string) => void; cuadrillas?: Map<string, { nombres: string[]; trabajando: boolean }>; detalleTaller?: boolean;
+}) {
+  useProduccionEnVivo(["op_eventos", "ordenes_produccion", "op_operaciones"]);
+  const plan = useQuery({ queryKey: [...CLAVE, "plan"], queryFn: () => q<FilaPlan[]>(supabase.rpc("plan_produccion")) });
+  const tablero = useTablero();
+  const etapas = useEtapas();
+  const hoy = aDia(hoyISO());
+  const todas = useMemo(() => armar(plan.data ?? [], tablero.data ?? [], etapas.data ?? [], hoy), [plan.data, tablero.data, etapas.data, hoy]);
+  const ids = new Set(ordenes);
+  const mias = todas.filter((g) => ids.has(g.id)).sort((a, b) => (a.posicion ?? 9999) - (b.posicion ?? 9999) || a.o.folio.localeCompare(b.o.folio));
+  // El zoom que deja ver todo sin recorrer: hasta la última etapa y la fecha compromiso.
+  const caja = useRef<HTMLDivElement>(null);
+  const [anchoCaja, setAnchoCaja] = useState(0);
+  useLayoutEffect(() => {
+    if (!caja.current) return;
+    const ro = new ResizeObserver(([e]) => setAnchoCaja(e.contentRect.width));
+    ro.observe(caja.current);
+    return () => ro.disconnect();
+  }, []);
+  // Todo a la vista sin recorrer: el mismo rango que arma el diagrama compacto, repartido en
+  // el ancho de la ficha; la regla dice días, semanas o meses según lo que quepa.
+  const desdes = mias.flatMap((g) => g.barras.map((b) => b.desde)).filter((d): d is number => d != null);
+  const hastas = mias.flatMap((g) => [...g.barras.map((b) => b.hasta), g.compromiso]).filter((d): d is number => d != null);
+  const ini0 = Math.max(Math.min(hoy - 3, ...desdes), hoy - 21);
+  const dias = Math.min(Math.max(hoy + 7, ...hastas) + 5, hoy + 760) - (ini0 - diaSemana(ini0)) + 1;
+  const cabe = anchoCaja - (window.innerWidth >= 640 ? 208 : 152) - 2;
+  const pxDia = Math.min(42, Math.max(6, Math.floor((cabe / dias) * 10) / 10));
+  const zoom: Zoom = pxDia >= 34 ? "dia" : pxDia >= 9 ? "semana" : "mes";
+  // Un solo contenedor medido, cargue o no: el observador se queda pegado al mismo elemento.
+  return (
+    <div ref={caja}>
+      {plan.error ? <ErrorCarga error={plan.error} />
+      : plan.isLoading || tablero.isLoading || etapas.isLoading || !anchoCaja ? <Cargando filas={2} />
+      : !mias.length ? <p className="px-1 text-sm text-tenue">Sin etapas por planear: las órdenes de aquí ya se terminaron o se cancelaron.</p>
+      : <Diagrama zoom={zoom} vista="orden" hoy={hoy}
+          activas={mias.filter((g) => !g.enEspera)} enEspera={mias.filter((g) => g.enEspera)} etapas={etapas.data ?? []}
+          carga={[]} buscar="" ver="todas" cuadrillas={cuadrillas ?? new Map()} arrastrable={false}
+          alAbrir={alAbrir ?? (() => {})} alReordenar={() => {}} compacto detalleTaller={detalleTaller} pxDia={pxDia} />}
     </div>
   );
 }

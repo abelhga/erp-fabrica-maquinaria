@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ClipboardPlus, PackageCheck, Printer, ShoppingCart } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
@@ -16,6 +16,7 @@ import { BotonEntregar, RecuadroEntrega, abrirHojaSalida, useHojaSalida } from "
 import { BarraAvance, InsigniaCompromiso } from "./componentes/piezas";
 import { ESTADO_OP, abreviarEquipo } from "./componentes/util";
 import { CLAVE } from "./componentes/datos";
+import { GanttCompacto } from "./Gantt";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
@@ -157,6 +158,9 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
   const activo = ACTIVOS.includes(p.estado);
   // Almacén entrega desde aquí: quién puede lo dice la base.
   const hoja = useHojaSalida(p.id);
+  const navegar = useNavigate();
+  const ordenes = [...p.partidas.flatMap((x) => x.ordenes), ...p.ordenes_sueltas];
+  const enTaller = ordenes.filter((o) => o.estado !== "entregada" && o.estado !== "cancelada");
   return (
     <div className="space-y-4">
       {p.estado !== "cancelado" && !hoja.data?.salidas.some((s) => !s.anulada_en) && (
@@ -248,6 +252,12 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
               </li>
             ))}
           </ul>
+        </div>
+      )}
+      {enTaller.length > 0 && (
+        <div data-explain={GLOSARIO.planTaller} data-explain-title="Plan del taller">
+          <p className="font-medium mb-2">Plan del taller</p>
+          <GanttCompacto ordenes={enTaller.map((o) => o.id)} alAbrir={(op) => navegar(`/produccion/ordenes/${op}`)} />
         </div>
       )}
     </div>

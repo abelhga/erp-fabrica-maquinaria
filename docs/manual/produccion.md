@@ -168,8 +168,32 @@ alguien, se pausa), el plan se recalcula y las barras se recorren solas.
 - Ponerle más gente a sus etapas en Cuadrillas: el plan cuenta 9 h por persona al día.
 - Si nada alcanza, acordar otra fecha con el cliente (ventas) y cambiar el compromiso.
 
+### En la ficha de un pedido o de una orden
+
+El mismo plan sale abajo, en **Plan del taller**, solo con los equipos de ese pedido (o la orden y
+las demás de su pedido). Lo ve quien puede ver producción, incluidos los vendedores: así contestan
+«¿cuándo sale mi equipo?» sin preguntarle a la planta. El vendedor ve las fechas; las horas y la
+cuadrilla de cada etapa son de la planta.
+
 **Importante:** es un plan, no una promesa. Las horas estimadas de cada etapa salen del costeo; si
 están lejos de la realidad, el plan también. Las métricas de producción dicen qué tan lejos.
+
+---
+
+## La TV del taller
+
+**Para qué:** que todo el piso vea, desde lejos, cómo va cada equipo sin entrar al ERP.
+
+Cambia de pantalla cada 10 segundos y da la vuelta a:
+
+1. **Las etapas**, tres columnas a la vez: en cada tarjeta, el nombre del equipo grande (así lo
+   reconoce la gente), abajo la orden, el pedido y el cliente, los días que faltan y el avance.
+2. **Cuadrillas ahora:** quién trabaja qué en este momento, con su etapa y cuánto lleva (¼, ½, ¾).
+3. **Entregas de las próximas dos semanas:** de lunes a viernes, qué equipo se compromete cada día
+   y cómo va. Lo de sábado o domingo sale el viernes anterior.
+
+Arriba siempre están lo atrasado y lo que espera material; abajo corre la cinta con lo último que
+se marcó en el piso, también por nombre del equipo.
 
 ---
 

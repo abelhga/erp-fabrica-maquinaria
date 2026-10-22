@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Ban, Check, Factory, FileText, PackageCheck, Plus, Printer, Receipt, ShoppingCart, Trash2, Users, Wallet } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
@@ -21,6 +21,7 @@ import { CANAL, ESTADO_PEDIDO, LINEA, dineroEn, hoyMx, useVendedores, type Estad
 import { TarjetaEnvio } from "@/modulos/almacen/envios/TarjetaEnvio";
 import { BotonEntregar, RecuadroEntrega, abrirHojaSalida, useHojaSalida } from "./componentes/EntregaPedido";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { GanttCompacto } from "@/modulos/produccion/Gantt";
 
 interface Pedido {
   id: string; folio: string; cotizacion_id: string | null; cliente_id: string; vendedor_id: string | null; canal: keyof typeof CANAL;
@@ -68,6 +69,7 @@ export default function DetallePedido() {
   const actualizar = useAccion((cambios: Partial<Pedido>) => q(supabase.from("pedidos").update(cambios).eq("id", id!)), { exito: "Pedido actualizado", invalidar: inv });
   // Quién entrega lo dice la base (almacén, el vendedor lo suyo, gerencia de ventas, dirección).
   const hoja = useHojaSalida(id);
+  const navegar = useNavigate();
   const producir = useAccion(() => q<number>(supabase.rpc("ordenes_desde_pedido", { p_pedido: id })), {
     exito: (n) => (n ? `Se crearon ${n} orden(es) de producción` : "No hay equipos con lista de materiales sin orden en este pedido"),
     invalidar: [...inv, ["ordenes_pedido", id], ["v_tablero_produccion"]],
@@ -249,6 +251,17 @@ export default function DetallePedido() {
                   </tbody>
                 </table>
               )}
+            </Tarjeta>
+          )}
+
+          {/* El Gantt de los equipos de este pedido: cuándo entra y sale cada uno de cada área. */}
+          {(puede("produccion") || puede("procesos")) && ordenes.data?.some((o) => !["entregada", "cancelada"].includes(o.estado)) && (
+            <Tarjeta>
+              <EncabezadoTarjeta titulo="Plan del taller" explica={GLOSARIO.planTaller}
+                descripcion="Cuándo empieza y termina cada etapa de los equipos de este pedido. Se recalcula solo con lo que pasa en el piso." />
+              <div className="px-4 pb-4">
+                <GanttCompacto ordenes={ordenes.data.map((o) => o.id)} alAbrir={(op) => navegar(`/produccion/ordenes/${op}`)} />
+              </div>
             </Tarjeta>
           )}
         </div>

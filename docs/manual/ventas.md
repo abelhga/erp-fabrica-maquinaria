@@ -53,3 +53,17 @@ y dirección. La planta termina las órdenes, pero no entrega al cliente.
   anotada con su motivo.
 - Los pedidos entregados con un envío de paquetería, o antes de que existiera la hoja de salida,
   no se reabren desde aquí: los regresa sistemas.
+
+---
+
+## ¿Cuándo sale el equipo de mi cliente?
+
+En el pedido, abajo de Producción, **Plan del taller** enseña cada equipo del pedido en el tiempo:
+cuándo entra y sale de cada área (pailería, detallado, pintura…) y, con el rombo, si llega a la fecha
+compromiso (verde llega, rojo no). Es el plan que hace la planta con lo que pasa en el piso: se mueve
+solo cuando algo se atrasa o se adelanta, sin que nadie lo capture.
+
+- Pasa el mouse por una barra para ver sus fechas.
+- Clic en un equipo abre su orden de producción con sus etapas y su historia.
+- Si el rombo sale rojo, avísale a la gerencia de producción antes que al cliente: quizá se puede
+  subir en la fila o ponerle más gente. Si no, se acuerda otra fecha.

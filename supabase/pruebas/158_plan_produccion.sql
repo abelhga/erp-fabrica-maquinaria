@@ -1,13 +1,14 @@
 -- Plan del taller: una etapa no empieza antes de que termine la anterior; la urgente va
 -- primero; la capacidad del área limita; reordenar en el Gantt (o la cola en Cuadrillas)
--- cambia el plan y el renglón; ventas no lo ve.
+-- cambia el plan y el renglón; ventas ve fechas y no horas.
 do $$
-declare v_gp uuid; v_sup uuid; v_vend uuid; v_eq uuid; a uuid; b uuid; a1 uuid; a2 uuid; b1 uuid; v_pai int; v_pin int;
+declare v_gp uuid; v_sup uuid; v_vend uuid; v_fin uuid; v_eq uuid; a uuid; b uuid; a1 uuid; a2 uuid; b1 uuid; v_pai int; v_pin int;
   ra record; rb record; ra2 record; v_ok boolean;
 begin
   v_gp := pg_temp.usuario('gp158@hegamex.com', '{gerente_produccion}');
   v_sup := pg_temp.usuario('sup158@hegamex.com', '{produccion}');
   v_vend := pg_temp.usuario('ven158@hegamex.com', '{ventas}');
+  v_fin := pg_temp.usuario('fin158@hegamex.com', '{finanzas}');
   select id into v_pai from etapas where nombre = 'Pailería';
   select id into v_pin from etapas where nombre = 'Pintura';
   -- Un taller chico para que se note la fila: Pailería da 18 h al día (una cuadrilla de 2).
@@ -61,8 +62,13 @@ begin
   assert (select inicio_plan from plan_produccion() where operacion_id = a2) = (select min(g)::date from generate_series(hoy_mx(), hoy_mx() + 7, interval '1 day') g where extract(isodow from g) <= 5),
     'la etapa en proceso no siguió desde hoy';
 
-  -- Ventas no ve el plan (trae horas del taller).
+  -- El vendedor ve las fechas (el Gantt de su pedido), no las horas del taller.
   perform pg_temp.como(v_vend);
+  select * into ra from plan_produccion() where operacion_id = a1;
+  assert ra.inicio_plan is not null, 'el vendedor no ve las fechas del plan';
+  assert ra.horas_estimadas is null and ra.horas_restantes is null and ra.gente is null, 'el vendedor ve las horas del taller';
+  -- Quien no ve producción (finanzas) no ve el plan.
+  perform pg_temp.como(v_fin);
   begin perform plan_produccion(); v_ok := true; exception when insufficient_privilege then v_ok := false; end;
-  assert not v_ok, 'ventas vio el plan';
+  assert not v_ok, 'finanzas vio el plan';
 end $$;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft, Ban, CheckCircle2, Hourglass, ClipboardX, MessageSquarePlus, PackageOpen, Pause, Pencil, Play, PlayCircle, Truck, Undo2 } from "lucide-react";
@@ -14,13 +14,14 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { fecha, fechaYHora } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
-import { CLAVE, consulta, useEventos, useProduccionEnVivo, type EstadoOP, type EstadoOperacion, type MaterialOP, type OrdenTablero, type PasoValidacion } from "./componentes/datos";
+import { CLAVE, consulta, useEventos, useProduccionEnVivo, useTablero, type EstadoOP, type EstadoOperacion, type MaterialOP, type OrdenTablero, type PasoValidacion } from "./componentes/datos";
 import { BarraAvance, IconoEvento, InsigniaCompromiso } from "./componentes/piezas";
 import { PasosValidacion, type AccionPaso } from "./componentes/Validacion";
 import { DialogoSurtir, MaterialOrden } from "./componentes/MaterialOrden";
 import { DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, DialogoEnEspera, DialogoReabrir, type OrdenBasica } from "./componentes/DialogosOrden";
 import { ESTADO_OP, ESTADO_OPERACION, PRIORIDAD, horas, textoEvento } from "./componentes/util";
 import { AvanceEtapa } from "./componentes/AvanceEtapa";
+import { GanttCompacto } from "./Gantt";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 interface HorasHombre {
@@ -47,6 +48,8 @@ interface Solicitud {
 
 export default function DetalleOrden() {
   const { id = "" } = useParams();
+  const navegar = useNavigate();
+  const tablero = useTablero();
   const { puede, veFabricacion } = useSesion();
   // Todo lo de la orden deja evento (incluido lo que hace almacén o ingeniería), así que basta con escucharlos.
   useProduccionEnVivo(["op_eventos", "ordenes_produccion", "existencias"]);
@@ -323,6 +326,18 @@ export default function DetalleOrden() {
           </Tarjeta>
         </div>
       </div>
+
+      {/* El Gantt de esta orden (y de las demás de su pedido): cuándo entra y sale de cada área. */}
+      {o.estado !== "cancelada" && o.estado !== "entregada" && (
+        <Tarjeta>
+          <EncabezadoTarjeta titulo="Plan del taller" explica={GLOSARIO.planTaller}
+            descripcion={o.pedido_id ? "Esta orden y las demás de su pedido. Se recalcula solo con lo que pasa en el piso." : "Cuándo entra y sale de cada área. Se recalcula solo con lo que pasa en el piso."} />
+          <div className="px-4 pb-4">
+            <GanttCompacto ordenes={o.pedido_id ? (tablero.data ?? []).filter((t) => t.pedido_id === o.pedido_id).map((t) => t.id).concat(id) : [id]}
+              alAbrir={(op) => op !== id && navegar(`/produccion/ordenes/${op}`)} />
+          </div>
+        </Tarjeta>
+      )}
 
       {p.gerencia && <>
         <DialogoEditarOrden abierto={dialogo === "editar"} alCambiar={abrir("editar")} o={basica} />
