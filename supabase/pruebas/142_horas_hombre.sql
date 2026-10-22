@@ -9,9 +9,9 @@ begin
   v_gp := pg_temp.usuario('gp142@hegamex.com', '{gerente_produccion}');
   v_rh := pg_temp.usuario('rh142@hegamex.com', '{rrhh}');
   perform pg_temp.como(v_rh);
-  insert into empleados (nombre, fecha_ingreso) values ('Ana Pailera142', '2023-01-02') returning id into e1;
-  insert into empleados (nombre, fecha_ingreso) values ('Beto Pailero142', '2023-01-02') returning id into e2;
-  insert into empleados (nombre, fecha_ingreso) values ('Carla Pintora142', '2023-01-02') returning id into e3;
+  insert into empleados (nombre, fecha_ingreso, departamento_id, en_cuadrillas) values ('Ana Pailera142', '2023-01-02', departamento_produccion(), true) returning id into e1;
+  insert into empleados (nombre, fecha_ingreso, departamento_id, en_cuadrillas) values ('Beto Pailero142', '2023-01-02', departamento_produccion(), true) returning id into e2;
+  insert into empleados (nombre, fecha_ingreso, departamento_id, en_cuadrillas) values ('Carla Pintora142', '2023-01-02', departamento_produccion(), true) returning id into e3;
 
   perform pg_temp.como_postgres();
   select id into v_pail from etapas where nombre = 'Pailería';

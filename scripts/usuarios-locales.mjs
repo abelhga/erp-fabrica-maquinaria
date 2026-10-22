@@ -30,6 +30,7 @@ export const USUARIOS = [
   ["importaciones@hegamex.com", "Alondra (prueba)", ["importaciones"]],
   ["recepcion@hegamex.com", "Recepción Hegamex", ["recepcion"]],
   ["mantenimiento@hegamex.com", "Técnico de Mantenimiento", ["mantenimiento"]],
+  ["procesos@hegamex.com", "Ingeniero de Procesos", ["ingenieria_procesos"]],
 ];
 
 for (const [correo, nombre, roles] of USUARIOS) {

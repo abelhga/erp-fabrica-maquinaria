@@ -112,3 +112,50 @@ Hay dos vistas, con el selector de arriba:
   arranca etapas.
 - Las horas que «faltan» y las que tiene «encima» cada persona son una estimación: las horas
   estimadas menos las ya trabajadas, repartidas entre la cuadrilla.
+
+---
+
+## Personal de piso: quién entra a cuadrillas
+
+**Para qué:** que la terminal y el tablero ofrezcan solo a la gente que trabaja en el piso, no a
+vendedores ni administrativos.
+
+**Quién:**
+- **Recursos Humanos** da de alta y de baja, decide el departamento de cada quien y lleva su ficha.
+- **La gerencia de producción** acomoda solo a la gente del departamento Producción: su área de
+  piso (Pailería, Pintura…) y si **entra a cuadrillas**. También ve la ficha, las vacaciones y las
+  incidencias solo de su gente.
+
+**Cómo:**
+1. RH da de alta a alguien en Producción con su área: entra a cuadrillas de una vez.
+2. En **Cuadrillas → Personal de piso**, la gerencia cambia el área o quita a quien no trabaja en
+   cuadrillas (por ejemplo, un coordinador o un auxiliar de supervisor).
+3. Quien no entra a cuadrillas no sale en la terminal ni en el tablero, y la base no deja anotarlo
+   en una etapa.
+4. Si alguien cambia de departamento, RH lo cambia en su ficha; fuera de Producción deja de entrar
+   a cuadrillas solo.
+
+---
+
+## Métricas de producción
+
+**Para qué:** medir la planta para mejorarla (lean). **Quién:** ingeniería de procesos, la gerencia
+de producción y dirección. Los costos dentro de las métricas solo los ve quien tiene Costos
+(ingeniería de procesos sí; la gerencia de producción no).
+
+**Qué mide** (Producción → Métricas, por periodo):
+- **Entregas a tiempo:** órdenes terminadas en su fecha compromiso, y pedidos entregados a tiempo.
+- **Equipos terminados** por semana.
+- **Lead time:** días de liberada a terminada. Las órdenes que se cargaron de la hoja ya
+  terminadas cuentan como terminadas pero no para los tiempos.
+- **Eficiencia del flujo:** del tiempo en el taller, qué parte se trabajó de verdad.
+- **Horas reales contra estimadas** por etapa, por equipo y por persona.
+- **Trabajo en proceso**, pausas, problemas reportados y etapas reabiertas.
+- **Máquinas:** fallas, horas fuera de servicio, tiempo de reparación y preventivos a tiempo.
+
+**Importante:** las horas, los tiempos y la eficiencia salen de lo que el piso marca en la terminal
+(iniciar, pausar, terminar y quién trabaja). La pantalla dice qué parte de las etapas se marcó; si es
+poca, esos números dicen poco. Las entregas a tiempo y los terminados no dependen de eso.
+
+**Siguiente:** las herramientas lean (5S, kaizen, A3, OEE, SMED) se habilitan una por una cuando
+ingeniería de procesos las vaya a usar.

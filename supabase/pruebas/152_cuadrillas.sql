@@ -7,9 +7,9 @@ begin
   v_gp := pg_temp.usuario('gp152@hegamex.com', '{gerente_produccion}');
   v_sup := pg_temp.usuario('sup152@hegamex.com', '{produccion}');
   v_vend := pg_temp.usuario('vend152@hegamex.com', '{ventas}');
-  insert into empleados (nombre, fecha_ingreso) values ('Pedro 152', current_date) returning id into v_pedro;
-  insert into empleados (nombre, fecha_ingreso) values ('Ramiro 152', current_date) returning id into v_ramiro;
-  insert into empleados (nombre, fecha_ingreso) values ('Juan 152', current_date) returning id into v_juan;
+  insert into empleados (nombre, fecha_ingreso, departamento_id, en_cuadrillas) values ('Pedro 152', current_date, departamento_produccion(), true) returning id into v_pedro;
+  insert into empleados (nombre, fecha_ingreso, departamento_id, en_cuadrillas) values ('Ramiro 152', current_date, departamento_produccion(), true) returning id into v_ramiro;
+  insert into empleados (nombre, fecha_ingreso, departamento_id, en_cuadrillas) values ('Juan 152', current_date, departamento_produccion(), true) returning id into v_juan;
   insert into articulos (clave, tipo, nombre) values ('T152-EQ', 'equipo', 'Tolva 152') returning id into v_eq;
   insert into ordenes_produccion (articulo_id, cantidad, estado) values (v_eq, 1, 'liberada') returning id into v_op;
   insert into ordenes_produccion (articulo_id, cantidad, estado) values (v_eq, 1, 'liberada') returning id into v_op2;

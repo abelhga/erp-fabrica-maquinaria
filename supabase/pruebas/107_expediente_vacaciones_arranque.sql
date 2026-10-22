@@ -10,9 +10,9 @@ begin
 
   perform pg_temp.como(v_rrhh);
   -- 3 años y 2 meses: le tocan 16 días en este periodo, que empezó hace 2 meses.
-  insert into empleados (nombre, fecha_ingreso, usuario_id) values ('Prueba Arranque', (current_date - interval '3 years 2 months')::date, v_trab)
+  insert into empleados (nombre, fecha_ingreso, usuario_id, departamento_id) values ('Prueba Arranque', (current_date - interval '3 years 2 months')::date, v_trab, departamento_produccion())
     returning id into v_emp;
-  insert into empleados (nombre, fecha_ingreso) values ('Prueba Sin Saldo', (current_date - interval '3 years 2 months')::date)
+  insert into empleados (nombre, fecha_ingreso, departamento_id) values ('Prueba Sin Saldo', (current_date - interval '3 years 2 months')::date, departamento_produccion())
     returning id into v_emp2;
 
   -- Expediente: solo valores conocidos.

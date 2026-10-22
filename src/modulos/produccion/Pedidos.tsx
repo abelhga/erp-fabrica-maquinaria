@@ -13,7 +13,7 @@ import { useSesion } from "@/lib/sesion";
 import { fecha, numero } from "@/lib/formato";
 import { ESTADO_PEDIDO, CANAL, type EstadoPedido, type Canal } from "@/modulos/ventas/comun";
 import { BarraAvance, InsigniaCompromiso } from "./componentes/piezas";
-import { ESTADO_OP } from "./componentes/util";
+import { ESTADO_OP, abreviarEquipo } from "./componentes/util";
 import { CLAVE } from "./componentes/datos";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -31,6 +31,8 @@ interface PedidoPlanta {
   id: string; folio: string; cliente: string | null; vendedor: string | null; canal: Canal;
   estado: EstadoPedido; fecha: string; fecha_compromiso: string | null; dias_restantes: number | null; entregado_en: string | null;
   partidas: Partida[]; equipos: number; sin_orden: number; ordenes: number; ordenes_terminadas: number; avance: number | null;
+  /** Órdenes del pedido que no cuelgan de una partida (las que vinieron de la hoja de Luis). */
+  ordenes_sueltas: (OrdenDePartida & { equipo: string; clave: string })[];
 }
 interface OrdenStock { id: string; folio: string; articulo_id: string; estado: keyof typeof ESTADO_OP; numero_serie: string | null }
 
@@ -92,13 +94,17 @@ export default function PedidosPlanta() {
     { clave: "cliente", titulo: "Cliente", celda: (p) => <span className="block max-w-[220px] truncate">{p.cliente ?? "—"}</span> },
     { clave: "vendedor", titulo: "Vendedor", clase: "text-tenue", celda: (p) => <span className="block max-w-[140px] truncate">{p.vendedor ?? "—"}</span> },
     {
-      clave: "equipos", titulo: "Lleva", valor: (p) => p.partidas.map((x) => x.titulo).join(" "),
-      celda: (p) => (
-        <div className="min-w-[220px] max-w-[320px]">
-          <p className="truncate">{p.partidas.filter((x) => x.fabrica).map((x) => `${numero(x.cantidad)} × ${x.titulo}`).join(" · ") || <span className="text-tenue">Solo componentes</span>}</p>
-          {p.partidas.some((x) => !x.fabrica) && <p className="text-xs text-tenue">+ {p.partidas.filter((x) => !x.fabrica).length} partida(s) de componentes</p>}
-        </div>
-      ),
+      clave: "equipos", titulo: "Lleva", valor: (p) => [...p.partidas.map((x) => x.titulo), ...p.ordenes_sueltas.map((o) => o.equipo)].join(" "),
+      celda: (p) => {
+        const equipos = [...p.partidas.filter((x) => x.fabrica).map((x) => `${numero(x.cantidad)} × ${x.titulo}`), ...p.ordenes_sueltas.map((o) => abreviarEquipo(o.equipo))];
+        const otras = p.partidas.filter((x) => !x.fabrica);
+        return (
+          <div className="min-w-[220px] max-w-[320px]">
+            <p className="truncate" title={equipos.join(" · ")}>{equipos.join(" · ") || <span className="text-tenue">Solo componentes</span>}</p>
+            {otras.length > 0 && <p className="text-xs text-tenue truncate">+ {otras.map((x) => x.titulo).join(" · ")}</p>}
+          </div>
+        );
+      },
     },
     {
       clave: "fecha_compromiso", titulo: "Compromiso", sinBusqueda: true, valor: (p) => p.fecha_compromiso ?? "",
@@ -159,6 +165,7 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
           </Boton>
         )}
       </div>
+      {p.partidas.length === 0 && p.ordenes_sueltas.length === 0 && <p className="text-sm text-tenue">El pedido no tiene partidas capturadas.</p>}
       <ul className="space-y-2">
         {p.partidas.map((x) => {
           const faltan = x.fabrica ? Math.max(Math.ceil(Number(x.cantidad)) - x.ordenes.length, 0) : 0;
@@ -207,6 +214,25 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
           );
         })}
       </ul>
+      {p.ordenes_sueltas.length > 0 && (
+        <div className="rounded-lg border border-borde p-3" data-explain={GLOSARIO.ordenesSueltas} data-explain-title="Equipos en el taller">
+          <p className="font-medium mb-2">Equipos en el taller <span className="text-tenue font-normal text-sm">· {p.ordenes_sueltas.length} orden(es)</span></p>
+          <ul className="space-y-2">
+            {p.ordenes_sueltas.map((o) => (
+              <li key={o.id} className="text-sm">
+                <p className="truncate" title={o.equipo}>{abreviarEquipo(o.equipo)} <span className="text-xs text-tenue cifra">{o.clave}</span></p>
+                <div className="flex items-center gap-3">
+                  <Link to={`/produccion/ordenes/${o.id}`} className="font-medium cifra text-marca-texto hover:underline whitespace-nowrap">{o.folio}</Link>
+                  {o.serie && <span className="text-xs text-tenue cifra">{o.serie}</span>}
+                  <Insignia tono={ESTADO_OP[o.estado]?.tono}>{ESTADO_OP[o.estado]?.texto ?? o.estado}</Insignia>
+                  <div className="flex-1 min-w-[80px]"><BarraAvance valor={o.avance} /></div>
+                  <span className="text-xs cifra w-9 text-right">{o.avance}%</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
