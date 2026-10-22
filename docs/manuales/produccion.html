@@ -1,0 +1,1231 @@
+<title>El taller en el ERP</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: una columna de lectura con barra de secciones fija arriba; cada simulador es una
+   «pantalla» del ERP en miniatura que se puede tocar. Los colores son los del ERP (mismos
+   tokens y los colores de cada área) para que Luis reconozca lo que ve en la tablet y la TV. */
+:root {
+  --fondo: hsl(220 22% 96%);
+  --superficie: hsl(0 0% 100%);
+  --hundido: hsl(220 20% 93%);
+  --borde: hsl(220 14% 86%);
+  --texto: hsl(222 32% 13%);
+  --tenue: hsl(220 10% 42%);
+  --marca: hsl(214 100% 50%);
+  --marca-suave: hsl(214 100% 95%);
+  --marca-texto: hsl(214 90% 38%);
+  --ok: hsl(152 62% 34%);
+  --ok-suave: hsl(150 60% 94%);
+  --aviso: hsl(33 95% 44%);
+  --aviso-suave: hsl(43 100% 92%);
+  --peligro: hsl(0 72% 47%);
+  --peligro-suave: hsl(0 85% 96%);
+  --tinta-sobre: hsl(0 0% 100%);
+  --sombra: 0 1px 2px hsl(222 40% 20% / .06), 0 4px 14px hsl(222 40% 20% / .07);
+  /* La TV y la tablet son aparatos: oscuros en los dos temas. */
+  --aparato: hsl(222 26% 9%);
+  --aparato-sup: hsl(222 22% 14%);
+  --aparato-borde: hsl(220 15% 24%);
+  --aparato-texto: hsl(220 20% 93%);
+  --aparato-tenue: hsl(220 10% 64%);
+  /* Colores de cada área, los mismos del ERP. */
+  --corte: #0ea5e9; --paileria: #f97316; --torno: #8b5cf6; --pintura: #ec4899;
+  --detallado: #22c55e; --electrico: #eab308; --pruebas: #6366f1; --embarque: #64748b;
+  --f-titulo: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  --f-texto: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fondo: hsl(222 25% 7%); --superficie: hsl(222 22% 11%); --hundido: hsl(222 22% 14%); --borde: hsl(220 15% 22%);
+    --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 63%);
+    --marca: hsl(214 100% 60%); --marca-suave: hsl(214 60% 17%); --marca-texto: hsl(214 100% 74%);
+    --ok: hsl(152 55% 48%); --ok-suave: hsl(152 40% 14%);
+    --aviso: hsl(38 92% 56%); --aviso-suave: hsl(38 50% 14%);
+    --peligro: hsl(0 75% 63%); --peligro-suave: hsl(0 45% 16%);
+    --aparato: hsl(222 30% 5%); --aparato-sup: hsl(222 24% 10%); --aparato-borde: hsl(220 15% 20%);
+    --sombra: 0 1px 2px hsl(0 0% 0% / .35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fondo: hsl(222 25% 7%); --superficie: hsl(222 22% 11%); --hundido: hsl(222 22% 14%); --borde: hsl(220 15% 22%);
+  --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 63%);
+  --marca: hsl(214 100% 60%); --marca-suave: hsl(214 60% 17%); --marca-texto: hsl(214 100% 74%);
+  --ok: hsl(152 55% 48%); --ok-suave: hsl(152 40% 14%);
+  --aviso: hsl(38 92% 56%); --aviso-suave: hsl(38 50% 14%);
+  --peligro: hsl(0 75% 63%); --peligro-suave: hsl(0 45% 16%);
+  --aparato: hsl(222 30% 5%); --aparato-sup: hsl(222 24% 10%); --aparato-borde: hsl(220 15% 20%);
+  --sombra: 0 1px 2px hsl(0 0% 0% / .35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 72px); }
+body { background: var(--fondo); color: var(--texto); font-family: var(--f-texto); font-size: 15.5px; line-height: 1.6; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--superficie); }
+h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.1; }
+h1, h2 { font-family: var(--f-titulo); font-weight: 700; letter-spacing: .005em; text-transform: uppercase; }
+h1 { font-size: clamp(44px, 8vw, 84px); line-height: .95; }
+h2 { font-size: clamp(30px, 4.6vw, 44px); }
+h3 { font-size: 17px; font-weight: 650; }
+p { margin: 0; }
+a { color: var(--marca-texto); }
+button, select, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2.5px solid var(--marca); outline-offset: 2px; border-radius: 6px; }
+.mono { font-family: var(--f-mono); font-size: .9em; letter-spacing: -.01em; }
+.cifra { font-variant-numeric: tabular-nums; }
+.tenue { color: var(--tenue); }
+.ceja { font-family: var(--f-titulo); font-weight: 600; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--marca-texto); }
+.lectura { max-width: 66ch; }
+.envoltura { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 80px; }
+
+/* Barra de secciones */
+.barra { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--superficie) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--borde); }
+.barra-dentro { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; display: flex; align-items: center; gap: 16px; }
+.marca-hx { font-family: var(--f-titulo); font-weight: 700; letter-spacing: .2em; font-size: 18px; white-space: nowrap; }
+.marca-hx span { color: var(--tenue); letter-spacing: .08em; font-weight: 600; }
+.indice { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.indice::-webkit-scrollbar { display: none; }
+.indice a { flex: none; text-decoration: none; color: var(--tenue); font-size: 13.5px; font-weight: 550; padding: 5px 11px; border-radius: 999px; border: 1px solid transparent; }
+.indice a:hover { color: var(--texto); border-color: var(--borde); }
+.indice a.activo { color: var(--marca-texto); background: var(--marca-suave); }
+@media (max-width: 720px) { .marca-hx span { display: none; } }
+
+/* Secciones */
+.seccion { padding-block: 64px 0; display: grid; gap: 22px; }
+.seccion > header { display: grid; gap: 10px; }
+.seccion > header .lectura { color: var(--tenue); font-size: 16.5px; }
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; box-shadow: var(--sombra); }
+.nota { font-size: 13.5px; color: var(--tenue); }
+.par { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 22px; align-items: start; }
+@media (max-width: 900px) { .par { grid-template-columns: minmax(0, 1fr); } }
+
+/* Botones como los de la tablet */
+.btn { border: 0; border-radius: 12px; padding: 10px 16px; font-weight: 650; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; transition: transform .08s, filter .15s; }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-ok { background: var(--ok); color: var(--tinta-sobre); }
+.btn-marca { background: var(--marca); color: var(--tinta-sobre); }
+.btn-aviso { background: var(--aviso); color: var(--tinta-sobre); }
+.btn-borde { background: transparent; border: 1.5px solid var(--borde); }
+.btn-peligro { background: transparent; color: var(--peligro); border: 2px solid color-mix(in srgb, var(--peligro) 55%, transparent); }
+.btn-chico { min-height: 34px; padding: 5px 12px; border-radius: 10px; font-size: 14px; }
+.punto { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+.pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 2px 10px; font-size: 13px; font-weight: 600; border: 1px solid var(--borde); background: var(--superficie); white-space: nowrap; }
+
+/* ---------- Portada ---------- */
+.portada { padding-block: 48px 0; display: grid; gap: 28px; }
+.portada .lectura { font-size: 18px; color: var(--tenue); }
+.portada .lectura b { color: var(--texto); font-weight: 600; }
+.demo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 18px; align-items: stretch; }
+@media (max-width: 900px) { .demo { grid-template-columns: minmax(0, 1fr); } }
+.tablet { background: var(--aparato); border-radius: 26px; padding: 14px; box-shadow: 0 18px 40px hsl(222 40% 10% / .25); color: var(--aparato-texto); display: grid; gap: 10px; align-content: start; }
+.tablet-barra { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--aparato-tenue); padding: 2px 6px; }
+.chip-area { color: #fff; font-weight: 700; padding: 4px 12px; border-radius: 10px; font-size: 14px; }
+.ficha { background: var(--aparato-sup); border: 1px solid var(--aparato-borde); border-left: 6px solid var(--paileria); border-radius: 16px; padding: 14px 16px; display: grid; gap: 10px; }
+.ficha .eq { font-size: 21px; font-weight: 700; line-height: 1.15; }
+.ficha .sub { font-size: 13.5px; color: var(--aparato-tenue); }
+.ficha .sub b { color: var(--aparato-texto); }
+.estado { font-weight: 650; font-size: 14.5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.e-pendiente { color: var(--aparato-tenue); }
+.e-en_proceso { color: hsl(214 100% 70%); }
+.e-pausada { color: hsl(38 95% 60%); }
+.e-terminada { color: hsl(152 60% 55%); }
+.cuartos { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13.5px; color: var(--aparato-tenue); }
+.cuartos button { min-width: 44px; height: 36px; border-radius: 9px; border: 1px solid var(--aparato-borde); background: transparent; color: var(--aparato-texto); font-weight: 650; cursor: pointer; }
+.cuartos button[aria-pressed="true"] { background: var(--marca); border-color: var(--marca); color: #fff; }
+.acciones { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.tablet .btn-peligro { color: hsl(0 85% 70%); border-color: hsl(0 70% 50% / .6); }
+.tablet .btn-borde { border-color: var(--aparato-borde); color: var(--aparato-texto); }
+
+.pantallas-mini { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 560px) { .pantallas-mini { grid-template-columns: minmax(0, 1fr); } }
+.mini { background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; align-content: start; position: relative; transition: box-shadow .4s, border-color .4s; min-width: 0; }
+.mini > .titulo-mini { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); }
+.mini.destello { border-color: var(--marca); box-shadow: 0 0 0 3px color-mix(in srgb, var(--marca) 30%, transparent); }
+.mini.tv { background: var(--aparato); border-color: var(--aparato-borde); color: var(--aparato-texto); }
+.mini.tv .titulo-mini { color: var(--aparato-tenue); }
+.barra-av { height: 10px; border-radius: 999px; background: var(--hundido); overflow: hidden; }
+.mini.tv .barra-av { background: var(--aparato-borde); }
+.barra-av > i { display: block; height: 100%; border-radius: inherit; background: var(--marca); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.vivo { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--ok); display: inline-flex; align-items: center; gap: 5px; }
+.vivo::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: latido 1.6s infinite; }
+@keyframes latido { 50% { opacity: .25; } }
+
+/* ---------- Pantallas del ERP ---------- */
+.rejilla-pantallas { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.pantalla { padding: 16px; display: grid; gap: 8px; align-content: start; text-decoration: none; color: inherit; transition: border-color .15s, transform .15s; }
+.pantalla:hover { border-color: var(--marca); transform: translateY(-2px); }
+.pantalla .ruta { font-family: var(--f-mono); font-size: 12px; color: var(--marca-texto); }
+.pantalla .quien { font-size: 13px; color: var(--tenue); border-top: 1px dashed var(--borde); padding-top: 8px; }
+
+/* ---------- Viaje de la orden ---------- */
+.via { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; position: relative; }
+.via::before { content: ""; position: absolute; left: 10%; right: 10%; top: 27px; height: 4px; background: repeating-linear-gradient(90deg, var(--borde) 0 14px, transparent 14px 22px); }
+.parada { position: relative; display: grid; justify-items: center; gap: 8px; text-align: center; background: none; border: 0; cursor: pointer; padding: 0 4px 6px; color: inherit; }
+.parada .num { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-titulo); font-size: 26px; font-weight: 700; background: var(--superficie); border: 3px solid var(--borde); position: relative; z-index: 1; transition: all .2s; }
+.parada .nom { font-weight: 650; font-size: 15px; }
+.parada .mueve { font-size: 12.5px; color: var(--tenue); }
+.parada[aria-selected="true"] .num { background: var(--marca); border-color: var(--marca); color: #fff; transform: scale(1.06); }
+@media (max-width: 640px) {
+  .via { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .via::before { left: 28px; right: auto; top: 10px; bottom: 10px; width: 4px; height: auto; background: repeating-linear-gradient(180deg, var(--borde) 0 14px, transparent 14px 22px); }
+  .parada { grid-template-columns: 58px minmax(0, 1fr); justify-items: start; text-align: left; align-items: center; column-gap: 12px; }
+  .parada .num { grid-row: span 2; }
+}
+.detalle-via { padding: 20px; display: grid; gap: 14px; }
+.detalle-via .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.detalle-via h4 { margin: 0 0 4px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); }
+.pasos5 { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
+.pasos5 li { border: 1px solid var(--borde); border-radius: 12px; padding: 10px 12px; background: var(--hundido); font-size: 14px; }
+.pasos5 b { display: block; font-family: var(--f-titulo); font-size: 20px; color: var(--marca-texto); }
+.lados { display: flex; flex-wrap: wrap; gap: 10px; }
+.lado { flex: 1 1 260px; padding: 14px 16px; border-radius: 14px; border: 1.5px dashed var(--borde); display: grid; gap: 4px; }
+.lado b { font-size: 15px; }
+
+/* ---------- Terminal simulada ---------- */
+.tablet-grande { padding: 16px; border-radius: 30px; }
+.tablet-cab { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 4px 4px 10px; border-bottom: 1px solid var(--aparato-borde); }
+.tablet-cab .titulo { font-family: var(--f-titulo); font-size: 26px; font-weight: 700; text-transform: uppercase; }
+.tablet-cab .quien-soy { margin-left: auto; border: 1.5px solid var(--aparato-borde); border-radius: 10px; padding: 4px 10px; font-size: 13.5px; }
+.consejo { font-size: 13px; color: var(--aparato-tenue); }
+.personas { display: flex; flex-wrap: wrap; gap: 6px; }
+.persona { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--aparato-borde); border-radius: 10px; padding: 4px 6px 4px 10px; font-size: 13.5px; }
+.persona button { border: 0; background: transparent; color: var(--aparato-tenue); cursor: pointer; font-size: 12.5px; padding: 2px 6px; border-radius: 6px; }
+.persona button:hover { background: var(--aparato-borde); color: var(--aparato-texto); }
+.dialogo { background: var(--aparato-sup); border: 1px solid var(--aparato-borde); border-radius: 16px; padding: 14px; display: grid; gap: 10px; }
+.dialogo .opciones { display: flex; flex-wrap: wrap; gap: 6px; }
+.dialogo .opciones button { border: 1.5px solid var(--aparato-borde); background: transparent; color: var(--aparato-texto); border-radius: 10px; padding: 6px 12px; cursor: pointer; font-weight: 550; }
+.dialogo .opciones button[aria-pressed="true"] { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 25%, transparent); }
+.dialogo textarea { width: 100%; min-height: 64px; border-radius: 10px; border: 1px solid var(--aparato-borde); background: var(--aparato); color: var(--aparato-texto); padding: 8px 10px; resize: vertical; }
+.contador { display: inline-flex; align-items: center; gap: 4px; border: 1.5px solid var(--aparato-borde); border-radius: 10px; padding: 2px; }
+.contador button { width: 32px; height: 30px; border: 0; background: transparent; color: var(--aparato-texto); cursor: pointer; border-radius: 8px; font-size: 18px; }
+.aviso-tablet { border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; font-weight: 650; background: var(--ok); color: #fff; }
+.aviso-tablet.mal { background: var(--peligro); }
+.aviso-tablet button { margin-left: auto; border: 0; background: hsl(0 0% 100% / .22); color: #fff; border-radius: 10px; padding: 8px 14px; font-weight: 700; cursor: pointer; }
+.historia { padding: 18px; display: grid; gap: 12px; align-content: start; }
+.historia ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; max-height: 360px; overflow-y: auto; }
+.historia li { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--borde); font-size: 14px; animation: entra .35s ease-out; }
+.historia li:last-child { border-bottom: 0; }
+.historia li .punto { margin-top: 6px; }
+.historia li small { display: block; color: var(--tenue); font-size: 12.5px; }
+@keyframes entra { from { opacity: 0; transform: translateY(-4px); } }
+.explica-paso { border-radius: 12px; background: var(--marca-suave); color: var(--texto); padding: 12px 14px; font-size: 14.5px; border-left: 4px solid var(--marca); }
+.pasos-terminal { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; counter-reset: p; }
+.pasos-terminal li { counter-increment: p; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; font-size: 14.5px; }
+.pasos-terminal li::before { content: counter(p); width: 26px; height: 26px; border-radius: 50%; background: var(--texto); color: var(--fondo); display: grid; place-items: center; font-weight: 700; font-size: 13px; margin-top: 1px; }
+
+/* ---------- Calculadora de horas ---------- */
+.calc { padding: 20px; display: grid; gap: 18px; }
+.calc .controles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; align-items: end; }
+.campo { display: grid; gap: 5px; font-size: 13px; color: var(--tenue); font-weight: 550; }
+.campo .fila { display: flex; gap: 6px; }
+.campo select { flex: 1; min-width: 0; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--borde); background: var(--superficie); color: var(--texto); }
+.segmentado { display: inline-flex; border: 1px solid var(--borde); border-radius: 12px; padding: 3px; background: var(--hundido); gap: 3px; flex-wrap: wrap; }
+.segmentado button { border: 0; background: transparent; padding: 7px 12px; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--tenue); }
+.segmentado button[aria-pressed="true"] { background: var(--superficie); color: var(--texto); box-shadow: var(--sombra); }
+.atajos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.atajos button { border: 1px dashed var(--borde); background: transparent; border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: 13.5px; }
+.atajos button:hover { border-style: solid; border-color: var(--marca); color: var(--marca-texto); }
+.resultado { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.cifra-grande { border-radius: 14px; padding: 12px 16px; background: var(--hundido); display: grid; gap: 2px; }
+.cifra-grande b { font-family: var(--f-titulo); font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+.cifra-grande span { font-size: 13px; color: var(--tenue); }
+.cifra-grande.principal { background: var(--marca-suave); }
+.cifra-grande.principal b { color: var(--marca-texto); }
+.cifra-grande.tachada b { text-decoration: line-through; text-decoration-thickness: 3px; text-decoration-color: color-mix(in srgb, var(--peligro) 70%, transparent); color: var(--tenue); }
+.dias-calc { display: grid; gap: 8px; overflow-x: auto; }
+.dia-calc { display: grid; grid-template-columns: 88px minmax(420px, 1fr) 62px; gap: 10px; align-items: center; font-size: 13.5px; }
+.pista { position: relative; height: 30px; border-radius: 8px; background: repeating-linear-gradient(135deg, var(--hundido) 0 6px, transparent 6px 12px), var(--fondo); border: 1px solid var(--borde); overflow: hidden; }
+.pista .horario { position: absolute; top: 0; bottom: 0; background: var(--superficie); }
+.pista .descanso { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--aviso) 30%, transparent) 0 4px, transparent 4px 8px); }
+.pista .seg { position: absolute; top: 6px; bottom: 6px; border-radius: 4px; }
+.seg.cuenta { background: var(--marca); }
+.seg.parcial { background: repeating-linear-gradient(90deg, var(--marca) 0 5px, color-mix(in srgb, var(--aviso) 70%, transparent) 5px 15px); }
+.seg.descanso-t { background: var(--aviso); opacity: .85; }
+.seg.fuera { background: repeating-linear-gradient(135deg, var(--peligro) 0 3px, transparent 3px 7px); opacity: .8; }
+.reglita { display: grid; grid-template-columns: 88px minmax(420px, 1fr) 62px; gap: 10px; font-size: 11px; color: var(--tenue); }
+.reglita > div { position: relative; height: 14px; }
+.reglita > div span { position: absolute; transform: translateX(-50%); }
+.leyenda { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--tenue); }
+.leyenda i { display: inline-block; width: 22px; height: 10px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+.comparar { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.modo-card { padding: 16px 18px; display: grid; gap: 8px; }
+.modo-card ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14.5px; }
+.modo-card .hoy { font-size: 12px; font-weight: 700; color: var(--ok); letter-spacing: .06em; text-transform: uppercase; }
+
+/* ---------- Cuadrillas ---------- */
+.tablero { padding: 18px; display: grid; gap: 14px; }
+.personal { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px; border-radius: 12px; background: var(--hundido); }
+.chip-persona { display: inline-flex; align-items: center; gap: 7px; border: 1.5px solid var(--borde); background: var(--superficie); border-radius: 999px; padding: 5px 12px; font-size: 14px; cursor: grab; user-select: none; touch-action: manipulation; }
+.chip-persona .punto { background: var(--borde); }
+.chip-persona.trabajando .punto { background: var(--ok); }
+.chip-persona small { color: var(--tenue); }
+.chip-persona[aria-pressed="true"] { border-color: var(--marca); background: var(--marca-suave); }
+.cartas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.carta { border: 1.5px solid var(--borde); border-left: 5px solid var(--paileria); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; background: var(--superficie); transition: border-color .15s, background .15s; cursor: pointer; }
+.carta.sobre { border-color: var(--marca); background: var(--marca-suave); }
+.carta .eq { font-weight: 700; font-size: 16px; line-height: 1.2; }
+.carta .gente { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; align-items: center; }
+.carta .vacia { font-size: 13px; color: var(--tenue); border: 1.5px dashed var(--borde); border-radius: 10px; padding: 4px 10px; }
+.quitar { border: 0; background: none; cursor: pointer; color: var(--tenue); padding: 0 2px; font-size: 15px; line-height: 1; }
+.mensaje { font-size: 14px; border-radius: 12px; padding: 10px 14px; background: var(--ok-suave); border-left: 4px solid var(--ok); min-height: 44px; }
+
+/* ---------- Gantt ---------- */
+.gantt { padding: 18px; display: grid; gap: 16px; }
+.gantt .controles { display: flex; flex-wrap: wrap; gap: 18px; align-items: end; }
+.marco-gantt { overflow-x: auto; border: 1px solid var(--borde); border-radius: 12px; }
+.g-tabla { min-width: 760px; display: grid; grid-template-columns: 130px minmax(0, 1fr); }
+.g-tabla.compacta { min-width: 0; grid-template-columns: 74px minmax(0, 1fr); }
+.g-cab { position: relative; height: 34px; border-bottom: 1px solid var(--borde); font-size: 11.5px; color: var(--tenue); }
+.g-cab span { position: absolute; top: 9px; transform: translateX(-50%); white-space: nowrap; }
+.g-cab span.hoy { color: #fff; background: var(--marca); border-radius: 999px; padding: 0 7px; font-weight: 700; }
+.g-nom { display: flex; align-items: center; gap: 8px; font-size: 13.5px; padding: 0 10px; height: 34px; border-bottom: 1px solid var(--borde); white-space: nowrap; overflow: hidden; }
+.g-tabla.compacta .g-nom { font-size: 11.5px; height: 22px; padding: 0 6px; gap: 5px; }
+.g-tabla.compacta .g-pista { height: 22px; }
+.g-tabla.compacta .g-cab { height: 22px; }
+.g-tabla.compacta .g-cab span { top: 3px; font-size: 10px; }
+.g-pista { position: relative; height: 34px; border-bottom: 1px solid var(--borde); }
+.g-finde { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--tenue) 9%, transparent); }
+.g-hoy { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--marca); z-index: 3; }
+.g-comp { position: absolute; top: 0; bottom: 0; border-left: 2px dashed var(--ok); z-index: 2; }
+.g-comp.tarde { border-color: var(--peligro); }
+.g-rombo { position: absolute; top: -1px; width: 11px; height: 11px; transform: translateX(-6.5px) rotate(45deg); background: var(--ok); border-radius: 2px; z-index: 4; box-shadow: 0 0 0 2px var(--superficie); }
+.g-rombo.tarde { background: var(--peligro); }
+.g-barra { position: absolute; top: 6px; bottom: 6px; border-radius: 6px; z-index: 1; transition: left .5s cubic-bezier(.2,.8,.2,1), width .5s cubic-bezier(.2,.8,.2,1); display: flex; align-items: center; padding: 0 6px; font-size: 11px; font-weight: 650; color: #fff; overflow: hidden; white-space: nowrap; }
+.g-tabla.compacta .g-barra { top: 4px; bottom: 4px; border-radius: 4px; padding: 0; }
+.g-barra.plan { opacity: .45; }
+.g-barra.activa { background-image: repeating-linear-gradient(135deg, hsl(0 0% 100% / .28) 0 6px, transparent 6px 12px); background-size: 17px 17px; animation: avanza 1s linear infinite; }
+.g-barra.pausa { background-image: repeating-linear-gradient(135deg, hsl(0 0% 100% / .4) 0 3px, transparent 3px 8px); }
+@keyframes avanza { to { background-position: 17px 0; } }
+.g-tarde { position: absolute; top: 9px; bottom: 9px; background: color-mix(in srgb, var(--peligro) 22%, transparent); border-radius: 0 6px 6px 0; }
+.g-hecha { font-size: 12px; color: var(--tenue); position: absolute; left: 8px; top: 50%; transform: translateY(-50%); }
+.veredicto { display: inline-flex; align-items: center; gap: 8px; font-weight: 650; border-radius: 12px; padding: 8px 14px; }
+.veredicto.bien { background: var(--ok-suave); color: var(--ok); }
+.veredicto.mal { background: var(--peligro-suave); color: var(--peligro); }
+.reglas { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.regla { padding: 14px 16px; border-radius: 14px; border: 1px solid var(--borde); background: var(--superficie); display: grid; gap: 4px; font-size: 14.5px; }
+.regla b { font-family: var(--f-titulo); font-size: 24px; text-transform: uppercase; line-height: 1.05; }
+
+/* ---------- TV ---------- */
+.tv-marco { background: hsl(0 0% 6%); border-radius: 18px; padding: 10px; box-shadow: 0 20px 40px hsl(222 40% 10% / .3); }
+.tv { container-type: inline-size; aspect-ratio: 16 / 9; width: 100%; background: var(--aparato); color: var(--aparato-texto); border-radius: 8px; overflow: hidden; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; }
+.tv-cab { display: flex; align-items: center; justify-content: space-between; padding: 1.2cqw 2cqw .6cqw; font-size: 1.5cqw; color: var(--aparato-tenue); }
+.tv-cab b { font-family: var(--f-titulo); color: var(--aparato-texto); font-size: 2.1cqw; letter-spacing: .2em; }
+.tv-franjas { display: grid; grid-template-columns: 1fr 1fr; gap: 1cqw; padding: 0 2cqw .8cqw; }
+.tv-franja { border-radius: .8cqw; padding: .6cqw 1cqw; font-size: 1.25cqw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tv-franja.mal { background: hsl(0 70% 45% / .25); border: .15cqw solid hsl(0 70% 55% / .6); }
+.tv-franja.aviso { background: hsl(38 90% 50% / .2); border: .15cqw solid hsl(38 90% 55% / .55); }
+.tv-cuerpo { padding: 0 2cqw; min-height: 0; position: relative; }
+.tv-hoja { position: absolute; inset: 0 2cqw; display: grid; gap: 1.2cqw; transition: opacity .5s; }
+.tv-hoja[hidden] { display: none !important; }
+.tv-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tv-col { display: grid; grid-template-rows: auto 1fr 1fr; gap: .8cqw; min-height: 0; min-width: 0; }
+.tv-col h5 { margin: 0; display: flex; align-items: center; gap: .8cqw; font-size: 1.7cqw; font-weight: 800; }
+.tv-col h5 i { width: 1.2cqw; height: 1.2cqw; border-radius: 50%; }
+.tv-tarjeta { border: .2cqw solid var(--aparato-borde); border-radius: 1cqw; padding: .8cqw 1.1cqw; display: grid; align-content: space-between; gap: .3cqw; min-height: 0; min-width: 0; overflow: hidden; background: var(--aparato-sup); }
+.tv-tarjeta.pausa { border-color: hsl(38 90% 55%); background: hsl(38 60% 15%); }
+.tv-tarjeta.sigue { border-style: dashed; background: transparent; }
+.tv-tarjeta .eq { font-size: 1.75cqw; font-weight: 800; line-height: 1.1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tv-tarjeta .sub { font-size: 1.15cqw; color: var(--aparato-tenue); display: flex; gap: .6cqw; justify-content: space-between; white-space: nowrap; }
+.tv-tarjeta .sub span:first-child { overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+.tv-dias { flex: none; }
+.tv-tarjeta .quien { font-size: 1.15cqw; }
+.tv-av { height: .8cqw; border-radius: 1cqw; background: var(--aparato-borde); overflow: hidden; }
+.tv-av i { display: block; height: 100%; background: var(--marca); }
+.tv-dias { border-radius: .5cqw; padding: 0 .5cqw; font-weight: 700; }
+.tv-dias.mal { background: hsl(0 70% 50%); color: #fff; }
+.tv-dias.cerca { background: hsl(38 92% 50%); color: #000; }
+.tv-titulo { font-size: 2cqw; font-weight: 800; display: flex; align-items: center; gap: 1cqw; }
+.tv-cuad { grid-template-rows: auto minmax(0, 1fr); }
+.tv-cuad .r { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 1cqw; min-height: 0; }
+.tv-cuad article { border: .2cqw solid var(--aparato-borde); border-radius: 1cqw; padding: .8cqw 1.1cqw; background: var(--aparato-sup); display: grid; align-content: start; gap: .4cqw; overflow: hidden; }
+.tv-cuad article b { font-size: 1.7cqw; }
+.tv-cuad article p { font-size: 1.2cqw; line-height: 1.25; }
+.tv-cuad article small { font-size: 1.05cqw; color: var(--aparato-tenue); display: flex; align-items: center; gap: .5cqw; }
+.tv-cuad article small i { width: .9cqw; height: .9cqw; border-radius: 50%; }
+.tv-ent { grid-template-rows: auto minmax(0, 1fr); }
+.tv-ent .r { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: .9cqw; min-height: 0; }
+.tv-ent section { border: .2cqw solid var(--aparato-borde); border-radius: 1cqw; padding: .6cqw .9cqw; background: var(--aparato-sup); display: grid; align-content: start; gap: .4cqw; overflow: hidden; }
+.tv-ent section.hoy { border-color: var(--marca); background: hsl(214 60% 16%); }
+.tv-ent section.pasado { opacity: .45; }
+.tv-ent h6 { margin: 0; font-size: 1.25cqw; color: var(--aparato-tenue); font-weight: 700; }
+.tv-ent section.hoy h6 { color: hsl(214 100% 74%); }
+.tv-ent p { font-size: 1.15cqw; font-weight: 650; line-height: 1.2; }
+.tv-cinta { overflow: hidden; border-top: .15cqw solid var(--aparato-borde); font-size: 1.3cqw; padding: .7cqw 0; white-space: nowrap; color: var(--aparato-tenue); }
+.tv-cinta div { display: inline-block; padding-left: 100%; animation: cinta 26s linear infinite; }
+.tv-cinta b { color: var(--aparato-texto); }
+@keyframes cinta { to { transform: translateX(-100%); } }
+.tv-control { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.tv-control .segmentado button { font-size: 13px; }
+.progreso-tv { height: 4px; border-radius: 999px; background: var(--borde); overflow: hidden; flex: 1 1 120px; max-width: 220px; }
+.progreso-tv i { display: block; height: 100%; width: 0; background: var(--marca); }
+
+/* ---------- Problemas y quién ---------- */
+.dudas { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px; }
+.duda { padding: 0; overflow: hidden; }
+.duda summary { cursor: pointer; padding: 16px 18px; font-weight: 650; list-style: none; display: flex; gap: 12px; align-items: flex-start; }
+.duda summary::-webkit-details-marker { display: none; }
+.duda summary::before { content: "+"; flex: none; width: 24px; height: 24px; border-radius: 8px; background: var(--hundido); display: grid; place-items: center; font-weight: 700; color: var(--marca-texto); transition: transform .2s; }
+.duda[open] summary::before { content: "–"; }
+.duda .resp { padding: 0 18px 16px 54px; display: grid; gap: 8px; font-size: 14.5px; }
+.boton-erp { display: inline-flex; align-items: center; gap: 6px; padding: 1px 9px; border-radius: 8px; font-size: 13px; font-weight: 650; border: 1.5px solid var(--borde); background: var(--superficie); white-space: nowrap; }
+.quienes { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+.rol { padding: 16px 18px; display: grid; gap: 8px; align-content: start; }
+.rol h3 { font-family: var(--f-titulo); font-size: 23px; text-transform: uppercase; font-weight: 700; }
+.rol ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14.5px; }
+.pie { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--borde); font-size: 13.5px; color: var(--tenue); display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .tv-cinta div { padding-left: 0; }
+}
+</style>
+
+<header class="barra">
+  <div class="barra-dentro">
+    <div class="marca-hx">HEGAMEX <span>· TALLER</span></div>
+    <nav class="indice" aria-label="Secciones">
+      <a href="#inicio">Inicio</a>
+      <a href="#pantallas">Pantallas</a>
+      <a href="#viaje">Una orden</a>
+      <a href="#terminal">Terminal</a>
+      <a href="#pausar">¿Pausar?</a>
+      <a href="#cuadrillas">Cuadrillas</a>
+      <a href="#gantt">Gantt</a>
+      <a href="#tv">TV</a>
+      <a href="#problemas">Si algo sale mal</a>
+      <a href="#quien">Quién hace qué</a>
+    </nav>
+  </div>
+</header>
+
+<main class="envoltura">
+
+<!-- ================= PORTADA ================= -->
+<section class="portada" id="inicio">
+  <div style="display:grid;gap:14px">
+    <p class="ceja">Manual de producción · para Luis y los encargados de piso</p>
+    <h1>El taller<br>en el ERP</h1>
+    <p class="lectura">Lo que el encargado marca en la tablet se ve <b>al momento</b> en la TV, en Cuadrillas, en el Gantt y en el pedido del vendedor. Nadie lo vuelve a capturar. Pruébalo: toca los botones de la tablet y mira cómo cambian las otras cuatro pantallas.</p>
+    <p class="nota">Los equipos, folios, clientes y fechas de esta página son de ejemplo.</p>
+  </div>
+
+  <div class="demo">
+    <div class="tablet" aria-label="Tablet de ejemplo">
+      <div class="tablet-barra"><span>Terminal de piso</span><span class="chip-area" style="background:var(--paileria)">Pailería</span></div>
+      <div class="ficha" id="h-ficha"></div>
+      <div id="h-aviso" aria-live="polite"></div>
+      <button class="btn btn-borde btn-chico" id="h-reiniciar" style="justify-self:start;color:var(--aparato-tenue);border-color:var(--aparato-borde)">Volver a empezar el ejemplo</button>
+    </div>
+    <div class="pantallas-mini">
+      <div class="mini tv" id="m-tv"><div class="titulo-mini"><span>TV del taller</span><span class="vivo">EN VIVO</span></div><div id="m-tv-c"></div></div>
+      <div class="mini" id="m-cuad"><div class="titulo-mini"><span>Cuadrillas</span><span class="vivo">EN VIVO</span></div><div id="m-cuad-c"></div></div>
+      <div class="mini" id="m-gantt"><div class="titulo-mini"><span>Gantt</span><span class="vivo">EN VIVO</span></div><div id="m-gantt-c"></div></div>
+      <div class="mini" id="m-ped"><div class="titulo-mini"><span>Pedido del vendedor</span><span class="vivo">EN VIVO</span></div><div id="m-ped-c"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PANTALLAS ================= -->
+<section class="seccion" id="pantallas">
+  <header>
+    <p class="ceja">El mapa</p>
+    <h2>Las pantallas de producción</h2>
+    <p class="lectura">Todas leen lo mismo: lo que pasa en el piso. Cambia algo en una y las demás se enteran solas. Toca una para abrirla en el ERP.</p>
+  </header>
+  <div class="rejilla-pantallas" id="lista-pantallas"></div>
+</section>
+
+<!-- ================= VIAJE ================= -->
+<section class="seccion" id="viaje">
+  <header>
+    <p class="ceja">De la venta a la entrega</p>
+    <h2>El viaje de una orden</h2>
+    <p class="lectura">Cada orden de producción pasa por estos cinco estados, en este orden. Toca uno para ver qué significa, quién lo mueve y qué ve el piso.</p>
+  </header>
+  <div class="via" role="tablist" aria-label="Estados de una orden" id="via"></div>
+  <div class="tarjeta detalle-via" id="via-detalle" role="tabpanel" aria-live="polite"></div>
+  <div class="lados">
+    <div class="lado"><b>En espera</b><span class="tenue">El equipo se detiene sin cancelarse (por ejemplo, el cliente dejó anticipo y no ha regresado). La gerencia usa «Poner en espera» con el motivo: no cuenta en la carga del taller ni sale atrasada, y la terminal no la muestra. «Reactivar» la regresa tal como estaba.</span></div>
+    <div class="lado"><b>Cancelada</b><span class="tenue">La gerencia la cancela con el motivo. Lo que se había pedido a compras para esa orden se cancela solo; si ya se surtió material, se regresa al almacén con una devolución.</span></div>
+  </div>
+</section>
+
+<!-- ================= TERMINAL ================= -->
+<section class="seccion" id="terminal">
+  <header>
+    <p class="ceja">Para el piso</p>
+    <h2>La terminal, botón por botón</h2>
+    <p class="lectura">La tablet de cada área. Botones grandes, nada de tablas, y cada marca guarda quién la hizo y cuándo. Esta es una copia que funciona: haz el recorrido completo y mira a la derecha lo que queda guardado.</p>
+  </header>
+  <div class="par">
+    <div style="display:grid;gap:16px">
+      <div class="tablet tablet-grande" id="terminal-sim"></div>
+    </div>
+    <div style="display:grid;gap:16px">
+      <div class="explica-paso" id="t-explica" aria-live="polite"></div>
+      <div class="tarjeta historia">
+        <h3>Lo que queda en la orden</h3>
+        <ol id="t-historia"></ol>
+      </div>
+      <div class="tarjeta historia">
+        <h3>El recorrido de todos los días</h3>
+        <ol class="pasos-terminal">
+          <li><span><b>Elige tu área.</b> La tablet se acuerda: mañana abre en la misma.</span></li>
+          <li><span><b>Di quién eres</b> con el botón de arriba. Cada marca lleva tu nombre.</span></li>
+          <li><span><b>Iniciar:</b> toca quiénes trabajan. Ya viene marcada la cuadrilla que planeó la gerencia («Le toca»).</span></li>
+          <li><span><b>Mientras trabajan:</b> «Se une» y «Sale» cambian la gente sin detener la etapa. «¿Cuánto lleva?» dice cómo va.</span></li>
+          <li><span><b>Pausar</b> si dejan la orden. <b>Terminar</b> cuando quedó: la sigue la siguiente área.</span></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PAUSAR ================= -->
+<section class="seccion" id="pausar">
+  <header>
+    <p class="ceja">La pregunta de todos</p>
+    <h2>¿Hay que pausar para desayunar?</h2>
+    <p class="lectura">Depende de cómo cuente las horas la gerencia de producción. Hoy está en <b>«Solo el horario del taller»</b>: nadie pausa para desayunar, comer o al irse, porque la noche, el domingo y los descansos no cuentan. Se cambia en Cuadrillas → Personal de piso, y la terminal dice arriba cuál está puesto.</p>
+  </header>
+  <div class="comparar">
+    <div class="tarjeta modo-card">
+      <span class="hoy">Así está hoy</span>
+      <h3>Solo el horario del taller</h3>
+      <ul>
+        <li>Cuenta de lunes a viernes de 8:00 a 18:00 y el sábado de 8:00 a 14:00.</li>
+        <li>Descuenta solo el descanso de 3:00 a 3:20 y 40 min de desayuno entre 10:00 y 11:00 (va por turnos: unos de 10:00 a 10:40, otros de 10:20 a 11:00).</li>
+        <li>La noche, el domingo y los feriados no cuentan.</li>
+        <li><b>Pausar</b> solo cuando dejan la orden: falta material, los mueven a otra.</li>
+      </ul>
+    </div>
+    <div class="tarjeta modo-card">
+      <span class="hoy" style="color:var(--tenue)">Para después</span>
+      <h3>Lo que marque la terminal</h3>
+      <ul>
+        <li>Cuenta tal cual el tiempo que la etapa estuvo iniciada.</li>
+        <li><b>Pausar</b> en cada descanso, al comer y al irse.</li>
+        <li>Si alguien olvida pausar, la noche cuenta.</li>
+        <li>Para cuando haya una terminal en cada área.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tarjeta calc">
+    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center">
+      <h3>Calcula: ¿cuántas horas cuenta?</h3>
+      <div class="segmentado" role="group" aria-label="Cómo se cuentan las horas" id="c-modo">
+        <button type="button" data-modo="horario" aria-pressed="true">Solo el horario del taller</button>
+        <button type="button" data-modo="terminal" aria-pressed="false">Lo que marque la terminal</button>
+      </div>
+    </div>
+    <div class="atajos"><span class="nota">Ejemplos:</span>
+      <button type="button" data-atajo="noche">Se quedó iniciada toda la noche</button>
+      <button type="button" data-atajo="dia">Un día completo</button>
+      <button type="button" data-atajo="finde">Del viernes al lunes</button>
+      <button type="button" data-atajo="desayuno">Empezó a media mañana</button>
+    </div>
+    <div class="controles">
+      <label class="campo">Se inició<span class="fila"><select id="c-ini-d" aria-label="Día de inicio"></select><select id="c-ini-h" aria-label="Hora de inicio"></select></span></label>
+      <label class="campo">Se pausó o terminó<span class="fila"><select id="c-fin-d" aria-label="Día de fin"></select><select id="c-fin-h" aria-label="Hora de fin"></select></span></label>
+      <label class="campo">Personas trabajando<span class="fila"><select id="c-personas" aria-label="Personas"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></span></label>
+    </div>
+    <div class="resultado" id="c-resultado" aria-live="polite"></div>
+    <div class="dias-calc" id="c-dias"></div>
+    <div class="leyenda">
+      <span><i style="background:var(--marca)"></i>Cuenta</span>
+      <span><i style="background:repeating-linear-gradient(90deg,var(--marca) 0 4px,var(--aviso) 4px 10px)"></i>Desayuno: cuenta 20 de cada 60 min</span>
+      <span><i style="background:var(--aviso)"></i>Descanso: no cuenta</span>
+      <span><i style="background:repeating-linear-gradient(135deg,var(--peligro) 0 3px,transparent 3px 7px)"></i>Fuera del horario: no cuenta</span>
+    </div>
+    <p class="nota">Los feriados de ley y los descansos que marque la empresa tampoco cuentan (no salen en este ejemplo). Un día completo da 9 horas por persona: las mismas que usa el Gantt para planear.</p>
+  </div>
+</section>
+
+<!-- ================= CUADRILLAS ================= -->
+<section class="seccion" id="cuadrillas">
+  <header>
+    <p class="ceja">Para la gerencia</p>
+    <h2>Cuadrillas: quién trabaja qué</h2>
+    <p class="lectura">El taller por áreas con la gente adentro. Lo que la gerencia planea aquí lo ve la terminal («Le toca»), y lo que se marca en la terminal sale aquí al momento. Pruébalo: arrastra a alguien a una tarjeta (en celular, tócalo y luego toca la tarjeta). Con la × lo sacas.</p>
+  </header>
+  <div class="tarjeta tablero">
+    <div class="personal" id="cu-personal" aria-label="Personal de Pailería"></div>
+    <div class="cartas" id="cu-cartas"></div>
+    <div class="mensaje" id="cu-mensaje" aria-live="polite">Arrastra a alguien a una tarjeta.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+      <p class="nota">«Faltan ≈» son las horas que le quedan a la etapa repartidas entre su cuadrilla. Junto a cada nombre, las horas que tiene encima. Son para darse idea, no una promesa.</p>
+      <button class="btn btn-borde btn-chico" id="cu-reiniciar" type="button">Volver a empezar</button>
+    </div>
+  </div>
+  <div class="reglas">
+    <div class="regla"><b>Una a la vez</b><span>Alguien puede estar planeado en varias etapas (es su fila de trabajo), pero <b>trabajando</b> solo en una.</span></div>
+    <div class="regla"><b>La cola</b><span>Arrastra una tarjeta encima de otra para acomodar lo que sigue. Es la misma fila del Gantt y de la terminal.</span></div>
+    <div class="regla"><b>Personal de piso</b><span>Ahí la gerencia cambia el área de alguien, decide si entra a cuadrillas y cómo se cuentan las horas.</span></div>
+  </div>
+</section>
+
+<!-- ================= GANTT ================= -->
+<section class="seccion" id="gantt">
+  <header>
+    <p class="ceja">El plan</p>
+    <h2>Gantt: de dónde salen las fechas</h2>
+    <p class="lectura">Nadie captura fechas: el ERP simula el taller día por día con lo que pasa en el piso y dibuja cuándo entra y sale cada orden de cada área. Mueve los controles y mira cómo se recorre la entrega.</p>
+  </header>
+  <div class="tarjeta gantt">
+    <div class="controles">
+      <div class="campo">Gente en Pailería
+        <div class="segmentado" role="group" aria-label="Gente en Pailería" id="g-gente"></div>
+      </div>
+      <div class="campo">¿Cuánto lleva Pailería?
+        <div class="segmentado" role="group" aria-label="Cuánto lleva Pailería" id="g-avance"></div>
+      </div>
+      <div id="g-veredicto" aria-live="polite"></div>
+    </div>
+    <div class="marco-gantt"><div class="g-tabla" id="g-tabla"></div></div>
+    <p class="nota"><b>Dosificadora de 4 tolvas</b> · OP-00052 · compromiso vie 13 nov (el rombo). Hoy es lunes 2 nov. Pailería trae 120 h; el resto, de 2 a 10 h cada área.</p>
+  </div>
+  <div class="reglas">
+    <div class="regla"><b>9 h por persona</b><span>Cada etapa avanza 9 horas al día por cada persona de su cuadrilla. Si no hay nadie anotado (o solo uno), el plan cuenta 2.</span></div>
+    <div class="regla"><b>Lo que da el área</b><span>Cada área trabaja hasta sus horas por semana entre 5. Eléctrico, con 45 h a la semana, da 9 h al día aunque haya más gente.</span></div>
+    <div class="regla"><b>Una tras otra</b><span>Una etapa empieza al día siguiente de que acaba la anterior de la misma orden. Lunes a viernes.</span></div>
+    <div class="regla"><b>Primero lo que se trabaja</b><span>Luego la fila que acomoda la gerencia, luego lo urgente y la fecha compromiso. Las órdenes en espera no entran.</span></div>
+    <div class="regla"><b>Lo que falta</b><span>De una etapa empezada falta lo que dijo el piso en «¿Cuánto lleva?». Si nadie lo dijo, lo estimado menos las horas marcadas.</span></div>
+  </div>
+  <p class="lectura tenue">Cómo se lee el Gantt de verdad: barra con rayas que se mueven, se está trabajando; rayada quieta, pausada; translúcida, planeada; apagada, ya se hizo. La línea azul es hoy. Pasa el mouse por una barra para ver sus fechas y quién la trabaja. La gerencia acomoda la fila arrastrando la orden por su asa, o con «Subir» y «Bajar». El mismo Gantt sale abajo en la ficha de cada pedido y de cada orden.</p>
+</section>
+
+<!-- ================= TV ================= -->
+<section class="seccion" id="tv">
+  <header>
+    <p class="ceja">Para todo el taller</p>
+    <h2>La TV del taller</h2>
+    <p class="lectura">Cambia de pantalla cada 10 segundos. Cada tarjeta dice primero <b>qué es</b> el equipo, en grande, porque así lo reconoce la gente; abajo, la orden, el pedido y el cliente. Arriba siempre: lo atrasado y lo que espera material. Abajo corre lo último que se marcó.</p>
+  </header>
+  <div class="tv-marco"><div class="tv" id="tv-pantalla" aria-label="TV del taller de ejemplo"></div></div>
+  <div class="tv-control">
+    <div class="segmentado" role="group" aria-label="Pantalla de la TV" id="tv-botones"></div>
+    <div class="progreso-tv" aria-hidden="true"><i id="tv-progreso"></i></div>
+    <button class="btn btn-borde btn-chico" id="tv-pausa" type="button" aria-pressed="false">Detener el cambio</button>
+  </div>
+</section>
+
+<!-- ================= PROBLEMAS ================= -->
+<section class="seccion" id="problemas">
+  <header>
+    <p class="ceja">Para el piso y la gerencia</p>
+    <h2>Si algo sale mal</h2>
+    <p class="lectura">Lo que más se pregunta, y qué hacer.</p>
+  </header>
+  <div class="dudas">
+    <details class="tarjeta duda" open><summary>Terminé una etapa por error</summary><div class="resp">
+      <p>El aviso verde trae <span class="boton-erp">Deshacer</span>. Quien la terminó tiene 15 minutos: la etapa regresa a pausada y se reanuda con su gente.</p>
+      <p>Después de 15 minutos, la gerencia de producción la reabre desde la orden con <span class="boton-erp">Reabrir</span> y el motivo.</p></div></details>
+    <details class="tarjeta duda"><summary>Una orden no sale en la terminal</summary><div class="resp">
+      <p>Casi siempre sigue <b>Planeada</b>: falta que ingeniería revise la lista y que la gerencia la libere. La terminal no deja iniciar una orden planeada, aunque ya la estén trabajando.</p>
+      <p>Otras razones: está en espera, o esa etapa ya se terminó.</p></div></details>
+    <details class="tarjeta duda"><summary>Falta material o algo está mal en la lista</summary><div class="resp">
+      <p><span class="boton-erp">Problema</span> con lo que pasa: queda en la orden y en su tarjeta. Si hay que parar, <span class="boton-erp">Pausar</span>.</p>
+      <p>Si la lista de materiales está mal, en la orden: <span class="boton-erp">Solicitar cambio a ingeniería</span>.</p></div></details>
+    <details class="tarjeta duda"><summary>Llegó a ayudar alguien que no está en la lista</summary><div class="resp">
+      <p>Súmalo en <b>Sin nombre</b> al iniciar o con <span class="boton-erp">Se une</span>: cuenta igual en las horas.</p>
+      <p>Para que salga con nombre: Recursos Humanos lo da de alta en Producción y la gerencia lo mete a cuadrillas.</p></div></details>
+    <details class="tarjeta duda"><summary>Se descompuso una máquina</summary><div class="resp">
+      <p>Arriba en la terminal: <span class="boton-erp">Reportar falla</span>, con foto. Le llega a mantenimiento y queda su historial.</p></div></details>
+    <details class="tarjeta duda"><summary>El cliente no ha regresado y el equipo se detuvo</summary><div class="resp">
+      <p>La gerencia usa <span class="boton-erp">Poner en espera</span> con el motivo. No cuenta en la carga ni sale atrasada. <span class="boton-erp">Reactivar</span> la regresa tal como estaba.</p></div></details>
+    <details class="tarjeta duda"><summary>Movieron a alguien a otra orden a media etapa</summary><div class="resp">
+      <p><span class="boton-erp">Sale</span> en una y <span class="boton-erp">Se une</span> en la otra, sin detener nada. Si la mueve la gerencia desde Cuadrillas, el ERP pregunta antes: su tiempo se cierra en una y empieza en la otra en ese momento.</p></div></details>
+    <details class="tarjeta duda"><summary>La etapa anterior no ha acabado, pero ya se puede avanzar</summary><div class="resp">
+      <p>En la terminal, lo de abajo («Todavía en otra etapa») también se puede iniciar si hace falta.</p></div></details>
+  </div>
+</section>
+
+<!-- ================= QUIÉN ================= -->
+<section class="seccion" id="quien">
+  <header>
+    <p class="ceja">Cada quien lo suyo</p>
+    <h2>Quién hace qué</h2>
+  </header>
+  <div class="quienes">
+    <div class="tarjeta rol"><h3>Gerencia de producción</h3><ul>
+      <li>Libera las órdenes al taller (el paso 5).</li>
+      <li>Arma las cuadrillas y acomoda la fila (Cuadrillas o Gantt).</li>
+      <li>Cambia fechas y prioridad, pone en espera, cancela.</li>
+      <li>Reabre etapas con el motivo.</li>
+      <li>Decide cómo se cuentan las horas.</li></ul></div>
+    <div class="tarjeta rol"><h3>Encargados de piso</h3><ul>
+      <li>La terminal: iniciar, pausar, terminar, quién trabaja.</li>
+      <li>«¿Cuánto lleva?» de lo que está empezado.</li>
+      <li>Problemas y fallas de máquinas.</li>
+      <li>Ven Cuadrillas y el Gantt.</li></ul></div>
+    <div class="tarjeta rol"><h3>Almacén</h3><ul>
+      <li>Aparta y surte el material de cada orden.</li>
+      <li>Revisa la existencia física (el paso 4).</li>
+      <li>Entrega con la hoja de salida firmada.</li></ul></div>
+    <div class="tarjeta rol"><h3>Ingeniería</h3><ul>
+      <li>Revisa la lista de materiales (el paso 1). Sin eso no se libera.</li>
+      <li>Atiende los cambios que pide el taller.</li></ul></div>
+    <div class="tarjeta rol"><h3>Vendedores</h3><ul>
+      <li>Ven cómo van sus equipos en el Tablero de producción.</li>
+      <li>En su pedido, el Plan del taller: fechas, sin horas.</li></ul></div>
+    <div class="tarjeta rol"><h3>Todos</h3><ul>
+      <li>La TV del taller.</li>
+      <li>El modo tutorial (el birrete arriba en el ERP) explica cada pantalla.</li></ul></div>
+  </div>
+  <footer class="pie"><span>Hegamex · Máquinas y Herramientas Gamex</span><span>Manual del taller · octubre 2026</span></footer>
+</section>
+</main>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const tranquilo = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ERP = "https://erp.hegamex.com";
+
+/* ---------- El taller de ejemplo ---------- */
+// Áreas con sus horas por semana (las del ERP en la nube).
+const AREAS = [
+  { n: "Corte", c: "var(--corte)", cap: 45 }, { n: "Pailería", c: "var(--paileria)", cap: 400 },
+  { n: "Torno", c: "var(--torno)", cap: 90 }, { n: "Pintura", c: "var(--pintura)", cap: 90 },
+  { n: "Detallado", c: "var(--detallado)", cap: 135 }, { n: "Eléctrico", c: "var(--electrico)", cap: 45 },
+  { n: "Pruebas", c: "var(--pruebas)", cap: 45 }, { n: "Embarque", c: "var(--embarque)", cap: 45 },
+];
+const COLOR = Object.fromEntries(AREAS.map((a) => [a.n, a.c]));
+const ORDEN = { folio: "OP-00052", equipo: "Dosificadora de 4 tolvas", pedido: "PED-26-824", cliente: "Cementos del Centro",
+  horas: [["Corte", 6], ["Pailería", 120], ["Torno", 10], ["Pintura", 8], ["Detallado", 6], ["Eléctrico", 4], ["Pruebas", 3], ["Embarque", 2]] };
+const TOTAL = ORDEN.horas.reduce((s, h) => s + h[1], 0);
+// «Hoy» del ejemplo: lunes 2 de noviembre de 2026; compromiso: viernes 13.
+const HOY = new Date(2026, 10, 2);
+const COMPROMISO = 11;
+const DSEM = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+const MES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const fechaDe = (d) => { const x = new Date(HOY); x.setDate(x.getDate() + d); return x; };
+const diaTexto = (d) => { const x = fechaDe(d); return `${DSEM[x.getDay()]} ${x.getDate()} ${MES[x.getMonth()]}`; };
+const habil = (d) => { const w = fechaDe(d).getDay(); return w >= 1 && w <= 5; };
+const cuarto = (a) => a == null ? null : [[.25, "¼"], [.5, "½"], [.75, "¾"], [.9, "casi"]].reduce((m, c) => Math.abs(c[0] - a) < Math.abs(m[0] - a) ? c : m)[1];
+
+/**
+ * El mismo plan que hace el ERP, para una orden: cada día hábil cada área da sus horas por
+ * semana entre 5; cada etapa avanza 9 h por persona (mínimo 2) y empieza al día siguiente
+ * de que acabó la anterior; lo empezado sigue desde hoy.
+ */
+function planear(etapas) {
+  const r = etapas.map((e) => {
+    const activa = e.estado === "en_proceso" || e.estado === "pausada";
+    const rem = e.estado === "terminada" ? 0 : activa
+      ? (e.avance != null ? Math.max(e.horas * (1 - e.avance), e.horas * 0.05) : Math.max(e.horas, e.horas * 0.15))
+      : e.horas;
+    return { ...e, activa, rem, ini: null, fin: null };
+  });
+  let pend = r.filter((x) => x.estado !== "terminada").length;
+  for (let d = 0; pend > 0 && d < 300; d++) {
+    if (!habil(d)) continue;
+    const disp = Object.fromEntries(AREAS.map((a) => [a.n, a.cap / 5]));
+    r.forEach((x, i) => {
+      if (x.estado === "terminada" || x.fin != null) return;
+      let prev = null;
+      for (let j = i - 1; j >= 0; j--) if (r[j].estado !== "terminada") { prev = r[j]; break; }
+      if (!x.activa && prev && (prev.fin == null || prev.fin >= d)) return;
+      if (x.rem <= 0) { if (x.ini == null) x.ini = d; x.fin = d; pend--; return; }
+      if (disp[x.n] <= 0) return;
+      const toma = Math.min(x.rem, Math.max(x.gente || 0, 2) * 9, disp[x.n]);
+      x.rem -= toma; disp[x.n] -= toma; if (x.ini == null) x.ini = d;
+      if (x.rem <= 0.0001) { x.fin = d; pend--; }
+    });
+  }
+  return r;
+}
+const finDe = (plan) => Math.max(...plan.filter((x) => x.fin != null).map((x) => x.fin));
+
+function veredicto(fin) {
+  const dif = fin - COMPROMISO;
+  if (dif > 0) return { bien: false, texto: `Termina el ${diaTexto(fin)} · ${dif} ${dif === 1 ? "día" : "días"} tarde` };
+  if (dif === 0) return { bien: true, texto: `Termina el ${diaTexto(fin)} · justo a tiempo` };
+  return { bien: true, texto: `Termina el ${diaTexto(fin)} · ${-dif} ${dif === -1 ? "día" : "días"} antes` };
+}
+
+/** Dibuja el Gantt de la orden en `caja`. compacta: sin textos dentro de las barras. */
+function dibujarGantt(caja, plan, { dias = 21, compacta = false } = {}) {
+  const x = (d) => `${(d / dias) * 100}%`;
+  const fin = finDe(plan);
+  const tarde = fin > COMPROMISO;
+  let h = `<div class="g-nom"></div><div class="g-cab">`;
+  for (let d = 0; d < dias; d++) {
+    if (compacta ? d % 7 === 0 : habil(d)) {
+      const t = compacta ? diaTexto(d) : `${DSEM[fechaDe(d).getDay()].slice(0, 1).toUpperCase()} ${fechaDe(d).getDate()}`;
+      h += `<span class="${d === 0 ? "hoy" : ""}" style="left:calc(${x(d)} + ${50 / dias}%)">${d === 0 ? "Hoy" : t}</span>`;
+    }
+  }
+  h += `</div>`;
+  plan.forEach((e, i) => {
+    h += `<div class="g-nom"><span class="punto" style="background:${COLOR[e.n]}"></span>${compacta ? e.n.slice(0, 4) + "." : e.n}</div><div class="g-pista">`;
+    for (let d = 0; d < dias; d++) if (!habil(d)) h += `<i class="g-finde" style="left:${x(d)};width:${100 / dias}%"></i>`;
+    h += `<i class="g-hoy" style="left:0"></i>`;
+    h += `<i class="g-comp ${tarde ? "tarde" : ""}" style="left:calc(${x(COMPROMISO)} + ${50 / dias}%)"></i>`;
+    if (i === 0) h += `<i class="g-rombo ${tarde ? "tarde" : ""}" style="left:calc(${x(COMPROMISO)} + ${50 / dias}%)"></i>`;
+    if (e.estado === "terminada") h += `<span class="g-hecha">${compacta ? "✓" : "Hecha"}</span>`;
+    else if (e.ini != null) {
+      const clase = e.estado === "en_proceso" ? "activa" : e.estado === "pausada" ? "pausa" : "plan";
+      const texto = compacta ? "" : e.estado === "en_proceso" ? (e.avance != null ? `lleva ${cuarto(e.avance)}` : "trabajando") : e.estado === "pausada" ? "pausada" : "";
+      h += `<i class="g-barra ${clase}" style="left:${x(e.ini)};width:calc(${x(e.fin - e.ini + 1)} - 2px);background-color:${COLOR[e.n]}">${texto}</i>`;
+      if (i === plan.length - 1 && tarde) h += `<i class="g-tarde" style="left:calc(${x(COMPROMISO + 1)});width:${x(fin - COMPROMISO)}"></i>`;
+    }
+    h += `</div>`;
+  });
+  caja.innerHTML = h;
+}
+
+/* ---------- Portada: una tablet, cuatro pantallas ---------- */
+const HERO0 = { estado: "pendiente", avance: null, gente: ["Genaro", "Juan Pablo"], aviso: null };
+let hero = { ...HERO0 };
+const nombres = (g) => g.length < 2 ? (g[0] ?? "nadie") : g.slice(0, -1).join(", ") + (/^h?[ií]/i.test(g[g.length - 1]) ? " e " : " y ") + g[g.length - 1];
+
+function etapasHero(gente) {
+  return ORDEN.horas.map(([n, horas], i) => ({
+    n, horas, gente: n === "Pailería" ? gente.length : 0,
+    estado: i === 0 ? "terminada" : n === "Pailería" ? hero.estado : "pendiente",
+    avance: n === "Pailería" ? hero.avance : null,
+  }));
+}
+function avanceOrden() {
+  const pai = hero.estado === "terminada" ? 120 : 120 * (hero.avance ?? 0);
+  return Math.round(((6 + pai) / TOTAL) * 100);
+}
+function destello(id) {
+  const el = document.getElementById(id);
+  el.classList.remove("destello"); void el.offsetWidth; el.classList.add("destello");
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("destello"), 1100);
+}
+function pintarHero(cambio) {
+  const f = $("#h-ficha");
+  const est = { pendiente: "Lista para empezar", en_proceso: "En proceso", pausada: "Pausada", terminada: "Terminada" }[hero.estado];
+  let botones = "";
+  if (hero.estado === "pendiente") botones = `<button class="btn btn-ok" data-h="inicio">Iniciar</button>`;
+  if (hero.estado === "en_proceso") botones = `<button class="btn btn-aviso" data-h="pausa">Pausar</button><button class="btn btn-marca" data-h="fin">Terminar</button>`;
+  if (hero.estado === "pausada") botones = `<button class="btn btn-ok" data-h="reanudar">Reanudar</button><button class="btn btn-marca" data-h="fin">Terminar</button>`;
+  const empezada = hero.estado === "en_proceso" || hero.estado === "pausada";
+  f.innerHTML = `
+    <div><div class="sub mono">${ORDEN.folio}</div><div class="eq">${ORDEN.equipo}</div>
+    <div class="sub"><b class="mono">${ORDEN.pedido}</b> · ${ORDEN.cliente}</div></div>
+    <div class="estado e-${hero.estado}">${est}${hero.estado === "pendiente" || hero.estado === "pausada" ? ` · <span style="font-weight:500;color:var(--aparato-tenue)">Le toca: ${nombres(hero.gente)}</span>` : hero.estado === "en_proceso" ? ` · <span style="font-weight:500;color:var(--aparato-texto)">${nombres(hero.gente)}</span>` : ""}</div>
+    ${empezada ? `<div class="cuartos">¿Cuánto lleva?${[[.25, "¼"], [.5, "½"], [.75, "¾"], [.9, "Casi"]].map(([v, t]) => `<button data-hav="${v}" aria-pressed="${hero.avance === v}">${t}</button>`).join("")}</div>` : ""}
+    ${botones ? `<div class="acciones">${botones}</div>` : `<p class="sub">Pailería quedó. Ya le toca a Torno: aparece en su terminal como «Lista para empezar».</p>`}`;
+  $("#h-aviso").innerHTML = hero.aviso ? `<div class="aviso-tablet"><span>${esc(hero.aviso)}</span>${hero.estado === "terminada" ? `<button data-h="deshacer">Deshacer</button>` : ""}</div>` : "";
+
+  const av = avanceOrden();
+  const quien = hero.estado === "en_proceso" ? `Trabajando: ${nombres(hero.gente)}` : hero.estado === "terminada" ? "Pailería terminada · sigue Torno" : hero.estado === "pausada" ? "Pausada" : `Le toca: ${nombres(hero.gente)}`;
+  $("#m-tv-c").innerHTML = `
+    <div style="font-size:19px;font-weight:800;line-height:1.15">${ORDEN.equipo}</div>
+    <div style="font-size:12.5px;color:var(--aparato-tenue)"><span class="mono">${ORDEN.folio}</span> · <b style="color:var(--aparato-texto)" class="mono">${ORDEN.pedido}</b> · ${ORDEN.cliente}</div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:6px"><span class="punto" style="background:var(--paileria)"></span>Pailería · ${quien}${hero.avance != null && hero.estado !== "terminada" ? ` · va a ${cuarto(hero.avance)}` : ""}</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:4px"><div class="barra-av" style="flex:1"><i style="width:${av}%;${av >= 100 ? "background:var(--ok)" : ""}"></i></div><b class="cifra" style="font-size:13px">${av}%</b></div>`;
+  const tono = hero.estado === "en_proceso" ? "var(--ok)" : hero.estado === "pausada" ? "var(--aviso)" : "var(--borde)";
+  $("#m-cuad-c").innerHTML = `
+    <div style="border:1.5px solid var(--borde);border-left:5px solid var(--paileria);border-radius:12px;padding:8px 10px;display:grid;gap:6px">
+      <div style="font-size:12px;color:var(--tenue)" class="mono">${ORDEN.folio}</div>
+      <div style="font-weight:700;line-height:1.2">${ORDEN.equipo}</div>
+      <div style="font-size:12px;font-weight:650;color:var(--tenue);letter-spacing:.05em;text-transform:uppercase">${{ pendiente: "Listas para empezar", en_proceso: "Trabajando", pausada: "Pausadas", terminada: "Terminada" }[hero.estado]}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${hero.estado === "terminada" ? `<span class="tenue" style="font-size:13px">Sale de la columna de Pailería</span>` : hero.gente.map((g) => `<span class="pill"><span class="punto" style="background:${tono}"></span>${g}</span>`).join("")}</div>
+    </div>`;
+  const plan = planear(etapasHero(hero.gente));
+  const v = veredicto(finDe(plan));
+  $("#m-gantt-c").innerHTML = `<div class="g-tabla compacta" id="m-gantt-t"></div><div class="veredicto ${v.bien ? "bien" : "mal"}" style="font-size:13px;padding:4px 10px;justify-self:start">${v.texto}</div>`;
+  dibujarGantt($("#m-gantt-t"), plan, { dias: 21, compacta: true });
+  $("#m-ped-c").innerHTML = `
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b>${ORDEN.pedido}</b><span class="tenue" style="font-size:13px">${ORDEN.cliente}</span></div>
+    <div style="font-size:13px" class="tenue">Producción · avance del pedido</div>
+    <div style="display:flex;align-items:center;gap:8px"><div class="barra-av" style="flex:1"><i style="width:${av}%"></i></div><b class="cifra">${av}%</b></div>
+    <div style="font-size:13px">Plan del taller: <b style="color:${v.bien ? "var(--ok)" : "var(--peligro)"}">${v.texto.replace("Termina el ", "sale el ")}</b></div>
+    <div class="nota" style="font-size:12px">El vendedor ve fechas, no horas.</div>`;
+  if (cambio) ["m-tv", "m-cuad", "m-gantt", "m-ped"].forEach(destello);
+}
+document.querySelector(".demo").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-h],[data-hav]");
+  if (!b) return;
+  if (b.dataset.hav) { hero.avance = Number(b.dataset.hav); hero.aviso = `Pailería lleva ${Math.round(hero.avance * 100)} % · el plan ya lo sabe`; }
+  const a = b.dataset.h;
+  if (a === "inicio") { hero.estado = "en_proceso"; hero.aviso = `Pailería iniciada · ${ORDEN.folio}`; }
+  if (a === "pausa") { hero.estado = "pausada"; hero.aviso = `Pailería pausada · ${ORDEN.folio}`; }
+  if (a === "reanudar") { hero.estado = "en_proceso"; hero.aviso = `Pailería reanudada · ${ORDEN.folio}`; }
+  if (a === "fin") { hero.estado = "terminada"; hero.aviso = `Pailería terminada · ${ORDEN.folio}`; }
+  if (a === "deshacer") { hero.estado = "pausada"; hero.aviso = "Pailería regresó a pausada"; }
+  pintarHero(true);
+});
+$("#h-reiniciar").addEventListener("click", () => { hero = { ...HERO0 }; pintarHero(true); });
+pintarHero(false);
+
+/* ---------- Pantallas ---------- */
+const PANTALLAS = [
+  ["Tablero de producción", "/produccion/gerencia", "Todas las órdenes por estado: qué va atrasado, qué no tiene material y cuánto trabajo tiene cada área. La gerencia libera, sube la prioridad y cambia fechas desde la tarjeta.", "Todo el que ve producción; los botones, la gerencia."],
+  ["Pedidos", "/produccion/pedidos", "Lo que se vendió, para cuándo y cómo va cada equipo, sin montos. Aquí se crean las órdenes que faltan, se usa un equipo de stock y se entrega.", "Gerencia, supervisores y almacén."],
+  ["Órdenes y material", "/produccion/ordenes", "Cada orden con su material: lo apartado, lo que falta y lo que ya se pidió a compras. Desde la orden se surte y se valida.", "Gerencia, almacén, ingeniería y compras."],
+  ["Cuadrillas", "/produccion/cuadrillas", "Quién trabaja qué en cada área y quién sigue. La gerencia arma las cuadrillas y acomoda la cola.", "Gerencia y supervisores."],
+  ["Gantt", "/produccion/gantt", "El plan en el tiempo: cuándo entra y sale cada orden de cada área y si llega a su fecha.", "Gerencia, supervisores, almacén e ingeniería de procesos."],
+  ["Terminal de piso", "/produccion/terminal", "La tablet: iniciar, pausar, terminar, quién trabaja y cuánto lleva.", "Los encargados de piso."],
+  ["TV del taller", "/piso", "Lo que todo el taller ve de lejos: lo que se trabaja, quién, lo atrasado y lo que se entrega pronto.", "La cuenta de la TV."],
+  ["Métricas", "/produccion/metricas", "Entregas a tiempo, horas reales contra estimadas y dónde se atora el flujo.", "Gerencia e ingeniería de procesos."],
+];
+$("#lista-pantallas").innerHTML = PANTALLAS.map(([t, r, d, q]) =>
+  `<a class="tarjeta pantalla" href="${ERP}${r}" target="_blank" rel="noopener"><h3>${t}</h3><span class="ruta">erp.hegamex.com${r}</span><p>${d}</p><p class="quien">${q}</p></a>`).join("");
+
+/* ---------- Viaje ---------- */
+const VIAJE = [
+  { n: "Planeada", mueve: "Se crea del pedido", que: "La orden ya existe (salió del pedido o se hizo para stock) y se prepara su material. Todavía no entra al taller.",
+    quien: "La crea la gerencia: desde el pedido («Crear las órdenes que faltan») o como orden para stock.", piso: "La terminal no la deja iniciar. En el Gantt ya sale, para ver cuándo entraría.", pasos: true },
+  { n: "Liberada", mueve: "La gerencia la libera", que: "Lista para el taller: pasó los cinco pasos de material y la gerencia la soltó.",
+    quien: "La gerencia de producción, con «Liberar» en el tablero o en la orden. Sin la revisión de ingeniería no se puede.", piso: "Aparece en la terminal de su primera área como «Lista para empezar», y en la TV." },
+  { n: "En proceso", mueve: "Sola, al iniciar", que: "Alguien ya inició su primera etapa en la terminal.",
+    quien: "Nadie la mueve a mano: pasa sola al iniciar la primera etapa.", piso: "Cada área inicia, pausa y termina lo suyo. La siguiente área la ve como lista en cuanto la anterior termina." },
+  { n: "Terminada", mueve: "Sola, al terminar", que: "Se terminó la última etapa. Si todas las órdenes de su pedido terminaron, el pedido queda «Listo» para entregar.",
+    quien: "Pasa sola al terminar la última etapa en la terminal.", piso: "Sale de la terminal y de la TV." },
+  { n: "Entregada", mueve: "Almacén o la gerencia", que: "El equipo salió de planta.",
+    quien: "La orden terminada la entrega la gerencia o almacén. El pedido completo se entrega con la hoja de salida firmada (almacén, el vendedor lo suyo, la gerencia de ventas o dirección).", piso: "Ya no sale en ninguna pantalla del taller." },
+];
+const PASOS5 = [["Ingeniería", "revisa la lista de materiales"], ["Se aparta", "el material de la orden"], ["Compras", "recibe los faltantes pedidos"], ["Almacén", "revisa la existencia física"], ["Gerencia", "la libera al taller"]];
+let viajeSel = 0;
+function pintarViaje() {
+  $("#via").innerHTML = VIAJE.map((v, i) => `<button class="parada" role="tab" aria-selected="${i === viajeSel}" data-v="${i}"><span class="num">${i + 1}</span><span class="nom">${v.n}</span><span class="mueve">${v.mueve}</span></button>`).join("");
+  const v = VIAJE[viajeSel];
+  $("#via-detalle").innerHTML = `
+    <h3 style="font-family:var(--f-titulo);font-size:28px;text-transform:uppercase">${viajeSel + 1} · ${v.n}</h3>
+    <div class="cols">
+      <div><h4>Qué significa</h4><p>${v.que}</p></div>
+      <div><h4>Quién la mueve</h4><p>${v.quien}</p></div>
+      <div><h4>Qué ve el piso</h4><p>${v.piso}</p></div>
+    </div>
+    ${v.pasos ? `<div><h4>Los cinco pasos antes del taller, en orden</h4><ol class="pasos5">${PASOS5.map(([a, b], i) => `<li><b>${i + 1}. ${a}</b>${b}</li>`).join("")}</ol>
+      <p class="nota" style="margin-top:8px">Cada paso guarda quién y cuándo, y cada quien ve el botón del suyo en la orden.</p></div>` : ""}`;
+}
+$("#via").addEventListener("click", (e) => { const b = e.target.closest("[data-v]"); if (b) { viajeSel = Number(b.dataset.v); pintarViaje(); } });
+$("#via").addEventListener("keydown", (e) => {
+  if (!["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"].includes(e.key)) return;
+  e.preventDefault(); viajeSel = (viajeSel + (e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : VIAJE.length - 1)) % VIAJE.length;
+  pintarViaje(); $(`#via [data-v="${viajeSel}"]`).focus();
+});
+pintarViaje();
+
+/* ---------- Terminal simulada ---------- */
+const GENTE = ["Genaro", "Juan Pablo", "Isaías", "Leonardo"];
+const T0 = () => ({ estado: "pendiente", avance: null, gente: [], sinNombre: 0, dialogo: null, eleccion: ["Genaro", "Juan Pablo"], extra: 0, nota: "", aviso: null, problema: null, historia: [], hora: 8 * 60 + 5 });
+let t = T0();
+const hora = (m) => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}`;
+function anotar(texto, detalle, color = "var(--paileria)") { t.hora += 20 + Math.floor(Math.random() * 40); t.historia.unshift({ texto, detalle: `${hora(t.hora)} · Luis${detalle ? " · " + detalle : ""}`, color }); }
+function explicar(texto) { $("#t-explica").innerHTML = texto; }
+function quienTrabaja() { const g = [...t.gente]; if (t.sinNombre) g.push(`${t.sinNombre} sin nombre`); return g; }
+
+function pintarTerminal() {
+  const empezada = t.estado === "en_proceso" || t.estado === "pausada";
+  let cuerpo = "";
+  if (t.estado === "terminada") cuerpo = `<div class="ficha" style="text-align:center;border-left-color:var(--ok)"><p class="eq">Nada pendiente en Pailería</p><p class="sub">Cuando la gerencia libere órdenes con esta etapa, aparecerán aquí.</p></div>`;
+  else if (t.estado !== "terminada") {
+    const titulo = t.estado === "pendiente" ? "Listas para empezar" : "Trabajando ahora";
+    let estado = "";
+    if (t.estado === "pendiente") estado = `<div class="estado e-pendiente">Le toca: <span style="color:var(--aparato-texto)">Genaro y Juan Pablo</span></div>`;
+    if (t.estado === "pausada") estado = `<div class="estado e-pausada">Pausada · <span style="font-weight:500;color:var(--aparato-tenue)">Le toca: ${nombres(quienTrabaja())}</span></div>`;
+    if (t.estado === "en_proceso") estado = `<div class="estado e-en_proceso">En proceso · empezó hace un momento</div>
+      <div class="personas">${t.gente.map((g) => `<span class="persona">${g}<button data-t="sale" data-p="${g}" aria-label="${g} sale">Sale</button></span>`).join("")}${t.sinNombre ? `<span class="persona">${t.sinNombre} sin nombre<button data-t="sale" data-p="__sin" aria-label="Sale uno sin nombre">Sale</button></span>` : ""}
+      <button class="btn btn-borde btn-chico" data-t="seune">Se une</button></div>`;
+    let botones = "";
+    if (t.estado === "pendiente") botones = `<button class="btn btn-ok" data-t="inicio">Iniciar</button><button class="btn btn-peligro" data-t="problema">Problema</button>`;
+    if (t.estado === "en_proceso") botones = `<button class="btn btn-aviso" data-t="pausa">Pausar</button><button class="btn btn-marca" data-t="fin">Terminar</button><button class="btn btn-peligro" data-t="problema">Problema</button>`;
+    if (t.estado === "pausada") botones = `<button class="btn btn-ok" data-t="reanudar">Reanudar</button><button class="btn btn-marca" data-t="fin">Terminar</button><button class="btn btn-peligro" data-t="problema">Problema</button>`;
+    cuerpo = `<p class="consejo" style="font-weight:650;letter-spacing:.06em;text-transform:uppercase">${titulo}</p>
+      <div class="ficha"><div style="display:flex;justify-content:space-between;gap:10px"><div><div class="sub mono">${ORDEN.folio}</div><div class="eq">${ORDEN.equipo}</div>
+        <div class="sub"><b class="mono">${ORDEN.pedido}</b> · ${ORDEN.cliente}</div></div>
+        <div style="text-align:right;flex:none"><span class="pill" style="background:transparent;border-color:hsl(152 60% 45%);color:hsl(152 60% 60%)">En 9 días</span><div class="sub" style="margin-top:4px">13 nov 2026</div></div></div>
+        ${t.problema ? `<div class="estado" style="color:hsl(0 85% 70%)">Problema: ${esc(t.problema)}</div>` : ""}
+        ${estado}
+        ${empezada ? `<div class="cuartos">¿Cuánto lleva?${[[.25, "¼"], [.5, "½"], [.75, "¾"], [.9, "Casi"]].map(([v, x]) => `<button data-tav="${v}" aria-pressed="${t.avance === v}">${x}</button>`).join("")}</div>` : ""}
+        <div class="acciones">${botones}</div></div>`;
+  }
+  let dialogo = "";
+  if (t.dialogo === "inicio" || t.dialogo === "reanudar" || t.dialogo === "seune") {
+    const lista = t.dialogo === "seune" ? GENTE.filter((g) => !t.gente.includes(g)) : GENTE;
+    dialogo = `<div class="dialogo"><b>${t.dialogo === "seune" ? "¿Quién se une?" : `¿Quiénes trabajan? · ${t.dialogo === "inicio" ? "Iniciar" : "Reanudar"} Pailería`}</b>
+      <p class="consejo">${t.dialogo === "seune" ? "Su tiempo empieza a contar ahora; la etapa no se detiene." : "Ya vienen marcados los que planeó la gerencia. Toca para quitar o poner."}</p>
+      <div class="opciones">${lista.map((g) => `<button data-t="elige" data-p="${g}" aria-pressed="${t.eleccion.includes(g)}">${g}</button>`).join("")}</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="consejo">Sin nombre (un ayudante de paso)</span><span class="contador"><button data-t="menos" aria-label="Uno menos">−</button><b class="cifra" style="min-width:18px;text-align:center">${t.extra}</b><button data-t="mas" aria-label="Uno más">+</button></span></div>
+      <div class="acciones"><button class="btn btn-borde" data-t="cancelar">Cancelar</button><button class="btn btn-ok" data-t="confirmar" ${t.eleccion.length + t.extra ? "" : "disabled"}>${t.dialogo === "seune" ? "Se une" : t.dialogo === "inicio" ? "Iniciar" : "Reanudar"}</button></div></div>`;
+  }
+  if (t.dialogo === "problema") {
+    dialogo = `<div class="dialogo"><b>¿Cuál es el problema?</b><textarea id="t-nota" placeholder="Por ejemplo: falta lámina de 3/16">${esc(t.nota)}</textarea>
+      <div class="acciones"><button class="btn btn-borde" data-t="cancelar">Cancelar</button><button class="btn btn-peligro" data-t="confirmar">Reportar problema</button></div></div>`;
+  }
+  const aviso = t.aviso ? `<div class="aviso-tablet ${t.aviso.mal ? "mal" : ""}"><span>${esc(t.aviso.texto)}</span>${t.aviso.deshacer ? `<button data-t="deshacer">Deshacer</button>` : ""}</div>` : "";
+  $("#terminal-sim").innerHTML = `
+    <div class="tablet-cab"><span class="chip-area" style="background:var(--paileria)">Pailería</span><span class="titulo">Pailería</span><span class="quien-soy">Luis</span></div>
+    <p class="consejo">No hace falta pausar para desayunar, comer o al irte: solo cuenta el horario del taller. Pausa cuando dejen esta orden.</p>
+    ${aviso}${dialogo}${cuerpo}
+    <button class="btn btn-borde btn-chico" data-t="reiniciar" style="justify-self:start">Volver a empezar</button>`;
+  $("#t-historia").innerHTML = t.historia.length ? t.historia.map((h) => `<li><span class="punto" style="background:${h.color}"></span><span>${esc(h.texto)}<small>${esc(h.detalle)}</small></span></li>`).join("")
+    : `<li><span class="punto" style="background:var(--borde)"></span><span class="tenue">Todavía nada. Toca «Iniciar» en la tablet.</span></li>`;
+  const nota = $("#t-nota");
+  if (nota) { nota.addEventListener("input", (e) => { t.nota = e.target.value; }); }
+}
+$("#terminal-sim").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-t],[data-tav]");
+  if (!b) return;
+  if (b.dataset.tav) {
+    t.avance = Number(b.dataset.tav);
+    anotar(`Pailería lleva ${Math.round(t.avance * 100)} %`, "");
+    explicar(`<b>¿Cuánto lleva?</b> No detiene nada. Con eso la orden sube de avance, al área le falta menos y el Gantt recorre las fechas. Se puede volver a decir cuantas veces haga falta.`);
+    return pintarTerminal();
+  }
+  const a = b.dataset.t;
+  if (a === "reiniciar") { t = T0(); explicar(inicio); return pintarTerminal(); }
+  if (a === "inicio" || a === "reanudar") { t.dialogo = a; t.eleccion = a === "inicio" ? ["Genaro", "Juan Pablo"] : [...t.gente]; t.extra = a === "inicio" ? 0 : t.sinNombre; t.aviso = null;
+    explicar(a === "inicio" ? `<b>Iniciar</b> pregunta quiénes trabajan. Vienen marcados Genaro y Juan Pablo porque la gerencia los planeó en Cuadrillas. Si es otra gente, cámbiala aquí: manda lo que se hizo.` : `<b>Reanudar</b>: la cuadrilla se quedó guardada al pausar. Confírmala o cámbiala.`); }
+  if (a === "seune") { t.dialogo = "seune"; t.eleccion = []; t.extra = 0; explicar(`<b>Se une</b> agrega a alguien sin detener la etapa. Su tiempo cuenta desde ahora. Una persona no puede estar trabajando en dos etapas a la vez.`); }
+  if (a === "problema") { t.dialogo = "problema"; t.nota = ""; explicar(`<b>Problema</b> pide qué pasa y lo deja en la orden y en su tarjeta. No pausa: si hay que parar, también <b>Pausar</b>.`); }
+  if (a === "elige") { const p = b.dataset.p; t.eleccion = t.eleccion.includes(p) ? t.eleccion.filter((x) => x !== p) : [...t.eleccion, p]; }
+  if (a === "mas") t.extra = Math.min(t.extra + 1, 10);
+  if (a === "menos") t.extra = Math.max(t.extra - 1, 0);
+  if (a === "cancelar") { t.dialogo = null; }
+  if (a === "confirmar") {
+    if (t.dialogo === "problema") {
+      if (!t.nota.trim()) { t.aviso = { texto: "Escribe cuál es el problema", mal: true }; return pintarTerminal(); }
+      t.problema = t.nota.trim(); anotar(`Problema en Pailería: ${t.problema}`, "", "var(--peligro)");
+      t.aviso = { texto: `Pailería con problema reportado · ${ORDEN.folio}` }; t.dialogo = null;
+      explicar(`Quedó en la orden con tu nombre y la hora, y en su tarjeta. La gerencia lo ve en el tablero.`);
+    } else if (t.dialogo === "seune") {
+      t.gente = [...t.gente, ...t.eleccion]; t.sinNombre += t.extra;
+      anotar(`Se unió a Pailería: ${nombres([...t.eleccion, ...(t.extra ? [`${t.extra} sin nombre`] : [])])}`, "");
+      t.dialogo = null; t.aviso = { texto: "Listo, ya cuenta su tiempo" };
+    } else {
+      const fue = t.dialogo; t.gente = [...t.eleccion]; t.sinNombre = t.extra; t.estado = "en_proceso"; t.dialogo = null;
+      anotar(`Pailería ${fue === "inicio" ? "iniciada" : "reanudada"}`, nombres(quienTrabaja()), "var(--ok)");
+      t.aviso = { texto: `Pailería ${fue === "inicio" ? "iniciada" : "reanudada"} · ${ORDEN.folio}` };
+      explicar(fue === "inicio" ? `La orden pasó sola a <b>En proceso</b>. Desde ahora cuenta el tiempo de cada uno (en horario del taller). La TV y Cuadrillas ya los ponen como «Trabajando».` : `Volvió a <b>En proceso</b> con su gente.`);
+    }
+  }
+  if (a === "sale") {
+    const p = b.dataset.p;
+    if (p === "__sin") t.sinNombre = Math.max(t.sinNombre - 1, 0); else t.gente = t.gente.filter((g) => g !== p);
+    anotar(`${p === "__sin" ? "Uno sin nombre" : p} salió de Pailería`, "");
+    explicar(`<b>Sale</b> cierra el tiempo de esa persona; la etapa sigue con los demás.${t.gente.length + t.sinNombre === 0 ? " Ya no queda nadie: si nadie la va a trabajar, mejor <b>Pausar</b>." : ""}`);
+  }
+  if (a === "pausa") { t.estado = "pausada"; anotar("Pailería pausada", "", "var(--aviso)"); t.aviso = { texto: `Pailería pausada · ${ORDEN.folio}` };
+    explicar(`<b>Pausar</b> cierra el tiempo de todos, pero la cuadrilla se queda guardada para reanudar. Úsalo cuando dejan la orden, no para desayunar.`); }
+  if (a === "fin") { t.estado = "terminada"; anotar("Pailería terminada", "", "var(--marca)"); t.aviso = { texto: `Pailería terminada · ${ORDEN.folio}`, deshacer: true };
+    explicar(`<b>Terminar</b> cierra el tiempo de todos y la orden sigue a Torno. ¿Fue sin querer? El aviso trae <b>Deshacer</b>: tienes 15 minutos. Después, la gerencia la reabre con el motivo.`); }
+  if (a === "deshacer") { t.estado = "pausada"; anotar("Pailería reabierta: se marcó terminada por error", "", "var(--aviso)"); t.aviso = { texto: "Pailería regresó a pausada" };
+    explicar(`Regresó a <b>pausada</b>, con su gente guardada. Reanúdala para seguir.`); }
+  pintarTerminal();
+});
+const inicio = `Así se ve una orden lista para empezar en la tablet de Pailería. Toca <b>Iniciar</b>.`;
+explicar(inicio);
+pintarTerminal();
+
+/* ---------- Calculadora de horas ---------- */
+const DIAS_C = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo", "Lunes siguiente", "Martes siguiente"];
+const DESCANSOS = [{ de: 600, a: 660, f: 40 / 60 }, { de: 900, a: 920, f: 1 }];
+const ventana = (dow) => dow <= 4 ? [480, 1080] : dow === 5 ? [480, 840] : null; // 0 = lunes
+let modo = "horario";
+const opcionesHora = () => { let h = ""; for (let m = 0; m < 1440; m += 15) h += `<option value="${m}">${hora(m)}</option>`; return h; };
+["#c-ini-h", "#c-fin-h"].forEach((s) => { $(s).innerHTML = opcionesHora(); });
+["#c-ini-d", "#c-fin-d"].forEach((s) => { $(s).innerHTML = DIAS_C.map((d, i) => `<option value="${i}">${d}</option>`).join(""); });
+const ATAJOS = { noche: [0, 1020, 1, 540], dia: [0, 480, 0, 1080], finde: [4, 1020, 7, 540], desayuno: [0, 615, 0, 780] };
+function ponerAtajo(k) { const [a, b, c, d] = ATAJOS[k]; $("#c-ini-d").value = a; $("#c-ini-h").value = b; $("#c-fin-d").value = c; $("#c-fin-h").value = d; calcular(); }
+
+function contar(ini, fin) {
+  const dias = []; let total = 0;
+  for (let d = Math.floor(ini / 1440); d * 1440 < fin; d++) {
+    const a = Math.max(ini, d * 1440), b = Math.min(fin, (d + 1) * 1440);
+    if (b <= a) continue;
+    const segs = []; let horas = 0;
+    if (modo === "terminal") { segs.push({ a, b, tipo: "cuenta" }); horas = (b - a) / 60; }
+    else {
+      const v = ventana(d % 7);
+      const cortes = new Set([a, b]);
+      const agrega = (m) => { const x = d * 1440 + m; if (x > a && x < b) cortes.add(x); };
+      if (v) { agrega(v[0]); agrega(v[1]); DESCANSOS.forEach((s) => { agrega(s.de); agrega(s.a); }); }
+      const p = [...cortes].sort((x, y) => x - y);
+      for (let k = 0; k < p.length - 1; k++) {
+        const s = p[k], e = p[k + 1], mid = (s + e) / 2 - d * 1440;
+        let tipo = "fuera", f = 1;
+        if (v && mid >= v[0] && mid < v[1]) {
+          const ds = DESCANSOS.find((z) => mid >= z.de && mid < z.a);
+          if (ds) { tipo = ds.f < 1 ? "parcial" : "descanso-t"; f = ds.f; } else tipo = "cuenta";
+        }
+        segs.push({ a: s, b: e, tipo });
+        if (tipo === "cuenta") horas += (e - s) / 60;
+        if (tipo === "parcial") horas += ((e - s) / 60) * (1 - f);
+      }
+    }
+    total += horas;
+    dias.push({ d, segs, horas, v: ventana(d % 7) });
+  }
+  return { total, dias, reloj: (fin - ini) / 60 };
+}
+const h1 = (x) => (Math.round(x * 100) / 100).toLocaleString("es-MX", { maximumFractionDigits: 2 });
+function calcular() {
+  const ini = Number($("#c-ini-d").value) * 1440 + Number($("#c-ini-h").value);
+  const fin = Number($("#c-fin-d").value) * 1440 + Number($("#c-fin-h").value);
+  const pers = Number($("#c-personas").value);
+  if (fin <= ini) {
+    $("#c-resultado").innerHTML = `<div class="cifra-grande" style="grid-column:1/-1"><span>El fin tiene que ser después del inicio.</span></div>`;
+    $("#c-dias").innerHTML = ""; return;
+  }
+  const r = contar(ini, fin);
+  const distinto = Math.abs(r.reloj - r.total) > 0.001;
+  $("#c-resultado").innerHTML = `
+    <div class="cifra-grande ${distinto ? "tachada" : ""}"><b>${h1(r.reloj)} h</b><span>de reloj, de que se inició a que se pausó</span></div>
+    <div class="cifra-grande principal"><b>${h1(r.total)} h</b><span>cuenta cada persona</span></div>
+    <div class="cifra-grande"><b>${h1(r.total * pers)} h</b><span>horas hombre (× ${pers} ${pers === 1 ? "persona" : "personas"})</span></div>`;
+  const pct = (m) => `${(m / 1440) * 100}%`;
+  let h = `<div class="reglita"><i></i><div>${[0, 6, 8, 10, 12, 15, 18, 24].map((x) => `<span style="left:${pct(x * 60)}">${x}:00</span>`).join("")}</div><i></i></div>`;
+  r.dias.forEach((dia) => {
+    const base = dia.d * 1440;
+    let pista = "";
+    if (dia.v) {
+      pista += `<i class="horario" style="left:${pct(dia.v[0])};width:${pct(dia.v[1] - dia.v[0])}"></i>`;
+      DESCANSOS.forEach((s) => { if (s.a <= dia.v[1]) pista += `<i class="descanso" style="left:${pct(s.de)};width:${pct(s.a - s.de)}"></i>`; });
+    }
+    dia.segs.forEach((s) => { pista += `<i class="seg ${s.tipo}" style="left:${pct(s.a - base)};width:${pct(s.b - s.a)}"></i>`; });
+    h += `<div class="dia-calc"><b>${DIAS_C[dia.d]}</b><div class="pista" role="img" aria-label="${DIAS_C[dia.d]}: cuenta ${h1(dia.horas)} horas">${pista}</div><span class="cifra" style="text-align:right">${h1(dia.horas)} h</span></div>`;
+  });
+  $("#c-dias").innerHTML = h;
+}
+$("#c-modo").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-modo]"); if (!b) return;
+  modo = b.dataset.modo; [...$("#c-modo").children].forEach((x) => x.setAttribute("aria-pressed", String(x === b))); calcular();
+});
+document.querySelector(".atajos").addEventListener("click", (e) => { const b = e.target.closest("[data-atajo]"); if (b) ponerAtajo(b.dataset.atajo); });
+["#c-ini-d", "#c-ini-h", "#c-fin-d", "#c-fin-h", "#c-personas"].forEach((s) => $(s).addEventListener("change", calcular));
+ponerAtajo("noche");
+
+/* ---------- Cuadrillas ---------- */
+const PERSONAL = ["Genaro", "Juan Pablo", "Isaías", "Leonardo", "Ramiro"];
+const CU0 = () => ({ cartas: [
+  { id: "a", folio: "OP-00048", equipo: "Elevador de cangilones de 18 m", pedido: "PED-26-820", estado: "en_proceso", restante: 30, gente: ["Ramiro"] },
+  { id: "b", folio: "OP-00052", equipo: "Dosificadora de 4 tolvas", pedido: "PED-26-824", estado: "pendiente", restante: 120, gente: [] },
+  { id: "c", folio: "OP-00051", equipo: "Banda artesa de 24″ × 20 m", pedido: "PED-26-823", estado: "pendiente", restante: 40, gente: ["Isaías"] },
+], elegido: null });
+let cu = CU0();
+const mediaHora = (x) => Math.ceil(x * 2) / 2;
+function pintarCuadrillas() {
+  const encima = (p) => cu.cartas.filter((c) => c.gente.includes(p)).reduce((s, c) => s + c.restante / c.gente.length, 0);
+  const trabajando = (p) => cu.cartas.some((c) => c.estado === "en_proceso" && c.gente.includes(p));
+  $("#cu-personal").innerHTML = `<b style="font-size:13px;margin-right:4px"><span class="punto" style="background:var(--paileria);margin-right:6px"></span>Pailería</b>` +
+    PERSONAL.map((p) => `<button type="button" class="chip-persona ${trabajando(p) ? "trabajando" : ""}" draggable="true" data-p="${p}" aria-pressed="${cu.elegido === p}"><span class="punto"></span>${p}${encima(p) ? ` <small class="cifra">${h1(mediaHora(encima(p)))} h</small>` : ""}</button>`).join("");
+  $("#cu-cartas").innerHTML = cu.cartas.map((c) => `
+    <div class="carta" data-c="${c.id}" tabindex="0" role="button" aria-label="${c.equipo}: soltar aquí">
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px" class="tenue"><span class="mono">${c.folio} · ${c.pedido}</span><span style="font-weight:650;color:${c.estado === "en_proceso" ? "var(--ok)" : "var(--tenue)"}">${c.estado === "en_proceso" ? "Trabajando" : "Lista para empezar"}</span></div>
+      <div class="eq">${c.equipo}</div>
+      <div class="gente">${c.gente.length ? c.gente.map((g) => `<span class="pill"><span class="punto" style="background:${c.estado === "en_proceso" ? "var(--ok)" : "var(--borde)"}"></span>${g}<button class="quitar" data-quitar="${g}" data-de="${c.id}" aria-label="Sacar a ${g}">×</button></span>`).join("") : `<span class="vacia">Suelta aquí a quien le toca</span>`}</div>
+      <div class="nota cifra">${c.gente.length ? `faltan ≈ ${h1(mediaHora(c.restante / c.gente.length))} h` : `≈ ${c.restante} h de trabajo`}</div>
+    </div>`).join("");
+}
+function asignar(p, id) {
+  const c = cu.cartas.find((x) => x.id === id); if (!c || !p) return;
+  cu.elegido = null;
+  if (c.gente.includes(p)) { $("#cu-mensaje").textContent = `${p} ya está en esa cuadrilla.`; return pintarCuadrillas(); }
+  const otra = cu.cartas.find((x) => x.estado === "en_proceso" && x.id !== id && x.gente.includes(p));
+  let msg = "";
+  if (c.estado === "en_proceso") {
+    if (otra) { otra.gente = otra.gente.filter((g) => g !== p); msg += `Deja Pailería de ${otra.folio}: su tiempo ahí se cierra ahora. `; }
+    msg += `Entra a Pailería de ${c.folio}, que está en proceso: su tiempo cuenta desde ahora.`;
+  } else msg = `Le toca a ${p} en ${c.folio}: cuando la inicien en la terminal, ya viene marcado.`;
+  c.gente.push(p);
+  $("#cu-mensaje").textContent = msg;
+  pintarCuadrillas();
+}
+const cuTablero = document.querySelector(".tablero");
+cuTablero.addEventListener("dragstart", (e) => { const b = e.target.closest("[data-p]"); if (b) e.dataTransfer.setData("text/plain", b.dataset.p); });
+cuTablero.addEventListener("dragover", (e) => { const c = e.target.closest(".carta"); if (c) { e.preventDefault(); c.classList.add("sobre"); } });
+cuTablero.addEventListener("dragleave", (e) => { const c = e.target.closest(".carta"); if (c && !c.contains(e.relatedTarget)) c.classList.remove("sobre"); });
+cuTablero.addEventListener("drop", (e) => { const c = e.target.closest(".carta"); if (!c) return; e.preventDefault(); c.classList.remove("sobre"); asignar(e.dataTransfer.getData("text/plain"), c.dataset.c); });
+cuTablero.addEventListener("click", (e) => {
+  const q = e.target.closest("[data-quitar]");
+  if (q) {
+    const c = cu.cartas.find((x) => x.id === q.dataset.de); c.gente = c.gente.filter((g) => g !== q.dataset.quitar);
+    $("#cu-mensaje").textContent = c.estado === "en_proceso" ? `Deja Pailería de ${c.folio}: su tiempo ahí se cierra ahora. La etapa sigue en proceso con los demás.` : `${q.dataset.quitar} ya no está planeado en ${c.folio}.`;
+    return pintarCuadrillas();
+  }
+  const p = e.target.closest("[data-p]");
+  if (p) { cu.elegido = cu.elegido === p.dataset.p ? null : p.dataset.p; $("#cu-mensaje").textContent = cu.elegido ? `Ahora toca la tarjeta donde va ${cu.elegido}.` : "Arrastra a alguien a una tarjeta."; return pintarCuadrillas(); }
+  const c = e.target.closest(".carta");
+  if (c && cu.elegido) asignar(cu.elegido, c.dataset.c);
+});
+cuTablero.addEventListener("keydown", (e) => { const c = e.target.closest(".carta"); if (c && cu.elegido && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); asignar(cu.elegido, c.dataset.c); } });
+$("#cu-reiniciar").addEventListener("click", () => { cu = CU0(); $("#cu-mensaje").textContent = "Arrastra a alguien a una tarjeta."; pintarCuadrillas(); });
+pintarCuadrillas();
+
+/* ---------- Gantt ---------- */
+let gGente = 2, gAvance = 0.25;
+function pintarGantt() {
+  $("#g-gente").innerHTML = [1, 2, 3, 4, 5].map((n) => `<button type="button" data-gg="${n}" aria-pressed="${n === gGente}">${n}${n === 1 ? " (cuenta 2)" : ""}</button>`).join("");
+  $("#g-avance").innerHTML = [[0, "Nada"], [.25, "¼"], [.5, "½"], [.75, "¾"]].map(([v, x]) => `<button type="button" data-ga="${v}" aria-pressed="${v === gAvance}">${x}</button>`).join("");
+  const plan = planear(ORDEN.horas.map(([n, horas], i) => ({ n, horas, estado: i === 0 ? "terminada" : n === "Pailería" ? "en_proceso" : "pendiente", avance: n === "Pailería" ? (gAvance || null) : null, gente: n === "Pailería" ? gGente : 0 })));
+  const v = veredicto(finDe(plan));
+  $("#g-veredicto").innerHTML = `<span class="veredicto ${v.bien ? "bien" : "mal"}">${v.texto}</span>`;
+  dibujarGantt($("#g-tabla"), plan, { dias: 21 });
+}
+$("#gantt").addEventListener("click", (e) => {
+  const g = e.target.closest("[data-gg]"), a = e.target.closest("[data-ga]");
+  if (g) gGente = Number(g.dataset.gg);
+  if (a) gAvance = Number(a.dataset.ga);
+  if (g || a) pintarGantt();
+});
+pintarGantt();
+
+/* ---------- TV ---------- */
+const TVCOL = [
+  ["Corte", [{ eq: "Tolva de 10 m³", op: "OP-00053", ped: "PED-26-819", cli: "Granos La Piedad", dias: "En 22 días", av: 4, q: "Le toca: Chuy y Raúl", sigue: true }]],
+  ["Pailería", [{ eq: "Dosificadora de 4 tolvas", op: "OP-00052", ped: "PED-26-824", cli: "Cementos del Centro", dias: "En 9 días", av: 23, q: "Genaro y Juan Pablo · va a ¼" }, { eq: "Elevador de cangilones de 18 m", op: "OP-00048", ped: "PED-26-820", cli: "Agroindustrias del Bajío", dias: "En 2 días", tono: "cerca", av: 61, q: "Ramiro · va a ¾" }]],
+  ["Torno", [{ eq: "Banda artesa de 24″ × 20 m", op: "OP-00051", ped: "PED-26-823", cli: "Forrajes Los Altos", dias: "1 día tarde", tono: "mal", av: 70, q: "Pausada · Leonardo", pausa: true }]],
+  ["Pintura", [{ eq: "Cribadora vibratoria de 3 camas", op: "OP-00057", ped: "PED-26-821", cli: "Alimentos Tepa", dias: "En 15 días", av: 55, q: "Beto y Toño · va a ½" }]],
+  ["Detallado", [{ eq: "Banda transportadora de 18″ × 12 m", op: "OP-00044", ped: "PED-26-812", cli: "Minera San Rafael", dias: "Hoy", tono: "cerca", av: 88, q: "Gustavo y Luis Enrique · casi" }]],
+  ["Eléctrico", [{ eq: "Silo de 60 t", op: "OP-00041", ped: "", cli: "Para stock", dias: "En 30 días", av: 80, q: "Le toca: Pedro", sigue: true }]],
+];
+const TVHOJAS = ["Etapas 1", "Etapas 2", "Cuadrillas", "Entregas"];
+let tvHoja = 0, tvParado = tranquilo, tvT0 = performance.now();
+function tarjetaTV(t) {
+  return `<div class="tv-tarjeta ${t.pausa ? "pausa" : ""} ${t.sigue ? "sigue" : ""}"><div class="eq">${t.eq}</div>
+    <div class="sub"><span><span class="mono">${t.op}</span>${t.ped ? ` · <b style="color:var(--aparato-texto)">${t.ped}</b> · ${t.cli}` : " · Para stock"}</span><span class="tv-dias ${t.tono || ""}">${t.dias}</span></div>
+    <div class="tv-av"><i style="width:${t.av}%"></i></div><div class="quien">${t.q}</div></div>`;
+}
+function pintarTV() {
+  const cols = (desde) => `<div class="tv-hoja tv-cols" ${tvHoja === desde / 3 ? "" : "hidden"}>${TVCOL.slice(desde, desde + 3).map(([n, ts]) => `<div class="tv-col"><h5><i style="background:${COLOR[n]}"></i>${n}</h5>${ts.map(tarjetaTV).join("")}${ts.length < 2 ? "<div></div>" : ""}</div>`).join("")}</div>`;
+  const cuad = [["Genaro y Juan Pablo", "Dosificadora de 4 tolvas", "Pailería · va a ¼", "Pailería"], ["Ramiro", "Elevador de cangilones de 18 m", "Pailería · va a ¾", "Pailería"], ["Beto y Toño", "Cribadora vibratoria de 3 camas", "Pintura · va a ½", "Pintura"], ["Gustavo y Luis Enrique", "Banda transportadora de 18″ × 12 m", "Detallado · casi", "Detallado"], ["Leonardo", "Banda artesa de 24″ × 20 m", "Torno · pausada", "Torno"], ["Chuy y Raúl", "Tolva de 10 m³", "Corte · le toca", "Corte"]];
+  const dias = ["Hoy", "mar 3 nov", "mié 4 nov", "jue 5 nov", "vie 6 nov", "lun 9 nov", "mar 10 nov", "mié 11 nov", "jue 12 nov", "vie 13 nov"];
+  const ent = { 0: ["Banda transportadora de 18″ × 12 m"], 2: ["Elevador de cangilones de 18 m"], 9: ["Dosificadora de 4 tolvas"], 6: ["Cribadora vibratoria de 3 camas"] };
+  $("#tv-pantalla").innerHTML = `
+    <div class="tv-cab"><b>HEGAMEX</b><span>${TVHOJAS[tvHoja]} · ${tvHoja + 1} de 4</span><span>lun 2 nov · 9:41</span></div>
+    <div class="tv-franjas"><div class="tv-franja mal"><b>Atrasadas:</b> Banda artesa de 24″ × 20 m (1 día)</div><div class="tv-franja aviso"><b>Falta material:</b> Elevador de cangilones de 18 m (2 materiales)</div></div>
+    <div class="tv-cuerpo">${cols(0)}${cols(3)}
+      <div class="tv-hoja tv-cuad" ${tvHoja === 2 ? "" : "hidden"}><div class="tv-titulo">Cuadrillas ahora</div><div class="r">${cuad.map(([q, e, s, a]) => `<article><b>${q}</b><p>${e}</p><small><i style="background:${COLOR[a]}"></i>${s}</small></article>`).join("")}</div></div>
+      <div class="tv-hoja tv-ent" ${tvHoja === 3 ? "" : "hidden"}><div class="tv-titulo">Entregas de las próximas dos semanas</div><div class="r">${dias.map((d, i) => `<section class="${i === 0 ? "hoy" : ""}"><h6>${d}</h6>${(ent[i] || []).map((x) => `<p>${x}</p>`).join("")}</section>`).join("")}</div></div>
+    </div>
+    <div class="tv-cinta" aria-hidden="true"><div>Pailería iniciada · <b>Dosificadora de 4 tolvas</b> · hace 5 min &nbsp; ● &nbsp; Pintura lleva 50 % · <b>Cribadora vibratoria</b> · hace 12 min &nbsp; ● &nbsp; Torno pausada · <b>Banda artesa de 24″</b> · hace 20 min &nbsp; ● &nbsp; Corte terminada · <b>Tolva de 10 m³</b> · hace 31 min</div></div>`;
+  $("#tv-botones").innerHTML = TVHOJAS.map((x, i) => `<button type="button" data-tv="${i}" aria-pressed="${i === tvHoja}">${x}</button>`).join("");
+  $("#tv-pausa").textContent = tvParado ? "Seguir cambiando" : "Detener el cambio";
+  $("#tv-pausa").setAttribute("aria-pressed", String(tvParado));
+}
+$("#tv-botones").addEventListener("click", (e) => { const b = e.target.closest("[data-tv]"); if (b) { tvHoja = Number(b.dataset.tv); tvT0 = performance.now(); pintarTV(); } });
+$("#tv-pausa").addEventListener("click", () => { tvParado = !tvParado; tvT0 = performance.now(); pintarTV(); });
+function relojTV(ahora) {
+  const pasado = ahora - tvT0;
+  $("#tv-progreso").style.width = tvParado ? "0%" : `${Math.min(pasado / 10000, 1) * 100}%`;
+  if (!tvParado && pasado >= 10000) { tvHoja = (tvHoja + 1) % 4; tvT0 = ahora; pintarTV(); }
+  requestAnimationFrame(relojTV);
+}
+pintarTV();
+requestAnimationFrame(relojTV);
+
+/* ---------- Índice: resalta la sección en pantalla ---------- */
+const enlaces = [...document.querySelectorAll(".indice a")];
+const obs = new IntersectionObserver((es) => {
+  es.forEach((en) => { if (en.isIntersecting) enlaces.forEach((a) => a.classList.toggle("activo", a.getAttribute("href") === "#" + en.target.id)); });
+}, { rootMargin: "-40% 0px -55% 0px" });
+document.querySelectorAll("main > section[id]").forEach((s) => obs.observe(s));
+})();
+</script>
