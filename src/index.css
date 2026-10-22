@@ -140,3 +140,31 @@
   border-radius: 9999px; border: 1px solid hsl(var(--info)); color: hsl(var(--info));
   font-size: 9.5px; font-weight: 600; letter-spacing: 0; line-height: 1; text-transform: none;
 }
+
+/* Gantt de producción. Las barras crecen al llegar y se recorren solas cuando la base
+   recalcula el plan (left/width con transición); lo que se trabaja ahorita lleva rayas que
+   avanzan, para distinguir de un vistazo lo vivo de lo planeado. */
+@keyframes gantt-crecer { from { transform: scaleX(0.15); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes gantt-rayas { to { background-position: 16px 0; } }
+@keyframes gantt-latir { 0%, 100% { transform: scale(1); opacity: 0.55; } 50% { transform: scale(1.9); opacity: 0; } }
+.gantt-barra {
+  transform-origin: left center;
+  animation: gantt-crecer 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transition: left 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s, filter 0.15s;
+}
+.gantt-vivo {
+  background-image: linear-gradient(-45deg, rgb(255 255 255 / 0.28) 25%, transparent 25%, transparent 50%,
+    rgb(255 255 255 / 0.28) 50%, rgb(255 255 255 / 0.28) 75%, transparent 75%, transparent);
+  background-size: 16px 16px;
+  animation: gantt-rayas 0.9s linear infinite;
+}
+.gantt-cortada { mask-image: linear-gradient(90deg, transparent, #000 14px); }
+.gantt-retraso {
+  background: repeating-linear-gradient(135deg, hsl(var(--peligro) / 0.22) 0 5px, hsl(var(--peligro) / 0.08) 5px 10px);
+  box-shadow: inset 0 0 0 1px hsl(var(--peligro) / 0.35);
+}
+.gantt-latido { animation: gantt-latir 2.4s ease-in-out infinite; }
+.gantt-globo { animation: entrar-explicacion 120ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .gantt-barra, .gantt-vivo, .gantt-latido { animation: none; transition: none; }
+}

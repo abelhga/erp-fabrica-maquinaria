@@ -115,6 +115,60 @@ Hay dos vistas, con el selector de arriba:
 
 ---
 
+## Gantt: el plan del taller
+
+**Para qué:** ver cuándo empieza y termina cada etapa de cada orden, qué no va a llegar a su fecha
+compromiso y qué área está atorando al resto, sin hacer cuentas en una hoja.
+
+**Quién:** lo ven la gerencia de producción, los supervisores, almacén e ingeniería de procesos
+(Producción → Gantt). Solo la gerencia de producción cambia el orden de la fila.
+
+### De dónde salen las fechas
+
+Nadie las captura. El ERP simula el taller día por día, de lunes a viernes:
+
+- cada área trabaja hasta lo que da por día: sus horas por semana entre 5 (Pailería 400 h por
+  semana = 80 h por día);
+- cada etapa avanza 9 h al día por cada persona de su cuadrilla (la planeada en Cuadrillas o la que
+  está trabajando); sin cuadrilla, cuenta 2 personas;
+- una etapa empieza al día siguiente de que acaba la anterior de la misma orden; lo que ya está en
+  proceso o pausado sigue desde hoy;
+- de una etapa empezada falta lo estimado menos las horas hombre ya marcadas en la terminal;
+- va primero lo que ya se trabaja, luego la fila, luego lo urgente y la fecha compromiso.
+
+Las órdenes en espera no entran al plan. Cada vez que el piso marca algo (inicia, termina, se une
+alguien, se pausa), el plan se recalcula y las barras se recorren solas.
+
+### Cómo se lee
+
+- Barra apagada: etapa hecha. Llena con rayas que se mueven: se está trabajando (llena hasta hoy).
+  Rayada: pausada. Translúcida: planeada.
+- Rombo y raya punteada: la fecha compromiso. Verde si el plan llega antes; rojo si no, y la franja
+  roja son los días que faltarían.
+- La línea azul es hoy.
+- Vistas: **Por orden** (en el orden de la fila), **Por pedido** (cuándo acaba el pedido completo) y
+  **Por área** (qué va a trabajar cada área; al pasar el mouse por una orden se resaltan sus etapas
+  en todas las áreas).
+
+### Acomodar la fila (gerencia de producción)
+
+1. En la vista **Por orden**, arrastra la orden por su asa (los puntitos de la izquierda) a su nuevo
+   lugar. Sin mouse: clic en la orden y **Hasta arriba**, **Subir** o **Bajar**.
+2. El plan se recalcula con ese orden.
+3. La cola de cada área en Cuadrillas y en la terminal queda en ese mismo orden. Al revés también:
+   acomodar la cola de un área en Cuadrillas mueve esas órdenes en el Gantt.
+
+### Qué hacer con una orden que va tarde
+
+- Subirla en la fila, para que su área la tome antes.
+- Ponerle más gente a sus etapas en Cuadrillas: el plan cuenta 9 h por persona al día.
+- Si nada alcanza, acordar otra fecha con el cliente (ventas) y cambiar el compromiso.
+
+**Importante:** es un plan, no una promesa. Las horas estimadas de cada etapa salen del costeo; si
+están lejos de la realidad, el plan también. Las métricas de producción dicen qué tan lejos.
+
+---
+
 ## Personal de piso: quién entra a cuadrillas
 
 **Para qué:** que la terminal y el tablero ofrezcan solo a la gente que trabaja en el piso, no a
