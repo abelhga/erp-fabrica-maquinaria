@@ -70,7 +70,7 @@ const TABLAS: Record<string, string> = {
   contactos: "cliente_id,nombre,puesto,telefono,whatsapp,correo,principal",
   historial_ventas_hoja: "fecha,cliente_id,cliente_nombre,tipo,monto,descripcion,factura",
   cotizaciones: "id,folio,cliente_id,empresa,fecha,vigencia_dias,estado,moneda,total,vendedor_id",
-  pedidos: "id,folio,cliente_id,canal,fecha,fecha_compromiso,estado,moneda,total,vendedor_id",
+  pedidos: "id,folio,folio_anterior,cliente_id,canal,fecha,fecha_compromiso,estado,moneda,total,vendedor_id",
   pedido_lineas: "pedido_id,articulo_id,titulo,cantidad,precio_unitario,importe,linea",
   oportunidades: "id,titulo,cliente_id,etapa,linea,canal,monto_estimado,probabilidad,fecha_cierre_estimada,vendedor_id",
   articulos: "id,clave,tipo,nombre,familia,unidad,es_importado,tiempo_entrega_dias,se_vende,activo",

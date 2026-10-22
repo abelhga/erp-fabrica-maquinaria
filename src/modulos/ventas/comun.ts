@@ -93,6 +93,8 @@ export interface VPedido {
   cotizacion_folio: string | null; moneda: Moneda; tipo_cambio: number; subtotal: number; iva: number; total: number; cobrado: number;
   saldo: number; facturado: boolean; ordenes: number | null; terminadas: number | null; avance: number | null; atrasado: boolean;
   credito_compartido: boolean; entregado_en: string | null; motivo_cancelacion: string | null;
+  /** El folio que tenía antes de pasar a PED-26-799 (HIS-…, P-…, PED-2026-…): se sigue buscando por él. */
+  folio_anterior: string | null;
 }
 export interface VCliente {
   id: string; nombre: string; razon_social: string | null; rfc: string | null; giro: string | null; ciudad: string | null; estado: string | null;

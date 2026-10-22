@@ -51,11 +51,11 @@ export default function Pedidos() {
 
   const columnas: Columna<VPedido & { historico: boolean }>[] = [
     {
-      clave: "folio", titulo: "Pedido", valor: (p) => `${p.folio} ${p.id_externo ?? ""} ${p.cotizacion_folio ?? ""}`,
+      clave: "folio", titulo: "Pedido", explica: GLOSARIO.folioPedido, valor: (p) => `${p.folio} ${p.folio_anterior ?? ""} ${p.id_externo ?? ""} ${p.cotizacion_folio ?? ""}`,
       celda: (p) => (
         <div className="whitespace-nowrap">
           <p className="font-medium cifra">{p.folio}</p>
-          <p className="text-[11px] text-tenue">{p.id_externo ? `#${p.id_externo}` : p.cotizacion_folio ?? (p.historico ? "de la hoja" : "")}</p>
+          <p className="text-[11px] text-tenue">{p.id_externo ? `#${p.id_externo}` : p.cotizacion_folio ?? (p.folio_anterior ? `antes ${p.folio_anterior}` : p.historico ? "de la hoja" : "")}</p>
           {angosta && (
             <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-tenue">
               {fecha(p.fecha)}

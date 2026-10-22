@@ -229,7 +229,10 @@ function TarjetaTV({ t }: { t: Tarjeta }) {
         </span>
       </div>
       <p className="text-[38px] font-semibold leading-tight truncate">{abreviarEquipo(o.equipo)}</p>
-      <p className="text-[30px] text-tenue truncate">{o.cliente ?? "Para stock"}</p>
+      {/* El número de pedido es como el taller habla de un equipo ("el 798"): va primero y resaltado. */}
+      <p className="text-[30px] text-tenue truncate">
+        {o.pedido_folio ? <><b className="text-texto cifra">{o.pedido_folio}</b> · {o.cliente ?? "—"}</> : "Para stock"}
+      </p>
       <div className="flex items-center gap-4">
         <div className="flex-1 h-6 rounded-full bg-borde overflow-hidden">
           <div className={cn("h-full rounded-full", o.avance >= 100 ? "bg-ok" : "bg-marca")} style={{ width: `${Math.max(0, Math.min(100, Number(o.avance)))}%` }} />
