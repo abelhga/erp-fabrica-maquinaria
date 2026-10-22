@@ -11,6 +11,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { Pestanas, ListaPestanas, ContenidoPestana } from "@/components/ui/pestanas";
 import { Ligar, PublicacionesLigadas, type SinLigar } from "./componentes/PublicacionesML";
+import { DineroMercadoLibre } from "./componentes/DineroML";
 import { supabase } from "@/lib/supabase";
 import { mensajeError, q, useTiempoReal } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
@@ -51,7 +52,7 @@ export default function MercadoLibre() {
   const enUnaHora = tiempos.length ? tiempos.filter((m) => m <= 60).length / tiempos.length : null;
 
   return (
-    <Pagina titulo="Mercado Libre" descripcion="Preguntas de compradores por contestar y publicaciones que falta ligar a su artículo. Las ventas entran solas a Pedidos."
+    <Pagina titulo="Mercado Libre" descripcion="Preguntas de compradores por contestar, publicaciones que falta ligar a su artículo y el dinero de cada venta. Las ventas entran solas a Pedidos."
       acciones={(tieneRol("direccion") || puede("admin", 3)) && <Boton asChild variante="secundario"><Link to="/sistema/configuracion?seccion=integraciones"><Settings className="h-4 w-4" /> Conexión</Link></Boton>}>
       {estado.data && !estado.data.conectada && (
         <p className="rounded-lg bg-aviso-suave px-3 py-2 text-sm">Mercado Libre todavía no está conectado: aquí aparecerán las preguntas y las publicaciones por ligar en cuanto dirección lo conecte en Configuración → Integraciones.</p>
@@ -70,6 +71,7 @@ export default function MercadoLibre() {
           { valor: "preguntas", texto: "Preguntas", cuenta: pendientes.length },
           { valor: "ligar", texto: "Por ligar", cuenta: sinLigar.data?.length, explica: GLOSARIO.publicacionPorLigar },
           { valor: "ligadas", texto: "Ligadas", explica: GLOSARIO.publicacionLigada },
+          { valor: "dinero", texto: "Dinero", explica: GLOSARIO.dineroML },
         ]} />
         <ContenidoPestana value="preguntas" className="pt-4 space-y-3">
           {preguntas.error ? <ErrorCarga error={preguntas.error} /> : preguntas.isLoading ? <Cargando filas={4} /> : todas.length === 0 ? (
@@ -107,6 +109,9 @@ export default function MercadoLibre() {
         </ContenidoPestana>
         <ContenidoPestana value="ligadas" className="pt-4">
           <PublicacionesLigadas editable={puede("ventas", 2) || puede("compras", 2)} />
+        </ContenidoPestana>
+        <ContenidoPestana value="dinero" className="pt-4">
+          <DineroMercadoLibre />
         </ContenidoPestana>
       </Pestanas>
     </Pagina>

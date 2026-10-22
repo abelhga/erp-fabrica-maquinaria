@@ -6,7 +6,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import pg from "pg";
-import { API_ML, atender, normalizarOrden, normalizarPregunta, normalizarReclamo } from "./nucleo.ts";
+import { API_ML, API_MP, atender, normalizarOrden, normalizarPago, normalizarPregunta, normalizarReclamo } from "./nucleo.ts";
 
 describe("traducciones de ML", () => {
   it("una venta Full con su SKU y precio con IVA", () => {
@@ -17,6 +17,39 @@ describe("traducciones de ML", () => {
     expect(v).toMatchObject({ id: "2000012345", estado: "paid", comprador: "COMPRADOR", full: true });
     expect(v.items).toEqual([{ item_id: "MLM123", titulo: "Polea", sku: "C-00148", cantidad: 2, precio: 1160 }]);
     expect(normalizarOrden({ id: 1, status: "paid", order_items: [] }, { logistic_type: "cross_docking" }).full).toBe(false);
+  });
+
+  // Con la forma de un pago de verdad de la cuenta (1,480 con envío gratis y retenciones).
+  const MP_REAL = {
+    id: 1820, status: "approved", date_approved: "2026-09-24T12:13:55.000-04:00", payment_method_id: "visa", transaction_amount: 1480,
+    transaction_amount_refunded: 0, money_release_date: "2026-09-30T19:08:07.000-04:00", money_release_status: "released",
+    transaction_details: { net_received_amount: 1083.93, total_paid_amount: 1480 },
+    charges_details: [
+      { name: "tax_withholding-isr", type: "tax", amounts: { original: 31.9, refunded: 0 }, accounts: { from: "collector", to: "600021407" } },
+      { name: "tax_withholding-iva", type: "tax", amounts: { original: 102.07, refunded: 0 }, accounts: { from: "collector", to: "600021407" } },
+      { name: "meli_fee", type: "fee", amounts: { original: 177.6, refunded: 0 }, accounts: { from: "collector", to: "ml" } },
+      { name: "shp_cross_docking", type: "shipping", amounts: { original: 84.5, refunded: 0 }, accounts: { from: "collector", to: "1438203764" } },
+      // Lo que paga el comprador (meses con interés) no es del vendedor.
+      { name: "financing_fee", type: "fee", amounts: { original: 50, refunded: 0 }, accounts: { from: "payer", to: "mp" } },
+    ],
+  };
+
+  it("un pago trae lo que se queda ML: comisión, envío, retenciones y lo que llega", () => {
+    expect(normalizarPago({ id: 1820, status: "approved", transaction_amount: 1480, marketplace_fee: 177.6 }, MP_REAL)).toMatchObject({
+      id: "1820", estado: "approved", total: 1480, comision: 177.6, envio: 84.5, retencion_iva: 102.07, retencion_isr: 31.9, otros: 0,
+      neto: 1083.93, libera_en: "2026-09-30T19:08:07.000-04:00", liberado: true, completo: true, metodo: "visa",
+    });
+    // Sin el detalle de Mercado Pago: la comisión de la orden y «incompleto».
+    expect(normalizarPago({ id: 1, status: "approved", transaction_amount: 1480, marketplace_fee: 177.6 }, { _error: "403" }))
+      .toMatchObject({ comision: 177.6, retencion_iva: 0, neto: null, completo: false });
+  });
+
+  it("el envío en formato nuevo: Full por logistic.type, guía y estado", () => {
+    const v = normalizarOrden({ id: 9, status: "paid", shipping: { id: 77 }, payments: [{ id: 1820 }], order_items: [] },
+      { id: 77, status: "shipped", substatus: null, tracking_number: "MEL9", logistic: { mode: "me2", type: "fulfillment" } }, [MP_REAL]);
+    expect(v).toMatchObject({ full: true, envio_estado: "shipped", envio_id: "77", guia: "MEL9", envio_tipo: "fulfillment" });
+    expect(v.pagos[0]).toMatchObject({ id: "1820", neto: 1083.93 });
+    expect(normalizarOrden({ id: 9, order_items: [] }, { logistic: { type: "xd_drop_off" } }).full).toBe(false);
   });
 
   it("un reclamo toma la fecha límite más próxima del vendedor", () => {
@@ -57,17 +90,27 @@ const hayBase = !!SERVICIO && !!URL_PG && await fetch(`${URL_SB}/auth/v1/health`
 
 // La API de ML falsa: responde según la ruta y anota lo que se le mandó.
 const enviados: { ruta: string; cuerpo: unknown }[] = [];
+// El envío de la venta de prueba cambia durante la prueba, como en ML.
+let envioML: Record<string, unknown> = { id: 99, logistic_type: "fulfillment", status: "ready_to_ship", substatus: "ready_to_print", tracking_number: "MEL-T-99" };
 const ORDEN = 7000000000 + Math.floor(Math.random() * 1e6);
 const VIEJA = ORDEN + 1;
 const falsa: typeof fetch = async (entrada, init) => {
   const u = new URL(String(entrada));
   const r = (d: unknown, status = 200) => new Response(JSON.stringify(d), { status, headers: { "Content-Type": "application/json" } });
+  if (String(entrada) === `${API_MP}/v1/payments/5551`) return r({ id: 5551, status: "approved", date_approved: "2026-10-16T10:00:00Z",
+    transaction_amount: 1160, transaction_amount_refunded: 0, transaction_details: { net_received_amount: 870.6 },
+    money_release_date: "2026-10-30T10:00:00Z", money_release_status: "pending",
+    charges_details: [{ name: "meli_fee", type: "fee", amounts: { original: 139.2, refunded: 0 }, accounts: { from: "collector" } },
+                      { name: "tax_withholding-iva", type: "tax", amounts: { original: 80, refunded: 0 }, accounts: { from: "collector" } },
+                      { name: "tax_withholding-isr", type: "tax", amounts: { original: 25, refunded: 0 }, accounts: { from: "collector" } },
+                      { name: "shp_fulfillment", type: "shipping", amounts: { original: 45.2, refunded: 0 }, accounts: { from: "collector" } }] });
   if (!String(entrada).startsWith(API_ML)) return r({}, 404);
   if (u.pathname === `/orders/${ORDEN}`) return r({ id: ORDEN, status: "paid", date_closed: "2026-10-16T10:00:00Z", buyer: { nickname: "PRUEBA_ML" },
-    shipping: { id: 99 }, order_items: [{ item: { id: "MLM-T-ML", title: "Polea prueba ML", seller_sku: "T-ML-POLEA" }, quantity: 1, unit_price: 1160 }] });
-  if (u.pathname === "/shipments/99") return r({ id: 99, logistic_type: "fulfillment" });
+    shipping: { id: 99 }, payments: [{ id: 5551, status: "approved", transaction_amount: 1160, marketplace_fee: 139.2 }],
+    order_items: [{ item: { id: "MLM-T-ML", title: "Polea prueba ML", seller_sku: "T-ML-POLEA" }, quantity: 1, unit_price: 1160 }] });
+  if (u.pathname === "/shipments/99") return r(envioML);
   if (u.pathname === "/questions/880001") return r({ id: 880001, item_id: "MLM-T-ML", text: "¿Tienen factura?", status: "UNANSWERED", date_created: "2026-10-16T11:00:00Z" });
-  if (u.pathname === "/items/MLM-T-ML") return r({ title: "Polea prueba ML" });
+  if (u.pathname === "/items/MLM-T-ML") return r({ title: "Polea prueba ML", status: "active" });
   // Lo que ya estaba en ML al conectar (sincronizar).
   if (u.pathname === "/questions/search") return r({ questions: [{ id: 880002 }] });
   if (u.pathname === "/questions/880002") return r({ id: 880002, item_id: "MLM-T-ML", text: "¿Hacen envíos a Monterrey?", status: "UNANSWERED", date_created: "2026-10-10T11:00:00Z" });
@@ -105,7 +148,8 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
       await c.query("delete from public.ml_preguntas where id in (880001, 880002)");
       await c.query("delete from public.avisos where tipo = 'ml_reclamo_sin_venta' and registro_id = '5009'");
       await c.query("delete from public.ml_avisos where resource = '/post-purchase/v1/claims/5009'");
-      await c.query("delete from public.ml_avisos where resource = any($1)", [[`/orders/${ORDEN}`, "/questions/880001", "/questions/880002"]]);
+      await c.query("delete from public.ml_avisos where resource = any($1)", [[`/orders/${ORDEN}`, "/questions/880001", "/questions/880002", "/shipments/99"]]);
+      await c.query("delete from public.ml_crudo where order_id = $1", [String(ORDEN)]);
       await c.query("delete from public.publicaciones where id_externo = 'MLM-T-ML'");
       if (articulo) await c.query("delete from public.articulos where id = $1", [articulo]);
       await c.query("delete from public.ml_cuenta where id = 1");
@@ -135,7 +179,31 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
     const { data: av } = await admin.from("ml_avisos").select("procesado_en, error").eq("resource", `/orders/${ORDEN}`).single();
     expect(av!.error).toBeNull();
     expect(av!.procesado_en).toBeTruthy();
-  });
+    // Lo que regresó ML queda tal cual; lo que no dejó leer, anotado (aquí la API falsa no tiene costos).
+    const { data: crudo } = await admin.from("ml_crudo").select("orden, envio, costos_envio").eq("order_id", String(ORDEN)).single();
+    expect(crudo!.orden).toMatchObject({ id: ORDEN, status: "paid" });
+    expect(crudo!.envio).toMatchObject({ logistic_type: "fulfillment" });
+    expect(crudo!.costos_envio).toMatchObject({ _error: expect.stringContaining("/shipments/99/costs") });
+
+    // Pagada: el cobro entra a Mercado Pago y queda lo que se quedó ML.
+    const { data: cobros } = await admin.from("cobros").select("monto, metodo, referencia").eq("pedido_id", ped!.id);
+    expect(cobros).toEqual([{ monto: 1160, metodo: "mercadopago", referencia: "Mercado Pago 5551" }]);
+    const { data: pago } = await admin.from("ml_pagos").select("comision, envio, retencion_iva, retencion_isr, neto, completo").eq("pago_id", "5551").single();
+    expect(pago).toEqual({ comision: 139.2, envio: 45.2, retencion_iva: 80, retencion_isr: 25, neto: 870.6, completo: true });
+    // Un aviso repetido no duplica el cobro.
+    await aviso({ topic: "orders_v2", resource: `/orders/${ORDEN}`, user_id: 4242, application_id: "APP-PRUEBA" });
+    expect((await admin.from("cobros").select("id").eq("pedido_id", ped!.id)).data!.length).toBe(1);
+
+    // El envío del ERP sigue al de ML: en camino y luego entregado (y el pedido entregado).
+    envioML = { ...envioML, status: "shipped", substatus: null };
+    await aviso({ topic: "shipments", resource: "/shipments/99", user_id: 4242, application_id: "APP-PRUEBA" });
+    expect((await admin.from("envios").select("estado, numero_guia").eq("pedido_id", ped!.id).single()).data).toEqual({ estado: "enviado", numero_guia: "MEL-T-99" });
+    envioML = { ...envioML, status: "delivered" };
+    await aviso({ topic: "shipments", resource: "/shipments/99", user_id: 4242, application_id: "APP-PRUEBA" });
+    expect((await admin.from("envios").select("estado").eq("pedido_id", ped!.id).single()).data!.estado).toBe("entregado");
+    expect((await admin.from("pedidos").select("estado").eq("id", ped!.id).single()).data!.estado).toBe("entregado");
+    expect((await admin.from("ml_ventas").select("envio_ml, guia").eq("order_id", String(ORDEN)).single()).data).toEqual({ envio_ml: "delivered", guia: "MEL-T-99" });
+  }, 20_000);
 
   it("una pregunta llega pendiente y se contesta desde el ERP", async () => {
     await aviso({ topic: "questions", resource: "/questions/880001", user_id: 4242, application_id: "APP-PRUEBA" });
