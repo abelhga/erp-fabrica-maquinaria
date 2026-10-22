@@ -16,8 +16,8 @@ import { fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import {
-  CLAVE, useAsignaciones, useCuadrillas, useEtapas, usePersonalPiso, usePiso, useProduccionEnVivo,
-  type Etapa, type OperacionPiso, type PersonaPiso, type TramoAbierto,
+  CLAVE, textoDescansos, useAsignaciones, useCuadrillas, useEtapas, useHorasTaller, usePersonalPiso, usePiso, useProduccionEnVivo,
+  type Etapa, type HorasTaller, type OperacionPiso, type PersonaPiso, type TramoAbierto,
 } from "./componentes/datos";
 import { BotonLink } from "./componentes/BotonLink";
 import { abreviarEquipo, folioCorto, haceRato, horas, textoDias, tonoCompromiso } from "./componentes/util";
@@ -503,6 +503,7 @@ function PersonalPiso({ etapas }: { etapas: Etapa[] }) {
   const dentro = gente.filter((p) => p.en_cuadrillas).length;
   return (
     <div className="space-y-3 text-sm">
+      <ModoHoras />
       <p className="text-tenue" data-explain={GLOSARIO.enCuadrillas} data-explain-title="Entra a cuadrillas">
         {dentro} de {gente.length} entran a cuadrillas. Quien no entra no sale en la terminal ni aquí para asignarle trabajo.
         Para dar de alta o de baja, o cambiar a alguien de departamento, pídeselo a Recursos Humanos.
@@ -529,5 +530,38 @@ function PersonalPiso({ etapas }: { etapas: Etapa[] }) {
         ))}
       </ul>
     </div>
+  );
+}
+
+/**
+ * Cómo se cuentan las horas de la terminal. Con una sola tablet nadie pausa en cada descanso:
+ * hoy cuenta solo el horario del taller; cuando haya una terminal por área, lo marcado tal cual.
+ */
+function ModoHoras() {
+  const cfg = useHorasTaller();
+  const poner = useAccion((modo: HorasTaller["modo"]) => q(supabase.rpc("poner_modo_horas", { p_modo: modo })),
+    { invalidar: [CLAVE], exito: "Listo: las horas se cuentan así desde ahora" });
+  const modo = cfg.data?.modo ?? "horario";
+  const opciones: { v: HorasTaller["modo"]; titulo: string; texto: string }[] = [
+    { v: "horario", titulo: "Solo el horario del taller",
+      texto: `No hace falta pausar para desayunar, comer o al irse. Cuenta de lunes a viernes de 8 a 18 y el sábado de 8 a 14, menos los descansos: ${textoDescansos(cfg.data?.descansos ?? [])}. Domingos y feriados no cuentan.` },
+    { v: "terminal", titulo: "Lo que marque la terminal",
+      texto: "Cuenta tal cual: el tiempo corre mientras la etapa esté iniciada. El piso pausa al desayunar, al comer y al irse. Para cuando haya una terminal en cada área." },
+  ];
+  return (
+    <section className="rounded-lg border border-borde p-3 space-y-2" data-explain={GLOSARIO.horasTaller} data-explain-title="Cómo se cuentan las horas">
+      <p className="font-medium">Cómo se cuentan las horas</p>
+      <div role="radiogroup" aria-label="Cómo se cuentan las horas" className="grid gap-2 sm:grid-cols-2">
+        {opciones.map((o) => (
+          <button key={o.v} type="button" role="radio" aria-checked={modo === o.v} disabled={poner.isPending || cfg.isLoading}
+            onClick={() => modo !== o.v && poner.mutate(o.v)}
+            className={cn("rounded-lg border p-3 text-left transition disabled:opacity-60",
+              modo === o.v ? "border-marca bg-marca/10" : "border-borde hover:bg-fondo")}>
+            <p className="font-medium">{o.titulo}</p>
+            <p className="mt-1 text-xs text-tenue">{o.texto}</p>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }

@@ -7,6 +7,8 @@ begin
   v_gp := pg_temp.usuario('gpm155@hegamex.com', '{gerente_produccion}');
   v_sup := pg_temp.usuario('supm155@hegamex.com', '{produccion}');
   v_vend := pg_temp.usuario('venm155@hegamex.com', '{ventas}');
+  -- Horas de reloj, para no depender de la hora a la que corre la prueba (el horario lo prueba 163).
+  update configuracion set valor = jsonb_set(valor, '{modo}', '"terminal"') where clave = 'horas_taller';
   insert into empleados (nombre, fecha_ingreso, departamento_id, etapa_id)
     values ('Uno 155m', current_date, departamento_produccion(), (select id from etapas where nombre = 'Pailería')) returning id into e1;
   insert into empleados (nombre, fecha_ingreso, departamento_id, etapa_id)

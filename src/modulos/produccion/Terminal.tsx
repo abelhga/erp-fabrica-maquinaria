@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, HardHat, LayoutGrid, Loader2, LogOut, Minus, PackageX, Pause, Play, PlayCircle, Plus, UserPlus, Users, X,
+  AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, Clock, HardHat, LayoutGrid, Loader2, LogOut, Minus, PackageX, Pause, Play, PlayCircle, Plus, UserPlus, Users, X,
 } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { supabase } from "@/lib/supabase";
 import { mensajeError, q } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
 import { fecha } from "@/lib/formato";
-import { CLAVE, useAsignaciones, useCuadrillas, useEtapas, usePersonalPiso, usePiso, useProduccionEnVivo, type Etapa, type OperacionPiso, type PersonaPiso } from "./componentes/datos";
+import { CLAVE, useAsignaciones, useCuadrillas, useEtapas, useHorasTaller, usePersonalPiso, usePiso, useProduccionEnVivo, type Etapa, type OperacionPiso, type PersonaPiso } from "./componentes/datos";
 import { abreviarEquipo, folioCorto, haceRato, textoDias, tonoCompromiso } from "./componentes/util";
 import { AvanceEtapa } from "./componentes/AvanceEtapa";
 import { useSesion } from "@/lib/sesion";
@@ -51,6 +51,7 @@ export default function Terminal() {
   const etapas = useEtapas();
   const { puede } = useSesion();
   const piso = usePiso({ intervalo: 60_000 });
+  const modoHoras = useHorasTaller().data?.modo;
   const [etapaId, setEtapaId] = useState<number | null>(() => Number(leer(LS.etapa)) || null);
   const [nombre, setNombre] = useState<string>(() => leer(LS.nombre) ?? "");
   const [recientes, setRecientes] = useState<string[]>(() => { try { return JSON.parse(leer(LS.recientes) ?? "[]"); } catch { return []; } });
@@ -151,6 +152,16 @@ export default function Terminal() {
                 <LayoutGrid className="h-5 w-5" /><span className="hidden sm:inline">Otra etapa</span>
               </button>
             </div>
+            {/* Lo que más se pregunta en el piso: ¿hay que pausar para desayunar? Depende del modo. */}
+            {modoHoras && (
+              <p className={cn("flex items-center gap-2 text-base", modoHoras === "terminal" ? "text-aviso" : "text-tenue")}
+                 data-explain={GLOSARIO.horasTaller} data-explain-title="¿Hay que pausar?">
+                <Clock className="h-5 w-5 shrink-0" />
+                {modoHoras === "terminal"
+                  ? "Pausa al desayunar, al comer y al irte: el tiempo corre mientras la etapa esté iniciada."
+                  : "No hace falta pausar para desayunar, comer o al irte: solo cuenta el horario del taller. Pausa cuando dejen esta orden."}
+              </p>
+            )}
             {piso.isLoading ? <div className="flex justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-tenue" /></div> : deEtapa.length === 0 ? (
               <div className="tarjeta p-10 text-center">
                 <CheckCircle2 className="h-14 w-14 text-ok mx-auto mb-3" />

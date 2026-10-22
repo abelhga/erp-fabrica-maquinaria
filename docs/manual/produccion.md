@@ -116,6 +116,23 @@ Hay dos vistas, con el selector de arriba:
 - Las horas que «faltan» y las que tiene «encima» cada persona son una estimación: las horas
   estimadas menos las ya trabajadas, repartidas entre la cuadrilla.
 
+### ¿Hay que pausar para desayunar o al irse?
+
+Depende de cómo cuente las horas la gerencia de producción (Cuadrillas → Personal de piso →
+«Cómo se cuentan las horas»). La terminal lo dice arriba de la lista.
+
+| | Solo el horario del taller (hoy) | Lo que marque la terminal |
+|---|---|---|
+| Qué cuenta | L–V de 8:00 a 18:00 y sábado de 8:00 a 14:00 | Todo el tiempo que la etapa esté iniciada |
+| Desayuno (40 min entre 10:00 y 11:00) y 15:00–15:20 | Se descuentan solos | Hay que pausar |
+| Noche, domingo, feriados | No cuentan | Cuentan si nadie pausó |
+| Cuándo pausar | Solo cuando dejan la orden | En cada descanso, al irse y cuando dejan la orden |
+| Para cuándo | Una sola tablet para todo el taller | Una terminal en cada área |
+
+Un día completo con el horario del taller son 9 horas por persona: las mismas que usa el Gantt
+para planear. El desayuno va por turnos (unos de 10:00 a 10:40, otros de 10:20 a 11:00), así que
+de la hora de 10 a 11 se descuentan 40 minutos.
+
 ---
 
 ## Gantt: el plan del taller
