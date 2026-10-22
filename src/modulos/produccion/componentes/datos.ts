@@ -14,7 +14,13 @@ export const CLAVE = ["produccion"] as const;
 export type EstadoOP = "planeada" | "liberada" | "en_proceso" | "terminada" | "entregada" | "cancelada";
 export type EstadoOperacion = "pendiente" | "en_proceso" | "pausada" | "terminada";
 
-export interface EtapaActiva { id: number; nombre: string; color: string; estado: EstadoOperacion; responsable: string | null; inicio: string | null }
+export interface EtapaActiva {
+  id: number; nombre: string; color: string; estado: EstadoOperacion; responsable: string | null; inicio: string | null;
+  /** Quién la trabaja: quien tiene su tiempo abierto o, si nadie, la cuadrilla planeada. */
+  cuadrilla?: string | null;
+  /** Lo que lleva según reportó el piso (0 a menos de 1). */
+  avance?: number | null;
+}
 
 export interface OrdenTablero {
   id: string; folio: string; numero_serie: string | null; estado: EstadoOP; prioridad: number;
@@ -44,6 +50,7 @@ export interface OperacionPiso {
   materiales_faltantes: number; orden_estado: EstadoOP; lista: boolean; espera_a: string | null;
   ultimo_problema: string | null; ultimo_problema_en: string | null;
   turno: number | null; horas_reales: number;
+  cuadrilla: string | null; avance_etapa: number | null;
 }
 
 /** El personal para elegir en la terminal y el tablero: nombre, su área y dónde está ahorita. */

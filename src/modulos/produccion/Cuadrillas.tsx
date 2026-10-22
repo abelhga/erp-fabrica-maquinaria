@@ -96,7 +96,8 @@ export default function Cuadrillas() {
       return {
         ...o, personas, sinNombre,
         desde: abiertos.length ? abiertos.map((t) => t.inicio).sort()[0] : null,
-        restante: Math.max(Number(o.horas_estimadas) - Number(o.horas_reales ?? 0), 0),
+        // Si el piso dijo cuánto lleva, eso manda; si no, lo estimado menos lo marcado.
+        restante: o.avance_etapa != null ? Number(o.horas_estimadas) * (1 - Number(o.avance_etapa)) : Math.max(Number(o.horas_estimadas) - Number(o.horas_reales ?? 0), 0),
         gente: personas.length + sinNombre,
       };
     });

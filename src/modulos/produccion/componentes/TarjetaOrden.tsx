@@ -47,7 +47,7 @@ export function TarjetaOrden({ o, puedeGestionar }: { o: OrdenTablero; puedeGest
       {o.etapas_activas.length > 0 ? (
         <div className="flex flex-wrap gap-x-3 gap-y-1">
           {o.etapas_activas.map((e) => (
-            <ChipEtapa key={e.id} nombre={`${e.nombre}${e.estado === "pausada" ? " (pausada)" : ""}${e.responsable ? ` · ${e.responsable.split(" ")[0]}` : ""}`}
+            <ChipEtapa key={e.id} nombre={`${e.nombre}${e.avance != null ? ` ${Math.round(e.avance * 100)} %` : ""}${e.estado === "pausada" ? " (pausada)" : ""}${(e.cuadrilla ?? e.responsable?.split(" ")[0]) ? ` · ${e.cuadrilla ?? e.responsable!.split(" ")[0]}` : ""}`}
                        color={e.color} estado={e.estado} />
           ))}
         </div>
