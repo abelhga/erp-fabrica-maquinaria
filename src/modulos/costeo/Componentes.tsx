@@ -29,7 +29,7 @@ function CeldaCosto({ a }: { a: ArticuloCatalogo }) {
 }
 
 export default function Componentes() {
-  const { puede } = useSesion();
+  const { puede, vePrecios } = useSesion();
   const ir = useNavigate();
   const [params, setParams] = useSearchParams();
   const [nuevo, setNuevo] = useState(false);
@@ -87,7 +87,7 @@ export default function Componentes() {
       clave: "existencia", titulo: "Existencia", alinear: "der", sinBusqueda: true, valor: (a) => a.existencia ?? 0, clase: "whitespace-nowrap", explica: GLOSARIO.enPlanta,
       celda: (a) => <span className={cn(!a.existencia && "text-tenue")}>{numero(a.existencia ?? 0)} <span className="text-xs text-tenue">{a.unidad}</span></span>,
     },
-    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (a) => a.precio, celda: (a) => dinero(a.precio), explica: GLOSARIO.precioLista },
+    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, oculta: !vePrecios, valor: (a) => a.precio, celda: (a) => dinero(a.precio), explica: GLOSARIO.precioLista },
     {
       clave: "costo", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, clase: "whitespace-nowrap", explica: GLOSARIO.costoArticulo,
       valor: (a) => a.costo_total ?? null, celda: (a) => <CeldaCosto a={a} />,
@@ -107,7 +107,7 @@ export default function Componentes() {
   return (
     <Pagina
       titulo="Componentes"
-      descripcion="Lo que se compra: componentes, materia prima y servicios, con su precio de lista y lo que hay en planta."
+      descripcion={`Lo que se compra: componentes, materia prima y servicios, con ${vePrecios ? "su precio de lista y " : ""}lo que hay en planta.`}
       acciones={puede("costeo", 2) && <Boton onClick={() => setNuevo(true)}><Plus className="h-4 w-4" /> Nuevo componente</Boton>}
     >
       <TablaDatos

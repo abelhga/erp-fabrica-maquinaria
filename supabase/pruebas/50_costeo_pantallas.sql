@@ -3,7 +3,7 @@
 -- parámetros, desglose del precio, simulador de márgenes y quién puede qué.
 do $$
 declare
-  v_ing uuid; v_vend uuid; v_dir uuid; v_prod uuid;
+  v_ing uuid; v_vend uuid; v_dir uuid; v_prod uuid; v_fin uuid;
   v_motor uuid; v_polea uuid; v_chum uuid; v_banda_m uuid; v_rod uuid; v_lam uuid; v_vulc uuid;
   v_eq uuid; v_eq2 uuid; v_sub uuid; v_copia uuid; v_tolva uuid;
   v_l_motor uuid; v_l_polea uuid; v_l_chum uuid; v_l_banda uuid; v_l_rod uuid;
@@ -13,6 +13,7 @@ begin
   v_ing := pg_temp.usuario('ingenieria@hegamex.com', '{ingenieria}');
   v_vend := pg_temp.usuario('isaac@hegamex.com', '{ventas}');
   v_dir := pg_temp.usuario('direccion@hegamex.com', '{direccion}');
+  v_fin := pg_temp.usuario('finanzas50@hegamex.com', '{finanzas}');
   v_prod := pg_temp.usuario('taller@hegamex.com', '{produccion}');
 
   -- Componentes con costo (uno con merma y otro que depende del largo)
@@ -211,11 +212,16 @@ begin
   update bom_lineas set cantidad = 1 where padre_id = v_tolva;
   update costos_articulo set costo = 9134.569 where articulo_id = v_lam;
   update articulos set categoria_id = (select id from categorias where nombre = 'Banda Transportadora'), medida_especial = false where id = v_tolva;
+  -- El desglose es de márgenes (finanzas, dirección); ingeniería ya no lo recibe (149).
   perform pg_temp.como(v_ing);
+  assert desglose_precio(v_tolva) is null, 'ingeniería recibió el desglose del precio';
+  perform pg_temp.como(v_fin);
   v_j := desglose_precio(v_tolva);
   assert (v_j->>'costo')::numeric = 9134.57, format('costo del desglose %s', v_j->>'costo');
   -- Ingeniería (costos 2) puede capturar un costo; el desglose sigue al instante.
+  perform pg_temp.como(v_ing);
   update costos_articulo set costo = 91345.69 where articulo_id = v_lam;
+  perform pg_temp.como(v_fin);
   v_j := desglose_precio(v_tolva);
   assert (v_j->>'precio_sin_redondeo')::numeric = 201941.29, format('V de E-315 debía ser 201,941.29 y salió %s', v_j->>'precio_sin_redondeo');
   assert (v_j->>'precio_redondeado')::numeric = 202000, format('W de E-315 debía ser 202,000 y salió %s', v_j->>'precio_redondeado');
@@ -228,7 +234,7 @@ begin
   -- ---------------------------------------------------------------------------
   -- Simulador: subir la utilidad de bandas mueve sus precios y nada más
   -- ---------------------------------------------------------------------------
-  perform pg_temp.como(v_ing);
+  perform pg_temp.como(v_fin);
   select count(*) filter (where precio_simulado > precio_actual), count(*) filter (where precio_simulado < precio_actual)
     into v_n, v_fotos
   from simular_precios((select id from politicas_precio where nombre = 'Banda Transportadora'), '{"utilidad": 0.35}');
@@ -242,10 +248,10 @@ begin
   where precio_simulado is not null;
   assert v_n = 0, 'una utilidad de 90 % compensada por ISR no tiene solución y dio precio';
 
-  -- ISR: solo quien administra costos (dirección), no ingeniería.
+  -- ISR: solo quien administra márgenes (dirección), no quien solo los ve.
   begin
     perform fijar_isr_compensacion(0.30);
-    assert false, 'ingeniería pudo cambiar el ISR de compensación';
+    assert false, 'finanzas pudo cambiar el ISR de compensación';
   exception when insufficient_privilege then null;
   end;
   perform pg_temp.como(v_dir);
@@ -257,11 +263,13 @@ begin
   assert (select precio from precios_lista where articulo_id = v_tolva) > 202000, 'subir el ISR debía subir el precio';
 
   -- ---------------------------------------------------------------------------
-  -- Precio por canal para ingeniería (antes recibía null porque no ve "canales")
+  -- Precio por canal: de quien ve precios de venta (finanzas sí; ingeniería ya no, 149)
   -- ---------------------------------------------------------------------------
-  perform pg_temp.como(v_ing);
+  perform pg_temp.como(v_fin);
   select count(*) filter (where precio_sugerido > 0) into v_n from precios_por_canal(v_rod);
-  assert v_n >= 2, format('ingeniería debía ver precio sugerido en ML y sitio web, vio %s', v_n);
+  assert v_n >= 2, format('finanzas debía ver precio sugerido en ML y sitio web, vio %s', v_n);
+  perform pg_temp.como(v_ing);
+  assert not exists (select 1 from precios_por_canal(v_rod)), 'ingeniería vio el precio por canal';
   perform pg_temp.como_postgres();
 
   -- ---------------------------------------------------------------------------

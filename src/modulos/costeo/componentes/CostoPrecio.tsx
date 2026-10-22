@@ -92,7 +92,7 @@ export function FormulaEnPalabras({ d }: { d: Desglose }) {
 
 /** Pestaña "Costo y precio": de dónde sale cada peso del precio de lista. */
 export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
-  const { puede } = useSesion();
+  const { puede, vePrecios } = useSesion();
   const d = useDesglose(articulo.id);
   const fab = esFabricado(articulo.tipo);
   const arbol = useArbol(fab ? articulo.id : undefined);
@@ -158,10 +158,12 @@ export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
             {fab && <Renglon etiqueta="Material" detalle="Lista de materiales, incluidos sus subensambles" valor={dinero(articulo.costo_material)} />}
             {fab && <Renglon signo="+" etiqueta="Mano de obra" detalle={`${numero(articulo.horas)} h a la tarifa de cada etapa`} valor={dinero(articulo.costo_mano_obra)} />}
             <Renglon signo={fab ? "=" : undefined} fuerte={fab} etiqueta="Costo" valor={dinero(articulo.costo_total)} />
-            <div className="flex items-baseline gap-3 mt-3 rounded-lg bg-marca-suave px-3 py-3">
-              <span className="flex-1 font-semibold text-marca-texto">Precio de lista sin IVA</span>
-              <span className="text-2xl font-semibold cifra">{dinero(articulo.precio)}</span>
-            </div>
+            {vePrecios && (
+              <div className="flex items-baseline gap-3 mt-3 rounded-lg bg-marca-suave px-3 py-3">
+                <span className="flex-1 font-semibold text-marca-texto">Precio de lista sin IVA</span>
+                <span className="text-2xl font-semibold cifra">{dinero(articulo.precio)}</span>
+              </div>
+            )}
           </div>
         </Tarjeta>
         {confiabilidad}

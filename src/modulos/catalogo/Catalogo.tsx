@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, ImageOff } from "lucide-react";
@@ -7,6 +7,7 @@ import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos"
 import { Lateral } from "@/components/ui/dialogo";
 import { Insignia } from "@/components/ui/insignia";
 import { supabase } from "@/lib/supabase";
+import { q } from "@/lib/consultas";
 import { dinero, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { traerTodas } from "@/modulos/costeo/componentes/comun";
@@ -40,6 +41,8 @@ function Foto({ url, grande }: { url: string | null; grande?: boolean }) {
 export default function Catalogo() {
   const [params, setParams] = useSearchParams();
   const filtro = (params.get("filtro") as FiltroCat) ?? "todos";
+  // ?articulo=… viene del buscador de arriba: abre su ficha.
+  const articuloId = params.get("articulo");
   const [abierto, setAbierto] = useState<Articulo | null>(null);
 
   const cat = useQuery({
@@ -50,6 +53,21 @@ export default function Catalogo() {
         .order("clave").range(d, h) as unknown as PromiseLike<{ data: Articulo[] | null; error: { message: string } | null }>),
     staleTime: 60_000,
   });
+  const enLista = cat.data?.find((a) => a.id === articuloId);
+  const suelto = useQuery({
+    queryKey: ["catalogo_venta", "uno", articuloId],
+    enabled: !!articuloId && !!cat.data && !enLista,
+    queryFn: () => q<Articulo | null>(supabase.from("v_catalogo").select("id, clave, tipo, nombre, descripcion, unidad, categoria, imagen_url, precio, existencia")
+      .eq("id", articuloId!).maybeSingle() as unknown as PromiseLike<{ data: Articulo | null; error: { message: string } | null }>),
+  });
+  useEffect(() => {
+    const a = enLista ?? suelto.data;
+    if (articuloId && a) setAbierto(a);
+  }, [articuloId, enLista, suelto.data]);
+  const cerrar = () => {
+    setAbierto(null);
+    if (articuloId) setParams((p) => { const n = new URLSearchParams(p); n.delete("articulo"); return n; }, { replace: true });
+  };
 
   const filas = useMemo(() => {
     const f = cat.data ?? [];
@@ -93,7 +111,7 @@ export default function Catalogo() {
   ];
 
   return (
-    <Pagina titulo="Catálogo" descripcion="Lo que vendemos, con su foto, precio de lista y lo que hay en planta. Para dar precios por teléfono.">
+    <Pagina titulo="Catálogo" descripcion="Lo que vendemos, con su foto, precio de lista y lo que hay en planta.">
       <TablaDatos
         filas={filas} columnas={columnas} cargando={cat.isLoading} error={cat.error} claveFila={(a) => a.id}
         alClicFila={setAbierto} exportarComo="catalogo"
@@ -103,7 +121,7 @@ export default function Catalogo() {
           ? { icono: BookOpen, titulo: "Todavía no hay nada a la venta", texto: "Ingeniería marca qué artículos se venden; cuando lo haga, aparecen aquí con su precio." }
           : { icono: BookOpen, titulo: "Nada con este filtro", texto: "Prueba con otro filtro o quítalo." }}
       />
-      <Lateral abierto={!!abierto} alCambiar={(v) => !v && setAbierto(null)} titulo={abierto?.nombre} subtitulo={abierto?.clave} ancho="max-w-lg">
+      <Lateral abierto={!!abierto} alCambiar={(v) => !v && cerrar()} titulo={abierto?.nombre} subtitulo={abierto?.clave} ancho="max-w-lg">
         {abierto && (
           <div className="space-y-5">
             <Foto key={abierto.imagen_url ?? abierto.id} url={abierto.imagen_url} grande />

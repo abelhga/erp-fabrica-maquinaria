@@ -22,7 +22,7 @@ export const COSTEO: Record<string, AyudaPantalla> = {
     "«Inhabilitar» lo saca del cotizador y de pedidos nuevos cuando ya no se fabrica; arriba sale la marca «Inhabilitado» y el botón cambia a «Reactivar».",
   ],
   "/costeo/componentes": [
-    "Todo lo que se compra: componentes, materia prima y servicios, con su precio de lista y lo que hay en planta. Ingeniería y compras lo dan de alta; los demás lo consultan.",
+    "Todo lo que se compra: componentes, materia prima y servicios, con lo que hay en planta (y su precio de lista, si tu puesto vende). Ingeniería y compras lo dan de alta; los demás lo consultan.",
     "Busca por clave, nombre, categoría o proveedor y dale clic a un renglón para abrir su ficha. Los filtros separan lo importado y lo que tiene existencia; el botón CSV baja la lista para Excel.",
     "La existencia suma los almacenes de planta: lo que está en el Full de Mercado Libre no cuenta aquí.",
     "Quien tiene permiso de costos ve además el costo, su fecha y el proveedor, y los filtros «Sin costo» y «Costo de +6 meses»; los renglones en rojo no tienen costo capturado.",
@@ -40,7 +40,7 @@ export const COSTEO: Record<string, AyudaPantalla> = {
     "Para ligar un plano, entra al equipo (Equipos y subensambles), pestaña Planos, y liga el archivo de Drive: el ERP le da folio y revisión. Si hay equipos en producción sin plano vigente, ingeniería los ve arriba en un aviso.",
   ],
   "/costeo/margenes": [
-    "El panel de utilidad, antes la pestaña Reglas de Nuevo Costeo: de aquí sale el precio de lista de todo el catálogo. Lo consultan ingeniería, finanzas y la gerencia administrativa; solo dirección lo cambia.",
+    "El panel de utilidad, antes la pestaña Reglas de Nuevo Costeo: de aquí sale el precio de lista de todo el catálogo. Lo consultan finanzas y la gerencia administrativa; solo dirección lo cambia.",
     "Cada tarjeta es una política de precio: utilidad, recargos sobre costo y sobre precio, medida especial, redondeo y descuento máximo. «Editar» abre el simulador: antes de guardar ves cuántos precios se mueven y cuáles más. Cada cambio queda en la bitácora con quién y cuándo.",
     "El precio de un equipo es: costo × (1 + recargos sobre costo + medida especial) ÷ (1 − utilidad ÷ (1 − ISR) − recargos sobre precio), redondeado hacia arriba. Lo que se revende usa el margen sobre precio de su política, sin compensar ISR: costo ÷ (1 − margen).",
     "El ISR de compensación, la mano de obra por etapa y el tipo de cambio también mueven precios: al cambiarlos se recalcula todo lo que depende de ellos. El tipo de cambio lo capturan compras (en Actualizar precios) o finanzas: escribe el valor y Enter.",

@@ -86,7 +86,8 @@ const TABLAS: Record<string, string> = {
   historial_costos: "articulo_id,costo_anterior,costo_nuevo,moneda,origen,en",
   costos_calculados: "articulo_id,costo_material,costo_mano_obra,costo_total,sin_costo,calculado_en",
   // Sin la utilidad: la API ya no da esa columna (es de márgenes, no de costos).
-  historial_costeo: "articulo_id,en,costo_total,precio_lista",
+  // Sin precio_lista: la API ya no lo da (149); los precios van por precios_lista, con su RLS.
+  historial_costeo: "articulo_id,en,costo_total",
   perfiles: "id,nombre,puesto",
   // Sin montos: la RLS deja ver el embarque a almacén y al taller, el dinero no.
   v_embarques: "folio,descripcion,modalidad,proveedores,fase,etapa_nombre,eta,arribo,dias_en_puerto,dias_libres_almacenaje,llegada_planta_estimada,siguiente_paso,debe,docs_pendientes",

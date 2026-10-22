@@ -20,16 +20,16 @@ interface Uso {
  * cada equipo de esta lista cambia de costo y de precio.
  */
 export function DondeSeUsa({ id, unidad }: { id: string; unidad: string }) {
-  const { puede } = useSesion();
+  const { puede, vePrecios } = useSesion();
   const ir = useNavigate();
   const costos = puede("costos");
   const usos = useQuery({
-    queryKey: ["costeo", "usos", id, costos],
+    queryKey: ["costeo", "usos", id, costos, vePrecios],
     queryFn: async () => {
       const niveles = await q<{ articulo_id: string; nivel: number }[]>(supabase.rpc("donde_se_usa", { p_articulo: id }));
       if (!niveles.length) return [];
       const ids = niveles.map((n) => n.articulo_id);
-      const cols = `id, clave, nombre, tipo, categoria, precio${costos ? ", costo_total" : ""}`;
+      const cols = `id, clave, nombre, tipo, categoria${vePrecios ? ", precio" : ""}${costos ? ", costo_total" : ""}`;
       const [arts, directas] = await Promise.all([
         enTrozos<Omit<Uso, "nivel" | "cantidad">>(ids, (t) => supabase.from("v_catalogo").select(cols).in("id", t) as never),
         q<{ padre_id: string; cantidad_efectiva: number }[]>(supabase.from("v_bom").select("padre_id, cantidad_efectiva").eq("hijo_id", id)),
@@ -50,7 +50,7 @@ export function DondeSeUsa({ id, unidad }: { id: string; unidad: string }) {
     { clave: "nivel", titulo: "Cómo lo lleva", clase: "whitespace-nowrap text-tenue", valor: (u) => u.nivel,
       celda: (u) => (u.nivel === 1 ? <span className="text-texto">directo · {cant(u.cantidad)} {unidad}</span> : `dentro de un subensamble (nivel ${u.nivel})`) },
     { clave: "costo_total", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (u) => u.costo_total ?? null, celda: (u) => dinero(u.costo_total) },
-    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (u) => u.precio, celda: (u) => dinero(u.precio) },
+    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, oculta: !vePrecios, valor: (u) => u.precio, celda: (u) => dinero(u.precio) },
   ];
 
   return (

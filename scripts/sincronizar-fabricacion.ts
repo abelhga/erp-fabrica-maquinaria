@@ -81,7 +81,9 @@ begin
     v_area := pg_temp.norm(h.area);
     v_ausente := v_area = 'cliente ausente';
     v_avance := case when h.avance ~ '^[0-9]+$' then h.avance::int end;
-    v_cuando := (coalesce(h.termino, h.actualizada, current_date)::timestamp + time '18:00') at time zone 'America/Mexico_City';
+    -- Las 18:00 del día de la hoja, pero nunca en el futuro: la del 21-oct dejó inicios a
+    -- las 18:00 de ese día y la terminal los mostraba después de su fin.
+    v_cuando := least((coalesce(h.termino, h.actualizada, current_date)::timestamp + time '18:00') at time zone 'America/Mexico_City', now());
     -- El orden de la etapa donde va el equipo (null = todavía no entra a una etapa del ERP).
     select e.orden into v_orden from public.etapas e where e.nombre = case v_area
       when 'plasma' then 'Corte' when 'paileria' then 'Pailería' when 'pintura' then 'Pintura' when 'habilitado' then 'Detallado' end;

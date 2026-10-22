@@ -231,7 +231,10 @@ begin
   v_j := contestar_solicitud_precio(v_s1, 735, 'MXN', v_prov, 5, current_date + 30, 'Mínimo 2 piezas', null,
                                     '{"nombre": "T Polea 10\" doble canal 2B10", "unidad": "pieza"}');
   v_nuevo := (v_j->>'articulo_id')::uuid;
-  assert (v_j->>'precio_lista')::numeric = 1050, format('precio de lista del nuevo: %s', v_j->>'precio_lista');
+  -- Compras no ve el precio de venta (149); queda guardado para el vendedor.
+  assert v_j->>'precio_lista' is null, format('compras vio el precio de lista: %s', v_j->>'precio_lista');
+  assert (select precio_lista from solicitudes_precio where id = v_s1) = 1050,
+    format('precio de lista del nuevo: %s', (select precio_lista from solicitudes_precio where id = v_s1));
   perform pg_temp.como_postgres();
   select * into r from articulos where id = v_nuevo;
   assert r.tipo = 'componente' and r.tiempo_entrega_dias = 5 and r.proveedor_id = v_prov and r.descripcion like '%Martin%', 'alta del componente desde la solicitud';
@@ -247,7 +250,8 @@ begin
   v_s3 := pedir_precio(null, v_pol, 10, false, null, null, 'Precio por volumen');
   perform pg_temp.como(v_compras);
   v_j := contestar_solicitud_precio(v_s3, 770, 'MXN', v_prov, 8, null, null);
-  assert (v_j->>'precio_lista')::numeric = 1100, format('precio de la polea después de la respuesta: %s', v_j->>'precio_lista');
+  assert (select precio_lista from solicitudes_precio where id = v_s3) = 1100,
+    format('precio de la polea después de la respuesta: %s', (select precio_lista from solicitudes_precio where id = v_s3));
   perform pg_temp.como_postgres();
   assert (select precio from precios_lista where articulo_id = v_pol) = 1100, 'el precio de lista no se recalculó';
   assert (select costo from costos_articulo where articulo_id = v_pol) = 770, 'el costo no quedó en el catálogo';
@@ -311,7 +315,13 @@ begin
   perform pg_temp.como(v_compras);
   select * into r from v_solicitudes_precio where id = v_s1;
   assert r.costo = 735 and r.moneda = 'MXN' and r.proveedor = 'T84 Rodamientos del Bajío', 'compras sí ve costo y proveedor';
-  assert precio_lista_estimado(v_pol, 840) = 1200 and precio_lista_estimado(null, 700) = 1000, 'estimado de compras';
+  -- Compras ve costo y proveedor, pero ni el precio estimado ni el de la solicitud (149).
+  assert precio_lista_estimado(v_pol, 840) is null and r.precio_lista is null and r.precio_lista_actual is null, 'compras vio precios de venta';
+  -- Quien ve costos y precios (dirección) sí recibe el estimado, con la misma regla de siempre.
+  perform pg_temp.como_postgres();
+  perform pg_temp.como(pg_temp.usuario('dir84@hegamex.com', '{direccion}'));
+  assert precio_lista_estimado(v_pol, 840) = 1200 and precio_lista_estimado(null, 700) = 1000, 'estimado de dirección';
+  perform pg_temp.como(v_compras);
 
   -- ---------------------------------------------------------------------------
   -- Aplicar a la partida: la libre se vuelve el artículo nuevo con su precio.
