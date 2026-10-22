@@ -8,6 +8,9 @@ begin
   v_vend := pg_temp.usuario('vend142@hegamex.com', '{ventas}');
   v_gp := pg_temp.usuario('gp142@hegamex.com', '{gerente_produccion}');
   v_rh := pg_temp.usuario('rh142@hegamex.com', '{rrhh}');
+  -- Aquí se prueban los tramos con horas de reloj; el horario del taller lo prueba 163
+  -- (con «horario», el resultado dependería de la hora a la que corre la prueba).
+  update configuracion set valor = jsonb_set(valor, '{modo}', '"terminal"') where clave = 'horas_taller';
   perform pg_temp.como(v_rh);
   insert into empleados (nombre, fecha_ingreso, departamento_id, en_cuadrillas) values ('Ana Pailera142', '2023-01-02', departamento_produccion(), true) returning id into e1;
   insert into empleados (nombre, fecha_ingreso, departamento_id, en_cuadrillas) values ('Beto Pailero142', '2023-01-02', departamento_produccion(), true) returning id into e2;

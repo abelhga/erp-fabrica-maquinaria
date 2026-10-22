@@ -126,6 +126,21 @@ export function usePiso(opciones: { etapa?: number | null; intervalo?: number } 
   });
 }
 
+/** Cómo se cuentan las horas de la terminal (lo elige la gerencia en Personal de piso). */
+export interface HorasTaller { modo: "horario" | "terminal"; descansos: { de: string; a: string; minutos?: number }[] }
+export function useHorasTaller() {
+  return useQuery({
+    queryKey: [...CLAVE, "horas_taller"], staleTime: 5 * 60_000,
+    queryFn: async () => (await q<{ valor: HorasTaller }[]>(supabase.from("configuracion").select("valor").eq("clave", "horas_taller")))[0]?.valor
+      ?? { modo: "horario", descansos: [] } as HorasTaller,
+  });
+}
+/** «40 min entre 10:00 y 11:00 y de 15:00 a 15:20», para decir qué se descuenta. */
+export function textoDescansos(d: HorasTaller["descansos"]) {
+  const t = d.map((x) => (x.minutos ? `${x.minutos} min entre ${x.de} y ${x.a}` : `de ${x.de} a ${x.a}`));
+  return t.length > 1 ? `${t.slice(0, -1).join(", ")} y ${t[t.length - 1]}` : t[0] ?? "ninguno";
+}
+
 export function usePersonalPiso() {
   return useQuery({ queryKey: [...CLAVE, "personal_piso"], staleTime: 30_000, queryFn: () => q<PersonaPiso[]>(supabase.rpc("personal_de_piso")) });
 }
