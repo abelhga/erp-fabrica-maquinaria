@@ -12,10 +12,15 @@ export const GENERAL: Record<string, AyudaPantalla> = {
     "“Me tocan” son los tuyos: dale clic al círculo para marcarlo hecho y, si quieres, deja una respuesta corta (un precio, una fecha). “Los que pedí” son los que esperas de otros; si ya no hace falta, cancélalo con la X. La flecha te lleva al pedido, orden o pantalla de donde salió.",
     "La fecha sale en ámbar si vence hoy y en rojo si ya venció; mientras siga vencido, el sistema les recuerda a los dos. Para pedir algo nuevo usa “Pedir algo a alguien”: qué hay que hacer, quién y para cuándo.",
   ],
+  "/calendario": [
+    "Todo lo que tiene fecha y te toca ver, en un solo lugar: entregas de pedidos, cierres de oportunidades y llamadas, compras y embarques que llegan, envíos por recolectar, compromisos del taller y cuándo termina cada orden según el plan, servicios, preventivos, herramienta por devolver, pagos, vacaciones, cumpleaños y tus pendientes. No se captura nada aquí: cada cosa sale de su pantalla.",
+    "Cada quien ve lo de su puesto: un vendedor ve sus entregas y sus llamadas, no las compras; los pagos solo los ve finanzas. Lo que ya se cerró no sale; lo que ya pasó su fecha y sigue abierto sale en rojo («atrasado»).",
+    "Arriba eliges Mes, Semana o Lista y te mueves con las flechas; «Hoy» te regresa. Los colores son las áreas: toca una para esconderla. «Solo lo mío» deja lo que está a tu nombre. Dale clic a un día para ver todo lo de ese día, y a una línea para ir a su pantalla.",
+  ],
   "/semana": [
     "Tu resumen de los lunes: lo que pasó la semana pasada comparado con la anterior, y lo que viene en esta. Sirve para preparar la junta o para saber de un vistazo cómo vamos.",
     "Arriba, “La semana en una frase” la narra Claude con los números (o las reglas del ERP si no está conectado); el botón de flechas la vuelve a escribir. En las tarjetas, el porcentaje compara contra la semana anterior: verde si subió, rojo si bajó.",
-    "La agenda “Esta semana” junta todo lo que tiene fecha de lunes a domingo: entregas, órdenes de taller, compras que llegan, embarques y servicios. Lo que ya pasó su fecha y sigue abierto sale en rojo. Dale clic a un renglón para ir a su lista.",
+    "La agenda “Esta semana” sale del calendario: todo lo que tiene fecha de lunes a domingo y tu puesto puede ver (entregas, lo que llega, taller, servicios, pagos, vacaciones, tus pendientes). Lo que ya pasó su fecha y sigue abierto sale en rojo. Dale clic a un renglón para ir a su pantalla, o a «Abrir el calendario» para ver más allá de esta semana.",
     "Si eres vendedor, las ventas y “Quién compró más” son solo de tus clientes. Las ventas de esta pantalla van con IVA, como en el libro de ventas de la hoja.",
   ],
 };
