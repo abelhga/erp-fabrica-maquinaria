@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { mensajeError, q } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
 import { fecha } from "@/lib/formato";
-import { CLAVE, useEtapas, usePiso, useProduccionEnVivo, type Etapa, type OperacionPiso } from "./componentes/datos";
+import { CLAVE, useAsignaciones, useCuadrillas, useEtapas, usePersonalPiso, usePiso, useProduccionEnVivo, type Etapa, type OperacionPiso, type PersonaPiso } from "./componentes/datos";
 import { abreviarEquipo, folioCorto, haceRato, textoDias, tonoCompromiso } from "./componentes/util";
 import { useSesion } from "@/lib/sesion";
 import { GLOSARIO } from "@/tutorial/glosario";
@@ -24,15 +24,6 @@ const guardar = (k: string, v: string | null) => { try { if (v == null) localSto
 type Accion = "inicio" | "pausa" | "reanudar" | "fin" | "problema";
 /** Quiénes trabajan una etapa: personas con nombre más las que no se sabe quiénes son. */
 interface Cuadrilla { empleados: string[]; sinNombre: number }
-interface PersonaPiso { id: string; nombre: string; etapa_id: number | null; trabajando_en: string | null; tiempo_id: string | null }
-interface TramoAbierto { tiempo_id: string; operacion_id: string; empleado_id: string | null; nombre: string; personas: number; inicio: string }
-
-function usePersonalPiso() {
-  return useQuery({ queryKey: [...CLAVE, "personal_piso"], staleTime: 30_000, queryFn: () => q<PersonaPiso[]>(supabase.rpc("personal_de_piso")) });
-}
-function useCuadrillas() {
-  return useQuery({ queryKey: [...CLAVE, "cuadrillas"], queryFn: () => q<TramoAbierto[]>(supabase.rpc("cuadrillas_abiertas")) });
-}
 const ACCIONES: Record<Accion, { texto: string; verbo: string; hecho: string; icono: typeof Play; clase: string }> = {
   inicio: { texto: "Iniciar", verbo: "Iniciar", hecho: "iniciada", icono: Play, clase: "bg-ok text-white" },
   pausa: { texto: "Pausar", verbo: "Pausar", hecho: "pausada", icono: Pause, clase: "bg-aviso text-white" },
@@ -55,7 +46,7 @@ function tintaSobre(hex: string) {
  * la pantalla (sin el menú) para que no se toque nada más por accidente.
  */
 export default function Terminal() {
-  useProduccionEnVivo(["op_eventos", "ordenes_produccion", "op_tiempos"]);
+  useProduccionEnVivo(["op_eventos", "ordenes_produccion", "op_tiempos", "op_asignaciones"]);
   const etapas = useEtapas();
   const { puede } = useSesion();
   const piso = usePiso({ intervalo: 60_000 });
@@ -110,7 +101,9 @@ export default function Terminal() {
 
   const todas = piso.data ?? [];
   const deEtapa = todas.filter((o) => o.etapa_id === etapaId);
-  const orden = (a: OperacionPiso, b: OperacionPiso) => a.prioridad - b.prioridad || (a.dias_restantes ?? 9999) - (b.dias_restantes ?? 9999);
+  // Primero el orden que dejó la gerencia en la cola de Cuadrillas; lo que nadie acomodó, por prioridad y fecha.
+  const orden = (a: OperacionPiso, b: OperacionPiso) => (a.turno ?? 9999) - (b.turno ?? 9999) || a.prioridad - b.prioridad
+    || (a.dias_restantes ?? 9999) - (b.dias_restantes ?? 9999);
   const trabajando = deEtapa.filter((o) => o.estado !== "pendiente").sort(orden);
   const listas = deEtapa.filter((o) => o.estado === "pendiente" && o.lista).sort(orden);
   const despues = deEtapa.filter((o) => o.estado === "pendiente" && !o.lista).sort(orden);
@@ -266,6 +259,7 @@ function TarjetaPiso({ o, pedir, ahora, tenue }: { o: OperacionPiso; pedir: (o: 
         {o.estado === "en_proceso" && <p className="font-medium text-marca-texto">● En proceso{o.inicio && ` · empezó ${haceRato(o.inicio, ahora)}`}</p>}
         {o.estado === "en_proceso" && <CuadrillaEnEtapa o={o} ahora={ahora} />}
         {o.estado === "pausada" && <p className="font-semibold text-aviso">❚❚ Pausada{o.responsable && ` · ${o.responsable}`}</p>}
+        {o.estado !== "en_proceso" && <LeToca o={o} />}
         {o.estado === "pendiente" && (o.lista ? <p className="text-ok font-medium">Lista para empezar</p> : <p className="text-tenue">Todavía en {o.espera_a}</p>)}
         {o.ultimo_problema && o.estado !== "pendiente" && (
           <p className="text-peligro flex gap-2"><AlertTriangle className="h-6 w-6 shrink-0" /><span>{o.ultimo_problema} <span className="text-tenue">({haceRato(o.ultimo_problema_en, ahora)})</span></span></p>
@@ -355,9 +349,13 @@ function Confirmar({ p, nombre, cargando, alConfirmar, alCancelar, alCambiarNomb
   const obligatoria = p.accion === "problema";
   const conCuadrilla = p.accion === "inicio" || p.accion === "reanudar";
   const personal = usePersonalPiso();
-  const [cuadrilla, setCuadrilla] = useState<Cuadrilla>(() => {
+  const asignaciones = useAsignaciones();
+  // Primero la cuadrilla que planeó la gerencia en el tablero; si no hay, la última de esta tablet.
+  const planeados = (asignaciones.data ?? []).filter((a) => a.operacion_id === p.op.id).map((a) => a.empleado_id);
+  const [propia, setCuadrilla] = useState<Cuadrilla | null>(null);
+  const cuadrilla: Cuadrilla = propia ?? (planeados.length > 0 ? { empleados: planeados, sinNombre: 0 } : (() => {
     try { return JSON.parse(leer(LS.cuadrilla + p.op.etapa_id) ?? "") as Cuadrilla; } catch { return { empleados: [], sinNombre: 0 }; }
-  });
+  })());
   // Quien ya está en otra etapa no se preselecciona (la base no lo deja estar en dos).
   const libres = new Set((personal.data ?? []).filter((x) => !x.trabajando_en).map((x) => x.id));
   const elegidos = { ...cuadrilla, empleados: cuadrilla.empleados.filter((id) => libres.has(id)) };
@@ -439,6 +437,20 @@ function ElegirPersonas({ etapaId, personal, cargando, valor, alCambiar, uno }: 
                   uno && valor.sinNombre > 0 ? "border-marca bg-marca-suave" : "border-borde")}><Plus className="h-6 w-6" />{uno && "1"}</button>
       </div>
     </div>
+  );
+}
+
+/** En lo que no ha empezado (o está pausado): a quién le toca, según el tablero de cuadrillas. */
+function LeToca({ o }: { o: OperacionPiso }) {
+  const asignaciones = useAsignaciones();
+  const personal = usePersonalPiso();
+  const nombres = (asignaciones.data ?? []).filter((a) => a.operacion_id === o.id)
+    .map((a) => (personal.data ?? []).find((x: PersonaPiso) => x.id === a.empleado_id)?.nombre).filter(Boolean);
+  if (nombres.length === 0) return null;
+  return (
+    <p className="flex items-center gap-2" data-explain={GLOSARIO.cuadrillaPlaneada} data-explain-title="Le toca">
+      <Users className="h-6 w-6 text-tenue shrink-0" /><span><span className="text-tenue">Le toca:</span> {nombres.join(", ")}</span>
+    </p>
   );
 }
 
