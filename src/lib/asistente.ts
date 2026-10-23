@@ -116,3 +116,18 @@ export async function conversar(mensajes: MensajeChat[], ruta: string, alEvento:
     for (const p of partes) if (p.startsWith("data: ")) alEvento(JSON.parse(p.slice(6)) as Evento);
   }
 }
+
+/** Una mejora que Claude sugiere con los datos del taller (sugerir_mejoras en la función). */
+export interface SugerenciaMejora {
+  titulo: string; etapa: string; desperdicio: string; tipo: "kaizen" | "a3";
+  problema: string; propuesta: string; evidencia: string; ahorro_horas_mes: number;
+}
+export interface SugerenciasMejora {
+  lectura: string; sugerencias: SugerenciaMejora[];
+  generado_en: string; simulado?: boolean; guardado?: boolean; modelo?: string | null; aviso?: string;
+}
+
+/** Solo para quien decide las mejoras (procesos 2): la función lo revisa. Las del día se reusan. */
+export async function pedirSugerenciasMejora(forzar = false): Promise<SugerenciasMejora> {
+  return (await llamar({ modo: "sugerir_mejoras", forzar })).json();
+}

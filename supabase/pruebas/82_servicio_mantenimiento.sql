@@ -21,6 +21,14 @@ begin
   select id into v_torno from etapas where nombre = 'Torno';
   select id into v_pb from almacenes where nombre = 'Planta Baja';
   v_lunes := date_trunc('week', hoy_planta())::date + 7;   -- la semana que entra
+  -- Las horas de taller salen del horario del taller (8:00 a 17:30, desayuno y tarde). Esa semana
+  -- se fija como días especiales: así un feriado que caiga ahí no mueve las cuentas.
+  update configuracion set valor = valor || jsonb_build_object(
+      'modo', 'horario',
+      'horario', '{"1": ["08:00", "17:30"], "2": ["08:00", "17:30"], "3": ["08:00", "17:30"], "4": ["08:00", "17:30"], "5": ["08:00", "17:30"]}'::jsonb,
+      'descansos', '[{"de": "10:00", "a": "11:00", "minutos": 40}, {"de": "15:00", "a": "15:20"}]'::jsonb,
+      'especiales', (select jsonb_object_agg(to_char(v_lunes + k, 'YYYY-MM-DD'), '["08:00", "17:30"]'::jsonb) from generate_series(0, 4) k))
+  where clave = 'horas_taller';
 
   insert into empleados (numero, nombre, puesto, etapa_id, fecha_ingreso) values
     ('T82-1', 'Soldador Uno T82', 'Soldador', v_pail, '2020-01-01') returning id into v_e1;
@@ -101,7 +109,8 @@ begin
   v_fin := ((v_lunes + 2) + time '17:30') at time zone 'America/Mexico_City';     -- lunes a miércoles
   perform programar_servicio(v_s2, v_ini, v_fin, array[v_e1, v_e2], v_e1);
   assert (select estado from servicios where id = v_s2) = 'programada', 'el servicio quedó programado';
-  assert (select horas_por_persona from v_servicios where id = v_s2) = 27, 'tres jornadas de 9 h por persona';
+  -- Lunes desde las 8:30 (8 h) y martes y miércoles completos (8.5 h): el horario del taller.
+  assert (select horas_por_persona from v_servicios where id = v_s2) = 25, format('horas por persona: %s', (select horas_por_persona from v_servicios where id = v_s2));
 
   v_s3 := solicitar_servicio('puesta_en_marcha', v_cli, 'Arrancar la dosificadora nueva');
   begin
@@ -132,13 +141,14 @@ begin
     if sqlerrm not like '%vacaciones%' then raise; end if;
   end;
 
-  -- Capacidad: Pailería pierde 2 personas × 27 h el lunes a miércoles y 4 h el jueves (Soldador Dos).
+  -- Capacidad: Pailería pierde 2 personas × 25 h de lunes a miércoles, y el jueves de 8:30 a
+  -- 12:30 (Soldador Dos) son 3.33 h: 4 menos 40 min de desayuno.
   select * into r from carga_semanal(2) where semana = v_lunes and etapa_id = v_pail;
-  assert r.horas_servicio = v_base.horas_servicio + 58, format('horas de servicio en Pailería: %s (antes %s)', r.horas_servicio, v_base.horas_servicio);
+  assert r.horas_servicio = round(v_base.horas_servicio + 53.33, 1), format('horas de servicio en Pailería: %s (antes %s)', r.horas_servicio, v_base.horas_servicio);
   assert r.capacidad_disponible = v_cap - r.horas_servicio, 'capacidad disponible = capacidad − horas de cuadrilla';
-  assert r.servicios @> jsonb_build_array(jsonb_build_object('folio', (select folio from servicios where id = v_s2), 'horas', 54)),
+  assert r.servicios @> jsonb_build_array(jsonb_build_object('folio', (select folio from servicios where id = v_s2), 'horas', 50)),
     format('el servicio aparece con sus horas en la semana: %s', r.servicios);
-  assert (select horas_servicio from carga_semanal(2) where semana = v_lunes and etapa_id = v_torno) >= 4, 'el tornero también descuenta';
+  assert (select horas_servicio from carga_semanal(2) where semana = v_lunes and etapa_id = v_torno) >= 3.3, 'el tornero también descuenta';
   -- v_carga_etapas (la usan la gerencia y la TV) no cambió: los servicios van aparte.
   assert (select jsonb_agg(to_jsonb(v) order by v.etapa_id) from v_carga_etapas v) = v_carga_antes, 'v_carga_etapas cambió';
 

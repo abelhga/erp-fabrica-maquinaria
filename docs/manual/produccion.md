@@ -283,5 +283,51 @@ de producción y dirección. Los costos dentro de las métricas solo los ve quie
 (iniciar, pausar, terminar y quién trabaja). La pantalla dice qué parte de las etapas se marcó; si es
 poca, esos números dicen poco. Las entregas a tiempo y los terminados no dependen de eso.
 
-**Siguiente:** las herramientas lean (5S, kaizen, A3, OEE, SMED) se habilitan una por una cuando
-ingeniería de procesos las vaya a usar.
+**Siguiente:** las demás herramientas lean (5S, OEE, SMED) se habilitan una por una cuando
+ingeniería de procesos las vaya a usar. Kaizen y A3 ya están: ver «Mejoras (kaizen)».
+
+---
+
+## Mejoras (kaizen)
+
+**Para qué:** que las ideas del piso y los problemas que se reportan terminen en algo hecho, con
+quién lo lleva, para cuándo y qué se logró. **Quién:** la ven y proponen producción, almacén,
+ingeniería de procesos y la gerencia (Producción → Mejoras). La deciden ingeniería de procesos, la
+gerencia de producción y dirección.
+
+**Cómo se propone:**
+- **«Tengo una idea»**, aquí o arriba en la terminal de piso. Basta una línea («un carrito para
+  mover las placas»); lo demás es opcional. Desde la terminal trae el área y el nombre de quien está
+  en la tablet, para reconocerle la idea.
+- **«Del piso, sin mejora todavía»** junta lo de los últimos 30 días que el piso ya reportó:
+  problemas de la terminal, pausas con motivo, etapas reabiertas y fallas de máquinas.
+  «Volverla mejora» la propone con lo que se reportó. Cada problema da una sola mejora.
+
+**Cómo avanza** (el tablero va de izquierda a derecha):
+
+| Estado | Qué falta | Quién lo mueve |
+|---|---|---|
+| Propuesta | Que alguien la decida | Ingeniería de procesos o la gerencia |
+| En marcha | Quién la lleva y para cuándo (sin eso no arranca) | Ingeniería de procesos o la gerencia |
+| Hecha | El resultado escrito (sin eso no se marca hecha) | Quien la lleva, o quien decide |
+| Descartada | El motivo (quien la propuso lo lee) | Ingeniería de procesos o la gerencia |
+
+Quien la propuso recibe un aviso cuando se pone en marcha, cuando se hace y cuando se descarta.
+Quien la lleva recibe uno cuando se la asignan. Las que pasan su fecha sin hacerse salen en rojo.
+
+**A3, para las grandes:** quien decide la marca como A3 y la ficha se abre en dos columnas, como la
+hoja de una página: a la izquierda la situación actual, el objetivo y la causa raíz (preguntar «¿por
+qué?» hasta llegar al fondo); a la derecha las contramedidas, el plan y el resultado.
+
+**Sugerencias de Claude:** ingeniería de procesos y la gerencia tienen «Sugerir con Claude». Claude
+revisa los datos del taller de los últimos 90 días (horas reales contra estimadas por área, esperas
+entre etapas, pausas, problemas, etapas reabiertas y fallas de máquinas) y las mejoras que ya hay, y
+propone de 3 a 6 con las cifras de donde salen. No guarda nada solo: «Proponerla» la manda al
+tablero como propuesta, a nombre de Claude. No se le mandan las horas de cada persona ni los costos:
+se mejora el proceso, no se señala a nadie. Si en la terminal se marca poco, lo dice; mientras más
+se marque, mejores salen. Las del día se guardan; «Volver a pedirlas» gasta una consulta.
+
+**Además:** el desperdicio que quita (los ocho de lean: espera, transporte, movimiento de más,
+inventario de más, sobreproceso, sobreproducción, defectos y talento no aprovechado), la foto de
+antes y la de después, y las horas al mes que ahorra (una estimación de quien la lleva; arriba se
+suman las de las mejoras hechas).

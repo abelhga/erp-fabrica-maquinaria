@@ -21,6 +21,13 @@ export const PRODUCCION: Record<string, AyudaPantalla> = {
     "La cola se acomoda arrastrando una tarjeta sobre otra; es la misma fila del Gantt, así que el plan se recalcula con ese orden. Clic en una tarjeta abre su detalle con lo mismo en botones (agregar, sacar, antes y después). Iniciar, pausar y terminar se sigue marcando en la terminal.",
     "Las horas que faltan y las que tiene encima cada persona salen de las horas estimadas menos las ya trabajadas, repartidas entre la cuadrilla. Son para darse idea, no una promesa.",
   ],
+  "/produccion/mejoras": [
+    "Las mejoras del taller (kaizen): las ideas de la gente y los problemas que reporta el piso, cada una con quién la lleva, para cuándo y qué se logró. La ven y la usan producción, ingeniería de procesos y la gerencia.",
+    "Cualquiera propone con «Tengo una idea», aquí o en la terminal de piso; basta una línea, y se le reconoce a quien la tuvo. Arriba, «Del piso, sin mejora todavía» junta lo que se reportó en los últimos 30 días (problemas, pausas con motivo, etapas reabiertas y fallas de máquinas): «Volverla mejora» la propone con lo que se reportó.",
+    "El tablero va de izquierda a derecha: Propuestas, En marcha y Hechas. Ingeniería de procesos y la gerencia de producción deciden: le ponen quién la lleva y para cuándo y la ponen en marcha, o la descartan diciendo por qué. Quien la lleva escribe el resultado, sube la foto de antes y la de después, y la marca hecha. Quien la propuso recibe un aviso en cada paso.",
+    "Las grandes se trabajan como A3: la ficha se abre en dos columnas, con la situación actual, el objetivo y la causa raíz a la izquierda, y las contramedidas, el plan y el resultado a la derecha. Las horas ahorradas al mes las estima quien la lleva.",
+    "«Sugerir con Claude» (para ingeniería de procesos y la gerencia) revisa los datos del taller de los últimos 90 días y propone mejoras con las cifras de donde salen. No guarda nada solo: «Proponerla» la manda al tablero y se decide como cualquier otra.",
+  ],
   "/produccion/gantt": [
     "El plan del taller en el tiempo: cuándo empieza y termina cada etapa de cada orden y si llega a su fecha compromiso. No se captura nada: el ERP lo calcula con las horas estimadas de cada etapa, lo que puede trabajar cada área, la cuadrilla de cada etapa y el orden de la fila, y lo recalcula al momento con lo que se marca en el piso. Lo ven la gerencia de producción, los supervisores, almacén e ingeniería de procesos.",
     "Cómo se lee: cada barra es una etapa con el color de su área. Apagada, ya se hizo; llena con rayas que se mueven, se está trabajando (llena hasta hoy, translúcida en lo que le falta); rayada, pausada; translúcida, planeada. El rombo es la fecha compromiso: verde si el plan llega antes, rojo si no, y la franja roja son los días que faltarían. La línea azul es hoy.",
@@ -47,6 +54,7 @@ export const PRODUCCION: Record<string, AyudaPantalla> = {
     "Con eso salen las horas hombre de cada etapa: el tiempo de cada persona sumado. Se ven en el detalle de la orden contra las horas estimadas del costeo. Al pausar o terminar la etapa salen todos.",
     "¿Hay que pausar para desayunar? Arriba de la lista lo dice. Si la gerencia eligió «Solo el horario del taller», no: la noche, los días que no se trabaja y los descansos no cuentan; pausa solo cuando dejen la orden. Fuera de horario, lo que quedó iniciado dice «fuera de horario» y sigue solo cuando abre el taller. Si eligió «Lo que marque la terminal», sí: pausa al desayunar, al comer y al irte.",
     "¿Terminaste una por error? El aviso verde trae «Deshacer» unos segundos: la etapa regresa a pausada. Tienes 15 minutos; después, pídeselo a la gerencia de producción.",
+    "¿Se te ocurre cómo hacerlo mejor? «Tengo una idea» (arriba, el foco) la manda a ingeniería de procesos y a la gerencia con tu nombre; basta una línea. Los problemas que reportas también les llegan para volverlos mejora.",
     "En lo que ya empezó, «¿Cuánto lleva?» (¼, ½, ¾, casi) dice cómo va la etapa: con eso el tablero, la TV y el plan saben cuánto falta aunque las horas no se hayan marcado desde el principio.",
   ],
   "/produccion/ordenes": [

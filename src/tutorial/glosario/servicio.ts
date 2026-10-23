@@ -2,7 +2,7 @@ export const SERVICIO = {
   tipoServicio: "Instalación, puesta en marcha (arranque), garantía, reparación en planta o servicio en campo. Cada tipo tiene siempre el mismo color en la lista y en el calendario.",
   estadoServicio: "Por programar (se pidió y nadie le ha puesto fecha), Programado (tiene fecha y cuadrilla), En curso, Cerrado o Cancelado.",
   cuadrilla: "Las personas del taller que salen al servicio. Una persona no puede estar en dos servicios que se enciman, ni salir con vacaciones o incapacidad aprobadas. La corona marca al jefe de cuadrilla.",
-  horasServicio: "Las horas de taller que la cuadrilla pasa en el servicio. Se descuentan de la capacidad semanal del área de cada persona.",
+  horasServicio: "Las horas de taller que la cuadrilla pasa en el servicio, contadas con el horario del taller que pone la gerencia de producción: sin noches, fines de semana, feriados ni descansos; un día de tiempo extra sí cuenta. Se descuentan de la capacidad semanal del área de cada persona.",
   cargaSemanal: "Cuánto trabajo tiene cada área por semana: producción liberada más horas en servicio, contra lo que el área puede trabajar. Las órdenes atrasadas cuentan completas en esta semana.",
   ocupacionArea: "Qué tanto de su capacidad tiene ocupada el área esa semana. Con holgura: menos de 85 %. Justa: de 85 a 100 %. Se pasa: más de 100 %, algo se va a atrasar.",
   garantiaVigente: "Si la garantía sigue en pie cuando se pidió el servicio. Cuenta desde que se entregó (o terminó) el equipo con ese número de serie.",

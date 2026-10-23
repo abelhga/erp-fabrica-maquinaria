@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
 import { CLAVE, cuandoAbre, useEtapas, useHorarioAhora, useProduccionEnVivo, type Evento, type OperacionPiso, type OrdenTablero } from "./componentes/datos";
-import { abreviarEquipo, folioTV, haceRato, textoDias, textoEvento } from "./componentes/util";
+import { abreviarEquipo, folioTV, haceRato, textoDias, textoEvento, tintaSobre } from "./componentes/util";
 
 // La TV se diseña a 1920×1080 y se escala a la pantalla que sea: así se ve
 // igual en la tele del taller que en la laptop del gerente.
@@ -364,18 +364,18 @@ function PantallaCuadrillas({ ops, etapas, ahora }: { ops: OperacionPiso[]; etap
               <article key={quien} className={cn("min-h-0 overflow-hidden rounded-2xl border-[3px] bg-superficie flex flex-col",
                 pausada ? "border-aviso" : o.prioridad === 1 ? "border-peligro" : "border-borde", fuera && "opacity-75")}>
                 {/* La franja de la etapa: el color que el taller ya conoce de las columnas. */}
-                <div className="flex items-center gap-3 px-5 py-2 text-white" style={{ background: o.color }}>
+                <div className="flex items-center gap-3 px-5 py-2" style={{ background: o.color, color: tintaSobre(o.color) }}>
                   <span className="text-[26px] font-extrabold uppercase tracking-wide truncate">{o.etapa}</span>
-                  {pausada && <span className="ml-auto flex items-center gap-1.5 rounded-lg bg-black/30 px-2.5 py-0.5 text-[22px] font-bold"><Pause className="h-6 w-6" />PAUSADA</span>}
-                  {!pausada && o.prioridad === 1 && <span className="ml-auto rounded-lg bg-black/30 px-2.5 py-0.5 text-[22px] font-extrabold">URGENTE</span>}
+                  {pausada && <span className="ml-auto flex items-center gap-1.5 rounded-lg bg-black/40 px-2.5 py-0.5 text-[22px] font-bold text-white"><Pause className="h-6 w-6" />PAUSADA</span>}
+                  {!pausada && o.prioridad === 1 && <span className="ml-auto rounded-lg bg-black/40 px-2.5 py-0.5 text-[22px] font-extrabold text-white">URGENTE</span>}
                 </div>
                 <div className={cn("flex-1 min-h-0 flex flex-col px-5 py-3", grande ? "gap-4" : "gap-2")}>
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="flex -space-x-3 shrink-0" aria-hidden>
                       {gente.slice(0, 4).map((p) => (
-                        <span key={p} className={cn("grid place-items-center rounded-full font-extrabold text-white ring-4 ring-superficie",
+                        <span key={p} className={cn("grid place-items-center rounded-full font-extrabold ring-4 ring-superficie",
                           grande ? "h-20 w-20 text-[38px]" : chico ? "h-11 w-11 text-[22px]" : "h-14 w-14 text-[26px]")}
-                          style={{ background: o.color }}>{inicial(p)}</span>
+                          style={{ background: o.color, color: tintaSobre(o.color) }}>{inicial(p)}</span>
                       ))}
                       {gente.length === 0 && <span className={cn("grid place-items-center rounded-full bg-borde text-tenue", grande ? "h-20 w-20" : chico ? "h-11 w-11" : "h-14 w-14")}><HardHat className="h-7 w-7" /></span>}
                     </div>
