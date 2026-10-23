@@ -14,10 +14,11 @@ import { useSesion } from "@/lib/sesion";
 import { dinero, fecha, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
-import { ESTADO_COT, dineroEn, folioCot, todas, useAncho, type VCotizacion, haceCuanto } from "./comun";
+import { ESTADO_COT, dineroEn, folioCot, hoyMx, todas, useAncho, type VCotizacion, haceCuanto } from "./comun";
+import { AvisoSeguimientos, ChipSeguimiento, ColaSeguimientos, DialogoQuePaso, ResumenVendedores, deSeguimiento, usePorVendedor, useSeguimientos } from "./componentes/Seguimiento";
 
 const ABIERTAS = ["borrador", "por_autorizar", "autorizada", "enviada"];
-type Pestana = "abiertas" | "por_autorizar" | "enviadas" | "aceptadas" | "todas";
+type Pestana = "abiertas" | "seguimiento" | "por_autorizar" | "enviadas" | "aceptadas" | "todas";
 
 /**
  * Registro de cotizaciones: lo que la hoja no tenía (cada plantilla pisaba la
@@ -42,6 +43,13 @@ export default function Cotizaciones() {
   const filas = lista.data ?? [];
   const porAutorizar = filas.filter((c) => c.estado === "por_autorizar");
   const pestana = (params.get("estado") as Pestana) ?? (esGerente && porAutorizar.some((c) => c.autorizacion_pedida_en) ? "por_autorizar" : "abiertas");
+  // El seguimiento de cada enviada (la base lo agenda al enviarla): pestaña, columna y aviso.
+  const seguimientos = useSeguimientos();
+  const porVendedor = usePorVendedor(esGerente);
+  const [anotar, setAnotar] = useState<string | null>(null);
+  const segPorCot = useMemo(() => new Map((seguimientos.data ?? []).filter((s) => s.cotizacion_id).map((s) => [s.cotizacion_id!, s])), [seguimientos.data]);
+  const colaVisible = (seguimientos.data ?? []).filter((s) => (vendedor === "todos" || s.vendedor_id === vendedor) && (esGerente || s.vendedor_id === perfil?.id));
+  const tocan = colaVisible.filter((s) => s.vence <= hoyMx()).length;
 
   const autorizar = useAccion(
     (id: string) => q(supabase.rpc("autorizar_cotizacion", { p_id: id })),
@@ -110,6 +118,11 @@ export default function Cotizaciones() {
       celda: (c) => <span className={cn("whitespace-nowrap", c.vencida && "text-peligro font-medium")}>{ABIERTAS.includes(c.estado) ? fecha(c.vence) : "—"}</span>,
     },
     {
+      clave: "seguimiento", titulo: "Seguimiento", oculta: angosta || !["enviadas", "abiertas"].includes(pestana), explica: GLOSARIO.seguimientoCotizacion,
+      valor: (c) => segPorCot.get(c.id)?.vence ?? "", sinBusqueda: true,
+      celda: (c) => { const s = segPorCot.get(c.id); return s ? <ChipSeguimiento vence={s.vence} alClic={() => setAnotar(s.id)} /> : <span className="text-tenue">—</span>; },
+    },
+    {
       clave: "total", titulo: "Total", oculta: angosta, alinear: "der", sinBusqueda: true, valor: (c) => Number(c.total),
       celda: (c) => <span className="font-medium whitespace-nowrap">{dineroEn(Number(c.total), c.moneda)}</span>,
     },
@@ -121,9 +134,11 @@ export default function Cotizaciones() {
     <Pagina titulo="Cotizaciones" descripcion="Cada cotización con su folio, versión y estado. Ya no se pisa la anterior."
       // Producción y finanzas ven ventas (nivel 1) pero no cotizan: el botón les daba un 403.
       acciones={puede("ventas", 2) && <Boton onClick={() => ir("/ventas/cotizaciones/nueva")}><Plus className="h-4 w-4" />Nueva cotización</Boton>}>
+      <AvisoSeguimientos enCola={pestana === "seguimiento"} alAbrir={() => setParams({ estado: "seguimiento" }, { replace: true })} />
       <Pestanas value={pestana} onValueChange={(v) => setParams(v === "abiertas" ? {} : { estado: v }, { replace: true })}>
         <ListaPestanas opciones={[
           { valor: "abiertas", texto: esGerente ? "Abiertas" : "Mías abiertas", explica: GLOSARIO.cotizacionAbierta, cuenta: cuenta((c) => ABIERTAS.includes(c.estado) && (esGerente || c.vendedor_id === perfil?.id)) },
+          { valor: "seguimiento", texto: "Seguimiento", explica: GLOSARIO.seguimientoCotizacion, cuenta: tocan || undefined },
           ...(esGerente ? [{ valor: "por_autorizar", texto: "Por autorizar", explica: GLOSARIO.autorizacionPrecios, cuenta: cuenta((c) => c.estado === "por_autorizar") }] : []),
           { valor: "enviadas", texto: "Enviadas", cuenta: cuenta((c) => c.estado === "enviada") },
           { valor: "aceptadas", texto: "Aceptadas", cuenta: cuenta((c) => c.estado === "aceptada") },
@@ -131,7 +146,12 @@ export default function Cotizaciones() {
         ]} />
       </Pestanas>
 
-      {pestana === "por_autorizar" && esGerente ? (
+      {pestana === "seguimiento" ? (
+        <div className="space-y-4">
+          {esGerente && <ResumenVendedores filas={porVendedor.data ?? []} elegido={vendedor} alElegir={setVendedor} />}
+          <ColaSeguimientos filas={colaVisible} cargando={seguimientos.isLoading} conVendedor={esGerente} />
+        </div>
+      ) : pestana === "por_autorizar" && esGerente ? (
         <ColaAutorizacion filas={visibles} cargando={lista.isLoading} alAutorizar={(id) => autorizar.mutate(id)} autorizando={autorizar.isPending ? autorizar.variables : null} />
       ) : (
         <TablaDatos
@@ -162,6 +182,8 @@ export default function Cotizaciones() {
           )}
         />
       )}
+      <DialogoQuePaso objetivo={(() => { const s = (seguimientos.data ?? []).find((x) => x.id === anotar); return s ? deSeguimiento(s) : null; })()}
+        alCerrar={() => setAnotar(null)} />
     </Pagina>
   );
 }

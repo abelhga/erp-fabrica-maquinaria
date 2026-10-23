@@ -27,6 +27,7 @@ import { FichaVenta } from "./componentes/FichaVenta";
 import { DialogoFleteSkydropx } from "./componentes/FleteSkydropx";
 import { DialogoCliente, DialogoMotivo, ElegirCliente, MOTIVOS_PERDIDA, type ClienteNuevo } from "./componentes/dialogos";
 import { DialogoConvertir, DialogoEnviar, DialogoPedirAutorizacion } from "./componentes/DialogosCotizacion";
+import { useFreno } from "./componentes/Seguimiento";
 import { useFichas } from "./componentes/Fichas";
 import { EntregaRealista, useEstimacionEntrega } from "./componentes/EntregaRealista";
 import { DialogoPedirPrecio, type DatosPedido, type InicialPedido } from "./solicitudes/DialogoPedirPrecio";
@@ -68,6 +69,8 @@ function Editor({ id }: { id: string }) {
   const qc = useQueryClient();
   const ir = useNavigate();
   const esGerente = puede("ventas", 3);
+  // Con demasiados seguimientos vencidos la base no deja enviar: el diálogo lo dice antes de abrir WhatsApp.
+  const freno = useFreno(puede("ventas", 2) && !esGerente);
   const dosColumnas = useAncho(1400);
   const tablaAncha = useAncho(768);
 
@@ -354,7 +357,7 @@ function Editor({ id }: { id: string }) {
       const r = await q<{ id: string }[]>(supabase.from("cotizaciones").update({ estado }).eq("id", id).select("id"));
       if (!r.length) throw new Error("No se pudo cambiar el estado");
     },
-    { exito: "Cotización marcada como enviada", invalidar: [["cotizacion", id], ["v_cotizaciones"], ["v_oportunidades"], ["indicadores"]] },
+    { exito: "Cotización enviada: su seguimiento queda agendado", invalidar: [["cotizacion", id], ["v_cotizaciones"], ["v_oportunidades"], ["indicadores"], ["seguimientos"], ["calendario"]] },
   );
   const pedirAutorizacion = useAccion(
     async (nota: string) => { await guardar(); await q(supabase.rpc("pedir_autorizacion", { p_id: id, p_nota: nota })); },
@@ -819,7 +822,8 @@ function Editor({ id }: { id: string }) {
         alAgregar={(titulo, precio) => agregarFlete.mutateAsync({ titulo, precio })} />}
       <DialogoEnviar abierto={dlg === "enviar"} alCambiar={(v) => setDlg(v ? "enviar" : null)} c={{ ...c, ...(tot ?? {}) }} partidas={lineas}
         contacto={contactoSel} vendedor={vendedor.data} plan={plan} yaEnviada={!["borrador", "autorizada"].includes(c.estado)}
-        alMarcarEnviada={() => cambiarEstado.mutateAsync("enviada")} alAbrirPdf={abrirPdf} enviando={cambiarEstado.isPending} fichas={ligasFichas} />
+        alMarcarEnviada={() => cambiarEstado.mutateAsync("enviada")} alAbrirPdf={abrirPdf} enviando={cambiarEstado.isPending} fichas={ligasFichas}
+        frenado={freno.data?.frenado ? freno.data : null} />
       <DialogoPedirPrecio abierto={!!pedirPara} alCambiar={(v) => !v && setPedirPara(null)} inicial={pedirPara ?? {}}
         crear={pedirPara?.nuevaPartida ? crearConPartida : undefined} />
       <DialogoConvertir estimacion={estimacion.data} abierto={dlg === "convertir"} alCambiar={(v) => setDlg(v ? "convertir" : null)} c={c} partidas={lineas}
