@@ -131,8 +131,8 @@ de hoy y el total, y cuántas cotizaciones envió contra cuántos seguimientos a
 días. Clic en un vendedor filtra su lista.
 
 **Arranque (23 oct 2026):** las cotizaciones que ya estaban enviadas recibieron su seguimiento.
-Las que ya habían pasado sus 3 días se repartieron de 8 en 8 por vendedor desde el siguiente día
-hábil, para que nadie amaneciera frenado.
+Las que ya habían pasado sus 3 días se acomodaron desde el siguiente día hábil sin pasar de 8 por
+día y vendedor (contando las que ya tocaban ese día), para que nadie amaneciera frenado.
 
 Los plazos y el tope se cambian en la configuración `seguimiento_cotizaciones` (dias_habiles,
 dias_no_contesta, tope_vencidos).

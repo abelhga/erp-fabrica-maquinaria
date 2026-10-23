@@ -18,8 +18,8 @@
 --    nuevas hasta ponerse al día; la gerencia de ventas lo libera por el día con un motivo.
 --    Nunca frena un pedido: convertir en pedido sigue igual.
 -- 5. Arranque: las cotizaciones ya enviadas reciben su seguimiento; las que ya pasaron de los
---    3 días se reparten de 8 en 8 por vendedor desde el siguiente día hábil, para no
---    amanecer con 40 vencidos (y el freno puesto) el primer día.
+--    3 días se acomodan desde el siguiente día hábil sin pasar de 8 por día y vendedor
+--    (contando las que ya tocaban), para no amanecer con 40 vencidos y el freno puesto.
 --
 -- Los seguimientos van en su propia tabla y no en actividades: una tarea creada por la
 -- máquina contaría como «contacto» para quedarse con el cliente (065) y como seguimiento
@@ -347,24 +347,38 @@ left join lateral (select a.id, a.descripcion, a.vence_en from actividades a
 left join seguimientos_cotizacion sg on sg.oportunidad_id = o.id and sg.estado = 'pendiente';
 
 -- Arranque: cada oportunidad abierta con una cotización enviada recibe su seguimiento. Las que
--- ya pasaron de su plazo se reparten desde el siguiente día hábil, de 8 en 8 por vendedor.
-with base as (
-  select distinct on (c.oportunidad_id) c.oportunidad_id, c.id as cot, coalesce(c.vendedor_id, o.vendedor_id) as vend,
-    coalesce(c.enviada_en, c.creado_en) as enviada,
-    sumar_dias_laborables((coalesce(c.enviada_en, c.creado_en) at time zone 'America/Mexico_City')::date,
-                          (_config_seguimiento()->>'dias_habiles')::int) as toca
-  from cotizaciones c join oportunidades o on o.id = c.oportunidad_id
-  where c.estado = 'enviada' and o.etapa not in ('ganada', 'perdida')
-    and not exists (select 1 from seguimientos_cotizacion s where s.oportunidad_id = c.oportunidad_id and s.estado = 'pendiente')
-  order by c.oportunidad_id, coalesce(c.enviada_en, c.creado_en) desc
-), atrasadas as (
-  select b.*, row_number() over (partition by b.vend order by b.enviada) as n from base b where b.toca <= hoy_mx()
-)
-insert into seguimientos_cotizacion (oportunidad_id, cotizacion_id, vendedor_id, vence)
-select b.oportunidad_id, b.cot, b.vend,
-  case when a.n is null then b.toca
-       else sumar_dias_laborables(hoy_mx(), 1 + ((a.n - 1) / (_config_seguimiento()->>'por_dia_al_arrancar')::int)::int) end
-from base b left join atrasadas a on a.oportunidad_id = b.oportunidad_id;
+-- todavía no cumplen sus 3 días se quedan en su fecha; las atrasadas se acomodan desde el
+-- siguiente día hábil en los días que tengan lugar (8 por vendedor, contando las que ya tocan).
+-- (Una sola instrucción: sin tabla temporal, corre igual con psql, el CLI o la API.)
+do $$
+declare r record; v_dia date; v_cupo int := (_config_seguimiento()->>'por_dia_al_arrancar')::int;
+begin
+  for r in
+    with base as (
+      select distinct on (c.oportunidad_id) c.oportunidad_id, c.id as cot, coalesce(c.vendedor_id, o.vendedor_id) as vend,
+        coalesce(c.enviada_en, c.creado_en) as enviada,
+        sumar_dias_laborables((coalesce(c.enviada_en, c.creado_en) at time zone 'America/Mexico_City')::date,
+                              (_config_seguimiento()->>'dias_habiles')::int) as toca
+      from cotizaciones c join oportunidades o on o.id = c.oportunidad_id
+      where c.estado = 'enviada' and o.etapa not in ('ganada', 'perdida')
+        and not exists (select 1 from seguimientos_cotizacion s where s.oportunidad_id = c.oportunidad_id and s.estado = 'pendiente')
+      order by c.oportunidad_id, coalesce(c.enviada_en, c.creado_en) desc
+    )
+    -- Primero las que conservan su fecha, para que el cupo de cada día ya las cuente.
+    select * from base order by (toca <= hoy_mx()), vend, enviada
+  loop
+    if r.toca > hoy_mx() then
+      v_dia := r.toca;
+    else
+      v_dia := sumar_dias_laborables(hoy_mx(), 1);
+      while (select count(*) from seguimientos_cotizacion
+             where vendedor_id is not distinct from r.vend and vence = v_dia and estado = 'pendiente') >= v_cupo loop
+        v_dia := sumar_dias_laborables(v_dia, 1);
+      end loop;
+    end if;
+    insert into seguimientos_cotizacion (oportunidad_id, cotizacion_id, vendedor_id, vence) values (r.oportunidad_id, r.cot, r.vend, v_dia);
+  end loop;
+end $$;
 
 -- El calendario de cada vendedor muestra sus seguimientos (la función es la de 160 con un bloque más).
 CREATE OR REPLACE FUNCTION public.calendario(p_desde date, p_hasta date)
