@@ -123,15 +123,36 @@ Depende de cómo cuente las horas la gerencia de producción (Cuadrillas → Per
 
 | | Solo el horario del taller (hoy) | Lo que marque la terminal |
 |---|---|---|
-| Qué cuenta | L–V de 8:00 a 18:00 y sábado de 8:00 a 14:00 | Todo el tiempo que la etapa esté iniciada |
+| Qué cuenta | El horario del taller (hoy L–V de 8:00 a 17:30) | Todo el tiempo que la etapa esté iniciada |
 | Desayuno (40 min entre 10:00 y 11:00) y 15:00–15:20 | Se descuentan solos | Hay que pausar |
-| Noche, domingo, feriados | No cuentan | Cuentan si nadie pausó |
+| Noche, fin de semana, feriados | No cuentan | Cuentan si nadie pausó |
+| Tiempo extra | Solo si se da de alta el día con su horario | Cuenta lo marcado |
 | Cuándo pausar | Solo cuando dejan la orden | En cada descanso, al irse y cuando dejan la orden |
 | Para cuándo | Una sola tablet para todo el taller | Una terminal en cada área |
 
-Un día completo con el horario del taller son 9 horas por persona: las mismas que usa el Gantt
-para planear. El desayuno va por turnos (unos de 10:00 a 10:40, otros de 10:20 a 11:00), así que
-de la hora de 10 a 11 se descuentan 40 minutos.
+Un día completo de 8:00 a 17:30 son 8.5 horas por persona (9.5 menos 40 min de desayuno y 20 de
+la tarde): las mismas que usa el Gantt para planear. El desayuno va por turnos (unos de 10:00 a
+10:40, otros de 10:20 a 11:00), así que de la hora de 10 a 11 se descuentan 40 minutos.
+
+### El horario del taller
+
+La gerencia de producción lo pone en Cuadrillas → Personal de piso, abajo de «Cómo se cuentan las
+horas». Ahí se edita:
+
+- **Qué días se trabaja** y a qué hora se entra y se sale. Hoy: lunes a viernes de 8:00 a 17:30,
+  sábado y domingo no.
+- **Los descansos**: el desayuno (ventana de 10:00 a 11:00, dura 40 min) y la tarde (15:00 a 15:20).
+- **Días con otro horario**: el tiempo extra (un sábado de 8:00 a 14:00, salir más tarde) o un día
+  que no se trabaja. Mandan sobre el horario de ese día y también sobre un feriado si lo trabajan.
+
+Con ese horario se cuentan las horas hombre y se arma el plan del Gantt. Las horas se calculan al
+momento: si se cambia el horario, lo ya marcado se vuelve a contar con el nuevo. Los feriados de ley
+y los días de descanso de toda la empresa no se trabajan.
+
+**Fuera de horario** (de noche, fin de semana) Cuadrillas, la terminal y la TV ya no dicen
+«trabajando»: dicen quién dejó su tiempo abierto. Con «Solo el horario del taller» es normal y no
+cuenta; sigue solo al día siguiente a las 8:00. Con «Lo que marque la terminal» sí cuenta: hay que
+pausar.
 
 ---
 
@@ -145,12 +166,13 @@ compromiso y qué área está atorando al resto, sin hacer cuentas en una hoja.
 
 ### De dónde salen las fechas
 
-Nadie las captura. El ERP simula el taller día por día, de lunes a viernes:
+Nadie las captura. El ERP simula el taller día por día con el horario del taller (los días que no
+se trabaja se los salta; un sábado de tiempo extra sí cuenta):
 
-- cada área trabaja hasta lo que da por día: sus horas por semana entre 5 (Pailería 400 h por
-  semana = 80 h por día);
-- cada etapa avanza 9 h al día por cada persona de su cuadrilla (la planeada en Cuadrillas o la que
-  está trabajando); sin cuadrilla, cuenta 2 personas;
+- cada área trabaja hasta lo que da ese día: su parte de las horas por semana (Pailería 400 h por
+  semana de 42.5 h de taller = 80 h en un día de 8.5 h);
+- cada etapa avanza al día lo que dura la jornada (8.5 h) por cada persona de su cuadrilla (la
+  planeada en Cuadrillas o la que está trabajando); sin cuadrilla, cuenta 2 personas;
 - una etapa empieza al día siguiente de que acaba la anterior de la misma orden; lo que ya está en
   proceso o pausado sigue desde hoy;
 - de una etapa empezada falta lo que el piso reportó en «¿Cuánto lleva?» (¼, ½, ¾, casi); si nadie
@@ -182,7 +204,8 @@ alguien, se pausa), el plan se recalcula y las barras se recorren solas.
 ### Qué hacer con una orden que va tarde
 
 - Subirla en la fila, para que su área la tome antes.
-- Ponerle más gente a sus etapas en Cuadrillas: el plan cuenta 9 h por persona al día.
+- Ponerle más gente a sus etapas en Cuadrillas: el plan cuenta la jornada (8.5 h) por persona al día.
+- Dar de alta tiempo extra (un sábado) en el horario del taller: el plan lo cuenta.
 - Si nada alcanza, acordar otra fecha con el cliente (ventas) y cambiar el compromiso.
 
 ### En la ficha de un pedido o de una orden
@@ -204,8 +227,12 @@ están lejos de la realidad, el plan también. Las métricas de producción dice
 Cambia de pantalla cada 10 segundos y da la vuelta a:
 
 1. **Las etapas**, tres columnas a la vez: en cada tarjeta, el nombre del equipo grande (así lo
-   reconoce la gente), abajo la orden, el pedido y el cliente, los días que faltan y el avance.
-2. **Cuadrillas ahora:** quién trabaja qué en este momento, con su etapa y cuánto lleva (¼, ½, ¾).
+   reconoce la gente), abajo la orden, el pedido y el cliente, los días que faltan y el avance. En
+   la TV los folios van cortos, sin año ni ceros (OP-53 · PED-819), para que quepan.
+2. **Cuadrillas ahora:** una tarjeta por cuadrilla con la franja del color de su etapa, un círculo
+   con la inicial de cada persona, el equipo, cuánto lleva en cuatro bloques (¼, ½, ¾, casi), desde
+   cuándo y los días que faltan. Las pausadas llevan borde ámbar; las urgentes, rojo. Fuera de
+   horario dice «Fuera de horario» y cuándo sigue: lo que quedó iniciado no se está trabajando.
 3. **Entregas de las próximas dos semanas:** de lunes a viernes, qué equipo se compromete cada día
    y cómo va. Lo de sábado o domingo sale el viernes anterior.
 

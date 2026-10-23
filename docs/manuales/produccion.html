@@ -342,12 +342,21 @@ button, select, input, textarea { font: inherit; color: inherit; }
 .tv-dias.cerca { background: hsl(38 92% 50%); color: #000; }
 .tv-titulo { font-size: 2cqw; font-weight: 800; display: flex; align-items: center; gap: 1cqw; }
 .tv-cuad { grid-template-rows: auto minmax(0, 1fr); }
-.tv-cuad .r { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 1cqw; min-height: 0; }
-.tv-cuad article { border: .2cqw solid var(--aparato-borde); border-radius: 1cqw; padding: .8cqw 1.1cqw; background: var(--aparato-sup); display: grid; align-content: start; gap: .4cqw; overflow: hidden; }
-.tv-cuad article b { font-size: 1.7cqw; }
-.tv-cuad article p { font-size: 1.2cqw; line-height: 1.25; }
-.tv-cuad article small { font-size: 1.05cqw; color: var(--aparato-tenue); display: flex; align-items: center; gap: .5cqw; }
-.tv-cuad article small i { width: .9cqw; height: .9cqw; border-radius: 50%; }
+.tv-cuad .r { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 1cqw; min-height: 0; }
+.tv-cuad article { border: .2cqw solid var(--aparato-borde); border-radius: 1cqw; background: var(--aparato-sup); display: grid; align-content: start; gap: .5cqw; overflow: hidden; min-width: 0; }
+.tv-cuad article.pausa { border-color: hsl(38 90% 55%); }
+.tv-cuad article h6 { margin: 0; color: #fff; font-size: 1.05cqw; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; padding: .35cqw 1cqw; display: flex; justify-content: space-between; gap: .5cqw; }
+.tv-cuad article h6 em { font-style: normal; background: rgb(0 0 0 / .3); border-radius: .4cqw; padding: 0 .4cqw; }
+.tv-cuad .cu { display: flex; align-items: center; gap: .6cqw; padding: 0 1cqw; min-width: 0; }
+.tv-cuad .caras { display: flex; flex: none; }
+.tv-cuad .caras span { width: 2.6cqw; height: 2.6cqw; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 1.2cqw; box-shadow: 0 0 0 .25cqw var(--aparato-sup); }
+.tv-cuad .caras span + span { margin-left: -.6cqw; }
+.tv-cuad article b { font-size: 1.45cqw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.tv-cuad article p { padding: 0 1cqw; font-size: 1.15cqw; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tv-cuad .cuartos { display: flex; gap: .35cqw; padding: 0 1cqw; }
+.tv-cuad .cuartos > i { flex: 1; height: 1.1cqw; border-radius: .3cqw; background: var(--aparato-borde); overflow: hidden; display: block; }
+.tv-cuad .cuartos > i > i { display: block; height: 100%; }
+.tv-cuad article small { font-size: 1.05cqw; color: var(--aparato-tenue); padding: 0 1cqw .6cqw; }
 .tv-ent { grid-template-rows: auto minmax(0, 1fr); }
 .tv-ent .r { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: .9cqw; min-height: 0; }
 .tv-ent section { border: .2cqw solid var(--aparato-borde); border-radius: 1cqw; padding: .6cqw .9cqw; background: var(--aparato-sup); display: grid; align-content: start; gap: .4cqw; overflow: hidden; }
@@ -492,16 +501,16 @@ button, select, input, textarea { font: inherit; color: inherit; }
   <header>
     <p class="ceja">La pregunta de todos</p>
     <h2>¿Hay que pausar para desayunar?</h2>
-    <p class="lectura">Depende de cómo cuente las horas la gerencia de producción. Hoy está en <b>«Solo el horario del taller»</b>: nadie pausa para desayunar, comer o al irse, porque la noche, el domingo y los descansos no cuentan. Se cambia en Cuadrillas → Personal de piso, y la terminal dice arriba cuál está puesto.</p>
+    <p class="lectura">Depende de cómo cuente las horas la gerencia de producción. Hoy está en <b>«Solo el horario del taller»</b>: nadie pausa para desayunar, comer o al irse, porque la noche, el fin de semana y los descansos no cuentan. Se cambia en Cuadrillas → Personal de piso, y la terminal dice arriba cuál está puesto.</p>
   </header>
   <div class="comparar">
     <div class="tarjeta modo-card">
       <span class="hoy">Así está hoy</span>
       <h3>Solo el horario del taller</h3>
       <ul>
-        <li>Cuenta de lunes a viernes de 8:00 a 18:00 y el sábado de 8:00 a 14:00.</li>
+        <li>Cuenta el horario del taller: lunes a viernes de 8:00 a 17:30. El sábado no se trabaja; si hay tiempo extra, la gerencia da de alta ese día con su horario y entonces sí cuenta.</li>
         <li>Descuenta solo el descanso de 3:00 a 3:20 y 40 min de desayuno entre 10:00 y 11:00 (va por turnos: unos de 10:00 a 10:40, otros de 10:20 a 11:00).</li>
-        <li>La noche, el domingo y los feriados no cuentan.</li>
+        <li>La noche, el fin de semana y los feriados no cuentan. De noche la pantalla dice «fuera de horario», no «trabajando».</li>
         <li><b>Pausar</b> solo cuando dejan la orden: falta material, los mueven a otra.</li>
       </ul>
     </div>
@@ -543,7 +552,7 @@ button, select, input, textarea { font: inherit; color: inherit; }
       <span><i style="background:var(--aviso)"></i>Descanso: no cuenta</span>
       <span><i style="background:repeating-linear-gradient(135deg,var(--peligro) 0 3px,transparent 3px 7px)"></i>Fuera del horario: no cuenta</span>
     </div>
-    <p class="nota">Los feriados de ley y los descansos que marque la empresa tampoco cuentan (no salen en este ejemplo). Un día completo da 9 horas por persona: las mismas que usa el Gantt para planear.</p>
+    <p class="nota">Los feriados de ley y los descansos que marque la empresa tampoco cuentan (no salen en este ejemplo). Un día completo da 8.5 horas por persona (9.5 menos 40 min de desayuno y 20 de la tarde): las mismas que usa el Gantt para planear. El horario, los descansos y el tiempo extra los pone la gerencia en Cuadrillas → Personal de piso.</p>
   </div>
 </section>
 
@@ -591,9 +600,9 @@ button, select, input, textarea { font: inherit; color: inherit; }
     <p class="nota"><b>Dosificadora de 4 tolvas</b> · OP-00052 · compromiso vie 13 nov (el rombo). Hoy es lunes 2 nov. Pailería trae 120 h; el resto, de 2 a 10 h cada área.</p>
   </div>
   <div class="reglas">
-    <div class="regla"><b>9 h por persona</b><span>Cada etapa avanza 9 horas al día por cada persona de su cuadrilla. Si no hay nadie anotado (o solo uno), el plan cuenta 2.</span></div>
-    <div class="regla"><b>Lo que da el área</b><span>Cada área trabaja hasta sus horas por semana entre 5. Eléctrico, con 45 h a la semana, da 9 h al día aunque haya más gente.</span></div>
-    <div class="regla"><b>Una tras otra</b><span>Una etapa empieza al día siguiente de que acaba la anterior de la misma orden. Lunes a viernes.</span></div>
+    <div class="regla"><b>8.5 h por persona</b><span>Cada etapa avanza al día lo que dura la jornada (8.5 h de 8:00 a 17:30) por cada persona de su cuadrilla. Si no hay nadie anotado (o solo uno), el plan cuenta 2.</span></div>
+    <div class="regla"><b>Lo que da el área</b><span>Cada área trabaja cada día su parte de sus horas por semana: con cinco jornadas iguales, la quinta parte. Eléctrico, con 45 h a la semana, da 9 h al día aunque haya más gente.</span></div>
+    <div class="regla"><b>Una tras otra</b><span>Una etapa empieza al día siguiente de que acaba la anterior de la misma orden. Solo los días que trabaja el taller (un sábado de tiempo extra sí cuenta).</span></div>
     <div class="regla"><b>Primero lo que se trabaja</b><span>Luego la fila que acomoda la gerencia, luego lo urgente y la fecha compromiso. Las órdenes en espera no entran.</span></div>
     <div class="regla"><b>Lo que falta</b><span>De una etapa empezada falta lo que dijo el piso en «¿Cuánto lleva?». Si nadie lo dijo, lo estimado menos las horas marcadas.</span></div>
   </div>
@@ -713,8 +722,8 @@ const habil = (d) => { const w = fechaDe(d).getDay(); return w >= 1 && w <= 5; }
 const cuarto = (a) => a == null ? null : [[.25, "¼"], [.5, "½"], [.75, "¾"], [.9, "casi"]].reduce((m, c) => Math.abs(c[0] - a) < Math.abs(m[0] - a) ? c : m)[1];
 
 /**
- * El mismo plan que hace el ERP, para una orden: cada día hábil cada área da sus horas por
- * semana entre 5; cada etapa avanza 9 h por persona (mínimo 2) y empieza al día siguiente
+ * El mismo plan que hace el ERP, para una orden: cada día de taller (L–V, 8.5 h) cada área da
+ * sus horas por semana entre 5; cada etapa avanza 8.5 h por persona (mínimo 2) y empieza al día siguiente
  * de que acabó la anterior; lo empezado sigue desde hoy.
  */
 function planear(etapas) {
@@ -736,7 +745,7 @@ function planear(etapas) {
       if (!x.activa && prev && (prev.fin == null || prev.fin >= d)) return;
       if (x.rem <= 0) { if (x.ini == null) x.ini = d; x.fin = d; pend--; return; }
       if (disp[x.n] <= 0) return;
-      const toma = Math.min(x.rem, Math.max(x.gente || 0, 2) * 9, disp[x.n]);
+      const toma = Math.min(x.rem, Math.max(x.gente || 0, 2) * 8.5, disp[x.n]);
       x.rem -= toma; disp[x.n] -= toma; if (x.ini == null) x.ini = d;
       if (x.rem <= 0.0001) { x.fin = d; pend--; }
     });
@@ -1027,12 +1036,12 @@ pintarTerminal();
 /* ---------- Calculadora de horas ---------- */
 const DIAS_C = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo", "Lunes siguiente", "Martes siguiente"];
 const DESCANSOS = [{ de: 600, a: 660, f: 40 / 60 }, { de: 900, a: 920, f: 1 }];
-const ventana = (dow) => dow <= 4 ? [480, 1080] : dow === 5 ? [480, 840] : null; // 0 = lunes
+const ventana = (dow) => dow <= 4 ? [480, 1050] : null; // 0 = lunes; de 8:00 a 17:30, sin sábado
 let modo = "horario";
 const opcionesHora = () => { let h = ""; for (let m = 0; m < 1440; m += 15) h += `<option value="${m}">${hora(m)}</option>`; return h; };
 ["#c-ini-h", "#c-fin-h"].forEach((s) => { $(s).innerHTML = opcionesHora(); });
 ["#c-ini-d", "#c-fin-d"].forEach((s) => { $(s).innerHTML = DIAS_C.map((d, i) => `<option value="${i}">${d}</option>`).join(""); });
-const ATAJOS = { noche: [0, 1020, 1, 540], dia: [0, 480, 0, 1080], finde: [4, 1020, 7, 540], desayuno: [0, 615, 0, 780] };
+const ATAJOS = { noche: [0, 1020, 1, 540], dia: [0, 480, 0, 1050], finde: [4, 1020, 7, 540], desayuno: [0, 615, 0, 780] };
 function ponerAtajo(k) { const [a, b, c, d] = ATAJOS[k]; $("#c-ini-d").value = a; $("#c-ini-h").value = b; $("#c-fin-d").value = c; $("#c-fin-h").value = d; calcular(); }
 
 function contar(ini, fin) {
@@ -1081,7 +1090,7 @@ function calcular() {
     <div class="cifra-grande principal"><b>${h1(r.total)} h</b><span>cuenta cada persona</span></div>
     <div class="cifra-grande"><b>${h1(r.total * pers)} h</b><span>horas hombre (× ${pers} ${pers === 1 ? "persona" : "personas"})</span></div>`;
   const pct = (m) => `${(m / 1440) * 100}%`;
-  let h = `<div class="reglita"><i></i><div>${[0, 6, 8, 10, 12, 15, 18, 24].map((x) => `<span style="left:${pct(x * 60)}">${x}:00</span>`).join("")}</div><i></i></div>`;
+  let h = `<div class="reglita"><i></i><div>${[0, 360, 480, 600, 720, 900, 1050, 1440].map((m) => `<span style="left:${pct(m)}">${hora(m)}</span>`).join("")}</div><i></i></div>`;
   r.dias.forEach((dia) => {
     const base = dia.d * 1440;
     let pista = "";
@@ -1179,12 +1188,12 @@ pintarGantt();
 
 /* ---------- TV ---------- */
 const TVCOL = [
-  ["Corte", [{ eq: "Tolva de 10 m³", op: "OP-00053", ped: "PED-26-819", cli: "Granos La Piedad", dias: "En 22 días", av: 4, q: "Le toca: Chuy y Raúl", sigue: true }]],
-  ["Pailería", [{ eq: "Dosificadora de 4 tolvas", op: "OP-00052", ped: "PED-26-824", cli: "Cementos del Centro", dias: "En 9 días", av: 23, q: "Genaro y Juan Pablo · va a ¼" }, { eq: "Elevador de cangilones de 18 m", op: "OP-00048", ped: "PED-26-820", cli: "Agroindustrias del Bajío", dias: "En 2 días", tono: "cerca", av: 61, q: "Ramiro · va a ¾" }]],
-  ["Torno", [{ eq: "Banda artesa de 24″ × 20 m", op: "OP-00051", ped: "PED-26-823", cli: "Forrajes Los Altos", dias: "1 día tarde", tono: "mal", av: 70, q: "Pausada · Leonardo", pausa: true }]],
-  ["Pintura", [{ eq: "Cribadora vibratoria de 3 camas", op: "OP-00057", ped: "PED-26-821", cli: "Alimentos Tepa", dias: "En 15 días", av: 55, q: "Beto y Toño · va a ½" }]],
-  ["Detallado", [{ eq: "Banda transportadora de 18″ × 12 m", op: "OP-00044", ped: "PED-26-812", cli: "Minera San Rafael", dias: "Hoy", tono: "cerca", av: 88, q: "Gustavo y Luis Enrique · casi" }]],
-  ["Eléctrico", [{ eq: "Silo de 60 t", op: "OP-00041", ped: "", cli: "Para stock", dias: "En 30 días", av: 80, q: "Le toca: Pedro", sigue: true }]],
+  ["Corte", [{ eq: "Tolva de 10 m³", op: "OP-53", ped: "PED-819", cli: "Granos La Piedad", dias: "En 22 días", av: 4, q: "Le toca: Chuy y Raúl", sigue: true }]],
+  ["Pailería", [{ eq: "Dosificadora de 4 tolvas", op: "OP-52", ped: "PED-824", cli: "Cementos del Centro", dias: "En 9 días", av: 23, q: "Genaro y Juan Pablo · va a ¼" }, { eq: "Elevador de cangilones de 18 m", op: "OP-48", ped: "PED-820", cli: "Agroindustrias del Bajío", dias: "En 2 días", tono: "cerca", av: 61, q: "Ramiro · va a ¾" }]],
+  ["Torno", [{ eq: "Banda artesa de 24″ × 20 m", op: "OP-51", ped: "PED-823", cli: "Forrajes Los Altos", dias: "1 día tarde", tono: "mal", av: 70, q: "Pausada · Leonardo", pausa: true }]],
+  ["Pintura", [{ eq: "Cribadora vibratoria de 3 camas", op: "OP-57", ped: "PED-821", cli: "Alimentos Tepa", dias: "En 15 días", av: 55, q: "Beto y Toño · va a ½" }]],
+  ["Detallado", [{ eq: "Banda transportadora de 18″ × 12 m", op: "OP-44", ped: "PED-812", cli: "Minera San Rafael", dias: "Hoy", tono: "cerca", av: 88, q: "Gustavo y Luis Enrique · casi" }]],
+  ["Eléctrico", [{ eq: "Silo de 60 t", op: "OP-41", ped: "", cli: "Para stock", dias: "En 30 días", av: 80, q: "Le toca: Pedro", sigue: true }]],
 ];
 const TVHOJAS = ["Etapas 1", "Etapas 2", "Cuadrillas", "Entregas"];
 let tvHoja = 0, tvParado = tranquilo, tvT0 = performance.now();
@@ -1195,14 +1204,19 @@ function tarjetaTV(t) {
 }
 function pintarTV() {
   const cols = (desde) => `<div class="tv-hoja tv-cols" ${tvHoja === desde / 3 ? "" : "hidden"}>${TVCOL.slice(desde, desde + 3).map(([n, ts]) => `<div class="tv-col"><h5><i style="background:${COLOR[n]}"></i>${n}</h5>${ts.map(tarjetaTV).join("")}${ts.length < 2 ? "<div></div>" : ""}</div>`).join("")}</div>`;
-  const cuad = [["Genaro y Juan Pablo", "Dosificadora de 4 tolvas", "Pailería · va a ¼", "Pailería"], ["Ramiro", "Elevador de cangilones de 18 m", "Pailería · va a ¾", "Pailería"], ["Beto y Toño", "Cribadora vibratoria de 3 camas", "Pintura · va a ½", "Pintura"], ["Gustavo y Luis Enrique", "Banda transportadora de 18″ × 12 m", "Detallado · casi", "Detallado"], ["Leonardo", "Banda artesa de 24″ × 20 m", "Torno · pausada", "Torno"], ["Chuy y Raúl", "Tolva de 10 m³", "Corte · le toca", "Corte"]];
+  // Cada cuadrilla: quién, qué equipo, su etapa, cuánto va (en cuartos) y si está pausada.
+  const cuad = [["Genaro y Juan Pablo", "Dosificadora de 4 tolvas", "Pailería", .25], ["Ramiro", "Elevador de cangilones de 18 m", "Pailería", .75], ["Beto y Toño", "Cribadora vibratoria de 3 camas", "Pintura", .5], ["Gustavo y Luis Enrique", "Banda transportadora de 18″ × 12 m", "Detallado", .9], ["Leonardo", "Banda artesa de 24″ × 20 m", "Torno", .5, true], ["Chuy y Raúl", "Tolva de 10 m³", "Corte", null]];
+  const fichaCuad = ([q, e, a, av, pausa]) => `<article class="${pausa ? "pausa" : ""}"><h6 style="background:${COLOR[a]}">${a}${pausa ? "<em>PAUSADA</em>" : ""}</h6>
+    <div class="cu"><div class="caras">${q.split(/, | y | e /).map((n) => `<span style="background:${COLOR[a]}">${n[0]}</span>`).join("")}</div><b>${q}</b></div>
+    <p>${e}</p><div class="cuartos">${[0, 1, 2, 3].map((k) => `<i><i style="width:${Math.max(0, Math.min(1, (av ?? 0) * 4 - k)) * 100}%;background:${COLOR[a]}"></i></i>`).join("")}</div>
+    <small>${av == null ? "sin avance reportado" : `va a ${cuarto(av)}`}</small></article>`;
   const dias = ["Hoy", "mar 3 nov", "mié 4 nov", "jue 5 nov", "vie 6 nov", "lun 9 nov", "mar 10 nov", "mié 11 nov", "jue 12 nov", "vie 13 nov"];
   const ent = { 0: ["Banda transportadora de 18″ × 12 m"], 2: ["Elevador de cangilones de 18 m"], 9: ["Dosificadora de 4 tolvas"], 6: ["Cribadora vibratoria de 3 camas"] };
   $("#tv-pantalla").innerHTML = `
     <div class="tv-cab"><b>HEGAMEX</b><span>${TVHOJAS[tvHoja]} · ${tvHoja + 1} de 4</span><span>lun 2 nov · 9:41</span></div>
     <div class="tv-franjas"><div class="tv-franja mal"><b>Atrasadas:</b> Banda artesa de 24″ × 20 m (1 día)</div><div class="tv-franja aviso"><b>Falta material:</b> Elevador de cangilones de 18 m (2 materiales)</div></div>
     <div class="tv-cuerpo">${cols(0)}${cols(3)}
-      <div class="tv-hoja tv-cuad" ${tvHoja === 2 ? "" : "hidden"}><div class="tv-titulo">Cuadrillas ahora</div><div class="r">${cuad.map(([q, e, s, a]) => `<article><b>${q}</b><p>${e}</p><small><i style="background:${COLOR[a]}"></i>${s}</small></article>`).join("")}</div></div>
+      <div class="tv-hoja tv-cuad" ${tvHoja === 2 ? "" : "hidden"}><div class="tv-titulo">Cuadrillas ahora</div><div class="r">${cuad.map(fichaCuad).join("")}</div></div>
       <div class="tv-hoja tv-ent" ${tvHoja === 3 ? "" : "hidden"}><div class="tv-titulo">Entregas de las próximas dos semanas</div><div class="r">${dias.map((d, i) => `<section class="${i === 0 ? "hoy" : ""}"><h6>${d}</h6>${(ent[i] || []).map((x) => `<p>${x}</p>`).join("")}</section>`).join("")}</div></div>
     </div>
     <div class="tv-cinta" aria-hidden="true"><div>Pailería iniciada · <b>Dosificadora de 4 tolvas</b> · hace 5 min &nbsp; ● &nbsp; Pintura lleva 50 % · <b>Cribadora vibratoria</b> · hace 12 min &nbsp; ● &nbsp; Torno pausada · <b>Banda artesa de 24″</b> · hace 20 min &nbsp; ● &nbsp; Corte terminada · <b>Tolva de 10 m³</b> · hace 31 min</div></div>`;

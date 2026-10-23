@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
+import { fecha } from "@/lib/formato";
 
 /** q() para consultas con relaciones (`almacen:almacenes(...)`): supabase-js infiere
  *  las relaciones como arreglos aunque sean de uno; aquí el tipo lo decide quien llama. */
@@ -127,13 +128,64 @@ export function usePiso(opciones: { etapa?: number | null; intervalo?: number } 
 }
 
 /** Cómo se cuentan las horas de la terminal (lo elige la gerencia en Personal de piso). */
-export interface HorasTaller { modo: "horario" | "terminal"; descansos: { de: string; a: string; minutos?: number }[] }
+/** Entrada y salida, como «08:00» y «17:30». */
+export type Tramo = [string, string];
+export interface Descanso { de: string; a: string; minutos?: number }
+export interface HorasTaller {
+  modo: "horario" | "terminal"; descansos: Descanso[];
+  /** Por día de la semana: "1" = lunes … "7" = domingo; el día que falta no se trabaja. */
+  horario?: Record<string, Tramo>;
+  /** Días con otro horario («2026-10-24»): tiempo extra, o null si ese día no se trabaja. */
+  especiales?: Record<string, Tramo | null>;
+}
 export function useHorasTaller() {
   return useQuery({
     queryKey: [...CLAVE, "horas_taller"], staleTime: 5 * 60_000,
     queryFn: async () => (await q<{ valor: HorasTaller }[]>(supabase.from("configuracion").select("valor").eq("clave", "horas_taller")))[0]?.valor
       ?? { modo: "horario", descansos: [] } as HorasTaller,
   });
+}
+/** Lo que da cada día de la semana con el horario de siempre (lo calcula la base). */
+export function useJornadas() {
+  return useQuery({
+    queryKey: [...CLAVE, "horas_taller", "jornadas"], staleTime: 5 * 60_000,
+    queryFn: () => q<{ dia: number; entrada: string; salida: string; horas: number }[]>(supabase.rpc("jornadas_taller")),
+  });
+}
+export interface HorarioAhora { modo: HorasTaller["modo"]; en_horario: boolean; cierra: string | null; abre: string | null }
+/** ¿El taller está en horario ahorita? Se revisa cada minuto: a las 17:30 la pantalla cambia sola. */
+export function useHorarioAhora() {
+  return useQuery({
+    queryKey: [...CLAVE, "horas_taller", "ahora"], refetchInterval: 60_000, staleTime: 30_000,
+    queryFn: () => q<HorarioAhora>(supabase.rpc("horario_taller_ahora")),
+  });
+}
+const DIAS_CORTOS = ["", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
+const hhmm = (h: string) => h.replace(/^0(\d)/, "$1");
+/** «de lunes a viernes de 8:00 a 17:30 y el sábado de 8:00 a 14:00». */
+export function textoHorario(h: HorasTaller["horario"]) {
+  const dias = Object.entries(h ?? {}).filter(([, v]) => v).map(([k, v]) => ({ d: Number(k), v: v as Tramo })).sort((x, y) => x.d - y.d);
+  const grupos: { de: number; a: number; v: Tramo }[] = [];
+  for (const x of dias) {
+    const u = grupos[grupos.length - 1];
+    if (u && u.a === x.d - 1 && u.v[0] === x.v[0] && u.v[1] === x.v[1]) u.a = x.d;
+    else grupos.push({ de: x.d, a: x.d, v: x.v });
+  }
+  const t = grupos.map((g) => `${g.de === g.a ? `el ${DIAS_CORTOS[g.de]}` : g.a === g.de + 1 ? `${DIAS_CORTOS[g.de]} y ${DIAS_CORTOS[g.a]}` : `de ${DIAS_CORTOS[g.de]} a ${DIAS_CORTOS[g.a]}`} de ${hhmm(g.v[0])} a ${hhmm(g.v[1])}`);
+  return t.length > 1 ? `${t.slice(0, -1).join(", ")} y ${t[t.length - 1]}` : t[0] ?? "ningún día";
+}
+/** «hoy a las 8:00», «mañana a las 8:00», «el lunes a las 8:00»: cuándo vuelve a contar. */
+export function cuandoAbre(abre: string | null) {
+  if (!abre) return null;
+  const d = new Date(abre);
+  const dia = (x: Date) => x.toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" });
+  const hoy = new Date();
+  const manana = new Date(hoy.getTime() + 86_400_000);
+  const hora = d.toLocaleTimeString("es-MX", { timeZone: "America/Mexico_City", hour: "numeric", minute: "2-digit", hourCycle: "h23" });
+  const iso = (new Date(dia(d) + "T12:00:00").getDay() + 6) % 7 + 1;
+  const lejos = d.getTime() - hoy.getTime() > 6 * 86_400_000;
+  const cuando = dia(d) === dia(hoy) ? "hoy" : dia(d) === dia(manana) ? "mañana" : lejos ? `el ${fecha(dia(d))}` : `el ${DIAS_CORTOS[iso]}`;
+  return `${cuando} a las ${hora}`;
 }
 /** «40 min entre 10:00 y 11:00 y de 15:00 a 15:20», para decir qué se descuenta. */
 export function textoDescansos(d: HorasTaller["descansos"]) {

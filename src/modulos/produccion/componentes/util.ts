@@ -43,6 +43,8 @@ export function textoDias(dias: number | null | undefined) {
 
 /** "OP-2026-00012" → "OP-00012": en el piso el año sobra. */
 export const folioCorto = (f: string) => f.replace(/^([A-Z]+)-\d{4}-/, "$1-");
+/** En la TV, a seis metros, sin año ni ceros: «OP-2026-00053» → «OP-53», «PED-26-819» → «PED-819». */
+export const folioTV = (f: string) => f.replace(/^([A-Z]+)-(?:\d{4}|\d{2})-0*(?=\d)/, "$1-");
 
 // Los nombres del catálogo son de cotización ("Transportador helicoidal tipo bazuca
 // de 10" x 12 metros con motor intermedio"); en una tarjeta o en la TV se leen mejor cortos.

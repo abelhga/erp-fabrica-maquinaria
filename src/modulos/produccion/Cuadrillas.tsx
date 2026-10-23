@@ -1,10 +1,10 @@
 import { useMemo, useState, type DragEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, ChevronRight, ExternalLink, GripVertical, HardHat, Tablet, UserCog, UserMinus, Users } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight, Clock, ExternalLink, GripVertical, HardHat, Moon, Plus, Tablet, Trash2, UserCog, UserMinus, Users } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Boton } from "@/components/ui/boton";
-import { Seleccion } from "@/components/ui/campo";
+import { Entrada, Seleccion } from "@/components/ui/campo";
 import { Interruptor } from "@/components/ui/interruptor";
 import { Filtro } from "@/components/datos/TablaDatos";
 import { Dialogo, Lateral } from "@/components/ui/dialogo";
@@ -12,12 +12,12 @@ import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
-import { fecha } from "@/lib/formato";
+import { fecha, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import {
-  CLAVE, textoDescansos, useAsignaciones, useCuadrillas, useEtapas, useHorasTaller, usePersonalPiso, usePiso, useProduccionEnVivo,
-  type Etapa, type HorasTaller, type OperacionPiso, type PersonaPiso, type TramoAbierto,
+  CLAVE, cuandoAbre, textoDescansos, textoHorario, useAsignaciones, useCuadrillas, useEtapas, useHorarioAhora, useHorasTaller, useJornadas,
+  usePersonalPiso, usePiso, useProduccionEnVivo, type Etapa, type HorasTaller, type OperacionPiso, type PersonaPiso, type TramoAbierto,
 } from "./componentes/datos";
 import { BotonLink } from "./componentes/BotonLink";
 import { abreviarEquipo, folioCorto, haceRato, horas, textoDias, tonoCompromiso } from "./componentes/util";
@@ -54,6 +54,10 @@ export default function Cuadrillas() {
   const personal = usePersonalPiso();
   const tramos = useCuadrillas();
   const asignaciones = useAsignaciones();
+  const horario = useHorarioAhora();
+  // Fuera de horario el tiempo abierto no es «trabajando»: en modo horario no cuenta hasta que abra.
+  const fuera = horario.data && !horario.data.en_horario ? horario.data : null;
+  const reposo = fuera?.modo === "horario" ? (cuandoAbre(fuera.abre) ?? "cuando abra el taller") : null;
   const [arrastre, setArrastre] = useState<Arrastre | null>(null);
   const [sobre, setSobre] = useState<string | null>(null);
   const [cambio, setCambio] = useState<Cambio | null>(null);
@@ -64,7 +68,7 @@ export default function Cuadrillas() {
   // Etapas con «Más adelante» abierto (por omisión cerrado: es la misma orden que ya sale en su etapa actual).
   const [masAdelante, setMasAdelante] = useState<Set<number>>(new Set());
   const tarjeta = (t: Trabajo, conEtapa = false) => (
-    <TarjetaTrabajo key={t.id} t={t} ahora={ahora} gestionar={gestionar} veHoras={veFabricacion} sobre={sobre === t.id} conEtapa={conEtapa}
+    <TarjetaTrabajo key={t.id} t={t} ahora={ahora} gestionar={gestionar} veHoras={veFabricacion} sobre={sobre === t.id} conEtapa={conEtapa} reposo={reposo}
       alAbrir={() => setAbierto(t.id)}
       alPasar={permitir(t.id)} alSalir={() => setSobre(null)} alSoltar={alSoltar(t)}
       alArrastrarTarjeta={() => setArrastre({ tipo: "tarjeta", operacion: t.id, etapa: t.etapa_id })}
@@ -204,15 +208,16 @@ export default function Cuadrillas() {
 
   return (
     <Pagina titulo="Cuadrillas" ancho="max-w-[1800px]"
-      descripcion={`Quién trabaja qué en cada etapa y quién sigue · ${trabajaEn.size} personas trabajando ahorita`}
+      descripcion={`Quién trabaja qué en cada etapa y quién sigue · ${fuera ? `fuera de horario, ${trabajaEn.size} con su tiempo abierto` : `${trabajaEn.size} personas trabajando ahorita`}`}
       acciones={<>
         {gestionar && <Boton variante="secundario" onClick={() => setPersonalAbierto(true)}><UserCog className="h-4 w-4" />Personal de piso</Boton>}
         <BotonLink a="/produccion/terminal"><Tablet className="h-4 w-4" />Terminal de piso</BotonLink>
       </>}>
       {error ? <ErrorCarga error={error} /> : cargando ? <Cargando filas={6} /> : (
         <>
+          {fuera && trabajaEn.size > 0 && <FueraDeHorario n={trabajaEn.size} reposo={reposo} />}
           <PanelPersonal personal={personal.data ?? []} etapas={etapas.data ?? []} trabajaEn={trabajaEn} carga={veFabricacion ? carga : null}
-            gestionar={gestionar} sobre={sobre === "personal"}
+            gestionar={gestionar} sobre={sobre === "personal"} reposo={reposo}
             alArrastrar={(emp) => setArrastre({ tipo: "persona", empleado: emp, desde: trabajaEn.get(emp)?.id ?? null })}
             alTerminar={() => { setArrastre(null); setSobre(null); }}
             alPasar={(e) => { if (gestionar && arrastre?.tipo === "persona" && arrastre.desde) { e.preventDefault(); setSobre("personal"); } }}
@@ -319,7 +324,7 @@ export default function Cuadrillas() {
         </div>
       </Dialogo>
 
-      <Lateral abierto={personalAbierto} alCambiar={setPersonalAbierto} ancho="max-w-xl" titulo="Personal de piso"
+      <Lateral abierto={personalAbierto} alCambiar={setPersonalAbierto} ancho="max-w-2xl" titulo="Personal de piso"
         subtitulo="La gente de Producción: su área y si entra a cuadrillas">
         {personalAbierto && <PersonalPiso etapas={etapas.data ?? []} />}
       </Lateral>
@@ -328,7 +333,7 @@ export default function Cuadrillas() {
         titulo={detalle ? `${detalle.etapa} · ${folioCorto(detalle.folio)}` : ""} subtitulo={detalle && abreviarEquipo(detalle.equipo)}
         acciones={detalle && <Link to={`/produccion/ordenes/${detalle.orden_id}`} className="inline-flex items-center gap-1 text-sm text-marca-texto hover:underline">Orden<ExternalLink className="h-3.5 w-3.5" /></Link>}>
         {detalle && (
-          <DetalleTrabajo t={detalle} personal={personal.data ?? []} trabajaEn={trabajaEn} gestionar={gestionar} veHoras={veFabricacion}
+          <DetalleTrabajo t={detalle} personal={personal.data ?? []} trabajaEn={trabajaEn} gestionar={gestionar} veHoras={veFabricacion} reposo={reposo}
             alAgregar={(emp) => soltarPersona(detalle, emp, null)} alQuitar={(emp) => sacarPersona(detalle.id, emp)}
             alMover={(paso) => mover(detalle, paso)} />
         )}
@@ -337,9 +342,25 @@ export default function Cuadrillas() {
   );
 }
 
+/** Fuera de horario, lo verde no es «trabajando»: es quien dejó su tiempo abierto al irse. */
+function FueraDeHorario({ n, reposo }: { n: number; reposo: string | null }) {
+  const gente = n === 1 ? "1 persona tiene" : `${n} personas tienen`;
+  return (
+    <div className={cn("rounded-lg border px-3 py-2 text-sm flex items-start gap-2", reposo ? "border-borde bg-fondo" : "border-aviso bg-aviso-suave")}
+      data-explain={GLOSARIO.fueraDeHorario} data-explain-title="Fuera de horario">
+      <Moon className="h-4 w-4 mt-0.5 shrink-0 text-tenue" aria-hidden />
+      <p>{reposo
+        ? <><b>Fuera de horario.</b> {gente} su tiempo abierto en una etapa: ahorita no cuenta horas y sigue solo {reposo}. Si ya no van a seguir con esa orden, que la pausen en la terminal.</>
+        : <><b>Fuera de horario y contando.</b> {gente} su tiempo abierto y sus horas siguen corriendo, porque se cuentan tal cual las marca la terminal. Si ya se fueron, que pausen en la terminal.</>}</p>
+    </div>
+  );
+}
+
 /** Todo el personal arriba, por área: de aquí se arrastra a una tarjeta, y aquí se suelta para sacar a alguien. */
-function PanelPersonal({ personal, etapas, trabajaEn, carga, gestionar, sobre, alArrastrar, alTerminar, alPasar, alSoltar }: {
+function PanelPersonal({ personal, etapas, trabajaEn, carga, gestionar, sobre, reposo, alArrastrar, alTerminar, alPasar, alSoltar }: {
   personal: PersonaPiso[]; etapas: Etapa[]; trabajaEn: Map<string, Trabajo>; carga: Map<string, number> | null; gestionar: boolean; sobre: boolean;
+  /** Fuera de horario (modo horario): cuándo vuelve a contar el tiempo abierto. */
+  reposo: string | null;
   alArrastrar: (emp: string) => void; alTerminar: () => void; alPasar: (e: DragEvent) => void; alSoltar: (e: DragEvent) => void;
 }) {
   const areas = [...etapas.map((e) => ({ id: e.id as number | null, nombre: e.nombre })), { id: null, nombre: "Sin área" }]
@@ -352,7 +373,8 @@ function PanelPersonal({ personal, etapas, trabajaEn, carga, gestionar, sobre, a
       className={cn("tarjeta p-3 transition", sobre && "ring-2 ring-marca")} data-explain={GLOSARIO.panelPersonal} data-explain-title="Personal">
       <div className="flex flex-wrap items-baseline gap-x-3 mb-2">
         <h2 className="font-semibold text-sm">Personal</h2>
-        <p className="text-xs text-tenue">{gestionar ? "Arrastra a alguien a una tarjeta; para sacarlo de una cuadrilla, arrástralo aquí." : "Verde: trabajando ahorita."}</p>
+        <p className="text-xs text-tenue">{gestionar ? "Arrastra a alguien a una tarjeta; para sacarlo de una cuadrilla, arrástralo aquí."
+          : reposo ? "Fuera de horario: con punto, quien dejó su tiempo abierto." : "Verde: trabajando ahorita."}</p>
       </div>
       <div className="flex flex-wrap gap-x-5 gap-y-2">
         {areas.map((a) => (
@@ -363,10 +385,11 @@ function PanelPersonal({ personal, etapas, trabajaEn, carga, gestionar, sobre, a
               const h = carga?.get(p.id);
               return (
                 <span key={p.id} draggable={gestionar} onDragStart={() => alArrastrar(p.id)} onDragEnd={alTerminar}
-                  title={en ? `Trabajando en ${en.etapa} de ${folioCorto(en.folio)}` : "Libre"}
+                  title={en ? (reposo ? `Fuera de horario: su tiempo sigue abierto en ${en.etapa} de ${folioCorto(en.folio)} y vuelve a contar ${reposo}`
+                    : `Trabajando en ${en.etapa} de ${folioCorto(en.folio)}`) : "Libre"}
                   className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
-                    gestionar && "cursor-grab active:cursor-grabbing", en ? "border-ok/40 bg-ok-suave" : "border-borde bg-superficie")}>
-                  <span className={cn("h-2 w-2 rounded-full", en ? "bg-ok" : "bg-borde")} />
+                    gestionar && "cursor-grab active:cursor-grabbing", en ? (reposo ? "border-borde bg-fondo" : "border-ok/40 bg-ok-suave") : "border-borde bg-superficie")}>
+                  <span className={cn("h-2 w-2 rounded-full", en ? (reposo ? "bg-tenue" : "bg-ok") : "bg-borde")} />
                   {p.nombre}
                   {h != null && h > 0 && <span className="text-tenue cifra" data-explain={GLOSARIO.cargaPersona} data-explain-title="Horas encima">{horas(Math.round(h))}</span>}
                 </span>
@@ -379,8 +402,8 @@ function PanelPersonal({ personal, etapas, trabajaEn, carga, gestionar, sobre, a
   );
 }
 
-function TarjetaTrabajo({ t, ahora, gestionar, veHoras, sobre, conEtapa, alAbrir, alPasar, alSalir, alSoltar, alArrastrarTarjeta, alArrastrarPersona, alTerminar }: {
-  t: Trabajo; ahora: number; gestionar: boolean; veHoras: boolean; sobre: boolean; conEtapa?: boolean; alAbrir: () => void;
+function TarjetaTrabajo({ t, ahora, gestionar, veHoras, sobre, conEtapa, reposo, alAbrir, alPasar, alSalir, alSoltar, alArrastrarTarjeta, alArrastrarPersona, alTerminar }: {
+  t: Trabajo; ahora: number; gestionar: boolean; veHoras: boolean; sobre: boolean; conEtapa?: boolean; reposo: string | null; alAbrir: () => void;
   alPasar: (e: DragEvent) => void; alSalir: () => void; alSoltar: (e: DragEvent) => void;
   alArrastrarTarjeta: () => void; alArrastrarPersona: (emp: string) => void; alTerminar: () => void;
 }) {
@@ -409,9 +432,9 @@ function TarjetaTrabajo({ t, ahora, gestionar, veHoras, sobre, conEtapa, alAbrir
           <span key={p.id} draggable={gestionar} onClick={(e) => e.stopPropagation()}
             onDragStart={(e) => { e.stopPropagation(); alArrastrarPersona(p.id); }} onDragEnd={alTerminar}
             className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border", gestionar && "cursor-grab",
-              p.trabajando ? "border-ok/40 bg-ok-suave" : "border-dashed border-borde bg-superficie")}
-            title={p.trabajando ? "Trabajando ahorita (su tiempo está contando)" : "Planeado: le toca cuando arranque"}>
-            {p.trabajando && <span className="h-1.5 w-1.5 rounded-full bg-ok" />}{p.nombre}
+              p.trabajando ? (reposo ? "border-borde bg-fondo" : "border-ok/40 bg-ok-suave") : "border-dashed border-borde bg-superficie")}
+            title={p.trabajando ? (reposo ? `Fuera de horario: su tiempo sigue abierto y vuelve a contar ${reposo}` : "Trabajando ahorita (su tiempo está contando)") : "Planeado: le toca cuando arranque"}>
+            {p.trabajando && <span className={cn("h-1.5 w-1.5 rounded-full", reposo ? "bg-tenue" : "bg-ok")} />}{p.nombre}
           </span>
         ))}
         {t.sinNombre > 0 && <span className="rounded-full px-2 py-0.5 text-xs bg-fondo border border-borde">+{t.sinNombre} sin nombre</span>}
@@ -428,8 +451,8 @@ function TarjetaTrabajo({ t, ahora, gestionar, veHoras, sobre, conEtapa, alAbrir
 }
 
 /** Lo mismo que el arrastre, con botones: para teclado, para la tablet y para quien no arrastra. */
-function DetalleTrabajo({ t, personal, trabajaEn, gestionar, veHoras, alAgregar, alQuitar, alMover }: {
-  t: Trabajo; personal: PersonaPiso[]; trabajaEn: Map<string, Trabajo>; gestionar: boolean; veHoras: boolean;
+function DetalleTrabajo({ t, personal, trabajaEn, gestionar, veHoras, reposo, alAgregar, alQuitar, alMover }: {
+  t: Trabajo; personal: PersonaPiso[]; trabajaEn: Map<string, Trabajo>; gestionar: boolean; veHoras: boolean; reposo: string | null;
   alAgregar: (emp: string) => void; alQuitar: (emp: string) => void; alMover: (paso: -1 | 1) => void;
 }) {
   const [elegido, setElegido] = useState("");
@@ -447,13 +470,13 @@ function DetalleTrabajo({ t, personal, trabajaEn, gestionar, veHoras, alAgregar,
       </dl>
       <div data-explain={t.estado === "en_proceso" ? GLOSARIO.cuadrillaEtapa : GLOSARIO.cuadrillaPlaneada} data-explain-title="Cuadrilla">
         <p className="font-medium mb-2 flex items-center gap-2"><Users className="h-4 w-4 text-tenue" />
-          {t.estado === "en_proceso" ? "Trabajando ahorita" : "Le toca"}</p>
+          {t.estado === "en_proceso" ? (reposo ? "Con su tiempo abierto (fuera de horario)" : "Trabajando ahorita") : "Le toca"}</p>
         {t.personas.length === 0 && t.sinNombre === 0 && <p className="text-tenue">Nadie todavía.</p>}
         <ul className="divide-y divide-borde">
           {t.personas.map((p) => (
             <li key={p.id} className="flex items-center gap-2 py-1.5">
-              <HardHat className={cn("h-4 w-4", p.trabajando ? "text-ok" : "text-tenue")} />
-              <span className="flex-1">{p.nombre} <span className="text-xs text-tenue">{p.trabajando ? "· trabajando" : "· planeado"}</span></span>
+              <HardHat className={cn("h-4 w-4", p.trabajando && !reposo ? "text-ok" : "text-tenue")} />
+              <span className="flex-1">{p.nombre} <span className="text-xs text-tenue">{p.trabajando ? (reposo ? `· vuelve a contar ${reposo}` : "· trabajando") : "· planeado"}</span></span>
               {gestionar && <Boton variante="fantasma" tamano="sm" onClick={() => alQuitar(p.id)}><UserMinus className="h-3.5 w-3.5" />Sacar</Boton>}
             </li>
           ))}
@@ -544,24 +567,145 @@ function ModoHoras() {
   const modo = cfg.data?.modo ?? "horario";
   const opciones: { v: HorasTaller["modo"]; titulo: string; texto: string }[] = [
     { v: "horario", titulo: "Solo el horario del taller",
-      texto: `No hace falta pausar para desayunar, comer o al irse. Cuenta de lunes a viernes de 8 a 18 y el sábado de 8 a 14, menos los descansos: ${textoDescansos(cfg.data?.descansos ?? [])}. Domingos y feriados no cuentan.` },
+      texto: `No hace falta pausar para desayunar, comer o al irse. Cuenta ${textoHorario(cfg.data?.horario)}, menos los descansos: ${textoDescansos(cfg.data?.descansos ?? [])}. Fuera de ese horario no cuenta; el tiempo extra, solo si lo das de alta abajo. Feriados no cuentan.` },
     { v: "terminal", titulo: "Lo que marque la terminal",
-      texto: "Cuenta tal cual: el tiempo corre mientras la etapa esté iniciada. El piso pausa al desayunar, al comer y al irse. Para cuando haya una terminal en cada área." },
+      texto: "Cuenta tal cual: el tiempo corre mientras la etapa esté iniciada, también fuera de horario. El piso pausa al desayunar, al comer y al irse. Para cuando haya una terminal en cada área." },
   ];
   return (
-    <section className="rounded-lg border border-borde p-3 space-y-2" data-explain={GLOSARIO.horasTaller} data-explain-title="Cómo se cuentan las horas">
-      <p className="font-medium">Cómo se cuentan las horas</p>
-      <div role="radiogroup" aria-label="Cómo se cuentan las horas" className="grid gap-2 sm:grid-cols-2">
-        {opciones.map((o) => (
-          <button key={o.v} type="button" role="radio" aria-checked={modo === o.v} disabled={poner.isPending || cfg.isLoading}
-            onClick={() => modo !== o.v && poner.mutate(o.v)}
-            className={cn("rounded-lg border p-3 text-left transition disabled:opacity-60",
-              modo === o.v ? "border-marca bg-marca/10" : "border-borde hover:bg-fondo")}>
-            <p className="font-medium">{o.titulo}</p>
-            <p className="mt-1 text-xs text-tenue">{o.texto}</p>
-          </button>
-        ))}
+    <>
+      <section className="rounded-lg border border-borde p-3 space-y-2" data-explain={GLOSARIO.horasTaller} data-explain-title="Cómo se cuentan las horas">
+        <p className="font-medium">Cómo se cuentan las horas</p>
+        <div role="radiogroup" aria-label="Cómo se cuentan las horas" className="grid gap-2 sm:grid-cols-2">
+          {opciones.map((o) => (
+            <button key={o.v} type="button" role="radio" aria-checked={modo === o.v} disabled={poner.isPending || cfg.isLoading}
+              onClick={() => modo !== o.v && poner.mutate(o.v)}
+              className={cn("rounded-lg border p-3 text-left transition disabled:opacity-60",
+                modo === o.v ? "border-marca bg-marca/10" : "border-borde hover:bg-fondo")}>
+              <p className="font-medium">{o.titulo}</p>
+              <p className="mt-1 text-xs text-tenue">{o.texto}</p>
+            </button>
+          ))}
+        </div>
+      </section>
+      {/* Al guardar se vuelve a leer la configuración y el editor arranca de lo guardado. */}
+      {cfg.data && <HorarioTaller key={JSON.stringify(cfg.data)} cfg={cfg.data} />}
+    </>
+  );
+}
+
+const NOMBRES_DIA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+interface HorarioEditable {
+  dias: { activo: boolean; de: string; a: string }[];
+  descansos: { de: string; a: string; minutos: string }[];
+  especiales: { fecha: string; trabaja: boolean; de: string; a: string }[];
+}
+const aEditable = (c: HorasTaller): HorarioEditable => ({
+  dias: NOMBRES_DIA.map((_, i) => {
+    const t = c.horario?.[String(i + 1)];
+    return { activo: !!t, de: t?.[0] ?? "08:00", a: t?.[1] ?? "17:30" };
+  }),
+  descansos: c.descansos.map((d) => ({ de: d.de, a: d.a, minutos: d.minutos ? String(d.minutos) : "" })),
+  especiales: Object.entries(c.especiales ?? {}).sort(([x], [y]) => x.localeCompare(y))
+    .map(([f, t]) => ({ fecha: f, trabaja: !!t, de: t?.[0] ?? "08:00", a: t?.[1] ?? "14:00" })),
+});
+
+/**
+ * El horario del taller: de él salen las horas hombre (en «Solo el horario del taller») y lo que
+ * da cada día en el plan del Gantt. Los días con otro horario son el tiempo extra (un sábado, salir
+ * más tarde) o un día que no se trabaja; los feriados de ley ya no cuentan solos.
+ */
+function HorarioTaller({ cfg }: { cfg: HorasTaller }) {
+  const jornadas = useJornadas();
+  const [e, setE] = useState(() => aEditable(cfg));
+  const cambiado = JSON.stringify(e) !== JSON.stringify(aEditable(cfg));
+  const guardar = useAccion(() => q(supabase.rpc("poner_horario_taller", {
+    p_horario: Object.fromEntries(e.dias.map((d, i) => [String(i + 1), d.activo ? [d.de, d.a] : null])),
+    p_descansos: e.descansos.map((d) => ({ de: d.de, a: d.a, ...(d.minutos ? { minutos: Number(d.minutos) } : {}) })),
+    p_especiales: Object.fromEntries(e.especiales.filter((x) => x.fecha).map((x) => [x.fecha, x.trabaja ? [x.de, x.a] : null])),
+  })), { invalidar: [CLAVE], exito: "Listo: el horario del taller quedó así" });
+  const cambiar = <K extends keyof HorarioEditable>(k: K, i: number, v: Partial<HorarioEditable[K][number]>) =>
+    setE((x) => ({ ...x, [k]: x[k].map((y, j) => (j === i ? { ...y, ...v } : y)) }));
+  const quitar = (k: "descansos" | "especiales", i: number) => setE((x) => ({ ...x, [k]: x[k].filter((_, j) => j !== i) }));
+  const semana = (jornadas.data ?? []).reduce((s, j) => s + Number(j.horas), 0);
+  const porDia = [...new Set((jornadas.data ?? []).map((j) => Number(j.horas)))];
+  const hoy = hoyISO();
+  const hora = "h-8 w-[7.75rem] sm:w-[8.5rem] px-2 cifra";
+  return (
+    <form className="rounded-lg border border-borde p-3 space-y-4" onSubmit={(ev) => { ev.preventDefault(); if (cambiado) guardar.mutate(undefined); }}
+      data-explain={GLOSARIO.horarioTaller} data-explain-title="Horario del taller">
+      <div>
+        <p className="font-medium flex items-center gap-2"><Clock className="h-4 w-4 text-tenue" />Horario del taller</p>
+        <p className="text-xs text-tenue mt-0.5">
+          Con él se cuentan las horas hombre y lo que da cada día en el plan.
+          {semana > 0 && ` Lo guardado da ${horas(semana)} a la semana${porDia.length === 1 ? ` (${horas(porDia[0])} por día)` : ""}.`}
+        </p>
       </div>
-    </section>
+      <ul className="space-y-1.5">
+        {e.dias.map((d, i) => (
+          <li key={NOMBRES_DIA[i]} className="flex flex-wrap items-center gap-2">
+            <Interruptor activo={d.activo} alCambiar={(v) => cambiar("dias", i, { activo: v })} aria-label={`Se trabaja el ${NOMBRES_DIA[i].toLowerCase()}`} />
+            <span className={cn("w-20", !d.activo && "text-tenue")}>{NOMBRES_DIA[i]}</span>
+            {d.activo ? (
+              // En celular la entrada y la salida bajan juntas a su renglón, no una por una.
+              <span className="flex items-center gap-2 w-full pl-11 sm:w-auto sm:pl-0">
+                <Entrada type="time" className={hora} value={d.de} onChange={(x) => cambiar("dias", i, { de: x.target.value })} aria-label={`Entrada del ${NOMBRES_DIA[i].toLowerCase()}`} required />
+                <span className="text-tenue">a</span>
+                <Entrada type="time" className={hora} value={d.a} onChange={(x) => cambiar("dias", i, { a: x.target.value })} aria-label={`Salida del ${NOMBRES_DIA[i].toLowerCase()}`} required />
+              </span>
+            ) : <span className="text-xs text-tenue">No se trabaja</span>}
+          </li>
+        ))}
+      </ul>
+
+      <div className="space-y-1.5" data-explain={GLOSARIO.descansosTaller} data-explain-title="Descansos">
+        <p className="text-sm font-medium">Descansos</p>
+        <p className="text-xs text-tenue">Si va por turnos (unos de 10:00 a 10:40 y otros de 10:20 a 11:00), pon la ventana completa y cuánto dura.</p>
+        {e.descansos.map((d, i) => (
+          <div key={i} className="flex flex-wrap items-center gap-2">
+            <Entrada type="time" className={hora} value={d.de} onChange={(x) => cambiar("descansos", i, { de: x.target.value })} aria-label="Descanso desde" required />
+            <span className="text-tenue">a</span>
+            <Entrada type="time" className={hora} value={d.a} onChange={(x) => cambiar("descansos", i, { a: x.target.value })} aria-label="Descanso hasta" required />
+            <span className="text-xs text-tenue">dura</span>
+            <Entrada type="number" min={1} className="h-8 w-20 px-2 cifra" placeholder="todo" value={d.minutos}
+              onChange={(x) => cambiar("descansos", i, { minutos: x.target.value })} aria-label="Minutos que dura" />
+            <span className="text-xs text-tenue">min</span>
+            <Boton type="button" variante="fantasma" tamano="sm" onClick={() => quitar("descansos", i)} aria-label="Quitar descanso"><Trash2 className="h-3.5 w-3.5" /></Boton>
+          </div>
+        ))}
+        <Boton type="button" variante="fantasma" tamano="sm" onClick={() => setE((x) => ({ ...x, descansos: [...x.descansos, { de: "13:00", a: "14:00", minutos: "" }] }))}>
+          <Plus className="h-3.5 w-3.5" />Agregar descanso
+        </Boton>
+      </div>
+
+      <div className="space-y-1.5" data-explain={GLOSARIO.diaEspecialTaller} data-explain-title="Tiempo extra">
+        <p className="text-sm font-medium">Días con otro horario</p>
+        <p className="text-xs text-tenue">Tiempo extra (un sábado, salir más tarde) o un día que no se trabaja. Manda sobre el horario de ese día, y también sobre un feriado si deciden trabajarlo.</p>
+        {e.especiales.map((x, i) => (
+          <div key={i} className={cn("flex flex-wrap items-center gap-2", x.fecha && x.fecha < hoy && "opacity-60")}>
+            <Entrada type="date" className="h-8 w-[9.5rem] px-2 cifra" value={x.fecha} onChange={(v) => cambiar("especiales", i, { fecha: v.target.value })} aria-label="Día" required />
+            <Interruptor activo={x.trabaja} alCambiar={(v) => cambiar("especiales", i, { trabaja: v })} aria-label="Se trabaja ese día" />
+            {x.trabaja ? (
+              <span className="flex items-center gap-2">
+                <Entrada type="time" className={hora} value={x.de} onChange={(v) => cambiar("especiales", i, { de: v.target.value })} aria-label="Entrada ese día" required />
+                <span className="text-tenue">a</span>
+                <Entrada type="time" className={hora} value={x.a} onChange={(v) => cambiar("especiales", i, { a: v.target.value })} aria-label="Salida ese día" required />
+              </span>
+            ) : <span className="text-xs text-tenue">No se trabaja</span>}
+            {x.fecha && x.fecha < hoy && <span className="text-xs text-tenue">ya pasó</span>}
+            <Boton type="button" variante="fantasma" tamano="sm" onClick={() => quitar("especiales", i)} aria-label="Quitar día"><Trash2 className="h-3.5 w-3.5" /></Boton>
+          </div>
+        ))}
+        <Boton type="button" variante="fantasma" tamano="sm"
+          onClick={() => setE((x) => ({ ...x, especiales: [...x.especiales, { fecha: hoy, trabaja: true, de: "08:00", a: "14:00" }] }))}>
+          <Plus className="h-3.5 w-3.5" />Agregar día
+        </Boton>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 border-t border-borde pt-3">
+        <Boton type="submit" disabled={!cambiado || guardar.isPending}>{guardar.isPending ? "Guardando…" : "Guardar horario"}</Boton>
+        {cambiado && <Boton type="button" variante="secundario" onClick={() => setE(aEditable(cfg))}>Deshacer cambios</Boton>}
+        <p className="text-xs text-tenue">Las horas ya marcadas se vuelven a contar con el horario nuevo.</p>
+      </div>
+    </form>
   );
 }
