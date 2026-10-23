@@ -594,8 +594,11 @@ async function datosDeArea(db: SupabaseClient, area: Area) {
     db.rpc("ventas_historicas_mes", { p_desde: hace2.toISOString().slice(0, 10) }),
     area === "direccion" || area === "ventas" ? db.rpc("oportunidades_sugeridas", { p_limite: 8 }) : Promise.resolve({ data: null, error: null }),
   ]);
+  // Si una de las dos fuentes no contesta a tiempo (la base corta a los 8 s), el resumen sale
+  // con la otra; sin ninguna, no hay de qué escribir.
+  if (h.error && t.error) revisar(h);
   return {
-    hallazgos: revisar(h) as { area: string; tono: string; titulo: string; detalle: string; ruta: string }[],
+    hallazgos: (h.error ? [] : h.data) as { area: string; tono: string; titulo: string; detalle: string; ruta: string }[],
     tablero: t.error ? null : t.data,
     ventas_mensuales: v.error ? null : v.data,
     oportunidades: o.error ? null : o.data,
@@ -1415,13 +1418,33 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
       if (!anthropic || (typeof cupo === "number" && cupo <= 0))
         return json({ ...mejorasSinIA(datos), generado_en: new Date().toISOString(), simulado: true,
           ...(anthropic ? { aviso: "Sin consultas de Claude por hoy: estas salen de reglas sobre los mismos datos." } : {}) });
-      const r = await sugerirMejoras({ anthropic, perfil, config, datos });
-      await Promise.all([
-        registrar(r),
-        db.from("asistente_resumenes").upsert({ usuario_id: perfil.id, area: "mejoras", contenido: { ...r.sugerencias, roles: vista(perfil) },
-          modelo: r.modelo, generado_en: new Date().toISOString() }),
-      ]);
-      return json({ ...r.sugerencias, generado_en: new Date().toISOString(), modelo: r.modelo });
+      // Claude tarda alrededor de un minuto, y Safari en el celular corta una petición que pasa
+      // un minuto sin recibir nada: el 23 oct las sugerencias se hicieron (63 s) pero no llegaron.
+      // Se manda una línea vacía cada 15 s y al final el resultado, como evento.
+      const codificador = new TextEncoder();
+      const flujoSSE = new ReadableStream<Uint8Array>({
+        async start(ctrl) {
+          const latido = setInterval(() => ctrl.enqueue(codificador.encode(": pensando\n\n")), 15_000);
+          const enviar = (x: unknown) => ctrl.enqueue(codificador.encode(`data: ${JSON.stringify(x)}\n\n`));
+          try {
+            const r = await sugerirMejoras({ anthropic, perfil, config, datos });
+            await Promise.all([
+              registrar(r),
+              db.from("asistente_resumenes").upsert({ usuario_id: perfil.id, area: "mejoras", contenido: { ...r.sugerencias, roles: vista(perfil) },
+                modelo: r.modelo, generado_en: new Date().toISOString() }),
+            ]);
+            enviar({ tipo: "listo", ...r.sugerencias, generado_en: new Date().toISOString(), modelo: r.modelo });
+          } catch (e) {
+            const x = explicarError(e);
+            await registrar({ error: x.codigo });
+            enviar({ tipo: "error", ...x });
+          } finally {
+            clearInterval(latido);
+            ctrl.close();
+          }
+        },
+      });
+      return new Response(flujoSSE, { headers: { ...CORS, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" } });
     }
 
     if (modo === "redactar") {
