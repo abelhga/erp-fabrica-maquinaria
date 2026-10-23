@@ -129,5 +129,14 @@ export interface SugerenciasMejora {
 
 /** Solo para quien decide las mejoras (procesos 2): la función lo revisa. Las del día se reusan. */
 export async function pedirSugerenciasMejora(forzar = false): Promise<SugerenciasMejora> {
-  return (await llamar({ modo: "sugerir_mejoras", forzar })).json();
+  const r = await llamar({ modo: "sugerir_mejoras", forzar });
+  // Las guardadas llegan como JSON; las nuevas, como flujo con latidos mientras Claude piensa
+  // (el celular corta lo que pasa un minuto callado). Cuenta el último evento.
+  if (!(r.headers.get("Content-Type") ?? "").includes("text/event-stream")) return r.json();
+  const texto = await r.text();
+  const eventos = texto.split("\n\n").filter((l) => l.startsWith("data: ")).map((l) => JSON.parse(l.slice(6)));
+  const fin = eventos[eventos.length - 1] as (SugerenciasMejora & { tipo: "listo" }) | { tipo: "error"; mensaje: string } | undefined;
+  if (!fin) throw new Error("El asistente cortó la respuesta. Intenta de nuevo.");
+  if (fin.tipo === "error") throw new Error(fin.mensaje);
+  return fin;
 }

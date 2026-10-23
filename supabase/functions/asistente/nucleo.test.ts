@@ -214,7 +214,12 @@ describe.skipIf(!hayBase)("asistente contra la base local", () => {
       const sin = await (await pedir(ger.token, { forzar: true })).json();
       expect(sin.simulado).toBe(true);
       expect(Array.isArray(sin.sugerencias)).toBe(true);
-      const j = await (await pedir(ger.token, { forzar: true }, () => falso)).json();
+      // Con Claude llega como flujo (latidos mientras piensa) y el resultado en el último evento.
+      const flujo = await pedir(ger.token, { forzar: true }, () => falso);
+      expect(flujo.headers.get("Content-Type")).toContain("text/event-stream");
+      const eventos = (await flujo.text()).split("\n\n").filter((l) => l.startsWith("data: ")).map((l) => JSON.parse(l.slice(6)));
+      const j = eventos[eventos.length - 1];
+      expect(j.tipo).toBe("listo");
       expect(j.sugerencias[0].titulo).toBe("Plantilla para barrenar la placa");
       const enviado = JSON.stringify(recibido[0].messages);
       expect(enviado).toContain("metricas_produccion");
