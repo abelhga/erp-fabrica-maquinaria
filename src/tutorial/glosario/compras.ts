@@ -19,7 +19,7 @@ export const COMPRAS = {
   estadoOrdenCompra: "Borrador: todavía se edita y el proveedor no la tiene. Enviada: ya se mandó y lo pedido cuenta como en camino. Recibida en parte: llegó algo y falta lo demás. Recibida: llegó todo. Cancelada: lo que venía de requisiciones regresa a pendiente.",
   ocAtrasada: "Una orden enviada o recibida en parte cuya fecha de entrega ya pasó. Llámale al proveedor o mueve la fecha si ya te dio otra.",
   avanceRecibido: "Qué parte de lo pedido ya llegó al almacén, sumando todas las partidas.",
-  porPagarOrden: "Total de la orden menos los pagos que ha registrado finanzas.",
+  porPagarOrden: "Total de la orden menos los pagos que ha registrado finanzas. «Sin precio» = la orden está en $0 porque a sus partidas les falta el costo (pasa con las que vinieron de la hoja con partidas escritas a mano): ponle precio antes de recibirla.",
   requisicionCompra: "Lo que producción y almacén le piden a compras: los faltantes de las órdenes de producción y lo que almacén pide desde el reabasto. Elige partidas y se vuelven órdenes en borrador, una por proveedor; el mismo artículo pedido varias veces se suma.",
   origenRequisicion: "Quién la pidió: Producción (faltante de una orden de producción), Reabasto (almacén, por stock mínimo) o Manual. La fecha en rojo es para menos de una semana.",
   fechaEntregaOrden: "Si no la capturas, al enviar la orden se calcula con los días hábiles de entrega del proveedor (7 si no tiene). Pasada esa fecha, la orden sale como atrasada.",

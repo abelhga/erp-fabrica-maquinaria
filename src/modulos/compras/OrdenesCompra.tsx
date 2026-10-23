@@ -93,7 +93,9 @@ export default function OrdenesCompra() {
     { clave: "total", titulo: "Total", alinear: "der", sinBusqueda: true, oculta: !verDinero, clase: "px-2 whitespace-nowrap", valor: (o) => Number(o.total), celda: (o) => dinero(o.total, o.moneda === "USD" ? "USD" : "MXN") },
     {
       clave: "saldo", titulo: "Por pagar", alinear: "der", sinBusqueda: true, oculta: !verDinero, explica: GLOSARIO.porPagarOrden, clase: "px-2 whitespace-nowrap", valor: (o) => Number(o.total) - Number(o.pagado),
+      // Una orden en $0 no está pagada: le faltan precios (las que vinieron de la hoja con partidas libres).
       celda: (o) => o.estado === "borrador" || o.estado === "cancelada" ? <span className="text-tenue/50">·</span>
+        : Number(o.total) <= 0 ? <span className="text-aviso text-xs">sin precio</span>
         : Number(o.total) - Number(o.pagado) <= 0.005 ? <span className="text-ok text-xs">pagada</span>
         : <span className="text-tenue">{dinero(Number(o.total) - Number(o.pagado), o.moneda === "USD" ? "USD" : "MXN")}</span>,
     },
