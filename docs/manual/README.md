@@ -10,6 +10,7 @@ repite: cuenta los procesos completos, que cruzan varias pantallas y varias pers
 
 | Área | Página | Qué trae |
 |---|---|---|
+| Todo el proceso | [proceso-completo.md](proceso-completo.md) | Un pedido de varios equipos de la cotización a la entrega: quién hace qué, validación de material, plan del taller, terminal, entrega y cobro |
 | Almacén | [almacen.md](almacen.md) | Existencias y disponible · Salidas, devoluciones y traspasos · Apartar, revisar y surtir a producción · Recibir · Ajustes y conteos · Reabasto · Envíos y entregas · Herramienta prestada |
 | Compras | [compras.md](compras.md) | Solicitudes de precio · Actualizar precios · Requisiciones y reabasto · La orden de compra · Recibir material · Proveedores · Por qué es mejor que la hoja |
 | Ventas | [ventas.md](ventas.md) | Números de pedido (PED-26-799, Mercado Libre y web) · Entregar un pedido y la hoja de salida · Cuándo sale un equipo |
