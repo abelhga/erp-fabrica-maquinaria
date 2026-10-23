@@ -8,7 +8,7 @@ import {
 import { Award, Banknote, Coins, Hash, ListChecks, Target } from "lucide-react";
 import { AlertTriangle, CalendarDays, CalendarRange, Hand, Wrench } from "lucide-react";
 import { BookOpen, Calendar, Inbox, MessageSquareQuote, PackageCheck, Store, Undo2 } from "lucide-react";
-import { GanttChart, Gauge, HardHat, Map as MapaIcono } from "lucide-react";
+import { GanttChart, Gauge, HardHat, Lightbulb, Map as MapaIcono } from "lucide-react";
 import type { Modulo } from "./lib/sesion";
 
 export interface EntradaMenu { ruta: string; texto: string; icono: LucideIcon; modulo: Modulo; nivel?: number }
@@ -82,6 +82,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/produccion/cuadrillas", texto: "Cuadrillas", icono: HardHat, modulo: "produccion", nivel: 2 },
       { ruta: "/produccion/gantt", texto: "Gantt (plan del taller)", icono: GanttChart, modulo: "produccion", nivel: 2 },
       { ruta: "/produccion/metricas", texto: "Métricas", icono: Gauge, modulo: "procesos" },
+      { ruta: "/produccion/mejoras", texto: "Mejoras (kaizen)", icono: Lightbulb, modulo: "produccion", nivel: 2 },
       { ruta: "/produccion/pedidos", texto: "Pedidos", icono: ShoppingCart, modulo: "produccion", nivel: 2 },
       { ruta: "/produccion/ordenes", texto: "Órdenes y material", icono: ClipboardCheck, modulo: "produccion" },
       { ruta: "/produccion/seriales", texto: "Números de serie", icono: Hash, modulo: "produccion" },

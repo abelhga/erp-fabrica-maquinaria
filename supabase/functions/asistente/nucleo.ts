@@ -446,7 +446,7 @@ function sistema(p: Perfil, ruta?: string): Anthropic.Beta.BetaTextBlockParam[] 
 // dirección está viendo como otro rol, el de su vista propia trae ventas, cobranza y
 // costos que ese rol no ve: se guarda con qué roles se hizo y solo se reusa con los mismos.
 export const vista = (p: Pick<Perfil, "roles">) => [...p.roles].sort().join(",");
-export const mismaVista = (c: { roles?: unknown } | null | undefined, p: Pick<Perfil, "roles">) => c?.roles === vista(p);
+export const mismaVista = (c: unknown, p: Pick<Perfil, "roles">) => (c as { roles?: unknown } | null | undefined)?.roles === vista(p);
 
 // -----------------------------------------------------------------------------
 // Errores de la API en palabras de quien usa el ERP. Tipados, no por texto:
@@ -1159,6 +1159,147 @@ export function ejemploDocumento(tipo: TipoDocumento): Record<string, unknown> {
 }
 
 // -----------------------------------------------------------------------------
+// Sugerencias de mejora (kaizen) con los datos del taller: métricas de 90 días, lo que el piso
+// reportó, las fallas de máquinas y las mejoras que ya existen. Claude propone; ingeniería de
+// procesos o la gerencia deciden cuál se vuelve mejora (con un clic, en la pantalla de Mejoras).
+// -----------------------------------------------------------------------------
+export const DESPERDICIOS = ["espera", "transporte", "movimiento", "inventario", "sobreproceso", "sobreproduccion", "defectos", "talento"] as const;
+export interface SugerenciaMejora {
+  titulo: string; etapa: string; desperdicio: (typeof DESPERDICIOS)[number]; tipo: "kaizen" | "a3";
+  problema: string; propuesta: string; evidencia: string; ahorro_horas_mes: number;
+}
+export interface Sugerencias { lectura: string; sugerencias: SugerenciaMejora[] }
+
+const esquemaSugerencias = (etapas: string[]) => ({
+  type: "object",
+  properties: {
+    lectura: { type: "string", description: "2 a 4 oraciones: dónde se está yendo el tiempo del taller según los datos, y qué tanto se puede confiar en ellos (qué parte se marcó en la terminal)" },
+    sugerencias: {
+      type: "array",
+      description: "De 3 a 6, primero la que más horas o retrabajo quita",
+      items: {
+        type: "object",
+        properties: {
+          titulo: { type: "string", description: "Qué se mejora, en una línea de menos de 90 caracteres, como lo diría el taller" },
+          etapa: { type: "string", enum: [...etapas, "Todo el taller"] },
+          desperdicio: { type: "string", enum: [...DESPERDICIOS] },
+          tipo: { type: "string", enum: ["kaizen", "a3"], description: "a3 si necesita buscar la causa raíz o cruza varias áreas; kaizen si es un cambio chico que se hace en días" },
+          problema: { type: "string", description: "La situación actual, con las cifras de los datos que la sustentan" },
+          propuesta: { type: "string", description: "Qué hacer, concreto; lo barato y del piso primero" },
+          evidencia: { type: "string", description: "De qué datos sale (métrica, periodo, números). Si son pocos datos, dilo" },
+          ahorro_horas_mes: { type: "number", description: "Horas de trabajo al mes que ahorraría, estimadas con los datos y conservadoras; 0 si no se puede estimar" },
+        },
+        required: ["titulo", "etapa", "desperdicio", "tipo", "problema", "propuesta", "evidencia", "ahorro_horas_mes"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["lectura", "sugerencias"],
+  additionalProperties: false,
+});
+
+export async function datosMejoras(db: SupabaseClient) {
+  const dia = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" });
+  const hasta = new Date(), desde = new Date(Date.now() - 90 * 86_400_000);
+  const [m, mm, p, mej, et, j] = await Promise.all([
+    db.rpc("metricas_produccion", { p_desde: dia(desde), p_hasta: dia(hasta) }),
+    db.rpc("metricas_mantenimiento", { p_desde: dia(desde), p_hasta: dia(hasta) }),
+    db.rpc("problemas_sin_mejora", { p_dias: 90 }),
+    db.from("v_mejoras").select("folio,titulo,estado,etapa,desperdicio,resultado,motivo_descarte").order("propuesta_en", { ascending: false }).limit(80),
+    db.from("etapas").select("nombre").eq("activa", true).order("orden"),
+    db.rpc("jornadas_taller"),
+  ]);
+  const metricas = revisar(m) as Record<string, unknown>;
+  // Una mejora arregla el proceso, no señala a nadie: las horas por persona no van. Los costos
+  // tampoco hacen falta para proponer, y así no salen de la base sin necesidad.
+  delete metricas.personas;
+  delete metricas.con_costos;
+  if (Array.isArray(metricas.etapas))
+    metricas.etapas = (metricas.etapas as Record<string, unknown>[]).map(({ costo_estimado: _a, costo_real: _b, ...x }) => x);
+  return {
+    periodo: { desde: dia(desde), hasta: dia(hasta) },
+    jornada_del_taller: j.error ? null : j.data,
+    metricas_produccion: metricas,
+    metricas_mantenimiento: mm.error ? null : mm.data,
+    problemas_del_piso_sin_mejora: revisar(p),
+    mejoras_existentes: revisar(mej),
+    etapas: ((revisar(et) as { nombre: string }[]) ?? []).map((e) => e.nombre),
+  };
+}
+export type DatosMejoras = Awaited<ReturnType<typeof datosMejoras>>;
+
+export async function sugerirMejoras(opts: { anthropic: Pick<Anthropic, "beta">; perfil: Perfil; config: Config; datos: DatosMejoras }) {
+  const esquema = esquemaSugerencias(opts.datos.etapas);
+  const flujo = opts.anthropic.beta.messages.stream({
+    model: opts.config.modelo,
+    max_tokens: 16000,
+    betas: BETAS,
+    fallbacks: "default",
+    // Es análisis, no plática: vale la pena que piense más que en el chat.
+    output_config: { effort: "high", format: { type: "json_schema", schema: esquema } },
+    system: sistema(opts.perfil),
+    messages: [{
+      role: "user",
+      content: "Actúa como ingeniero de procesos lean del taller de Hegamex (fabricamos bandas transportadoras, dosificadoras, cribadoras, " +
+        "tolvas, silos y elevadores, por etapas: corte, pailería, torno, pintura, eléctrico…). Propón mejoras kaizen para el taller con " +
+        "estos datos de los últimos 90 días. Reglas:\n" +
+        "- Cada sugerencia sale de algo que está en los datos (una etapa que se pasa de sus horas, esperas largas entre etapas, pausas o " +
+        "problemas que se repiten, etapas reabiertas, fallas de una máquina) y lo dice con sus cifras. No inventes números ni hechos.\n" +
+        "- No repitas lo que ya está en mejoras_existentes. Si una se descartó, no la vuelvas a proponer igual.\n" +
+        "- Primero lo barato y del piso: 5S, plantillas y dispositivos, a prueba de errores, estandarizar el trabajo, nivelar la carga, " +
+        "mantenimiento autónomo. Una inversión grande solo si los datos la justifican, y como A3.\n" +
+        "- No señales a personas: se mejora el proceso.\n" +
+        "- Si se marcó poco en la terminal, dilo en la lectura y no saques conclusiones de una sola orden; mejorar esa captura puede ser " +
+        "una de las sugerencias.\n" +
+        "- Las horas ahorradas al mes, conservadoras y con la jornada del taller que viene en los datos.\n\n" +
+        "```json\n" + JSON.stringify(opts.datos) + "\n```",
+    }],
+  });
+  const r = await flujo.finalMessage();
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso sugerir mejoras con estos datos.");
+  if (r.stop_reason === "max_tokens") throw new ErrorHerramienta("Las sugerencias salieron demasiado largas; intenta de nuevo.");
+  const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
+  if (!bloque) throw new ErrorHerramienta("Claude no devolvió sugerencias.");
+  const sugerencias = JSON.parse(bloque.text) as Sugerencias;
+  const fallas = validarEsquema(sugerencias, esquema as Esquema);
+  if (fallas.length) throw new ErrorHerramienta("Las sugerencias llegaron incompletas; intenta de nuevo.");
+  return { sugerencias, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+}
+
+/** Sin llave de Claude: lo que las reglas ya ven en los mismos datos, sin interpretación. */
+export function mejorasSinIA(d: DatosMejoras): Sugerencias {
+  const sugerencias: SugerenciaMejora[] = [];
+  const etapas = (d.metricas_produccion.etapas ?? []) as { etapa: string; horas_estimadas: number | null; horas_reales: number | null; espera_h: number | null; problemas: number; pausas: number }[];
+  for (const e of etapas) {
+    if (e.horas_estimadas && e.horas_reales && e.horas_reales > e.horas_estimadas * 1.2) {
+      sugerencias.push({ titulo: `Revisar por qué ${e.etapa} se pasa de sus horas`, etapa: e.etapa, desperdicio: "sobreproceso", tipo: "a3",
+        problema: `En 90 días ${e.etapa} llevó ${e.horas_reales} h contra ${e.horas_estimadas} h estimadas.`,
+        propuesta: "Ver en el piso qué se repite (retrabajos, esperas de material, ajustes) y estandarizarlo.",
+        evidencia: "Métricas de producción, etapas con tiempos marcados en la terminal.", ahorro_horas_mes: 0 });
+    }
+    if (e.problemas + e.pausas >= 3) {
+      sugerencias.push({ titulo: `Atacar las pausas y problemas que se repiten en ${e.etapa}`, etapa: e.etapa, desperdicio: "espera", tipo: "kaizen",
+        problema: `${e.etapa} tuvo ${e.pausas} pausas y ${e.problemas} problemas reportados en 90 días.`,
+        propuesta: "Revisar los motivos en «Del piso, sin mejora» y volver mejora el que más se repite.",
+        evidencia: "Pausas y problemas marcados en la terminal.", ahorro_horas_mes: 0 });
+    }
+  }
+  // Lo que el piso reportó y nadie ha vuelto mejora: lo más reciente primero.
+  const problemas = (d.problemas_del_piso_sin_mejora ?? []) as { tipo: string; nota: string | null; etapa: string | null; en: string }[];
+  for (const p of problemas.filter((x) => x.nota).slice(0, Math.max(0, 4 - sugerencias.length))) {
+    sugerencias.push({ titulo: `Que no se repita: ${p.nota!.slice(0, 70)}`, etapa: p.etapa && d.etapas.includes(p.etapa) ? p.etapa : "Todo el taller",
+      desperdicio: p.tipo === "pausa" ? "espera" : "defectos", tipo: "kaizen",
+      problema: `${p.tipo === "pausa" ? "Pausa" : p.tipo === "reabierta" ? "Etapa reabierta" : p.tipo === "falla" ? "Falla de máquina" : "Problema"} reportado el ${p.en.slice(0, 10)}: ${p.nota}`,
+      propuesta: "Ir al piso a ver qué lo provoca y dejar por escrito lo que lo evita.",
+      evidencia: "Lo que el piso reportó y todavía no tiene mejora.", ahorro_horas_mes: 0 });
+  }
+  return {
+    lectura: "Modo demostración: falta conectar la llave de Claude, así que estas sugerencias salen de reglas fijas sobre los mismos datos.",
+    sugerencias: sugerencias.slice(0, 6),
+  };
+}
+
+// -----------------------------------------------------------------------------
 // La puerta: autentica, revisa cupo, despacha y registra el uso.
 // -----------------------------------------------------------------------------
 const json = (cuerpo: unknown, status = 200) =>
@@ -1201,7 +1342,7 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
     }).then(() => undefined);
 
   // Cupo: solo cuenta lo que cuesta. El modo demostración no gasta nada.
-  if (anthropic && !((modo === "resumen" || modo === "semana") && cuerpo.forzar !== true)) {
+  if (anthropic && !((modo === "resumen" || modo === "semana" || modo === "sugerir_mejoras") && cuerpo.forzar !== true)) {
     const { data: cupo } = await db.rpc("asistente_cupo");
     if (typeof cupo === "number" && cupo <= 0)
       return json({ error: "Ya usaste tus consultas de hoy. Mañana se renuevan; si te hacen falta más, pídelo a sistemas." }, 429);
@@ -1257,6 +1398,30 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
           generado_en: new Date().toISOString() }),
       ]);
       return json({ ...r.resumen, numeros, generado_en: new Date().toISOString(), modelo: r.modelo });
+    }
+
+    if (modo === "sugerir_mejoras") {
+      const { data: decide } = await db.rpc("puede", { p_modulo: "procesos", p_nivel: 2 });
+      if (decide !== true) return json({ error: "Las sugerencias de mejora son para ingeniería de procesos y la gerencia de producción." }, 403);
+      if (cuerpo.forzar !== true) {
+        const { data: guardado } = await db.from("asistente_resumenes").select("contenido,modelo,generado_en").eq("area", "mejoras").maybeSingle();
+        const g = guardado as { contenido: Sugerencias & { roles?: string }; modelo: string | null; generado_en: string } | null;
+        // Unas del mismo día sirven: los datos de 90 días no cambian de una hora a otra.
+        if (g && Date.now() - new Date(g.generado_en).getTime() < 24 * 3600_000 && (g.modelo || !anthropic) && mismaVista(g.contenido, perfil))
+          return json({ ...g.contenido, generado_en: g.generado_en, simulado: !g.modelo, guardado: true, modelo: g.modelo });
+      }
+      const datos = await datosMejoras(db);
+      const { data: cupo } = anthropic ? await db.rpc("asistente_cupo") : { data: 0 };
+      if (!anthropic || (typeof cupo === "number" && cupo <= 0))
+        return json({ ...mejorasSinIA(datos), generado_en: new Date().toISOString(), simulado: true,
+          ...(anthropic ? { aviso: "Sin consultas de Claude por hoy: estas salen de reglas sobre los mismos datos." } : {}) });
+      const r = await sugerirMejoras({ anthropic, perfil, config, datos });
+      await Promise.all([
+        registrar(r),
+        db.from("asistente_resumenes").upsert({ usuario_id: perfil.id, area: "mejoras", contenido: { ...r.sugerencias, roles: vista(perfil) },
+          modelo: r.modelo, generado_en: new Date().toISOString() }),
+      ]);
+      return json({ ...r.sugerencias, generado_en: new Date().toISOString(), modelo: r.modelo });
     }
 
     if (modo === "redactar") {

@@ -26,7 +26,7 @@ if (hayBase) {
   const db = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres" });
   await db.connect();
   await db.query(`delete from asistente_uso where en >= current_date
-    and usuario_id in (select id from auth.users where email in ('isaac@hegamex.com','importaciones@hegamex.com','direccion@hegamex.com','almacen@hegamex.com','compras@hegamex.com'))`);
+    and usuario_id in (select id from auth.users where email in ('isaac@hegamex.com','importaciones@hegamex.com','direccion@hegamex.com','almacen@hegamex.com','compras@hegamex.com','gerente.produccion@hegamex.com'))`);
   await db.end();
 }
 
@@ -199,6 +199,44 @@ describe.skipIf(!hayBase)("asistente contra la base local", () => {
     expect(JSON.stringify(r)).toContain("Zapopan");
     await expect(ejecutarHerramienta(isaac.db, "ventas_por_region", { desde: "2025-01-01", hasta: "2025-12-31", estado: "" }))
       .rejects.toThrow();
+  });
+
+  it("sugerencias de mejora: Claude recibe los datos del taller sin las horas por persona; el supervisor no las pide", async () => {
+    const ger = await sesion("gerente.produccion@hegamex.com");
+    const sug = { lectura: "Pailería se pasa de sus horas.", sugerencias: [{ titulo: "Plantilla para barrenar la placa", etapa: "Pailería",
+      desperdicio: "sobreproceso", tipo: "kaizen", problema: "Se traza a mano.", propuesta: "Plantilla de lámina.", evidencia: "Problemas del piso.", ahorro_horas_mes: 4 }] };
+    const { falso, recibido } = claudeFalso([{ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(sug), citations: null }] }]);
+    const pedir = (token: string, cuerpo: object, crear?: () => Pick<Anthropic, "beta">) => atender(new Request("http://x/", {
+      method: "POST", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify({ modo: "sugerir_mejoras", ...cuerpo }),
+    }), { supabaseUrl: URL_SB, supabaseAnonKey: ANON, ...(crear ? { crearAnthropic: crear } : {}) });
+    try {
+      // Sin llave: reglas sobre los mismos datos, y lo dice.
+      const sin = await (await pedir(ger.token, { forzar: true })).json();
+      expect(sin.simulado).toBe(true);
+      expect(Array.isArray(sin.sugerencias)).toBe(true);
+      const j = await (await pedir(ger.token, { forzar: true }, () => falso)).json();
+      expect(j.sugerencias[0].titulo).toBe("Plantilla para barrenar la placa");
+      const enviado = JSON.stringify(recibido[0].messages);
+      expect(enviado).toContain("metricas_produccion");
+      expect(enviado).toContain("problemas_del_piso_sin_mejora");
+      // Las horas por persona y los costos no salen de la base para esto.
+      expect(enviado).not.toMatch(/\\"personas\\":/);
+      expect(enviado).not.toContain("costo_real");
+      // El esquema solo deja las áreas que existen.
+      expect(JSON.stringify(recibido[0].output_config)).toContain("Pailería");
+      // La segunda vez sale la guardada, sin llamar a Claude.
+      const otra = await (await pedir(ger.token, {}, () => claudeFalso([]).falso)).json();
+      expect(otra.guardado).toBe(true);
+      // El supervisor del piso propone mejoras, pero no le pide sugerencias a Claude.
+      const sup = await sesion("taller@hegamex.com");
+      expect((await pedir(sup.token, { forzar: true })).status).toBe(403);
+    } finally {
+      const { default: pg } = await import("pg");
+      const db = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres" });
+      await db.connect();
+      await db.query("delete from asistente_resumenes where area = 'mejoras' and usuario_id = (select id from auth.users where email = 'gerente.produccion@hegamex.com')");
+      await db.end();
+    }
   });
 
   it("la TV del taller no usa el asistente", async () => {

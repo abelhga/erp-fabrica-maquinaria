@@ -115,3 +115,11 @@ export const cifra = (n: number | null | undefined) =>
 
 export const horas = (n: number | null | undefined) =>
   n == null ? "—" : `${new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 }).format(Number(n))} h`;
+
+/** Texto negro o blanco según el color de la etapa (el amarillo de Eléctrico no aguanta letra blanca). */
+export function tintaSobre(hex: string) {
+  const m = hex.replace("#", "").match(/.{2}/g);
+  if (!m) return "#fff";
+  const [r, g, b] = m.map((x) => parseInt(x, 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.4 ? "#111827" : "#ffffff";
+}

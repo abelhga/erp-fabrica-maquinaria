@@ -36,6 +36,7 @@ const Reabasto = p(() => import("./modulos/almacen/Reabasto"));
 const Gerencia = p(() => import("./modulos/produccion/Gerencia"));
 const PedidosPlanta = p(() => import("./modulos/produccion/Pedidos"));
 const Cuadrillas = p(() => import("./modulos/produccion/Cuadrillas"));
+const Mejoras = p(() => import("./modulos/produccion/Mejoras"));
 const Gantt = p(() => import("./modulos/produccion/Gantt"));
 const Metricas = p(() => import("./modulos/produccion/Metricas"));
 const OrdenesProduccion = p(() => import("./modulos/produccion/Ordenes"));
@@ -171,6 +172,7 @@ export function App() {
           <Route path="produccion/gerencia" element={<Con m="produccion"><Gerencia /></Con>} />
           <Route path="produccion/pedidos" element={<Con m="produccion" n={2}><PedidosPlanta /></Con>} />
           <Route path="produccion/cuadrillas" element={<Con m="produccion" n={2}><Cuadrillas /></Con>} />
+          <Route path="produccion/mejoras" element={<Con m="produccion" n={2}><Mejoras /></Con>} />
           <Route path="produccion/gantt" element={<Con m="produccion" n={2}><Gantt /></Con>} />
           <Route path="produccion/metricas" element={<Con m="procesos"><Metricas /></Con>} />
           <Route path="produccion/ordenes" element={<Con m="produccion"><OrdenesProduccion /></Con>} />

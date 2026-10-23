@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, Clock, HardHat, LayoutGrid, Loader2, LogOut, Minus, Moon, PackageX, Pause, Play, PlayCircle, Plus, UserPlus, Users, X,
+  AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, Clock, HardHat, LayoutGrid, Lightbulb, Loader2, LogOut, Minus, Moon, PackageX, Pause, Play, PlayCircle, Plus, UserPlus, Users, X,
 } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { supabase } from "@/lib/supabase";
@@ -13,8 +13,9 @@ import {
   CLAVE, cuandoAbre, useAsignaciones, useCuadrillas, useEtapas, useHorarioAhora, useHorasTaller, usePersonalPiso, usePiso, useProduccionEnVivo,
   type Etapa, type OperacionPiso, type PersonaPiso,
 } from "./componentes/datos";
-import { abreviarEquipo, folioCorto, haceRato, textoDias, tonoCompromiso } from "./componentes/util";
+import { abreviarEquipo, folioCorto, haceRato, textoDias, tintaSobre, tonoCompromiso } from "./componentes/util";
 import { AvanceEtapa } from "./componentes/AvanceEtapa";
+import { DialogoIdea } from "./componentes/mejoras";
 import { useSesion } from "@/lib/sesion";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { Explicacion } from "@/tutorial/Explicacion";
@@ -36,13 +37,6 @@ const ACCIONES: Record<Accion, { texto: string; verbo: string; hecho: string; ic
   problema: { texto: "Problema", verbo: "Reportar problema en", hecho: "con problema reportado", icono: AlertTriangle, clase: "bg-superficie text-peligro border-2 border-peligro/50" },
 };
 
-/** Texto negro o blanco según el color de la etapa (el amarillo de Eléctrico no aguanta letra blanca). */
-function tintaSobre(hex: string) {
-  const m = hex.replace("#", "").match(/.{2}/g);
-  if (!m) return "#fff";
-  const [r, g, b] = m.map((x) => parseInt(x, 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.4 ? "#111827" : "#ffffff";
-}
 
 /**
  * Terminal de piso: una tablet por estación, la usan supervisores con guantes.
@@ -62,6 +56,7 @@ export default function Terminal() {
   const [nombre, setNombre] = useState<string>(() => leer(LS.nombre) ?? "");
   const [recientes, setRecientes] = useState<string[]>(() => { try { return JSON.parse(leer(LS.recientes) ?? "[]"); } catch { return []; } });
   const [eligiendoNombre, setEligiendoNombre] = useState(false);
+  const [idea, setIdea] = useState(false);
   const [pendiente, setPendiente] = useState<{ op: OperacionPiso; accion: Accion } | null>(null);
   // `deshacer`: la etapa que se acaba de terminar, por si fue un toque sin querer.
   const [aviso, setAviso] = useState<{ texto: string; folio?: string; tono: "ok" | "peligro"; deshacer?: OperacionPiso } | null>(null);
@@ -123,6 +118,11 @@ export default function Terminal() {
         <Logo className="hidden md:flex" />
         <span className="hidden lg:inline text-tenue">Terminal de piso</span>
         <div className="ml-auto flex items-center gap-2 min-w-0">
+          {/* Una idea de mejora se propone aquí mismo, con el nombre de quien está en la tablet. */}
+          <button onClick={() => setIdea(true)} aria-label="Tengo una idea de mejora"
+                  className="h-12 rounded-xl px-3 sm:px-4 flex items-center gap-2 border-2 border-marca/50 bg-superficie text-marca-texto font-semibold shrink-0">
+            <Lightbulb className="h-6 w-6 shrink-0" /><span className="hidden sm:inline">Tengo una idea</span>
+          </button>
           {/* Una máquina descompuesta se reporta desde aquí mismo, con foto (antes: foto al chat). */}
           {puede("mantenimiento", 2) && (
             <Link to={`/servicio/reportar?volver=/produccion/terminal${etapaId ? `&etapa=${etapaId}` : ""}`}
@@ -144,6 +144,7 @@ export default function Terminal() {
         </div>
       </header>
 
+      {idea && <DialogoIdea abierto alCambiar={setIdea} grande quien={nombre} semilla={{ etapa: etapaId }} />}
       <main className="flex-1 overflow-y-auto">
         {!etapa ? (
           <ElegirEtapa etapas={etapas.data ?? []} cargando={etapas.isLoading} piso={todas} alElegir={elegirEtapa} />

@@ -7,23 +7,12 @@ import { Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
+import { useJornadas } from "@/modulos/produccion/componentes/datos";
 import { CLAVE, horaMx, horas, instanteMx, isoLocal, periodo, sumarDias, usePersonal, type CuadrillaFila, type Servicio } from "../datos";
 
-// La misma jornada que usa la base (configuracion.servicio) para descontar capacidad.
-const JORNADA = { inicio: "08:30", fin: "17:30" };
-
-/** Horas de taller (lunes a viernes, 8:30 a 17:30 en la planta) que caen en un periodo. Como horas_laborables() en la base. */
-function horasTaller(a: Date, b: Date) {
-  let total = 0;
-  for (let dia = isoLocal(a); dia <= isoLocal(b); dia = sumarDias(dia, 1)) {
-    const dow = new Date(dia + "T12:00:00Z").getUTCDay();
-    if (dow >= 1 && dow <= 5) {
-      const ini = instanteMx(dia, JORNADA.inicio), fin = instanteMx(dia, JORNADA.fin);
-      total += Math.max(0, Math.min(b.getTime(), fin.getTime()) - Math.max(a.getTime(), ini.getTime())) / 3_600_000;
-    }
-  }
-  return Math.round(total * 10) / 10;
-}
+// Si todavía no llega el horario del taller: el de siempre (lo edita la gerencia de producción).
+const JORNADA = { inicio: "08:00", fin: "17:30" };
+const diaSemana = (dia: string) => ((new Date(dia + "T12:00:00Z").getUTCDay() + 6) % 7) + 1;
 
 /**
  * Fecha, duración y cuadrilla. Marca a quien ya va en otro servicio en esas fechas;
@@ -31,6 +20,12 @@ function horasTaller(a: Date, b: Date) {
  */
 export function DialogoProgramar({ s, abierto, alCambiar }: { s: Servicio; abierto: boolean; alCambiar: (v: boolean) => void }) {
   const personal = usePersonal();
+  // La entrada y la salida de cada día salen del horario del taller, no de una jornada fija.
+  const jornadas = useJornadas();
+  const jornadaDe = (dia: string) => {
+    const j = jornadas.data?.find((x) => x.dia === diaSemana(dia));
+    return j ? { inicio: j.entrada, fin: j.salida } : JORNADA;
+  };
   const inicioPrevio = s.inicio ? new Date(s.inicio) : null;
   // Sin fecha previa: la que pidió el cliente si no ya pasó; si no, el siguiente día hábil.
   const [dia, setDia] = useState(() => {
@@ -53,8 +48,9 @@ export function DialogoProgramar({ s, abierto, alCambiar }: { s: Servicio; abier
     const k = Number(n);
     if (!(k > 0) || Number.isNaN(inicio.getTime())) return null;
     if (unidad === "horas") return new Date(inicio.getTime() + k * 3_600_000);
-    return instanteMx(sumarDias(dia, Math.ceil(k) - 1), JORNADA.fin);
-  }, [n, unidad, dia, hora]); // eslint-disable-line react-hooks/exhaustive-deps
+    const ultimo = sumarDias(dia, Math.ceil(k) - 1);
+    return instanteMx(ultimo, jornadaDe(ultimo).fin);
+  }, [n, unidad, dia, hora, jornadas.data]); // eslint-disable-line react-hooks/exhaustive-deps
   const valido = fin != null && fin > inicio;
 
   const ocupados = useQuery({
@@ -72,7 +68,13 @@ export function DialogoProgramar({ s, abierto, alCambiar }: { s: Servicio; abier
   const gente = (personal.data ?? []).filter((p) => p.activo);
   const grupos = [...new Map(gente.map((p) => [p.etapa ?? p.departamento ?? "Otros", [] as typeof gente])).entries()];
   for (const p of gente) grupos.find(([k]) => k === (p.etapa ?? p.departamento ?? "Otros"))![1].push(p);
-  const hPersona = valido ? horasTaller(inicio, fin!) : 0;
+  // Las horas de taller por persona las cuenta la base, con el mismo horario que descuenta de la capacidad.
+  const horasPeriodo = useQuery({
+    queryKey: [...CLAVE, "horas_laborables", inicio.toISOString(), fin?.toISOString()],
+    enabled: abierto && valido,
+    queryFn: () => q<{ dia: string; horas: number }[]>(supabase.rpc("horas_laborables", { p_desde: inicio.toISOString(), p_hasta: fin!.toISOString() })),
+  });
+  const hPersona = valido ? (horasPeriodo.data ?? []).reduce((x, d) => x + Number(d.horas), 0) : 0;
   const porArea = new Map<string, number>();
   for (const id of elegidos) {
     const p = gente.find((x) => x.id === id);
