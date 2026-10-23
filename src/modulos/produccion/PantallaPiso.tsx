@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, CalendarDays, CheckCircle2, HardHat, PackageX, Pause, WifiOff } from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, HardHat, Moon, PackageX, Pause, WifiOff } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
-import { CLAVE, useEtapas, useProduccionEnVivo, type Evento, type OperacionPiso, type OrdenTablero } from "./componentes/datos";
-import { abreviarEquipo, folioCorto, haceRato, textoDias, textoEvento } from "./componentes/util";
+import { CLAVE, cuandoAbre, useEtapas, useHorarioAhora, useProduccionEnVivo, type Evento, type OperacionPiso, type OrdenTablero } from "./componentes/datos";
+import { abreviarEquipo, folioTV, haceRato, textoDias, textoEvento } from "./componentes/util";
 
 // La TV se diseña a 1920×1080 y se escala a la pantalla que sea: así se ve
 // igual en la tele del taller que en la laptop del gerente.
@@ -163,7 +163,7 @@ export default function PantallaPiso() {
 
         {/* Columnas por etapa (y, al final de la vuelta, cuadrillas y entregas) */}
         <main className="flex-1 min-h-0 px-12 pb-5">
-          {extra === "cuadrillas" ? <PantallaCuadrillas ops={piso.data ?? []} etapas={etapas.data ?? []} />
+          {extra === "cuadrillas" ? <PantallaCuadrillas ops={piso.data ?? []} etapas={etapas.data ?? []} ahora={ahora} />
           : extra === "entregas" ? <PantallaEntregas ordenes={enTaller} hoy={ahora} />
           : piso.isLoading ? null : columnas.length === 0 ? (
             <div className="h-full rounded-3xl border-2 border-dashed border-borde flex flex-col items-center justify-center gap-4 text-tenue">
@@ -234,8 +234,8 @@ function TarjetaTV({ t }: { t: Tarjeta }) {
       <p className="text-[40px] font-extrabold leading-[1.1] line-clamp-2">{abreviarEquipo(o.equipo)}</p>
       <div className="flex items-center gap-3 min-w-0">
         <p className="text-[28px] text-tenue truncate min-w-0">
-          <span className="cifra">{folioCorto(o.folio)}</span>
-          {o.pedido_folio ? <> · <b className="text-texto cifra">{o.pedido_folio}</b> · {o.cliente ?? "—"}</> : " · Para stock"}
+          <span className="cifra">{folioTV(o.folio)}</span>
+          {o.pedido_folio ? <> · <b className="text-texto cifra">{folioTV(o.pedido_folio)}</b> · {o.cliente ?? "—"}</> : " · Para stock"}
         </p>
         <span className={cn("ml-auto rounded-xl px-3 py-0.5 text-[28px] font-bold whitespace-nowrap cifra shrink-0",
           tarde ? "bg-peligro text-white" : cerca ? "bg-aviso text-black" : "text-tenue")}>
@@ -291,9 +291,39 @@ const CUARTOS: [number, string][] = [[0.25, "¼"], [0.5, "½"], [0.75, "¾"], [0
 const enCuartos = (a: number | null) =>
   a == null ? null : CUARTOS.reduce((m, c) => (Math.abs(c[0] - a) < Math.abs(m[0] - a) ? c : m))[1];
 
-/** Quién trabaja qué ahorita: una tarjeta por cuadrilla, como el pizarrón de Luis. */
-function PantallaCuadrillas({ ops, etapas }: { ops: OperacionPiso[]; etapas: { id: number; orden: number }[] }) {
+/** «Juan y Ramiro», «Leonardo e Isaías», «Juan, 2 sin nombre»: una persona por círculo. */
+const integrantes = (quien: string) => quien.split(/, | y | e /).filter(Boolean);
+const inicial = (n: string) => (/^\d+ sin nombre$/.test(n) ? `+${n.split(" ")[0]}` : n.slice(0, 1).toUpperCase());
+
+/** El avance en cuartos, como lo marca el piso: cuatro bloques que se llenan (¼, ½, ¾, casi). */
+function Cuartos({ avance, color, grande }: { avance: number | null; color: string; grande: boolean }) {
+  return (
+    <div className={cn("flex", grande ? "flex-col gap-2" : "items-center gap-3")}>
+      <div className={cn("flex gap-1.5", grande && "gap-2.5")} aria-hidden>
+        {[0, 1, 2, 3].map((k) => {
+          const lleno = Math.max(0, Math.min(1, (avance ?? 0) * 4 - k));
+          return (
+            <span key={k} className={cn("relative overflow-hidden rounded-md bg-borde", grande ? "h-16 flex-1 rounded-xl" : "h-7 w-14")}>
+              <span className="absolute inset-y-0 left-0" style={{ width: `${lleno * 100}%`, background: color }} />
+            </span>
+          );
+        })}
+      </div>
+      <span className={cn("font-semibold", grande ? "text-[32px]" : "text-[26px]", avance == null && "text-tenue")}>
+        {avance == null ? "sin avance reportado" : `va a ${enCuartos(avance)}`}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Quién trabaja qué ahorita: una tarjeta por cuadrilla, como el pizarrón de Luis. Desde lejos se
+ * reconoce por las caras (círculos con la inicial, del color de su etapa), el equipo y cuánto va.
+ */
+function PantallaCuadrillas({ ops, etapas, ahora }: { ops: OperacionPiso[]; etapas: { id: number; orden: number }[]; ahora: number }) {
   const ordenEtapa = new Map(etapas.map((e) => [e.id, e.orden]));
+  const horario = useHorarioAhora().data;
+  const fuera = !!horario && !horario.en_horario;
   const activas = ops.filter((o) => o.estado === "en_proceso" || o.estado === "pausada");
   const grupos = new Map<string, OperacionPiso[]>();
   for (const o of activas) {
@@ -304,28 +334,74 @@ function PantallaCuadrillas({ ops, etapas }: { ops: OperacionPiso[]; etapas: { i
     .map(([quien, trabajos]) => ({ quien, trabajos: trabajos.sort((a, b) => Number(a.estado === "pausada") - Number(b.estado === "pausada")) }))
     .sort((a, b) => (ordenEtapa.get(a.trabajos[0].etapa_id) ?? 99) - (ordenEtapa.get(b.trabajos[0].etapa_id) ?? 99) || a.quien.localeCompare(b.quien, "es"))
     .slice(0, 12);
+  // Pocas cuadrillas, tarjetas grandes: con tres no se queda media TV vacía.
+  const n = lista.length;
+  const rejilla = n <= 3 ? "grid-cols-3 grid-rows-1" : n <= 6 ? "grid-cols-3 grid-rows-2" : n <= 8 ? "grid-cols-4 grid-rows-2" : "grid-cols-4 grid-rows-3";
+  const grande = n <= 3;
+  // Con 9 a 12 cuadrillas cada tarjeta mide ~200 px: va lo esencial (quién, qué, cuánto va, la fecha).
+  const chico = n > 8;
   return (
     <div className="h-full flex flex-col gap-4">
-      <h2 className="flex items-center gap-4 text-[44px] font-extrabold"><HardHat className="h-12 w-12 text-marca" />Cuadrillas ahora</h2>
-      {lista.length === 0 ? (
+      <h2 className="flex items-center gap-4 text-[44px] font-extrabold"><HardHat className="h-12 w-12 text-marca" />Cuadrillas ahora
+        <span className="text-[30px] font-semibold text-tenue">{n} {n === 1 ? "cuadrilla" : "cuadrillas"}</span>
+        {/* De noche lo que quedó iniciado no se está trabajando: que la TV no lo presuma. */}
+        {fuera && (
+          <span className="ml-auto flex items-center gap-3 text-[30px] font-semibold text-tenue"><Moon className="h-9 w-9" />
+            Fuera de horario{horario?.modo === "horario" && horario.abre ? ` · sigue ${cuandoAbre(horario.abre)}` : ""}</span>
+        )}
+      </h2>
+      {n === 0 ? (
         <p className="flex-1 rounded-3xl border-2 border-dashed border-borde grid place-items-center text-[40px] text-tenue">Nadie trabajando en este momento</p>
       ) : (
-        <div className="flex-1 min-h-0 grid grid-cols-4 grid-rows-3 gap-4">
-          {lista.map(({ quien, trabajos }) => (
-            <article key={quien} className="min-h-0 overflow-hidden rounded-2xl border-2 border-borde bg-superficie px-5 py-3 flex flex-col gap-2">
-              <p className="text-[34px] font-extrabold leading-tight truncate">{quien}</p>
-              {trabajos.slice(0, 2).map((o) => (
-                <div key={o.id} className="min-w-0">
-                  <p className="text-[28px] font-semibold leading-tight truncate">{abreviarEquipo(o.equipo)}</p>
-                  <p className="flex items-center gap-2 text-[24px] text-tenue truncate">
-                    <span className="h-4 w-4 rounded-full shrink-0" style={{ background: o.color }} />
-                    {o.etapa}{o.estado === "pausada" ? " · pausada" : ""}{enCuartos(o.avance_etapa) ? ` · va a ${enCuartos(o.avance_etapa)}` : ""}
-                  </p>
+        <div className={cn("flex-1 min-h-0 grid gap-4", rejilla)}>
+          {lista.map(({ quien, trabajos }) => {
+            const o = trabajos[0];
+            const pausada = o.estado === "pausada";
+            const gente = o.cuadrilla ? integrantes(o.cuadrilla) : [];
+            const dias = o.dias_restantes;
+            const tarde = dias != null && dias < 0, cerca = dias != null && dias >= 0 && dias <= 3;
+            return (
+              <article key={quien} className={cn("min-h-0 overflow-hidden rounded-2xl border-[3px] bg-superficie flex flex-col",
+                pausada ? "border-aviso" : o.prioridad === 1 ? "border-peligro" : "border-borde", fuera && "opacity-75")}>
+                {/* La franja de la etapa: el color que el taller ya conoce de las columnas. */}
+                <div className="flex items-center gap-3 px-5 py-2 text-white" style={{ background: o.color }}>
+                  <span className="text-[26px] font-extrabold uppercase tracking-wide truncate">{o.etapa}</span>
+                  {pausada && <span className="ml-auto flex items-center gap-1.5 rounded-lg bg-black/30 px-2.5 py-0.5 text-[22px] font-bold"><Pause className="h-6 w-6" />PAUSADA</span>}
+                  {!pausada && o.prioridad === 1 && <span className="ml-auto rounded-lg bg-black/30 px-2.5 py-0.5 text-[22px] font-extrabold">URGENTE</span>}
                 </div>
-              ))}
-              {trabajos.length > 2 && <p className="text-[22px] text-tenue">y {trabajos.length - 2} más</p>}
-            </article>
-          ))}
+                <div className={cn("flex-1 min-h-0 flex flex-col px-5 py-3", grande ? "gap-4" : "gap-2")}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex -space-x-3 shrink-0" aria-hidden>
+                      {gente.slice(0, 4).map((p) => (
+                        <span key={p} className={cn("grid place-items-center rounded-full font-extrabold text-white ring-4 ring-superficie",
+                          grande ? "h-20 w-20 text-[38px]" : chico ? "h-11 w-11 text-[22px]" : "h-14 w-14 text-[26px]")}
+                          style={{ background: o.color }}>{inicial(p)}</span>
+                      ))}
+                      {gente.length === 0 && <span className={cn("grid place-items-center rounded-full bg-borde text-tenue", grande ? "h-20 w-20" : chico ? "h-11 w-11" : "h-14 w-14")}><HardHat className="h-7 w-7" /></span>}
+                    </div>
+                    <p className={cn("font-extrabold leading-tight min-w-0", grande ? "text-[40px] line-clamp-2" : chico ? "text-[26px] truncate" : "text-[30px] truncate")}>{quien}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className={cn("font-bold leading-tight", grande ? "text-[36px] line-clamp-2" : chico ? "text-[24px] truncate" : "text-[28px] truncate")}>{abreviarEquipo(o.equipo)}</p>
+                    <p className={cn("text-[24px] text-tenue truncate", chico && "hidden")}>
+                      <span className="cifra">{folioTV(o.folio)}</span>
+                      {o.pedido_folio ? <> · <span className="cifra text-texto">{folioTV(o.pedido_folio)}</span>{o.cliente ? ` · ${o.cliente}` : ""}</> : " · Para stock"}
+                    </p>
+                  </div>
+                  <Cuartos avance={o.avance_etapa} color={o.color} grande={grande} />
+                  <div className={cn("mt-auto flex items-center gap-3 text-tenue min-w-0", chico ? "text-[20px]" : "text-[24px]")}>
+                    {pausada && o.ultimo_problema ? <span className="text-aviso truncate">{o.ultimo_problema}</span>
+                      : o.inicio && <span className="truncate">empezó {haceRato(o.inicio, ahora)}</span>}
+                    <span className={cn("ml-auto rounded-lg px-2.5 py-0.5 font-bold whitespace-nowrap cifra shrink-0",
+                      tarde ? "bg-peligro text-white" : cerca ? "bg-aviso text-black" : "")}>{textoDias(dias)}</span>
+                  </div>
+                  {trabajos.length > 1 && !chico && (
+                    <p className="text-[22px] text-tenue truncate">También: {trabajos.slice(1).map((x) => `${abreviarEquipo(x.equipo)} (${x.etapa}${x.estado === "pausada" ? ", pausada" : ""})`).join(" · ")}</p>
+                  )}
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
     </div>
@@ -377,7 +453,7 @@ function PantallaEntregas({ ordenes, hoy }: { ordenes: OrdenTablero[]; hoy: numb
                     <div className="flex-1 h-3 rounded-full bg-borde overflow-hidden">
                       <div className={cn("h-full rounded-full", o.avance >= 100 ? "bg-ok" : o.atrasada ? "bg-peligro" : "bg-marca")} style={{ width: `${Math.min(100, Number(o.avance))}%` }} />
                     </div>
-                    <span className="text-[22px] text-tenue cifra">{o.pedido_folio ?? "stock"}</span>
+                    <span className="text-[22px] text-tenue cifra">{o.pedido_folio ? folioTV(o.pedido_folio) : "stock"}</span>
                   </div>
                 </div>
               ))}

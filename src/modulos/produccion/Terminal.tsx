@@ -2,14 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, Clock, HardHat, LayoutGrid, Loader2, LogOut, Minus, PackageX, Pause, Play, PlayCircle, Plus, UserPlus, Users, X,
+  AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, Clock, HardHat, LayoutGrid, Loader2, LogOut, Minus, Moon, PackageX, Pause, Play, PlayCircle, Plus, UserPlus, Users, X,
 } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { supabase } from "@/lib/supabase";
 import { mensajeError, q } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
 import { fecha } from "@/lib/formato";
-import { CLAVE, useAsignaciones, useCuadrillas, useEtapas, useHorasTaller, usePersonalPiso, usePiso, useProduccionEnVivo, type Etapa, type OperacionPiso, type PersonaPiso } from "./componentes/datos";
+import {
+  CLAVE, cuandoAbre, useAsignaciones, useCuadrillas, useEtapas, useHorarioAhora, useHorasTaller, usePersonalPiso, usePiso, useProduccionEnVivo,
+  type Etapa, type OperacionPiso, type PersonaPiso,
+} from "./componentes/datos";
 import { abreviarEquipo, folioCorto, haceRato, textoDias, tonoCompromiso } from "./componentes/util";
 import { AvanceEtapa } from "./componentes/AvanceEtapa";
 import { useSesion } from "@/lib/sesion";
@@ -52,6 +55,9 @@ export default function Terminal() {
   const { puede } = useSesion();
   const piso = usePiso({ intervalo: 60_000 });
   const modoHoras = useHorasTaller().data?.modo;
+  // Fuera de horario lo iniciado no es «trabajando ahora»: o no cuenta (modo horario) o hay que pausar.
+  const ahoraTaller = useHorarioAhora().data;
+  const fuera = !!ahoraTaller && !ahoraTaller.en_horario;
   const [etapaId, setEtapaId] = useState<number | null>(() => Number(leer(LS.etapa)) || null);
   const [nombre, setNombre] = useState<string>(() => leer(LS.nombre) ?? "");
   const [recientes, setRecientes] = useState<string[]>(() => { try { return JSON.parse(leer(LS.recientes) ?? "[]"); } catch { return []; } });
@@ -155,11 +161,13 @@ export default function Terminal() {
             {/* Lo que más se pregunta en el piso: ¿hay que pausar para desayunar? Depende del modo. */}
             {modoHoras && (
               <p className={cn("flex items-center gap-2 text-base", modoHoras === "terminal" ? "text-aviso" : "text-tenue")}
-                 data-explain={GLOSARIO.horasTaller} data-explain-title="¿Hay que pausar?">
-                <Clock className="h-5 w-5 shrink-0" />
+                 data-explain={fuera ? GLOSARIO.fueraDeHorario : GLOSARIO.horasTaller} data-explain-title={fuera ? "Fuera de horario" : "¿Hay que pausar?"}>
+                {fuera ? <Moon className="h-5 w-5 shrink-0" /> : <Clock className="h-5 w-5 shrink-0" />}
                 {modoHoras === "terminal"
-                  ? "Pausa al desayunar, al comer y al irte: el tiempo corre mientras la etapa esté iniciada."
-                  : "No hace falta pausar para desayunar, comer o al irte: solo cuenta el horario del taller. Pausa cuando dejen esta orden."}
+                  ? fuera ? "Fuera de horario: lo que esté iniciado sigue contando. Si ya se van, pausen."
+                    : "Pausa al desayunar, al comer y al irte: el tiempo corre mientras la etapa esté iniciada."
+                  : fuera ? `Fuera de horario: lo iniciado no cuenta ahorita y sigue solo ${cuandoAbre(ahoraTaller?.abre ?? null) ?? "cuando abra el taller"}.`
+                    : "No hace falta pausar para desayunar, comer o al irte: solo cuenta el horario del taller. Pausa cuando dejen esta orden."}
               </p>
             )}
             {piso.isLoading ? <div className="flex justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-tenue" /></div> : deEtapa.length === 0 ? (
@@ -170,7 +178,7 @@ export default function Terminal() {
               </div>
             ) : (
               <>
-                <Seccion titulo="Trabajando ahora" lista={trabajando} pedir={pedir} ahora={ahora} />
+                <Seccion titulo={fuera ? "Iniciadas (fuera de horario)" : "Trabajando ahora"} lista={trabajando} pedir={pedir} ahora={ahora} />
                 <Seccion titulo="Listas para empezar" lista={listas} pedir={pedir} ahora={ahora} />
                 <Seccion titulo="Todavía en otra etapa" ayuda="Se pueden empezar si hace falta" lista={despues} pedir={pedir} ahora={ahora} tenue />
               </>
