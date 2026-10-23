@@ -9,6 +9,8 @@ import { Logo } from "@/components/layout/Logo";
 import { Boton } from "@/components/ui/boton";
 import { dineroEn, hoyMx, mensualidad, useEmpresa, usePlanesMeses, venceEl, type Cotizacion, type Partida } from "./comun";
 import { useFichas } from "./componentes/Fichas";
+import { SIN_ENVIAR, mensajeFreno, useFreno } from "./componentes/Seguimiento";
+import { useSesion } from "@/lib/sesion";
 
 const NOMBRE_MONEDA = { MXN: "Pesos mexicanos (MXN)", USD: "Dólares estadounidenses (USD)", EUR: "Euros (EUR)" } as const;
 
@@ -52,6 +54,11 @@ export default function ImprimirCotizacion() {
   });
   const empresa = useEmpresa();
   const planes = usePlanesMeses();
+  // El freno de seguimientos alcanza también a la hoja: abrirla por su liga daba el PDF de una
+  // cotización que nunca se marcó enviada (y que por eso no tendría seguimiento).
+  const { puede } = useSesion();
+  const conFreno = puede("ventas", 2) && !puede("ventas", 3);
+  const freno = useFreno(conFreno);
   const fichas = useFichas((lineas.data ?? []).map((l) => l.articulo_id));
 
   // Es papel: siempre claro, aunque el usuario use el tema oscuro.
@@ -71,6 +78,18 @@ export default function ImprimirCotizacion() {
 
   if (cot.isLoading || lineas.isLoading) return <p className="p-10 text-center text-tenue">Preparando la cotización…</p>;
   if (!c) return <p className="p-10 text-center text-tenue">No encontramos esta cotización (o es de otro vendedor).</p>;
+  if (conFreno && freno.isLoading) return <p className="p-10 text-center text-tenue">Preparando la cotización…</p>;
+  if (conFreno && freno.data?.frenado && SIN_ENVIAR.includes(c.estado)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-fondo">
+        <div className="max-w-md rounded-xl border border-peligro/30 bg-peligro-suave p-6 space-y-3 text-sm">
+          <p className="font-semibold text-peligro">{c.folio} todavía no se envía</p>
+          <p>{mensajeFreno(freno.data)}</p>
+          <Link to="/ventas/cotizaciones?estado=seguimiento" target={enVista ? "_top" : undefined} className="inline-block font-medium text-marca-texto underline">Ponerme al día</Link>
+        </div>
+      </div>
+    );
+  }
 
   const partidas = lineas.data ?? [];
   const m = c.moneda;

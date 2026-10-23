@@ -27,7 +27,7 @@ import { FichaVenta } from "./componentes/FichaVenta";
 import { DialogoFleteSkydropx } from "./componentes/FleteSkydropx";
 import { DialogoCliente, DialogoMotivo, ElegirCliente, MOTIVOS_PERDIDA, type ClienteNuevo } from "./componentes/dialogos";
 import { DialogoConvertir, DialogoEnviar, DialogoPedirAutorizacion } from "./componentes/DialogosCotizacion";
-import { useFreno } from "./componentes/Seguimiento";
+import { SIN_ENVIAR, mensajeFreno, useFreno } from "./componentes/Seguimiento";
 import { useFichas } from "./componentes/Fichas";
 import { EntregaRealista, useEstimacionEntrega } from "./componentes/EntregaRealista";
 import { DialogoPedirPrecio, type DatosPedido, type InicialPedido } from "./solicitudes/DialogoPedirPrecio";
@@ -397,11 +397,18 @@ function Editor({ id }: { id: string }) {
     },
     { exito: "Borrador eliminado", invalidar: [["v_cotizaciones"]], alTerminar: () => ir("/ventas/cotizaciones") },
   );
-  const abrirPdf = async () => { await guardar(); window.open(`/ventas/cotizaciones/${id}/imprimir`, "_blank"); };
+  // Con el freno puesto, una cotización que no ha salido tampoco se descarga ni se ve como hoja:
+  // si no, se mandaba el PDF a mano y se quedaba sin enviar y sin seguimiento.
+  const frenoHoja = () => {
+    if (esGerente || !freno.data?.frenado || !SIN_ENVIAR.includes(cot.data?.estado ?? "")) return false;
+    toast.error(mensajeFreno(freno.data), { duration: 10_000, action: { label: "Ponerme al día", onClick: () => ir("/ventas/cotizaciones?estado=seguimiento") } });
+    return true;
+  };
+  const abrirPdf = async () => { if (frenoHoja()) return; await guardar(); window.open(`/ventas/cotizaciones/${id}/imprimir`, "_blank"); };
   // Vista previa: la misma hoja que recibe el cliente, sin salir del editor. Se guarda antes
   // para que muestre lo último que se escribió; la llave obliga a recargarla cada vez.
   const [vista, setVista] = useState(0);
-  const abrirVista = async () => { await guardar(); setVista(Date.now()); };
+  const abrirVista = async () => { if (frenoHoja()) return; await guardar(); setVista(Date.now()); };
 
   // El cliente se guarda al momento (no con el resto): con la regla de cartera
   // encendida la base puede negarse ("Este cliente es de X hasta…") y ese
