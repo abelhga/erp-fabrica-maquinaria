@@ -10,6 +10,7 @@ repite: cuenta los procesos completos, que cruzan varias pantallas y varias pers
 
 | Área | Página | Qué trae |
 |---|---|---|
+| Almacén | [almacen.md](almacen.md) | Existencias y disponible · Salidas, devoluciones y traspasos · Apartar, revisar y surtir a producción · Recibir · Ajustes y conteos · Reabasto · Envíos y entregas · Herramienta prestada |
 | Compras | [compras.md](compras.md) | Solicitudes de precio · Actualizar precios · Requisiciones y reabasto · La orden de compra · Recibir material · Proveedores · Por qué es mejor que la hoja |
 | Ventas | [ventas.md](ventas.md) | Números de pedido (PED-26-799, Mercado Libre y web) · Entregar un pedido y la hoja de salida · Cuándo sale un equipo |
 | Producción | [produccion.md](produccion.md) | Equipos de stock: fabricarlos y venderlos · Cuadrillas y terminal de piso · Gantt (también en la ficha del pedido y la orden) · La TV del taller · Personal de piso · Métricas |
