@@ -35,6 +35,11 @@ export interface PorVendedor {
 }
 export interface Freno { vencidos: number; tope: number; frenado: boolean; liberado: boolean; liberado_por: string | null; motivo: string | null }
 
+/** Una cotización que todavía no sale al cliente: con el freno puesto no se envía ni se saca su PDF. */
+export const SIN_ENVIAR = ["borrador", "por_autorizar", "autorizada"];
+export const mensajeFreno = (f: Pick<Freno, "vencidos" | "tope">) =>
+  `Tienes ${f.vencidos} seguimientos vencidos y el tope es ${f.tope}: antes de sacar o enviar otra cotización, anota qué pasó con las que ya mandaste. Si el cliente está esperando, pide a la gerencia de ventas que te libere por hoy.`;
+
 /** Lo que el diálogo necesita saber de la venta, venga de la cola o de una tarjeta del tablero. */
 export interface ParaAnotar {
   oportunidad_id: string; titulo: string; cliente: string | null; etapa: EtapaOportunidad; cotizacion_id?: string | null;
@@ -370,6 +375,33 @@ export function AvisoSeguimientos({ alAbrir, enCola = false }: { alAbrir: () => 
         {!esGerente && freno.data && vencidos > 0 && <span className="text-tenue"> Con más de {freno.data.tope} vencidos ya no se pueden enviar cotizaciones.</span>}
       </p>
       <Boton tamano="sm" variante="secundario" onClick={alAbrir}>{esGerente ? "Ver seguimiento" : "Ponerme al día"}</Boton>
+    </div>
+  );
+}
+
+/** En el centro de mando de dirección: cómo va cada vendedor con sus seguimientos. */
+export function SeguimientoEquipo() {
+  const ir = useNavigate();
+  const filas = usePorVendedor();
+  const conAlgo = (filas.data ?? []).filter((v) => v.pendientes > 0 || v.anotados_7d > 0);
+  if (!conAlgo.length) return null;
+  return (
+    <div className="border-t border-borde pt-3 mt-1 space-y-2" data-explain={GLOSARIO.seguimientoEquipo} data-explain-title="Seguimiento de cotizaciones">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-medium titulo-explicable">Seguimiento de cotizaciones</p>
+        <button className="text-sm text-marca-texto" onClick={() => ir("/ventas/cotizaciones?estado=seguimiento")}>Ver</button>
+      </div>
+      {conAlgo.map((v) => (
+        <button key={v.vendedor_id} onClick={() => ir("/ventas/cotizaciones?estado=seguimiento")}
+          className="w-full flex items-center justify-between gap-2 text-left text-sm hover:text-marca-texto">
+          <span className="truncate">{v.vendedor.split(" ")[0]}
+            {v.frenado && <Insignia tono="peligro" className="ml-2">Frenado</Insignia>}
+            {!v.frenado && v.liberado_motivo && <Insignia tono="info" className="ml-2">Liberado hoy</Insignia>}</span>
+          <span className="cifra text-xs text-tenue whitespace-nowrap">
+            <b className={cn(v.vencidos > 0 ? "text-peligro" : "text-texto")}>{v.vencidos}</b> vencidos · {v.para_hoy} hoy · anotó {v.anotados_7d} en 7 días
+          </span>
+        </button>
+      ))}
     </div>
   );
 }

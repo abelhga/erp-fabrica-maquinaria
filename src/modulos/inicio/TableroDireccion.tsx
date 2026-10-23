@@ -18,6 +18,7 @@ import { dinero, dineroCompacto, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { ResumenIA } from "./ResumenIA";
 import { DondeVendemos } from "@/modulos/analisis/DondeVendemos";
+import { SeguimientoEquipo } from "@/modulos/ventas/componentes/Seguimiento";
 import { Explicacion } from "@/tutorial/Explicacion";
 import { PANTALLAS } from "@/tutorial/pantallas";
 import { GLOSARIO } from "@/tutorial/glosario";
@@ -294,6 +295,7 @@ export function TableroDireccion() {
                     <div className="text-sm cifra whitespace-nowrap"><b>{numero(e.n)}</b> <span className="text-tenue">· {dineroCompacto(e.monto)}</span></div>
                   </div>
                 ))}
+                <SeguimientoEquipo />
               </div>
             </Tarjeta>
           )}

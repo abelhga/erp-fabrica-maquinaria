@@ -121,14 +121,17 @@ sola nota de seguimiento.
 Negociación sin la nota, ni siquiera desde el detalle.
 
 **El freno:** con **más de 10 seguimientos vencidos**, el vendedor no puede enviar cotizaciones
-nuevas. El botón de enviar lo avisa antes de abrir WhatsApp. Convertir en pedido nunca se frena.
+nuevas. El botón de enviar lo avisa antes de abrir WhatsApp, y tampoco sale el PDF ni la vista
+previa de una cotización que todavía no se envía (las ya enviadas se pueden volver a compartir).
+Convertir en pedido nunca se frena.
 Si un cliente está esperando, la gerencia de ventas lo libera **por ese día**: en Cotizaciones →
 Seguimiento, en la tarjeta del vendedor, «Liberar por hoy» con el motivo. Al vendedor le llega el
 aviso.
 
 **Para la gerencia:** la misma pestaña muestra a cada vendedor con sus seguimientos vencidos, los
 de hoy y el total, y cuántas cotizaciones envió contra cuántos seguimientos anotó en los últimos 7
-días. Clic en un vendedor filtra su lista.
+días. Clic en un vendedor filtra su lista. Dirección lo ve también en su Inicio, abajo del embudo
+comercial.
 
 **Arranque (23 oct 2026):** las cotizaciones que ya estaban enviadas recibieron su seguimiento.
 Las que ya habían pasado sus 3 días se acomodaron desde el siguiente día hábil sin pasar de 8 por
