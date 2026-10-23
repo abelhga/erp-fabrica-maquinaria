@@ -101,6 +101,15 @@ export const folioCfdi = (c: Cfdi) => [c.serie, c.folio].filter(Boolean).join(" 
 const UUID = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/;
 /** El UUID solo vale completo: uno mal leído de un PDF dejaría pasar la factura dos veces. */
 export const uuidValido = (u: string | null | undefined) => !!u && UUID.test(u.trim().toUpperCase());
+/**
+ * Lo mismo que hace la base al guardar: el PDF del SAT trae guiones tipográficos (‐) y a veces
+ * caracteres invisibles, y copiado de ahí el UUID se veía bien pero no pasaba. Así el aviso de
+ * la pantalla dice lo mismo que la base.
+ */
+export function limpiarUuid(u: string) {
+  const v = u.replace(/[‐‑‒–—―−]/g, "-").replace(/[^0-9A-Za-z-]/g, "").toUpperCase();
+  return /^[0-9A-F]{32}$/.test(v) ? [v.slice(0, 8), v.slice(8, 12), v.slice(12, 16), v.slice(16, 20), v.slice(20)].join("-") : v;
+}
 
 /**
  * Lo que Claude leyó de un PDF o una foto de factura, en la misma forma que el XML, para que
