@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, FileCode2, FileText, HandCoins, Receipt, Upload } from "lucide-react";
+import { ExternalLink, FileCode2, FileText, HandCoins, Pencil, Receipt, Upload } from "lucide-react";
 import { Lateral, Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { Campo, Entrada, Seleccion } from "@/components/ui/campo";
@@ -13,9 +13,10 @@ import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, hoyISO } from "@/lib/formato";
 import { ESTADO_PEDIDO, METODOS, enMoneda, nombreMetodo, tonoRango, type Moneda, type Rango } from "./comun";
 import { GLOSARIO } from "@/tutorial/glosario";
-import { folioCfdi, leerCfdi } from "@/lib/cfdi";
+import { folioCfdi, leerCfdi, limpiarUuid, uuidValido } from "@/lib/cfdi";
 import { useEmpresa } from "@/modulos/ventas/comun";
 import { SubirComplementos } from "./SubirComplementos";
+import { EditarFactura, type FacturaEditable } from "./EditarFactura";
 
 export interface FilaCobranza {
   pedido_id: string; folio: string; cliente_id: string; cliente: string; vendedor_id: string | null; vendedor: string | null;
@@ -31,6 +32,7 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
   const [cobro, setCobro] = useState(false);
   const [factura, setFactura] = useState(false);
   const [complementos, setComplementos] = useState(false);
+  const [corregir, setCorregir] = useState<FacturaEditable | null>(null);
   const cobros = useQuery({
     queryKey: ["cobros", p?.pedido_id],
     enabled: !!p,
@@ -104,6 +106,8 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
                     <b>{f.folio}</b>
                     <span className="text-tenue">{fecha(f.fecha)}</span>
                     <span className="ml-auto cifra">{enMoneda(f.total, m)}</span>
+                    {puede("finanzas", 2) && <button type="button" className="text-tenue hover:text-texto" aria-label={`Corregir factura ${f.folio}`}
+                      data-explain={GLOSARIO.corregirFactura} data-explain-title="Corregir factura" onClick={() => setCorregir(f)}><Pencil className="h-3.5 w-3.5" /></button>}
                     <span className="w-full text-xs text-tenue font-mono pl-7 break-all">{f.uuid_sat ?? "Sin UUID del SAT"}</span>
                   </li>
                 ))}
@@ -113,6 +117,7 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
           <RegistrarCobro pedido={p} abierto={cobro} alCambiar={setCobro} />
           <RegistrarFactura pedido={p} abierto={factura} alCambiar={setFactura} />
           <SubirComplementos abierto={complementos} alCambiar={setComplementos} />
+          <EditarFactura factura={corregir} alCerrar={() => setCorregir(null)} invalidar={INVALIDAR} />
         </div>
       )}
     </Lateral>
@@ -168,7 +173,7 @@ export function RegistrarFactura({ pedido: p, abierto, alCambiar }: { pedido: Fi
   const guardar = useAccion(() => q(supabase.from("facturas").insert({
     pedido_id: p.pedido_id, folio: f.folio, uuid_sat: f.uuid.trim() || null, fecha: f.fecha, total: Number(f.total), notas: f.notas.trim() || null,
   })), { exito: `Factura ${f.folio} registrada`, invalidar: INVALIDAR, alTerminar: () => alCambiar(false) });
-  const uuidMal = f.uuid.trim() !== "" && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(f.uuid.trim());
+  const uuidMal = f.uuid !== "" && !uuidValido(f.uuid);
   // Con el XML de la factura que timbramos se llena todo; se revisa que sea nuestra y de este cliente.
   const empresa = useEmpresa();
   const [xml, setXml] = useState<{ nombre: string; aviso: string | null; error: string | null } | null>(null);
@@ -230,7 +235,7 @@ export function RegistrarFactura({ pedido: p, abierto, alCambiar }: { pedido: Fi
         <Campo etiqueta="UUID del SAT (opcional)" className="sm:col-span-2"
           error={uuidMal ? "Son 36 caracteres: 8-4-4-4-12, números y letras A–F" : undefined}
           ayuda="El folio fiscal del XML. Se puede poner después.">
-          <Entrada value={f.uuid} onChange={(e) => setF({ ...f, uuid: e.target.value.toUpperCase() })} className="font-mono" maxLength={36}
+          <Entrada value={f.uuid} onChange={(e) => setF({ ...f, uuid: limpiarUuid(e.target.value) })} className="font-mono"
             placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX" />
         </Campo>
       </form>

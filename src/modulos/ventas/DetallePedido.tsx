@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Ban, Check, Factory, FileText, PackageCheck, Plus, Printer, Receipt, ShoppingCart, Trash2, Users, Wallet } from "lucide-react";
+import { Ban, Check, Factory, FileText, PackageCheck, Pencil, Plus, Printer, Receipt, ShoppingCart, Trash2, Users, Wallet } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/insignia";
@@ -23,6 +23,8 @@ import { TarjetaMercadoLibre } from "./componentes/DineroML";
 import { BotonEntregar, RecuadroEntrega, abrirHojaSalida, useHojaSalida } from "./componentes/EntregaPedido";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { GanttCompacto } from "@/modulos/produccion/Gantt";
+import { EditarFactura, type FacturaEditable } from "@/modulos/finanzas/componentes/EditarFactura";
+import { limpiarUuid } from "@/lib/cfdi";
 
 interface Pedido {
   id: string; folio: string; cotizacion_id: string | null; cliente_id: string; vendedor_id: string | null; canal: keyof typeof CANAL;
@@ -46,6 +48,7 @@ export default function DetallePedido() {
   const { perfil, puede } = useSesion();
   const esGerente = puede("ventas", 3);
   const [dlg, setDlg] = useState<null | "cancelar" | "cobro" | "factura" | "credito">(null);
+  const [corregir, setCorregir] = useState<FacturaEditable | null>(null);
 
   const ped = useQuery({ queryKey: ["pedido", id], queryFn: () => q<Pedido | null>(supabase.from("pedidos").select("*").eq("id", id!).maybeSingle()) });
   const resumen = useQuery({ queryKey: ["v_pedidos", id], queryFn: () => q<VPedido | null>(supabase.from("v_pedidos").select("*").eq("id", id!).maybeSingle()) });
@@ -304,7 +307,16 @@ export default function DetallePedido() {
             <EncabezadoTarjeta titulo="Facturas" acciones={puede("finanzas", 2) && <Boton variante="secundario" tamano="sm" onClick={() => setDlg("factura")}><FileText className="h-3.5 w-3.5" />Registrar</Boton>} />
             <div className="px-5 pb-4 text-sm space-y-1.5">
               {(facturas.data?.length ?? 0) === 0 ? <p className="text-tenue">Sin facturar.{!puede("finanzas", 2) && " La registra finanzas."}</p>
-                : facturas.data!.map((f) => <p key={f.id} className="flex justify-between gap-2"><span><b className="cifra">{f.folio}</b> · {fecha(f.fecha)}</span><span className="cifra">{dineroEn(Number(f.total), p.moneda)}</span></p>)}
+                : facturas.data!.map((f) => (
+                  <p key={f.id} className="flex items-center justify-between gap-2">
+                    <span><b className="cifra">{f.folio}</b> · {fecha(f.fecha)}{!f.uuid_sat && <span className="text-tenue"> · sin UUID</span>}</span>
+                    <span className="flex items-center gap-1">
+                      <span className="cifra">{dineroEn(Number(f.total), p.moneda)}</span>
+                      {puede("finanzas", 2) && <button type="button" className="text-tenue hover:text-texto" aria-label={`Corregir factura ${f.folio}`}
+                        data-explain={GLOSARIO.corregirFactura} data-explain-title="Corregir factura" onClick={() => setCorregir(f)}><Pencil className="h-3.5 w-3.5" /></button>}
+                    </span>
+                  </p>
+                ))}
             </div>
           </Tarjeta>
 
@@ -334,6 +346,7 @@ export default function DetallePedido() {
         cargando={actualizar.isPending} alConfirmar={(m) => actualizar.mutate({ estado: "cancelado", motivo_cancelacion: m }, { onSuccess: () => setDlg(null) })} />
       <DialogoCobro abierto={dlg === "cobro"} alCambiar={(v) => setDlg(v ? "cobro" : null)} pedidoId={p.id} saldo={Number(r?.saldo ?? 0)} moneda={p.moneda} />
       <DialogoFactura abierto={dlg === "factura"} alCambiar={(v) => setDlg(v ? "factura" : null)} pedidoId={p.id} total={Number(p.total)} />
+      <EditarFactura factura={corregir} alCerrar={() => setCorregir(null)} invalidar={[["facturas", p.id], ["v_pedidos"]]} />
       <DialogoCredito abierto={dlg === "credito"} alCambiar={(v) => setDlg(v ? "credito" : null)} pedidoId={p.id} vendedorId={p.vendedor_id}
         actual={(credito.data ?? []).map((x) => ({ vendedor_id: x.vendedor_id, porcentaje: Number(x.porcentaje) }))} />
     </Pagina>
@@ -388,7 +401,7 @@ function DialogoFactura({ abierto, alCambiar, pedidoId, total }: { abierto: bool
       <div className="grid gap-3 sm:grid-cols-2">
         <Campo etiqueta="Folio"><Entrada value={f.folio} onChange={(e) => setF({ ...f, folio: e.target.value })} placeholder="A-2990" /></Campo>
         <Campo etiqueta="Fecha"><Entrada type="date" value={f.fecha} onChange={(e) => setF({ ...f, fecha: e.target.value })} /></Campo>
-        <Campo etiqueta="UUID del SAT" className="sm:col-span-2"><Entrada value={f.uuid} onChange={(e) => setF({ ...f, uuid: e.target.value })} /></Campo>
+        <Campo etiqueta="UUID del SAT" className="sm:col-span-2"><Entrada value={f.uuid} onChange={(e) => setF({ ...f, uuid: limpiarUuid(e.target.value) })} className="font-mono" /></Campo>
         <Campo etiqueta="Total"><CampoNumero valor={f.total} prefijo="$" alCambiar={(n) => setF({ ...f, total: n })} /></Campo>
       </div>
     </Dialogo>
