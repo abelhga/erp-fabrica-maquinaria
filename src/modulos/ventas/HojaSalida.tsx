@@ -121,6 +121,7 @@ export default function HojaSalidaPagina() {
             ))}
           </tbody>
         </table>
+        {h.como_venia && <p className="mt-2 text-[11px] text-tenue">Así venía en el pedido: {h.como_venia}</p>}
 
         <section className="bloque mt-6 rounded-lg border border-borde p-3 text-[11.5px]">
           <p>Recibo el equipo descrito arriba completo y en buen estado aparente. Las observaciones, si las hay, se anotan aquí:</p>

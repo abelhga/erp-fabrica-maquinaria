@@ -28,6 +28,8 @@ export interface HojaSalida {
   puede_entregar: boolean; puede_reabrir: boolean;
   partidas: { id: string; cantidad: number; unidad: string; titulo: string; descripcion: string | null; clave: string | null; series: string[] }[];
   sueltas: { equipo: string; clave: string | null; serie: string | null; folio: string }[];
+  /** Pedidos de la hoja: el texto de sus partidas, que describe los mismos equipos sueltos (no se cuenta otra vez). */
+  como_venia?: string | null;
   salidas: Salida[];
 }
 
