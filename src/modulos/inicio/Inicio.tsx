@@ -2,8 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
-  AlertTriangle, Boxes, CheckCircle2, ClipboardList, Factory, FileText, FileWarning, Inbox, PackageCheck, Scale, Ship, ShoppingCart,
-  TrendingUp, Truck, UserRound, Wallet,
+  AlertTriangle, Boxes, CheckCircle2, ClipboardList, Factory, FileText, FileWarning, Inbox, MessageCircleQuestionMark, PackageCheck, Scale, Ship,
+  ShoppingCart, TrendingUp, Truck, UserRound, Wallet,
 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
@@ -21,6 +21,7 @@ import { dinero, dineroCompacto, fecha, numero, porcentaje } from "@/lib/formato
 import { GLOSARIO } from "@/tutorial/glosario";
 import { useSaldoHoja } from "@/modulos/finanzas/componentes/SaldosArranque";
 import { contenidoInicio } from "./porRol";
+import { usePorVendedor } from "@/modulos/ventas/componentes/Seguimiento";
 
 interface Indicadores {
   ventas?: { mes: number; mes_anterior: number; anio: number; pedidos_mes: number };
@@ -97,6 +98,22 @@ function InicioPorArea() {
         .or("atrasada.eq.true,dias_restantes.lte.5").order("fecha_compromiso").limit(6)),
   });
 
+  // Seguimiento de cotizaciones: al vendedor los suyos; a la gerencia, el equipo y quién está frenado.
+  const seguimientos = usePorVendedor(avisar.has("seguimientos") && puede("ventas"));
+  const seg = (() => {
+    const filas = seguimientos.data ?? [];
+    if (!filas.length) return null;
+    if (puede("ventas", 3)) {
+      const vencidos = filas.reduce((n, v) => n + v.vencidos, 0), frenados = filas.filter((v) => v.frenado).length;
+      return vencidos ? { texto: `El equipo tiene ${vencidos} seguimiento(s) de cotizaciones vencido(s)${frenados ? ` · ${frenados} vendedor(es) frenado(s)` : ""}`, tono: "peligro" as const } : null;
+    }
+    const v = filas.find((x) => x.vendedor_id === perfil?.id);
+    if (!v || (!v.vencidos && !v.para_hoy)) return null;
+    const partes = [v.vencidos ? `${v.vencidos} vencido(s)` : null, v.para_hoy ? `${v.para_hoy} para hoy` : null].filter(Boolean).join(" y ");
+    return { texto: v.frenado ? `Seguimientos de cotizaciones: ${partes}. No puedes enviar cotizaciones nuevas hasta ponerte al día` : `Seguimientos de cotizaciones: ${partes}`,
+      tono: v.vencidos ? "peligro" as const : "aviso" as const };
+  })();
+
   const i = ind.data ?? {};
   // Barras apiladas por línea, un mes por barra (12 meses, incluido el actual).
   const serie = (() => {
@@ -116,11 +133,12 @@ function InicioPorArea() {
   const conversion = i.cotizaciones && i.cotizaciones.cerradas_90d > 0 ? i.cotizaciones.ganadas_90d / i.cotizaciones.cerradas_90d : null;
 
   const pendientes = [
+    seg ? { texto: seg.texto, ruta: "/ventas/cotizaciones?estado=seguimiento", icono: MessageCircleQuestionMark, tono: seg.tono } : null,
     i.leads?.por_tomar && avisar.has("leads_por_tomar") ? { texto: `${i.leads.por_tomar} lead(s) esperando vendedor`, ruta: "/ventas/leads?filtro=por_tomar", icono: Inbox, tono: "peligro" as const } : null,
     i.leads?.mios_sin_atender && avisar.has("leads_mios") ? { texto: `${i.leads.mios_sin_atender} lead(s) tuyos por atender`, ruta: "/ventas/leads?filtro=mios", icono: Inbox, tono: "aviso" as const } : null,
     i.leads?.sin_atender && avisar.has("leads_sin_atender") ? { texto: `${i.leads.sin_atender} lead(s) con vendedor, sin atender todavía`, ruta: "/ventas/leads?filtro=abiertos", icono: Inbox, tono: "marca" as const } : null,
     i.cotizaciones?.por_autorizar && avisar.has("por_autorizar") && puede("ventas", 3) ? { texto: `${i.cotizaciones.por_autorizar} cotización(es) esperan tu autorización de precio`, ruta: "/ventas/cotizaciones?estado=por_autorizar", icono: FileText, tono: "aviso" as const } : null,
-    i.tareas_vencidas && avisar.has("tareas_vencidas") ? { texto: `${i.tareas_vencidas} seguimiento(s) vencido(s) con clientes`, ruta: "/ventas/oportunidades", icono: UserRound, tono: "peligro" as const } : null,
+    i.tareas_vencidas && avisar.has("tareas_vencidas") ? { texto: `${i.tareas_vencidas} tarea(s) con clientes vencida(s)`, ruta: "/ventas/oportunidades", icono: UserRound, tono: "peligro" as const } : null,
     i.inventario?.ajustes_pendientes && avisar.has("ajustes") && (puede("inventario", 3) || puede("produccion", 3)) ? { texto: `${i.inventario.ajustes_pendientes} ajuste(s) de inventario por autorizar`, ruta: "/almacen/movimientos?vista=ajustes", icono: Scale, tono: "aviso" as const } : null,
     i.produccion?.con_faltantes && avisar.has("faltantes") ? { texto: `${i.produccion.con_faltantes} orden(es) de producción con material faltante`, ruta: "/produccion/ordenes?filtro=faltantes", icono: AlertTriangle, tono: "peligro" as const } : null,
     i.compras?.oc_atrasadas && avisar.has("oc_atrasadas") ? { texto: `${i.compras.oc_atrasadas} orden(es) de compra con entrega atrasada`, ruta: "/compras/ordenes?filtro=atrasadas", icono: Truck, tono: "aviso" as const } : null,

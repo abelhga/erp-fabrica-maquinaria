@@ -3,8 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
-  Cake, CalendarOff, ClipboardList, Factory, Hand, HandCoins, KanbanSquare, ListTodo, PackageCheck, PhoneCall, Ship, Truck,
-  Undo2, Wrench, type LucideIcon,
+  Cake, CalendarOff, ClipboardList, Factory, Hand, HandCoins, KanbanSquare, ListTodo, MessageCircleQuestionMark, PackageCheck, PhoneCall, Ship,
+  Truck, Undo2, Wrench, type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
@@ -38,7 +38,7 @@ export const colorDe = (a: string) => AREAS.find((x) => x.valor === areaDe(a))?.
 export const textoArea = (a: string) => AREAS.find((x) => x.valor === areaDe(a))?.texto ?? a;
 
 export const ICONO: Record<string, LucideIcon> = {
-  entrega: Truck, oportunidad: KanbanSquare, actividad: PhoneCall, llamar: PhoneCall, devolucion: Undo2,
+  entrega: Truck, oportunidad: KanbanSquare, actividad: PhoneCall, llamar: PhoneCall, seguimiento: MessageCircleQuestionMark, devolucion: Undo2,
   compromiso: Factory, fin_plan: Factory, arranque: Factory, requisicion: ClipboardList, compra: PackageCheck,
   embarque: Ship, recoleccion: Truck, servicio: Wrench, servicio_pedido: Wrench, preventivo: Wrench, resguardo: Hand,
   pago: HandCoins, ausencia: CalendarOff, cumpleanos: Cake, pendiente: ListTodo,

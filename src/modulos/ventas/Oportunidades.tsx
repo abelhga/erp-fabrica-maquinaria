@@ -20,6 +20,7 @@ import { CampoNumero } from "./componentes/campos";
 import { Actividades } from "./componentes/Actividades";
 import { DialogoCliente, DialogoMotivo, ElegirCliente, MOTIVOS_PERDIDA } from "./componentes/dialogos";
 import { ETAPA, ETAPAS, ESTADO_COT, LINEA, dineroEn, hoyMx, todas, useFuentes, type EtapaOportunidad, type Linea, type VOportunidad, type EstadoCotizacion, type Moneda } from "./comun";
+import { ChipSeguimiento, DialogoQuePaso, deSeguimiento, textoVence, useSeguimientos, type ParaAnotar, type Resultado } from "./componentes/Seguimiento";
 
 const COLOR_COLUMNA: Record<EtapaOportunidad, string> = {
   prospecto: "bg-tenue/60", contactado: "bg-info", cotizado: "bg-marca", negociacion: "bg-aviso", ganada: "bg-ok", perdida: "bg-peligro",
@@ -30,6 +31,8 @@ const COLOR_COLUMNA: Record<EtapaOportunidad, string> = {
  * cerradas. Tablero por etapa con arrastrar y soltar, días que lleva cada
  * oportunidad en su etapa y la próxima tarea (en rojo si ya venció).
  * Enviar una cotización la mueve sola a "cotizado"; convertirla en pedido, a "ganada".
+ * A Negociación (y de Prospecto a Contactado) no se arrastra sin decir qué pasó: la tarjeta
+ * abre «¿Qué pasó?» y es eso lo que la mueve (la base no acepta Negociación sin la nota).
  */
 export default function Oportunidades() {
   const { puede, perfil } = useSesion();
@@ -45,6 +48,14 @@ export default function Oportunidades() {
   const [perder, setPerder] = useState<VOportunidad | null>(null);
   const [arrastrando, setArrastrando] = useState<string | null>(null);
   const [sobre, setSobre] = useState<EtapaOportunidad | null>(null);
+  const [anotar, setAnotar] = useState<{ objetivo: ParaAnotar; resultado?: Resultado } | null>(null);
+  const seguimientos = useSeguimientos();
+  const segPorOp = useMemo(() => new Map((seguimientos.data ?? []).map((x) => [x.oportunidad_id, x])), [seguimientos.data]);
+  // Lo que el diálogo sabe de la venta: de su seguimiento si lo tiene (folio, total, teléfono), si no de la tarjeta.
+  const paraAnotar = (o: VOportunidad): ParaAnotar => {
+    const sg = segPorOp.get(o.id);
+    return sg ? deSeguimiento(sg) : { oportunidad_id: o.id, titulo: o.titulo, cliente: o.cliente, etapa: o.etapa, total: o.ultima_cotizacion_total };
+  };
 
   const lista = useQuery({
     queryKey: ["v_oportunidades"],
@@ -72,6 +83,7 @@ export default function Oportunidades() {
     setArrastrando(null);
     if (!o || o.etapa === etapa) return;
     if (etapa === "perdida") { setPerder(o); return; }
+    if (etapa === "negociacion" || (etapa === "contactado" && o.etapa === "prospecto")) { setAnotar({ objetivo: paraAnotar(o), resultado: etapa }); return; }
     // Se mueve al instante en pantalla; si la base no lo acepta (no es tuya, la
     // cartera es de otro), se vuelve a leer y la tarjeta regresa a su columna.
     qc.setQueryData<VOportunidad[]>(["v_oportunidades"], (v) => v?.map((x) => (x.id === o.id ? { ...x, etapa, dias_en_etapa: 0 } : x)));
@@ -85,6 +97,8 @@ export default function Oportunidades() {
     { clave: "vendedor", titulo: "Vendedor", oculta: !esGerente, valor: (o) => o.vendedor },
     { clave: "linea", titulo: "Línea", explica: GLOSARIO.lineaVenta, valor: (o) => LINEA[o.linea] },
     { clave: "dias", titulo: "Días en etapa", explica: GLOSARIO.diasEnEtapa, alinear: "der", valor: (o) => o.dias_en_etapa, sinBusqueda: true },
+    { clave: "seguimiento", titulo: "Seguimiento", explica: GLOSARIO.seguimientoCotizacion, valor: (o) => o.seguimiento_vence ?? "",
+      celda: (o) => o.seguimiento_vence ? <ChipSeguimiento vence={o.seguimiento_vence} alClic={() => setAnotar({ objetivo: paraAnotar(o) })} /> : <span className="text-tenue">—</span> },
     { clave: "tarea", titulo: "Próxima tarea", explica: GLOSARIO.proximaTarea, valor: (o) => o.tarea_vence ?? "", celda: (o) => o.tarea ? <span className={cn("text-xs", (o.tarea_vence ?? "") < hoy && "text-peligro font-medium")}>{fecha(o.tarea_vence)} · {o.tarea}</span> : <span className="text-tenue">—</span> },
     { clave: "monto", titulo: "Monto estimado", explica: GLOSARIO.montoEstimado, alinear: "der", sinBusqueda: true, valor: (o) => Number(o.monto_estimado ?? 0), celda: (o) => dinero(o.monto_estimado) },
   ];
@@ -126,6 +140,9 @@ export default function Oportunidades() {
                     <CalendarClock className="h-3.5 w-3.5 mt-px shrink-0" />
                     <span><b className="font-medium">{vencida ? "Venció" : o.tarea_vence === hoy ? "Hoy" : fecha(o.tarea_vence)}</b> · {o.tarea}</span>
                   </p>
+                )}
+                {o.seguimiento_vence && !["ganada", "perdida"].includes(o.etapa) && (
+                  <ChipSeguimiento vence={o.seguimiento_vence} className="mt-2" alClic={() => setAnotar({ objetivo: paraAnotar(o) })} />
                 )}
                 {o.etapa === "perdida" && o.motivo_perdida && <p className="mt-2 text-xs text-peligro">{o.motivo_perdida}</p>}
                 {o.cotizaciones > 0 && <p className="mt-1.5 text-[11px] text-tenue inline-flex items-center gap-1"><FileText className="h-3 w-3" />{o.cotizaciones} cotización(es)</p>}
@@ -183,13 +200,17 @@ export default function Oportunidades() {
         alConfirmar={(m) => { if (perder) mover.mutate({ id: perder.id, etapa: "perdida", motivo: m }, { onSuccess: () => setPerder(null) }); }} />
       <Lateral abierto={!!abiertoSel} alCambiar={(v) => !v && setAbierta(null)} titulo={abiertoSel?.titulo ?? ""}
         subtitulo={abiertoSel && <span>{abiertoSel.cliente} · <Insignia tono={ETAPA[abiertoSel.etapa].tono}>{ETAPA[abiertoSel.etapa].texto}</Insignia></span>}>
-        {abiertoSel && <DetalleOportunidad o={abiertoSel} puedeEditar={esGerente || abiertoSel.vendedor_id === perfil?.id} alPerder={() => setPerder(abiertoSel)} />}
+        {abiertoSel && <DetalleOportunidad o={abiertoSel} puedeEditar={esGerente || abiertoSel.vendedor_id === perfil?.id} alPerder={() => setPerder(abiertoSel)}
+          alAnotar={(resultado) => setAnotar({ objetivo: paraAnotar(abiertoSel), resultado })} />}
       </Lateral>
+      <DialogoQuePaso objetivo={anotar?.objetivo ?? null} resultadoInicial={anotar?.resultado} alCerrar={() => setAnotar(null)} />
     </Pagina>
   );
 }
 
-function DetalleOportunidad({ o, puedeEditar, alPerder }: { o: VOportunidad; puedeEditar: boolean; alPerder: () => void }) {
+function DetalleOportunidad({ o, puedeEditar, alPerder, alAnotar }: {
+  o: VOportunidad; puedeEditar: boolean; alPerder: () => void; alAnotar: (resultado?: Resultado) => void;
+}) {
   const ir = useNavigate();
   const fuentes = useFuentes();
   const [f, setF] = useState(o);
@@ -202,10 +223,13 @@ function DetalleOportunidad({ o, puedeEditar, alPerder }: { o: VOportunidad; pue
   const guardar = useAccion(
     async () => {
       if (f.etapa === "perdida" && o.etapa !== "perdida") { alPerder(); return; }
+      // A Negociación (o de Prospecto a Contactado) se pasa diciendo qué pasó: se guarda lo demás y se pregunta.
+      const conNota = f.etapa !== o.etapa && (f.etapa === "negociacion" || (f.etapa === "contactado" && o.etapa === "prospecto"));
       await q(supabase.from("oportunidades").update({
-        titulo: f.titulo, etapa: f.etapa, linea: f.linea, monto_estimado: f.monto_estimado, probabilidad: f.probabilidad,
+        titulo: f.titulo, etapa: conNota ? o.etapa : f.etapa, linea: f.linea, monto_estimado: f.monto_estimado, probabilidad: f.probabilidad,
         fecha_cierre_estimada: f.fecha_cierre_estimada || null, fuente_id: f.fuente_id, notas: f.notas || null,
       }).eq("id", o.id));
+      if (conNota) alAnotar(f.etapa as Resultado);
     },
     { exito: "Oportunidad guardada", invalidar: [["v_oportunidades"]] },
   );
@@ -214,6 +238,16 @@ function DetalleOportunidad({ o, puedeEditar, alPerder }: { o: VOportunidad; pue
 
   return (
     <div className="space-y-6">
+      {!["ganada", "perdida"].includes(o.etapa) && puedeEditar && (
+        <div className={cn("flex items-center gap-3 rounded-xl border px-4 py-3",
+          o.seguimiento_vence && o.seguimiento_vence < hoyMx() ? "border-peligro/30 bg-peligro-suave" : "border-borde bg-fondo")}
+          data-explain={GLOSARIO.seguimientoCotizacion} data-explain-title="Seguimiento">
+          <p className="flex-1 text-sm">{o.seguimiento_vence
+            ? <>Seguimiento: <b>{textoVence(o.seguimiento_vence).toLowerCase()}</b></>
+            : "Sin seguimiento agendado. Anota cómo va y, si quieres, cuándo le vuelves a buscar."}</p>
+          <Boton tamano="sm" onClick={() => alAnotar()}>¿Qué pasó?</Boton>
+        </div>
+      )}
       <div className="flex flex-wrap gap-2">
         <Boton onClick={() => ir(`/ventas/cotizaciones/nueva?oportunidad=${o.id}`)} disabled={!puedeEditar}><FilePlus className="h-4 w-4" />Nueva cotización</Boton>
         <Boton asChild variante="secundario"><Link to={`/ventas/clientes/${o.cliente_id}`}>Ver cliente</Link></Boton>
@@ -261,7 +295,8 @@ function DetalleOportunidad({ o, puedeEditar, alPerder }: { o: VOportunidad; pue
       </section>
 
       <section>
-        <h3 className="font-semibold mb-2">Seguimiento</h3>
+        {/* El seguimiento de la cotización va arriba («¿Qué pasó?»); aquí, la historia y tareas sueltas. */}
+        <h3 className="font-semibold mb-2">Historia y tareas</h3>
         <Actividades clienteId={o.cliente_id} oportunidadId={o.id} puedeCapturar={puedeEditar} />
       </section>
     </div>
@@ -308,7 +343,8 @@ function DialogoAlta({ abierto, alCambiar, alCrear }: { abierto: boolean; alCamb
           <Campo etiqueta="Monto estimado"><CampoNumero valor={f.monto} prefijo="$" vacioEsCero={false} alCambiar={(n) => setF({ ...f, monto: n })} /></Campo>
           <Campo etiqueta="Etapa">
             <Seleccion value={f.etapa} onChange={(e) => setF({ ...f, etapa: e.target.value as EtapaOportunidad })}>
-              {ETAPAS.filter((e) => !["ganada", "perdida"].includes(e.valor)).map((e) => <option key={e.valor} value={e.valor}>{e.texto}</option>)}
+              {/* Negociación se alcanza anotando qué pasó, no desde el alta. */}
+              {ETAPAS.filter((e) => !["negociacion", "ganada", "perdida"].includes(e.valor)).map((e) => <option key={e.valor} value={e.valor}>{e.texto}</option>)}
             </Seleccion>
           </Campo>
           <Campo etiqueta="Línea">

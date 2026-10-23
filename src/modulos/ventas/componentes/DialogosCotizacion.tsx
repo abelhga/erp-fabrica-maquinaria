@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { FileText, MessageCircle, Send } from "lucide-react";
+import { Link } from "react-router-dom";
+import { AlertTriangle, FileText, MessageCircle, Send } from "lucide-react";
 import { textoFichas } from "./Fichas";
 import type { Estimacion } from "./EntregaRealista";
 import { Dialogo } from "@/components/ui/dialogo";
@@ -18,13 +19,16 @@ import {
  * cotización como "enviada" para darle seguimiento. wa.me no permite adjuntar:
  * el PDF se descarga con "Abrir PDF" y se arrastra al chat.
  */
-export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vendedor, plan, yaEnviada, alMarcarEnviada, alAbrirPdf, enviando, fichas = [] }: {
+export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vendedor, plan, yaEnviada, alMarcarEnviada, alAbrirPdf, enviando, fichas = [], frenado }: {
   abierto: boolean; alCambiar: (v: boolean) => void; c: Cotizacion; partidas: Partida[]; contacto: Contacto | null | undefined;
   vendedor: { nombre?: string | null; telefono?: string | null } | null | undefined; plan: PlanMeses | null | undefined;
   yaEnviada: boolean; alMarcarEnviada: () => Promise<unknown>; alAbrirPdf: () => void; enviando?: boolean;
   /** Fichas técnicas vigentes de las partidas: el cliente las pide y antes se buscaban en Drive. */
   fichas?: { titulo: string; drive_url: string }[];
+  /** Con más seguimientos vencidos que el tope, no se envía (ni se abre WhatsApp) hasta ponerse al día. */
+  frenado?: { vencidos: number; tope: number } | null;
 }) {
+  const bloqueado = !!frenado && !yaEnviada;
   const [tel, setTel] = useState("");
   const [texto, setTexto] = useState("");
   const [conFichas, setConFichas] = useState(false);
@@ -57,11 +61,19 @@ export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vende
     <Dialogo abierto={abierto} alCambiar={alCambiar} titulo={yaEnviada ? "Compartir cotización" : "Enviar cotización"} ancho="max-w-xl"
       descripcion={yaEnviada ? `${c.folio} ya está enviada; puedes volver a compartirla.` : `${c.folio} quedará como enviada y empieza a contar su vigencia para el seguimiento.`}
       pie={<>
-        {!yaEnviada && <Boton variante="secundario" cargando={enviando} onClick={async () => { await alMarcarEnviada(); alCambiar(false); }}><Send className="h-4 w-4" />Solo marcar enviada</Boton>}
-        <Boton variante="secundario" onClick={alAbrirPdf}><FileText className="h-4 w-4" />Abrir PDF</Boton>
-        <Boton variante="exito" onClick={porWhatsApp} cargando={enviando}><MessageCircle className="h-4 w-4" />Enviar por WhatsApp</Boton>
+        {!yaEnviada && <Boton variante="secundario" cargando={enviando} disabled={bloqueado} onClick={async () => { await alMarcarEnviada(); alCambiar(false); }}><Send className="h-4 w-4" />Solo marcar enviada</Boton>}
+        <Boton variante="secundario" onClick={alAbrirPdf} disabled={bloqueado}><FileText className="h-4 w-4" />Abrir PDF</Boton>
+        <Boton variante="exito" onClick={porWhatsApp} cargando={enviando} disabled={bloqueado}><MessageCircle className="h-4 w-4" />Enviar por WhatsApp</Boton>
       </>}>
       <div className="space-y-3">
+        {bloqueado && (
+          <div className="flex items-start gap-3 rounded-lg border border-peligro/30 bg-peligro-suave px-3 py-2.5 text-sm">
+            <AlertTriangle className="h-4 w-4 text-peligro mt-0.5 shrink-0" />
+            <p>Tienes <b>{frenado!.vencidos} seguimientos vencidos</b> y el tope es {frenado!.tope}: primero anota qué pasó con las cotizaciones que ya mandaste.{" "}
+              <Link to="/ventas/cotizaciones?estado=seguimiento" className="font-medium text-marca-texto underline" onClick={() => alCambiar(false)}>Ponerme al día</Link>.
+              {" "}Si el cliente está esperando, pide a la gerencia de ventas que te libere por hoy.</p>
+          </div>
+        )}
         <Campo etiqueta="WhatsApp del cliente" ayuda={tel && telefonoWa(tel).length < 12 ? "Revisa el número: le faltan dígitos." : contacto ? `Contacto: ${contacto.nombre}` : "Sin contacto ligado: escríbelo o deja vacío para elegir el chat en WhatsApp."}>
           <Entrada value={tel} onChange={(e) => setTel(e.target.value)} inputMode="tel" placeholder="33 1234 5678" />
         </Campo>

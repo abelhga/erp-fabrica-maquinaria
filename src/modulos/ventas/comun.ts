@@ -85,7 +85,7 @@ export interface VOportunidad {
   canal: Canal; monto_estimado: number | null; probabilidad: number | null; fecha_cierre_estimada: string | null; vendedor_id: string;
   vendedor: string | null; fuente_id: number | null; fuente: string | null; motivo_perdida: string | null; notas: string | null;
   dias_en_etapa: number; tarea_id: string | null; tarea: string | null; tarea_vence: string | null; cotizaciones: number;
-  ultima_cotizacion_total: number | null; creado_en: string;
+  ultima_cotizacion_total: number | null; creado_en: string; seguimiento_id: string | null; seguimiento_vence: string | null;
 }
 export interface VPedido {
   id: string; folio: string; fecha: string; fecha_compromiso: string | null; estado: EstadoPedido; canal: Canal; id_externo: string | null;

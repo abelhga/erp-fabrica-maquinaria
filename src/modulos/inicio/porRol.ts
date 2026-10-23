@@ -12,15 +12,15 @@ export type Tarjeta =
   | "grafica_ventas" | "ordenes_por_vencer" | "leads";
 export type Pendiente =
   | "por_autorizar" | "tareas_vencidas" | "ajustes" | "faltantes" | "oc_atrasadas" | "requisiciones" | "costos_viejos" | "incidencias"
-  | "docs_embarque" | "leads_por_tomar" | "leads_mios" | "leads_sin_atender";
+  | "docs_embarque" | "leads_por_tomar" | "leads_mios" | "leads_sin_atender" | "seguimientos";
 
 interface Contenido { tarjetas: Tarjeta[]; pendientes: Pendiente[] }
 
 export const INICIO_POR_ROL: Partial<Record<Rol, Contenido>> = {
   gerente_ventas: { tarjetas: ["ventas", "cotizaciones", "cobranza", "taller", "grafica_ventas", "ordenes_por_vencer"],
-    pendientes: ["por_autorizar", "leads_por_tomar", "leads_sin_atender", "tareas_vencidas"] },
+    pendientes: ["por_autorizar", "seguimientos", "leads_por_tomar", "leads_sin_atender", "tareas_vencidas"] },
   // El taller: para ver cómo van los equipos de sus clientes.
-  ventas: { tarjetas: ["ventas", "cotizaciones", "taller", "grafica_ventas", "ordenes_por_vencer"], pendientes: ["leads_por_tomar", "leads_mios", "tareas_vencidas"] },
+  ventas: { tarjetas: ["ventas", "cotizaciones", "taller", "grafica_ventas", "ordenes_por_vencer"], pendientes: ["seguimientos", "leads_por_tomar", "leads_mios", "tareas_vencidas"] },
   ingenieria: { tarjetas: ["taller", "ordenes_por_vencer"], pendientes: [] },
   compras: { tarjetas: ["compras", "valor_inventario", "taller"], pendientes: ["requisiciones", "oc_atrasadas", "faltantes", "costos_viejos"] },
   almacen: { tarjetas: ["compras", "taller", "ordenes_por_vencer"], pendientes: ["ajustes", "faltantes", "oc_atrasadas"] },
@@ -47,6 +47,8 @@ const SECCION: Record<Tarjeta | Pendiente, string | string[] | null> = {
   por_autorizar: "ventas", tareas_vencidas: "ventas", ajustes: "inventario", faltantes: "produccion", oc_atrasadas: "compras",
   requisiciones: "compras", costos_viejos: "costos", incidencias: "rrhh", docs_embarque: "importaciones",
   leads: "leads", leads_por_tomar: "leads", leads_mios: "leads", leads_sin_atender: "leads",
+  // Sale de v_seguimientos_por_vendedor, no de indicadores().
+  seguimientos: null,
 };
 
 export function contenidoInicio(tieneRol: (r: Rol) => boolean) {

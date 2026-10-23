@@ -89,3 +89,50 @@ Las retenciones no son gasto: ML se las entrega al SAT a nombre de Hegamex y se 
 conciliar la cuenta de Mercado Pago, en Ventas → Mercado Libre → **Dinero** está cada pago del mes
 con sus totales, y se baja a Excel.
 
+
+---
+
+## Seguimiento de cotizaciones: «¿Qué pasó?»
+
+**Para qué:** que ninguna cotización enviada se quede sin saber qué pasó. Antes el embudo se
+llenaba solo al cotizar y nadie lo movía: en octubre había 82 cotizaciones en «Cotizado» y una
+sola nota de seguimiento.
+
+**Cómo funciona:**
+
+- Al **enviar** una cotización, el ERP agenda su seguimiento a **3 días hábiles** (sin fines de
+  semana ni festivos). Si mandas otra versión a la misma oportunidad, el seguimiento se recorre;
+  no se duplica.
+- Cuando toca, aparece en **Cotizaciones → Seguimiento**, en el aviso de arriba de Cotizaciones,
+  en Inicio, en tu calendario y en la tarjeta de la oportunidad.
+- Solo se cierra anotando **qué pasó**. Eliges cómo va y escribes en una línea lo que dijo el
+  cliente:
+  - **Sigue en pie:** lo está pensando; el siguiente seguimiento queda a 3 días hábiles (o la fecha
+    que pongas).
+  - **No contestó:** se vuelve a intentar en 2 días hábiles. El texto es opcional.
+  - **Negociando:** la oportunidad pasa a Negociación, con su siguiente seguimiento.
+  - **Ya compró:** te lleva a la cotización para convertirla en pedido; eso cierra el seguimiento.
+  - **Se perdió:** pide el motivo; la oportunidad y su cotización se cierran.
+- Lo que escribes queda en la historia del cliente (cuenta como contacto para la cartera y para el
+  objetivo de seguimiento de prospectos).
+- Si la cotización se vuelve pedido o se rechaza por otro camino, el seguimiento se cierra solo.
+
+**Negociación:** arrastrar una tarjeta a Negociación abre «¿Qué pasó?». La base no acepta
+Negociación sin la nota, ni siquiera desde el detalle.
+
+**El freno:** con **más de 10 seguimientos vencidos**, el vendedor no puede enviar cotizaciones
+nuevas. El botón de enviar lo avisa antes de abrir WhatsApp. Convertir en pedido nunca se frena.
+Si un cliente está esperando, la gerencia de ventas lo libera **por ese día**: en Cotizaciones →
+Seguimiento, en la tarjeta del vendedor, «Liberar por hoy» con el motivo. Al vendedor le llega el
+aviso.
+
+**Para la gerencia:** la misma pestaña muestra a cada vendedor con sus seguimientos vencidos, los
+de hoy y el total, y cuántas cotizaciones envió contra cuántos seguimientos anotó en los últimos 7
+días. Clic en un vendedor filtra su lista.
+
+**Arranque (23 oct 2026):** las cotizaciones que ya estaban enviadas recibieron su seguimiento.
+Las que ya habían pasado sus 3 días se repartieron de 8 en 8 por vendedor desde el siguiente día
+hábil, para que nadie amaneciera frenado.
+
+Los plazos y el tope se cambian en la configuración `seguimiento_cotizaciones` (dias_habiles,
+dias_no_contesta, tope_vencidos).
