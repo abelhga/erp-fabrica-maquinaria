@@ -96,7 +96,12 @@ begin
           E'• 2 tolvas de 6 m³ con básculas independientes\n• Banda de 24" con variador de velocidad\n• Tablero con dosificación automática por receta', 'equipo')
   on conflict (clave) do nothing;
   select id into v_eq from public.articulos where clave = 'DEMO-SP-ZAR6';
-  insert into public.costos_articulo (articulo_id, costo, precio_fijo) values (v_eq, 231000, 385000) on conflict (articulo_id) do nothing;
+  -- Ingeniería captura el costo (costos 2), pero el precio fijo es de márgenes: la API ya
+  -- no deja escribir esa columna a nadie, así que dirección lo fija con su función.
+  insert into public.costos_articulo (articulo_id, costo) values (v_eq, 231000) on conflict (articulo_id) do nothing;
+  perform pg_temp.soy('direccion@hegamex.com');
+  perform public.fijar_margen_articulo(v_eq, null, 385000);
+  perform pg_temp.soy('ingenieria@hegamex.com');
   insert into public.articulos (clave, tipo, nombre, unidad) values ('DEMO-SP-CAT', 'componente', 'Catarina 80B14 para elevador de cangilones', 'pieza')
   on conflict (clave) do nothing;
   select id into v_cat from public.articulos where clave = 'DEMO-SP-CAT';
