@@ -215,6 +215,11 @@ las demás de su pedido). Lo ve quien puede ver producción, incluidos los vende
 «¿cuándo sale mi equipo?» sin preguntarle a la planta. El vendedor ve las fechas; las horas y la
 cuadrilla de cada etapa son de la planta.
 
+Para ir de una orden a su pedido, haz clic en el recuadro **Pedido y cliente**, arriba de la ficha
+de la orden. Ventas, finanzas y dirección llegan a la ficha completa del pedido. La planta y almacén
+llegan a **Producción → Pedidos**, con lo que se vendió y cómo va cada equipo, sin montos. De
+regreso, en la ficha del pedido, el folio de cada orden la abre.
+
 **Importante:** es un plan, no una promesa. Las horas estimadas de cada etapa salen del costeo; si
 están lejos de la realidad, el plan también. Las métricas de producción dicen qué tan lejos.
 

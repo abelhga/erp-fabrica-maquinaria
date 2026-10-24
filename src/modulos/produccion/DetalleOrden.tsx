@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft, Ban, CheckCircle2, Hourglass, ClipboardX, MessageSquarePlus, PackageOpen, Pause, Pencil, Play, PlayCircle, Truck, Undo2 } from "lucide-react";
+  ArrowLeft, ArrowUpRight, Ban, CheckCircle2, Hourglass, ClipboardX, MessageSquarePlus, PackageOpen, Pause, Pencil, Play, PlayCircle, Truck, Undo2 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { PlanosOrden } from "@/components/planos/PlanosArticulo";
@@ -66,6 +66,13 @@ export default function DetalleOrden() {
     queryKey: [...CLAVE, "orden", id, "pedido", orden.data?.pedido_id],
     enabled: !!orden.data?.pedido_id,
     queryFn: () => q<{ folio: string; cliente: string }[]>(supabase.rpc("pedido_de_orden", { p_pedido: orden.data!.pedido_id })),
+  });
+  // La ficha de ventas trae montos y la base solo la deja ver a ventas, finanzas, dirección y al
+  // vendedor del pedido; preguntarle a la base (no al rol) evita mandar a alguien a un «no existe».
+  const pedidoEnVentas = useQuery({
+    queryKey: [...CLAVE, "orden", id, "pedido_en_ventas", orden.data?.pedido_id],
+    enabled: !!orden.data?.pedido_id && puede("ventas"),
+    queryFn: () => q<{ id: string } | null>(supabase.from("pedidos").select("id").eq("id", orden.data!.pedido_id!).maybeSingle()),
   });
   const pasos = useQuery({
     queryKey: [...CLAVE, "orden", id, "validacion"],
@@ -139,6 +146,10 @@ export default function DetalleOrden() {
                                 notas: o.notas, articulo_id: o.articulo_id, equipo: o.articulo.nombre };
   const t = tab.data;
   const ped = pedido.data?.[0];
+  // Quien no puede ver la ficha de ventas pero es de planta va a la del pedido sin montos.
+  const aPedido = !o.pedido_id || pedidoEnVentas.isLoading ? null
+    : pedidoEnVentas.data ? `/ventas/pedidos/${o.pedido_id}`
+    : puede("produccion", 2) ? `/produccion/pedidos?pedido=${o.pedido_id}` : null;
   const lista = material.data ?? [];
   const pasoDe = (k: PasoValidacion["paso"]) => pasos.data?.find((x) => x.paso === k);
   const faltanSinPedir = lista.some((m) => m.faltante - m.pedido_a_compras > 0);
@@ -199,14 +210,28 @@ export default function DetalleOrden() {
         <Dato titulo="Equipo">
           {puede("costeo") ? <Link to={`/costeo/equipos/${o.articulo_id}`} className="hover:text-marca-texto hover:underline">{o.articulo.clave}</Link> : o.articulo.clave}
         </Dato>
-        <Dato titulo={o.pedido_id ? "Pedido y cliente" : "Destino"}>
-          {o.pedido_id ? (
-            <>
-              {puede("ventas") ? <Link to={`/ventas/pedidos/${o.pedido_id}`} className="hover:text-marca-texto hover:underline">{ped?.folio ?? "Pedido"}</Link> : ped?.folio}
-              <span className="block text-sm text-tenue font-normal truncate">{ped?.cliente}</span>
-            </>
-          ) : "Para stock"}
-        </Dato>
+        {/* Todo el recuadro es el enlace: el folio con solo subrayado al pasar el mouse no se veía.
+            En el celular va primero, porque abajo de la serie y el equipo quedaba fuera de la pantalla. */}
+        {aPedido ? (
+          <Link to={aPedido} className="group order-first sm:order-none bg-superficie px-4 py-3 min-w-0 transition-colors hover:bg-marca-suave focus-visible:bg-marca-suave focus-visible:outline-none"
+            data-explain={GLOSARIO.abrirPedidoDeOrden} data-explain-title="Pedido y cliente">
+            <p className="etiqueta">Pedido y cliente</p>
+            <p className="mt-1 flex flex-wrap items-center gap-x-2 font-medium text-marca-texto">
+              <span className="cifra">{ped?.folio ?? "Pedido"}</span>
+              <span className="inline-flex items-center gap-0.5 text-xs font-normal group-hover:underline">Abrir pedido<ArrowUpRight className="h-3.5 w-3.5" /></span>
+            </p>
+            <span className="block text-sm text-tenue truncate">{ped?.cliente}</span>
+          </Link>
+        ) : (
+          <Dato titulo={o.pedido_id ? "Pedido y cliente" : "Destino"}>
+            {o.pedido_id ? (
+              <>
+                {ped?.folio}
+                <span className="block text-sm text-tenue font-normal truncate">{ped?.cliente}</span>
+              </>
+            ) : "Para stock"}
+          </Dato>
+        )}
         <Dato titulo="Compromiso">
           <InsigniaCompromiso dias={t?.dias_restantes ?? null} fechaCompromiso={o.fecha_compromiso} cerrada={!abierta} />
           {o.terminada_en && <span className="block text-xs text-tenue mt-1">Terminada {fecha(o.terminada_en)}</span>}
