@@ -117,6 +117,18 @@ export function App() {
   if (roles.length === 1 && roles[0] === "pantalla") {
     return <><Suspense fallback={<Cargando />}><PantallaPiso /></Suspense><AvisoVerComo flotante /></>;
   }
+  // La tablet del taller solo abre la terminal, y «Reportar falla», que sale de ahí y regresa.
+  if (roles.length === 1 && roles[0] === "terminal") {
+    return (
+      <Suspense fallback={<Cargando />}>
+        <Routes>
+          <Route path="/servicio/reportar" element={<ReportarFalla />} />
+          <Route path="*" element={<Terminal />} />
+        </Routes>
+        <AvisoVerComo flotante />
+      </Suspense>
+    );
+  }
 
   return (
     <Suspense fallback={<Cargando />}>

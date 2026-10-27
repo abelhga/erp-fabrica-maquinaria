@@ -15,6 +15,7 @@ export const ROLES: { rol: Rol; descripcion: string }[] = [
   { rol: "finanzas", descripcion: "Cobranza, pagos a proveedores y pago de comisiones." },
   { rol: "administracion", descripcion: "Gerencia administrativa: lo mismo que finanzas (cobranza, pagos, caja chica), sin ver las comisiones de los vendedores." },
   { rol: "pantalla", descripcion: "TV del taller: entra directo al tablero de piso y no ve nada más." },
+  { rol: "terminal", descripcion: "Tablet del taller: entra directo a la terminal de piso para marcar el avance de las etapas y reportar fallas de máquinas. No ve nada más." },
   { rol: "recepcion", descripcion: "Contesta el teléfono: registra leads para ventas, ve si quien llama ya es cliente y de quién, y ve el catálogo con precios de lista. No ve clientes, ventas ni costos." },
   { rol: "mantenimiento", descripcion: "Máquinas y herramienta del taller: programa preventivo, fallas, checklist, refacciones y préstamo de herramienta. Ve el avance del taller y las existencias; no ve ventas, clientes ni costos de equipos." },
   { rol: "ingenieria_procesos", descripcion: "Ingeniería de procesos (lean): métricas de la planta, el taller, las cuadrillas y las horas de cada etapa. Ve costos para medir el costo del desperdicio; no ve márgenes ni precios de venta." },

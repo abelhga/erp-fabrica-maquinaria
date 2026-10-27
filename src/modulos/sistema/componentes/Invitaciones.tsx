@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@supabase/supabase-js";
 import { toast } from "sonner";
-import { Copy, Info, MailPlus, Monitor, RefreshCw, Trash2 } from "lucide-react";
+import { Copy, Info, MailPlus, Monitor, RefreshCw, Tablet, Trash2 } from "lucide-react";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Boton } from "@/components/ui/boton";
 import { Campo, Entrada } from "@/components/ui/campo";
@@ -19,11 +19,23 @@ import { GLOSARIO } from "@/tutorial/glosario";
 
 /** Un correo no admite acentos ni espacios: el navegador lo rechaza (en inglés) y no deja guardar. Se limpian al escribir. */
 const correoLimpio = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").toLowerCase();
-/** "Pantalla de pailería" → tv.paileria@…: el correo de la TV sale del nombre mientras nadie lo cambie a mano. */
-const correoDePantalla = (nombre: string) => {
-  const base = correoLimpio(nombre.replace(/^\s*pantalla\s+(de(l)?\s+)?/i, "").replace(/[^\p{L}\p{N}]+/gu, "."))
+/**
+ * Los aparatos del taller no tienen cuenta de Google: la TV (solo ve el tablero de piso) y la
+ * tablet de la terminal (solo marca el avance de las etapas). Cada uno con su rol y su correo.
+ */
+type Aparato = "tv" | "terminal";
+const APARATO: Record<Aparato, { rol: Rol; prefijo: string; nombre: string; titulo: string; descripcion: string; dondeAbrir: string }> = {
+  tv: { rol: "pantalla", prefijo: "tv", nombre: "Pantalla de pintura", titulo: "Crear cuenta de pantalla (TV)",
+        descripcion: "Una cuenta con contraseña y rol Pantalla de piso: solo ve el tablero del taller.", dondeAbrir: "En la TV" },
+  terminal: { rol: "terminal", prefijo: "terminal", nombre: "Terminal de pailería", titulo: "Crear cuenta de terminal (tablet)",
+        descripcion: "Una cuenta con contraseña y rol Terminal de piso: solo abre la terminal, para marcar el avance de las etapas y reportar fallas.",
+        dondeAbrir: "En la tablet, en Safari" },
+};
+/** "Pantalla de pailería" → tv.paileria@…, "Terminal de pailería" → terminal.paileria@…: sale del nombre mientras nadie lo cambie a mano. */
+const correoDeAparato = (nombre: string, tipo: Aparato) => {
+  const base = correoLimpio(nombre.replace(/^\s*(pantalla|terminal)\s+(de(l)?\s+)?/i, "").replace(/[^\p{L}\p{N}]+/gu, "."))
     .replace(/[^a-z0-9.]/g, "").replace(/^\.+|\.+$/g, "");
-  return `tv.${base || "taller"}@${DOMINIO_EMPRESA}`;
+  return `${APARATO[tipo].prefijo}.${base || "taller"}@${DOMINIO_EMPRESA}`;
 };
 
 interface Invitacion { correo: string; nombre: string | null; roles: Rol[]; creado_en: string; invitado_por: string | null }
@@ -50,7 +62,7 @@ export function SelectorRoles({ valor, alCambiar, deshabilitados = [] }: { valor
 export function Invitaciones({ usuarios }: { usuarios: { id: string; nombre: string }[] }) {
   const { tieneRol } = useSesion();
   const [f, setF] = useState<{ correo: string; nombre: string; roles: Rol[] }>({ correo: "", nombre: "", roles: [] });
-  const [pantalla, setPantalla] = useState(false);
+  const [aparato, setAparato] = useState<Aparato | null>(null);
   const lista = useQuery({
     queryKey: ["invitaciones"],
     queryFn: () => q<Invitacion[]>(supabase.from("invitaciones").select("*").order("creado_en", { ascending: false })),
@@ -136,17 +148,26 @@ export function Invitaciones({ usuarios }: { usuarios: { id: string; nombre: str
             La TV no tiene cuenta de Google. Se le crea una con contraseña: se invita su correo con el rol <b className="text-texto">Pantalla de piso</b> y
             se le pone una contraseña. En la TV se abre el ERP, “Entrar con correo y contraseña”, y entra directo al tablero de piso sin ver nada más.
           </p>
-          <Boton variante="secundario" className="w-full" onClick={() => setPantalla(true)}><Monitor className="h-4 w-4" /> Crear cuenta de pantalla</Boton>
+          <Boton variante="secundario" className="w-full" onClick={() => setAparato("tv")}><Monitor className="h-4 w-4" /> Crear cuenta de pantalla</Boton>
+        </Tarjeta>
+        <Tarjeta className="p-5 space-y-3 text-sm">
+          <p className="font-semibold flex items-center gap-2" data-explain={GLOSARIO.cuentaTerminal}><Tablet className="h-4 w-4 text-info" /> Terminal de piso (tablet)</p>
+          <p className="text-tenue">
+            La tablet del taller tampoco necesita cuenta de Google. Se le crea una con contraseña y el rol <b className="text-texto">Terminal de piso</b>:
+            entra directo a la terminal para marcar el avance de las etapas y reportar fallas, y no ve nada más. Cada quien elige su nombre en la terminal.
+          </p>
+          <Boton variante="secundario" className="w-full" onClick={() => setAparato("terminal")}><Tablet className="h-4 w-4" /> Crear cuenta de terminal</Boton>
         </Tarjeta>
       </div>
-      <CrearPantalla abierto={pantalla} alCambiar={setPantalla} />
+      {aparato && <CrearCuentaAparato tipo={aparato} alCerrar={() => setAparato(null)} />}
     </div>
   );
 }
 
-function CrearPantalla({ abierto, alCambiar }: { abierto: boolean; alCambiar: (v: boolean) => void }) {
+function CrearCuentaAparato({ tipo, alCerrar }: { tipo: Aparato; alCerrar: () => void }) {
   const qc = useQueryClient();
-  const [f, setF] = useState(() => ({ nombre: "Pantalla de pintura", correo: correoDePantalla("Pantalla de pintura"), clave: contrasenaNueva() }));
+  const a = APARATO[tipo];
+  const [f, setF] = useState(() => ({ nombre: a.nombre, correo: correoDeAparato(a.nombre, tipo), clave: contrasenaNueva() }));
   const [correoAMano, setCorreoAMano] = useState(false);
   const [estado, setEstado] = useState<"captura" | "creando" | { listo: boolean; confirmar: boolean }>("captura");
 
@@ -155,10 +176,10 @@ function CrearPantalla({ abierto, alCambiar }: { abierto: boolean; alCambiar: (v
     const correo = f.correo.trim().toLowerCase();
     setEstado("creando");
     try {
-      // 1) La invitación le da el rol "pantalla" al crearse la cuenta (al_crear_usuario).
-      await q(supabase.from("invitaciones").insert({ correo, nombre: f.nombre.trim(), roles: ["pantalla"] }));
+      // 1) La invitación le da su rol (pantalla o terminal) al crearse la cuenta (al_crear_usuario).
+      await q(supabase.from("invitaciones").insert({ correo, nombre: f.nombre.trim(), roles: [a.rol] }));
       // 2) La cuenta con contraseña, con un cliente aparte que no guarda sesión:
-      //    con el cliente normal, signUp cambiaría tu sesión por la de la TV.
+      //    con el cliente normal, signUp cambiaría tu sesión por la del aparato.
       const aparte = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY, {
         auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: "hegamex-alta-pantalla" },
       });
@@ -177,14 +198,12 @@ function CrearPantalla({ abierto, alCambiar }: { abierto: boolean; alCambiar: (v
     }
   }
   function cerrar(v: boolean) {
-    alCambiar(v);
-    if (!v) { setEstado("captura"); setCorreoAMano(false); setF({ nombre: "Pantalla de pintura", correo: correoDePantalla("Pantalla de pintura"), clave: contrasenaNueva() }); }
+    if (!v) alCerrar();
   }
   const copiar = (t: string) => { navigator.clipboard?.writeText(t); toast.success("Copiado"); };
 
   return (
-    <Dialogo abierto={abierto} alCambiar={cerrar} titulo="Crear cuenta de pantalla (TV)"
-      descripcion="Una cuenta con contraseña y rol Pantalla de piso: solo ve el tablero del taller."
+    <Dialogo abierto alCambiar={cerrar} titulo={a.titulo} descripcion={a.descripcion}
       pie={typeof estado === "object"
         ? <Boton onClick={() => cerrar(false)}>Listo</Boton>
         : <>
@@ -193,23 +212,30 @@ function CrearPantalla({ abierto, alCambiar }: { abierto: boolean; alCambiar: (v
         </>}>
       {typeof estado === "object" ? (
         <div className="space-y-3 text-sm">
-          <p>Listo. En la TV abre <b>{window.location.origin}</b>, elige <b>“Entrar con correo y contraseña”</b> y escribe:</p>
+          <p>Listo. {a.dondeAbrir} abre <b>{window.location.origin}</b>, elige <b>“Entrar con correo y contraseña”</b> y escribe:</p>
           <div className="rounded-lg border border-borde bg-fondo p-3 space-y-2 font-mono">
             <p className="flex items-center justify-between gap-2"><span>{f.correo}</span><button onClick={() => copiar(f.correo)} aria-label="Copiar correo"><Copy className="h-4 w-4 text-tenue" /></button></p>
             <p className="flex items-center justify-between gap-2"><span>{f.clave}</span><button onClick={() => copiar(f.clave)} aria-label="Copiar contraseña"><Copy className="h-4 w-4 text-tenue" /></button></p>
           </div>
-          {estado.confirmar && <p className="text-aviso">El servidor pide confirmar el correo: llegará un mensaje a {f.correo}; hasta abrirlo la TV no podrá entrar.</p>}
+          {tipo === "terminal" && (
+            <ol className="list-decimal pl-5 space-y-1 text-tenue">
+              <li>Ya adentro: botón Compartir → <b className="text-texto">«Agregar a pantalla de inicio»</b>. Queda como app, a pantalla completa.</li>
+              <li>Ajustes → Accesibilidad → <b className="text-texto">Acceso guiado</b>, para que la tablet no salga de la terminal.</li>
+              <li>Ajustes → Pantalla y brillo → Bloqueo automático: <b className="text-texto">Nunca</b>, y déjala con su cargador.</li>
+            </ol>
+          )}
+          {estado.confirmar && <p className="text-aviso">El servidor pide confirmar el correo: llegará un mensaje a {f.correo}; hasta abrirlo {tipo === "tv" ? "la TV" : "la tablet"} no podrá entrar.</p>}
           <p className="text-tenue">Guarda la contraseña: no se vuelve a mostrar. Si se pierde, crea otra cuenta y desactiva esta.</p>
         </div>
       ) : (
         <form id="crear-pantalla" onSubmit={crear} className="space-y-4">
           <Campo etiqueta="Nombre" ayuda="Para reconocerla en la lista de usuarios.">
-            <Entrada autoFocus required value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value, correo: correoAMano ? f.correo : correoDePantalla(e.target.value) })} />
+            <Entrada autoFocus required value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value, correo: correoAMano ? f.correo : correoDeAparato(e.target.value, tipo) })} />
           </Campo>
           <Campo etiqueta="Correo de la cuenta" ayuda="Sale del nombre, sin acentos ni espacios. No necesita ser un buzón real si el servidor no pide confirmación.">
             <Entrada type="email" required value={f.correo} onChange={(e) => { setCorreoAMano(true); setF({ ...f, correo: correoLimpio(e.target.value) }); }} />
           </Campo>
-          <Campo etiqueta="Contraseña" ayuda="Generada para dictarla fácil en la TV (sin 0/O ni 1/l).">
+          <Campo etiqueta="Contraseña" ayuda={`Generada para dictarla fácil ${tipo === "tv" ? "en la TV" : "en la tablet"} (sin 0/O ni 1/l).`}>
             <div className="flex gap-2">
               <Entrada required minLength={8} value={f.clave} onChange={(e) => setF({ ...f, clave: e.target.value })} className="font-mono" />
               <Boton type="button" variante="secundario" tamano="icono" aria-label="Otra contraseña" onClick={() => setF({ ...f, clave: contrasenaNueva() })}><RefreshCw className="h-4 w-4" /></Boton>

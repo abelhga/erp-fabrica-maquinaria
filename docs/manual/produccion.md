@@ -100,6 +100,24 @@ Hay dos vistas, con el selector de arriba:
 6. Sin mouse (tablet o celular), toca la tarjeta. En su detalle están los mismos cambios con
    botones: Agregar, Sacar, Antes y Después.
 
+### La tablet de la terminal
+
+La tablet no necesita cuenta de Google. Sistemas o dirección le crean una en **Sistema →
+Usuarios → Invitaciones y pantallas → Crear cuenta de terminal**: el ERP arma el correo
+(«Terminal de pailería» → terminal.paileria@hegamex.com, no tiene que ser un buzón real) y
+muestra la contraseña una sola vez. Esa cuenta solo abre la terminal: marca el avance de las
+etapas y reporta fallas de máquinas, y no ve nada más del ERP.
+
+En la tablet, una sola vez:
+
+1. En Safari abre erp.hegamex.com → «Entrar con correo y contraseña».
+2. Botón Compartir → **Agregar a pantalla de inicio**: queda como app, a pantalla completa.
+3. Ajustes → Accesibilidad → **Acceso guiado**, para que no se salga de la terminal.
+4. Ajustes → Pantalla y brillo → Bloqueo automático: **Nunca**, y con su cargador.
+
+La sesión se queda abierta. Una cuenta basta para toda el área: cada quien elige su nombre en
+la terminal al iniciar o unirse a una etapa.
+
 ### En la terminal (supervisor)
 
 1. Las tarjetas que no han empezado dicen **Le toca: …** con la cuadrilla planeada.

@@ -46,7 +46,8 @@ const ACCIONES: Record<Accion, { texto: string; verbo: string; hecho: string; ic
 export default function Terminal() {
   useProduccionEnVivo(["op_eventos", "ordenes_produccion", "op_tiempos", "op_asignaciones"]);
   const etapas = useEtapas();
-  const { puede } = useSesion();
+  const { puede, roles } = useSesion();
+  const soloTerminal = roles.length === 1 && roles[0] === "terminal";
   const piso = usePiso({ intervalo: 60_000 });
   const modoHoras = useHorasTaller().data?.modo;
   // Fuera de horario lo iniciado no es «trabajando ahora»: o no cuenta (modo horario) o hay que pausar.
@@ -114,7 +115,8 @@ export default function Terminal() {
   return (
     <div className="fixed inset-0 z-[35] bg-fondo flex flex-col text-lg">
       <header className="h-16 shrink-0 flex items-center gap-2 sm:gap-3 px-3 sm:px-5 border-b border-borde bg-superficie">
-        <Link to="/" className="p-2 -ml-2 text-tenue" aria-label="Salir de la terminal"><ArrowLeft className="h-6 w-6" /></Link>
+        {/* En la tablet no hay a dónde salir: solo abre la terminal. */}
+        {!soloTerminal && <Link to="/" className="p-2 -ml-2 text-tenue" aria-label="Salir de la terminal"><ArrowLeft className="h-6 w-6" /></Link>}
         <Logo className="hidden md:flex" />
         <span className="hidden lg:inline text-tenue">Terminal de piso</span>
         <div className="ml-auto flex items-center gap-2 min-w-0">
