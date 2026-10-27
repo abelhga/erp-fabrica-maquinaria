@@ -602,7 +602,7 @@ button, select, input, textarea { font: inherit; color: inherit; }
   <div class="reglas">
     <div class="regla"><b>8.5 h por persona</b><span>Cada etapa avanza al día lo que dura la jornada (8.5 h de 8:00 a 17:30) por cada persona de su cuadrilla. Si no hay nadie anotado (o solo uno), el plan cuenta 2.</span></div>
     <div class="regla"><b>Lo que da el área</b><span>Cada área trabaja cada día su parte de sus horas por semana: con cinco jornadas iguales, la quinta parte. Eléctrico, con 45 h a la semana, da 9 h al día aunque haya más gente.</span></div>
-    <div class="regla"><b>Una tras otra</b><span>Una etapa empieza al día siguiente de que acaba la anterior de la misma orden. Solo los días que trabaja el taller (un sábado de tiempo extra sí cuenta).</span></div>
+    <div class="regla"><b>Una tras otra (menos Torno)</b><span>Una etapa empieza al día siguiente de que acaban las anteriores de la misma orden. Torno va en paralelo: arranca sin esperar a Pailería, y Pintura espera a las dos. Solo los días que trabaja el taller (un sábado de tiempo extra sí cuenta).</span></div>
     <div class="regla"><b>Primero lo que se trabaja</b><span>Luego la fila que acomoda la gerencia, luego lo urgente y la fecha compromiso. Las órdenes en espera no entran.</span></div>
     <div class="regla"><b>Lo que falta</b><span>De una etapa empezada falta lo que dijo el piso en «¿Cuánto lleva?». Si nadie lo dijo, lo estimado menos las horas marcadas.</span></div>
   </div>
@@ -727,8 +727,10 @@ const cuarto = (a) => a == null ? null : [[.25, "¼"], [.5, "½"], [.75, "¾"], 
 /**
  * El mismo plan que hace el ERP, para una orden: cada día de taller (L–V, 8.5 h) cada área da
  * sus horas por semana entre 5; cada etapa avanza 8.5 h por persona (mínimo 2) y empieza al día siguiente
- * de que acabó la anterior; lo empezado sigue desde hoy.
+ * de que acabaron las anteriores (Torno va en paralelo: no espera, pero las siguientes sí lo esperan);
+ * lo empezado sigue desde hoy.
  */
+const EN_PARALELO = new Set(["Torno"]);
 function planear(etapas) {
   const r = etapas.map((e) => {
     const activa = e.estado === "en_proceso" || e.estado === "pausada";
@@ -743,9 +745,8 @@ function planear(etapas) {
     const disp = Object.fromEntries(AREAS.map((a) => [a.n, a.cap / 5]));
     r.forEach((x, i) => {
       if (x.estado === "terminada" || x.fin != null) return;
-      let prev = null;
-      for (let j = i - 1; j >= 0; j--) if (r[j].estado !== "terminada") { prev = r[j]; break; }
-      if (!x.activa && prev && (prev.fin == null || prev.fin >= d)) return;
+      const espera = !x.activa && !EN_PARALELO.has(x.n) && r.slice(0, i).some((p) => p.estado !== "terminada" && (p.fin == null || p.fin >= d));
+      if (espera) return;
       if (x.rem <= 0) { if (x.ini == null) x.ini = d; x.fin = d; pend--; return; }
       if (disp[x.n] <= 0) return;
       const toma = Math.min(x.rem, Math.max(x.gente || 0, 2) * 8.5, disp[x.n]);
@@ -829,11 +830,11 @@ function pintarHero(cambio) {
     <div class="sub"><b class="mono">${ORDEN.pedido}</b> · ${ORDEN.cliente}</div></div>
     <div class="estado e-${hero.estado}">${est}${hero.estado === "pendiente" || hero.estado === "pausada" ? ` · <span style="font-weight:500;color:var(--aparato-tenue)">Le toca: ${nombres(hero.gente)}</span>` : hero.estado === "en_proceso" ? ` · <span style="font-weight:500;color:var(--aparato-texto)">${nombres(hero.gente)}</span>` : ""}</div>
     ${empezada ? `<div class="cuartos">¿Cuánto lleva?${[[.25, "¼"], [.5, "½"], [.75, "¾"], [.9, "Casi"]].map(([v, t]) => `<button data-hav="${v}" aria-pressed="${hero.avance === v}">${t}</button>`).join("")}</div>` : ""}
-    ${botones ? `<div class="acciones">${botones}</div>` : `<p class="sub">Pailería quedó. Ya le toca a Torno: aparece en su terminal como «Lista para empezar».</p>`}`;
+    ${botones ? `<div class="acciones">${botones}</div>` : `<p class="sub">Pailería quedó. Torno va en paralelo y ya venía trabajando; en cuanto acabe, Pintura la ve como «Lista para empezar» en su terminal.</p>`}`;
   $("#h-aviso").innerHTML = hero.aviso ? `<div class="aviso-tablet"><span>${esc(hero.aviso)}</span>${hero.estado === "terminada" ? `<button data-h="deshacer">Deshacer</button>` : ""}</div>` : "";
 
   const av = avanceOrden();
-  const quien = hero.estado === "en_proceso" ? `Trabajando: ${nombres(hero.gente)}` : hero.estado === "terminada" ? "Pailería terminada · sigue Torno" : hero.estado === "pausada" ? "Pausada" : `Le toca: ${nombres(hero.gente)}`;
+  const quien = hero.estado === "en_proceso" ? `Trabajando: ${nombres(hero.gente)}` : hero.estado === "terminada" ? "Pailería terminada · sigue Pintura" : hero.estado === "pausada" ? "Pausada" : `Le toca: ${nombres(hero.gente)}`;
   $("#m-tv-c").innerHTML = `
     <div style="font-size:19px;font-weight:800;line-height:1.15">${ORDEN.equipo}</div>
     <div style="font-size:12.5px;color:var(--aparato-tenue)"><span class="mono">${ORDEN.folio}</span> · <b style="color:var(--aparato-texto)" class="mono">${ORDEN.pedido}</b> · ${ORDEN.cliente}</div>
@@ -895,7 +896,7 @@ const VIAJE = [
   { n: "Liberada", mueve: "La gerencia la libera", que: "Lista para el taller: pasó los cinco pasos de material y la gerencia la soltó.",
     quien: "La gerencia de producción, con «Liberar» en el tablero o en la orden. Sin la revisión de ingeniería no se puede.", piso: "Aparece en la terminal de su primera área como «Lista para empezar», y en la TV." },
   { n: "En proceso", mueve: "Sola, al iniciar", que: "Alguien ya inició su primera etapa en la terminal.",
-    quien: "Nadie la mueve a mano: pasa sola al iniciar la primera etapa.", piso: "Cada área inicia, pausa y termina lo suyo. La siguiente área la ve como lista en cuanto la anterior termina." },
+    quien: "Nadie la mueve a mano: pasa sola al iniciar la primera etapa.", piso: "Cada área inicia, pausa y termina lo suyo. La siguiente área la ve como lista en cuanto la anterior termina; Torno la ve lista desde que se libera." },
   { n: "Terminada", mueve: "Sola, al terminar", que: "Se terminó la última etapa. Si todas las órdenes de su pedido terminaron, el pedido queda «Listo» para entregar.",
     quien: "Pasa sola al terminar la última etapa en la terminal.", piso: "Sale de la terminal y de la TV." },
   { n: "Entregada", mueve: "Almacén o la gerencia", que: "El equipo salió de planta.",
@@ -1027,7 +1028,7 @@ $("#terminal-sim").addEventListener("click", (e) => {
   if (a === "pausa") { t.estado = "pausada"; anotar("Pailería pausada", "", "var(--aviso)"); t.aviso = { texto: `Pailería pausada · ${ORDEN.folio}` };
     explicar(`<b>Pausar</b> cierra el tiempo de todos, pero la cuadrilla se queda guardada para reanudar. Úsalo cuando dejan la orden, no para desayunar.`); }
   if (a === "fin") { t.estado = "terminada"; anotar("Pailería terminada", "", "var(--marca)"); t.aviso = { texto: `Pailería terminada · ${ORDEN.folio}`, deshacer: true };
-    explicar(`<b>Terminar</b> cierra el tiempo de todos y la orden sigue a Torno. ¿Fue sin querer? El aviso trae <b>Deshacer</b>: tienes 15 minutos. Después, la gerencia la reabre con el motivo.`); }
+    explicar(`<b>Terminar</b> cierra el tiempo de todos y la orden sigue a Pintura (cuando Torno, que va en paralelo, también acabe). ¿Fue sin querer? El aviso trae <b>Deshacer</b>: tienes 15 minutos. Después, la gerencia la reabre con el motivo.`); }
   if (a === "deshacer") { t.estado = "pausada"; anotar("Pailería reabierta: se marcó terminada por error", "", "var(--aviso)"); t.aviso = { texto: "Pailería regresó a pausada" };
     explicar(`Regresó a <b>pausada</b>, con su gente guardada. Reanúdala para seguir.`); }
   pintarTerminal();

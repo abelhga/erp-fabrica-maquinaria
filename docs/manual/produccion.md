@@ -261,7 +261,8 @@ se trabaja se los salta; un sábado de tiempo extra sí cuenta):
   semana de 42.5 h de taller = 80 h en un día de 8.5 h);
 - cada etapa avanza al día lo que dura la jornada (8.5 h) por cada persona de su cuadrilla (la
   planeada en Cuadrillas o la que está trabajando); sin cuadrilla, cuenta 2 personas;
-- una etapa empieza al día siguiente de que acaba la anterior de la misma orden; lo que ya está en
+- una etapa empieza al día siguiente de que acaban las anteriores de la misma orden, salvo las que van
+  en paralelo (Torno), que arrancan sin esperar; las que siguen sí las esperan; lo que ya está en
   proceso o pausado sigue desde hoy;
 - de una etapa empezada falta lo que el piso reportó en «¿Cuánto lleva?» (¼, ½, ¾, casi); si nadie
   lo ha reportado, lo estimado menos las horas hombre ya marcadas en la terminal;

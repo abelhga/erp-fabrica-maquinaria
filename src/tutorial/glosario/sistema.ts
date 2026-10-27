@@ -13,6 +13,7 @@ export const SISTEMA = {
   accionBitacora: "Alta: se creó el registro. Cambio: se modificó (se ve el antes y el después). Baja: se borró (se ve lo que tenía).",
   bitacoraSistema: "Quién hizo el cambio. «Sistema» es un proceso automático del ERP, no una persona.",
   almacenParaPlanta: "Si lo que hay en ese almacén cuenta para producción y para el cotizador. El Full de Mercado Libre existe, pero no está disponible para planta.",
+  etapaEnParalelo: "Una etapa en paralelo se trabaja al mismo tiempo que las anteriores: no espera a que terminen (Torno hace flechas y poleas mientras Pailería arma la estructura). Las etapas que siguen sí la esperan: Pintura no empieza hasta que terminan Pailería y Torno. Lo usan el plan del taller, las fechas y la columna «Listas para empezar».",
   capacidadEtapa: "Horas hombre por semana que tiene esa etapa del taller. Contra ellas se mide la carga de trabajo; 45 h por persona a la semana es una buena base.",
   fechaArranque: "El día en que el ERP empezó a llevar ventas y cobros. Antes de esa fecha, los análisis y los saldos de arranque salen del libro de la hoja; cambiarla mueve ese corte en los reportes.",
   precioIgualHoja: "Cuántos precios de equipo que calcula el ERP salen idénticos a los de la hoja «Nuevo Costeo». Si alguno sale distinto, revísalo antes de cotizar ese equipo.",
