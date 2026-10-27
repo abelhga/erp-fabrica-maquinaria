@@ -45,14 +45,33 @@ stock al pedido que lo compra. Ventas captura el pedido como cualquier otro.
 orden nueva, se fabricaría otro equipo y «Usar» ya no aparece. Se arregla cancelando la orden
 nueva (gerencia de producción, con motivo): vuelve a salir «Usar».
 
-**Revisa el folio y la serie antes del clic.** «Usar» asigna con un clic, sin confirmar, y no hay
-botón para regresar la orden a stock; si te equivocas, avisa a sistemas.
+**Revisa el folio y la serie antes del clic.** «Usar» asigna con un clic, sin confirmar. Si te
+equivocas, se deshace con «Regresar a stock» (abajo).
 
 Las partidas de texto (una instalación, por ejemplo) dicen **No se fabrica**: no llevan orden ni
 salen del almacén.
 
 Hay una versión interactiva, con el caso real PED-26-810 (una ZEUS 30 y un THOR 36 de stock), en
 [`docs/manuales/equipo-de-stock.html`](../manuales/equipo-de-stock.html).
+
+### Regresar una orden a stock
+
+**Para qué:** soltar una orden de su pedido cuando se le dio «Usar» a la equivocada o cuando el
+cliente canceló. Sin esto, la orden de un pedido cancelado se queda ligada a él y el equipo no se
+le puede dar a nadie más.
+
+1. Lo hace la gerencia de producción, con el motivo. Hay dos lugares:
+   - en la orden, botón **Regresar a stock**. Si su pedido se canceló, arriba sale un aviso rojo
+     con el mismo botón;
+   - en **Producción → Pedidos**, en el pedido, la flecha junto a la orden.
+2. La orden vuelve a decir «Para stock» con su avance, su número de serie y el material que ya se
+   le surtió. Pierde la fecha compromiso del pedido (para stock no hay nada prometido).
+3. En la historia de la orden queda «Regresó a stock (era del pedido …): motivo».
+4. En el pedido, ese equipo vuelve a quedar **Sin orden**. Si estaba listo para entregar, regresa
+   a «En producción». Un pedido cancelado se queda cancelado.
+5. Ya en stock, se le da al pedido correcto (o a otro cliente) con **Usar OP-…**.
+
+No se puede con una orden entregada o cancelada, ni si el pedido ya se entregó.
 
 ### Qué no se puede
 
