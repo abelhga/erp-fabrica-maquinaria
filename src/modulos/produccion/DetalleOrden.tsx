@@ -18,7 +18,7 @@ import { CLAVE, consulta, useEventos, useProduccionEnVivo, useTablero, type Esta
 import { BarraAvance, IconoEvento, InsigniaCompromiso } from "./componentes/piezas";
 import { PasosValidacion, type AccionPaso } from "./componentes/Validacion";
 import { DialogoSurtir, MaterialOrden } from "./componentes/MaterialOrden";
-import { DialogoAgregarEtapa, DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, DialogoEnEspera, DialogoReabrir, type OrdenBasica } from "./componentes/DialogosOrden";
+import { DialogoAgregarEtapa, DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, DialogoEnEspera, DialogoReabrir, DialogoRegresarStock, type OrdenBasica } from "./componentes/DialogosOrden";
 import { ESTADO_OP, ESTADO_OPERACION, PRIORIDAD, horas, textoEvento } from "./componentes/util";
 import { AvanceEtapa } from "./componentes/AvanceEtapa";
 import { GanttCompacto } from "./Gantt";
@@ -67,6 +67,12 @@ export default function DetalleOrden() {
     enabled: !!orden.data?.pedido_id,
     queryFn: () => q<{ folio: string; cliente: string }[]>(supabase.rpc("pedido_de_orden", { p_pedido: orden.data!.pedido_id })),
   });
+  // Si el cliente canceló, la orden sigue ligada a un pedido muerto: el detalle lo avisa.
+  const estadoPedido = useQuery({
+    queryKey: [...CLAVE, "orden", id, "estado_pedido", orden.data?.pedido_id],
+    enabled: !!orden.data?.pedido_id,
+    queryFn: () => q<{ estado: string; motivo_cancelacion: string | null }[]>(supabase.rpc("estado_pedido_de_orden", { p_pedido: orden.data!.pedido_id })),
+  });
   // La ficha de ventas trae montos y la base solo la deja ver a ventas, finanzas, dirección y al
   // vendedor del pedido; preguntarle a la base (no al rol) evita mandar a alguien a un «no existe».
   const pedidoEnVentas = useQuery({
@@ -98,7 +104,7 @@ export default function DetalleOrden() {
       .eq("orden_id", id).order("solicitado_en", { ascending: false })),
   });
 
-  const [dialogo, setDialogo] = useState<null | "editar" | "cancelar" | "surtir" | "cambio" | "espera" | "etapa">(null);
+  const [dialogo, setDialogo] = useState<null | "editar" | "cancelar" | "surtir" | "cambio" | "espera" | "etapa" | "stock">(null);
   const abrir = (d: typeof dialogo) => (v: boolean) => setDialogo(v ? d : null);
 
   const inv = { invalidar: [CLAVE] };
@@ -146,6 +152,8 @@ export default function DetalleOrden() {
                                 notas: o.notas, articulo_id: o.articulo_id, equipo: o.articulo.nombre };
   const t = tab.data;
   const ped = pedido.data?.[0];
+  const cancelado = estadoPedido.data?.[0]?.estado === "cancelado" ? estadoPedido.data[0] : null;
+  const puedeRegresar = p.gerencia && !!o.pedido_id && o.estado !== "entregada" && o.estado !== "cancelada";
   // Quien no puede ver la ficha de ventas pero es de planta va a la del pedido sin montos.
   const aPedido = !o.pedido_id || pedidoEnVentas.isLoading ? null
     : pedidoEnVentas.data ? `/ventas/pedidos/${o.pedido_id}`
@@ -180,6 +188,11 @@ export default function DetalleOrden() {
       acciones={<>
         {p.solicitar && <Boton variante="secundario" onClick={() => setDialogo("cambio")}><MessageSquarePlus className="h-4 w-4" />Solicitar cambio a ingeniería</Boton>}
         {p.gerencia && o.estado !== "entregada" && o.estado !== "cancelada" && <Boton variante="secundario" onClick={() => setDialogo("editar")}><Pencil className="h-4 w-4" />Editar</Boton>}
+        {puedeRegresar && !cancelado && (
+          <Boton variante="secundario" onClick={() => setDialogo("stock")} data-explain={GLOSARIO.regresarStock} data-explain-title="Regresar a stock">
+            <Undo2 className="h-4 w-4" />Regresar a stock
+          </Boton>
+        )}
         {o.estado === "terminada" && (p.gerencia || p.almacen) && <Boton onClick={() => entregar.mutate(undefined)} cargando={entregar.isPending}><Truck className="h-4 w-4" />Marcar entregada</Boton>}
         {p.gerencia && abierta && (o.en_espera_motivo
           ? <Boton onClick={() => reactivar.mutate(undefined)} cargando={reactivar.isPending}><Play className="h-4 w-4" />Reactivar</Boton>
@@ -190,6 +203,15 @@ export default function DetalleOrden() {
       {o.en_espera_motivo && abierta && (
         <div className="rounded-lg border border-aviso/40 bg-aviso-suave p-3 text-sm" data-explain={GLOSARIO.ordenEnEspera}>
           <b>En espera desde el {fecha(o.en_espera_desde)}:</b> {o.en_espera_motivo}. No cuenta en la carga del taller ni se trabaja en la terminal hasta que se reactive.
+        </div>
+      )}
+      {cancelado && o.estado !== "entregada" && o.estado !== "cancelada" && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-peligro/30 bg-peligro-suave p-3 text-sm" data-explain={GLOSARIO.regresarStock}>
+          <p className="min-w-[240px] flex-1">
+            <b>El pedido {ped?.folio} se canceló</b>{cancelado.motivo_cancelacion ? `: ${cancelado.motivo_cancelacion}` : ""}. Esta orden sigue siendo de ese pedido.{" "}
+            {p.gerencia ? "Regrésala a stock para dársela a otro cliente, o cancélala si ya no se va a terminar." : "La gerencia de producción decide si regresa a stock o se cancela."}
+          </p>
+          {puedeRegresar && <Boton tamano="sm" onClick={() => setDialogo("stock")}><Undo2 className="h-3.5 w-3.5" />Regresar a stock</Boton>}
         </div>
       )}
       {o.estado === "cancelada" && (
@@ -374,6 +396,7 @@ export default function DetalleOrden() {
         <DialogoCancelar abierto={dialogo === "cancelar"} alCambiar={abrir("cancelar")} o={basica} />
         <DialogoEnEspera abierto={dialogo === "espera"} alCambiar={abrir("espera")} o={basica} />
         <DialogoReabrir etapa={reabrir} alCerrar={() => setReabrir(null)} o={basica} />
+        <DialogoRegresarStock orden={dialogo === "stock" ? { id: o.id, folio: o.folio } : null} pedido={ped?.folio} alCerrar={() => setDialogo(null)} />
         <DialogoAgregarEtapa abierto={dialogo === "etapa"} alCambiar={abrir("etapa")} o={{ ...basica, terminada: o.estado === "terminada", conPedido: !!o.pedido_id }}
           tiene={(operaciones.data ?? []).map((x) => x.etapa_id)} />
       </>}

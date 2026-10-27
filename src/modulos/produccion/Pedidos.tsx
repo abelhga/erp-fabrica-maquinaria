@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ClipboardPlus, PackageCheck, Printer, ShoppingCart } from "lucide-react";
+import { ClipboardPlus, PackageCheck, Printer, ShoppingCart, Undo2 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { Lateral } from "@/components/ui/dialogo";
@@ -16,6 +16,7 @@ import { BotonEntregar, RecuadroEntrega, abrirHojaSalida, useHojaSalida } from "
 import { BarraAvance, InsigniaCompromiso } from "./componentes/piezas";
 import { ESTADO_OP, abreviarEquipo } from "./componentes/util";
 import { CLAVE } from "./componentes/datos";
+import { DialogoRegresarStock } from "./componentes/DialogosOrden";
 import { GanttCompacto } from "./Gantt";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -156,6 +157,9 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
     exito: "Equipo de stock asignado al pedido", invalidar: [CLAVE_PED, CLAVE],
   });
   const activo = ACTIVOS.includes(p.estado);
+  // Soltar una orden: «Usar» a la equivocada, o el cliente canceló y el equipo se vende a otro.
+  const soltar = gerencia && (activo || p.estado === "cancelado");
+  const [regresar, setRegresar] = useState<{ id: string; folio: string } | null>(null);
   // Almacén entrega desde aquí: quién puede lo dice la base.
   const hoja = useHojaSalida(p.id);
   const navegar = useNavigate();
@@ -213,6 +217,13 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
                       <Insignia tono={ESTADO_OP[o.estado]?.tono}>{ESTADO_OP[o.estado]?.texto ?? o.estado}</Insignia>
                       <div className="flex-1 min-w-[80px]"><BarraAvance valor={o.avance} /></div>
                       <span className="text-xs cifra w-9 text-right">{o.avance}%</span>
+                      {soltar && o.estado !== "entregada" && o.estado !== "cancelada" && (
+                        <button type="button" onClick={() => setRegresar({ id: o.id, folio: o.folio })} title="Regresar a stock" aria-label={`Regresar ${o.folio} a stock`}
+                                data-explain={GLOSARIO.regresarStock} data-explain-title="Regresar a stock"
+                                className="h-7 w-7 shrink-0 rounded-md border border-borde flex items-center justify-center text-tenue hover:text-texto hover:bg-fondo">
+                          <Undo2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -250,6 +261,13 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
                   <Insignia tono={ESTADO_OP[o.estado]?.tono}>{ESTADO_OP[o.estado]?.texto ?? o.estado}</Insignia>
                   <div className="flex-1 min-w-[80px]"><BarraAvance valor={o.avance} /></div>
                   <span className="text-xs cifra w-9 text-right">{o.avance}%</span>
+                  {soltar && o.estado !== "entregada" && o.estado !== "cancelada" && (
+                        <button type="button" onClick={() => setRegresar({ id: o.id, folio: o.folio })} title="Regresar a stock" aria-label={`Regresar ${o.folio} a stock`}
+                                data-explain={GLOSARIO.regresarStock} data-explain-title="Regresar a stock"
+                                className="h-7 w-7 shrink-0 rounded-md border border-borde flex items-center justify-center text-tenue hover:text-texto hover:bg-fondo">
+                          <Undo2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                 </div>
               </li>
             ))}
@@ -262,6 +280,7 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
           <GanttCompacto ordenes={enTaller.map((o) => o.id)} alAbrir={(op) => navegar(`/produccion/ordenes/${op}`)} />
         </div>
       )}
+      {gerencia && <DialogoRegresarStock orden={regresar} pedido={p.folio} alCerrar={() => setRegresar(null)} invalidar={[CLAVE_PED]} />}
     </div>
   );
 }

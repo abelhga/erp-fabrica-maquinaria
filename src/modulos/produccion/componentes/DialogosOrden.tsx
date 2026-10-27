@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { QueryKey } from "@tanstack/react-query";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
@@ -98,6 +99,29 @@ export function DialogoReabrir({ etapa, alCerrar, o }: { etapa: { id: string; et
                <Boton onClick={() => reabrir.mutate(undefined)} disabled={motivo.trim().length < 5} cargando={reabrir.isPending}>Reabrir</Boton></>}>
       <Campo etiqueta="¿Por qué?">
         <AreaTexto value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Se marcó terminada por error; falta soldar la tolva 3…" autoFocus />
+      </Campo>
+    </Dialogo>
+  );
+}
+
+/**
+ * Soltar una orden de su pedido (gerencia): «Usar» se le dio a la orden equivocada, o el cliente
+ * canceló y el equipo tiene que poder venderse a otro. Vuelve a «Para stock» con todo lo que lleva.
+ */
+export function DialogoRegresarStock({ orden, pedido, alCerrar, invalidar = [] }: {
+  orden: { id: string; folio: string } | null; pedido?: string; alCerrar: () => void; invalidar?: QueryKey[];
+}) {
+  const [motivo, setMotivo] = useState("");
+  const regresar = useAccion(() => q(supabase.rpc("regresar_orden_a_stock", { p_op: orden!.id, p_motivo: motivo })), {
+    exito: `${orden?.folio ?? "La orden"} regresó a stock`, invalidar: [CLAVE, ...invalidar], alTerminar: () => { setMotivo(""); alCerrar(); },
+  });
+  return (
+    <Dialogo abierto={!!orden} alCambiar={(v) => !v && alCerrar()} titulo={`Regresar ${orden?.folio ?? ""} a stock`}
+             descripcion={`Deja de ser ${pedido ? `del pedido ${pedido}` : "de su pedido"} y vuelve a «Para stock» con su avance, su número de serie y el material que ya se le surtió; se le puede dar a otro pedido con «Usar». En el pedido, el equipo vuelve a quedar «Sin orden». Queda en la historia de la orden.`}
+             pie={<><Boton variante="secundario" onClick={alCerrar}>No</Boton>
+               <Boton onClick={() => regresar.mutate(undefined)} disabled={motivo.trim().length < 5} cargando={regresar.isPending}>Regresar a stock</Boton></>}>
+      <Campo etiqueta="¿Por qué?">
+        <AreaTexto value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Se eligió el THOR equivocado; el cliente canceló el pedido…" autoFocus />
       </Campo>
     </Dialogo>
   );
