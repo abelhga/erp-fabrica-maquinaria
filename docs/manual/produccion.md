@@ -79,8 +79,11 @@ Hay dos vistas, con el selector de arriba:
 - **Por etapa:** una columna por área (Corte, Pailería, Pintura…). Lo que todavía está en una
   etapa anterior se junta cerrado en «Más adelante», así cada orden sale una vez donde va.
 - **Por cuadrilla:** una columna por cuadrilla («Isidro y César») con lo que trabaja ahorita y lo
-  que le sigue. La cuadrilla se arma sola con la gente que tiene el mismo trabajo asignado. Al
-  final, «Sin cuadrilla» junta lo que nadie tiene: de ahí sale a quién hay que asignarle trabajo.
+  que le sigue. La cuadrilla se arma sola con la gente que trabaja junta ahorita, y el nombre son
+  sus primeros nombres: cambia solo cuando cambia la gente. En «Después» va lo que sigue de cada
+  quien; cada tarjeta dice quién la trabaja, así que si uno de la cuadrilla se va a otra orden, ahí
+  se ve. Al final, «Sin cuadrilla» junta lo que nadie tiene: de ahí sale a quién hay que
+  asignarle trabajo.
 
 1. Arriba está el personal por área. En verde, quien trabaja ahorita.
 2. Para planear quién hace algo, arrastra a la persona a la tarjeta de esa etapa. En una
