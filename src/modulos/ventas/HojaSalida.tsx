@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Printer } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { Boton } from "@/components/ui/boton";
@@ -13,12 +13,14 @@ const plural = (u: string, n: number) => (n === 1 || /s$/.test(u) ? u : /[aeiou]
 /**
  * La hoja que firma el cliente al recibir: qué se le entrega (con números de serie), sin
  * precios, y los renglones de firma. Va fuera del menú y en claro (es papel). La abre quien
- * ve el pedido, almacén incluido; si el pedido ya se entregó, trae quién recibió.
+ * ve el pedido, almacén incluido. Con ?salida= es la de esa entrega (con quién recibió); con
+ * ?lineas= la de lo que va a salir en una entrega parcial; sin nada, lo que falta por entregar.
  */
 export default function HojaSalidaPagina() {
   const { id } = useParams();
   const navegar = useNavigate();
   const hoja = useHojaSalida(id);
+  const [params] = useSearchParams();
   const empresa = useEmpresa();
   const h = hoja.data;
 
@@ -39,9 +41,25 @@ export default function HojaSalidaPagina() {
   if (!h) return <p className="p-10 text-center text-tenue">No encontramos este pedido (o no lo puedes ver).</p>;
 
   const fis = empresa.data?.fiscal;
-  const vigente = h.salidas.find((s) => !s.anulada_en);
+  // Qué entrega es: la que se pidió, o la última si ya está todo entregado (como antes).
+  const pedidas = params.get("lineas")?.split(",").map((x) => x.split(":")).map(([lid, c]) => ({ id: lid, cantidad: Number(c) })).filter((x) => x.id && x.cantidad > 0);
+  const faltaAlgo = h.partidas.some((p) => Number(p.cantidad) > Number(p.entregado ?? 0));
+  const vigente = params.get("salida") ? h.salidas.find((s) => s.id === params.get("salida"))
+    : !pedidas?.length && !faltaAlgo ? h.salidas.find((s) => !s.anulada_en) : undefined;
+  // Cuánto va de cada partida: lo de esa entrega, lo que va a salir, o lo que falta (todo, si no ha salido nada).
+  const cuanto = (p: (typeof h.partidas)[number]) => {
+    if (vigente?.lineas) return Number(vigente.lineas.find((l) => l.id === p.id)?.cantidad ?? 0);
+    if (pedidas?.length) return Number(pedidas.find((l) => l.id === p.id)?.cantidad ?? 0);
+    if (vigente) return Number(p.cantidad);
+    return Number(p.cantidad) - Number(p.entregado ?? 0);
+  };
+  const series = (p: (typeof h.partidas)[number]) => {
+    const deEsta = vigente?.lineas?.find((l) => l.id === p.id)?.series;
+    return deEsta?.length ? deEsta : p.series;
+  };
   const renglones = [
-    ...h.partidas.map((p) => ({ clave: p.id, cantidad: `${numero(Number(p.cantidad))} ${plural(p.unidad, Number(p.cantidad))}`, texto: p.titulo, detalle: p.descripcion, series: p.series })),
+    ...h.partidas.map((p) => ({ p, n: cuanto(p) })).filter((x) => x.n > 0)
+      .map(({ p, n }) => ({ clave: p.id, cantidad: `${numero(n)} ${plural(p.unidad, n)}`, texto: p.titulo, detalle: p.descripcion, series: series(p) })),
     ...h.sueltas.map((s) => ({ clave: s.folio, cantidad: "1 pieza", texto: s.equipo, detalle: null, series: s.serie ? [s.serie] : [] })),
   ];
 

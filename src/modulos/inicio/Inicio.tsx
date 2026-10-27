@@ -22,6 +22,7 @@ import { GLOSARIO } from "@/tutorial/glosario";
 import { useSaldoHoja } from "@/modulos/finanzas/componentes/SaldosArranque";
 import { contenidoInicio } from "./porRol";
 import { usePorVendedor } from "@/modulos/ventas/componentes/Seguimiento";
+import { PorSurtir } from "./PorSurtir";
 
 interface Indicadores {
   ventas?: { mes: number; mes_anterior: number; anio: number; pedidos_mes: number };
@@ -154,6 +155,7 @@ function InicioPorArea() {
       descripcion={new Date().toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
     >
       {area && <ResumenIA area={area} conClaude={puede("asistente")} />}
+      {ver.has("por_surtir") && puede("inventario", 2) && <PorSurtir />}
       {ind.isLoading ? <Cargando filas={4} /> : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

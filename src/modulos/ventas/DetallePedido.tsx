@@ -130,8 +130,8 @@ export default function DetallePedido() {
         {puedeCambiar && ["confirmado", "en_produccion"].includes(p.estado) && (
           <Boton variante="secundario" onClick={() => actualizar.mutate({ estado: "listo" })}><PackageCheck className="h-4 w-4" />Marcar listo</Boton>
         )}
-        {/* Ya entregado, la hoja sale en el recuadro de la entrega. */}
-        {p.estado !== "cancelado" && !hoja.data?.salidas.some((s) => !s.anulada_en) && (
+        {/* Ya entregado, la hoja sale en el recuadro de la entrega; con una entrega parcial, esta imprime lo que falta. */}
+        {p.estado !== "cancelado" && (abierto || !hoja.data?.salidas.some((s) => !s.anulada_en)) && (
           <Boton variante="secundario" onClick={() => abrirHojaSalida(p.id)} data-explain={GLOSARIO.hojaSalida} data-explain-title="Hoja de salida">
             <Printer className="h-4 w-4" />Hoja de salida
           </Boton>

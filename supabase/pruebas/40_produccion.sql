@@ -68,7 +68,7 @@ begin
   -- Surtido: 14 m de tubo y 3 de 4 chumaceras; tornillería fuera de lista exige motivo.
   perform pg_temp.como(v_alm);
   begin
-    perform surtir_material(v_op1, jsonb_build_array(jsonb_build_object('articulo_id', v_tornillo, 'cantidad', 8, 'almacen_id', v_pb)));
+    perform surtir_material(v_op1, jsonb_build_array(jsonb_build_object('articulo_id', v_tornillo, 'cantidad', 8, 'almacen_id', v_pb)), 'Juan Torres');
     assert false, 'salió material fuera de lista sin motivo';
   exception when others then
     if sqlerrm not like '%no está en la lista%' then raise; end if;
@@ -76,7 +76,7 @@ begin
   perform surtir_material(v_op1, jsonb_build_array(
     jsonb_build_object('articulo_id', v_tubo, 'cantidad', 14, 'almacen_id', v_pb),
     jsonb_build_object('articulo_id', v_chum, 'cantidad', 3, 'almacen_id', v_pb),
-    jsonb_build_object('articulo_id', v_tornillo, 'cantidad', 8, 'almacen_id', v_pb, 'motivo', 'Fijación de guarda')));
+    jsonb_build_object('articulo_id', v_tornillo, 'cantidad', 8, 'almacen_id', v_pb, 'motivo', 'Fijación de guarda')), 'Juan Torres');
   select * into r from v_op_material where orden_id = v_op1 and articulo_id = v_chum;
   assert r.surtido = 3 and r.faltante = 0 and r.apartado = 1, format('chumaceras: surtido %s, apartado %s', r.surtido, r.apartado);
   assert (select fuera_de_lista from movimientos_inventario where orden_produccion_id = v_op1 and articulo_id = v_tornillo), 'tornillo marcado fuera de lista';

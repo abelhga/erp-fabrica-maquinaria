@@ -55,6 +55,34 @@ la ve con su avance, la planta sabe para quién es y el número de serie llega c
 
 ---
 
+## Surtir material al taller (almacén)
+
+**Para qué:** que quede qué material se le dio a cada orden y a quién, sin papel, y que almacén
+lo tenga listo antes de que vayan por él.
+
+1. En **Inicio**, almacén ve **Por surtir**: las órdenes con material pendiente, en el orden en
+   que el taller las va a trabajar según el plan. «Empieza» es el día en que arranca su siguiente
+   etapa. Clic en una la abre.
+2. En la orden, **Surtir**. Elige o escribe **quién recibe** (la persona del taller que se lleva
+   el material). Se propone lo apartado; si das una parte, escribe solo lo que sale: lo demás
+   queda «por surtir» y la siguiente vez solo aparece eso.
+3. **Surtir** descuenta del inventario y queda en la historia de la orden: «Almacén surtió
+   material · recibió Juan…».
+
+### Lo que ya se había entregado con la hoja
+
+Las órdenes que venían de la hoja ya tenían material entregado con la hoja de salidas. Ese
+material ya no está en el inventario que se cargó en el ERP, así que no se debe descontar otra
+vez. En esas órdenes, Surtir trae la casilla **«Ya se había entregado con la hoja (antes del
+ERP)»**: propone todo lo que falta, quitas lo que todavía no se ha dado y **Registrar lo ya
+entregado**. Cuenta como surtido, no toca el inventario y queda en la historia. Solo aparece en
+las órdenes que ya existían antes de arrancar; las nuevas se surten normal.
+
+Lo recomendado para empezar: Mimi revisa cada orden de la lista con Luis, registra lo que ya se
+entregó con la hoja, y de ahí en adelante todo lo que salga se surte normal.
+
+---
+
 ## Cuadrillas y terminal de piso
 
 **Para qué:** saber quién trabaja qué en cada etapa, quién sigue, y medir las horas de cada
