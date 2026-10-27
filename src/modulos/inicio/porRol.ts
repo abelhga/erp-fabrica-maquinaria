@@ -9,7 +9,7 @@ import type { Rol } from "@/lib/sesion";
  */
 export type Tarjeta =
   | "ventas" | "cotizaciones" | "cobranza" | "por_pagar" | "taller" | "compras" | "valor_inventario" | "personal" | "embarques"
-  | "grafica_ventas" | "ordenes_por_vencer" | "leads";
+  | "grafica_ventas" | "ordenes_por_vencer" | "leads" | "por_surtir";
 export type Pendiente =
   | "por_autorizar" | "tareas_vencidas" | "ajustes" | "faltantes" | "oc_atrasadas" | "requisiciones" | "costos_viejos" | "incidencias"
   | "docs_embarque" | "leads_por_tomar" | "leads_mios" | "leads_sin_atender" | "seguimientos";
@@ -23,7 +23,8 @@ export const INICIO_POR_ROL: Partial<Record<Rol, Contenido>> = {
   ventas: { tarjetas: ["ventas", "cotizaciones", "taller", "grafica_ventas", "ordenes_por_vencer"], pendientes: ["seguimientos", "leads_por_tomar", "leads_mios", "tareas_vencidas"] },
   ingenieria: { tarjetas: ["taller", "ordenes_por_vencer"], pendientes: [] },
   compras: { tarjetas: ["compras", "valor_inventario", "taller"], pendientes: ["requisiciones", "oc_atrasadas", "faltantes", "costos_viejos"] },
-  almacen: { tarjetas: ["compras", "taller", "ordenes_por_vencer"], pendientes: ["ajustes", "faltantes", "oc_atrasadas"] },
+  // Almacén: primero lo que tiene que preparar para el taller, en el orden del plan.
+  almacen: { tarjetas: ["por_surtir", "compras", "taller", "ordenes_por_vencer"], pendientes: ["ajustes", "faltantes", "oc_atrasadas"] },
   gerente_produccion: { tarjetas: ["taller", "compras", "personal", "ordenes_por_vencer"], pendientes: ["ajustes", "faltantes", "incidencias"] },
   produccion: { tarjetas: ["taller", "ordenes_por_vencer"], pendientes: ["faltantes"] },
   rrhh: { tarjetas: ["personal"], pendientes: ["incidencias"] },
@@ -44,6 +45,8 @@ export const INICIO_POR_ROL: Partial<Record<Rol, Contenido>> = {
 const SECCION: Record<Tarjeta | Pendiente, string | string[] | null> = {
   ventas: "ventas", cotizaciones: "ventas", cobranza: "cobranza", por_pagar: "por_pagar", taller: "produccion", compras: "compras",
   valor_inventario: ["costos", "inventario"], personal: "rrhh", embarques: "importaciones", grafica_ventas: null, ordenes_por_vencer: null,
+  // Sale de ordenes_por_surtir(), no de indicadores().
+  por_surtir: null,
   por_autorizar: "ventas", tareas_vencidas: "ventas", ajustes: "inventario", faltantes: "produccion", oc_atrasadas: "compras",
   requisiciones: "compras", costos_viejos: "costos", incidencias: "rrhh", docs_embarque: "importaciones",
   leads: "leads", leads_por_tomar: "leads", leads_mios: "leads", leads_sin_atender: "leads",

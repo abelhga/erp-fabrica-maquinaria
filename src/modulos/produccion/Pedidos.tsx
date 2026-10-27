@@ -163,7 +163,8 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
   const enTaller = ordenes.filter((o) => o.estado !== "entregada" && o.estado !== "cancelada");
   return (
     <div className="space-y-4">
-      {p.estado !== "cancelado" && !hoja.data?.salidas.some((s) => !s.anulada_en) && (
+      {/* Con una entrega parcial sigue habiendo qué entregar: la hoja imprime lo que falta. */}
+      {p.estado !== "cancelado" && (activo || !hoja.data?.salidas.some((s) => !s.anulada_en)) && (
         <div className="flex flex-wrap items-center gap-2">
           <Boton variante="secundario" tamano="sm" onClick={() => abrirHojaSalida(p.id)} data-explain={GLOSARIO.hojaSalida} data-explain-title="Hoja de salida">
             <Printer className="h-3.5 w-3.5" />Hoja de salida

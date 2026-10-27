@@ -13,7 +13,7 @@ import { BuscadorArticulo, type ArticuloEncontrado } from "@/components/datos/Bu
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
-import { CLAVE, consulta, type MaterialOP } from "./datos";
+import { CLAVE, consulta, usePersonalPiso, type MaterialOP } from "./datos";
 import { cifra, grupoRuta } from "./util";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -198,9 +198,21 @@ interface Extra { art: ArticuloEncontrado; cantidad: string; almacen: string; mo
  * existencia; lo que no está en la lista se agrega con su motivo. La base
  * rechaza llevarse lo apartado para otra orden.
  */
-export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material }: {
+export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, creadaEn }: {
   abierto: boolean; alCambiar: (v: boolean) => void; ordenId: string; folio: string; material: MaterialOP[];
+  /** Cuándo se creó la orden: las de antes del corte pueden registrar lo que ya se entregó con la hoja. */
+  creadaEn?: string;
 }) {
+  // A quién se le entrega: la gente de piso, como en la terminal (o un nombre escrito).
+  const personal = usePersonalPiso();
+  const [recibe, setRecibe] = useState("");
+  // Lo que ya salió con la hoja de salidas no se descuenta otra vez: el inventario del ERP ya venía sin eso.
+  const corte = useQuery({
+    queryKey: ["configuracion", "surtido_antes_del_erp"], staleTime: 10 * 60_000, enabled: abierto,
+    queryFn: async () => (await q<{ valor: string }[]>(supabase.from("configuracion").select("valor").eq("clave", "surtido_antes_del_erp")))[0]?.valor ?? null,
+  });
+  const puedePrevio = !!corte.data && !!creadaEn && creadaEn.slice(0, 10) <= String(corte.data);
+  const [previo, setPrevio] = useState(false);
   const pendientes = useMemo(() => material.filter((m) => m.por_surtir > 0)
     .sort((a, b) => Number(b.apartado > 0) - Number(a.apartado > 0) || a.nombre.localeCompare(b.nombre, "es")), [material]);
   const [extras, setExtras] = useState<Extra[]>([]);
@@ -232,7 +244,15 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material }: 
     if (!abierto) return;
     setCant(Object.fromEntries(pendientes.map((m) => [m.articulo_id, m.apartado > 0 ? String(Math.min(m.apartado, m.por_surtir)) : ""])));
     setExtras([]);
+    setPrevio(false);
+    setRecibe("");
   }, [abierto]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Lo de la hoja se registra completo por omisión: casi siempre ya se entregó todo lo que falta.
+  const cambiarPrevio = (v: boolean) => {
+    setPrevio(v);
+    setCant(Object.fromEntries(pendientes.map((m) => [m.articulo_id, v ? String(m.por_surtir) : m.apartado > 0 ? String(Math.min(m.apartado, m.por_surtir)) : ""])));
+    if (v) setExtras([]);
+  };
   useEffect(() => {
     setAlm((a) => {
       const n = { ...a };
@@ -241,8 +261,10 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material }: 
     });
   }, [porArticulo]);
 
-  const surtir = useAccion((lineas: unknown[]) => q(supabase.rpc("surtir_material", { p_op: ordenId, p_lineas: lineas })), {
-    exito: "Material surtido a la orden", invalidar: [CLAVE], alTerminar: () => alCambiar(false),
+  const surtir = useAccion((lineas: unknown[]) => q(supabase.rpc("surtir_material", {
+    p_op: ordenId, p_lineas: lineas, p_recibio: recibe.trim() || null, p_previo: previo,
+  })), {
+    exito: previo ? "Quedó registrado lo que ya se había entregado" : "Material surtido a la orden", invalidar: [CLAVE], alTerminar: () => alCambiar(false),
   });
 
   function enviar() {
@@ -253,6 +275,7 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material }: 
         .map((x) => ({ articulo_id: x.art.id, cantidad: Number(x.cantidad), almacen_id: Number(x.almacen || alm[x.art.id]) || null, motivo: x.motivo.trim() })),
     ];
     if (lineas.length === 0) { toast.error("Escribe al menos una cantidad"); return; }
+    if (!previo && !recibe.trim()) { toast.error("Elige quién recibe el material"); return; }
     const sinMotivo = extras.find((x) => Number(x.cantidad) > 0 && !x.motivo.trim());
     if (sinMotivo) { toast.error(`Escribe por qué sale "${sinMotivo.art.nombre}" si no está en la lista`); return; }
     surtir.mutate(lineas);
@@ -271,14 +294,34 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material }: 
 
   return (
     <Dialogo abierto={abierto} alCambiar={alCambiar} ancho="max-w-4xl" titulo={`Surtir material · ${folio}`}
-             descripcion="Se propone lo apartado para esta orden. La salida queda ligada a la orden y descuenta su reserva."
+             descripcion={previo
+               ? "Lo que ya se le había entregado a esta orden con la hoja de salidas, antes del ERP. Cuenta como surtido y no descuenta inventario (el inventario que se cargó ya venía sin eso)."
+               : "Se propone lo apartado para esta orden. Si das una parte, escribe solo lo que sale: lo demás queda «por surtir». La salida queda ligada a la orden y descuenta su reserva."}
              pie={<>
-               <span className="mr-auto text-sm text-tenue self-center">{total} partida(s) a surtir</span>
+               <span className="mr-auto text-sm text-tenue self-center">{total} partida(s) {previo ? "ya entregada(s)" : "a surtir"}</span>
                <Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
-               <Boton onClick={enviar} cargando={surtir.isPending} disabled={total === 0}><PackageOpen className="h-4 w-4" />Surtir</Boton>
+               <Boton onClick={enviar} cargando={surtir.isPending} disabled={total === 0 || (!previo && !recibe.trim())}>
+                 <PackageOpen className="h-4 w-4" />{previo ? "Registrar lo ya entregado" : "Surtir"}
+               </Boton>
              </>}>
+      <div className="grid gap-3 sm:grid-cols-[1fr_auto] items-end mb-4">
+        {!previo ? (
+          <Campo etiqueta="¿Quién recibe?" ayuda="La persona del taller que se lleva el material. Queda en la historia de la orden.">
+            <span className="block" data-explain={GLOSARIO.quienRecibe} data-explain-title="¿Quién recibe?">
+              <Entrada list="recibe-surtido" value={recibe} onChange={(e) => setRecibe(e.target.value)} placeholder="Escribe o elige un nombre" autoFocus />
+            </span>
+            <datalist id="recibe-surtido">{(personal.data ?? []).map((p) => <option key={p.id} value={p.nombre} />)}</datalist>
+          </Campo>
+        ) : <span />}
+        {puedePrevio && (
+          <label className="flex items-center gap-2 text-sm rounded-lg border border-borde px-3 py-2 cursor-pointer" data-explain={GLOSARIO.entregadoAntesDelErp} data-explain-title="Ya entregado con la hoja">
+            <input type="checkbox" checked={previo} onChange={(e) => cambiarPrevio(e.target.checked)} />
+            Ya se había entregado con la hoja (antes del ERP)
+          </label>
+        )}
+      </div>
       {pendientes.length === 0 && extras.length === 0 && <p className="text-sm text-tenue mb-3">Todo lo de la lista ya se surtió.</p>}
-      {pendientes.length > 0 && (
+      {pendientes.length > 0 && !previo && (
         <div className="flex gap-2 mb-2">
           <Boton tamano="sm" variante="fantasma" onClick={() => setCant(Object.fromEntries(pendientes.map((m) => [m.articulo_id, m.apartado > 0 ? String(Math.min(m.apartado, m.por_surtir)) : ""])))}>Proponer lo apartado</Boton>
           <Boton tamano="sm" variante="fantasma" onClick={() => setCant({})}>Limpiar</Boton>
@@ -287,7 +330,7 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material }: 
       {pendientes.length > 0 && (
         <div className="overflow-x-auto -mx-5 px-5">
           <table className="tabla">
-            <thead><tr><th>Material</th><th className="text-right">Por surtir</th><th className="text-right">Apartado</th><th className="text-right w-32">Sale</th><th className="w-56">De</th></tr></thead>
+            <thead><tr><th>Material</th><th className="text-right">Por surtir</th><th className="text-right">Apartado</th><th className="text-right w-32">{previo ? "Ya se entregó" : "Sale"}</th>{!previo && <th className="w-56">De</th>}</tr></thead>
             <tbody>
               {pendientes.map((m) => (
                 <tr key={m.id} className={cn(m.apartado === 0 && "text-tenue")}>
@@ -299,7 +342,7 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material }: 
                            aria-label={`Cantidad que sale de ${m.nombre}`}
                            onChange={(e) => setCant((c) => ({ ...c, [m.articulo_id]: e.target.value }))} />
                   </td>
-                  <td>{existencias.isLoading ? <span className="text-xs text-tenue">…</span> : selAlmacen(m.articulo_id, alm[m.articulo_id] ?? "", (v) => setAlm((a) => ({ ...a, [m.articulo_id]: v })))}</td>
+                  {!previo && <td>{existencias.isLoading ? <span className="text-xs text-tenue">…</span> : selAlmacen(m.articulo_id, alm[m.articulo_id] ?? "", (v) => setAlm((a) => ({ ...a, [m.articulo_id]: v })))}</td>}
                 </tr>
               ))}
             </tbody>
@@ -307,7 +350,7 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material }: 
         </div>
       )}
 
-      <div className="mt-5 space-y-2">
+      {!previo && <div className="mt-5 space-y-2">
         <p className="text-sm font-medium">Fuera de la lista</p>
         <p className="text-xs text-tenue">Lo que sale para esta orden sin estar en su lista (tornillería distinta, discos, soldadura). Sirve para corregir el costeo.</p>
         {extras.map((x, i) => (
@@ -328,7 +371,7 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material }: 
             if (material.some((m) => m.articulo_id === a.id && m.requerido > 0)) { toast.info(`"${a.nombre}" ya está en la lista: surte desde la tabla`); return; }
             if (!extras.some((x) => x.art.id === a.id)) setExtras((l) => [...l, { art: a, cantidad: "", almacen: "", motivo: "" }]);
           }} />
-      </div>
+      </div>}
     </Dialogo>
   );
 }

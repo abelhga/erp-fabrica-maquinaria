@@ -87,20 +87,20 @@ begin
   -- Surtido: almacén no puede sacarle a op2 el tubo que op1 tiene apartado (en la hoja cada pestaña veía todo el stock).
   perform pg_temp.como(v_alm);
   begin
-    perform surtir_material(v_op2, jsonb_build_array(jsonb_build_object('articulo_id', v_tubo, 'cantidad', 10, 'almacen_id', v_pb)));
+    perform surtir_material(v_op2, jsonb_build_array(jsonb_build_object('articulo_id', v_tubo, 'cantidad', 10, 'almacen_id', v_pb)), 'Juan Torres');
     assert false, 'se surtió material apartado para otra orden';
   exception when others then
     if sqlerrm not like '%apartado para OP-%' then raise; end if;
   end;
   -- Lo suyo (4 m) sí sale.
-  perform surtir_material(v_op2, jsonb_build_array(jsonb_build_object('articulo_id', v_tubo, 'cantidad', 4, 'almacen_id', v_pb)));
+  perform surtir_material(v_op2, jsonb_build_array(jsonb_build_object('articulo_id', v_tubo, 'cantidad', 4, 'almacen_id', v_pb)), 'Juan Torres');
   begin
-    perform surtir_material(v_op1, jsonb_build_array(jsonb_build_object('articulo_id', v_motor, 'cantidad', 1, 'almacen_id', v_ml)));
+    perform surtir_material(v_op1, jsonb_build_array(jsonb_build_object('articulo_id', v_motor, 'cantidad', 1, 'almacen_id', v_ml)), 'Juan Torres');
     assert false, 'se surtió a planta desde Mercado Libre';
   exception when others then
     if sqlerrm not like '%no se surte a planta%' then raise; end if;
   end;
-  perform surtir_material(v_op1, jsonb_build_array(jsonb_build_object('articulo_id', v_tubo, 'cantidad', 6, 'almacen_id', v_pb)));
+  perform surtir_material(v_op1, jsonb_build_array(jsonb_build_object('articulo_id', v_tubo, 'cantidad', 6, 'almacen_id', v_pb)), 'Juan Torres');
   assert (select nota from op_eventos where orden_id = v_op1 and tipo = 'surtido' order by id desc limit 1) = '1 partida(s)', 'evento de surtido';
 
   -- Ingeniería corrige la lista de op1: el tubo baja de 14 a 10 m. Ya salieron 6 y había 8 apartados:

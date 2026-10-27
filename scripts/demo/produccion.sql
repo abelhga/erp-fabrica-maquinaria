@@ -154,7 +154,7 @@ begin
                       where e.articulo_id = m.articulo_id and a.disponible_para_planta and e.cantidad > 0
                       order by e.cantidad desc limit 1) al
   where m.orden_id = p_op and m.apartado > 0;
-  if jsonb_array_length(v || p_extra) > 0 then perform public.surtir_material(p_op, v || p_extra); end if;
+  if jsonb_array_length(v || p_extra) > 0 then perform public.surtir_material(p_op, v || p_extra, 'Demo'); end if;
 end $$;
 
 do $$
