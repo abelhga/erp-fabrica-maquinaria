@@ -62,7 +62,7 @@ export interface TramoAbierto { tiempo_id: string; operacion_id: string; emplead
 export interface Asignacion { operacion_id: string; empleado_id: string }
 
 export type TipoEvento = "creada" | "liberada" | "inicio" | "pausa" | "reanudar" | "fin" | "problema" | "nota" | "surtido"
-  | "cambio_material" | "terminada" | "entregada" | "reabierta";
+  | "cambio_material" | "terminada" | "entregada" | "reabierta" | "etapa_agregada";
 
 export interface Evento {
   id: number; orden_id: string; operacion_id: string | null; tipo: TipoEvento; nota: string | null; en: string;

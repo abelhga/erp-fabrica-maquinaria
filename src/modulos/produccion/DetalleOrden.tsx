@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft, ArrowUpRight, Ban, CheckCircle2, Hourglass, ClipboardX, MessageSquarePlus, PackageOpen, Pause, Pencil, Play, PlayCircle, Truck, Undo2 } from "lucide-react";
+  ArrowLeft, ArrowUpRight, Ban, CheckCircle2, Hourglass, ClipboardX, ListPlus, MessageSquarePlus, PackageOpen, Pause, Pencil, Play, PlayCircle, Truck, Undo2 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { PlanosOrden } from "@/components/planos/PlanosArticulo";
@@ -18,7 +18,7 @@ import { CLAVE, consulta, useEventos, useProduccionEnVivo, useTablero, type Esta
 import { BarraAvance, IconoEvento, InsigniaCompromiso } from "./componentes/piezas";
 import { PasosValidacion, type AccionPaso } from "./componentes/Validacion";
 import { DialogoSurtir, MaterialOrden } from "./componentes/MaterialOrden";
-import { DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, DialogoEnEspera, DialogoReabrir, type OrdenBasica } from "./componentes/DialogosOrden";
+import { DialogoAgregarEtapa, DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, DialogoEnEspera, DialogoReabrir, type OrdenBasica } from "./componentes/DialogosOrden";
 import { ESTADO_OP, ESTADO_OPERACION, PRIORIDAD, horas, textoEvento } from "./componentes/util";
 import { AvanceEtapa } from "./componentes/AvanceEtapa";
 import { GanttCompacto } from "./Gantt";
@@ -98,7 +98,7 @@ export default function DetalleOrden() {
       .eq("orden_id", id).order("solicitado_en", { ascending: false })),
   });
 
-  const [dialogo, setDialogo] = useState<null | "editar" | "cancelar" | "surtir" | "cambio" | "espera">(null);
+  const [dialogo, setDialogo] = useState<null | "editar" | "cancelar" | "surtir" | "cambio" | "espera" | "etapa">(null);
   const abrir = (d: typeof dialogo) => (v: boolean) => setDialogo(v ? d : null);
 
   const inv = { invalidar: [CLAVE] };
@@ -269,7 +269,12 @@ export default function DetalleOrden() {
           </Tarjeta>}
           <Tarjeta>
             <EncabezadoTarjeta titulo="Etapas" explica={veFabricacion ? GLOSARIO.horasHombre : undefined}
-              descripcion={veFabricacion ? "Horas estimadas del costeo contra las horas hombre reales, y quién la trabajó" : "En qué va cada etapa del taller"} />
+              descripcion={veFabricacion ? "Horas estimadas del costeo contra las horas hombre reales, y quién la trabajó" : "En qué va cada etapa del taller"}
+              acciones={p.gerencia && !["entregada", "cancelada"].includes(o.estado) && (
+                <span data-explain={GLOSARIO.agregarEtapa} data-explain-title="Agregar etapa">
+                  <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("etapa")}><ListPlus className="h-3.5 w-3.5" />Agregar etapa</Boton>
+                </span>
+              )} />
             <ul className="px-3 pb-3 space-y-1">
               {(operaciones.data ?? []).length === 0 && !operaciones.isLoading && <li className="text-sm text-tenue px-2 py-4">Este equipo no tiene horas por etapa en el costeo.</li>}
               {(operaciones.data ?? []).map((x) => (
@@ -369,6 +374,8 @@ export default function DetalleOrden() {
         <DialogoCancelar abierto={dialogo === "cancelar"} alCambiar={abrir("cancelar")} o={basica} />
         <DialogoEnEspera abierto={dialogo === "espera"} alCambiar={abrir("espera")} o={basica} />
         <DialogoReabrir etapa={reabrir} alCerrar={() => setReabrir(null)} o={basica} />
+        <DialogoAgregarEtapa abierto={dialogo === "etapa"} alCambiar={abrir("etapa")} o={{ ...basica, terminada: o.estado === "terminada", conPedido: !!o.pedido_id }}
+          tiene={(operaciones.data ?? []).map((x) => x.etapa_id)} />
       </>}
       {p.almacen && <DialogoSurtir abierto={dialogo === "surtir"} alCambiar={abrir("surtir")} ordenId={id} folio={o.folio} material={lista} />}
       {p.solicitar && <DialogoCambioIngenieria abierto={dialogo === "cambio"} alCambiar={abrir("cambio")} o={basica} material={lista} />}

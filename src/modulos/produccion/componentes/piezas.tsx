@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  AlertTriangle, CheckCircle2, CirclePlay, FilePlus2, Flag, MessageSquare, PackageCheck, Pause, Play, Truck, Unlock, Wrench, Undo2,
+  AlertTriangle, CheckCircle2, CirclePlay, FilePlus2, Flag, ListPlus, MessageSquare, PackageCheck, Pause, Play, Truck, Unlock, Wrench, Undo2,
 } from "lucide-react";
 import { Insignia } from "@/components/ui/insignia";
 import { cn } from "@/lib/utilidades";
@@ -58,6 +58,7 @@ const ICONOS: Record<TipoEvento, { icono: LucideIcon; clase: string }> = {
   terminada: { icono: Flag, clase: "text-ok" },
   entregada: { icono: Truck, clase: "text-ok" },
   reabierta: { icono: Undo2, clase: "text-aviso" },
+  etapa_agregada: { icono: ListPlus, clase: "text-aviso" },
 };
 
 export function IconoEvento({ tipo, className }: { tipo: TipoEvento; className?: string }) {

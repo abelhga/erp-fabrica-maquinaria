@@ -115,6 +115,12 @@ Hay dos vistas, con el selector de arriba:
   arranca etapas.
 - Las horas que «faltan» y las que tiene «encima» cada persona son una estimación: las horas
   estimadas menos las ya trabajadas, repartidas entre la cuadrilla.
+- Las etapas de cada orden salen de las horas por etapa del equipo, y la orden se termina sola
+  al acabar la última. Si al equipo le falta una (OP-2026-00010 se terminó al acabar Pintura
+  porque su mezcladora no traía Detallado), la gerencia entra a la orden y usa **Agregar
+  etapa**, con sus horas y el porqué. Queda pendiente para el taller y, si la orden ya estaba
+  terminada, regresa a «en proceso». Para que las siguientes órdenes de ese equipo ya la
+  traigan, ingeniería la agrega a las horas por etapa del equipo.
 
 ### ¿Hay que pausar para desayunar o al irse?
 

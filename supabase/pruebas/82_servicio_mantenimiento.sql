@@ -161,7 +161,9 @@ begin
   perform pg_temp.como(v_gp);
   select * into r from carga_semanal(2) where semana = v_lunes and etapa_id = v_pail;
   assert r.horas_produccion = v_base.horas_produccion + 15, format('producción en Pailería la semana que entra: %s (antes %s)', r.horas_produccion, v_base.horas_produccion);
-  assert r.carga = r.horas_produccion + r.horas_servicio and r.saldo = v_cap - r.carga, 'carga y saldo';
+  -- Cada parte sale redondeada a una décima y la carga de la suma sin redondear (132.83 + 53.33
+  -- da 186.2, no 132.8 + 53.3): según las órdenes del día pueden diferir en una décima.
+  assert abs(r.carga - (r.horas_produccion + r.horas_servicio)) <= 0.1 and r.saldo = v_cap - r.carga, 'carga y saldo';
   -- Un vendedor ve la misma carga (la capacidad es la de todo el taller), sin clientes.
   perform pg_temp.como(v_vend2);
   assert (select horas_servicio from carga_semanal(2) where semana = v_lunes and etapa_id = v_pail) = r.horas_servicio,

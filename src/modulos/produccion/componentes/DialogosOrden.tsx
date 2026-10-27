@@ -4,7 +4,7 @@ import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
-import { CLAVE, type MaterialOP } from "./datos";
+import { CLAVE, useEtapas, type MaterialOP } from "./datos";
 
 export interface OrdenBasica {
   id: string; folio: string; numero_serie: string | null; prioridad: number; fecha_compromiso: string | null; notas: string | null;
@@ -99,6 +99,48 @@ export function DialogoReabrir({ etapa, alCerrar, o }: { etapa: { id: string; et
       <Campo etiqueta="¿Por qué?">
         <AreaTexto value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Se marcó terminada por error; falta soldar la tolva 3…" autoFocus />
       </Campo>
+    </Dialogo>
+  );
+}
+
+/**
+ * La etapa que el equipo no trae en el costeo (OP-2026-00010 se terminó sin Detallado). Solo
+ * para esta orden: que las siguientes la traigan es de ingeniería, en la ruta del equipo.
+ */
+export function DialogoAgregarEtapa({ abierto, alCambiar, o, tiene }: {
+  abierto: boolean; alCambiar: (v: boolean) => void; o: OrdenBasica & { terminada: boolean; conPedido: boolean }; tiene: number[];
+}) {
+  const etapas = useEtapas();
+  const [etapa, setEtapa] = useState("");
+  const [horas, setHoras] = useState("");
+  const [motivo, setMotivo] = useState("");
+  const faltan = (etapas.data ?? []).filter((e) => !tiene.includes(e.id));
+  useEffect(() => { if (abierto) { setEtapa(""); setHoras(""); setMotivo(""); } }, [abierto]);
+  const agregar = useAccion(() => q(supabase.rpc("agregar_etapa_orden", {
+    p_op: o.id, p_etapa: Number(etapa), p_horas: Number(horas), p_motivo: motivo,
+  })), { exito: "Etapa agregada a la orden", invalidar: [CLAVE], alTerminar: () => alCambiar(false) });
+  const listo = !!etapa && Number(horas) > 0 && motivo.trim().length >= 5;
+  return (
+    <Dialogo abierto={abierto} alCambiar={alCambiar} titulo={`Agregar etapa a ${o.folio}`}
+             descripcion={`Solo para esta orden: queda pendiente para que el taller la trabaje.${o.terminada ? ` La orden deja de estar terminada${o.conPedido ? " (y su pedido de estar listo)" : ""}.` : ""} Para que las siguientes órdenes de ${o.equipo} ya la traigan, pídele a ingeniería que la agregue a las horas por etapa del equipo.`}
+             pie={<><Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
+               <Boton form="agregar-etapa" type="submit" disabled={!listo} cargando={agregar.isPending}>Agregar</Boton></>}>
+      <form id="agregar-etapa" className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (listo) agregar.mutate(undefined); }}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Campo etiqueta="Etapa">
+            <Seleccion value={etapa} onChange={(e) => setEtapa(e.target.value)} autoFocus>
+              <option value="">Elige…</option>
+              {faltan.map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
+            </Seleccion>
+          </Campo>
+          <Campo etiqueta="Horas estimadas">
+            <Entrada type="number" min="0.5" step="0.5" inputMode="decimal" value={horas} onChange={(e) => setHoras(e.target.value)} placeholder="15" />
+          </Campo>
+        </div>
+        <Campo etiqueta="¿Por qué?">
+          <AreaTexto value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="El equipo no trae Detallado y la orden se terminó al acabar Pintura…" />
+        </Campo>
+      </form>
     </Dialogo>
   );
 }
