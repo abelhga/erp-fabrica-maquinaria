@@ -64,7 +64,7 @@ export default function Usuarios() {
       clave: "roles", titulo: "Roles", explica: GLOSARIO.rolUsuario, valor: (u) => u.roles.map((r) => NOMBRE_ROL[r]).join(", "),
       celda: (u) => u.roles.length ? (
         <div className="flex flex-wrap gap-1 max-w-[320px]">
-          {u.roles.map((r) => <Insignia key={r} tono={r === "direccion" ? "peligro" : r === "admin" ? "info" : r === "pantalla" ? "neutro" : "marca"}>{NOMBRE_ROL[r]}</Insignia>)}
+          {u.roles.map((r) => <Insignia key={r} tono={r === "direccion" ? "peligro" : r === "admin" ? "info" : r === "pantalla" || r === "terminal" ? "neutro" : "marca"}>{NOMBRE_ROL[r]}</Insignia>)}
         </div>
       ) : <Insignia tono="aviso" punto>Espera rol</Insignia>,
     },
