@@ -199,7 +199,8 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
                   <p className="font-medium">{numero(x.cantidad)} {x.unidad} · {x.titulo}</p>
                   <p className="text-xs text-tenue cifra">{x.clave}</p>
                 </div>
-                {!x.fabrica ? <Insignia>Componente</Insignia>
+                {!x.articulo_id ? <Insignia>No se fabrica</Insignia>
+                  : !x.fabrica ? <Insignia>Componente</Insignia>
                   : faltan > 0 ? <span data-explain={GLOSARIO.sinOrden} data-explain-title="Sin orden"><Insignia tono="aviso">{faltan} sin orden</Insignia></span>
                   : <Insignia tono="ok">Con orden</Insignia>}
               </div>

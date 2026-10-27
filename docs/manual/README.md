@@ -17,3 +17,9 @@ repite: cuenta los procesos completos, que cruzan varias pantallas y varias pers
 una página interactiva con la terminal, cuándo pausar, cuadrillas, el Gantt y la TV que se pueden tocar. Se publica
 como artefacto: https://claude.ai/artifact/Y1QRgDT8s6dRcmP7u8pG4r (si cambia una regla de producción, se corrige
 ahí también).
+
+**Se vendió un equipo de stock** (para la gerencia de producción, ventas y almacén):
+[`docs/manuales/equipo-de-stock.html`](../manuales/equipo-de-stock.html), un simulador con el pedido real
+PED-26-810 de cómo una orden de stock pasa a un pedido, cuál orden sirve y qué no hacer. Se publica como
+artefacto: https://claude.ai/artifact/CZZPsCjXV8wy6LsUF6LPvQ (si cambia `asignar_orden_stock`, se corrige ahí
+también).

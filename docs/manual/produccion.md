@@ -40,6 +40,20 @@ stock al pedido que lo compra. Ventas captura el pedido como cualquier otro.
 5. Si la partida pide más equipos que los que hay en stock, se usan los que hay y
    **Crear las órdenes que faltan** fabrica solo el resto.
 
+**Primero «Usar», después «Crear las órdenes que faltan».** Si alguien crea las órdenes antes
+(con ese botón o con **Mandar a producción** desde el pedido de ventas), la partida queda con su
+orden nueva, se fabricaría otro equipo y «Usar» ya no aparece. Se arregla cancelando la orden
+nueva (gerencia de producción, con motivo): vuelve a salir «Usar».
+
+**Revisa el folio y la serie antes del clic.** «Usar» asigna con un clic, sin confirmar, y no hay
+botón para regresar la orden a stock; si te equivocas, avisa a sistemas.
+
+Las partidas de texto (una instalación, por ejemplo) dicen **No se fabrica**: no llevan orden ni
+salen del almacén.
+
+Hay una versión interactiva, con el caso real PED-26-810 (una ZEUS 30 y un THOR 36 de stock), en
+[`docs/manuales/equipo-de-stock.html`](../manuales/equipo-de-stock.html).
+
 ### Qué no se puede
 
 - Usar una orden de stock de otro equipo (aunque se parezca, por ejemplo de otra medida).
