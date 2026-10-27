@@ -1,0 +1,771 @@
+<title>Equipo de stock vendido</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Mismo lenguaje visual que el manual del taller: columna de lectura, barra de secciones y un
+   simulador que imita la pantalla Producción → Pedidos con el pedido real que se vendió, para
+   que la gerencia y ventas reconozcan exactamente lo que van a ver. */
+:root {
+  --fondo: hsl(220 22% 96%);
+  --superficie: hsl(0 0% 100%);
+  --hundido: hsl(220 20% 93%);
+  --borde: hsl(220 14% 86%);
+  --texto: hsl(222 32% 13%);
+  --tenue: hsl(220 10% 42%);
+  --marca: hsl(214 100% 50%);
+  --marca-suave: hsl(214 100% 95%);
+  --marca-texto: hsl(214 90% 38%);
+  --ok: hsl(152 62% 34%);
+  --ok-suave: hsl(150 60% 94%);
+  --aviso: hsl(33 95% 44%);
+  --aviso-texto: hsl(30 90% 32%);
+  --aviso-suave: hsl(43 100% 92%);
+  --info: hsl(262 60% 52%);
+  --info-suave: hsl(262 80% 96%);
+  --peligro: hsl(0 72% 47%);
+  --peligro-suave: hsl(0 85% 96%);
+  --tinta-sobre: hsl(0 0% 100%);
+  --sombra: 0 1px 2px hsl(222 40% 20% / .06), 0 4px 14px hsl(222 40% 20% / .07);
+  --f-titulo: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  --f-texto: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fondo: hsl(222 25% 7%); --superficie: hsl(222 22% 11%); --hundido: hsl(222 22% 14%); --borde: hsl(220 15% 22%);
+    --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 63%);
+    --marca: hsl(214 100% 60%); --marca-suave: hsl(214 60% 17%); --marca-texto: hsl(214 100% 74%);
+    --ok: hsl(152 55% 48%); --ok-suave: hsl(152 40% 14%);
+    --aviso: hsl(38 92% 56%); --aviso-texto: hsl(38 92% 64%); --aviso-suave: hsl(38 50% 14%);
+    --info: hsl(262 70% 72%); --info-suave: hsl(262 35% 18%);
+    --peligro: hsl(0 75% 63%); --peligro-suave: hsl(0 45% 16%);
+    --sombra: 0 1px 2px hsl(0 0% 0% / .35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fondo: hsl(222 25% 7%); --superficie: hsl(222 22% 11%); --hundido: hsl(222 22% 14%); --borde: hsl(220 15% 22%);
+  --texto: hsl(220 20% 92%); --tenue: hsl(220 10% 63%);
+  --marca: hsl(214 100% 60%); --marca-suave: hsl(214 60% 17%); --marca-texto: hsl(214 100% 74%);
+  --ok: hsl(152 55% 48%); --ok-suave: hsl(152 40% 14%);
+  --aviso: hsl(38 92% 56%); --aviso-texto: hsl(38 92% 64%); --aviso-suave: hsl(38 50% 14%);
+  --info: hsl(262 70% 72%); --info-suave: hsl(262 35% 18%);
+  --peligro: hsl(0 75% 63%); --peligro-suave: hsl(0 45% 16%);
+  --sombra: 0 1px 2px hsl(0 0% 0% / .35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 72px); }
+body { margin: 0; background: var(--fondo); color: var(--texto); font-family: var(--f-texto); font-size: 15.5px; line-height: 1.6; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--superficie); }
+h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.1; }
+h1, h2 { font-family: var(--f-titulo); font-weight: 700; letter-spacing: .005em; text-transform: uppercase; }
+h1 { font-size: clamp(42px, 7.5vw, 80px); line-height: .95; }
+h2 { font-size: clamp(30px, 4.6vw, 44px); }
+h3 { font-size: 17px; font-weight: 650; }
+p { margin: 0; }
+a { color: var(--marca-texto); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2.5px solid var(--marca); outline-offset: 2px; border-radius: 6px; }
+.mono { font-family: var(--f-mono); font-size: .9em; letter-spacing: -.01em; }
+.cifra { font-variant-numeric: tabular-nums; }
+.tenue { color: var(--tenue); }
+.ceja { font-family: var(--f-titulo); font-weight: 600; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--marca-texto); }
+.lectura { max-width: 66ch; }
+.envoltura { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 80px; }
+
+/* Barra de secciones */
+.barra { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--superficie) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--borde); }
+.barra-dentro { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; display: flex; align-items: center; gap: 16px; }
+.marca-hx { font-family: var(--f-titulo); font-weight: 700; letter-spacing: .2em; font-size: 18px; white-space: nowrap; }
+.marca-hx span { color: var(--tenue); letter-spacing: .08em; font-weight: 600; }
+.indice { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.indice::-webkit-scrollbar { display: none; }
+.indice a { flex: none; text-decoration: none; color: var(--tenue); font-size: 13.5px; font-weight: 550; padding: 5px 11px; border-radius: 999px; border: 1px solid transparent; }
+.indice a:hover { color: var(--texto); border-color: var(--borde); }
+.indice a.activo { color: var(--marca-texto); background: var(--marca-suave); }
+@media (max-width: 720px) { .marca-hx span { display: none; } }
+
+/* Secciones */
+.seccion { padding-block: 64px 0; display: grid; gap: 22px; }
+.seccion > header { display: grid; gap: 10px; }
+.seccion > header .lectura { color: var(--tenue); font-size: 16.5px; }
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; box-shadow: var(--sombra); }
+.nota { font-size: 13.5px; color: var(--tenue); }
+
+.btn { border: 0; border-radius: 10px; padding: 7px 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; font-size: 14px; transition: transform .08s, filter .15s, background .15s; text-align: left; }
+.btn:active { transform: scale(.97); }
+.btn-marca { background: var(--marca); color: var(--tinta-sobre); }
+.btn-marca:hover { filter: brightness(1.06); }
+.btn-borde { background: var(--superficie); border: 1.5px solid var(--borde); }
+.btn-borde:hover { border-color: var(--marca); }
+.btn-ok { background: var(--ok); color: var(--tinta-sobre); }
+.pulso { animation: pulso 1.8s ease-in-out infinite; }
+@keyframes pulso { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--marca) 45%, transparent); } 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--marca) 0%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .pulso { animation: none; outline: 2px solid var(--marca); outline-offset: 2px; } }
+
+/* Insignias como las del ERP */
+.ins { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 1px 9px; font-size: 12.5px; font-weight: 600; white-space: nowrap; border: 1px solid transparent; }
+.ins-neutro { background: var(--hundido); color: var(--tenue); }
+.ins-marca { background: var(--marca-suave); color: var(--marca-texto); }
+.ins-info { background: var(--info-suave); color: var(--info); }
+.ins-ok { background: var(--ok-suave); color: var(--ok); }
+.ins-aviso { background: var(--aviso-suave); color: var(--aviso-texto); }
+
+/* ---------- Portada ---------- */
+.portada { padding-block: 48px 0; display: grid; gap: 28px; }
+.portada .lectura { font-size: 18px; color: var(--tenue); }
+.portada .lectura b { color: var(--texto); font-weight: 600; }
+.cambio { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 14px; align-items: center; }
+@media (max-width: 760px) { .cambio { grid-template-columns: minmax(0, 1fr); } .cambio .flecha { transform: rotate(90deg); justify-self: center; } }
+.op { padding: 16px 18px; display: grid; gap: 8px; }
+.op .fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.op .folio { font-family: var(--f-mono); font-weight: 600; font-size: 15px; }
+.op .eq { font-weight: 600; line-height: 1.3; }
+.op .para { font-size: 14px; }
+.op .para b { font-weight: 650; }
+.op.despues { border-color: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 18%, transparent), var(--sombra); }
+.flecha { display: grid; justify-items: center; gap: 4px; color: var(--marca-texto); font-size: 13px; font-weight: 600; text-align: center; }
+.flecha svg { width: 40px; height: 24px; }
+.datos-clave { display: flex; flex-wrap: wrap; gap: 8px; }
+.dato { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--borde); background: var(--superficie); border-radius: 999px; padding: 5px 13px; font-size: 14px; font-weight: 550; }
+.dato i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); flex: none; }
+.barra-av { height: 8px; border-radius: 999px; background: var(--hundido); overflow: hidden; }
+.barra-av > i { display: block; height: 100%; border-radius: inherit; background: var(--marca); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.barra-av.ok > i { background: var(--ok); }
+
+/* ---------- Pasos ---------- */
+.via { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; counter-reset: paso; }
+@media (max-width: 960px) { .via { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .via { grid-template-columns: minmax(0, 1fr); } }
+.parada { padding: 16px; display: grid; gap: 6px; align-content: start; position: relative; }
+.parada::before { counter-increment: paso; content: counter(paso); width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--marca); color: var(--tinta-sobre); font-weight: 700; font-size: 14px; }
+.parada .quien { font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); }
+.parada p { font-size: 14px; color: var(--tenue); }
+.parada.clave { border-color: var(--marca); background: color-mix(in srgb, var(--marca-suave) 55%, var(--superficie)); }
+
+/* ---------- Simulador ---------- */
+.sim { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.45fr); gap: 18px; align-items: start; }
+@media (max-width: 960px) { .sim { grid-template-columns: minmax(0, 1fr); } }
+.guia { padding: 18px; display: grid; gap: 14px; position: sticky; top: 76px; }
+@media (max-width: 960px) { .guia { position: static; } }
+.guia ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.guia ol > li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; padding: 8px 10px; border-radius: 10px; font-size: 14.5px; color: var(--tenue); }
+.guia ol > li .n { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--borde); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+.guia ol > li.ahora { background: var(--marca-suave); color: var(--texto); }
+.guia ol > li.ahora .n { border-color: var(--marca); color: var(--marca-texto); }
+.guia ol > li.hecho { color: var(--texto); }
+.guia ol > li.hecho .n { background: var(--ok); border-color: var(--ok); color: var(--tinta-sobre); }
+.guia ol > li b { font-weight: 650; }
+.bitacora { border-top: 1px dashed var(--borde); padding-top: 12px; display: grid; gap: 8px; }
+.bitacora h3 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); font-weight: 650; }
+.bitacora ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13.5px; }
+.bitacora li { padding-left: 16px; position: relative; }
+.bitacora li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+.bitacora li.nuevo { animation: entra .5s ease-out; }
+@keyframes entra { from { opacity: 0; transform: translateY(-4px); } }
+.bitacora li.vacio { color: var(--tenue); font-size: 13.5px; padding-left: 0; }
+.bitacora li.vacio::before { content: none; }
+.controles { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.ventana { overflow: hidden; border-radius: 14px; }
+.ventana-barra { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--hundido); border-bottom: 1px solid var(--borde); }
+.ventana-barra .puntos { display: flex; gap: 5px; }
+.ventana-barra .puntos i { width: 10px; height: 10px; border-radius: 50%; background: var(--borde); }
+.ventana-barra .url { flex: 1; min-width: 0; font-family: var(--f-mono); font-size: 12px; color: var(--tenue); background: var(--superficie); border: 1px solid var(--borde); border-radius: 7px; padding: 3px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ventana-cuerpo { padding: 16px; display: grid; gap: 14px; min-height: 520px; align-content: start; position: relative; }
+.pag-tit { display: grid; gap: 2px; }
+.pag-tit h3 { font-size: 20px; }
+.pag-tit p { font-size: 13px; color: var(--tenue); }
+.filtros { display: flex; gap: 6px; flex-wrap: wrap; }
+.filtro { border: 1px solid var(--borde); background: var(--superficie); border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 550; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.filtro .c { font-size: 11.5px; color: var(--tenue); font-weight: 600; }
+.filtro[aria-pressed="true"] { background: var(--marca-suave); border-color: var(--marca); color: var(--marca-texto); }
+.filtro[aria-pressed="true"] .c { color: var(--marca-texto); }
+.tabla-mini { border: 1px solid var(--borde); border-radius: 12px; overflow: hidden; }
+.tabla-mini .enc, .tabla-mini .reng { display: grid; grid-template-columns: 1.05fr 1.5fr .85fr 1fr; gap: 10px; padding: 10px 12px; align-items: center; font-size: 13px; }
+.tabla-mini .enc { background: var(--hundido); font-size: 11.5px; font-weight: 650; letter-spacing: .05em; text-transform: uppercase; color: var(--tenue); }
+.tabla-mini .reng { border-top: 1px solid var(--borde); }
+.tabla-mini button.reng { width: 100%; background: var(--superficie); border: 0; border-top: 1px solid var(--borde); cursor: pointer; text-align: left; }
+.tabla-mini button.reng:hover { background: var(--marca-suave); }
+.tabla-mini .otro { color: var(--tenue); font-style: italic; }
+@media (max-width: 560px) { .tabla-mini .enc { display: none; } .tabla-mini .reng { grid-template-columns: minmax(0, 1fr) auto; } .tabla-mini .reng .col-eq { grid-column: 1 / -1; order: 3; } .tabla-mini .reng .col-comp { display: none; } }
+.trunc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.vacio-mini { padding: 26px 16px; text-align: center; color: var(--tenue); font-size: 14px; display: grid; gap: 4px; }
+.vacio-mini b { color: var(--texto); }
+
+.lateral { border: 1px solid var(--borde); border-radius: 12px; background: var(--superficie); display: grid; gap: 14px; padding: 14px; box-shadow: var(--sombra); }
+.lateral-enc { display: flex; align-items: start; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--borde); padding-bottom: 10px; }
+.lateral-enc h4 { margin: 0; font-size: 15.5px; font-weight: 650; line-height: 1.3; }
+.lateral-enc p { font-size: 12.5px; color: var(--tenue); }
+.cerrar { border: 0; background: transparent; cursor: pointer; color: var(--tenue); font-size: 20px; line-height: 1; padding: 2px 6px; border-radius: 6px; }
+.renglon-comp { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 13.5px; }
+.renglon-comp .derecha { margin-left: auto; }
+.partida { border: 1px solid var(--borde); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; transition: border-color .3s, box-shadow .3s; }
+.partida.destello { border-color: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent); }
+.partida .cab { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
+.partida .cab p { font-weight: 600; font-size: 13.5px; line-height: 1.35; }
+.partida .cab .clave { font-family: var(--f-mono); font-size: 11.5px; color: var(--tenue); font-weight: 500; }
+.de-stock { background: var(--fondo); border-radius: 8px; padding: 8px 10px; display: grid; gap: 7px; }
+.de-stock > p { font-size: 12px; color: var(--tenue); }
+.de-stock .botones { display: flex; flex-wrap: wrap; gap: 6px; }
+.de-stock .btn { font-size: 12.5px; min-height: 32px; padding: 5px 10px; font-weight: 550; }
+.op-ren { display: grid; grid-template-columns: auto auto auto minmax(60px, 1fr) auto; gap: 8px; align-items: center; font-size: 12.5px; }
+.op-ren .f { font-family: var(--f-mono); font-weight: 600; color: var(--marca-texto); white-space: nowrap; }
+.op-ren .s { font-family: var(--f-mono); color: var(--tenue); font-size: 11.5px; }
+@media (max-width: 560px) { .op-ren { grid-template-columns: auto auto minmax(0, 1fr) auto; } .op-ren .s { display: none; } }
+
+.alerta { border-radius: 10px; padding: 10px 12px; font-size: 13.5px; display: grid; gap: 4px; border: 1px solid; }
+.alerta b { font-weight: 650; }
+.alerta-aviso { background: var(--aviso-suave); border-color: color-mix(in srgb, var(--aviso) 45%, transparent); }
+.alerta-ok { background: var(--ok-suave); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+.alerta-marca { background: var(--marca-suave); border-color: color-mix(in srgb, var(--marca) 35%, transparent); }
+
+.aviso-flotante { position: absolute; right: 14px; bottom: 14px; left: 14px; max-width: 360px; margin-left: auto; background: var(--texto); color: var(--fondo); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; font-weight: 550; box-shadow: 0 10px 26px hsl(222 40% 10% / .3); animation: entra .3s ease-out; }
+
+.ficha-op { display: grid; gap: 12px; }
+.mosaicos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .mosaicos { grid-template-columns: minmax(0, 1fr); } }
+.mosaico { border: 1px solid var(--borde); border-radius: 10px; padding: 10px 12px; display: grid; gap: 3px; font-size: 13.5px; align-content: start; }
+.mosaico .et { font-size: 11.5px; font-weight: 650; letter-spacing: .05em; text-transform: uppercase; color: var(--tenue); }
+.mosaico.pedido { border-color: var(--marca); background: color-mix(in srgb, var(--marca-suave) 50%, var(--superficie)); }
+.mosaico.pedido .abrir { color: var(--marca-texto); font-weight: 600; font-size: 12.5px; }
+.historia { border: 1px solid var(--borde); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; font-size: 13.5px; }
+.historia .ev { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 8px; }
+.historia .ev i { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; background: var(--borde); }
+.historia .ev.nuevo i { background: var(--ok); }
+.historia .ev small { display: block; color: var(--tenue); font-size: 12px; }
+
+.hoja { border: 1px dashed var(--borde); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; font-size: 13.5px; background: var(--fondo); }
+.hoja .t { font-family: var(--f-titulo); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 16px; }
+.hoja table { width: 100%; border-collapse: collapse; }
+.hoja th, .hoja td { text-align: left; padding: 5px 4px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+.hoja th { font-size: 11.5px; font-weight: 650; letter-spacing: .05em; text-transform: uppercase; color: var(--tenue); }
+.hoja .firma { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-top: 18px; font-size: 12px; color: var(--tenue); }
+.hoja .firma span { border-top: 1px solid var(--tenue); padding-top: 4px; }
+
+/* ---------- Cuál sirve ---------- */
+.reglas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .reglas { grid-template-columns: minmax(0, 1fr); } }
+.regla { padding: 14px 16px; display: grid; gap: 4px; }
+.regla h3 { font-size: 15.5px; }
+.regla p { font-size: 14px; color: var(--tenue); }
+.lista-stock { overflow-x: auto; }
+.lista-stock table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px; }
+.lista-stock th, .lista-stock td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+.lista-stock th { font-size: 11.5px; font-weight: 650; letter-spacing: .05em; text-transform: uppercase; color: var(--tenue); background: var(--hundido); }
+.lista-stock tr:last-child td { border-bottom: 0; }
+.lista-stock .si { color: var(--ok); font-weight: 650; }
+.lista-stock .no { color: var(--tenue); }
+.lista-stock tr.parecido td { background: color-mix(in srgb, var(--aviso-suave) 60%, transparent); }
+.lista-stock .eqn { font-weight: 550; }
+.lista-stock .eqn small { display: block; font-family: var(--f-mono); color: var(--tenue); font-weight: 500; font-size: 12px; }
+
+/* ---------- Quién hace qué ---------- */
+.roles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 960px) { .roles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .roles { grid-template-columns: minmax(0, 1fr); } }
+.rol { padding: 16px; display: grid; gap: 8px; align-content: start; }
+.rol h3 { font-size: 16px; }
+.rol ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; font-size: 14px; color: var(--tenue); }
+.rol ul b { color: var(--texto); font-weight: 600; }
+.rol .no-hace { font-size: 13px; color: var(--tenue); border-top: 1px dashed var(--borde); padding-top: 8px; }
+
+/* ---------- Cuidado ---------- */
+.cuidados { display: grid; gap: 12px; }
+.cuidado { padding: 16px 18px; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; }
+.cuidado .ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font-weight: 800; background: var(--aviso-suave); color: var(--aviso-texto); }
+.cuidado h3 { font-size: 16px; margin-bottom: 4px; }
+.cuidado p { font-size: 14.5px; color: var(--tenue); }
+.cuidado p b { color: var(--texto); font-weight: 600; }
+
+/* ---------- Preguntas ---------- */
+.preguntas { display: grid; gap: 8px; }
+.preguntas details { padding: 0; }
+.preguntas summary { cursor: pointer; padding: 14px 18px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+.preguntas summary::-webkit-details-marker { display: none; }
+.preguntas summary::after { content: "+"; color: var(--marca-texto); font-weight: 700; font-size: 18px; line-height: 1; }
+.preguntas details[open] summary::after { content: "–"; }
+.preguntas details > p { padding: 0 18px 16px; color: var(--tenue); font-size: 14.5px; max-width: 75ch; }
+.preguntas details > p b { color: var(--texto); font-weight: 600; }
+
+.pie { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--borde); font-size: 13px; color: var(--tenue); display: grid; gap: 4px; }
+</style>
+
+<header class="barra">
+  <div class="barra-dentro">
+    <div class="marca-hx">HEGAMEX <span>· STOCK</span></div>
+    <nav class="indice" aria-label="Secciones">
+      <a href="#como">Cómo funciona</a>
+      <a href="#pruebalo">Pruébalo</a>
+      <a href="#cual">Cuál sirve</a>
+      <a href="#quien">Quién hace qué</a>
+      <a href="#cuidado">Cuidado</a>
+      <a href="#preguntas">Preguntas</a>
+    </nav>
+  </div>
+</header>
+
+<main class="envoltura">
+
+  <section class="portada">
+    <div style="display:grid; gap:14px">
+      <p class="ceja">Ventas · Producción · Almacén</p>
+      <h1>Se vendió un equipo de stock</h1>
+      <p class="lectura">No se fabrica otro. El equipo ya tiene su <b>orden de producción (OP)</b> y su <b>número de serie</b>.
+        La gerencia de producción le <b>asigna esa orden al pedido</b> con un clic, y desde ahí la orden es de ese cliente:
+        la misma orden, con el avance que ya llevaba y la misma serie.</p>
+    </div>
+
+    <div class="cambio" aria-label="La orden antes y después de asignarla">
+      <article class="tarjeta op">
+        <div class="fila"><span class="folio">OP-2026-00048</span><span class="ins ins-marca">En proceso</span></div>
+        <p class="eq">Dosificadora ZEUS 30 con 2 tolvas móvil suspensión de aire, frenos</p>
+        <p class="para tenue">Para: <b>Para stock</b></p>
+        <p class="mono tenue">Serie 3AAMBACE7TMMJA042 · E-369</p>
+        <div class="barra-av"><i style="width:16%"></i></div>
+        <p class="nota cifra">16 % · en Pailería</p>
+      </article>
+      <div class="flecha" aria-hidden="true">
+        <svg viewBox="0 0 40 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h32M27 4l8 8-8 8"/></svg>
+        <span>«Usar<br>OP-2026-00048»</span>
+      </div>
+      <article class="tarjeta op despues">
+        <div class="fila"><span class="folio">OP-2026-00048</span><span class="ins ins-marca">En proceso</span></div>
+        <p class="eq">Dosificadora ZEUS 30 con 2 tolvas móvil suspensión de aire, frenos</p>
+        <p class="para">Para: <b>PED-26-810 · CONSTRUCCION ASESORIA Y SUPERVICION</b></p>
+        <p class="mono tenue">Serie 3AAMBACE7TMMJA042 · E-369 · compromiso 07 dic 2026</p>
+        <div class="barra-av"><i style="width:16%"></i></div>
+        <p class="nota cifra">16 % · en Pailería — no se pierde nada</p>
+      </article>
+    </div>
+
+    <div class="datos-clave">
+      <span class="dato"><i></i>Un clic de la gerencia de producción</span>
+      <span class="dato"><i></i>La orden, el avance y la serie no cambian</span>
+      <span class="dato"><i></i>Toma la fecha compromiso del pedido</span>
+      <span class="dato"><i></i>Solo el mismo equipo (la misma clave)</span>
+    </div>
+  </section>
+
+  <section class="seccion" id="como">
+    <header>
+      <p class="ceja">El camino completo</p>
+      <h2>Cómo funciona, en 5 pasos</h2>
+      <p class="lectura">Ventas no hace nada especial. La diferencia está en el paso 3: en lugar de crear una orden nueva, se usa la de stock.</p>
+    </header>
+    <div class="via">
+      <article class="tarjeta parada">
+        <p class="quien">Vendedor</p>
+        <h3>Captura el pedido</h3>
+        <p>Como cualquier pedido, con el equipo como partida. Con la <b>clave exacta</b> del equipo que se vendió.</p>
+      </article>
+      <article class="tarjeta parada">
+        <p class="quien">Producción → Pedidos</p>
+        <h3>Sale en «Sin orden»</h3>
+        <p>Nadie está fabricando ese equipo para ese cliente todavía, así que el pedido aparece en el filtro <b>Sin orden</b>.</p>
+      </article>
+      <article class="tarjeta parada clave">
+        <p class="quien">Gerencia de producción</p>
+        <h3>«Usar OP-…»</h3>
+        <p>Abre el pedido. En la partida del equipo aparece un botón por cada orden de stock que sirve. Un clic y queda asignada.</p>
+      </article>
+      <article class="tarjeta parada">
+        <p class="quien">Taller</p>
+        <h3>Sigue igual</h3>
+        <p>Es la misma orden. En el tablero ahora dice el cliente en lugar de «Para stock», y tiene fecha compromiso.</p>
+      </article>
+      <article class="tarjeta parada">
+        <p class="quien">Almacén o ventas</p>
+        <h3>Se entrega</h3>
+        <p>Cuando el pedido está <b>Listo para entregar</b>, «Entregar» con la hoja de salida, que lleva los números de serie.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="seccion" id="pruebalo">
+    <header>
+      <p class="ceja">Simulador</p>
+      <h2>Pruébalo con PED-26-810</h2>
+      <p class="lectura">Es el pedido que se acaba de vender: una dosificadora ZEUS 30 y un silo THOR 36, más la instalación. Los dos equipos están en stock.
+        Sigue la guía de la izquierda y toca la pantalla como lo harías en el ERP. <b>Es una simulación: aquí no cambia nada del ERP.</b></p>
+    </header>
+    <div class="sim">
+      <aside class="tarjeta guia" aria-label="Guía del simulador">
+        <ol id="guia"></ol>
+        <div class="bitacora">
+          <h3>Lo que hizo el ERP</h3>
+          <ul id="bitacora"></ul>
+        </div>
+        <div class="controles">
+          <button class="btn btn-borde" type="button" id="reiniciar">Empezar de nuevo</button>
+        </div>
+      </aside>
+      <div class="tarjeta ventana">
+        <div class="ventana-barra"><span class="puntos" aria-hidden="true"><i></i><i></i><i></i></span><span class="url" id="url">erp.hegamex.com/produccion/pedidos</span></div>
+        <div class="ventana-cuerpo" id="pantalla" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" id="cual">
+    <header>
+      <p class="ceja">Qué orden se puede usar</p>
+      <h2>¿Cuál orden de stock sirve?</h2>
+      <p class="lectura">El ERP solo ofrece «Usar» con las órdenes que cumplen las tres cosas. Si una orden no aparece, es porque le falla alguna.</p>
+    </header>
+    <div class="reglas">
+      <article class="tarjeta regla"><h3>1. El mismo equipo</h3><p>La misma clave que la partida del pedido. Uno parecido (otra medida, sin frenos, sin suspensión) no cuenta.</p></article>
+      <article class="tarjeta regla"><h3>2. Sin pedido</h3><p>Que nadie la tenga ya. Una orden que ya es de otro pedido no se puede mover.</p></article>
+      <article class="tarjeta regla"><h3>3. Viva</h3><p>Planeada, liberada, en proceso o terminada. Entregada o cancelada, no.</p></article>
+    </div>
+    <div class="tarjeta lista-stock">
+      <table>
+        <thead><tr><th>Orden de stock</th><th>Equipo</th><th>Estado</th><th>¿Sirve para PED-26-810?</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">OP-2026-00048</td><td class="eqn">Dosificadora ZEUS 30 con 2 tolvas móvil suspensión de aire, frenos<small>E-369 · 3AAMBACE7TMMJA042</small></td><td><span class="ins ins-marca">En proceso</span></td><td class="si">Sí, para la ZEUS</td></tr>
+          <tr><td class="mono">OP-2026-00049</td><td class="eqn">Silo móvil THOR 36 con pesaje, colector, válvula, suspensión y frenos<small>E-069 · 3AAMBACE9TMMJA043</small></td><td><span class="ins ins-marca">En proceso</span></td><td class="si">Sí, para el THOR (la más avanzada)</td></tr>
+          <tr><td class="mono">OP-2026-00042</td><td class="eqn">Silo móvil THOR 36 con pesaje, colector, válvula, suspensión y frenos<small>E-069 · todavía sin serie</small></td><td><span class="ins ins-neutro">Planeada</span></td><td class="si">Sí, para el THOR</td></tr>
+          <tr class="parecido"><td class="mono">OP-2026-00045</td><td class="eqn">Dosificadora ZEUS 30 con 2 tolvas móvil<small>E-200 · 3AAMBACE3TMMJA037</small></td><td><span class="ins ins-ok">Terminada</span></td><td class="no">No: es E-200 (sin suspensión de aire ni frenos) y la partida pide E-369</td></tr>
+          <tr class="parecido"><td class="mono">OP-2026-00046</td><td class="eqn">Silo móvil THOR 36 con pesaje, colector y válvula<small>E-226 · 3AAMBACE5TMMJA038</small></td><td><span class="ins ins-ok">Terminada</span></td><td class="no">No: es E-226 (sin suspensión ni frenos) y la partida pide E-069</td></tr>
+          <tr><td class="mono">OP-2026-00040</td><td class="eqn">Transportador helicoidal tipo bazuca de 10" x 12 metros con motor intermedio<small>E-243</small></td><td><span class="ins ins-ok">Terminada</span></td><td class="no">No: otro equipo</td></tr>
+          <tr><td class="mono">OP-2026-00039 · 00047</td><td class="eqn">Cribadora V3 con turbina bifásica<small>E-123</small></td><td><span class="ins ins-neutro">Planeada</span></td><td class="no">No: otro equipo</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="nota">Las órdenes de stock que había en el ERP el 27 de octubre de 2026. Los renglones en amarillo se parecen, pero no son el mismo equipo.
+      Si el cliente acepta uno de esos, primero el vendedor cambia la partida del pedido a esa clave (solo se puede mientras el pedido está «Confirmado») y entonces aparece «Usar».</p>
+  </section>
+
+  <section class="seccion" id="quien">
+    <header>
+      <p class="ceja">Responsables</p>
+      <h2>Quién hace qué</h2>
+    </header>
+    <div class="roles">
+      <article class="tarjeta rol">
+        <h3>Vendedor</h3>
+        <ul>
+          <li>Captura el pedido normal, con la <b>clave exacta</b> del equipo que se vendió.</li>
+          <li>Ve en su pedido, tarjeta <b>Producción</b>, la orden, su avance y el número de serie.</li>
+        </ul>
+        <p class="no-hace">No ve ni usa «Usar OP-…»: eso es de la gerencia de producción.</p>
+      </article>
+      <article class="tarjeta rol">
+        <h3>Gerencia de producción</h3>
+        <ul>
+          <li>Revisa <b>Producción → Pedidos</b>, filtro <b>Sin orden</b>.</li>
+          <li>Abre el pedido y da <b>Usar OP-…</b> en cada equipo que hay en stock.</li>
+          <li>Solo después, si algo falta, <b>Crear las órdenes que faltan</b>.</li>
+        </ul>
+      </article>
+      <article class="tarjeta rol">
+        <h3>Taller</h3>
+        <ul>
+          <li>No hace nada distinto: sigue trabajando <b>la misma orden</b> en la terminal.</li>
+          <li>En el tablero ahora ve para qué cliente es y su fecha compromiso.</li>
+        </ul>
+      </article>
+      <article class="tarjeta rol">
+        <h3>Almacén</h3>
+        <ul>
+          <li>Surte lo que le falte a la orden; lo que ya se surtió no se repite.</li>
+          <li>Cuando el pedido está <b>Listo para entregar</b>, entrega con la <b>hoja de salida</b>, que lleva los números de serie.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="seccion" id="cuidado">
+    <header>
+      <p class="ceja">Para no equivocarse</p>
+      <h2>Cuidado con esto</h2>
+    </header>
+    <div class="cuidados">
+      <article class="tarjeta cuidado">
+        <span class="ic" aria-hidden="true">1</span>
+        <div><h3>Primero «Usar», después «Crear las órdenes que faltan»</h3>
+          <p>Si alguien crea las órdenes primero (en <b>Crear las órdenes que faltan</b> o con <b>Mandar a producción</b> desde el pedido), la partida ya queda con su orden nueva,
+            se fabricaría otro equipo y «Usar» ya no aparece. Para arreglarlo, la gerencia de producción <b>cancela la orden nueva</b> (con su motivo) y vuelve a aparecer «Usar».</p></div>
+      </article>
+      <article class="tarjeta cuidado">
+        <span class="ic" aria-hidden="true">2</span>
+        <div><h3>Revisa el folio y la serie antes del clic</h3>
+          <p>«Usar» asigna la orden con un solo clic, sin pedir confirmación, y hoy <b>no hay botón para regresarla a stock</b>.
+            Cuando hay dos opciones (como los dos THOR), fíjate cuál eliges. Si te equivocas, avisa a sistemas para corregirlo.</p></div>
+      </article>
+      <article class="tarjeta cuidado">
+        <span class="ic" aria-hidden="true">3</span>
+        <div><h3>Un equipo parecido no es el mismo</h3>
+          <p>Una ZEUS 30 sin suspensión no es la ZEUS 30 con suspensión y frenos. Si el cliente acepta la otra, primero el vendedor cambia la partida del pedido mientras está «Confirmado».</p></div>
+      </article>
+      <article class="tarjeta cuidado">
+        <span class="ic" aria-hidden="true">4</span>
+        <div><h3>Lo que el ERP no deja hacer</h3>
+          <p>Asignar a un pedido entregado o cancelado; asignar una orden que ya es de otro pedido; asignar más órdenes de las que pide la partida.</p></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="seccion" id="preguntas">
+    <header>
+      <p class="ceja">Dudas comunes</p>
+      <h2>Preguntas</h2>
+    </header>
+    <div class="preguntas">
+      <details class="tarjeta"><summary>¿Cambia el número de serie?</summary>
+        <p>No. La serie se le dio a la orden cuando se creó y se queda con el equipo. Llega con el cliente en la hoja de salida.</p></details>
+      <details class="tarjeta"><summary>¿Qué fecha compromiso toma la orden?</summary>
+        <p>La del pedido: con PED-26-810, el <b>07 dic 2026</b>. Si el pedido no tuviera fecha, la orden se queda con la suya.</p></details>
+      <details class="tarjeta"><summary>¿Sirve aunque el equipo no esté terminado?</summary>
+        <p>Sí. Puede estar planeada, en proceso o terminada. El avance que ya llevaba se queda: la ZEUS sigue en 16 % y el taller continúa donde iba.</p></details>
+      <details class="tarjeta"><summary>¿Y si el equipo de stock ya estaba terminado?</summary>
+        <p>Si con eso ya no falta nada por fabricar en el pedido, el pedido pasa directo a <b>Listo para entregar</b>.</p></details>
+      <details class="tarjeta"><summary>¿Qué pasa con el material que ya se surtió a la orden?</summary>
+        <p>Se queda en la orden. No se vuelve a pedir ni a surtir; almacén solo ve lo que le falta.</p></details>
+      <details class="tarjeta"><summary>¿La instalación necesita orden?</summary>
+        <p>No. Es una partida de texto: no se fabrica ni sale del almacén. El pedido se completa con los dos equipos.</p></details>
+      <details class="tarjeta"><summary>¿Cuál THOR conviene usar?</summary>
+        <p>Los dos sirven. <b>OP-2026-00049</b> ya está en Pailería (8 %) y tiene serie; <b>OP-2026-00042</b> está planeada, sin empezar. Si el compromiso es pronto, conviene la más avanzada. La que no uses sigue para stock.</p></details>
+      <details class="tarjeta"><summary>¿Cómo se hacía en la hoja?</summary>
+        <p>Se anotaba el número S en un texto (por ejemplo «S091-P691») y no había forma de ligarlo al pedido. Ahora la liga es la orden: el pedido ve el avance, la planta sabe para quién es y la serie llega con su cliente.</p></details>
+    </div>
+  </section>
+
+  <footer class="pie">
+    <p>Datos de PED-26-810 y de las órdenes de stock al 27 de octubre de 2026. Lo que dice este manual sale de cómo funciona el ERP hoy.</p>
+    <p>La versión en texto está en el manual de producción, «Equipos de stock: fabricarlos y venderlos».</p>
+  </footer>
+</main>
+
+<script>
+(() => {
+  // Lo que se ve en Producción → Pedidos con el pedido real. Sin montos: la planta no los ve.
+  const PED = { folio: "PED-26-810", cliente: "CONSTRUCCION ASESORIA Y SUPERVICION", vendedor: "Juan Manuel Ramírez", fecha: "26 oct 2026", compromiso: "07 dic 2026" };
+  const PARTIDAS = [
+    { id: "serv", cant: "1 servicio", titulo: "SERVICIO DE INTALACION, PUESTA EN MARCHA, CAPACITACION", clave: null },
+    { id: "zeus", cant: "1 pieza", titulo: "Dosificadora ZEUS 30 con 2 tolvas móvil suspensión de aire, frenos", clave: "E-369", corto: "la ZEUS" },
+    { id: "thor", cant: "1 pieza", titulo: "Silo móvil THOR 36 con pesaje, colector, válvula, suspensión y frenos", clave: "E-069", corto: "el THOR" },
+  ];
+  const STOCK = {
+    zeus: [{ folio: "OP-2026-00048", serie: "3AAMBACE7TMMJA042", estado: "en_proceso", avance: 16 }],
+    thor: [{ folio: "OP-2026-00042", serie: null, estado: "planeada", avance: 0 },
+           { folio: "OP-2026-00049", serie: "3AAMBACE9TMMJA043", estado: "en_proceso", avance: 8 }],
+  };
+  const EST_OP = { planeada: ["Planeada", "neutro"], en_proceso: ["En proceso", "marca"], terminada: ["Terminada", "ok"], entregada: ["Entregada", "ok"] };
+  const EST_PED = { confirmado: ["Confirmado", "marca"], en_produccion: ["En producción", "info"], listo: ["Listo para entregar", "aviso"], entregado: ["Entregado", "ok"] };
+
+  const $ = (id) => document.getElementById(id);
+  const pantalla = $("pantalla"), url = $("url"), guia = $("guia"), bitacora = $("bitacora");
+  let s, avisoTimer;
+
+  function inicial() {
+    return { filtro: "activos", abierto: false, abrio: false, usada: { zeus: null, thor: null }, vista: "pedidos", vioOrden: false, terminado: false, entregado: false,
+             aviso: null, alerta: null, destello: null, log: [] };
+  }
+  const ins = (texto, tono) => `<span class="ins ins-${tono}">${texto}</span>`;
+  const estadoPedido = () => s.entregado ? "entregado" : (s.usada.zeus && s.usada.thor && s.terminado) ? "listo" : (s.usada.zeus || s.usada.thor) ? "en_produccion" : "confirmado";
+  const sinOrden = () => (s.usada.zeus ? 0 : 1) + (s.usada.thor ? 0 : 1);
+  const opDe = (id) => s.usada[id] && STOCK[id].find((o) => o.folio === s.usada[id]);
+  const estadoOp = (o) => s.entregado ? "entregada" : s.terminado ? "terminada" : o.estado;
+  const avanceOp = (o) => s.terminado || s.entregado ? 100 : o.avance;
+
+  const PASOS = [
+    { hecho: () => s.filtro === "sin_orden" || s.abrio, txt: "En <b>Producción → Pedidos</b>, toca el filtro <b>Sin orden</b>." },
+    { hecho: () => s.abrio, txt: "Abre <b>PED-26-810</b>." },
+    { hecho: () => !!s.usada.zeus, txt: "En la ZEUS, toca <b>Usar OP-2026-00048</b>." },
+    { hecho: () => !!s.usada.thor, txt: "En el THOR hay dos. Elige uno: <b>OP-2026-00049</b> va más avanzada." },
+    { hecho: () => s.vioOrden, txt: "Toca el folio de la orden para ver que ya dice el cliente." },
+    { hecho: () => s.entregado, txt: "Cuando el taller termine, <b>Entregar</b>." },
+  ];
+
+  // Lo de un mismo clic se lee en orden; el clic más reciente va arriba.
+  let lote = [];
+  function anotar(texto) { lote.push({ texto, nuevo: true }); }
+  function avisar(texto) {
+    s.aviso = texto; clearTimeout(avisoTimer);
+    avisoTimer = setTimeout(() => { s.aviso = null; pintar(); }, 3200);
+  }
+
+  function pintarGuia() {
+    const ahora = PASOS.findIndex((p) => !p.hecho());
+    guia.innerHTML = PASOS.map((p, i) => {
+      const cls = p.hecho() ? "hecho" : i === ahora ? "ahora" : "";
+      return `<li class="${cls}"><span class="n">${p.hecho() ? "✓" : i + 1}</span><span>${p.txt}</span></li>`;
+    }).join("");
+    bitacora.innerHTML = s.log.length ? s.log.map((l) => `<li class="${l.nuevo ? "nuevo" : ""}">${l.texto}</li>`).join("")
+      : `<li class="vacio">Todavía nada. Aquí vas a ver qué cambia con cada clic.</li>`;
+    s.log.forEach((l) => (l.nuevo = false));
+  }
+
+  function filaPedido() {
+    const ep = EST_PED[estadoPedido()];
+    const n = sinOrden(), ops = ["zeus", "thor"].filter((k) => s.usada[k]);
+    const term = ops.filter((k) => ["terminada", "entregada"].includes(estadoOp(opDe(k)))).length;
+    const av = ops.length ? Math.round(ops.reduce((a, k) => a + avanceOp(opDe(k)), 0) / ops.length) : 0;
+    const ordenes = ops.length ? `<p class="cifra" style="font-size:12px">${term} de ${ops.length} terminadas · ${av}%</p><div class="barra-av"><i style="width:${av}%"></i></div>` : "";
+    return `<button type="button" class="reng ${s.filtro === "sin_orden" && !s.abierto ? "pulso" : ""}" data-accion="abrir" aria-label="Abrir PED-26-810">
+      <span><b class="mono">${PED.folio}</b><br><span class="tenue trunc" style="display:block;font-size:12px">${PED.cliente}</span></span>
+      <span class="col-eq"><span class="trunc" style="display:block">1 × Dosificadora ZEUS 30… · 1 × Silo móvil THOR 36…</span><span class="tenue trunc" style="display:block;font-size:12px">+ SERVICIO DE INTALACION…</span></span>
+      <span class="col-comp">${ordenes}${n ? ins(`${n} sin orden`, "aviso") : ""}</span>
+      <span>${ins(ep[0], ep[1])}</span>
+    </button>`;
+  }
+
+  function vistaPedidos() {
+    const n = sinOrden();
+    const enLista = s.filtro === "activos" || (s.filtro === "sin_orden" && n > 0 && !s.entregado);
+    const filtros = [["activos", "Activos", ""], ["sin_orden", "Sin orden", n && !s.entregado ? n : 0], ["listos", "Listos", estadoPedido() === "listo" ? 1 : 0], ["entregados", "Entregados", ""]];
+    let html = `<div class="pag-tit"><h3>Pedidos</h3><p>Lo que se vendió y cómo va cada equipo en el taller: cliente, compromiso, equipos y sus órdenes. Sin montos.</p></div>
+      <div class="filtros" role="group" aria-label="Filtros">${filtros.map(([v, t, c]) =>
+        `<button type="button" class="filtro ${v === "sin_orden" && s.filtro === "activos" && !s.abierto ? "pulso" : ""}" data-accion="filtro" data-valor="${v}" aria-pressed="${s.filtro === v}">${t}${c !== "" ? ` <span class="c">${c}</span>` : ""}</button>`).join("")}</div>`;
+    const visible = s.entregado ? s.filtro === "entregados" : s.filtro === "listos" ? estadoPedido() === "listo" : enLista;
+    if (!s.abierto) {
+      html += visible ? `<div class="tabla-mini"><div class="enc"><span>Pedido</span><span>Equipos</span><span class="col-comp">Órdenes</span><span>Estado</span></div>
+        ${filaPedido()}${s.filtro === "activos" && !s.entregado ? `<div class="reng otro"><span>…</span><span class="col-eq">los demás pedidos activos</span><span></span><span></span></div>` : ""}</div>`
+        : s.filtro === "sin_orden"
+          ? `<div class="tabla-mini"><div class="vacio-mini"><b>Todos los equipos vendidos tienen orden</b>Cuando ventas confirme un pedido con equipos, aparece aquí hasta que se creen sus órdenes.</div></div>`
+          : `<div class="tabla-mini"><div class="vacio-mini"><b>No hay pedidos con este filtro</b>Prueba con otro filtro.</div></div>`;
+    } else {
+      html += detalle();
+    }
+    return html;
+  }
+
+  function detalle() {
+    const ep = EST_PED[estadoPedido()];
+    const activo = !s.entregado;
+    const n = sinOrden();
+    let h = `<div class="lateral">
+      <div class="lateral-enc"><div><h4>${PED.folio} · ${PED.cliente}</h4><p>${ep[0]} · ${PED.vendedor} · pedido el ${PED.fecha}</p></div>
+        <button type="button" class="cerrar" data-accion="cerrar" aria-label="Cerrar">×</button></div>`;
+    h += `<div class="renglon-comp"><button type="button" class="btn btn-borde" data-accion="hoja">Hoja de salida</button>
+      ${estadoPedido() === "listo" ? `<button type="button" class="btn btn-marca pulso" data-accion="entregar">Entregar</button>` : ""}</div>`;
+    if (s.alerta) h += s.alerta;
+    h += `<div class="renglon-comp"><span class="tenue">Compromiso</span>${ins(PED.compromiso, s.entregado ? "neutro" : "ok")}
+      ${activo && n > 0 ? `<button type="button" class="btn btn-marca derecha" data-accion="crear">Crear las órdenes que faltan</button>` : ""}</div>`;
+    for (const x of PARTIDAS) {
+      const op = x.clave ? opDe(x.id) : null;
+      const badge = !x.clave ? ins("No se fabrica", "neutro") : op ? ins("Con orden", "ok") : ins("1 sin orden", "aviso");
+      h += `<div class="partida ${s.destello === x.id ? "destello" : ""}"><div class="cab"><div><p>${x.cant} · ${x.titulo}</p>${x.clave ? `<span class="clave">${x.clave}</span>` : ""}</div>${badge}</div>`;
+      if (op) {
+        const e = EST_OP[estadoOp(op)], av = avanceOp(op);
+        h += `<div class="op-ren"><button type="button" class="btn btn-borde ${s.usada.zeus && s.usada.thor && !s.vioOrden ? "pulso" : ""}" style="min-height:28px;padding:2px 8px" data-accion="orden" data-id="${x.id}"><span class="f">${op.folio}</span></button>
+          ${op.serie ? `<span class="s">${op.serie}</span>` : `<span class="s">sin serie</span>`}${ins(e[0], e[1])}
+          <div class="barra-av ${av === 100 ? "ok" : ""}"><i style="width:${av}%"></i></div><span class="cifra">${av}%</span></div>`;
+      } else if (x.clave && activo) {
+        const opciones = STOCK[x.id];
+        const sugerida = x.id === "thor" ? "OP-2026-00049" : "OP-2026-00048";
+        h += `<div class="de-stock"><p>▣ Hay ${opciones.length} de este equipo para stock:</p><div class="botones">${opciones.map((o) =>
+          `<button type="button" class="btn btn-borde ${(x.id === "zeus" || s.usada.zeus) && o.folio === sugerida ? "pulso" : ""}" data-accion="usar" data-id="${x.id}" data-folio="${o.folio}">Usar ${o.folio}${o.serie ? ` · ${o.serie}` : ""} (${EST_OP[o.estado][0]})</button>`).join("")}</div></div>`;
+      }
+      h += `</div>`;
+    }
+    if (s.usada.zeus && s.usada.thor && !s.terminado && !s.entregado) {
+      h += `<div class="alerta alerta-marca"><b>Así queda hasta que el taller termine.</b> El pedido sigue «En producción» mientras las dos órdenes avanzan.
+        <span><button type="button" class="btn btn-borde" style="margin-top:6px" data-accion="terminar">Adelantar: el taller terminó las dos</button></span></div>`;
+    }
+    return h + `</div>`;
+  }
+
+  function vistaOrden() {
+    const id = s.vistaOrden, op = opDe(id), x = PARTIDAS.find((p) => p.id === id), e = EST_OP[estadoOp(op)];
+    return `<div class="ficha-op">
+      <div><button type="button" class="btn btn-borde" data-accion="volver" style="min-height:30px;padding:3px 10px">← Pedidos</button></div>
+      <div class="pag-tit"><h3 class="mono" style="font-size:18px">${op.folio}</h3><p>${x.titulo}</p></div>
+      <div class="renglon-comp">${ins(e[0], e[1])}${op.serie ? `<span class="mono tenue" style="font-size:12.5px">Serie ${op.serie}</span>` : ""}</div>
+      <div class="mosaicos">
+        <div class="mosaico pedido"><span class="et">Pedido y cliente</span><b class="mono">${PED.folio}</b><span>${PED.cliente}</span><span class="abrir">Abrir pedido ↗</span></div>
+        <div class="mosaico"><span class="et">Compromiso</span><b>${PED.compromiso}</b><span class="tenue">la del pedido</span></div>
+        <div class="mosaico"><span class="et">Avance</span><b class="cifra">${avanceOp(op)}%</b><span class="tenue">el que ya llevaba</span></div>
+      </div>
+      <div class="historia"><b>Historia</b>
+        <div class="ev nuevo"><i></i><span>Venía de stock: se asignó al pedido ${PED.folio}<small>hoy · gerencia de producción</small></span></div>
+        <div class="ev"><i></i><span>Lo que el taller ya había hecho sigue aquí, igual que antes.<small>etapas, horas y material surtido</small></span></div>
+        <div class="ev"><i></i><span>Orden creada para stock<small>con su número de serie</small></span></div>
+      </div>
+    </div>`;
+  }
+
+  function vistaHoja() {
+    const filas = ["zeus", "thor"].map((k) => { const o = opDe(k), x = PARTIDAS.find((p) => p.id === k);
+      return `<tr><td>1</td><td>${x.titulo}</td><td class="mono" style="font-size:12px">${o.serie ?? "sin serie"}</td></tr>`; }).join("");
+    return `<div class="ficha-op">
+      <div><button type="button" class="btn btn-borde" data-accion="volver" style="min-height:30px;padding:3px 10px">← Pedidos</button></div>
+      <div class="hoja"><span class="t">Hoja de salida · ${PED.folio}</span><span>${PED.cliente}</span>
+        <table><thead><tr><th>Cant.</th><th>Equipo</th><th>Número de serie</th></tr></thead><tbody>${filas}</tbody></table>
+        <p class="tenue" style="font-size:12px">La instalación no aparece: no sale del almacén.</p>
+        <div class="firma"><span>Entregó</span><span>Recibió</span></div></div>
+    </div>`;
+  }
+
+  function pintar() {
+    let html;
+    if (s.vista === "orden") { html = vistaOrden(); url.textContent = `erp.hegamex.com/produccion/ordenes/${opDe(s.vistaOrden).folio}`; }
+    else if (s.vista === "hoja") { html = vistaHoja(); url.textContent = `erp.hegamex.com/pedidos/${PED.folio}/salida`; }
+    else {
+      html = vistaPedidos();
+      const q = [s.filtro !== "activos" && `filtro=${s.filtro}`, s.abierto && `pedido=${PED.folio}`].filter(Boolean).join("&");
+      url.textContent = "erp.hegamex.com/produccion/pedidos" + (q ? "?" + q : "");
+    }
+    if (s.aviso) html += `<div class="aviso-flotante" role="status">${s.aviso}</div>`;
+    pantalla.innerHTML = html;
+    pintarGuia();
+  }
+
+  pantalla.addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-accion]");
+    if (!b) return;
+    const a = b.dataset.accion;
+    s.destello = null;
+    if (a === "filtro") { s.filtro = b.dataset.valor; s.abierto = false; }
+    else if (a === "abrir") { s.abierto = true; s.abrio = true; s.alerta = null; }
+    else if (a === "cerrar") { s.abierto = false; s.alerta = null; }
+    else if (a === "crear") {
+      s.alerta = `<div class="alerta alerta-aviso"><b>¡Espera! Aquí no conviene.</b>
+        «Crear las órdenes que faltan» abriría órdenes nuevas: se fabricaría otra ZEUS y otro THOR, y los de stock se quedarían sin cliente.
+        Primero «Usar» en cada equipo; este botón es solo para lo que no haya en stock.</div>`;
+    }
+    else if (a === "usar") {
+      const id = b.dataset.id, folio = b.dataset.folio, x = PARTIDAS.find((p) => p.id === id), antes = estadoPedido();
+      s.usada[id] = folio; s.destello = id; s.alerta = null;
+      anotar(`<b>${folio}</b> ahora es de ${PED.folio} (${x.corto}). Misma serie, mismo avance.`);
+      anotar(`Su fecha compromiso pasa a <b>${PED.compromiso}</b>, la del pedido.`);
+      anotar(`En su historia queda «Venía de stock: se asignó al pedido ${PED.folio}».`);
+      if (antes === "confirmado") anotar(`El pedido pasa de <b>Confirmado</b> a <b>En producción</b>.`);
+      if (id === "thor" && folio === "OP-2026-00042") anotar(`OP-2026-00049 (la más avanzada) se queda para stock. También valía; con el compromiso cerca convenía esa.`);
+      if (id === "thor" && folio === "OP-2026-00049") anotar(`OP-2026-00042 (la planeada) se queda para stock.`);
+      if (sinOrden() === 0) anotar(`Ya no queda nada «Sin orden»: no hay que fabricar ningún equipo nuevo.`);
+      avisar("Equipo de stock asignado al pedido");
+    }
+    else if (a === "orden") { s.vista = "orden"; s.vistaOrden = b.dataset.id; s.vioOrden = true; }
+    else if (a === "volver") { s.vista = "pedidos"; }
+    else if (a === "terminar") {
+      s.terminado = true; s.filtro = "activos";
+      anotar(`El taller terminó las dos órdenes: el pedido pasa a <b>Listo para entregar</b>.`);
+    }
+    else if (a === "entregar") {
+      s.entregado = true;
+      anotar(`Se entregó: el pedido queda <b>Entregado</b> y las dos órdenes, <b>Entregadas</b>. Las series van en la hoja de salida. (En el ERP, antes te pregunta qué sale y quién recibe.)`);
+      avisar("Pedido entregado");
+    }
+    else if (a === "hoja") { s.vista = "hoja"; }
+    if (lote.length) { s.log = [...lote, ...s.log]; lote = []; }
+    pintar();
+  });
+
+  $("reiniciar").addEventListener("click", () => { s = inicial(); pintar(); });
+  s = inicial();
+  pintar();
+
+  // Marca en la barra la sección que se está leyendo.
+  const enlaces = [...document.querySelectorAll(".indice a")];
+  const obs = new IntersectionObserver((ents) => {
+    ents.forEach((e) => { if (e.isIntersecting) enlaces.forEach((l) => l.classList.toggle("activo", l.getAttribute("href") === "#" + e.target.id)); });
+  }, { rootMargin: "-40% 0px -55% 0px" });
+  document.querySelectorAll("section[id]").forEach((sec) => obs.observe(sec));
+})();
+</script>
