@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { PackageCheck } from "lucide-react";
+import { Link2, PackageCheck, X } from "lucide-react";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { Seleccion } from "@/components/ui/campo";
@@ -8,6 +8,8 @@ import { q, useAccion } from "@/lib/consultas";
 import { numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { nombreCorto, useAlmacenes } from "@/modulos/almacen/componentes/comun";
+import { BuscadorArticulo, type ArticuloEncontrado } from "@/components/datos/BuscadorArticulo";
+import { GLOSARIO } from "@/tutorial/glosario";
 import type { LineaOC } from "./tipos";
 
 /**
@@ -15,12 +17,19 @@ import type { LineaOC } from "./tipos";
  * La base no deja recibir más de 10 % arriba de lo pedido, mete la entrada al
  * inventario con el costo de la orden y, si se marca, actualiza el costo del
  * artículo (queda en el historial como "por orden de compra").
+ *
+ * Las partidas de texto (las de la hoja o de un PDF, sin artículo) también se reciben: si son
+ * material se ligan aquí a su artículo y entran al almacén; si son un cobro («Manejo», un flete)
+ * se reciben tal cual y no tocan el inventario. Antes no salían y la orden no se cerraba nunca.
  */
 export function DialogoRecibir({ abierto, alCambiar, ocId, folio, lineas }: {
   abierto: boolean; alCambiar: (v: boolean) => void; ocId: string; folio: string; lineas: LineaOC[];
 }) {
   const almacenes = useAlmacenes();
-  const pendientes = lineas.filter((l) => Number(l.pendiente) > 0 && l.articulo_id);
+  const pendientes = lineas.filter((l) => Number(l.pendiente) > 0);
+  // Partida de texto → artículo elegido al recibir (solo las que aún no reciben nada).
+  const [ligar, setLigar] = useState<Record<string, ArticuloEncontrado>>({});
+  const conArticulo = (l: LineaOC) => !!l.articulo_id || !!ligar[l.id];
   const [cant, setCant] = useState<Record<string, string>>({});
   const [alm, setAlm] = useState<Record<string, number>>({});
   const [factura, setFactura] = useState("");
@@ -33,15 +42,21 @@ export function DialogoRecibir({ abierto, alCambiar, ocId, folio, lineas }: {
     setCant(Object.fromEntries(pendientes.map((l) => [l.id, String(Number(l.pendiente))])));
     setAlm(Object.fromEntries(pendientes.map((l) => [l.id, l.almacen_preferido_id ?? def])));
     setFactura("");
+    setLigar({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [abierto, almacenes.data]);
 
   const partidas = pendientes.map((l) => ({ l, n: Number((cant[l.id] ?? "").replace(",", ".")) || 0 })).filter((x) => x.n > 0);
-  const recibir = useAccion(() => q(supabase.rpc("recibir_orden_compra", {
-    p_oc: ocId, p_factura: factura.trim() || null, p_actualizar_costos: actualizar,
-    p_lineas: partidas.map(({ l, n }) => ({ linea_id: l.id, cantidad: n, almacen_id: alm[l.id] })),
-  })), {
-    exito: `Entraron ${partidas.length} partida(s) de ${folio} al almacén`,
+  const recibir = useAccion(async () => {
+    for (const [linea, a] of Object.entries(ligar)) {
+      await q(supabase.rpc("ligar_partida_oc", { p_linea: linea, p_articulo: a.id }));
+    }
+    return q(supabase.rpc("recibir_orden_compra", {
+      p_oc: ocId, p_factura: factura.trim() || null, p_actualizar_costos: actualizar,
+      p_lineas: partidas.map(({ l, n }) => ({ linea_id: l.id, cantidad: n, almacen_id: conArticulo(l) ? alm[l.id] : null })),
+    }));
+  }, {
+    exito: `${folio}: recibiste ${partidas.length} partida(s)`,
     invalidar: [["oc", ocId], ["oc_lineas", ocId], ["oc_recepciones", ocId], ["v_ordenes_compra"], ["v_existencias"], ["v_precios_compra"], ["reabasto_detalle"]],
     alTerminar: () => alCambiar(false),
   });
@@ -74,18 +89,37 @@ export function DialogoRecibir({ abierto, alCambiar, ocId, folio, lineas }: {
           {pendientes.map((l) => {
             const n = Number((cant[l.id] ?? "").replace(",", ".")) || 0;
             const demas = n > Number(l.pendiente) * 1.1 + 0.0005;
+            const elegido = ligar[l.id];
             return (
               <div key={l.id} className="grid gap-2 p-3 sm:grid-cols-[1fr_110px_150px] sm:items-center">
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate" title={l.nombre}>{l.nombre}</p>
-                  <p className="text-xs text-tenue">{l.clave} · pedido {numero(l.cantidad)} · ya llegó {numero(l.recibido)} · faltan <b>{numero(l.pendiente)}</b> {l.unidad}</p>
+                  <p className="text-xs text-tenue">{l.clave ?? (elegido ? elegido.clave : "Sin artículo")} · pedido {numero(l.cantidad)} · ya llegó {numero(l.recibido)} · faltan <b>{numero(l.pendiente)}</b> {l.unidad}</p>
                   {demas && <p className="text-xs text-peligro">Más de 10 % arriba de lo pendiente: la base no lo deja pasar.</p>}
+                  {!l.articulo_id && (elegido ? (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs text-marca-texto">
+                      <Link2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">Entra como <b className="cifra">{elegido.clave}</b> {elegido.nombre}</span>
+                      <button type="button" className="ml-1 text-tenue hover:text-texto" aria-label="Quitar el artículo"
+                              onClick={() => setLigar(({ [l.id]: _, ...resto }) => resto)}><X className="h-3.5 w-3.5" /></button>
+                    </p>
+                  ) : Number(l.recibido) === 0 ? (
+                    <div className="mt-1.5" data-explain={GLOSARIO.partidaSinArticulo} data-explain-title="Partida sin artículo">
+                      <BuscadorArticulo tipos={["componente", "materia_prima"]} mostrarPrecio={false} className="max-w-sm"
+                        placeholder="Si es material, búscalo para que entre al inventario…"
+                        alElegir={(a) => setLigar((x) => ({ ...x, [l.id]: a }))} />
+                    </div>
+                  ) : null)}
                 </div>
                 <input inputMode="decimal" aria-label={`Cantidad recibida de ${l.nombre}`} className={cn("campo text-right cifra", demas && "border-peligro")}
                   value={cant[l.id] ?? ""} onChange={(e) => setCant((c) => ({ ...c, [l.id]: e.target.value.replace(/[^\d.,]/g, "") }))} />
-                <Seleccion aria-label="Almacén" value={alm[l.id] ?? ""} onChange={(e) => setAlm((a) => ({ ...a, [l.id]: Number(e.target.value) }))}>
-                  {(almacenes.data ?? []).map((a) => <option key={a.id} value={a.id}>{nombreCorto(a.nombre)}</option>)}
-                </Seleccion>
+                {conArticulo(l) ? (
+                  <Seleccion aria-label="Almacén" value={alm[l.id] ?? ""} onChange={(e) => setAlm((a) => ({ ...a, [l.id]: Number(e.target.value) }))}>
+                    {(almacenes.data ?? []).map((a) => <option key={a.id} value={a.id}>{nombreCorto(a.nombre)}</option>)}
+                  </Seleccion>
+                ) : (
+                  <p className="text-xs text-tenue" data-explain={GLOSARIO.partidaSinArticulo} data-explain-title="Partida sin artículo">No entra al inventario</p>
+                )}
               </div>
             );
           })}

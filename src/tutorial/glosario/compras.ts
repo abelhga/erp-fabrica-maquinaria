@@ -1,6 +1,8 @@
 // Compras. Aquí sí hay costos de compra (compras tiene permiso de costos), pero nada de cómo se
 // arma el precio de venta: eso vive en el glosario de costeo.
 export const COMPRAS = {
+  // --- Recibir ---
+  partidaSinArticulo: "Una partida escrita a mano, sin artículo del catálogo (vienen así de la hoja o de un PDF). Si es material, búscala y elige su artículo: entra al almacén con el costo de la orden, como cualquier otra. Si es un cobro como «Manejo» o un flete, recíbela tal cual: cuenta como recibida y no toca el inventario.",
   // --- Solicitudes de precio (la cola que manda ventas) ---
   semaforoSolicitud: "Verde: a tiempo. Amarillo: vence en menos de una hora hábil. Rojo: ya venció y el vendedor sigue esperando. Las vencidas van arriba de la lista.",
   plazoSolicitud: "Cuánto tiempo tiene compras para contestar: unas horas hábiles que se fijan en Configuración (al arrancar: un día hábil, o medio día si el vendedor la marcó urgente porque el cliente está esperando). Solo corre en horario de la planta: una solicitud del domingo empieza a contar el lunes.",

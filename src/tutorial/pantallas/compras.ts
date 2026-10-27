@@ -25,6 +25,7 @@ export const COMPRAS: Record<string, AyudaPantalla> = {
     "Una orden de compra completa: sus partidas, los datos para el proveedor, lo que ya se recibió en almacén y, para quien ve dinero, sus pagos.",
     "En borrador agregas artículos con el buscador de abajo (Enter) y editas cantidad y costo en su lugar; el costo sugerido es el vigente del artículo, y debajo ves si el del proveedor sale más caro o más barato. «Enviar al proveedor» fija las partidas; no se envía con partidas en $0. Después imprímela o mándala.",
     "Cuando llega mercancía, almacén usa «Recibir»: captura lo que de verdad llegó y lo que falte queda pendiente. Si todavía no se recibe nada, compras la puede cancelar y sus requisiciones vuelven a pendientes.",
+    "Las partidas escritas a mano (sin artículo del catálogo) también se reciben. Si son material, en «Recibir» busca su artículo para que entren al almacén; si son un cobro, como «Manejo» o un flete, recíbelas tal cual: cuentan como recibidas y no tocan el inventario.",
     "Si no pones fecha de entrega, se calcula al enviar con los días hábiles del proveedor; si pasa sin que llegue todo, la orden sale atrasada. El vencimiento del pago se fija al recibir, con los días de crédito del proveedor.",
   ],
   "/compras/proveedores": [
