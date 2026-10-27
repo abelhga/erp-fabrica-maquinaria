@@ -5,11 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  AlertTriangle, CalendarClock, CircleX, Handshake, Hourglass, LockOpen, Mail, MapPin, MessageCircle, MessageCircleQuestionMark,
-  Phone, PhoneOff, ShoppingCart, UserCheck,
+  AlertTriangle, CalendarClock, CircleX, Copy, Handshake, Hourglass, Lightbulb, LockOpen, Mail, MapPin, MessageCircle, MessageCircleQuestionMark,
+  Phone, PhoneOff, RefreshCw, ShoppingCart, Sparkles, UserCheck,
 } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
+import { mensajeSeguimiento } from "@/lib/asistente";
 import { useSesion } from "@/lib/sesion";
 import { fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
@@ -113,6 +115,62 @@ const CANALES = [
 ] as const;
 
 /**
+ * El WhatsApp de seguimiento que escribe Claude con lo anotado en «¿Qué pasó?». Es lo que le
+ * devuelve al vendedor el trabajo de anotar: con notas retoma lo que dijo el cliente; sin
+ * ellas sale general, y lo dice. Nada se manda solo: el vendedor lo revisa y lo abre en WhatsApp.
+ */
+export function BorradorMensaje({ objetivo, alt = 40 }: { objetivo: ParaAnotar; alt?: number }) {
+  // La llave lleva la última nota: anotar algo nuevo pide un mensaje nuevo, no el de antes.
+  const borrador = useQuery({
+    queryKey: ["mensaje_seguimiento", objetivo.oportunidad_id, objetivo.ultimo_en ?? ""],
+    queryFn: () => mensajeSeguimiento(objetivo.oportunidad_id),
+    staleTime: Infinity, retry: false,
+  });
+  const [texto, setTexto] = useState<string | null>(null);
+  useEffect(() => setTexto(null), [borrador.data]);
+  const mensaje = texto ?? borrador.data?.mensaje ?? "";
+  const d = borrador.data;
+  if (borrador.isLoading || borrador.isFetching) {
+    return <div className="rounded-lg bg-fondo animate-pulse grid place-items-center text-sm text-tenue" style={{ height: alt * 4 }}>
+      <span className="inline-flex items-center gap-2"><Sparkles className="h-4 w-4" />Leyendo lo que has anotado y escribiendo…</span></div>;
+  }
+  if (borrador.error) return <p className="text-sm text-peligro">{(borrador.error as Error).message}</p>;
+  return (
+    <div className="space-y-2">
+      <textarea className="campo py-2 leading-relaxed" style={{ height: alt * 4 }} value={mensaje} onChange={(e) => setTexto(e.target.value)}
+        aria-label="Mensaje para el cliente" />
+      {d?.consejo && <p className="flex gap-2 rounded-lg bg-marca-suave text-marca-texto px-3 py-2 text-xs">
+        <Lightbulb className="h-4 w-4 shrink-0" /><span><b>Para ti:</b> {d.consejo}</span></p>}
+      <p className="text-xs text-tenue" data-explain={GLOSARIO.mensajeSeguimiento} data-explain-title="Mensaje con Claude">
+        {d?.simulado ? "Plantilla básica: con Claude conectado, el mensaje se escribe con lo que anotaste."
+          : d?.notas ? `Claude lo escribió con ${d.notas === 1 ? "1 nota" : `${d.notas} notas`} de esta venta. Entre más anotes qué pasó, más a la medida sale.`
+          : "Esta venta todavía no tiene notas: el mensaje es general. Anota lo que te diga el cliente en «¿Qué pasó?» y el siguiente saldrá a la medida."}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Boton tamano="sm" variante="secundario" disabled={!mensaje}
+          onClick={() => { navigator.clipboard.writeText(mensaje); toast.success("Mensaje copiado"); }}><Copy className="h-4 w-4" />Copiar</Boton>
+        {objetivo.telefono && <Boton tamano="sm" asChild><a href={enlaceWhatsApp(objetivo.telefono, mensaje)} target="_blank" rel="noopener noreferrer">
+          <MessageCircle className="h-4 w-4" />Abrir en WhatsApp</a></Boton>}
+        {!d?.simulado && <Boton tamano="sm" variante="fantasma" onClick={() => borrador.refetch()}><RefreshCw className="h-4 w-4" />Otra versión</Boton>}
+      </div>
+    </div>
+  );
+}
+
+/** El borrador solo, desde la cola: para escribirle sin abrir «¿Qué pasó?». */
+export function DialogoMensaje({ objetivo, alCerrar }: { objetivo: ParaAnotar | null; alCerrar: () => void }) {
+  if (!objetivo) return null;
+  return (
+    <Dialogo abierto alCambiar={(v) => !v && alCerrar()} ancho="max-w-xl"
+      titulo={`Mensaje para ${objetivo.contacto ? nombrePila(objetivo.contacto) : objetivo.cliente ?? "el cliente"}`}
+      descripcion={[objetivo.cliente, objetivo.folio && folioCot(objetivo.folio), objetivo.titulo].filter(Boolean).join(" · ")}
+      pie={<Boton variante="secundario" onClick={alCerrar}>Cerrar</Boton>}>
+      <BorradorMensaje objetivo={objetivo} />
+    </Dialogo>
+  );
+}
+
+/**
  * «¿Qué pasó?»: lo único que cierra un seguimiento. Lo que se escribe queda en la bitácora del
  * cliente y el resultado mueve la oportunidad; si sigue viva, agenda el siguiente.
  */
@@ -120,6 +178,8 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
   objetivo: ParaAnotar | null; resultadoInicial?: Resultado; alCerrar: () => void; alGuardado?: () => void;
 }) {
   const ir = useNavigate();
+  const { puede } = useSesion();
+  const [redactar, setRedactar] = useState(false);
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [texto, setTexto] = useState("");
   const [canal, setCanal] = useState<(typeof CANALES)[number]["valor"]>("llamada");
@@ -129,7 +189,7 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
   const llave = objetivo?.oportunidad_id ?? null;
   useEffect(() => {
     if (!llave) return;
-    setResultado(resultadoInicial ?? null); setTexto(""); setCanal("llamada"); setProxima(""); setMotivo("");
+    setResultado(resultadoInicial ?? null); setTexto(""); setCanal("llamada"); setProxima(""); setMotivo(""); setRedactar(false);
   }, [llave, resultadoInicial]);
 
   const guardar = useAccion(
@@ -163,7 +223,7 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
           : <Boton onClick={enviar} disabled={!valido} cargando={guardar.isPending} variante={resultado === "perdida" ? "peligro" : "primario"}>Guardar</Boton>}
       </>}>
       <div className="space-y-4">
-        {(objetivo.telefono || objetivo.ultimo_que_paso) && (
+        {(objetivo.telefono || objetivo.ultimo_que_paso || puede("asistente", 1)) && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
             {objetivo.telefono && <>
               <a className="inline-flex items-center gap-1 rounded-md border border-borde px-2 py-1 text-xs hover:bg-fondo" href={enlaceWhatsApp(objetivo.telefono, "")} target="_blank" rel="noopener noreferrer">
@@ -171,9 +231,15 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
               <a className="inline-flex items-center gap-1 rounded-md border border-borde px-2 py-1 text-xs hover:bg-fondo" href={`tel:${objetivo.telefono}`}>
                 <Phone className="h-3.5 w-3.5" />Llamar</a>
             </>}
+            {puede("asistente", 1) && !redactar && (
+              <button type="button" onClick={() => setRedactar(true)} data-explain={GLOSARIO.mensajeSeguimiento} data-explain-title="Mensaje con Claude"
+                className="inline-flex items-center gap-1 rounded-md border border-marca/30 bg-marca-suave text-marca-texto px-2 py-1 text-xs hover:ring-1 hover:ring-marca/40">
+                <Sparkles className="h-3.5 w-3.5" />Redactar mensaje</button>
+            )}
             {objetivo.ultimo_que_paso && <p className="w-full text-xs text-tenue">La última vez ({haceCuanto(objetivo.ultimo_en)}): {objetivo.ultimo_que_paso}</p>}
           </div>
         )}
+        {redactar && <div className="rounded-lg border border-borde p-3"><BorradorMensaje objetivo={objetivo} alt={32} /></div>}
 
         <div className="space-y-1.5">
           <p className="text-sm font-medium" data-explain={GLOSARIO.resultadoSeguimiento} data-explain-title="Resultado">¿Cómo va?</p>
@@ -240,7 +306,9 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
  * siguiente que ya toca, para ponerse al día de corrido.
  */
 export function ColaSeguimientos({ filas, cargando, conVendedor }: { filas: Seguimiento[]; cargando: boolean; conVendedor: boolean }) {
+  const { puede } = useSesion();
   const [actual, setActual] = useState<string | null>(null);
+  const [paraMensaje, setParaMensaje] = useState<Seguimiento | null>(null);
   const hoy = hoyMx();
   const grupos = useMemo(() => [
     { titulo: "Vencidos", filas: filas.filter((s) => s.vence < hoy), tono: "peligro" as const },
@@ -279,6 +347,9 @@ export function ColaSeguimientos({ filas, cargando, conVendedor }: { filas: Segu
                   <span className={cn("text-xs whitespace-nowrap", s.vence < hoy ? "text-peligro font-medium" : "text-tenue")}>{textoVence(s.vence)}</span>
                   {s.telefono && <a href={enlaceWhatsApp(s.telefono, "")} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp a ${s.cliente ?? "cliente"}`}
                     className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-borde text-tenue hover:text-texto hover:bg-fondo"><MessageCircle className="h-4 w-4" /></a>}
+                  {puede("asistente", 1) && <button type="button" onClick={() => setParaMensaje(s)} aria-label={`Redactar mensaje para ${s.cliente ?? "el cliente"}`}
+                    data-explain={GLOSARIO.mensajeSeguimiento} data-explain-title="Mensaje con Claude"
+                    className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg border border-marca/30 bg-marca-suave text-marca-texto text-xs font-medium hover:ring-1 hover:ring-marca/40"><Sparkles className="h-4 w-4" />Mensaje</button>}
                   <Boton tamano="sm" variante={s.vence <= hoy ? "primario" : "secundario"} onClick={() => setActual(s.id)}>¿Qué pasó?</Boton>
                 </div>
               </div>
@@ -287,6 +358,7 @@ export function ColaSeguimientos({ filas, cargando, conVendedor }: { filas: Segu
         </section>
       ))}
       <DialogoQuePaso objetivo={sel && deSeguimiento(sel)} alCerrar={() => setActual(null)} alGuardado={siguiente} />
+      <DialogoMensaje objetivo={paraMensaje && deSeguimiento(paraMensaje)} alCerrar={() => setParaMensaje(null)} />
     </div>
   );
 }

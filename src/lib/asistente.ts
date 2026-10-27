@@ -86,6 +86,12 @@ export async function redactarMensaje(cliente_id: string, canal: "whatsapp" | "c
   return (await llamar({ modo: "redactar", cliente_id, canal, motivo })).json() as Promise<{ asunto: string; mensaje: string; simulado?: boolean }>;
 }
 
+/** El WhatsApp de seguimiento de una venta, escrito con lo que se anotó en «¿Qué pasó?». */
+export async function mensajeSeguimiento(oportunidad_id: string) {
+  return (await llamar({ modo: "mensaje_seguimiento", oportunidad_id })).json() as
+    Promise<{ mensaje: string; consejo: string; notas: number; simulado?: boolean }>;
+}
+
 /** Los que lee importaciones dentro de un embarque. */
 export type TipoImportacion = "proforma" | "factura" | "lista_empaque" | "bl" | "pedimento" | "cuenta_gastos";
 export type TipoDocumento = TipoImportacion | "cotizacion_proveedor" | "constancia_fiscal" | "factura_proveedor";
