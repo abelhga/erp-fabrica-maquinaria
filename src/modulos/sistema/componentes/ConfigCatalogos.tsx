@@ -13,7 +13,7 @@ import { CeldaCheck, CeldaTexto, SoloLectura } from "./Editables";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Almacen { id: number; nombre: string; tipo: "fisico" | "mercadolibre"; disponible_para_planta: boolean; descripcion: string | null; activo: boolean }
-interface Etapa { id: number; nombre: string; orden: number; color: string; activa: boolean; capacidad_horas_semana: number }
+interface Etapa { id: number; nombre: string; orden: number; color: string; activa: boolean; capacidad_horas_semana: number; en_paralelo: boolean }
 
 export function ConfigAlmacenes() {
   const { puede } = useSesion();
@@ -80,14 +80,14 @@ export function ConfigTaller() {
   const capacidad = (etapas.data ?? []).filter((e) => e.activa).reduce((s, e) => s + Number(e.capacidad_horas_semana), 0);
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Etapas del taller" descripcion="El recorrido de un equipo por el taller. El color es el de la pantalla de piso; la capacidad, las horas hombre por semana contra las que se mide la carga."
+      <EncabezadoTarjeta titulo="Etapas del taller" descripcion="El recorrido de un equipo por el taller, en el orden de la columna «Orden». El color es el de la pantalla de piso; la capacidad, las horas hombre por semana contra las que se mide la carga. «En paralelo»: esa etapa no espera a las anteriores."
         acciones={<span className="text-sm text-tenue whitespace-nowrap">Capacidad total: <b className="text-texto cifra">{numero(capacidad)} h/sem</b></span>} />
       <div className="px-5 pb-5 space-y-3">
         {!editable && <SoloLectura quien="gerencia de producción, sistemas o dirección" />}
         {etapas.isLoading ? <Cargando /> : (
           <div className="overflow-x-auto">
             <table className="tabla">
-              <thead><tr><th className="w-16">Color</th><th>Etapa</th><th className="w-24 !text-right">Orden</th><th className="w-36 !text-right" data-explain={GLOSARIO.capacidadEtapa}>Capacidad h/semana</th><th className="w-20 !text-center">Activa</th></tr></thead>
+              <thead><tr><th className="w-16">Color</th><th>Etapa</th><th className="w-24 !text-right">Orden</th><th className="w-36 !text-right" data-explain={GLOSARIO.capacidadEtapa}>Capacidad h/semana</th><th className="w-24 !text-center" data-explain={GLOSARIO.etapaEnParalelo}>En paralelo</th><th className="w-20 !text-center">Activa</th></tr></thead>
               <tbody>
                 {(etapas.data ?? []).map((e) => (
                   <tr key={e.id} className={e.activa ? "" : "opacity-60"}>
@@ -95,6 +95,7 @@ export function ConfigTaller() {
                     <td><CeldaTexto valor={e.nombre} deshabilitado={!editable} ariaLabel="Nombre" className="font-medium min-w-[140px]" alGuardar={(v) => v.trim() && cambiar.mutate({ id: e.id, datos: { nombre: v.trim() } })} /></td>
                     <td><CeldaTexto tipo="number" paso="1" valor={e.orden} deshabilitado={!editable} ariaLabel="Orden" className="w-20 ml-auto" alGuardar={(v) => cambiar.mutate({ id: e.id, datos: { orden: Number(v) } })} /></td>
                     <td><CeldaTexto tipo="number" paso="0.5" valor={e.capacidad_horas_semana} deshabilitado={!editable} ariaLabel="Capacidad" className="w-28 ml-auto" alGuardar={(v) => cambiar.mutate({ id: e.id, datos: { capacidad_horas_semana: Number(v) } })} /></td>
+                    <td className="text-center"><CeldaCheck valor={e.en_paralelo} deshabilitado={!editable} ariaLabel={`${e.nombre} en paralelo`} alCambiar={(v) => cambiar.mutate({ id: e.id, datos: { en_paralelo: v } })} /></td>
                     <td className="text-center"><CeldaCheck valor={e.activa} deshabilitado={!editable} ariaLabel="Activa" alCambiar={(v) => cambiar.mutate({ id: e.id, datos: { activa: v } })} /></td>
                   </tr>
                 ))}

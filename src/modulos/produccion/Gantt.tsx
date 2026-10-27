@@ -95,6 +95,24 @@ function rango(f: FilaPlan, hoy: number): [number, number] | null {
   return f.inicio_plan && f.fin_plan ? [aDia(f.inicio_plan), aDia(f.fin_plan)] : null;
 }
 
+/**
+ * Una etapa en paralelo (Torno) cae en los mismos días que otra de su orden: en el renglón de la
+ * orden va en una segunda línea, si no las dos barras se encimaban con los nombres revueltos.
+ * Una que empieza el día en que acaba la anterior se queda en la misma línea (como siempre).
+ */
+function lineasDeOrden(barras: Barra[]): { linea: Map<string, number>; total: number } {
+  const fines: number[] = [];
+  const linea = new Map<string, number>();
+  const conFecha = barras.filter((b) => b.desde != null && b.hasta != null)
+    .sort((a, b) => a.desde! - b.desde! || a.etapa.orden - b.etapa.orden);
+  for (const b of conFecha) {
+    let l = fines.findIndex((f) => f <= b.desde!);
+    if (l < 0) { l = fines.length; fines.push(b.hasta!); } else fines[l] = b.hasta!;
+    linea.set(b.id, l);
+  }
+  return { linea, total: Math.max(fines.length, 1) };
+}
+
 function armar(plan: FilaPlan[], ordenes: OrdenTablero[], etapas: Etapa[], hoy: number): OrdenGantt[] {
   const porId = new Map(ordenes.map((o) => [o.id, o]));
   const ets = new Map(etapas.map((e) => [e.id, e]));
@@ -557,7 +575,14 @@ function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, 
                   {g.retraso > 0 && xComp != null && xFin != null && (
                     <span className="gantt-retraso absolute top-2 bottom-2 rounded-r-md transition-all duration-500" style={{ left: xComp + px / 2, width: Math.max(xFin - xComp - px / 2, 2) }} />
                   )}
-                  {g.barras.map((b, j) => barra(b, g, 15, 24, b.etapa.nombre, b.etapa.nombre.slice(0, 3), i + j))}
+                  {(() => {
+                    const { linea, total } = lineasDeOrden(g.barras);
+                    const alto = total === 1 ? 24 : Math.floor((ALTO_ORDEN - 12) / total) - 2;
+                    return g.barras.map((b, j) => {
+                      const top = total === 1 ? 15 : 6 + (linea.get(b.id) ?? 0) * (alto + 2);
+                      return barra(b, g, top, alto, b.etapa.nombre, b.etapa.nombre.slice(0, 3), i + j);
+                    });
+                  })()}
                   {xComp != null && (
                     // Una raya punteada de arriba abajo y el rombo arriba: no tapa el nombre de la etapa de ese día.
                     <span title={`Compromiso: ${fecha(o.fecha_compromiso)}`} className="absolute inset-y-1 z-[5] transition-all duration-500" style={{ left: xComp }}>
