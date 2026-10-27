@@ -176,8 +176,10 @@ export default function Cuadrillas() {
   };
   const permitir = (id: string) => (e: DragEvent) => { if (gestionar && arrastre) { e.preventDefault(); setSobre(id); } };
 
-  // Por cuadrilla: la gente que tiene exactamente el mismo trabajo (lo de ahorita y su fila) es
-  // una cuadrilla, como «Isidro y César» en el tablero de Luis. Se arma sola de lo asignado.
+  // Por cuadrilla: la gente que trabaja junta ahorita (o, si nadie ha arrancado, la que empieza
+  // junta lo siguiente) es una cuadrilla, como «Isidro y César» en el tablero de Luis. Antes había
+  // que tener idéntica también la fila: tres en la misma Zeus con distinto «después» salían en dos
+  // columnas y la Zeus repetida. Abajo va lo que sigue de cada quien, cada tarjeta con su gente.
   const cuadrillas = useMemo(() => {
     const rango = (t: Trabajo) => (t.estado === "en_proceso" ? 0 : t.estado === "pausada" ? 1 : 2);
     const porPersona = new Map<string, Trabajo[]>();
@@ -185,11 +187,14 @@ export default function Cuadrillas() {
     const grupos = new Map<string, { gente: string[]; lista: Trabajo[] }>();
     for (const [emp, lista] of porPersona) {
       const orden = [...lista].sort((a, b) => rango(a) - rango(b) || enCola(a, b));
-      const clave = orden.map((t) => t.id).join(",");
-      const g = grupos.get(clave) ?? { gente: [], lista: orden };
+      // Lo de ahorita es donde tiene su tiempo abierto; si no lo tiene, lo primero de su fila.
+      const ahora = trabajaEn.get(emp) ?? orden[0];
+      const g = grupos.get(ahora.id) ?? { gente: [], lista: [ahora] };
       g.gente.push(emp);
-      grupos.set(clave, g);
+      for (const t of orden) if (!g.lista.some((x) => x.id === t.id)) g.lista.push(t);
+      grupos.set(ahora.id, g);
     }
+    for (const g of grupos.values()) g.lista = [g.lista[0], ...g.lista.slice(1).sort((a, b) => rango(a) - rango(b) || enCola(a, b))];
     const primero = (id: string) => (nombres.get(id) ?? "—").split(" ")[0];
     return [...grupos.entries()].map(([clave, g]) => {
       const n = g.gente.map(primero).sort((a, b) => a.localeCompare(b, "es"));
@@ -199,7 +204,7 @@ export default function Cuadrillas() {
         horas: g.lista.reduce((s, t) => s + t.restante / Math.max(t.gente, 1), 0),
       };
     }).sort((a, b) => Number(b.trabajando) - Number(a.trabajando) || a.titulo.localeCompare(b.titulo, "es"));
-  }, [trabajos, nombres]);
+  }, [trabajos, nombres, trabajaEn]);
   const sinCuadrilla = trabajos.filter((t) => t.gente === 0 && (t.estado !== "pendiente" || t.lista))
     .sort((a, b) => a.etapa_orden - b.etapa_orden || enCola(a, b));
 
