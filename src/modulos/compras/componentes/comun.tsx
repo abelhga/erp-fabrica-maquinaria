@@ -38,6 +38,8 @@ export interface OrdenCompra {
   fecha_entrega: string | null; moneda: Moneda; tipo_cambio: number; tasa_iva: number; condiciones: string | null; notas: string | null;
   factura_proveedor: string | null; subtotal: number; iva: number; total: number; vence_pago: string | null; creado_por_nombre: string | null;
   partidas: number; avance_recibido: number; atrasada: boolean; dias_atraso: number | null; pagado: number; creado_en: string;
+  /** Sube cada vez que se cambia una partida ya enviada (lo impreso dice «Rev. 2»). */
+  revision: number;
 }
 
 /** Último tipo de cambio por moneda (lo que usa la base en tc()). */
