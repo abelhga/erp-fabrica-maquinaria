@@ -137,6 +137,44 @@ describe.skipIf(!hayBase)("asistente contra la base local", () => {
     expect(await (await pedir({ texto: "- uno\n*  dos  tres" })).json()).toMatchObject({ texto: "• uno\n• dos tres", simulado: true });
   });
 
+  it("mensaje de seguimiento: Claude recibe lo anotado de la venta, sin precios de partida; quien no ve la venta no lo pide", async () => {
+    const cli = (await isaac.db.from("clientes").select("id").limit(1).single()).data!;
+    const op = (await isaac.db.from("oportunidades").insert({ cliente_id: cli.id, titulo: "Dosificadora de concreto prueba-seguimiento" })
+      .select("id").single()).data!;
+    try {
+      await isaac.db.from("actividades").insert([
+        { cliente_id: cli.id, oportunidad_id: op.id, tipo: "llamada", descripcion: "Lo está viendo con su socio; quiere que incluyamos la instalación" },
+        { cliente_id: cli.id, oportunidad_id: op.id, tipo: "llamada", descripcion: "No contestó" },
+      ]);
+      const propuesta = { mensaje: "Hola, ¿pudo verlo con su socio? Isaac", consejo: "Pregunta para cuándo la necesita." };
+      const { falso, recibido } = claudeFalso([{ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(propuesta), citations: null }] as Anthropic.Beta.BetaContentBlock[] }]);
+      const pedir = (token: string, f?: Pick<Anthropic, "beta">) => atender(new Request("http://x/", {
+        method: "POST", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify({ modo: "mensaje_seguimiento", oportunidad_id: op.id }),
+      }), { supabaseUrl: URL_SB, supabaseAnonKey: ANON, ...(f ? { crearAnthropic: () => f } : {}) });
+      const r = await pedir(isaac.token, falso);
+      expect(r.status).toBe(200);
+      // Solo cuenta lo que dice algo del cliente: «No contestó» a secas no.
+      expect(await r.json()).toMatchObject({ ...propuesta, notas: 1 });
+      const enviado = JSON.stringify(recibido[0].messages);
+      expect(enviado).toContain("quiere que incluyamos la instalación");
+      expect(enviado).toContain("Dosificadora de concreto prueba-seguimiento");
+      expect(enviado).not.toContain("precio_unitario");
+      // Sin llave, una plantilla que nombra el equipo y lo dice.
+      const sin = await (await pedir(isaac.token)).json();
+      expect(sin).toMatchObject({ simulado: true, notas: 1 });
+      expect(sin.mensaje).toContain("Dosificadora de concreto prueba-seguimiento");
+      // Almacén no ve las ventas de Isaac: no hay mensaje.
+      const alm = await sesion("almacen@hegamex.com");
+      expect((await pedir(alm.token)).status).not.toBe(200);
+    } finally {
+      const { default: pg } = await import("pg");
+      const db = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres" });
+      await db.connect();
+      await db.query("delete from oportunidades where id = $1", [op.id]);
+      await db.end();
+    }
+  });
+
   it("almacén no lee el libro de ventas aunque Claude lo pida", async () => {
     const alm = await sesion("almacen@hegamex.com");
     const r = await ejecutarHerramienta(alm.db, "consultar", {

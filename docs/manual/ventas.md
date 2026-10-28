@@ -127,6 +127,14 @@ sola nota de seguimiento.
   objetivo de seguimiento de prospectos).
 - Si la cotización se vuelve pedido o se rechaza por otro camino, el seguimiento se cierra solo.
 
+**Mensaje con Claude:** el botón «Mensaje» (con destellos ✦) de cada renglón de Seguimiento, o «Redactar
+mensaje» dentro de «¿Qué pasó?», escribe el WhatsApp de seguimiento para ese cliente. Lo arma con
+el equipo cotizado y con **lo que hayas anotado de esa venta**: si anotaste «lo está viendo con su
+socio; quiere la instalación», el mensaje retoma eso. Sin notas sale un mensaje general, y la
+pantalla te lo dice. Entre más anotes, más a la medida sale. Claude no inventa precios, descuentos
+ni fechas, y el mensaje no se manda solo: lo revisas, lo ajustas y lo abres en WhatsApp. Abajo
+te da un consejo de qué averiguar en ese contacto. «Otra versión» pide uno distinto.
+
 **Negociación:** arrastrar una tarjeta a Negociación abre «¿Qué pasó?». La base no acepta
 Negociación sin la nota, ni siquiera desde el detalle.
 
