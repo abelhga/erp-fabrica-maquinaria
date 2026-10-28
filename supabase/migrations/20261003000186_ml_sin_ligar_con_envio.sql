@@ -439,3 +439,15 @@ begin
   perform ml_sincronizar_envio(v_envio);
   return v_ped.id;
 end $$;
+
+-- Las ventas que ya esperaban sin envío por no estar ligadas lo piden ahora (las que ML ya mandó, no).
+do $$
+declare r record;
+begin
+  for r in select p.id from pedidos p
+           where p.canal = 'mercadolibre' and p.estado not in ('cancelado', 'entregado')
+             and not exists (select 1 from envios e where e.pedido_id = p.id and e.estado <> 'cancelado')
+             and exists (select 1 from pedido_lineas l where l.pedido_id = p.id and l.articulo_id is null) loop
+    perform ml_envio_si_falta(r.id);
+  end loop;
+end $$;
