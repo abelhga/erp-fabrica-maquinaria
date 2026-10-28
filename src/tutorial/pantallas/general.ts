@@ -10,7 +10,8 @@ export const GENERAL: Record<string, AyudaPantalla> = {
   "/pendientes": [
     "Aquí ves lo que te pidieron a ti y lo que tú les pediste a otros, con fecha. Reemplaza el “¿ya quedó?” por chat: cuando alguien termina, a quien lo pidió le llega un aviso en la campana.",
     "“Me tocan” son los tuyos: dale clic al círculo para marcarlo hecho y, si quieres, deja una respuesta corta (un precio, una fecha). “Los que pedí” son los que esperas de otros; si ya no hace falta, cancélalo con la X. La flecha te lleva al pedido, orden o pantalla de donde salió.",
-    "La fecha sale en ámbar si vence hoy y en rojo si ya venció; mientras siga vencido, el sistema les recuerda a los dos. Para pedir algo nuevo usa “Pedir algo a alguien”: qué hay que hacer, quién y para cuándo.",
+    "La fecha sale en ámbar si vence hoy y en rojo si ya venció; mientras siga vencido, el sistema les recuerda a los dos. Para pedir algo nuevo usa “Pedir algo a alguien”: qué hay que hacer, quién y para cuándo. Puedes agregar a varias personas y elegir si basta con que uno lo haga o si cada quien lo tiene que hacer.",
+    "Arriba ves tu propio cumplimiento de los últimos 30 días: qué tanto cierras a tiempo, a cuántas personas tienes esperando algo tuyo, cuántos días de retraso suman tus vencidos y cuánto tardas en cerrar. Dirección y Recursos Humanos ven además la pestaña “Equipo” con el de todos.",
   ],
   "/calendario": [
     "Todo lo que tiene fecha y te toca ver, en un solo lugar: entregas de pedidos, cierres de oportunidades y llamadas, compras y embarques que llegan, envíos por recolectar, compromisos del taller y cuándo termina cada orden según el plan, servicios, preventivos, herramienta por devolver, pagos, vacaciones, cumpleaños y tus pendientes. No se captura nada aquí: cada cosa sale de su pantalla.",
