@@ -9,7 +9,7 @@ import { Award, Banknote, Coins, Hash, ListChecks, Target } from "lucide-react";
 import { AlertTriangle, CalendarDays, CalendarRange, Hand, Wrench } from "lucide-react";
 import { BookOpen, Calendar, Inbox, MessageSquareQuote, PackageCheck, Store, Undo2 } from "lucide-react";
 import { GanttChart, Gauge, HardHat, Lightbulb, Map as MapaIcono } from "lucide-react";
-import type { Modulo } from "./lib/sesion";
+import type { Modulo, Rol } from "./lib/sesion";
 
 export interface EntradaMenu { ruta: string; texto: string; icono: LucideIcon; modulo: Modulo; nivel?: number }
 export interface SeccionMenu { titulo: string; entradas: EntradaMenu[] }
@@ -138,3 +138,30 @@ export const PENDIENTES: EntradaMenu = { ruta: "/pendientes", texto: "Pendientes
 export const CALENDARIO: EntradaMenu = { ruta: "/calendario", texto: "Calendario", icono: Calendar, modulo: "ventas" };
 // El resumen de la semana lo arma el asistente: lo ve quien tiene asistente.
 export const SEMANA: EntradaMenu = { ruta: "/semana", texto: "Tu semana", icono: CalendarDays, modulo: "asistente" };
+
+// Qué secciones van primero según el puesto: la gerencia de producción abría el ERP y tenía que
+// bajar más allá de Ventas, Ingeniería, Compras y Almacén para llegar a lo suyo. Con varios roles
+// se juntan en el orden en que vienen; lo que no aparece sigue en el orden de MENU. Dirección y
+// sistemas ven todo y se quedan con el orden de siempre. Cada quien puede moverlas después.
+export const PRIMERO_POR_ROL: Partial<Record<Rol, string[]>> = {
+  gerente_produccion: ["Producción", "Almacén", "Mantenimiento"],
+  produccion: ["Producción", "Almacén", "Mantenimiento"],
+  ingenieria_procesos: ["Producción", "Mantenimiento"],
+  mantenimiento: ["Mantenimiento", "Producción"],
+  almacen: ["Almacén", "Compras", "Producción"],
+  compras: ["Compras", "Almacén", "Importaciones"],
+  importaciones: ["Importaciones", "Compras", "Almacén"],
+  ingenieria: ["Ingeniería y costeo", "Producción"],
+  rrhh: ["Administración"],
+  finanzas: ["Administración", "Compras"],
+  administracion: ["Administración", "Compras"],
+  ventas: ["Ventas"],
+  gerente_ventas: ["Ventas", "Dirección"],
+  recepcion: ["Ventas"],
+};
+
+/** Los títulos de sección en el orden de quien entra: su puesto primero, lo demás como en MENU. */
+export function ordenPorRol(roles: Rol[]): string[] {
+  const primero = roles.flatMap((r) => PRIMERO_POR_ROL[r] ?? []);
+  return [...new Set([...primero, ...MENU.map((s) => s.titulo)])];
+}

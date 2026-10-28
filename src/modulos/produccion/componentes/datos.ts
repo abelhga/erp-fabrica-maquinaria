@@ -52,6 +52,8 @@ export interface OperacionPiso {
   ultimo_problema: string | null; ultimo_problema_en: string | null;
   turno: number | null; horas_reales: number;
   cuadrilla: string | null; avance_etapa: number | null;
+  /** En proceso y con alguien con su tiempo corriendo (si no, la cuadrilla es la planeada). */
+  con_tiempo: boolean;
 }
 
 /** El personal para elegir en la terminal y el tablero: nombre, su área y dónde está ahorita. */

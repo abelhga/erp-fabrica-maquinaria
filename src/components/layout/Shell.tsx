@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
-import { MENU, INICIO, PENDIENTES, CALENDARIO, SEMANA } from "@/navegacion";
+import { ChevronDown, ChevronUp, LogOut, Menu, Moon, Pin, PinOff, RotateCcw, Search, Sun, X } from "lucide-react";
+import { MENU, INICIO, PENDIENTES, CALENDARIO, SEMANA, ordenPorRol, type EntradaMenu } from "@/navegacion";
+import { useMenuPersonal } from "@/lib/menuPersonal";
+import { GLOSARIO } from "@/tutorial/glosario";
 import { useSesion, NOMBRE_ROL } from "@/lib/sesion";
 import { cn } from "@/lib/utilidades";
 import { supabase } from "@/lib/supabase";
@@ -49,8 +51,18 @@ export function Shell() {
     return () => window.removeEventListener("keydown", atajo);
   }, []);
 
-  const secciones = MENU.map((s) => ({ ...s, entradas: s.entradas.filter((e) => puede(e.modulo, e.nivel ?? 1)) }))
+  // Lo que el rol no ve no entra; el orden sale del puesto (producción ve Producción primero) o
+  // del que la persona eligió. Lo fijado va arriba, sin quitarlo de su sección.
+  const menuPersonal = useMenuPersonal(perfil?.id);
+  const { prefs } = menuPersonal;
+  const visibles = MENU.map((s) => ({ ...s, entradas: s.entradas.filter((e) => puede(e.modulo, e.nivel ?? 1)) }))
     .filter((s) => s.entradas.length);
+  const porPuesto = ordenPorRol(roles);
+  const orden = [...new Set([...(prefs.orden ?? []), ...porPuesto])];
+  const secciones = [...visibles].sort((a, b) => orden.indexOf(a.titulo) - orden.indexOf(b.titulo));
+  const ordenVisible = secciones.map((s) => s.titulo);
+  const fijadas = prefs.fijadas.map((r) => visibles.flatMap((s) => s.entradas).find((e) => e.ruta === r)).filter((e): e is EntradaMenu => !!e);
+  const conRutaActual = (entradas: EntradaMenu[]) => entradas.some((e) => pathname === e.ruta || pathname.startsWith(`${e.ruta}/`));
 
   const menu = (
     <nav className="flex-1 overflow-y-auto px-3 pb-6 space-y-5">
@@ -60,14 +72,46 @@ export function Shell() {
         <ItemMenu ruta={CALENDARIO.ruta} texto={CALENDARIO.texto} Icono={CALENDARIO.icono} />
         {puede(SEMANA.modulo, 1) && <ItemMenu ruta={SEMANA.ruta} texto={SEMANA.texto} Icono={SEMANA.icono} />}
       </div>
-      {secciones.map((s) => (
-        <div key={s.titulo}>
-          <p className="px-3 mb-1 text-[11px] font-semibold uppercase tracking-wider text-tenue/80">{s.titulo}</p>
+      {fijadas.length > 0 && (
+        <div>
+          <p className="px-3 mb-1 text-[11px] font-semibold uppercase tracking-wider text-tenue/80" data-explain={GLOSARIO.menuFijadas} data-explain-title="Fijadas">Fijadas</p>
           <div className="space-y-0.5">
-            {s.entradas.map((e) => <ItemMenu key={e.ruta} ruta={e.ruta} texto={e.texto} Icono={e.icono} />)}
+            {fijadas.map((e) => <ItemMenu key={e.ruta} ruta={e.ruta} texto={e.texto} Icono={e.icono} fijada alFijar={() => menuPersonal.fijar(e.ruta)} />)}
           </div>
         </div>
-      ))}
+      )}
+      {secciones.map((s, i) => {
+        // Una sección colapsada se abre sola mientras estés en una de sus pantallas, para no perderte.
+        const colapsada = prefs.colapsadas.includes(s.titulo) && !conRutaActual(s.entradas);
+        return (
+          <div key={s.titulo}>
+            <div className="group/sec flex items-center gap-1 pr-1 mb-1">
+              <button type="button" onClick={() => menuPersonal.colapsar(s.titulo)} aria-expanded={!colapsada}
+                data-explain={GLOSARIO.menuPersonal} data-explain-title="Tu menú"
+                className="flex-1 flex items-center gap-1 px-3 text-left text-[11px] font-semibold uppercase tracking-wider text-tenue/80 hover:text-texto">
+                {s.titulo}
+                <ChevronDown className={cn("h-3 w-3 transition-transform", colapsada && "-rotate-90")} />
+              </button>
+              <span className="flex opacity-0 group-hover/sec:opacity-100 focus-within:opacity-100 transition-opacity">
+                <button type="button" disabled={i === 0} onClick={() => menuPersonal.mover(s.titulo, -1, ordenVisible)} aria-label={`Subir ${s.titulo}`}
+                  className="p-0.5 rounded text-tenue hover:text-texto hover:bg-fondo disabled:opacity-30"><ChevronUp className="h-3.5 w-3.5" /></button>
+                <button type="button" disabled={i === secciones.length - 1} onClick={() => menuPersonal.mover(s.titulo, 1, ordenVisible)} aria-label={`Bajar ${s.titulo}`}
+                  className="p-0.5 rounded text-tenue hover:text-texto hover:bg-fondo disabled:opacity-30"><ChevronDown className="h-3.5 w-3.5" /></button>
+              </span>
+            </div>
+            {!colapsada && (
+              <div className="space-y-0.5">
+                {s.entradas.map((e) => <ItemMenu key={e.ruta} ruta={e.ruta} texto={e.texto} Icono={e.icono}
+                  fijada={prefs.fijadas.includes(e.ruta)} alFijar={() => menuPersonal.fijar(e.ruta)} />)}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {menuPersonal.personalizado && (
+        <button type="button" onClick={menuPersonal.restaurar}
+          className="flex items-center gap-2 px-3 text-xs text-tenue hover:text-texto"><RotateCcw className="h-3.5 w-3.5" />Restaurar el menú de mi puesto</button>
+      )}
     </nav>
   );
 
@@ -139,8 +183,10 @@ export function Shell() {
   );
 }
 
-function ItemMenu({ ruta, texto, Icono }: { ruta: string; texto: string; Icono: React.ComponentType<{ className?: string }> }) {
-  return (
+function ItemMenu({ ruta, texto, Icono, fijada, alFijar }: {
+  ruta: string; texto: string; Icono: React.ComponentType<{ className?: string }>; fijada?: boolean; alFijar?: () => void;
+}) {
+  const enlace = (
     <NavLink
       to={ruta}
       end={ruta === "/"}
@@ -154,6 +200,19 @@ function ItemMenu({ ruta, texto, Icono }: { ruta: string; texto: string; Icono: 
       <Icono className="h-[18px] w-[18px] shrink-0" />
       {texto}
     </NavLink>
+  );
+  if (!alFijar) return enlace;
+  // El alfiler aparece al pasar el mouse (o con el foco); fijada, se queda visible en la sección.
+  return (
+    <div className="group/item relative">
+      {enlace}
+      <button type="button" onClick={alFijar} aria-label={fijada ? `Quitar ${texto} de fijadas` : `Fijar ${texto} arriba`}
+        title={fijada ? "Quitar de fijadas" : "Fijar arriba"}
+        className={cn("absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded text-tenue hover:text-texto hover:bg-superficie transition-opacity",
+          "opacity-0 group-hover/item:opacity-100 focus:opacity-100")}>
+        {fijada ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
+      </button>
+    </div>
   );
 }
 
