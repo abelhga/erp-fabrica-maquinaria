@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Ban, Globe2, PackageCheck, Plus, Printer, Send, Trash2, Truck } from "lucide-react";
+import { ArrowLeft, Ban, Globe2, PackageCheck, Pencil, Plus, Printer, Send, Trash2, Truck } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { BuscadorArticulo } from "@/components/datos/BuscadorArticulo";
 import { Boton } from "@/components/ui/boton";
@@ -20,6 +20,7 @@ import { DialogoRecibir } from "./componentes/DialogoRecibir";
 import { RevisarCotizacion, SubirCotizacion, type CotizacionLeida } from "./componentes/LeerCotizacion";
 import { ImpresionOC, type Empresa } from "./componentes/ImpresionOC";
 import { PagosOC } from "./componentes/PagosOC";
+import { DialogoCambiarPartida, HistorialCambiosOC } from "./componentes/CambiarPartida";
 import type { LineaOC, ProveedorCompleto } from "./componentes/tipos";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -86,6 +87,7 @@ function Detalle({ id }: { id: string }) {
   const [recibiendo, setRecibiendo] = useState(false);
   const [cancelando, setCancelando] = useState(false);
   const [motivo, setMotivo] = useState("");
+  const [cambiando, setCambiando] = useState<LineaOC | null>(null);
   const verDinero = puede("costos", 1) || puede("finanzas", 1);
   const compra = puede("compras", 2);
 
@@ -139,6 +141,8 @@ function Detalle({ id }: { id: string }) {
   const borrador = o.estado === "borrador";
   const editable = borrador && compra;
   const recibido = (lineas.data ?? []).some((l) => Number(l.recibido) > 0);
+  // Enviada: lo acordado después con el proveedor se cambia partida por partida, mientras no se reciba nada de ella.
+  const cambiable = compra && verDinero && (o.estado === "enviada" || o.estado === "parcial");
   const costoVigente = (articulo: string | null) => {
     const c = costos.data?.find((x) => x.articulo_id === articulo);
     if (!c || !tc.data) return null;
@@ -149,7 +153,7 @@ function Detalle({ id }: { id: string }) {
     <>
       <div className="print:hidden">
         <Pagina
-          titulo={<span className="flex flex-wrap items-center gap-3">{o.folio} <InsigniaOC estado={o.estado} atrasada={o.atrasada} dias={o.dias_atraso} /></span>}
+          titulo={<span className="flex flex-wrap items-center gap-3">{o.folio}{o.revision > 1 && <span className="text-base font-medium text-tenue" data-explain={GLOSARIO.revisionOC}>Rev. {o.revision}</span>} <InsigniaOC estado={o.estado} atrasada={o.atrasada} dias={o.dias_atraso} /></span>}
           descripcion={<>
             <Link to={`/compras/proveedores/${o.proveedor_id}`} className="text-marca-texto hover:underline">{o.proveedor}</Link>
             {" · "}{fecha(o.fecha)}{o.creado_por_nombre && ` · hizo ${o.creado_por_nombre}`}
@@ -179,7 +183,7 @@ function Detalle({ id }: { id: string }) {
                           {verDinero && <th className="text-right w-36" data-explain={GLOSARIO.costoContraVigente}>Costo unitario</th>}
                           {verDinero && <th className="text-right">Importe</th>}
                           {!borrador && <th className="text-right" data-explain={GLOSARIO.avanceRecibido}>Recibido</th>}
-                          {editable && <th className="w-8" />}
+                          {(editable || cambiable) && <th className="w-8" />}
                         </tr>
                       </thead>
                       <tbody>
@@ -214,6 +218,9 @@ function Detalle({ id }: { id: string }) {
                               )}
                               {editable && <td><button className="p-1 rounded text-tenue hover:text-peligro hover:bg-fondo" aria-label={`Quitar ${l.nombre}`}
                                 onClick={() => quitarLinea.mutate(l.id)}><Trash2 className="h-4 w-4" /></button></td>}
+                              {cambiable && <td>{Number(l.recibido) === 0 && (
+                                <button className="p-1 rounded text-tenue hover:text-marca-texto hover:bg-fondo" aria-label={`Cambiar ${l.nombre}`} title="Cambiar partida"
+                                  data-explain={GLOSARIO.revisionOC} data-explain-title="Cambiar partida" onClick={() => setCambiando(l)}><Pencil className="h-4 w-4" /></button>)}</td>}
                             </tr>
                           );
                         })}
@@ -239,6 +246,8 @@ function Detalle({ id }: { id: string }) {
                   </div>
                 )}
               </Tarjeta>
+
+              {verDinero && o.revision > 1 && <HistorialCambiosOC ocId={id} moneda={m} />}
 
               {(recepciones.data?.length ?? 0) > 0 && (
                 <Tarjeta className="overflow-hidden">
@@ -312,6 +321,7 @@ function Detalle({ id }: { id: string }) {
 
       {verDinero && <ImpresionOC oc={o} lineas={lineas.data ?? []} proveedor={proveedor.data} empresa={empresa.data} />}
 
+      {cambiando && <DialogoCambiarPartida linea={cambiando} folio={o.folio} moneda={m} alCerrar={() => setCambiando(null)} />}
       <DialogoRecibir abierto={recibiendo} alCambiar={setRecibiendo} ocId={id} folio={o.folio} lineas={lineas.data ?? []} />
       <Dialogo abierto={cancelando} alCambiar={setCancelando} titulo={`Cancelar ${o.folio}`}
         descripcion="Lo que venía de requisiciones regresa a pendiente para volver a pedirse."

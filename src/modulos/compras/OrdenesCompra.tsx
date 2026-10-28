@@ -31,7 +31,7 @@ export default function OrdenesCompra() {
   const ordenes = useQuery({
     queryKey: ["v_ordenes_compra"],
     queryFn: () => todasLasFilas<OrdenCompra>((d, h) => supabase.from("v_ordenes_compra")
-      .select("id, folio, proveedor_id, proveedor, es_importacion, estado, fecha, fecha_entrega, moneda, tipo_cambio, total, partidas, avance_recibido, atrasada, dias_atraso, pagado, creado_por_nombre, creado_en, notas, condiciones, factura_proveedor, subtotal, iva, tasa_iva, vence_pago")
+      .select("id, folio, proveedor_id, proveedor, es_importacion, estado, fecha, fecha_entrega, moneda, tipo_cambio, total, partidas, avance_recibido, atrasada, dias_atraso, pagado, creado_por_nombre, creado_en, notas, condiciones, factura_proveedor, subtotal, iva, tasa_iva, vence_pago, revision")
       .order("fecha", { ascending: false }).order("folio", { ascending: false }).range(d, h)),
   });
   const reqPendientes = useQuery({

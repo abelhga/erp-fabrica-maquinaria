@@ -35,7 +35,8 @@ export function ImpresionOC({ oc, lineas, proveedor, empresa }: {
         </div>
         <div className="text-right">
           <p className="text-lg font-bold tracking-wide">ORDEN DE COMPRA</p>
-          <p className="text-base font-semibold">{oc.folio}</p>
+          <p className="text-base font-semibold">{oc.folio}{oc.revision > 1 && ` · Rev. ${oc.revision}`}</p>
+          {oc.revision > 1 && <p className="tenue">Sustituye a la revisión anterior</p>}
           <p className="tenue">Fecha: {fecha(oc.fecha)}</p>
           {oc.fecha_entrega && <p>Entrega requerida: <b>{fecha(oc.fecha_entrega)}</b></p>}
         </div>
