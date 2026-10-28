@@ -342,6 +342,10 @@ button, select, input, textarea { font: inherit; color: inherit; }
 .tv-dias.cerca { background: hsl(38 92% 50%); color: #000; }
 .tv-titulo { font-size: 2cqw; font-weight: 800; display: flex; align-items: center; gap: 1cqw; }
 .tv-cuad { grid-template-rows: auto minmax(0, 1fr); }
+.tv-ent p[class^="e-"] { border-left: .4cqw solid; padding-left: .5cqw; display: flex; justify-content: space-between; gap: .4cqw; }
+.tv-ent p.e-ok { border-color: hsl(152 55% 45%); } .tv-ent p.e-ok b { color: hsl(152 55% 55%); }
+.tv-ent p.e-bien { border-color: hsl(214 100% 60%); } .tv-ent p.e-bien b { color: hsl(214 100% 72%); }
+.tv-ent p.e-mal { border-color: hsl(0 75% 58%); } .tv-ent p.e-mal b { color: hsl(0 85% 68%); }
 .tv-cuad .r { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 1cqw; min-height: 0; }
 .tv-cuad article { border: .2cqw solid var(--aparato-borde); border-radius: 1cqw; background: var(--aparato-sup); display: grid; align-content: start; gap: .5cqw; overflow: hidden; min-width: 0; }
 .tv-cuad article.pausa { border-color: hsl(38 90% 55%); }
@@ -1211,17 +1215,18 @@ function pintarTV() {
   // Cada cuadrilla: quién, qué equipo, su etapa, cuánto va (en cuartos) y si está pausada.
   const cuad = [["Genaro y Juan Pablo", "Dosificadora de 4 tolvas", "Pailería", .25], ["Ramiro", "Elevador de cangilones de 18 m", "Pailería", .75], ["Beto y Toño", "Cribadora vibratoria de 3 camas", "Pintura", .5], ["Gustavo y Luis Enrique", "Banda transportadora de 18″ × 12 m", "Detallado", .9], ["Leonardo", "Banda artesa de 24″ × 20 m", "Torno", .5, true], ["Chuy y Raúl", "Tolva de 10 m³", "Corte", null]];
   const fichaCuad = ([q, e, a, av, pausa]) => `<article class="${pausa ? "pausa" : ""}"><h6 style="background:${COLOR[a]}">${a}${pausa ? "<em>PAUSADA</em>" : ""}</h6>
-    <div class="cu"><div class="caras">${q.split(/, | y | e /).map((n) => `<span style="background:${COLOR[a]}">${n[0]}</span>`).join("")}</div><b>${q}</b></div>
+    <div class="cu"><div class="caras">${q.split(/, | y | e /).map((n) => `<span style="background:${pausa ? "hsl(38 90% 50%)" : "hsl(152 55% 42%)"}">${n[0]}</span>`).join("")}</div><b style="color:${pausa ? "hsl(38 92% 60%)" : "hsl(152 55% 55%)"}">${q}</b></div>
     <p>${e}</p><div class="cuartos">${[0, 1, 2, 3].map((k) => `<i><i style="width:${Math.max(0, Math.min(1, (av ?? 0) * 4 - k)) * 100}%;background:${COLOR[a]}"></i></i>`).join("")}</div>
     <small>${av == null ? "sin avance reportado" : `va a ${cuarto(av)}`}</small></article>`;
   const dias = ["Hoy", "mar 3 nov", "mié 4 nov", "jue 5 nov", "vie 6 nov", "lun 9 nov", "mar 10 nov", "mié 11 nov", "jue 12 nov", "vie 13 nov"];
-  const ent = { 0: ["Banda transportadora de 18″ × 12 m"], 2: ["Elevador de cangilones de 18 m"], 9: ["Dosificadora de 4 tolvas"], 6: ["Cribadora vibratoria de 3 camas"] };
+  // Verde lista, azul a tiempo, rojo atrasada: la barra de color y el avance grande, como en la TV.
+  const ent = { 0: [["Banda transportadora de 18″ × 12 m", "ok", "✓"]], 2: [["Elevador de cangilones de 18 m", "mal", "62%"]], 9: [["Dosificadora de 4 tolvas", "bien", "25%"]], 6: [["Cribadora vibratoria de 3 camas", "bien", "50%"]] };
   $("#tv-pantalla").innerHTML = `
     <div class="tv-cab"><b>HEGAMEX</b><span>${TVHOJAS[tvHoja]} · ${tvHoja + 1} de 4</span><span>lun 2 nov · 9:41</span></div>
     <div class="tv-franjas"><div class="tv-franja mal"><b>Atrasadas:</b> Banda artesa de 24″ × 20 m (1 día)</div><div class="tv-franja aviso"><b>Falta material:</b> Elevador de cangilones de 18 m (2 materiales)</div></div>
     <div class="tv-cuerpo">${cols(0)}${cols(3)}
       <div class="tv-hoja tv-cuad" ${tvHoja === 2 ? "" : "hidden"}><div class="tv-titulo">Cuadrillas ahora</div><div class="r">${cuad.map(fichaCuad).join("")}</div></div>
-      <div class="tv-hoja tv-ent" ${tvHoja === 3 ? "" : "hidden"}><div class="tv-titulo">Entregas de las próximas dos semanas</div><div class="r">${dias.map((d, i) => `<section class="${i === 0 ? "hoy" : ""}"><h6>${d}</h6>${(ent[i] || []).map((x) => `<p>${x}</p>`).join("")}</section>`).join("")}</div></div>
+      <div class="tv-hoja tv-ent" ${tvHoja === 3 ? "" : "hidden"}><div class="tv-titulo">Entregas de las próximas dos semanas</div><div class="r">${dias.map((d, i) => `<section class="${i === 0 ? "hoy" : ""}"><h6>${d}</h6>${(ent[i] || []).map(([x, t, av]) => `<p class="e-${t}">${x}<b>${av}</b></p>`).join("")}</section>`).join("")}</div></div>
     </div>
     <div class="tv-cinta" aria-hidden="true"><div>Pailería iniciada · <b>Dosificadora de 4 tolvas</b> · hace 5 min &nbsp; ● &nbsp; Pintura lleva 50 % · <b>Cribadora vibratoria</b> · hace 12 min &nbsp; ● &nbsp; Torno pausada · <b>Banda artesa de 24″</b> · hace 20 min &nbsp; ● &nbsp; Corte terminada · <b>Tolva de 10 m³</b> · hace 31 min</div></div>`;
   $("#tv-botones").innerHTML = TVHOJAS.map((x, i) => `<button type="button" data-tv="${i}" aria-pressed="${i === tvHoja}">${x}</button>`).join("");

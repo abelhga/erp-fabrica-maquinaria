@@ -325,10 +325,18 @@ Cambia de pantalla cada 10 segundos y da la vuelta a:
    la TV los folios van cortos, sin año ni ceros (OP-53 · PED-819), para que quepan.
 2. **Cuadrillas ahora:** una tarjeta por cuadrilla con la franja del color de su etapa, un círculo
    con la inicial de cada persona, el equipo, cuánto lleva en cuatro bloques (¼, ½, ¾, casi), desde
-   cuándo y los días que faltan. Las pausadas llevan borde ámbar; las urgentes, rojo. Fuera de
-   horario dice «Fuera de horario» y cuándo sigue: lo que quedó iniciado no se está trabajando.
-3. **Entregas de las próximas dos semanas:** de lunes a viernes, qué equipo se compromete cada día
-   y cómo va. Lo de sábado o domingo sale el viernes anterior.
+   cuándo y los días que faltan. Los nombres van con el mismo color que en el tablero de Cuadrillas:
+   **verde** si su tiempo está corriendo, **ámbar** si la etapa está pausada y **gris** si la etapa
+   dice «en proceso» pero nadie la ha arrancado en la terminal (abajo dice «Sin arrancar en la
+   terminal»: hay que arrancarla para que cuenten sus horas). Las pausadas llevan borde ámbar; las
+   urgentes, rojo. Fuera de horario dice «Fuera de horario» y cuándo sigue: lo que quedó iniciado no
+   se está trabajando. En las tarjetas de las etapas pasa lo mismo: «● nombres» en verde solo con el
+   tiempo corriendo.
+3. **Entregas de las próximas dos semanas:** un calendario de lunes a viernes. Cada día trae su
+   fecha grande, cuántas entregas tiene y hasta tres equipos, con una barra de color: **verde** ya
+   está lista, **azul** va a tiempo y **rojo** va atrasada (la misma regla que el tablero). Lo
+   atrasado sale primero, con su avance en grande y la etapa en la que va. Hoy va resaltado en azul
+   y los días que ya pasaron, tenues. Lo de sábado o domingo sale el viernes anterior.
 
 Arriba siempre están lo atrasado y lo que espera material; abajo corre la cinta con lo último que
 se marcó en el piso, también por nombre del equipo.
