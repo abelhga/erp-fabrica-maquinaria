@@ -2,11 +2,12 @@
 -- deshace, alguien invitado que todavía no entra puede atender ML, un reclamo de una venta de
 -- antes de conectar avisa una vez, y una venta que ML ya mandó no pide envío a planta.
 do $$
-declare v_dir uuid; v_ven uuid; v_alm uuid; v_art uuid; v_otro uuid; v_ped uuid; v_ped2 uuid; l record; v_ok boolean; r jsonb;
+declare v_dir uuid; v_ven uuid; v_alm uuid; v_rh uuid; v_art uuid; v_otro uuid; v_ped uuid; v_ped2 uuid; l record; v_ok boolean; r jsonb;
 begin
   v_dir := pg_temp.usuario('dir134@hegamex.com', '{direccion}');
   v_ven := pg_temp.usuario('ven134@hegamex.com', '{ventas}');
   v_alm := pg_temp.usuario('alm134@hegamex.com', '{almacen}');
+  v_rh := pg_temp.usuario('rh134@hegamex.com', '{rrhh}');
   insert into articulos (clave, tipo, nombre, unidad) values ('T134-CANG', 'componente', 'Cangilón de prueba', 'pieza') returning id into v_art;
   insert into articulos (clave, tipo, nombre, unidad) values ('T134-CANG2', 'componente', 'Cangilón grande de prueba', 'pieza') returning id into v_otro;
 
@@ -15,10 +16,10 @@ begin
   select * into l from pedido_lineas where pedido_id = v_ped;
   assert l.articulo_id is null and l.cantidad = 1 and l.precio_unitario = 3000, format('antes de ligar: %s × %s', l.cantidad, l.precio_unitario);
 
-  -- Almacén no liga; ventas sí, diciendo que cada venta son 24 piezas.
-  perform pg_temp.como(v_alm);
+  -- RRHH no liga (almacén sí, desde el envío: ver 186); ventas sí, diciendo que cada venta son 24 piezas.
+  perform pg_temp.como(v_rh);
   begin perform ml_ligar_publicacion('MLM-T134', v_art, 24); v_ok := true; exception when insufficient_privilege then v_ok := false; end;
-  assert not v_ok, 'almacén no liga publicaciones';
+  assert not v_ok, 'RRHH no liga publicaciones';
   perform pg_temp.como(v_ven);
   perform ml_ligar_publicacion('MLM-T134', v_art, 24);
   perform pg_temp.como_postgres();

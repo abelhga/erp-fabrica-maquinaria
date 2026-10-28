@@ -91,6 +91,8 @@ export interface LineaEnvio {
   nota_inventario: string | null; paquete_kg: number | null; paquete_largo_cm: number | null; paquete_ancho_cm: number | null;
   paquete_alto_cm: number | null; paquete_piezas: number | null; series_orden: string[] | null; ordenes: string[] | null;
   ordenes_sin_terminar: number | null;
+  /** Publicación de ML que nadie ha ligado a un artículo: almacén la liga antes de cerrar la caja. */
+  publicacion_ml: string | null;
 }
 
 export interface Bulto {

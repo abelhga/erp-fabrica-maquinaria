@@ -10,7 +10,7 @@ import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { Pestanas, ListaPestanas, ContenidoPestana } from "@/components/ui/pestanas";
-import { Ligar, PublicacionesLigadas, type SinLigar } from "./componentes/PublicacionesML";
+import { Ligar, PublicacionesAjenas, PublicacionesLigadas, type SinLigar } from "./componentes/PublicacionesML";
 import { DineroMercadoLibre } from "./componentes/DineroML";
 import { supabase } from "@/lib/supabase";
 import { mensajeError, q, useTiempoReal } from "@/lib/consultas";
@@ -63,7 +63,7 @@ export default function MercadoLibre() {
         <Kpi titulo="Tiempo de respuesta" valor={mediana == null ? "—" : duracion(mediana)} icono={Clock} tono={mediana != null && mediana > 60 ? "aviso" : "marca"}
           detalle={enUnaHora == null ? "Sin respuestas en 30 días" : `${Math.round(enUnaHora * 100)} % en menos de 1 h (30 días)`} explica={GLOSARIO.tiempoRespuestaML} />
         <Kpi titulo="Publicaciones por ligar" valor={numero(sinLigar.data?.length ?? 0)} icono={Link2} tono={sinLigar.data?.length ? "aviso" : "ok"}
-          detalle="Sus ventas esperan para pedir el envío" explica={GLOSARIO.publicacionPorLigar} alClic={() => setParams({ seccion: "ligar" })} />
+          detalle="Su envío ya está pedido; se ligan antes de cerrar la caja" explica={GLOSARIO.publicacionPorLigar} alClic={() => setParams({ seccion: "ligar" })} />
       </div>
 
       <Pestanas value={seccion} onValueChange={(v) => setParams(v === "preguntas" ? {} : { seccion: v }, { replace: true })}>
@@ -98,14 +98,15 @@ export default function MercadoLibre() {
             </Tarjeta>}
           </>}
         </ContenidoPestana>
-        <ContenidoPestana value="ligar" className="pt-4">
+        <ContenidoPestana value="ligar" className="pt-4 space-y-5">
           {sinLigar.error ? <ErrorCarga error={sinLigar.error} /> : sinLigar.isLoading ? <Cargando filas={3} /> : (sinLigar.data ?? []).length === 0 ? (
-            <div className="tarjeta"><Vacio icono={Link2} titulo="Todas las publicaciones vendidas están ligadas" texto="Si se vende una publicación que el ERP no conoce (sin SKU o con uno que no es clave del catálogo), aparece aquí para decir qué artículo es." /></div>
+            <div className="tarjeta"><Vacio icono={Link2} titulo="Todas las publicaciones vendidas están ligadas" texto="Si se vende una publicación que el ERP no conoce (sin SKU o con uno que no es clave del catálogo), aparece aquí para decir qué artículo es. Su envío ya está pedido: almacén también la puede ligar al empacar." /></div>
           ) : (
             <Tarjeta>
               <ul className="divide-y divide-borde">{sinLigar.data!.map((s) => <Ligar key={s.item_id} s={s} editable={puede("ventas", 2) || puede("compras", 2)} />)}</ul>
             </Tarjeta>
           )}
+          <PublicacionesAjenas editable={puede("ventas", 2) || puede("compras", 2)} />
         </ContenidoPestana>
         <ContenidoPestana value="ligadas" className="pt-4">
           <PublicacionesLigadas editable={puede("ventas", 2) || puede("compras", 2)} />
