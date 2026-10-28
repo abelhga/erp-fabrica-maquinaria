@@ -428,14 +428,14 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
   }
 
   if (accion === "procesar") {
-    if (!(await puede(u.db, "ventas", 2)) && !(await esDireccion(u.db))) return json({ error: "Sin permiso" }, 403);
+    if (!(await puede(u.db, "mercadolibre", 2)) && !(await esDireccion(u.db))) return json({ error: "Sin permiso" }, 403);
     // Lo que se agotó en intentos vuelve a la fila cuando alguien lo pide a mano.
     await admin.from("ml_avisos").update({ intentos: 0 }).is("procesado_en", null).gte("intentos", MAX_INTENTOS);
     try { return json(await procesarPendientes(e, admin, 50)); } catch (err) { return json({ error: err instanceof Error ? err.message : String(err) }, 502); }
   }
 
   if (accion === "sincronizar") {
-    if (!(await puede(u.db, "ventas", 2)) && !(await esDireccion(u.db))) return json({ error: "Sin permiso" }, 403);
+    if (!(await puede(u.db, "mercadolibre", 2)) && !(await esDireccion(u.db))) return json({ error: "Sin permiso" }, 403);
     const b = o(await req.json().catch(() => ({})));
     const desde = txt(b.ventas_desde);
     if (desde && !/^\d{4}-\d{2}-\d{2}$/.test(desde)) return json({ error: "La fecha va como AAAA-MM-DD" }, 400);
@@ -443,7 +443,7 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
   }
 
   if (accion === "responder") {
-    if (!(await puede(u.db, "ventas", 2))) return json({ error: "Contestar preguntas es de ventas" }, 403);
+    if (!(await puede(u.db, "mercadolibre", 2))) return json({ error: "Contestar preguntas es de quien atiende Mercado Libre" }, 403);
     const b = o(await req.json().catch(() => ({})));
     const id = num(b.pregunta_id), texto = txt(b.texto);
     if (!id || !texto) return json({ error: "Falta la pregunta o la respuesta" }, 400);
