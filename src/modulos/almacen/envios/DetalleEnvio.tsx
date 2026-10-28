@@ -228,6 +228,6 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
 
 const NOMBRE_EVENTO: Record<string, string> = {
   solicitado: "pidió el envío", cotizado: "cotizó", guia: "registró la guía", bultos: "ajustó bultos", cambio: "cambió",
-  empacado: "empacó", inventario: "salida de inventario", enviado: "marcó la salida", entregado: "marcó entregado", cancelado: "canceló",
+  empacado: "empacó", foto_retirada: "retiró una foto", foto_agregada: "agregó una foto", inventario: "salida de inventario", enviado: "marcó la salida", entregado: "marcó entregado", cancelado: "canceló",
 };
 

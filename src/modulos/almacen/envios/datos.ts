@@ -101,7 +101,11 @@ export interface Bulto {
 export interface Archivo {
   id: string; envio_id: string | null; devolucion_id: string | null; tipo: TipoArchivo; ruta: string; nota: string | null;
   subido_por_nombre: string | null; en: string;
+  /** Retirada: no se borró (la evidencia no se borra), pero ya no cuenta; con su motivo. */
+  retirada: boolean; motivo_retiro: string | null; retirada_por_nombre: string | null; retirada_en: string | null;
 }
+/** Las que cuentan como evidencia: lo retirado se ve aparte. */
+export const vigentes = (archivos: Archivo[]) => archivos.filter((a) => !a.retirada);
 
 export interface Evento { id: number; envio_id: string | null; devolucion_id: string | null; tipo: string; nota: string | null; usuario: string | null; en: string }
 

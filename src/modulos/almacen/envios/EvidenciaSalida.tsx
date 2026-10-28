@@ -2,8 +2,9 @@ import { CheckCircle2, Hash, PackageCheck, ShieldCheck, Truck, UserRound } from 
 import { Insignia } from "@/components/ui/insignia";
 import { fechaYHora, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
-import { Galeria, Miniatura } from "./Archivos";
-import { estadoEnvio, useArchivos, useLineas, useUrlsFirmadas, type Envio } from "./datos";
+import { useSesion } from "@/lib/sesion";
+import { Galeria, Miniatura, SubirArchivo } from "./Archivos";
+import { estadoEnvio, useArchivos, useLineas, useUrlsFirmadas, vigentes, type Envio } from "./datos";
 
 /**
  * La evidencia de salida de un envío: fotos del paquete, check list palomeado,
@@ -11,7 +12,13 @@ import { estadoEnvio, useArchivos, useLineas, useUrlsFirmadas, type Envio } from
  * Mercado Libre o al cliente cuando dice que "llegó incompleto". No se edita.
  */
 export function EvidenciaSalida({ envio, className, titulo = true }: { envio: Envio; className?: string; titulo?: boolean }) {
+  const { puede } = useSesion();
   const archivos = useArchivos({ envioId: envio.id });
+  // Mientras la caja siga en el almacén, almacén puede retirar una foto equivocada y subir la
+  // correcta; ya en camino, la foto es la prueba y solo la gerencia la retira (lo mismo en la base).
+  const enAlmacen = !envio.enviado_en && envio.estado !== "cancelado";
+  const almacen = puede("envios", 2) && puede("inventario", 2);
+  const retirar = (almacen && enAlmacen) || puede("envios", 3);
   const lineas = useLineas(envio.id);
   const fotos = (archivos.data ?? []).filter((a) => a.tipo === "empaque" || a.tipo === "entrega");
   const guias = (archivos.data ?? []).filter((a) => a.tipo === "guia");
@@ -64,7 +71,10 @@ export function EvidenciaSalida({ envio, className, titulo = true }: { envio: En
               ))}
             </div>
           )}
-          <Galeria archivos={fotos} vacio="Sin fotos." />
+          <Galeria archivos={fotos} vacio="Sin fotos." retirar={retirar} />
+          {almacen && enAlmacen && vigentes(fotos).length < 6 && (
+            <SubirArchivo tipo="empaque" envioId={envio.id} texto="Agregar foto del paquete" maximo={6 - vigentes(fotos).length} />
+          )}
           {(envio.checklist?.length ?? 0) > 0 && (
             <ul className="grid gap-1 sm:grid-cols-2 text-sm">
               {envio.checklist!.map((c) => (
