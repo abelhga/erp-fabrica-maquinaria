@@ -36,7 +36,9 @@ export default function Pedidos() {
   const [canal, setCanal] = useState<"todos" | Canal>("todos");
   const [historicos, setHistoricos] = useState(false);
   const [alta, setAlta] = useState(false);
-  // En el celular: pedido (con fecha y estado) y cliente (con total y saldo), sin desplazarse de lado.
+  // En el celular, folio y cliente van resumidos (con fecha, estado y total) para no repetir
+  // Estado y Total; lo demás (entrega, producción, saldo, vendedor) sigue a la derecha y la
+  // tabla se desliza de lado. Antes se escondía y no había cómo verlo en el teléfono.
   const angosta = !useAncho(640);
 
   const lista = useQuery({
@@ -67,7 +69,7 @@ export default function Pedidos() {
       ),
     },
     {
-      clave: "fecha", titulo: "Fecha / entrega", oculta: angosta, explica: GLOSARIO.fechaCompromisoPedido, valor: (p) => p.fecha,
+      clave: "fecha", titulo: "Fecha / entrega", explica: GLOSARIO.fechaCompromisoPedido, valor: (p) => p.fecha,
       celda: (p) => (
         <div className="whitespace-nowrap">
           <p>{fecha(p.fecha)}</p>
@@ -82,16 +84,12 @@ export default function Pedidos() {
       celda: (p) => (
         <div className={angosta ? "w-[150px]" : "max-w-[260px]"}>
           <p className="truncate">{p.cliente}</p>
-          {angosta && (
-            <p className="text-sm font-medium cifra">{dineroEn(Number(p.total), p.moneda)}
-              {!p.historico && Number(p.saldo) > 0.5 && <span className="block text-[11px] font-normal text-aviso">saldo {dineroEn(Number(p.saldo), p.moneda)}</span>}
-            </p>
-          )}
+          {angosta && <p className="text-sm font-medium cifra">{dineroEn(Number(p.total), p.moneda)}</p>}
           {p.canal !== "directo" && <span data-explain={GLOSARIO.canalVenta}><Insignia className="mt-0.5" tono={p.canal === "mercadolibre" ? "aviso" : p.canal === "sitio_web" ? "info" : "neutro"}>{CANAL[p.canal]}</Insignia></span>}
         </div>
       ),
     },
-    { clave: "vendedor", titulo: "Vendedor", valor: (p) => p.vendedor, oculta: angosta || (!puede("ventas", 3) && !puede("finanzas", 1) && !puede("produccion", 2)) },
+    { clave: "vendedor", titulo: "Vendedor", valor: (p) => p.vendedor, oculta: !puede("ventas", 3) && !puede("finanzas", 1) && !puede("produccion", 2) },
     {
       clave: "estado", titulo: "Estado", oculta: angosta, explica: GLOSARIO.estadoPedido, valor: (p) => ESTADO_PEDIDO[p.estado].texto,
       celda: (p) => (
@@ -102,7 +100,7 @@ export default function Pedidos() {
       ),
     },
     {
-      clave: "avance", titulo: "Producción", oculta: angosta, explica: GLOSARIO.avancePedido, valor: (p) => p.avance ?? -1, sinBusqueda: true,
+      clave: "avance", titulo: "Producción", explica: GLOSARIO.avancePedido, valor: (p) => p.avance ?? -1, sinBusqueda: true,
       celda: (p) => p.ordenes ? (
         <div className="w-28">
           <Barra valor={p.avance} tono={p.avance === 100 ? "ok" : "marca"} />
@@ -112,7 +110,7 @@ export default function Pedidos() {
     },
     { clave: "total", titulo: "Total", oculta: angosta, alinear: "der", sinBusqueda: true, valor: (p) => Number(p.total), celda: (p) => <span className="font-medium whitespace-nowrap">{dineroEn(Number(p.total), p.moneda)}</span> },
     {
-      clave: "saldo", titulo: "Saldo", oculta: angosta, alinear: "der", sinBusqueda: true, explica: GLOSARIO.saldoPorCobrar, valor: (p) => Number(p.saldo),
+      clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, explica: GLOSARIO.saldoPorCobrar, valor: (p) => Number(p.saldo),
       celda: (p) => p.historico ? <span className="text-tenue text-xs">en saldo de arranque</span> : (
         <div className="whitespace-nowrap">
           {Number(p.saldo) > 0.5 ? <p className="font-medium text-aviso">{dineroEn(Number(p.saldo), p.moneda)}</p> : <p className="text-ok text-xs font-medium">pagado</p>}
