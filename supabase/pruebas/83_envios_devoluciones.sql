@@ -259,11 +259,13 @@ begin
     assert false, 'almacén borró una foto de evidencia';
   exception when insufficient_privilege then null;
   end;
+  -- Empacado pero todavía en el almacén, sí se puede agregar (para reemplazar una foto retirada,
+  -- 183): aquí solo la frena que el archivo no existe. Ya en camino, se cierra (lo prueba 183).
   begin
     perform agregar_archivo_envio('envios/' || v_env || '/otra.jpg', 'empaque', v_env);
-    assert false, 'se agregó una foto de empaque después de empacar';
+    assert false, 'se registró una foto que no se subió';
   exception when others then
-    if sqlerrm not like '%evidencia quedó cerrada%' then raise; end if;
+    if sqlerrm not like '%no se subió completo%' then raise; end if;
   end;
   perform pg_temp.como_postgres();
   begin

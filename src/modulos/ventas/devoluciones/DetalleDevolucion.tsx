@@ -39,7 +39,7 @@ export function DetalleDevolucion({ dev: d }: { dev: Devolucion }) {
   const actualizar = useAccion((datos: Record<string, unknown>) => q(supabase.rpc("actualizar_devolucion", { p_dev: d.id, p_datos: datos })), { ...inv, exito: "Guardado" });
   const responder = useAccion((r: string) => q(supabase.rpc("responder_reclamo", { p_dev: d.id, p_respuesta: r })), { ...inv, exito: "Respuesta registrada", alTerminar: () => setDlg(null) });
   const cancelar = useAccion((m: string) => q(supabase.rpc("cancelar_devolucion", { p_dev: d.id, p_motivo: m })), { ...inv, exito: "Cancelada", alTerminar: () => setDlg(null) });
-  const fotosRecepcion = (archivos.data ?? []).filter((a) => a.tipo === "recepcion");
+  const fotosRecepcion = (archivos.data ?? []).filter((a) => a.tipo === "recepcion" && !a.retirada);
   const documentos = (archivos.data ?? []).filter((a) => a.tipo === "documento");
   const enviosVenta = (envios.data ?? []).filter((e) => e.estado !== "cancelado");
   const restante = faltan(d.vence);
@@ -118,7 +118,9 @@ export function DetalleDevolucion({ dev: d }: { dev: Devolucion }) {
       {(d.tipo === "devolucion" || fotosRecepcion.length > 0 || documentos.length > 0) && (
         <section className="space-y-2">
           <h4 className="font-semibold">Cómo llegó</h4>
-          <Galeria archivos={[...fotosRecepcion, ...documentos]} vacio={d.tipo === "devolucion" ? "Sin fotos todavía: al llegar, fotos antes de abrirla." : undefined} />
+          <Galeria archivos={(archivos.data ?? []).filter((a) => a.tipo === "recepcion" || a.tipo === "documento")}
+            retirar={(almacen && d.estado !== "resuelta" && d.estado !== "cancelada") || puede("envios", 3)}
+            vacio={d.tipo === "devolucion" ? "Sin fotos todavía: al llegar, fotos antes de abrirla." : undefined} />
           {d.abierta && d.estado !== "recibida" && (
             <div className="flex flex-wrap gap-2">
               {almacen && d.tipo === "devolucion" && <SubirArchivo tipo="recepcion" devolucionId={d.id} texto="Foto de cómo llegó" grande className="sm:w-auto" />}

@@ -7,7 +7,7 @@ import { numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { CampoNumero } from "@/modulos/ventas/componentes/campos";
 import { Galeria, SubirArchivo } from "./Archivos";
-import { CLAVE, useArchivos, useChecklist, type Bulto, type Envio, type LineaEnvio } from "./datos";
+import { CLAVE, useArchivos, useChecklist, vigentes, type Bulto, type Envio, type LineaEnvio } from "./datos";
 
 const esEquipo = (l: LineaEnvio) => l.articulo_tipo === "equipo" || l.articulo_tipo === "subensamble";
 
@@ -20,7 +20,9 @@ export function Empacar({ envio, lineas, bultosIniciales, maxFotos = 6 }: {
   envio: Envio; lineas: LineaEnvio[]; bultosIniciales: Bulto[]; maxFotos?: number;
 }) {
   const archivos = useArchivos({ envioId: envio.id });
-  const fotos = (archivos.data ?? []).filter((a) => a.tipo === "empaque");
+  const todas = (archivos.data ?? []).filter((a) => a.tipo === "empaque");
+  // Lo retirado no cuenta para «hay foto» ni para el tope.
+  const fotos = vigentes(todas);
   const checklist = useChecklist();
   const hayEquipo = lineas.some(esEquipo);
   const hayComponente = lineas.some((l) => !esEquipo(l));
@@ -83,7 +85,7 @@ export function Empacar({ envio, lineas, bultosIniciales, maxFotos = 6 }: {
       <section className="space-y-3">
         {paso(1, `Fotos del paquete (${fotos.length} de ${maxFotos})`, fotos.length > 0)}
         <p className="text-sm text-tenue">Abierto con lo que lleva y cerrado con la etiqueta. Son la prueba si llega un reclamo de "llegó incompleto".</p>
-        <Galeria archivos={fotos} />
+        <Galeria archivos={todas} retirar />
         {fotos.length < maxFotos && (
           <SubirArchivo tipo="empaque" envioId={envio.id} texto={fotos.length ? "Tomar otra foto" : "Tomar foto del paquete"} maximo={maxFotos - fotos.length} grande />
         )}
