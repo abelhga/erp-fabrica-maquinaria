@@ -19,7 +19,7 @@ export const ROLES: { rol: Rol; descripcion: string }[] = [
   { rol: "recepcion", descripcion: "Contesta el teléfono: registra leads para ventas, ve si quien llama ya es cliente y de quién, y ve el catálogo con precios de lista. No ve clientes, ventas ni costos." },
   { rol: "mantenimiento", descripcion: "Máquinas y herramienta del taller: programa preventivo, fallas, checklist, refacciones y préstamo de herramienta. Ve el avance del taller y las existencias; no ve ventas, clientes ni costos de equipos." },
   { rol: "ingenieria_procesos", descripcion: "Ingeniería de procesos (lean): métricas de la planta, el taller, las cuadrillas y las horas de cada etapa. Ve costos para medir el costo del desperdicio; no ve márgenes ni precios de venta." },
-  { rol: "marketing", descripcion: "Marketing: el catálogo con precios de lista, todos los leads y a quién le llegan, y Mercado Libre (preguntas y publicaciones). No ve clientes, cotizaciones, pedidos, costos ni márgenes." },
+  { rol: "marketing", descripcion: "Marketing: el catálogo con precios de lista (y pone sus fotos), todos los leads y a quién le llegan, y Mercado Libre (preguntas y publicaciones). No ve clientes, cotizaciones, pedidos, costos ni márgenes." },
   { rol: "importaciones", descripcion: "Embarques, documentos con el agente aduanal, pagos en dólares y costo puesto en planta." },
 ];
 
@@ -41,7 +41,7 @@ export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; ale
     alerta: "Quien tenga Nómina, aunque sea en nivel 1, ve lo que gana cada persona. Los jefes califican con Objetivos sin necesitarla." },
   { modulo: "servicio", nombre: "Servicio", descripcion: "Servicio postventa a clientes: instalaciones, garantías y cuadrillas. 2: pedir servicios · 3: programar y cerrar." },
   { modulo: "mantenimiento", nombre: "Mantenimiento", descripcion: "Máquinas y herramienta del taller. 1: ver · 2: reportar fallas y subir fotos (con Producción 2 también atiende y presta herramienta) · 3: administrar el programa y cerrar órdenes." },
-  { modulo: "catalogo", nombre: "Catálogo", descripcion: "1: ver lo que se vende con foto, descripción, precio de lista y existencia (recepción y ventas). Sin listas de materiales, planos, proveedores ni costos (eso es Ingeniería).",
+  { modulo: "catalogo", nombre: "Catálogo", descripcion: "1: ver lo que se vende con foto, descripción, precio de lista y existencia (recepción y ventas) · 2: poner la foto (marketing). Sin listas de materiales, planos, proveedores ni costos (eso es Ingeniería).",
     alerta: "Los precios de venta los ve quien tiene Ventas, Catálogo, Márgenes o Finanzas; ningún otro puesto." },
   { modulo: "leads", nombre: "Leads", descripcion: "Recados de gente interesada que capturan recepción y ventas. 1: ver los suyos · 2: capturar y tomar · 3: asignar, ver todos y decidir a quién le llegan." },
   { modulo: "mercadolibre", nombre: "Mercado Libre", descripcion: "Preguntas de compradores y publicaciones de ML. 1: ver · 2: contestar preguntas y ligar publicaciones a su artículo. El dinero de cada venta es de Ventas y Finanzas." },

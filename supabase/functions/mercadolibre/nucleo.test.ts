@@ -68,7 +68,8 @@ describe("traducciones de ML", () => {
 
   it("una pregunta con y sin respuesta", () => {
     expect(normalizarPregunta({ id: 77, item_id: "MLM1", text: "¿Hay?", status: "UNANSWERED", date_created: "2026-10-16T09:00:00Z" }, "Polea"))
-      .toMatchObject({ id: 77, item_id: "MLM1", titulo: "Polea", texto: "¿Hay?", estado: "UNANSWERED", respuesta: null });
+      .toMatchObject({ id: 77, item_id: "MLM1", titulo: "Polea", texto: "¿Hay?", estado: "UNANSWERED", respuesta: null, comprador_id: null });
+    expect(normalizarPregunta({ id: 80, status: "UNANSWERED", from: { id: 555 } }).comprador_id).toBe(555);
     expect(normalizarPregunta({ id: 78, status: "ANSWERED", answer: { text: "Sí", date_created: "2026-10-16T10:00:00Z" } }).respuesta).toBe("Sí");
     // Publicación pausada o cerrada: la base la deja fuera de las pendientes.
     expect(normalizarPregunta({ id: 79, status: "UNANSWERED" }, "Polea", false).item_activo).toBe(false);
@@ -109,9 +110,14 @@ const falsa: typeof fetch = async (entrada, init) => {
     shipping: { id: 99 }, payments: [{ id: 5551, status: "approved", transaction_amount: 1160, marketplace_fee: 139.2 }],
     order_items: [{ item: { id: "MLM-T-ML", title: "Polea prueba ML", seller_sku: "T-ML-POLEA" }, quantity: 1, unit_price: 1160 }] });
   if (u.pathname === "/shipments/99") return r(envioML);
-  if (u.pathname === "/questions/880001") return r({ id: 880001, item_id: "MLM-T-ML", text: "¿Tienen factura?", status: "UNANSWERED", date_created: "2026-10-16T11:00:00Z" });
+  if (u.pathname === "/questions/880001") return r({ id: 880001, item_id: "MLM-T-ML", text: "¿Tienen factura?", status: "UNANSWERED", date_created: "2026-10-16T11:00:00Z", from: { id: 555 } });
   if (u.pathname === "/items/MLM-T-ML") return r({ title: "Polea prueba ML", status: "active" });
   // Lo que ya estaba en ML al conectar (sincronizar).
+  // Lo que ese comprador ya había preguntado en la publicación (con y sin la pregunta nueva).
+  if (u.pathname === "/questions/search" && u.searchParams.get("from") === "555") return r({ questions: [
+    { id: 880003, item_id: "MLM-T-ML", text: "¿De qué medida es?", status: "ANSWERED", date_created: "2026-10-15T09:00:00Z", from: { id: 555 },
+      answer: { text: "Es de 4 pulgadas.", date_created: "2026-10-15T09:30:00Z" } },
+    { id: 880001, item_id: "MLM-T-ML", text: "¿Tienen factura?", status: "UNANSWERED", date_created: "2026-10-16T11:00:00Z", from: { id: 555 } }] });
   if (u.pathname === "/questions/search") return r({ questions: [{ id: 880002 }] });
   if (u.pathname === "/questions/880002") return r({ id: 880002, item_id: "MLM-T-ML", text: "¿Hacen envíos a Monterrey?", status: "UNANSWERED", date_created: "2026-10-10T11:00:00Z" });
   // Un reclamo de una venta de antes de conectar: no está en el ERP y nunca va a llegar sola.
@@ -145,7 +151,7 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
       await c.query("delete from public.ml_ventas where pedido_id in (select id from _p)");
       await c.query("delete from public.pedido_lineas where pedido_id in (select id from _p)");
       await c.query("delete from public.pedidos where id in (select id from _p)");
-      await c.query("delete from public.ml_preguntas where id in (880001, 880002)");
+      await c.query("delete from public.ml_preguntas where id in (880001, 880002, 880003)");
       await c.query("delete from public.avisos where tipo = 'ml_reclamo_sin_venta' and registro_id = '5009'");
       await c.query("delete from public.ml_avisos where resource = '/post-purchase/v1/claims/5009'");
       await c.query("delete from public.ml_avisos where resource = any($1)", [[`/orders/${ORDEN}`, "/questions/880001", "/questions/880002", "/shipments/99"]]);
@@ -209,6 +215,9 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
     await aviso({ topic: "questions", resource: "/questions/880001", user_id: 4242, application_id: "APP-PRUEBA" });
     const { data: q } = await admin.from("ml_preguntas").select("estado, titulo_publicacion, articulo_id").eq("id", 880001).single();
     expect(q).toEqual({ estado: "pendiente", titulo_publicacion: "Polea prueba ML", articulo_id: articulo });
+    // La pregunta anterior del mismo comprador llega ya contestada, como contexto (sin aviso).
+    expect((await admin.from("ml_preguntas").select("estado, comprador_id, respuesta").eq("id", 880003).single()).data)
+      .toEqual({ estado: "contestada", comprador_id: 555, respuesta: "Es de 4 pulgadas." });
 
     const db = createClient(URL_SB, ANON, { auth: { persistSession: false } });
     const { data: s } = await db.auth.signInWithPassword({ email: "isaac@hegamex.com", password: "hegamex-local" });

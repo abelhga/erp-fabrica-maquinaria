@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, ImageOff } from "lucide-react";
+import { BookOpen, ImageOff, Link2 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { Lateral } from "@/components/ui/dialogo";
 import { Insignia } from "@/components/ui/insignia";
 import { supabase } from "@/lib/supabase";
-import { q } from "@/lib/consultas";
+import { q, useAccion } from "@/lib/consultas";
+import { useSesion } from "@/lib/sesion";
+import { BotonSubirFoto } from "@/components/datos/SubirFoto";
 import { dinero, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { traerTodas } from "@/modulos/costeo/componentes/comun";
@@ -24,7 +26,7 @@ interface Articulo {
   categoria: string | null; imagen_url: string | null; precio: number | null; existencia: number | null;
 }
 
-type FiltroCat = "todos" | "equipo" | "componente" | "con_existencia";
+type FiltroCat = "todos" | "equipo" | "componente" | "con_existencia" | "sin_foto";
 
 function Foto({ url, grande }: { url: string | null; grande?: boolean }) {
   const [rota, setRota] = useState(false);
@@ -39,7 +41,27 @@ function Foto({ url, grande }: { url: string | null; grande?: boolean }) {
   return <img src={url} alt="" loading="lazy" onError={() => setRota(true)} className={cn("object-contain border border-borde bg-fondo", clase)} />;
 }
 
+/** Marketing (catálogo 2) pone la foto: la sube o pega la liga de Drive; nada más de la ficha. */
+function CambiarFoto({ a, alCambiar }: { a: Articulo; alCambiar: (url: string | null) => void }) {
+  const [liga, setLiga] = useState("");
+  const poner = useAccion((url: string | null) => q<string | null>(supabase.rpc("poner_imagen_articulo", { p_articulo: a.id, p_url: url })), {
+    exito: (u) => u ? "Foto guardada: ya sale en el catálogo y en las cotizaciones nuevas" : "Foto quitada",
+    invalidar: [["catalogo_venta"]], alTerminar: (u) => { alCambiar(u); setLiga(""); },
+  });
+  return (
+    <div className="flex flex-wrap items-center gap-2" data-explain={GLOSARIO.fotoCatalogo} data-explain-title="Foto del catálogo">
+      <BotonSubirFoto carpeta={`articulos/${a.id}`} texto={a.imagen_url ? "Cambiar foto" : "Subir foto"} alSubir={(url) => poner.mutate(url)} />
+      <form className="flex flex-1 min-w-[200px] items-center gap-2" onSubmit={(e) => { e.preventDefault(); if (liga.trim()) poner.mutate(liga.trim()); }}>
+        <Link2 className="h-4 w-4 text-tenue shrink-0" />
+        <input className="campo h-9 flex-1 text-sm" value={liga} onChange={(e) => setLiga(e.target.value)} placeholder="o pega la liga (Drive o https://…) y Enter" />
+      </form>
+      {a.imagen_url && <button type="button" className="text-sm text-peligro hover:underline" onClick={() => poner.mutate(null)}>Quitar</button>}
+    </div>
+  );
+}
+
 export default function Catalogo() {
+  const { puede } = useSesion();
   const [params, setParams] = useSearchParams();
   const filtro = (params.get("filtro") as FiltroCat) ?? "todos";
   // ?articulo=… viene del buscador de arriba: abre su ficha.
@@ -74,6 +96,7 @@ export default function Catalogo() {
     const f = cat.data ?? [];
     if (filtro === "equipo" || filtro === "componente") return f.filter((a) => a.tipo === filtro);
     if (filtro === "con_existencia") return f.filter((a) => (a.existencia ?? 0) > 0);
+    if (filtro === "sin_foto") return f.filter((a) => !a.imagen_url);
     return f;
   }, [cat.data, filtro]);
 
@@ -83,6 +106,7 @@ export default function Catalogo() {
     { valor: "equipo", texto: "Equipos", cuenta: cuenta((a) => a.tipo === "equipo") },
     { valor: "componente", texto: "Componentes", cuenta: cuenta((a) => a.tipo === "componente") },
     { valor: "con_existencia", texto: "Con existencia", cuenta: cuenta((a) => (a.existencia ?? 0) > 0), explica: GLOSARIO.enPlanta },
+    { valor: "sin_foto", texto: "Sin foto", cuenta: cuenta((a) => !a.imagen_url) },
   ];
 
   const columnas: Columna<Articulo>[] = [
@@ -126,6 +150,7 @@ export default function Catalogo() {
         {abierto && (
           <div className="space-y-5">
             <Foto key={abierto.imagen_url ?? abierto.id} url={abierto.imagen_url} grande />
+            {puede("catalogo", 2) && <CambiarFoto a={abierto} alCambiar={(url) => setAbierto({ ...abierto, imagen_url: url })} />}
             <dl className="grid grid-cols-2 gap-4">
               <div data-explain={GLOSARIO.precioListaCatalogo} data-explain-title="Precio de lista">
                 <dt className="text-xs text-tenue">Precio de lista</dt>

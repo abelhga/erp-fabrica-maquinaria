@@ -22,6 +22,7 @@ import { GLOSARIO } from "@/tutorial/glosario";
 interface Pregunta {
   id: number; item_id: string; articulo_id: string | null; titulo_publicacion: string | null; texto: string;
   estado: "pendiente" | "contestada" | "borrada" | "sin_publicacion"; recibida_en: string; respuesta: string | null; contestada_en: string | null;
+  comprador_id: number | null;
 }
 
 const minutos = (p: Pregunta) => p.contestada_en ? (new Date(p.contestada_en).getTime() - new Date(p.recibida_en).getTime()) / 60_000 : null;
@@ -125,7 +126,15 @@ function PreguntaPendiente({ p, editable }: { p: Pregunta; editable: boolean }) 
   const qc = useQueryClient();
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const { puede } = useSesion();
   const espera = (Date.now() - new Date(p.recibida_en).getTime()) / 60_000;
+  // Lo que este comprador ya preguntó en la misma publicación: muchas preguntas siguen a otra.
+  const antes = useQuery({
+    queryKey: ["ml_preguntas", "comprador", p.item_id, p.comprador_id],
+    enabled: p.comprador_id != null,
+    queryFn: () => q<Pregunta[]>(supabase.from("ml_preguntas").select("*").eq("item_id", p.item_id).eq("comprador_id", p.comprador_id!)
+      .neq("id", p.id).neq("estado", "borrada").order("recibida_en")),
+  });
   async function enviar() {
     if (!texto.trim()) return;
     setEnviando(true);
@@ -143,10 +152,22 @@ function PreguntaPendiente({ p, editable }: { p: Pregunta; editable: boolean }) 
   return (
     <Tarjeta className="p-4 space-y-2">
       <div className="flex flex-wrap items-center gap-2 text-xs text-tenue">
-        {p.articulo_id ? <Link to={`/costeo/componentes/${p.articulo_id}`} className="text-marca-texto hover:underline">{p.titulo_publicacion ?? p.item_id}</Link> : <span>{p.titulo_publicacion ?? p.item_id}</span>}
+        {p.articulo_id ? <Link to={puede("costeo", 1) ? `/costeo/componentes/${p.articulo_id}` : `/catalogo?articulo=${p.articulo_id}`} className="text-marca-texto hover:underline">{p.titulo_publicacion ?? p.item_id}</Link> : <span>{p.titulo_publicacion ?? p.item_id}</span>}
         <span>· {fechaYHora(p.recibida_en)}</span>
         <Insignia tono={espera > 60 ? "peligro" : espera > 30 ? "aviso" : "info"}>esperando {duracion(espera)}</Insignia>
       </div>
+      {(antes.data?.length ?? 0) > 0 && (
+        <div className="rounded-lg border border-borde bg-fondo/60 px-3 py-2 space-y-2 text-sm" data-explain={GLOSARIO.preguntasAnterioresML} data-explain-title="Lo que ya preguntó">
+          <p className="text-xs font-medium text-tenue">Este comprador ya preguntó en esta publicación</p>
+          {antes.data!.map((x) => (
+            <div key={x.id}>
+              <p><span className="text-xs text-tenue">{fechaYHora(x.recibida_en)} · </span>{x.texto}</p>
+              {x.respuesta ? <p className="pl-3 border-l-2 border-ok text-tenue">{x.respuesta}</p>
+                : <p className="pl-3 text-xs text-aviso">{x.estado === "pendiente" ? "Sin contestar todavía" : "No se contestó"}</p>}
+            </div>
+          ))}
+        </div>
+      )}
       <p className="font-medium">{p.texto}</p>
       {editable && (
         <form className="flex gap-2 items-end" onSubmit={(e) => { e.preventDefault(); enviar(); }}>
