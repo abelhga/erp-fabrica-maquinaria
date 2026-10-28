@@ -35,10 +35,13 @@ begin
   -- Antes de pagarse no es venta.
   assert ml_registrar_orden('{"id":"2000119009","estado":"payment_required","items":[]}') is null, 'registró una venta sin pagar';
 
-  -- 3. Publicación desconocida: la partida espera, sin envío, hasta que alguien la liga.
+  -- 3. Publicación desconocida: el envío se pide igual (ML ya imprimió la guía) con la partida sin
+  -- artículo; al ligarla, la partida del envío toma el artículo.
   v_ped3 := ml_registrar_orden('{"id":"2000119003","estado":"paid","items":[{"item_id":"MLM119Z","titulo":"Catarina misteriosa","sku":"","cantidad":3,"precio":116}]}');
   assert (select articulo_id from pedido_lineas where pedido_id = v_ped3) is null, 'inventó el artículo';
-  assert not exists (select 1 from envios where pedido_id = v_ped3), 'pidió envío de algo sin artículo';
+  assert exists (select 1 from envio_lineas el join envios e on e.id = el.envio_id
+                 where e.pedido_id = v_ped3 and el.articulo_id is null and el.publicacion_ml = 'MLM119Z' and el.cantidad = 3),
+    'el paquete de una publicación sin ligar no se ve en envíos';
   assert exists (select 1 from ml_publicaciones_sin_ligar where item_id = 'MLM119Z'), 'no quedó por ligar';
   assert exists (select 1 from avisos where usuario_id = v_jc and tipo = 'ml_por_ligar'), 'el responsable no supo que hay que ligar';
 
@@ -58,7 +61,9 @@ begin
   assert v_n = 1, format('ligó %s partidas', v_n);
   perform pg_temp.como_postgres();
   assert (select articulo_id from pedido_lineas where pedido_id = v_ped3) = v_a1, 'la partida no tomó el artículo';
-  assert exists (select 1 from envios where pedido_id = v_ped3 and estado <> 'cancelado'), 'al ligar no se pidió el envío';
+  assert (select count(*) from envios where pedido_id = v_ped3 and estado <> 'cancelado') = 1, 'al ligar se pidió otro envío';
+  assert exists (select 1 from envio_lineas el join envios e on e.id = el.envio_id
+                 where e.pedido_id = v_ped3 and el.articulo_id = v_a1 and el.cantidad = 3), 'la partida del envío no tomó el artículo';
   assert not exists (select 1 from ml_publicaciones_sin_ligar where item_id = 'MLM119Z'), 'sigue por ligar';
 
   -- 4. Cancelada en ML: el pedido y su envío sin empacar se cancelan.

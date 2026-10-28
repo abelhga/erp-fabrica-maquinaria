@@ -332,7 +332,8 @@ function Publicaciones({ a }: { a: ArticuloCatalogo }) {
                           {x.url ? <a href={x.url} target="_blank" rel="noreferrer" className="truncate max-w-[260px] hover:underline inline-flex items-center gap-1">{x.titulo ?? x.id_externo}<ExternalLink className="h-3 w-3 shrink-0" /></a>
                             : <span className="truncate max-w-[260px]">{x.titulo ?? x.id_externo}</span>}
                           <span className="cifra font-medium">{dinero(x.precio)}</span>
-                          {x.piezas_por_paquete > 1 && <Insignia>paquete de {x.piezas_por_paquete}</Insignia>}
+                          {Number(x.piezas_por_paquete) > 1 ? <Insignia>paquete de {numero(Number(x.piezas_por_paquete))}</Insignia>
+                            : Number(x.piezas_por_paquete) < 1 && <Insignia>{numero(Number(x.piezas_por_paquete))} por venta</Insignia>}
                           {x.estado !== "activa" && <Insignia tono="neutro">{x.estado}</Insignia>}
                           {abajo && <Insignia tono="aviso" punto>abajo del sugerido</Insignia>}
                         </div>

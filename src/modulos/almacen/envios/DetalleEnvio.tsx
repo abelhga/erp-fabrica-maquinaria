@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { AlertTriangle, Ban, Check, ClipboardCopy, ExternalLink, FileText, PackageCheck, Send, Truck, Warehouse } from "lucide-react";
+import { AlertTriangle, Ban, Check, ClipboardCopy, ExternalLink, FileText, Link2, PackageCheck, Send, Truck, Warehouse } from "lucide-react";
 import { Boton } from "@/components/ui/boton";
 import { Cargando } from "@/components/ui/estados";
 import { Seleccion } from "@/components/ui/campo";
+import { Dialogo } from "@/components/ui/dialogo";
+import { FormaLigar } from "@/modulos/ventas/componentes/PublicacionesML";
 import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
@@ -31,6 +33,8 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
   const skydropx = captura && e.tipo === "paqueteria" && !e.numero_guia;
   const plan = usePlanSalida(e.id, almacen && !e.inventario_descontado_en && e.estado !== "cancelado");
   const [dlg, setDlg] = useState<null | "skydropx" | "cotizar" | "guia" | "entregado" | "cancelar">(null);
+  const [ligar, setLigar] = useState<{ item: string; titulo: string } | null>(null);
+  const ligaML = puede("envios", 2) || puede("ventas", 2) || puede("compras", 2);
 
   const inv = { invalidar: [CLAVE] };
   const actualizar = useAccion((datos: Record<string, unknown>) => q(supabase.rpc("actualizar_envio", { p_envio: e.id, p_datos: datos })), { ...inv, exito: "Guardado" });
@@ -49,6 +53,7 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
   ].filter((p) => p.aplica);
 
   const problemas = (plan.data ?? []).filter((p) => p.problema);
+  const sinLigar = new Set((lineas.data ?? []).filter((l) => !l.articulo_id && l.publicacion_ml).map((l) => l.id));
   const copiarDestino = () => {
     const t = [e.destinatario, e.telefono, e.destino].filter(Boolean).join("\n");
     navigator.clipboard?.writeText(t).then(() => toast.success("Destino copiado para la plataforma de la paquetería"), () => toast.error("No se pudo copiar"));
@@ -147,8 +152,14 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
                 <span className="cifra font-semibold w-10 text-right">{numero(Number(l.cantidad))}</span>
                 <span className="flex-1 min-w-[10rem]">{l.nombre}{l.clave && <span className="text-xs text-tenue cifra"> · {l.clave}</span>}
                   {l.series.length > 0 && <span className="block text-xs">Serie <b className="cifra">{l.series.join(", ")}</b></span>}
-                  {l.nota_inventario && <span className="block text-xs text-tenue">{l.nota_inventario}</span>}</span>
-                {almacen && e.abierto && !e.empacado_en && e.tipo !== "full" && e.tipo !== "proveedor" && l.articulo_tipo !== "equipo" ? (
+                  {l.nota_inventario && <span className="block text-xs text-tenue">{l.nota_inventario}</span>}
+                  {!l.articulo_id && l.publicacion_ml && (
+                    <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-aviso" data-explain={GLOSARIO.publicacionPorLigar} data-explain-title="Sin artículo">
+                      <AlertTriangle className="h-3.5 w-3.5" />Publicación {l.publicacion_ml} sin ligar: di qué artículo es antes de cerrar la caja
+                      {ligaML && e.estado !== "cancelado" && <Boton variante="secundario" tamano="sm" onClick={() => setLigar({ item: l.publicacion_ml!, titulo: l.descripcion })}><Link2 className="h-3.5 w-3.5" />Ligar artículo</Boton>}
+                    </span>
+                  )}</span>
+                {almacen && e.abierto && !e.empacado_en && e.tipo !== "full" && e.tipo !== "proveedor" && l.articulo_tipo !== "equipo" && l.articulo_id ? (
                   <Seleccion className="h-8 w-40 text-xs" value={l.almacen_id ?? ""} aria-label={`Almacén de salida de ${l.nombre}`}
                     onChange={(ev) => actualizar.mutate({ almacenes: [{ linea_id: l.id, almacen_id: Number(ev.target.value) }] })}>
                     {(almacenes.data ?? []).filter((a) => a.disponible_para_planta).map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
@@ -172,7 +183,7 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
           <p className="font-medium flex items-center gap-1.5">{problemas.length > 0 && <AlertTriangle className="h-4 w-4 text-peligro" />}Al salir, en el inventario</p>
           {plan.data!.map((p) => (
             <p key={p.linea_id} className={cn(p.problema && "text-peligro")}>
-              {p.accion === "nada" ? <span className="text-tenue">{p.articulo}: {p.nota ?? "no se descuenta"}</span>
+              {p.accion === "nada" ? <span className="text-tenue">{p.articulo}: {sinLigar.has(p.linea_id) ? "se descuenta cuando se ligue el artículo" : p.nota ?? "no se descuenta"}</span>
                 : <>{p.accion === "traspaso" ? "Pasan" : "Salen"} <b className="cifra">{numero(Number(p.descontar))}</b> {p.articulo} de {p.almacen}{p.nota ? ` · ${p.nota}` : ""}</>}
               {p.problema && <span className="block text-xs">{p.problema}</span>}
             </p>
@@ -214,6 +225,12 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
           : <>Pedido {e.pedido_folio}</>}</p>
       )}
 
+      {ligar && (
+        <Dialogo abierto alCambiar={(v) => !v && setLigar(null)} titulo="Ligar artículo" descripcion={ligar.titulo}>
+          <p className="mb-3 text-sm text-tenue">Elige qué artículo del catálogo es esta publicación. Se liga una vez: esta venta y las siguientes ya entran con su artículo.</p>
+          <FormaLigar item={ligar.item} titulo={ligar.titulo} alTerminar={() => setLigar(null)} />
+        </Dialogo>
+      )}
       {skydropx && <DialogoSkydropx envio={e} abierto={dlg === "skydropx"} alCambiar={(v) => setDlg(v ? "skydropx" : null)} />}
       <DialogoCotizar envio={e} abierto={dlg === "cotizar"} alCambiar={(v) => setDlg(v ? "cotizar" : null)} />
       <DialogoGuia envio={e} abierto={dlg === "guia"} alCambiar={(v) => setDlg(v ? "guia" : null)} />
