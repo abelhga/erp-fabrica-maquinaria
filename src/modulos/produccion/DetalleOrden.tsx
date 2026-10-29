@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft, ArrowUpRight, Ban, CheckCircle2, Hourglass, ClipboardX, ListPlus, MessageSquarePlus, PackageOpen, Pause, Pencil, Play, PlayCircle, Truck, Undo2 } from "lucide-react";
+  ArrowLeft, ArrowUpRight, Ban, CheckCircle2, Hourglass, ClipboardX, ListPlus, MessageSquarePlus, PackageOpen, Pause, Pencil, Play, PlayCircle, Printer, Truck, Undo2 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { PlanosOrden } from "@/components/planos/PlanosArticulo";
@@ -23,7 +23,7 @@ import { ESTADO_OP, ESTADO_OPERACION, PRIORIDAD, horas, textoEvento, cifra } fro
 import { AvanceEtapa } from "./componentes/AvanceEtapa";
 import { GanttCompacto } from "./Gantt";
 import { GLOSARIO } from "@/tutorial/glosario";
-import { DescripcionVenta } from "./componentes/DescripcionVenta";
+import { DescripcionVenta, abrirDescripcion } from "./componentes/DescripcionVenta";
 
 interface HorasHombre {
   operacion_id: string; horas_estimadas: number; horas_reales: number; horas_sin_nombre: number;
@@ -269,7 +269,7 @@ export default function DetalleOrden() {
         </Dato>
       </Tarjeta>
       {o.notas && <p className="text-sm rounded-lg bg-aviso-suave border border-aviso/25 px-3 py-2"><b className="font-medium">Notas:</b> {o.notas}</p>}
-      {o.pedido_id && <LoVendido ordenId={id} />}
+      {o.pedido_id && <LoVendido ordenId={id} pedidoId={o.pedido_id} />}
 
       <section className="space-y-2">
         <h2 className="font-semibold" data-explain={GLOSARIO.validacionMaterial} data-explain-title="Validación de material">Validación de material</h2>
@@ -485,7 +485,7 @@ function PartidasSurtido({ evento }: { evento: number }) {
 interface PartidaVendida { linea_id: string; titulo: string; descripcion: string | null; cantidad: number; unidad: string; de_la_orden: boolean }
 
 /** Lo que se le cotizó al cliente para esta orden, sin precio: con eso se fabrica. */
-function LoVendido({ ordenId }: { ordenId: string }) {
+function LoVendido({ ordenId, pedidoId }: { ordenId: string; pedidoId: string }) {
   const venta = useQuery({
     queryKey: [...CLAVE, "venta_de_orden", ordenId],
     queryFn: () => q<PartidaVendida[]>(supabase.rpc("venta_de_orden", { p_op: ordenId })),
@@ -496,7 +496,13 @@ function LoVendido({ ordenId }: { ordenId: string }) {
   return (
     <Tarjeta>
       <EncabezadoTarjeta titulo="Lo que se le vendió al cliente" explica={GLOSARIO.descripcionVenta}
-        descripcion={propia ? "La descripción de la partida del pedido, como se cotizó (sin precio)." : "La orden no está ligada a una partida: estas son todas las del pedido."} />
+        descripcion={propia ? "La descripción de la partida del pedido, como se cotizó (sin precio)." : "La orden no está ligada a una partida: estas son todas las del pedido."}
+        acciones={
+          <Boton variante="secundario" tamano="sm" onClick={() => abrirDescripcion(pedidoId, ordenId)}
+            data-explain={GLOSARIO.imprimirDescripcion} data-explain-title="Imprimir">
+            <Printer className="h-3.5 w-3.5" />Imprimir
+          </Boton>
+        } />
       <ul className="px-5 pb-4 space-y-3 text-sm">
         {filas.map((f) => (
           <li key={f.linea_id}>

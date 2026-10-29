@@ -121,4 +121,12 @@ export const VENTAS = {
   mensajeSeguimiento: "El botón «Mensaje» (con destellos ✦) le pide a Claude el WhatsApp de seguimiento para ese cliente. Lo escribe con lo que has anotado en «¿Qué pasó?» de esa venta y el equipo que cotizaste: entre más detalle anotes (qué dijo, qué le preocupa, quién decide), más a la medida sale; sin notas, sale un mensaje general. No inventa precios, descuentos ni fechas, y no se manda solo: lo revisas, lo cambias si quieres y lo abres en WhatsApp. Abajo te da un consejo de qué averiguar en ese contacto. Cuando el cliente conteste, anota qué pasó.",
   seguimientosPorVendedor: "Cuántos seguimientos trae cada vendedor: vencidos, para hoy y en total, y en los últimos 7 días cuántas cotizaciones envió contra cuántos seguimientos anotó. «Frenado» = pasó de 10 vencidos y no puede enviar; con «Liberar por hoy» lo dejas enviar ese día (pide el motivo y le avisa). Clic en un vendedor filtra la lista de abajo.",
   seguimientoEquipo: "Cómo va cada vendedor con el seguimiento de sus cotizaciones: cuántos tiene vencidos, cuántos le tocan hoy y cuántos anotó en los últimos 7 días. «Frenado» = pasó de 10 vencidos y no puede enviar cotizaciones nuevas; «Liberado hoy» = la gerencia de ventas lo dejó enviar ese día. Clic para ver la lista completa.",
+
+  // --- Lo cotizado ---
+  loCotizado: "Todas las cotizaciones que empezaron en el periodo, cada una una sola vez aunque tenga varias versiones, con el monto de su última versión, sin IVA y en pesos (las de dólares, con su tipo de cambio).",
+  ganadoCotizado: "Lo cotizado que se volvió pedido.",
+  perdidoCotizado: "Lo cotizado que se rechazó, se canceló o venció después de enviarse, o cuya oportunidad se marcó perdida. Se agrupa por el motivo que anotó el vendedor.",
+  abiertoCotizado: "Lo enviado que ni se ganó ni se perdió. Se divide por lo que hace falta: Negociando (el cliente está negociando), Seguimiento atrasado (ya pasó el día de preguntar qué pasó), No contesta (en el último seguimiento no contestó), Vigencia vencida (pasaron sus días de vigencia: toca actualizarla) y Esperando respuesta (lo demás, con su seguimiento al día).",
+  sinEnviarCotizado: "Cotizaciones que nunca se mandaron al cliente: en borrador, esperando que la gerencia autorice el precio o canceladas antes de enviarse.",
+  tasaCierreCotizado: "De lo que ya se decidió (ganado más perdido), qué parte se ganó, en dinero. Lo abierto no cuenta todavía.",
 } satisfies Record<string, string>;
