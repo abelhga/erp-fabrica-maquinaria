@@ -15,8 +15,7 @@ import { supabase } from "@/lib/supabase";
 import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, hoyISO, numero } from "@/lib/formato";
 import {
-  Avatar, ESTADOS, PUNTOS_CHECKLIST, TIPOS, antiguedad, nombrePeriodo, useCatalogosRrhh, type CargoVacaciones, type Empleado, type Incidencia,
-  type PeriodoVacaciones, type PuntoChecklist, type Vacaciones,
+  Avatar, ESTADOS, PUNTOS_CHECKLIST, TIPOS, antiguedad, useCatalogosRrhh, type Empleado, type Incidencia, type PuntoChecklist, type Vacaciones,
 } from "./comun";
 import { NuevaIncidencia } from "./NuevaIncidencia";
 import { GLOSARIO } from "@/tutorial/glosario";
@@ -390,79 +389,42 @@ function HistorialEmpleado({ empleado: e }: { empleado: Empleado }) {
     enabled: e.activo,
     queryFn: () => q<Vacaciones | null>(supabase.from("v_vacaciones").select("*").eq("empleado_id", e.id).maybeSingle()),
   });
-  const periodos = useQuery({
-    queryKey: ["v_vacaciones", "periodos", e.id],
-    enabled: e.activo,
-    queryFn: () => q<PeriodoVacaciones[]>(supabase.rpc("vacaciones_periodos", { p_empleado: e.id })),
-  });
-  const cargos = useQuery({
-    queryKey: ["v_vacaciones", "cargos", e.id],
-    queryFn: () => q<CargoVacaciones[]>(supabase.rpc("vacaciones_cargos", { p_empleado: e.id })),
-  });
   const inc = useQuery({
     queryKey: ["incidencias", "empleado", e.id],
     queryFn: () => q<Incidencia[]>(supabase.from("incidencias").select("*").eq("empleado_id", e.id).order("inicio", { ascending: false })),
   });
   const v = vac.data;
-  const lista = periodos.data ?? [];
-  const desde = new Map(lista.map((p) => [p.periodo, p.desde]));
-  // Lo que importa hoy: lo vigente, lo que viene si ya se adelantó, y lo vencido que dejó días sin tomar.
-  const visibles = lista.filter((p) => p.estado === "vigente" || (p.estado === "por_venir" && (Number(p.usados) > 0 || p.periodo === (v?.anios ?? 0) + 1))
-    || (p.estado === "vencido" && Number(p.restan) > 0 && p.periodo >= (v?.anios ?? 0) - 1));
   return (
     <div className="space-y-4">
       {v && (
-        <div className="rounded-xl border border-borde bg-fondo/60 p-4 space-y-3">
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div data-explain={GLOSARIO.saldoVacaciones} data-explain-title="Puede tomar hoy">
-              <p className="text-xs text-tenue">Puede tomar hoy</p><p className="text-xl font-semibold cifra">{numero(v.disponible)}</p>
-            </div>
-            <div data-explain={GLOSARIO.adelantoVacaciones} data-explain-title="Adelantados">
-              <p className="text-xs text-tenue">Adelantados</p><p className={`text-xl font-semibold cifra ${Number(v.adelantados) > 0 ? "text-aviso" : ""}`}>{numero(v.adelantados)}</p>
-            </div>
-            <div data-explain={GLOSARIO.saldoVacaciones} data-explain-title="Saldo">
-              <p className="text-xs text-tenue">Saldo</p><p className={`text-xl font-semibold cifra ${v.saldo < 0 ? "text-peligro" : "text-ok"}`}>{numero(v.saldo)}</p>
-            </div>
-          </div>
-          <p className="text-xs text-tenue">
-            {v.anios < 1
-              ? <>Aún no cumple su primer año: la LFT le da 12 días a partir del {fecha(v.proximo_aniversario)}.{Number(v.adelantados) > 0 && <> Ya tomó {numero(v.adelantados)} adelantados: le quedarán {numero(12 - Number(v.adelantados))}.</>}</>
-              : <>{v.anios} {v.anios === 1 ? "año cumplido" : "años cumplidos"}. En su próximo aniversario ({fecha(v.proximo_aniversario)}) le tocarán {v.dias_proximo_periodo} días{Number(v.adelantados) > 0 && <>, menos los {numero(v.adelantados)} que ya adelantó</>}.</>}
-            {v.vence_primero && Number(v.dias_vence_primero) > 0 && (
-              <span className={new Date(v.vence_primero + "T12:00:00").getTime() - Date.now() < 60 * 86_400_000 ? "text-aviso" : ""} data-explain={GLOSARIO.venceVacaciones} data-explain-title="Vencen">
-                {" "}{numero(v.dias_vence_primero)} {Number(v.dias_vence_primero) === 1 ? "día vence" : "días vencen"} el {fecha(v.vence_primero)}.
-              </span>
-            )}
-            {v.solicitados > 0 && <> Tiene {numero(v.solicitados)} días solicitados por aprobar.</>}
-          </p>
-          {visibles.length > 0 && (
-            <table className="w-full text-xs" data-explain={GLOSARIO.periodoVacaciones} data-explain-title="Periodos">
-              <thead><tr className="text-tenue text-left"><th className="font-normal py-1">Periodo</th><th className="font-normal text-right">Le tocan</th>
-                <th className="font-normal text-right">Usados</th><th className="font-normal text-right">Quedan</th><th className="font-normal text-right">Vigencia</th></tr></thead>
-              <tbody className="divide-y divide-borde">
-                {visibles.map((p) => (
-                  <tr key={p.periodo}>
-                    <td className="py-1.5">{nombrePeriodo(p.desde)} <span className="text-tenue">· {p.periodo}.º año</span></td>
-                    <td className="text-right cifra">{p.dias}</td>
-                    <td className="text-right cifra">{numero(p.usados)}{Number(p.adelantados) > 0 && <span className="text-aviso"> ({numero(p.adelantados)} adelant.)</span>}</td>
-                    <td className={`text-right cifra font-medium ${Number(p.restan) < 0 ? "text-peligro" : ""}`}>{numero(p.restan)}</td>
-                    <td className="text-right whitespace-nowrap">
-                      {p.estado === "por_venir" ? <span className="text-tenue">empieza {fecha(p.desde)}</span>
-                        : p.estado === "vencido" ? <Insignia tono="neutro">venció {fecha(p.vence)}</Insignia>
-                        : <span>hasta {fecha(p.vence)}</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="rounded-xl border border-borde bg-fondo/60 p-4">
+          {v.anios < 1 ? (
+            <p className="text-sm">
+              Aún no cumple su primer año: la LFT le da <b>12 días</b> a partir del <b>{fecha(v.proximo_aniversario)}</b>.
+              {v.tomados > 0 && <> Ya tomó {numero(v.tomados)} días adelantados.</>}
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div><p className="text-xs text-tenue">Le tocan</p><p className="text-xl font-semibold cifra">{v.dias_periodo}</p></div>
+                <div><p className="text-xs text-tenue">Tomados</p><p className="text-xl font-semibold cifra">{numero(v.tomados)}</p></div>
+                <div><p className="text-xs text-tenue">Saldo</p><p className={`text-xl font-semibold cifra ${v.saldo < 0 ? "text-peligro" : "text-ok"}`}>{numero(v.saldo)}</p></div>
+              </div>
+              <p className="text-xs text-tenue mt-3">
+                {v.anios} {v.anios === 1 ? "año cumplido" : "años cumplidos"}: periodo del {fecha(v.inicio_periodo)} al {fecha(v.proximo_aniversario)}.
+                {v.saldo > 0 && v.disfrutar_antes_de < hoyISO()
+                  ? <span className="text-peligro"> Ya pasaron los 6 meses para disfrutarlos (vencían el {fecha(v.disfrutar_antes_de)}, art. 81 LFT): prográmalos cuanto antes.</span>
+                  : <> Debe disfrutarlos antes del {fecha(v.disfrutar_antes_de)} (art. 81 LFT).</>} En su próximo aniversario le tocarán {v.dias_proximo_periodo} días.
+                {v.solicitados > 0 && <> Tiene {numero(v.solicitados)} días solicitados por aprobar.</>}
+              </p>
+              <p className="text-xs text-tenue mt-2 flex flex-wrap items-center gap-x-2">
+                {v.saldo_arranque != null
+                  ? <span data-explain={GLOSARIO.saldoArranqueVacaciones} data-explain-title="Saldo de arranque">Arrancó en el ERP con {numero(v.saldo_arranque)} días el {fecha(v.fecha_arranque)} (control de vacaciones en Excel).</span>
+                  : <span data-explain={GLOSARIO.saldoArranqueVacaciones} data-explain-title="Saldo de arranque">Saldo calculado por ley desde su aniversario.</span>}
+                {puede("rrhh", 3) && <button type="button" className="text-marca-texto hover:underline" onClick={() => setCorregir(true)}>Corregir saldo</button>}
+              </p>
+            </>
           )}
-          <p className="text-xs text-tenue flex flex-wrap items-center gap-x-2">
-            {v.saldo_arranque != null
-              ? <span data-explain={GLOSARIO.saldoArranqueVacaciones} data-explain-title="Saldo de arranque">
-                  Arrancó en el ERP el {fecha(v.fecha_arranque)} con {numero(v.saldo_arranque)} días del periodo {v.periodo_arranque && desde.get(v.periodo_arranque) ? nombrePeriodo(desde.get(v.periodo_arranque)!) : v.periodo_arranque} (control de vacaciones en Excel).</span>
-              : <span data-explain={GLOSARIO.saldoArranqueVacaciones} data-explain-title="Saldo de arranque">Calculado por ley desde su aniversario.</span>}
-            {puede("rrhh", 3) && <button type="button" className="text-marca-texto hover:underline" onClick={() => setCorregir(true)}>Corregir saldo</button>}
-          </p>
         </div>
       )}
       <div className="flex items-center justify-between">
@@ -475,72 +437,42 @@ function HistorialEmpleado({ empleado: e }: { empleado: Empleado }) {
         <Vacio icono={CalendarPlus} titulo="Sin vacaciones ni incidencias" texto="Aquí aparecerán sus vacaciones, permisos, faltas e incapacidades." className="py-8" />
       ) : (
         <ul className="divide-y divide-borde rounded-xl border border-borde">
-          {inc.data!.map((i) => {
-            const suyos = (cargos.data ?? []).filter((c) => c.incidencia_id === i.id);
-            return (
-              <li key={i.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5 text-sm">
-                <Insignia tono={TIPOS[i.tipo].tono}>{TIPOS[i.tipo].texto}</Insignia>
-                <span className="cifra">{i.inicio === i.fin ? fecha(i.inicio) : `${fecha(i.inicio)} – ${fecha(i.fin)}`}</span>
-                <span className="text-tenue cifra">
-                  {i.tipo === "horas_extra" ? `${numero(i.horas)} h` : i.tipo === "retardo" ? (i.horas ? `${numero(i.horas)} h` : "") : `${numero(i.dias)} ${Number(i.dias) === 1 ? "día" : "días"}`}
-                </span>
-                <span className="ml-auto"><Insignia tono={ESTADOS[i.estado].tono}>{ESTADOS[i.estado].texto}</Insignia></span>
-                {suyos.length > 0 && (
-                  <p className="w-full text-xs text-tenue">
-                    {suyos.map((c, k) => (
-                      <span key={k} className={c.adelanto ? "text-aviso" : ""} data-explain={c.adelanto ? GLOSARIO.adelantoVacaciones : GLOSARIO.periodoVacaciones}>
-                        {k > 0 && " · "}{c.adelanto ? "Adelanto del periodo" : "Periodo"} {desde.get(c.periodo) ? nombrePeriodo(desde.get(c.periodo)!) : c.periodo}{suyos.length > 1 && `: ${numero(c.dias)}`}
-                      </span>
-                    ))}
-                  </p>
-                )}
-                {i.motivo && <p className="w-full text-xs text-tenue">{i.motivo}</p>}
-              </li>
-            );
-          })}
+          {inc.data!.map((i) => (
+            <li key={i.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5 text-sm">
+              <Insignia tono={TIPOS[i.tipo].tono}>{TIPOS[i.tipo].texto}</Insignia>
+              <span className="cifra">{i.inicio === i.fin ? fecha(i.inicio) : `${fecha(i.inicio)} – ${fecha(i.fin)}`}</span>
+              <span className="text-tenue cifra">
+                {i.tipo === "horas_extra" ? `${numero(i.horas)} h` : i.tipo === "retardo" ? (i.horas ? `${numero(i.horas)} h` : "") : `${numero(i.dias)} ${Number(i.dias) === 1 ? "día" : "días"}`}
+              </span>
+              <span className="ml-auto"><Insignia tono={ESTADOS[i.estado].tono}>{ESTADOS[i.estado].texto}</Insignia></span>
+              {i.motivo && <p className="w-full text-xs text-tenue">{i.motivo}</p>}
+            </li>
+          ))}
         </ul>
       )}
       <NuevaIncidencia abierto={nueva} alCambiar={setNueva} empleadoId={e.id} />
-      {v && <CorregirSaldo abierto={corregir} alCambiar={setCorregir} vacaciones={v} periodos={lista} />}
+      {v && <CorregirSaldo abierto={corregir} alCambiar={setCorregir} vacaciones={v} />}
     </div>
   );
 }
 
-/** Fija a mano cuántos días le quedan hoy de un periodo (lo que diga el control en papel o en Excel). Los anteriores se dan por usados. */
-function CorregirSaldo({ abierto, alCambiar, vacaciones: v, periodos }: {
-  abierto: boolean; alCambiar: (x: boolean) => void; vacaciones: Vacaciones; periodos: PeriodoVacaciones[];
-}) {
+/** Fija el saldo de hoy a mano (lo que diga el control en papel o en Excel). Vale hasta su próximo aniversario. */
+function CorregirSaldo({ abierto, alCambiar, vacaciones: v }: { abierto: boolean; alCambiar: (x: boolean) => void; vacaciones: Vacaciones }) {
   const [saldo, setSaldo] = useState("");
-  const [periodo, setPeriodo] = useState(1);
   const [nota, setNota] = useState("");
-  // De entrada, el periodo más viejo que todavía tiene días (o el que viene si ya adelantó).
-  const sugerido = periodos.find((p) => p.estado === "vigente" && Number(p.restan) > 0) ?? periodos.find((p) => p.estado === "por_venir") ?? periodos[periodos.length - 1];
-  useEffect(() => {
-    if (abierto && sugerido) { setPeriodo(sugerido.periodo); setSaldo(String(Number(sugerido.restan))); setNota(""); }
-  }, [abierto]); // eslint-disable-line react-hooks/exhaustive-deps
-  const elegido = periodos.find((p) => p.periodo === periodo);
-  const opciones = periodos.filter((p) => p.estado !== "vencido" || p.periodo === periodo);
+  useEffect(() => { if (abierto) { setSaldo(String(v.saldo)); setNota(""); } }, [abierto, v.saldo]);
   const guardar = useAccion(() => q(supabase.from("vacaciones_arranque").upsert({
-    empleado_id: v.empleado_id, fecha: hoyISO(), periodo, saldo: Number(saldo), nota: nota.trim() || null,
+    empleado_id: v.empleado_id, fecha: hoyISO(), saldo: Number(saldo), nota: nota.trim() || null,
   })), { exito: "Saldo corregido", invalidar: [["v_vacaciones"]], alTerminar: () => alCambiar(false) });
   return (
     <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="Corregir saldo de vacaciones"
-      descripcion={`Cuántos días le quedan hoy a ${v.nombre} y de qué periodo. Los periodos anteriores se dan por usados; desde hoy se le cargan las vacaciones que se aprueben.`}
+      descripcion={`Cuántos días le quedan hoy a ${v.nombre}. Desde hoy se le restarán las vacaciones que se aprueben, hasta su próximo aniversario (${fecha(v.proximo_aniversario)}).`}
       pie={<>
         <Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
         <Boton cargando={guardar.isPending} disabled={saldo === "" || Number.isNaN(Number(saldo))} onClick={() => guardar.mutate(undefined)}>Guardar</Boton>
       </>}>
       <form className="space-y-4" onSubmit={(ev) => { ev.preventDefault(); if (saldo !== "") guardar.mutate(undefined); }}>
-        <Campo etiqueta="Periodo" ayuda="En la hoja es el «año de vacaciones». Si ya va en «proporcionales», es el que todavía no empieza.">
-          <Seleccion value={periodo} onChange={(ev) => { const p = periodos.find((x) => x.periodo === Number(ev.target.value)); setPeriodo(Number(ev.target.value)); if (p) setSaldo(String(Number(p.restan))); }}>
-            {opciones.map((p) => (
-              <option key={p.periodo} value={p.periodo}>
-                {nombrePeriodo(p.desde)} ({p.dias} días){p.estado === "por_venir" ? ` · empieza ${fecha(p.desde)}` : ` · vence ${fecha(p.vence)}`}
-              </option>
-            ))}
-          </Seleccion>
-        </Campo>
-        <Campo etiqueta="Días que le quedan hoy de ese periodo" ayuda={elegido ? `Le tocan ${elegido.dias}. Si ya adelantó, pon lo que le queda (p. ej. ${elegido.dias - 4} si adelantó 4).` : undefined}>
+        <Campo etiqueta="Días que le quedan hoy">
           <Entrada type="number" step="0.5" value={saldo} onChange={(ev) => setSaldo(ev.target.value)} className="cifra" autoFocus />
         </Campo>
         <Campo etiqueta="Por qué" ayuda="Ej. «Así viene en el control de vacaciones» o «le quedaban 3 días del año pasado».">
@@ -571,10 +503,6 @@ function DialogoBaja({ empleado: e, abierto, alCambiar }: { empleado: Empleado; 
       };
     },
   });
-  const vac = useQuery({
-    queryKey: ["v_vacaciones", e.id], enabled: abierto,
-    queryFn: () => q<Vacaciones | null>(supabase.from("v_vacaciones").select("*").eq("empleado_id", e.id).maybeSingle()),
-  });
   const dar = useAccion(async () => {
     const motivo = f.detalle.trim() ? `${f.tipo}: ${f.detalle.trim()}` : f.tipo;
     await q(supabase.from("empleados").update({ activo: false, baja_en: f.fecha, motivo_baja: motivo }).eq("id", e.id));
@@ -592,11 +520,6 @@ function DialogoBaja({ empleado: e, abierto, alCambiar }: { empleado: Empleado; 
         <Boton variante="peligro" cargando={dar.isPending} onClick={() => dar.mutate(undefined)}>Dar de baja</Boton>
       </>}>
       <form className="space-y-4" onSubmit={(ev) => { ev.preventDefault(); dar.mutate(undefined); }}>
-        {vac.data && (Number(vac.data.disponible) > 0 || Number(vac.data.adelantados) > 0) && (
-          <p className="rounded-lg border border-borde bg-fondo p-3 text-sm" data-explain={GLOSARIO.adelantoVacaciones} data-explain-title="Vacaciones al darlo de baja">
-            Vacaciones hoy: {numero(vac.data.disponible)} días sin tomar{Number(vac.data.adelantados) > 0 && <> y <b className="text-aviso">{numero(vac.data.adelantados)} adelantados</b></>}. Tenlo en cuenta para su finiquito.
-          </p>
-        )}
         {(Number(pendientes.data?.prestamo) > 0 || Number(pendientes.data?.ahorro) > 0) && (
           <div className="rounded-lg border border-aviso/30 bg-aviso-suave p-3 text-sm text-aviso space-y-1">
             {Number(pendientes.data?.prestamo) > 0 && <p><b>Debe {dinero(pendientes.data!.prestamo)} de préstamo.</b> Se descuenta completo en la prenómina de su última semana (su finiquito).</p>}
