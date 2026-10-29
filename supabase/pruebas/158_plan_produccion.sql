@@ -16,7 +16,7 @@ begin
   -- Las demás órdenes de la base no estorban: se mandan a espera dentro de la prueba.
   update configuracion set valor = valor || '{"horario": {"1": ["08:00", "17:30"], "2": ["08:00", "17:30"], "3": ["08:00", "17:30"], "4": ["08:00", "17:30"], "5": ["08:00", "17:30"]}, "descansos": [{"de": "10:00", "a": "11:00", "minutos": 40}, {"de": "15:00", "a": "15:20"}], "especiales": {}}' where clave = 'horas_taller';
   update ordenes_produccion set en_espera_motivo = 'prueba 158', en_espera_desde = now() where estado in ('planeada', 'liberada', 'en_proceso');
-  update etapas set capacidad_horas_semana = 85 where id = v_pai;
+  update etapas set capacidad_automatica = false, capacidad_horas_semana = 85 where id = v_pai;
   insert into articulos (clave, tipo, nombre) values ('T158-EQ', 'equipo', 'Banda plan 158') returning id into v_eq;
   insert into ordenes_produccion (articulo_id, cantidad, estado, prioridad, fecha_compromiso) values (v_eq, 1, 'liberada', 2, current_date + 60) returning id into b;
   insert into ordenes_produccion (articulo_id, cantidad, estado, prioridad, fecha_compromiso) values (v_eq, 1, 'liberada', 1, current_date + 30) returning id into a;

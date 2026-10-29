@@ -10,7 +10,7 @@ begin
   assert (select en_paralelo from etapas where id = v_tor), 'Torno no quedó en paralelo';
   -- Solo esta orden en el plan, y capacidad en las tres áreas.
   update ordenes_produccion set en_espera_motivo = 'prueba 181' where estado in ('planeada', 'liberada', 'en_proceso');
-  update etapas set capacidad_horas_semana = 200 where id in (v_pai, v_tor, v_pin);
+  update etapas set capacidad_automatica = false, capacidad_horas_semana = 200 where id in (v_pai, v_tor, v_pin);
   insert into articulos (clave, tipo, nombre) values ('T181-EQ', 'equipo', 'Equipo 181') returning id into v_eq;
   insert into ordenes_produccion (articulo_id, cantidad, estado) values (v_eq, 1, 'liberada') returning id into v_op;
   insert into op_operaciones (orden_id, etapa_id, horas_estimadas) values (v_op, v_pai, 60), (v_op, v_tor, 20), (v_op, v_pin, 10);

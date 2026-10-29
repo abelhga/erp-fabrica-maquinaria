@@ -15,6 +15,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { fecha, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { CapacidadTaller } from "./componentes/CapacidadTaller";
 import {
   CLAVE, cuandoAbre, textoDescansos, textoHorario, useAsignaciones, useCuadrillas, useEtapas, useHorarioAhora, useHorasTaller, useJornadas,
   usePersonalPiso, usePiso, useProduccionEnVivo, type Etapa, type HorasTaller, type OperacionPiso, type PersonaPiso, type TramoAbierto,
@@ -532,6 +533,7 @@ function PersonalPiso({ etapas }: { etapas: Etapa[] }) {
   return (
     <div className="space-y-3 text-sm">
       <ModoHoras />
+      <CapacidadTaller />
       <p className="text-tenue" data-explain={GLOSARIO.enCuadrillas} data-explain-title="Entra a cuadrillas">
         {dentro} de {gente.length} entran a cuadrillas. Quien no entra no sale en la terminal ni aquí para asignarle trabajo.
         Para dar de alta o de baja, o cambiar a alguien de departamento, pídeselo a Recursos Humanos.
