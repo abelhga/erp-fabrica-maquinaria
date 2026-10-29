@@ -184,6 +184,14 @@ async function apiML(e: Entorno, access: string, ruta: string, init?: RequestIni
   return o(d);
 }
 
+/** Como apiML, pero deja pasar una lista (el multiget de publicaciones y las visitas la regresan así). */
+async function apiMLLista(e: Entorno, access: string, ruta: string): Promise<unknown> {
+  const r = await (e.fetch ?? fetch)(`${API_ML}${ruta}`, { headers: { Authorization: `Bearer ${access}`, Accept: "application/json" } });
+  const d = await r.json().catch(() => null);
+  if (!r.ok) throw new ErrorML(`ML ${ruta}: ${txt(o(d).message) ?? txt(o(d).error) ?? r.status}`, r.status);
+  return d;
+}
+
 /**
  * Lo que regresa ML de una venta, tal cual (ml_crudo): la orden con sus pagos, el envío, lo
  * que costó el envío y el pago en Mercado Pago. Sirve para ver de qué campo sale cada cosa
@@ -271,6 +279,8 @@ async function procesarUno(e: Entorno, admin: SupabaseClient, access: string, to
     const pub = item ? await apiML(e, access, `/items/${item}?attributes=title,status`).catch(() => null) : null;
     const datos = normalizarPregunta(pregunta, pub ? txt(pub.title) : null, pub ? txt(pub.status) === "active" : null);
     await rpc("ml_registrar_pregunta", datos);
+    // Lo que dice la publicación (descripción y atributos): con eso se sugiere la respuesta.
+    if (item && datos.estado === "UNANSWERED") await traerFicha(e, admin, access, item).catch(() => undefined);
     // Muchas preguntas siguen a otra del mismo comprador en esa publicación (a veces de antes de
     // conectar el ERP): se traen para que quien contesta vea la conversación completa. Si ML no
     // responde, la pregunta ya quedó registrada; lo anterior solo es contexto.
@@ -359,6 +369,78 @@ export async function sincronizar(e: Entorno, admin: SupabaseClient, ventasDesde
   }
   return { cuenta: cuenta.nickname, publicaciones, preguntas: avisos.filter((a) => a.topic === "questions").length,
     reclamos: avisos.filter((a) => a.topic === "claims").length, ventas, procesados, errores };
+}
+
+// -----------------------------------------------------------------------------
+// Publicaciones y reputación (solo lectura): el tablero de Mercado Libre
+// -----------------------------------------------------------------------------
+/** Una publicación de ML como la guarda el tablero. */
+export function normalizarPublicacion(it: Obj, visitas?: number | null) {
+  const envio = o(it.shipping);
+  const atributos = (Array.isArray(it.attributes) ? it.attributes : []) as Obj[];
+  return {
+    item_id: txt(it.id), titulo: txt(it.title), estado: txt(it.status), precio: num(it.price), stock: num(it.available_quantity),
+    vendidas: num(it.sold_quantity), visitas_30d: visitas ?? null, fotos: Array.isArray(it.pictures) ? it.pictures.length : null,
+    permalink: txt(it.permalink), tipo_publicacion: txt(it.listing_type_id), logistica: txt(envio.logistic_type),
+    envio_gratis: envio.free_shipping === true,
+    atributos: atributos.length ? atributos.map((a) => ({ nombre: txt(a.name) ?? txt(a.id), valor: txt(a.value_name) })).filter((a) => a.valor) : null,
+  };
+}
+
+/** Las visitas de los últimos 30 días; ML las regresa como lista o como mapa según la versión. */
+export function leerVisitas(r: unknown): Map<string, number> {
+  const m = new Map<string, number>();
+  if (Array.isArray(r)) for (const x of r as Obj[]) { const id = txt(x.item_id); const n = num(x.total_visits); if (id && n != null) m.set(id, n); }
+  else for (const [id, n] of Object.entries(o(r))) if (typeof n === "number") m.set(id, n);
+  return m;
+}
+
+/** La descripción y los atributos de una publicación (para contestar con lo que dice). */
+async function traerFicha(e: Entorno, admin: SupabaseClient, access: string, item: string) {
+  const [desc, it] = await Promise.all([
+    apiML(e, access, `/items/${item}/description`).catch(() => ({} as Obj)),
+    apiML(e, access, `/items/${item}?attributes=attributes`).catch(() => ({} as Obj)),
+  ]);
+  const atributos = normalizarPublicacion(it).atributos;
+  await admin.rpc("ml_registrar_descripcion", { p_item: item, p_texto: txt(desc.plain_text) ?? txt(desc.text) ?? "", p_atributos: atributos });
+}
+
+export async function publicacionesML(e: Entorno, admin: SupabaseClient) {
+  const { cuenta, access } = await token(e, admin);
+  const vendedor = cuenta.ml_user_id;
+  // Las activas y las pausadas (una pausada con preguntas también importa). Hasta 1,000.
+  const ids: string[] = [];
+  for (const estado of ["active", "paused"]) {
+    for (let offset = 0; offset < 1000; offset += 100) {
+      const r = await apiML(e, access, `/users/${vendedor}/items/search?status=${estado}&limit=100&offset=${offset}`);
+      const lista = (Array.isArray(r.results) ? r.results : []) as unknown[];
+      for (const id of lista) if (typeof id === "string") ids.push(id);
+      if (lista.length < 100) break;
+    }
+  }
+  const hoy = new Date(), hace30 = new Date(hoy.getTime() - 30 * 86400_000);
+  const dia = (d: Date) => d.toISOString().slice(0, 10);
+  const publicaciones: ReturnType<typeof normalizarPublicacion>[] = [];
+  for (let i = 0; i < ids.length; i += 20) {
+    const lote = ids.slice(i, i + 20);
+    const [items, visitas] = await Promise.all([
+      apiMLLista(e, access, `/items?ids=${lote.join(",")}&attributes=id,title,status,price,available_quantity,sold_quantity,pictures,permalink,listing_type_id,shipping,attributes`),
+      // Sin visitas el tablero sigue sirviendo: no frena lo demás.
+      apiMLLista(e, access, `/visits/items?ids=${lote.join(",")}&date_from=${dia(hace30)}&date_to=${dia(hoy)}`).then(leerVisitas).catch(() => new Map<string, number>()),
+    ]);
+    // El multiget llega como lista de {code, body}.
+    const lista = (Array.isArray(items) ? items : []) as Obj[];
+    for (const x of lista) {
+      const it = o(x.body ?? x);
+      const id = txt(it.id);
+      if (id) publicaciones.push(normalizarPublicacion(it, visitas.get(id) ?? null));
+    }
+  }
+  const { data: n, error } = await admin.rpc("ml_registrar_publicaciones", { p: { publicaciones, completo: true } });
+  if (error) throw new ErrorML(error.message);
+  const yo = await apiML(e, access, `/users/${vendedor}`).catch(() => ({} as Obj));
+  if (yo.seller_reputation) await admin.rpc("ml_registrar_reputacion", { p: yo.seller_reputation });
+  return { publicaciones: n as number, reputacion: !!yo.seller_reputation };
 }
 
 // -----------------------------------------------------------------------------
@@ -453,6 +535,11 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
     const desde = txt(b.ventas_desde);
     if (desde && !/^\d{4}-\d{2}-\d{2}$/.test(desde)) return json({ error: "La fecha va como AAAA-MM-DD" }, 400);
     try { return json(await sincronizar(e, admin, desde ?? null)); } catch (err) { return json({ error: err instanceof Error ? err.message : String(err) }, 502); }
+  }
+
+  if (accion === "publicaciones") {
+    if (!(await puede(u.db, "mercadolibre", 1)) && !(await esDireccion(u.db))) return json({ error: "Sin permiso" }, 403);
+    try { return json(await publicacionesML(e, admin)); } catch (err) { return json({ error: err instanceof Error ? err.message : String(err) }, 502); }
   }
 
   if (accion === "responder") {

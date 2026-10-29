@@ -92,6 +92,12 @@ export async function mensajeSeguimiento(oportunidad_id: string) {
     Promise<{ mensaje: string; consejo: string; notas: number; simulado?: boolean }>;
 }
 
+/** Claude sugiere la respuesta a una pregunta de ML con la ficha del artículo y de la publicación. No la manda: eso lo decide quien atiende. */
+export async function respuestaML(pregunta_id: number) {
+  return (await llamar({ modo: "respuesta_ml", pregunta_id })).json() as
+    Promise<{ respuesta: string; usados: string[]; falta: string; simulado?: boolean }>;
+}
+
 /** Los que lee importaciones dentro de un embarque. */
 export type TipoImportacion = "proforma" | "factura" | "lista_empaque" | "bl" | "pedimento" | "cuenta_gastos";
 export type TipoDocumento = TipoImportacion | "cotizacion_proveedor" | "constancia_fiscal" | "factura_proveedor";

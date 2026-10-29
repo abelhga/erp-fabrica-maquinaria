@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Clock, Link2, MessageCircleQuestion, Send, Settings } from "lucide-react";
+import { BookText, Clock, Link2, MessageCircleQuestion, Send, Settings } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
 import { Tarjeta } from "@/components/ui/tarjeta";
@@ -12,6 +12,8 @@ import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { Pestanas, ListaPestanas, ContenidoPestana } from "@/components/ui/pestanas";
 import { Ligar, PublicacionesAjenas, PublicacionesLigadas, type SinLigar } from "./componentes/PublicacionesML";
 import { DineroMercadoLibre } from "./componentes/DineroML";
+import { ReputacionML, TableroPublicaciones } from "./componentes/TableroML";
+import { AyudaRespuesta, DialogoDatosContestar } from "./componentes/ResponderML";
 import { supabase } from "@/lib/supabase";
 import { mensajeError, q, useTiempoReal } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
@@ -32,6 +34,7 @@ const duracion = (m: number) => m < 60 ? `${Math.round(m)} min` : m < 48 * 60 ? 
 export default function MercadoLibre() {
   const { puede, tieneRol } = useSesion();
   const veDinero = puede("ventas", 1) || puede("finanzas", 1);
+  const [datosContestar, setDatosContestar] = useState(false);
   const [params, setParams] = useSearchParams();
   const seccion = params.get("seccion") ?? "preguntas";
   useTiempoReal("ml_preguntas", [["ml_preguntas"]]);
@@ -73,10 +76,25 @@ export default function MercadoLibre() {
           { valor: "preguntas", texto: "Preguntas", cuenta: pendientes.length },
           { valor: "ligar", texto: "Por ligar", cuenta: sinLigar.data?.length, explica: GLOSARIO.publicacionPorLigar },
           { valor: "ligadas", texto: "Ligadas", explica: GLOSARIO.publicacionLigada },
+          { valor: "publicaciones", texto: "Publicaciones", explica: GLOSARIO.tableroML },
+          { valor: "reputacion", texto: "Reputación", explica: GLOSARIO.reputacionML },
           // El dinero de cada venta es de ventas y finanzas; marketing atiende ML sin verlo.
           ...(veDinero ? [{ valor: "dinero", texto: "Dinero", explica: GLOSARIO.dineroML }] : []),
         ]} />
+        <ContenidoPestana value="publicaciones" className="pt-4">
+          <TableroPublicaciones puedeActualizar={puede("mercadolibre", 1)} />
+        </ContenidoPestana>
+        <ContenidoPestana value="reputacion" className="pt-4">
+          <ReputacionML />
+        </ContenidoPestana>
         <ContenidoPestana value="preguntas" className="pt-4 space-y-3">
+          {puede("mercadolibre", 2) && (
+            <div className="flex justify-end">
+              <Boton variante="fantasma" tamano="sm" onClick={() => setDatosContestar(true)} data-explain={GLOSARIO.datosContestarML} data-explain-title="Datos para contestar">
+                <BookText className="h-3.5 w-3.5" /> Datos para contestar
+              </Boton>
+            </div>
+          )}
           {preguntas.error ? <ErrorCarga error={preguntas.error} /> : preguntas.isLoading ? <Cargando filas={4} /> : todas.length === 0 ? (
             <div className="tarjeta"><Vacio icono={MessageCircleQuestion} titulo="Sin preguntas todavía" texto="Cuando un comprador pregunte en una publicación, aparece aquí y le llega un aviso al responsable de Mercado Libre." /></div>
           ) : <>
@@ -118,6 +136,7 @@ export default function MercadoLibre() {
           <DineroMercadoLibre />
         </ContenidoPestana>}
       </Pestanas>
+      <DialogoDatosContestar abierto={datosContestar} alCambiar={setDatosContestar} />
     </Pagina>
   );
 }
@@ -169,6 +188,7 @@ function PreguntaPendiente({ p, editable }: { p: Pregunta; editable: boolean }) 
         </div>
       )}
       <p className="font-medium">{p.texto}</p>
+      {editable && <AyudaRespuesta preguntaId={p.id} alPoner={setTexto} />}
       {editable && (
         <form className="flex gap-2 items-end" onSubmit={(e) => { e.preventDefault(); enviar(); }}>
           <textarea className="campo min-h-[60px] flex-1" value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={2000}
