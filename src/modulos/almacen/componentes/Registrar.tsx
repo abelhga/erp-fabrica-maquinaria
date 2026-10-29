@@ -12,6 +12,7 @@ import { fechaYHora, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { CantidadConSigno, InsigniaMovimiento, nombreCorto, unidadEn, useAlmacenes, type TipoMovimiento } from "./comun";
+import { usePersonalPiso } from "@/modulos/produccion/componentes/datos";
 
 type Modo = "salida" | "devolucion" | "traspaso";
 type TipoSalida = "salida_venta" | "salida_consumo";
@@ -41,6 +42,9 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
   const [destino, setDestino] = useState<number | null>(null);
   const [cantidad, setCantidad] = useState("");
   const [motivo, setMotivo] = useState("");
+  // En consumo se anota quién se lo lleva aparte del motivo: así se ve cuánto consume cada persona.
+  const [recibe, setRecibe] = useState("");
+  const personal = usePersonalPiso();
   const refCantidad = useRef<HTMLInputElement>(null);
   const refMotivo = useRef<HTMLInputElement>(null);
 
@@ -81,24 +85,28 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
   const mios = useQuery({
     queryKey: ["mis_movimientos_hoy", perfil?.id],
     enabled: !!perfil,
-    queryFn: () => q<{ id: number; en: string; tipo: TipoMovimiento; clave: string; nombre: string; unidad: string; almacen: string; cantidad: number; referencia: string | null; motivo: string | null }[]>(
-      supabase.from("v_movimientos").select("id, en, tipo, clave, nombre, unidad, almacen, cantidad, referencia, motivo")
+    queryFn: () => q<{ id: number; en: string; tipo: TipoMovimiento; clave: string; nombre: string; unidad: string; almacen: string; cantidad: number; referencia: string | null; motivo: string | null; recibio: string | null }[]>(
+      supabase.from("v_movimientos").select("id, en, tipo, clave, nombre, unidad, almacen, cantidad, referencia, motivo, recibio")
         .eq("usuario_id", perfil!.id).gte("en", hoy.toISOString()).order("en", { ascending: false }).order("id", { ascending: false }).limit(30)),
   });
 
   const n = Number(cantidad.replace(",", "."));
   const sale = modo !== "devolucion";
   const insuficiente = sale && almacen != null && existencias.data && n > hayEn(almacen);
-  const listo = !!articulo && almacen != null && n > 0 && motivo.trim().length > 0 && (modo !== "traspaso" || (destino != null && destino !== almacen));
+  const pideRecibe = modo === "salida" && tipoSalida === "salida_consumo";
+  const listo = !!articulo && almacen != null && n > 0 && motivo.trim().length > 0 && (!pideRecibe || recibe.trim().length > 0)
+    && (modo !== "traspaso" || (destino != null && destino !== almacen));
 
   const guardar = useAccion(async () => {
     const base = { p_articulo: articulo!.id, p_cantidad: n };
-    if (modo === "salida") return q(supabase.rpc("registrar_salida", { ...base, p_almacen: almacen, p_tipo: tipoSalida, p_motivo: motivo.trim() }));
+    if (modo === "salida") return q(supabase.rpc("registrar_salida", { ...base, p_almacen: almacen, p_tipo: tipoSalida, p_motivo: motivo.trim(),
+      p_recibio: pideRecibe ? recibe.trim() : null }));
     if (modo === "devolucion") return q(supabase.rpc("registrar_devolucion", { ...base, p_almacen: almacen, p_motivo: motivo.trim() }));
     return q(supabase.rpc("traspasar", { ...base, p_de: almacen, p_a: destino, p_motivo: motivo.trim() }));
   }, {
     exito: () => `${modo === "salida" ? "Salida" : modo === "devolucion" ? "Devolución" : "Traspaso"} registrada: ${numero(n)} ${unidadEn(articulo?.unidad ?? "", n)} de ${articulo?.nombre ?? ""}`,
     invalidar: [["mis_movimientos_hoy"], ["v_existencias"], ["existencias_articulo"], ["kardex"], ["v_movimientos"]],
+    // Quién recibe se queda: casi siempre la misma persona se lleva varias cosas seguidas.
     alTerminar: () => { setArticulo(null); setAlmacen(null); setDestino(null); setCantidad(""); setMotivo(""); },
   });
 
@@ -208,9 +216,16 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
               <label className="space-y-1.5 min-w-0">
                 <span className="text-sm font-medium">{modo === "salida" ? "Para qué o para quién" : "Motivo"}</span>
                 <input ref={refMotivo} className="campo h-11" value={motivo} onChange={(e) => setMotivo(e.target.value)}
-                  placeholder={modo === "salida" ? (tipoSalida === "salida_venta" ? "Venta mostrador · cliente" : "Taller · Juan") : "Obligatorio"} />
+                  placeholder={modo === "salida" ? (tipoSalida === "salida_venta" ? "Venta mostrador · cliente" : "Taller, EPP, plasma…") : "Obligatorio"} />
               </label>
             </div>
+            {pideRecibe && (
+              <label className="block space-y-1.5" data-explain={GLOSARIO.quienRecibe} data-explain-title="¿Quién lo recibe?">
+                <span className="text-sm font-medium">¿Quién lo recibe?</span>
+                <input className="campo h-11" list="recibe-consumo" value={recibe} onChange={(e) => setRecibe(e.target.value)} placeholder="Escribe o elige un nombre" />
+                <datalist id="recibe-consumo">{(personal.data ?? []).map((p) => <option key={p.id} value={p.nombre} />)}</datalist>
+              </label>
+            )}
             {insuficiente && (
               <p className="text-xs text-peligro -mt-2">En {nombreAlm(almacen)} solo hay {numero(hayEn(almacen))}. La base no deja sacar más de lo que hay.</p>
             )}
@@ -246,7 +261,7 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm truncate">{m.nombre}</p>
                   <p className="text-xs text-tenue truncate">
-                    <InsigniaMovimiento tipo={m.tipo} /> <span className="ml-1">{nombreCorto(m.almacen)}{m.referencia ? ` · ${m.referencia}` : ""}{m.motivo ? ` · ${m.motivo}` : ""}</span>
+                    <InsigniaMovimiento tipo={m.tipo} /> <span className="ml-1">{nombreCorto(m.almacen)}{m.referencia ? ` · ${m.referencia}` : ""}{m.motivo ? ` · ${m.motivo}` : ""}{m.recibio ? ` · recibió ${m.recibio}` : ""}</span>
                   </p>
                 </div>
                 <div className="text-right shrink-0">

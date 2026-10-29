@@ -14,6 +14,7 @@ import { CantidadConSigno, InsigniaMovimiento, TIPO_MOV, nombreCorto, todasLasFi
 interface Mov {
   id: number; en: string; tipo: TipoMovimiento; clave: string; nombre: string; unidad: string; almacen: string; cantidad: number;
   costo_unitario: number | null; motivo: string | null; usuario: string | null; referencia: string | null; fuera_de_lista: boolean;
+  recibio: string | null;
 }
 
 const GRUPOS: { valor: string; texto: string; tipos: TipoMovimiento[] }[] = [
@@ -54,7 +55,7 @@ export function Historial() {
       const tipos = GRUPOS.find((g) => g.valor === grupo)?.tipos ?? [];
       return todasLasFilas<Mov>((d, h) => {
         let c = supabase.from("v_movimientos")
-          .select("id, en, tipo, clave, nombre, unidad, almacen, cantidad, costo_unitario, motivo, usuario, referencia, fuera_de_lista")
+          .select("id, en, tipo, clave, nombre, unidad, almacen, cantidad, costo_unitario, motivo, usuario, referencia, fuera_de_lista, recibio")
           .order("en", { ascending: false }).order("id", { ascending: false });
         if (tipos.length) c = c.in("tipo", tipos);
         if (almacen) c = c.eq("almacen_id", Number(almacen));
@@ -79,6 +80,7 @@ export function Historial() {
       celda: (m) => <CantidadConSigno n={Number(m.cantidad)} unidad={m.unidad} /> },
     { clave: "referencia", titulo: "Referencia", clase: "whitespace-nowrap px-2 text-xs", celda: (m) => m.referencia ?? <span className="text-tenue">—</span> },
     { clave: "motivo", titulo: "Motivo", clase: "max-w-[200px] truncate text-tenue text-xs px-2", celda: (m) => <span title={m.motivo ?? ""}>{m.motivo ?? "—"}</span> },
+    { clave: "recibio", titulo: "Recibió", clase: "whitespace-nowrap text-xs px-2", explica: GLOSARIO.quienRecibe, celda: (m) => m.recibio ?? <span className="text-tenue">—</span> },
     { clave: "usuario", titulo: "Quién", clase: "whitespace-nowrap text-xs px-2" },
     { clave: "valor", titulo: "Valor", alinear: "der", sinBusqueda: true, oculta: !verCostos,
       valor: (m) => (m.costo_unitario == null ? null : Math.round(Number(m.cantidad) * Number(m.costo_unitario) * 100) / 100),

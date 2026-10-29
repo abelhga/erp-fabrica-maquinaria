@@ -19,7 +19,7 @@ import { BarraAvance, IconoEvento, InsigniaCompromiso } from "./componentes/piez
 import { PasosValidacion, type AccionPaso } from "./componentes/Validacion";
 import { DialogoSurtir, MaterialOrden } from "./componentes/MaterialOrden";
 import { DialogoAgregarEtapa, DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, DialogoEnEspera, DialogoReabrir, DialogoRegresarStock, type OrdenBasica } from "./componentes/DialogosOrden";
-import { ESTADO_OP, ESTADO_OPERACION, PRIORIDAD, horas, textoEvento } from "./componentes/util";
+import { ESTADO_OP, ESTADO_OPERACION, PRIORIDAD, horas, textoEvento, cifra } from "./componentes/util";
 import { AvanceEtapa } from "./componentes/AvanceEtapa";
 import { GanttCompacto } from "./Gantt";
 import { GLOSARIO } from "@/tutorial/glosario";
@@ -368,9 +368,10 @@ export default function DetalleOrden() {
                 <li key={e.id} className="relative flex gap-3 pb-3">
                   {i < (eventos.data?.length ?? 0) - 1 && <span className="absolute left-[7px] top-5 bottom-0 w-px bg-borde" />}
                   <IconoEvento tipo={e.tipo} className="mt-0.5 relative bg-superficie" />
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className={cn("text-sm leading-snug", e.tipo === "problema" && "text-peligro")}>{textoEvento(e, false)}</p>
                     <p className="text-xs text-tenue cifra">{fechaYHora(e.en)}{e.usuario && ` · ${e.usuario}`}</p>
+                    {e.tipo === "surtido" && <PartidasSurtido evento={e.id} />}
                   </div>
                 </li>
               ))}
@@ -443,3 +444,39 @@ function HorasDeEtapa({ h }: { h?: HorasHombre }) {
     </div>
   );
 }
+
+interface PartidaSurtido { articulo_id: string; clave: string; nombre: string; unidad: string; cantidad: number; almacen: string | null; fuera_de_lista: boolean; consumo: boolean; motivo: string | null }
+
+/** Qué fueron las partidas de un surtido: se piden al abrirlas (una orden trae decenas de avisos). */
+function PartidasSurtido({ evento }: { evento: number }) {
+  const [abierto, setAbierto] = useState(false);
+  const partidas = useQuery({
+    queryKey: [...CLAVE, "partidas_surtido", evento], enabled: abierto, staleTime: Infinity,
+    queryFn: () => q<PartidaSurtido[]>(supabase.rpc("partidas_surtido", { p_evento: evento })),
+  });
+  return (
+    <div className="mt-0.5">
+      <button type="button" className="text-xs text-marca-texto hover:underline" aria-expanded={abierto} onClick={() => setAbierto((v) => !v)}>
+        {abierto ? "Ocultar partidas" : "Ver partidas"}
+      </button>
+      {abierto && (partidas.isLoading ? <p className="text-xs text-tenue">Cargando…</p> : partidas.error ? <ErrorCarga error={partidas.error} /> : (
+        (partidas.data ?? []).length === 0
+          ? <p className="text-xs text-tenue">Este surtido no guardó sus partidas. Lo surtido se ve en Material, columna Surtido.</p>
+          : <ul className="mt-1 space-y-1 rounded-lg bg-fondo/70 px-2.5 py-2 text-xs">
+              {partidas.data!.map((x, i) => (
+                <li key={`${x.articulo_id}-${i}`} className="flex gap-2">
+                  <span className="cifra font-medium whitespace-nowrap">{cifra(x.cantidad)} {x.unidad}</span>
+                  <span className="min-w-0">
+                    {x.nombre}
+                    {x.fuera_de_lista && <span data-explain={GLOSARIO.fueraDeLista}> <Insignia tono="aviso">Fuera de lista</Insignia></span>}
+                    {x.consumo && <span data-explain={GLOSARIO.consumibleTaller}> <Insignia tono="neutro">Al taller</Insignia></span>}
+                    {(x.almacen || x.motivo) && <span className="block text-tenue">{[x.almacen, x.fuera_de_lista ? x.motivo : null].filter(Boolean).join(" · ")}</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+      ))}
+    </div>
+  );
+}
+

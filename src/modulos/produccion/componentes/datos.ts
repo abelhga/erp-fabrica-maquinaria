@@ -82,6 +82,8 @@ export interface MaterialOP {
   requerido: number; surtido: number; ruta: string | null; agregado: boolean; notas: string | null;
   apartado: number; faltante: number; pedido_a_compras: number; existencia_planta: number;
   por_surtir: number; disponible_planta: number; tipo: string;
+  /** Consumible del taller (discos, soldadura, EPP…): sale a nombre de quien lo recibe, no a la orden. */
+  del_taller: boolean;
 }
 
 export function useTablero() {

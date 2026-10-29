@@ -45,6 +45,7 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
   const conFaltante = lista.filter((m) => m.faltante > 0).length;
   const porSurtir = lista.filter((m) => m.por_surtir > 0).length;
   const fuera = lista.filter((m) => m.agregado).length;
+  const delTaller = lista.filter((m) => m.del_taller).length;
 
   const corregir = useAccion((a: { id: string; requerido: number }) =>
     q(supabase.from("op_materiales").update({ requerido: a.requerido }).eq("id", a.id).select("id")), {
@@ -59,6 +60,7 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
           {conFaltante > 0 ? <span className="text-peligro font-medium">{conFaltante} con faltante</span> : lista.length > 0 && <span className="text-ok">Nada falta</span>}
           <span>{porSurtir} por surtir</span>
           {fuera > 0 && <span>{fuera} agregadas o fuera de lista</span>}
+          {delTaller > 0 && <span data-explain={GLOSARIO.consumibleTaller}>{delTaller} {delTaller === 1 ? "consumible" : "consumibles"} del taller</span>}
         </span>}
         acciones={<div className="flex flex-wrap justify-end gap-2">
           {acciones}
@@ -101,6 +103,7 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
                         <p className="text-xs text-tenue flex flex-wrap items-center gap-1.5">
                           <span>{m.clave}</span>
                           {m.agregado && <Insignia tono={m.requerido === 0 ? "aviso" : "info"}>{m.requerido === 0 ? "Fuera de lista" : "Agregado"}</Insignia>}
+                          {m.del_taller && <span data-explain={GLOSARIO.consumibleTaller}><Insignia tono="neutro">Del taller</Insignia></span>}
                           {m.notas && <span className="italic truncate">{m.notas}</span>}
                         </p>
                       </td>
@@ -216,6 +219,17 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
   const pendientes = useMemo(() => material.filter((m) => m.por_surtir > 0)
     .sort((a, b) => Number(b.apartado > 0) - Number(a.apartado > 0) || a.nombre.localeCompare(b.nombre, "es")), [material]);
   const [extras, setExtras] = useState<Extra[]>([]);
+  // Con el switch de almacén, lo de las categorías consumibles sale al taller a nombre de quien recibe.
+  const idsExtras = extras.map((x) => x.art.id);
+  const consumibles = useQuery({
+    queryKey: [...CLAVE, "consumibles_taller", idsExtras],
+    enabled: abierto && idsExtras.length > 0,
+    queryFn: async () => {
+      const r = await Promise.all(idsExtras.map((id) => q<boolean>(supabase.rpc("es_consumible_taller", { p_articulo: id })).then((v) => [id, v] as const)));
+      return new Set(r.filter(([, v]) => v).map(([id]) => id));
+    },
+  });
+  const esDelTaller = (id: string) => consumibles.data?.has(id) ?? false;
   const ids = useMemo(() => [...new Set([...pendientes.map((m) => m.articulo_id), ...extras.map((x) => x.art.id)])], [pendientes, extras]);
   const existencias = useQuery({
     queryKey: [...CLAVE, "existencias_surtir", ordenId, ids],
@@ -264,7 +278,12 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
   const surtir = useAccion((lineas: unknown[]) => q(supabase.rpc("surtir_material", {
     p_op: ordenId, p_lineas: lineas, p_recibio: recibe.trim() || null, p_previo: previo,
   })), {
-    exito: previo ? "Quedó registrado lo que ya se había entregado" : "Material surtido a la orden", invalidar: [CLAVE], alTerminar: () => alCambiar(false),
+    exito: () => {
+      if (previo) return "Quedó registrado lo que ya se había entregado";
+      const taller = extras.filter((x) => Number(x.cantidad) > 0 && esDelTaller(x.art.id)).length;
+      return taller ? `Material surtido; ${taller} consumible(s) salieron al taller a nombre de ${recibe.trim()}` : "Material surtido a la orden";
+    },
+    invalidar: [CLAVE], alTerminar: () => alCambiar(false),
   });
 
   function enviar() {
@@ -276,7 +295,7 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
     ];
     if (lineas.length === 0) { toast.error("Escribe al menos una cantidad"); return; }
     if (!previo && !recibe.trim()) { toast.error("Elige quién recibe el material"); return; }
-    const sinMotivo = extras.find((x) => Number(x.cantidad) > 0 && !x.motivo.trim());
+    const sinMotivo = extras.find((x) => Number(x.cantidad) > 0 && !x.motivo.trim() && !esDelTaller(x.art.id));
     if (sinMotivo) { toast.error(`Escribe por qué sale "${sinMotivo.art.nombre}" si no está en la lista`); return; }
     surtir.mutate(lineas);
   }
@@ -352,14 +371,15 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
 
       {!previo && <div className="mt-5 space-y-2">
         <p className="text-sm font-medium">Fuera de la lista</p>
-        <p className="text-xs text-tenue">Lo que sale para esta orden sin estar en su lista (tornillería distinta, discos, soldadura). Sirve para corregir el costeo.</p>
+        <p className="text-xs text-tenue">Lo que sale para esta orden sin estar en su lista (una pieza distinta, tornillería de otra medida). Sirve para corregir la lista. Si es consumible del taller (discos, lijas, soldadura, EPP) sale a nombre de quien recibe, no a la orden, y no pide motivo.</p>
         {extras.map((x, i) => (
           <div key={x.art.id} className="grid gap-2 sm:grid-cols-[1fr_6rem_12rem_1fr_auto] items-center rounded-lg border border-borde p-2">
             <p className="text-sm truncate" title={x.art.nombre}>{x.art.nombre}</p>
             <input className="campo h-8 text-right cifra" inputMode="decimal" placeholder="Cant." value={x.cantidad} aria-label="Cantidad"
                    onChange={(e) => setExtras((l) => l.map((y, k) => (k === i ? { ...y, cantidad: e.target.value } : y)))} />
             {selAlmacen(x.art.id, x.almacen || alm[x.art.id] || "", (v) => setExtras((l) => l.map((y, k) => (k === i ? { ...y, almacen: v } : y))))}
-            <input className="campo h-8" placeholder="Motivo (obligatorio)" value={x.motivo} aria-label="Motivo"
+            <input className="campo h-8" placeholder={esDelTaller(x.art.id) ? "Consumo del taller (motivo opcional)" : "Motivo (obligatorio)"} value={x.motivo} aria-label="Motivo"
+                   data-explain={esDelTaller(x.art.id) ? GLOSARIO.consumibleTaller : undefined}
                    onChange={(e) => setExtras((l) => l.map((y, k) => (k === i ? { ...y, motivo: e.target.value } : y)))} />
             <button type="button" className="p-1.5 text-tenue hover:text-peligro" aria-label="Quitar" onClick={() => setExtras((l) => l.filter((_, k) => k !== i))}>
               <Trash2 className="h-4 w-4" />
@@ -368,7 +388,7 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
         ))}
         <BuscadorArticulo tipos={TIPOS_MATERIAL} mostrarPrecio={false} placeholder="Agregar material fuera de la lista…"
           alElegir={(a) => {
-            if (material.some((m) => m.articulo_id === a.id && m.requerido > 0)) { toast.info(`"${a.nombre}" ya está en la lista: surte desde la tabla`); return; }
+            if (material.some((m) => m.articulo_id === a.id && m.requerido > 0 && !m.del_taller)) { toast.info(`"${a.nombre}" ya está en la lista: surte desde la tabla`); return; }
             if (!extras.some((x) => x.art.id === a.id)) setExtras((l) => [...l, { art: a, cantidad: "", almacen: "", motivo: "" }]);
           }} />
       </div>}

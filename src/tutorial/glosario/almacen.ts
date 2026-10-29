@@ -10,12 +10,20 @@ export const ALMACEN = {
   // Movimientos
   kardex: "La historia de un artículo: cada entrada y salida con fecha, quién la hizo, para qué y el saldo que quedó en ese almacén.",
   tipoMovimiento: "Qué fue: entrada de compra, devolución, salida a producción, venta, consumo, traspaso, ajuste autorizado o saldo inicial. Lo que entra suma (verde) y lo que sale resta (rojo).",
-  salidaConsumo: "Material que se gasta en la planta y no va a un cliente: taller, EPP, plasma, torno, pintura, uniformes, mantenimiento.",
+  salidaConsumo: "Material que se gasta en la planta y no va a un cliente: taller, EPP, plasma, torno, pintura, uniformes, mantenimiento. Se anota quién lo recibe, para ver cuánto se lleva cada persona.",
   traspaso: "Mover material de un almacén a otro. El total no cambia, solo dónde está. Mandar mercancía al Full de Mercado Libre es un traspaso.",
   devolucionAlmacen: "Material que regresa al almacén: lo que sobró de una orden, lo que devolvió un cliente o una garantía.",
-  fueraDeLista: "Salió a una orden de producción sin estar en su lista de materiales. Puede estar bien, pero conviene revisar si a la lista le falta algo.",
+  fueraDeLista: "Salió a una orden de producción sin estar en su lista de materiales, con el motivo que escribió almacén. Puede estar bien, pero conviene preguntar por qué y revisar si a la lista le falta algo. Si «Consumibles del taller» está encendido en Configuración, los consumibles no cuentan aquí: salen a nombre de quien los recibe.",
+  consumibleTaller: "Lo que se gasta trabajando y no se queda en el equipo: discos, lijas, soldadura, EPP y lo demás de las categorías marcadas en Configuración → Almacenes. Con «Consumibles del taller» encendido sale a nombre de quien lo recibe, no a la orden: en la orden se ve como «Del taller» y no cuenta como faltante, no se aparta ni se pide a compras por orden (lo cubre el reabasto).",
   ajusteInventario: "La única forma de corregir una existencia. Lo pide quien encontró la diferencia y lo autoriza la gerencia de producción, dirección o el jefe de almacén; quien lo pidió no se lo autoriza (salvo dirección). Hasta entonces la existencia no cambia.",
   conteoFisico: "Contar lo que hay en un almacén, artículo por artículo. Al cerrar el conteo, cada diferencia se vuelve un ajuste por autorizar; lo que no se contó no se ajusta.",
+  // Métricas de almacén
+  surtidoOrdenes: "Partidas que almacén entregó a órdenes de producción en el periodo (cada artículo en cada surtido es una partida) y a cuántas órdenes distintas.",
+  consumoTaller: "Lo que salió de los consumibles del taller en el periodo: renglones y a cuántas personas. «Sin anotar» son salidas a consumo que no dicen quién lo recibió.",
+  consumoVsReceta: "Lo que salió de cada consumible en el periodo contra lo que prevén las recetas de las órdenes que se terminaron en ese mismo periodo. Arriba de la receta es más de 20 % sobre lo previsto. Lo que no viene en ninguna receta (como el EPP) solo se ve por persona.",
+  exactitudConteo: "De los renglones contados en los conteos que se cerraron en el periodo, cuántos coincidieron con el sistema. Cada renglón que no coincidió se volvió un ajuste.",
+  esperandoMaterial: "Órdenes abiertas con partidas de su lista todavía por surtir (sin contar los consumibles del taller). Las que ya están en proceso empezaron sin su material completo.",
+  quienRegistra: "Cuántos movimientos registró cada persona en el ERP en el periodo, por tipo. Es quién lo capturó, no quién se lo llevó.",
   // Reabasto
   consumo12Meses: "Lo que salió cada mes del último año (salidas a producción, ventas y consumo). Las seis barras de color son los meses que cuenta la regla; las grises, los anteriores.",
   demandaMensual: "Cuánto se usa al mes. Se calcula solo si el artículo tuvo consumo en suficientes meses de los últimos seis, y es el promedio de los meses con consumo. Un importado con consumo de vez en cuando promedia el año.",

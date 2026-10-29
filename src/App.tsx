@@ -33,6 +33,7 @@ const DetalleProveedor = p(() => import("./modulos/compras/DetalleProveedor"));
 const Existencias = p(() => import("./modulos/almacen/Existencias"));
 const Movimientos = p(() => import("./modulos/almacen/Movimientos"));
 const Reabasto = p(() => import("./modulos/almacen/Reabasto"));
+const MetricasAlmacen = p(() => import("./modulos/almacen/Metricas"));
 const Gerencia = p(() => import("./modulos/produccion/Gerencia"));
 const PedidosPlanta = p(() => import("./modulos/produccion/Pedidos"));
 const Cuadrillas = p(() => import("./modulos/produccion/Cuadrillas"));
@@ -178,6 +179,7 @@ export function App() {
           <Route path="almacen/existencias" element={<Con m="inventario"><Existencias /></Con>} />
           <Route path="almacen/movimientos" element={<Con m="inventario"><Movimientos /></Con>} />
           <Route path="almacen/reabasto" element={<Con m="inventario"><Reabasto /></Con>} />
+          <Route path="almacen/metricas" element={<Con m="inventario" n={2}><MetricasAlmacen /></Con>} />
           <Route path="almacen/envios" element={<Con m="envios"><Envios /></Con>} />
           <Route path="ventas/devoluciones" element={<Con m="envios"><Devoluciones /></Con>} />
           <Route path="ventas/mercadolibre" element={<Con m="mercadolibre"><MercadoLibre /></Con>} />
