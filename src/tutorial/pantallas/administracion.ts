@@ -60,4 +60,10 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
     "Cuando cuentes el efectivo, usa «Arqueo»: escribe cuánto hay y, si no cuadra con el saldo, la diferencia queda anotada como sobrante o faltante con tu nombre.",
     "El saldo es la suma de todo lo que ha entrado menos lo que ha salido desde que empezó la hoja. Se pinta en rojo abajo del mínimo (toca reponer) y en amarillo arriba del máximo (sobra efectivo).",
   ],
+  "/finanzas/resultados": [
+    "Aquí ves cuánto deja de verdad lo que se vende: de las ventas del periodo, cuánto se va en fabricar, cuánto en vender y administrar, y cuánto queda. La ven dirección, finanzas y la gerencia administrativa.",
+    "Elige el periodo arriba. El diagrama se lee de izquierda a derecha: las ventas por línea se juntan y se reparten en costo de fabricación, gastos de operación y utilidad; el grueso de cada franja es el dinero. Pasa el mouse por una franja para ver cuánto es y qué parte de las ventas. Con el botón de tabla ves lo mismo en números.",
+    "Los números con ≈ son estimados: casi todas las ventas que vienen de la hoja no tienen costeo y la nómina todavía no se cierra en el ERP. La tabla de abajo dice de dónde sale cada número; los avisos de arriba dicen qué falta para que el periodo esté completo.",
+    "En «Categorías de compra» decides cómo cuenta cada categoría del libro de compras: material (ya va en lo vendido), gasto de fabricación o gasto de operación. Finanzas la cambia; el cambio se ve en todos los periodos.",
+  ],
 };
