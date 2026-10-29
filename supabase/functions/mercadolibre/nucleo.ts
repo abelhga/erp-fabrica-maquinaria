@@ -138,6 +138,8 @@ export function normalizarPregunta(q: Obj, titulo?: string | null, itemActivo?: 
     id: num(q.id), item_id: txt(q.item_id), titulo: titulo ?? null, texto: txt(q.text) ?? "",
     estado: txt(q.status), fecha: txt(q.date_created), respuesta: txt(resp.text), fecha_respuesta: txt(resp.date_created),
     item_activo: itemActivo ?? null,
+    // Quién preguntó: con eso se muestran sus preguntas anteriores en la misma publicación.
+    comprador_id: num(o(q.from).id) ?? null,
   };
 }
 
@@ -267,7 +269,18 @@ async function procesarUno(e: Entorno, admin: SupabaseClient, access: string, to
     }
     const item = txt(pregunta.item_id);
     const pub = item ? await apiML(e, access, `/items/${item}?attributes=title,status`).catch(() => null) : null;
-    await rpc("ml_registrar_pregunta", normalizarPregunta(pregunta, pub ? txt(pub.title) : null, pub ? txt(pub.status) === "active" : null));
+    const datos = normalizarPregunta(pregunta, pub ? txt(pub.title) : null, pub ? txt(pub.status) === "active" : null);
+    await rpc("ml_registrar_pregunta", datos);
+    // Muchas preguntas siguen a otra del mismo comprador en esa publicación (a veces de antes de
+    // conectar el ERP): se traen para que quien contesta vea la conversación completa. Si ML no
+    // responde, la pregunta ya quedó registrada; lo anterior solo es contexto.
+    if (item && datos.comprador_id) {
+      const previas = await apiML(e, access, `/questions/search?item=${item}&from=${datos.comprador_id}&api_version=4&limit=50`).catch(() => ({} as Obj));
+      for (const q of (Array.isArray(previas.questions) ? previas.questions : []) as Obj[]) {
+        if (num(q.id) === datos.id) continue;
+        await rpc("ml_registrar_pregunta", normalizarPregunta(q, datos.titulo, datos.item_activo)).catch(() => undefined);
+      }
+    }
   }
   // Otros tópicos (items, mensajes…) todavía no se usan: se marcan como vistos.
 }
@@ -428,14 +441,14 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
   }
 
   if (accion === "procesar") {
-    if (!(await puede(u.db, "ventas", 2)) && !(await esDireccion(u.db))) return json({ error: "Sin permiso" }, 403);
+    if (!(await puede(u.db, "mercadolibre", 2)) && !(await esDireccion(u.db))) return json({ error: "Sin permiso" }, 403);
     // Lo que se agotó en intentos vuelve a la fila cuando alguien lo pide a mano.
     await admin.from("ml_avisos").update({ intentos: 0 }).is("procesado_en", null).gte("intentos", MAX_INTENTOS);
     try { return json(await procesarPendientes(e, admin, 50)); } catch (err) { return json({ error: err instanceof Error ? err.message : String(err) }, 502); }
   }
 
   if (accion === "sincronizar") {
-    if (!(await puede(u.db, "ventas", 2)) && !(await esDireccion(u.db))) return json({ error: "Sin permiso" }, 403);
+    if (!(await puede(u.db, "mercadolibre", 2)) && !(await esDireccion(u.db))) return json({ error: "Sin permiso" }, 403);
     const b = o(await req.json().catch(() => ({})));
     const desde = txt(b.ventas_desde);
     if (desde && !/^\d{4}-\d{2}-\d{2}$/.test(desde)) return json({ error: "La fecha va como AAAA-MM-DD" }, 400);
@@ -443,7 +456,7 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
   }
 
   if (accion === "responder") {
-    if (!(await puede(u.db, "ventas", 2))) return json({ error: "Contestar preguntas es de ventas" }, 403);
+    if (!(await puede(u.db, "mercadolibre", 2))) return json({ error: "Contestar preguntas es de quien atiende Mercado Libre" }, 403);
     const b = o(await req.json().catch(() => ({})));
     const id = num(b.pregunta_id), texto = txt(b.texto);
     if (!id || !texto) return json({ error: "Falta la pregunta o la respuesta" }, 400);

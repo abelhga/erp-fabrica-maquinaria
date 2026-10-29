@@ -6,14 +6,14 @@ import { EN_VISTA_PREVIA, supabase } from "./supabase";
 export type Rol =
   | "direccion" | "admin" | "gerente_ventas" | "ventas" | "ingenieria" | "compras" | "almacen"
   | "gerente_produccion" | "produccion" | "rrhh" | "finanzas" | "pantalla"
-  | "importaciones" | "administracion" | "recepcion" | "mantenimiento" | "ingenieria_procesos" | "terminal";
+  | "importaciones" | "administracion" | "recepcion" | "mantenimiento" | "ingenieria_procesos" | "terminal" | "marketing";
 
 export const NOMBRE_ROL: Record<Rol, string> = {
   direccion: "Dirección", admin: "Sistemas", gerente_ventas: "Gerencia de ventas", ventas: "Ventas",
   ingenieria: "Ingeniería", compras: "Compras", almacen: "Almacén", gerente_produccion: "Gerencia de producción",
   produccion: "Producción", rrhh: "Recursos humanos", finanzas: "Finanzas", pantalla: "Pantalla de piso",
   importaciones: "Importaciones", administracion: "Gerencia administrativa", recepcion: "Recepción",
-  mantenimiento: "Mantenimiento", ingenieria_procesos: "Ingeniería de procesos", terminal: "Terminal de piso",
+  mantenimiento: "Mantenimiento", ingenieria_procesos: "Ingeniería de procesos", terminal: "Terminal de piso", marketing: "Marketing",
 };
 
 export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" | "produccion" | "rrhh" | "finanzas" | "admin" | "asistente"
@@ -28,6 +28,8 @@ export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" |
   | "mantenimiento"
   // analisis: el BI de dirección (mapa, tendencias, clientes, producto, metas). Sin costos.
   | "analisis"
+  // mercadolibre: preguntas y publicaciones de ML. 1 ver · 2 contestar y ligar. Aparte de ventas para que marketing lo tenga sin clientes ni cotizaciones.
+  | "mercadolibre"
   // comisiones: 1 = ver las de todos los vendedores (cada vendedor ve la suya sin él) · 2 = marcarlas pagadas.
   | "comisiones"
   // margenes: 1 = ver utilidad, políticas y la fórmula del precio · 2 = fijar el margen o precio de un artículo

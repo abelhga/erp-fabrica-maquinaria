@@ -22,6 +22,7 @@ import { GLOSARIO } from "@/tutorial/glosario";
 interface Pregunta {
   id: number; item_id: string; articulo_id: string | null; titulo_publicacion: string | null; texto: string;
   estado: "pendiente" | "contestada" | "borrada" | "sin_publicacion"; recibida_en: string; respuesta: string | null; contestada_en: string | null;
+  comprador_id: number | null;
 }
 
 const minutos = (p: Pregunta) => p.contestada_en ? (new Date(p.contestada_en).getTime() - new Date(p.recibida_en).getTime()) / 60_000 : null;
@@ -30,6 +31,7 @@ const duracion = (m: number) => m < 60 ? `${Math.round(m)} min` : m < 48 * 60 ? 
 /** Lo de Mercado Libre que pide a alguien: preguntas por contestar y publicaciones por ligar. */
 export default function MercadoLibre() {
   const { puede, tieneRol } = useSesion();
+  const veDinero = puede("ventas", 1) || puede("finanzas", 1);
   const [params, setParams] = useSearchParams();
   const seccion = params.get("seccion") ?? "preguntas";
   useTiempoReal("ml_preguntas", [["ml_preguntas"]]);
@@ -52,7 +54,7 @@ export default function MercadoLibre() {
   const enUnaHora = tiempos.length ? tiempos.filter((m) => m <= 60).length / tiempos.length : null;
 
   return (
-    <Pagina titulo="Mercado Libre" descripcion="Preguntas de compradores por contestar, publicaciones que falta ligar a su artículo y el dinero de cada venta. Las ventas entran solas a Pedidos."
+    <Pagina titulo="Mercado Libre" descripcion={`Preguntas de compradores por contestar, publicaciones que falta ligar a su artículo${veDinero ? " y el dinero de cada venta" : ""}. Las ventas entran solas a Pedidos.`}
       acciones={(tieneRol("direccion") || puede("admin", 3)) && <Boton asChild variante="secundario"><Link to="/sistema/configuracion?seccion=integraciones"><Settings className="h-4 w-4" /> Conexión</Link></Boton>}>
       {estado.data && !estado.data.conectada && (
         <p className="rounded-lg bg-aviso-suave px-3 py-2 text-sm">Mercado Libre todavía no está conectado: aquí aparecerán las preguntas y las publicaciones por ligar en cuanto dirección lo conecte en Configuración → Integraciones.</p>
@@ -71,13 +73,14 @@ export default function MercadoLibre() {
           { valor: "preguntas", texto: "Preguntas", cuenta: pendientes.length },
           { valor: "ligar", texto: "Por ligar", cuenta: sinLigar.data?.length, explica: GLOSARIO.publicacionPorLigar },
           { valor: "ligadas", texto: "Ligadas", explica: GLOSARIO.publicacionLigada },
-          { valor: "dinero", texto: "Dinero", explica: GLOSARIO.dineroML },
+          // El dinero de cada venta es de ventas y finanzas; marketing atiende ML sin verlo.
+          ...(veDinero ? [{ valor: "dinero", texto: "Dinero", explica: GLOSARIO.dineroML }] : []),
         ]} />
         <ContenidoPestana value="preguntas" className="pt-4 space-y-3">
           {preguntas.error ? <ErrorCarga error={preguntas.error} /> : preguntas.isLoading ? <Cargando filas={4} /> : todas.length === 0 ? (
             <div className="tarjeta"><Vacio icono={MessageCircleQuestion} titulo="Sin preguntas todavía" texto="Cuando un comprador pregunte en una publicación, aparece aquí y le llega un aviso al responsable de Mercado Libre." /></div>
           ) : <>
-            {pendientes.map((p) => <PreguntaPendiente key={p.id} p={p} editable={puede("ventas", 2)} />)}
+            {pendientes.map((p) => <PreguntaPendiente key={p.id} p={p} editable={puede("mercadolibre", 2)} />)}
             {pendientes.length === 0 && <p className="text-sm text-tenue">No hay preguntas sin contestar.</p>}
             {todas.some((p) => p.estado === "sin_publicacion") && (
               <p className="text-xs text-tenue" data-explain={GLOSARIO.preguntaSinPublicacion} data-explain-title="Sin publicación activa">
@@ -103,17 +106,17 @@ export default function MercadoLibre() {
             <div className="tarjeta"><Vacio icono={Link2} titulo="Todas las publicaciones vendidas están ligadas" texto="Si se vende una publicación que el ERP no conoce (sin SKU o con uno que no es clave del catálogo), aparece aquí para decir qué artículo es. Su envío ya está pedido: almacén también la puede ligar al empacar." /></div>
           ) : (
             <Tarjeta>
-              <ul className="divide-y divide-borde">{sinLigar.data!.map((s) => <Ligar key={s.item_id} s={s} editable={puede("ventas", 2) || puede("compras", 2)} />)}</ul>
+              <ul className="divide-y divide-borde">{sinLigar.data!.map((s) => <Ligar key={s.item_id} s={s} editable={puede("mercadolibre", 2) || puede("compras", 2)} />)}</ul>
             </Tarjeta>
           )}
-          <PublicacionesAjenas editable={puede("ventas", 2) || puede("compras", 2)} />
+          <PublicacionesAjenas editable={puede("mercadolibre", 2) || puede("compras", 2)} />
         </ContenidoPestana>
         <ContenidoPestana value="ligadas" className="pt-4">
-          <PublicacionesLigadas editable={puede("ventas", 2) || puede("compras", 2)} />
+          <PublicacionesLigadas editable={puede("mercadolibre", 2) || puede("compras", 2)} />
         </ContenidoPestana>
-        <ContenidoPestana value="dinero" className="pt-4">
+        {veDinero && <ContenidoPestana value="dinero" className="pt-4">
           <DineroMercadoLibre />
-        </ContenidoPestana>
+        </ContenidoPestana>}
       </Pestanas>
     </Pagina>
   );
@@ -123,7 +126,15 @@ function PreguntaPendiente({ p, editable }: { p: Pregunta; editable: boolean }) 
   const qc = useQueryClient();
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const { puede } = useSesion();
   const espera = (Date.now() - new Date(p.recibida_en).getTime()) / 60_000;
+  // Lo que este comprador ya preguntó en la misma publicación: muchas preguntas siguen a otra.
+  const antes = useQuery({
+    queryKey: ["ml_preguntas", "comprador", p.item_id, p.comprador_id],
+    enabled: p.comprador_id != null,
+    queryFn: () => q<Pregunta[]>(supabase.from("ml_preguntas").select("*").eq("item_id", p.item_id).eq("comprador_id", p.comprador_id!)
+      .neq("id", p.id).neq("estado", "borrada").order("recibida_en")),
+  });
   async function enviar() {
     if (!texto.trim()) return;
     setEnviando(true);
@@ -141,10 +152,22 @@ function PreguntaPendiente({ p, editable }: { p: Pregunta; editable: boolean }) 
   return (
     <Tarjeta className="p-4 space-y-2">
       <div className="flex flex-wrap items-center gap-2 text-xs text-tenue">
-        {p.articulo_id ? <Link to={`/costeo/componentes/${p.articulo_id}`} className="text-marca-texto hover:underline">{p.titulo_publicacion ?? p.item_id}</Link> : <span>{p.titulo_publicacion ?? p.item_id}</span>}
+        {p.articulo_id ? <Link to={puede("costeo", 1) ? `/costeo/componentes/${p.articulo_id}` : `/catalogo?articulo=${p.articulo_id}`} className="text-marca-texto hover:underline">{p.titulo_publicacion ?? p.item_id}</Link> : <span>{p.titulo_publicacion ?? p.item_id}</span>}
         <span>· {fechaYHora(p.recibida_en)}</span>
         <Insignia tono={espera > 60 ? "peligro" : espera > 30 ? "aviso" : "info"}>esperando {duracion(espera)}</Insignia>
       </div>
+      {(antes.data?.length ?? 0) > 0 && (
+        <div className="rounded-lg border border-borde bg-fondo/60 px-3 py-2 space-y-2 text-sm" data-explain={GLOSARIO.preguntasAnterioresML} data-explain-title="Lo que ya preguntó">
+          <p className="text-xs font-medium text-tenue">Este comprador ya preguntó en esta publicación</p>
+          {antes.data!.map((x) => (
+            <div key={x.id}>
+              <p><span className="text-xs text-tenue">{fechaYHora(x.recibida_en)} · </span>{x.texto}</p>
+              {x.respuesta ? <p className="pl-3 border-l-2 border-ok text-tenue">{x.respuesta}</p>
+                : <p className="pl-3 text-xs text-aviso">{x.estado === "pendiente" ? "Sin contestar todavía" : "No se contestó"}</p>}
+            </div>
+          ))}
+        </div>
+      )}
       <p className="font-medium">{p.texto}</p>
       {editable && (
         <form className="flex gap-2 items-end" onSubmit={(e) => { e.preventDefault(); enviar(); }}>

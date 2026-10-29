@@ -30,7 +30,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/ventas/clientes", texto: "Clientes", icono: Users, modulo: "ventas" },
       { ruta: "/ventas/comisiones", texto: "Comisiones", icono: Trophy, modulo: "ventas" },
       { ruta: "/ventas/devoluciones", texto: "Devoluciones y reclamos", icono: Undo2, modulo: "envios" },
-      { ruta: "/ventas/mercadolibre", texto: "Mercado Libre", icono: Store, modulo: "ventas" },
+      { ruta: "/ventas/mercadolibre", texto: "Mercado Libre", icono: Store, modulo: "mercadolibre" },
     ],
   },
   {
@@ -158,6 +158,7 @@ export const PRIMERO_POR_ROL: Partial<Record<Rol, string[]>> = {
   ventas: ["Ventas"],
   gerente_ventas: ["Ventas", "Dirección"],
   recepcion: ["Ventas"],
+  marketing: ["Ventas"],
 };
 
 /** Los títulos de sección en el orden de quien entra: su puesto primero, lo demás como en MENU. */

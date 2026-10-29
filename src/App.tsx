@@ -180,7 +180,7 @@ export function App() {
           <Route path="almacen/reabasto" element={<Con m="inventario"><Reabasto /></Con>} />
           <Route path="almacen/envios" element={<Con m="envios"><Envios /></Con>} />
           <Route path="ventas/devoluciones" element={<Con m="envios"><Devoluciones /></Con>} />
-          <Route path="ventas/mercadolibre" element={<Con m="ventas"><MercadoLibre /></Con>} />
+          <Route path="ventas/mercadolibre" element={<Con m="mercadolibre"><MercadoLibre /></Con>} />
           <Route path="produccion/gerencia" element={<Con m="produccion"><Gerencia /></Con>} />
           <Route path="produccion/pedidos" element={<Con m="produccion" n={2}><PedidosPlanta /></Con>} />
           <Route path="produccion/cuadrillas" element={<Con m="produccion" n={2}><Cuadrillas /></Con>} />

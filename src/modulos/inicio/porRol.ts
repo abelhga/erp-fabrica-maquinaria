@@ -33,6 +33,8 @@ export const INICIO_POR_ROL: Partial<Record<Rol, Contenido>> = {
   importaciones: { tarjetas: ["embarques", "compras"], pendientes: ["docs_embarque", "oc_atrasadas"] },
   // Recepción: lo que registró hoy y si alguien lo está atendiendo.
   recepcion: { tarjetas: ["leads"], pendientes: [] },
+  // Marketing: de dónde llegan los leads y qué pasó con ellos; Mercado Libre está en su menú.
+  marketing: { tarjetas: ["leads"], pendientes: [] },
   // Mantenimiento: sus pendientes (fallas, preventivos) llegan por la campana; ve cómo va el taller.
   mantenimiento: { tarjetas: ["taller"], pendientes: [] },
   // Ingeniería de procesos: el taller y lo que vence; sus números están en Métricas.
