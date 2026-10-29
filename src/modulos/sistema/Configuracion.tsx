@@ -4,7 +4,7 @@ import { Pagina } from "@/components/layout/Shell";
 import { Pestanas, ListaPestanas, ContenidoPestana } from "@/components/ui/pestanas";
 import { ConfigEmpresa } from "./componentes/ConfigEmpresa";
 import { ConfigVentas } from "./componentes/ConfigVentas";
-import { ConfigAlmacenes, ConfigTaller } from "./componentes/ConfigCatalogos";
+import { ConfigAlmacenes, ConfigConsumibles, ConfigTaller } from "./componentes/ConfigCatalogos";
 import { ConfigTipoCambio } from "./componentes/ConfigTipoCambio";
 import { ConfigIntegraciones } from "./componentes/ConfigIntegraciones";
 
@@ -27,7 +27,7 @@ export default function Configuracion() {
         <ListaPestanas opciones={PESTANAS} />
         <ContenidoPestana value="empresa" className="pt-4"><ConfigEmpresa /></ContenidoPestana>
         <ContenidoPestana value="ventas" className="pt-4"><ConfigVentas /></ContenidoPestana>
-        <ContenidoPestana value="almacenes" className="pt-4"><ConfigAlmacenes /></ContenidoPestana>
+        <ContenidoPestana value="almacenes" className="pt-4 space-y-4"><ConfigAlmacenes /><ConfigConsumibles /></ContenidoPestana>
         <ContenidoPestana value="taller" className="pt-4"><ConfigTaller /></ContenidoPestana>
         <ContenidoPestana value="tipo-cambio" className="pt-4"><ConfigTipoCambio /></ContenidoPestana>
         <ContenidoPestana value="integraciones" className="pt-4"><ConfigIntegraciones /></ContenidoPestana>

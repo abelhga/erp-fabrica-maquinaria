@@ -5,10 +5,13 @@ import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Boton } from "@/components/ui/boton";
 import { Entrada, Seleccion } from "@/components/ui/campo";
 import { Cargando } from "@/components/ui/estados";
+import { Insignia } from "@/components/ui/insignia";
+import { Interruptor } from "@/components/ui/interruptor";
 import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { numero } from "@/lib/formato";
+import { cn } from "@/lib/utilidades";
 import { CeldaCheck, CeldaTexto, SoloLectura } from "./Editables";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -62,6 +65,83 @@ export function ConfigAlmacenes() {
             </Seleccion>
             <Boton type="submit" variante="secundario" cargando={agregar.isPending} disabled={!nuevo.nombre.trim()}><Plus className="h-4 w-4" /> Agregar</Boton>
           </form>
+        )}
+      </div>
+    </Tarjeta>
+  );
+}
+
+interface CategoriaConsumible { id: number; nombre: string; consumible_taller: boolean }
+
+/**
+ * El switch de consumibles del taller y qué categorías cuentan. La regla vive en la base
+ * (surtir manda esas partidas a consumo a nombre de quien recibe); aquí solo se prende.
+ */
+export function ConfigConsumibles() {
+  const { puede } = useSesion();
+  const editable = puede("inventario", 3) || puede("admin", 3);
+  const datos = useQuery({
+    queryKey: ["consumibles_taller"],
+    queryFn: async () => {
+      const [cats, conf] = await Promise.all([
+        q<CategoriaConsumible[]>(supabase.from("categorias").select("id, nombre, consumible_taller").order("nombre")),
+        q<{ valor: unknown }[]>(supabase.from("configuracion").select("valor").eq("clave", "almacen_consumibles_taller")),
+      ]);
+      return { cats, activo: conf[0]?.valor === true };
+    },
+  });
+  const guardadas = new Set((datos.data?.cats ?? []).filter((c) => c.consumible_taller).map((c) => c.id));
+  const [marcadas, setMarcadas] = useState<Set<number> | null>(null);
+  const actuales = marcadas ?? guardadas;
+  const cambiaron = marcadas != null && (marcadas.size !== guardadas.size || [...marcadas].some((id) => !guardadas.has(id)));
+  const fijar = useAccion((v: { activo: boolean; categorias: number[] | null }) =>
+    q<number>(supabase.rpc("fijar_consumibles_taller", { p_activo: v.activo, p_categorias: v.categorias })), {
+    exito: (n) => (n > 0 ? `Listo. Se soltó lo apartado para órdenes de ${numero(n)} consumible(s)` : "Listo"),
+    invalidar: [["consumibles_taller"]], alTerminar: () => setMarcadas(null),
+  });
+  const activo = datos.data?.activo ?? false;
+  const alternar = (id: number) => {
+    const n = new Set(actuales);
+    if (n.has(id)) n.delete(id); else n.add(id);
+    setMarcadas(n);
+  };
+  return (
+    <Tarjeta>
+      <EncabezadoTarjeta titulo="Consumibles del taller" explica={GLOSARIO.consumibleTaller}
+        descripcion="Lo que se gasta trabajando (discos, lijas, soldadura, EPP) sale a nombre de quien lo recibe, no a la orden. En la orden se ve como «Del taller» y no cuenta como faltante." />
+      <div className="px-5 pb-5 space-y-4">
+        {!editable && <SoloLectura quien="almacén (nivel administrar), sistemas o dirección" />}
+        {datos.isLoading ? <Cargando /> : (
+          <>
+            <div className="flex items-center justify-between gap-4 rounded-lg border border-borde px-4 py-3">
+              <div>
+                <p className="text-sm font-medium">Sacar los consumibles a nombre de quien los recibe</p>
+                <p className="text-xs text-tenue">Apagado, todo lo que sale para una orden se carga a la orden, como en la hoja. Al prenderlo se suelta lo que estaba apartado de consumibles para órdenes.</p>
+              </div>
+              {editable
+                ? <Interruptor activo={activo} cargando={fijar.isPending} aria-label="Consumibles del taller" alCambiar={(v) => fijar.mutate({ activo: v, categorias: null })} />
+                : <Insignia tono={activo ? "ok" : "neutro"}>{activo ? "Prendido" : "Apagado"}</Insignia>}
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Categorías que cuentan como consumibles <span className="text-tenue font-normal cifra">({numero(actuales.size)})</span></p>
+              <div className="flex flex-wrap gap-1.5">
+                {(datos.data?.cats ?? []).map((c) => (
+                  <button key={c.id} type="button" disabled={!editable} aria-pressed={actuales.has(c.id)} onClick={() => alternar(c.id)}
+                    className={cn("h-7 rounded-full border px-2.5 text-xs transition",
+                      actuales.has(c.id) ? "border-marca bg-marca-suave text-marca-texto font-medium" : "border-borde text-tenue hover:text-texto",
+                      !editable && !actuales.has(c.id) && "hidden")}>
+                    {c.nombre}
+                  </button>
+                ))}
+              </div>
+              {editable && cambiaron && (
+                <div className="flex gap-2">
+                  <Boton tamano="sm" cargando={fijar.isPending} onClick={() => fijar.mutate({ activo, categorias: [...actuales] })}>Guardar categorías</Boton>
+                  <Boton tamano="sm" variante="fantasma" onClick={() => setMarcadas(null)}>Deshacer</Boton>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </Tarjeta>

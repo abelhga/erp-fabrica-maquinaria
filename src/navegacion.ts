@@ -66,6 +66,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/almacen/existencias", texto: "Existencias", icono: Warehouse, modulo: "inventario" },
       { ruta: "/almacen/movimientos", texto: "Entradas y salidas", icono: ArrowLeftRight, modulo: "inventario" },
       { ruta: "/almacen/reabasto", texto: "Reabasto", icono: TrendingDown, modulo: "inventario" },
+      { ruta: "/almacen/metricas", texto: "Métricas de almacén", icono: Gauge, modulo: "inventario", nivel: 2 },
       { ruta: "/almacen/envios", texto: "Envíos", icono: PackageCheck, modulo: "envios" },
     ],
   },
