@@ -27,8 +27,21 @@ export const PUNTOS_CHECKLIST: { valor: PuntoChecklist; texto: string; corto: st
 export interface Vacaciones {
   empleado_id: string; nombre: string; fecha_ingreso: string; anios: number; dias_periodo: number; inicio_periodo: string;
   tomados: number; saldo: number; proximo_aniversario: string; dias_proximo_periodo: number; solicitados: number;
-  disfrutar_antes_de: string; saldo_arranque: number | null; fecha_arranque: string | null;
+  disfrutar_antes_de: string; saldo_arranque: number | null; fecha_arranque: string | null; periodo_arranque: number | null;
+  /** Lo que queda de los periodos vigentes; adelantados: lo tomado a cuenta de periodos que no empiezan. saldo = disponible − adelantados. */
+  disponible: number; adelantados: number; vence_primero: string | null; dias_vence_primero: number | null;
 }
+
+/** Un periodo de vacaciones: los días que da la ley al cumplir «periodo» años (vacaciones_periodos en la base). */
+export interface PeriodoVacaciones {
+  periodo: number; desde: string; vence: string; dias: number; usados: number; adelantados: number; restan: number;
+  estado: "vigente" | "por_venir" | "vencido";
+}
+/** A qué periodo se cargó cada vacación aprobada; una puede partirse entre dos. */
+export interface CargoVacaciones { incidencia_id: string; inicio: string; periodo: number; dias: number; adelanto: boolean }
+
+/** «2025–2026»: el periodo con los años en que empieza y termina. */
+export const nombrePeriodo = (desde: string) => { const a = Number(desde.slice(0, 4)); return `${a}–${a + 1}`; };
 
 export type TipoIncidencia = "vacaciones" | "permiso_con_goce" | "permiso_sin_goce" | "falta" | "incapacidad" | "retardo" | "horas_extra";
 export type EstadoIncidencia = "solicitada" | "aprobada" | "rechazada";
