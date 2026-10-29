@@ -19,6 +19,7 @@ import { CLAVE } from "./componentes/datos";
 import { DialogoRegresarStock } from "./componentes/DialogosOrden";
 import { GanttCompacto } from "./Gantt";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { DescripcionVenta } from "./componentes/DescripcionVenta";
 
 /**
  * Los pedidos vistos desde la planta: qué se vendió, para cuándo y cómo va cada equipo,
@@ -29,6 +30,8 @@ interface OrdenDePartida { id: string; folio: string; estado: keyof typeof ESTAD
 interface Partida {
   linea_id: string; articulo_id: string | null; clave: string; titulo: string; cantidad: number; unidad: string;
   fabrica: boolean; tiene_lista: boolean; ordenes: OrdenDePartida[];
+  /** Lo que se le cotizó al cliente (sin precio). */
+  descripcion: string | null;
 }
 interface PedidoPlanta {
   id: string; folio: string; cliente: string | null; vendedor: string | null; canal: Canal;
@@ -215,6 +218,7 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
                   : faltan > 0 ? <span data-explain={GLOSARIO.sinOrden} data-explain-title="Sin orden"><Insignia tono="aviso">{faltan} sin orden</Insignia></span>
                   : <Insignia tono="ok">Con orden</Insignia>}
               </div>
+              <DescripcionVenta texto={x.descripcion} />
               {x.ordenes.length > 0 && (
                 <ul className="mt-2 space-y-1.5">
                   {x.ordenes.map((o) => (

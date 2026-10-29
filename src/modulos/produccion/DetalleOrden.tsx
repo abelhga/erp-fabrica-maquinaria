@@ -23,6 +23,7 @@ import { ESTADO_OP, ESTADO_OPERACION, PRIORIDAD, horas, textoEvento, cifra } fro
 import { AvanceEtapa } from "./componentes/AvanceEtapa";
 import { GanttCompacto } from "./Gantt";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { DescripcionVenta } from "./componentes/DescripcionVenta";
 
 interface HorasHombre {
   operacion_id: string; horas_estimadas: number; horas_reales: number; horas_sin_nombre: number;
@@ -268,6 +269,7 @@ export default function DetalleOrden() {
         </Dato>
       </Tarjeta>
       {o.notas && <p className="text-sm rounded-lg bg-aviso-suave border border-aviso/25 px-3 py-2"><b className="font-medium">Notas:</b> {o.notas}</p>}
+      {o.pedido_id && <LoVendido ordenId={id} />}
 
       <section className="space-y-2">
         <h2 className="font-semibold" data-explain={GLOSARIO.validacionMaterial} data-explain-title="Validación de material">Validación de material</h2>
@@ -480,3 +482,29 @@ function PartidasSurtido({ evento }: { evento: number }) {
   );
 }
 
+interface PartidaVendida { linea_id: string; titulo: string; descripcion: string | null; cantidad: number; unidad: string; de_la_orden: boolean }
+
+/** Lo que se le cotizó al cliente para esta orden, sin precio: con eso se fabrica. */
+function LoVendido({ ordenId }: { ordenId: string }) {
+  const venta = useQuery({
+    queryKey: [...CLAVE, "venta_de_orden", ordenId],
+    queryFn: () => q<PartidaVendida[]>(supabase.rpc("venta_de_orden", { p_op: ordenId })),
+  });
+  const filas = venta.data ?? [];
+  if (filas.length === 0 || !filas.some((f) => f.descripcion)) return null;
+  const propia = filas.some((f) => f.de_la_orden);
+  return (
+    <Tarjeta>
+      <EncabezadoTarjeta titulo="Lo que se le vendió al cliente" explica={GLOSARIO.descripcionVenta}
+        descripcion={propia ? "La descripción de la partida del pedido, como se cotizó (sin precio)." : "La orden no está ligada a una partida: estas son todas las del pedido."} />
+      <ul className="px-5 pb-4 space-y-3 text-sm">
+        {filas.map((f) => (
+          <li key={f.linea_id}>
+            <p className="font-medium">{cifra(f.cantidad)} {f.unidad} · {f.titulo}</p>
+            <DescripcionVenta texto={f.descripcion} className="text-sm" />
+          </li>
+        ))}
+      </ul>
+    </Tarjeta>
+  );
+}
