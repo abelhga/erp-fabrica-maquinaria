@@ -184,6 +184,14 @@ async function apiML(e: Entorno, access: string, ruta: string, init?: RequestIni
   return o(d);
 }
 
+/** Como apiML, pero deja pasar una lista (el multiget de publicaciones y las visitas la regresan así). */
+async function apiMLLista(e: Entorno, access: string, ruta: string): Promise<unknown> {
+  const r = await (e.fetch ?? fetch)(`${API_ML}${ruta}`, { headers: { Authorization: `Bearer ${access}`, Accept: "application/json" } });
+  const d = await r.json().catch(() => null);
+  if (!r.ok) throw new ErrorML(`ML ${ruta}: ${txt(o(d).message) ?? txt(o(d).error) ?? r.status}`, r.status);
+  return d;
+}
+
 /**
  * Lo que regresa ML de una venta, tal cual (ml_crudo): la orden con sus pagos, el envío, lo
  * que costó el envío y el pago en Mercado Pago. Sirve para ver de qué campo sale cada cosa
@@ -239,8 +247,12 @@ async function procesarUno(e: Entorno, admin: SupabaseClient, access: string, to
     // llega por esto. Un envío puede llevar varias ventas del mismo carrito: se busca por envío.
     const envio = await apiML(e, access, resource, { headers: { "x-format-new": "true" } });
     await rpc("ml_sincronizar_envio", { envio_id: txt(envio.id), estado: txt(envio.status), subestado: txt(envio.substatus), guia: txt(envio.tracking_number) });
-  } else if (topic === "claims") {
-    const reclamo = await apiML(e, access, resource);
+  } else if (topic === "claims" || topic === "post_purchase") {
+    // ML manda los reclamos nuevos como «post_purchase» (a veces del historial de acciones del
+    // reclamo). Hasta el 29 oct solo se leía «claims» y dos reclamos nuevos nunca entraron.
+    const id = /\/claims\/(\d+)/.exec(resource)?.[1];
+    if (!id) return;
+    const reclamo = await apiML(e, access, `/post-purchase/v1/claims/${id}`);
     const razonId = txt(reclamo.reason_id);
     const razon = razonId ? await apiML(e, access, `/post-purchase/v1/claims/reasons/${razonId}`).then((x) => txt(x.name) ?? txt(x.detail)).catch(() => null) : null;
     const datos = normalizarReclamo(reclamo, razon);
@@ -271,6 +283,8 @@ async function procesarUno(e: Entorno, admin: SupabaseClient, access: string, to
     const pub = item ? await apiML(e, access, `/items/${item}?attributes=title,status`).catch(() => null) : null;
     const datos = normalizarPregunta(pregunta, pub ? txt(pub.title) : null, pub ? txt(pub.status) === "active" : null);
     await rpc("ml_registrar_pregunta", datos);
+    // Lo que dice la publicación (descripción y atributos): con eso se sugiere la respuesta.
+    if (item && datos.estado === "UNANSWERED") await traerFicha(e, admin, access, item).catch(() => undefined);
     // Muchas preguntas siguen a otra del mismo comprador en esa publicación (a veces de antes de
     // conectar el ERP): se traen para que quien contesta vea la conversación completa. Si ML no
     // responde, la pregunta ya quedó registrada; lo anterior solo es contexto.
@@ -359,6 +373,133 @@ export async function sincronizar(e: Entorno, admin: SupabaseClient, ventasDesde
   }
   return { cuenta: cuenta.nickname, publicaciones, preguntas: avisos.filter((a) => a.topic === "questions").length,
     reclamos: avisos.filter((a) => a.topic === "claims").length, ventas, procesados, errores };
+}
+
+// -----------------------------------------------------------------------------
+// Publicaciones y reputación (solo lectura): el tablero de Mercado Libre
+// -----------------------------------------------------------------------------
+/** Una publicación de ML como la guarda el tablero. */
+export function normalizarPublicacion(it: Obj, visitas?: number | null) {
+  const envio = o(it.shipping);
+  const atributos = (Array.isArray(it.attributes) ? it.attributes : []) as Obj[];
+  return {
+    item_id: txt(it.id), titulo: txt(it.title), estado: txt(it.status), precio: num(it.price), stock: num(it.available_quantity),
+    vendidas: num(it.sold_quantity), visitas_30d: visitas ?? null, fotos: Array.isArray(it.pictures) ? it.pictures.length : null,
+    permalink: txt(it.permalink), tipo_publicacion: txt(it.listing_type_id), logistica: txt(envio.logistic_type),
+    envio_gratis: envio.free_shipping === true, categoria_id: txt(it.category_id),
+    atributos: atributos.length ? atributos.map((a) => ({ nombre: txt(a.name) ?? txt(a.id), valor: txt(a.value_name) })).filter((a) => a.valor) : null,
+  };
+}
+
+/**
+ * Lo que ML cobra por vender a ese precio en esa categoría (GET /sites/MLM/listing_prices), para
+ * clásica (gold_special) y premium (gold_pro). La comisión cambia con la categoría y el tipo de
+ * publicación; abajo de $299 se suma una cuota fija. Si ML no desglosa la cuota, sale de lo cobrado
+ * menos el porcentaje.
+ */
+export function leerTarifas(r: unknown, precio: number | null) {
+  const t: Record<string, { pct: number | null; fijo: number | null }> = {};
+  for (const x of (Array.isArray(r) ? r : []) as Obj[]) {
+    const tipo = txt(x.listing_type_id); if (!tipo) continue;
+    const d = o(x.sale_fee_details);
+    const pct = num(d.percentage_fee);
+    const total = num(x.sale_fee_amount);
+    const fijo = num(d.fixed_fee) ?? (total != null && pct != null && precio != null ? Math.max(0, Math.round((total - precio * pct / 100) * 100) / 100) : null);
+    t[tipo] = { pct, fijo };
+  }
+  return { clasica: t.gold_special ?? null, premium: t.gold_pro ?? null };
+}
+
+/** Lo que le cuesta a la cuenta el envío gratis de esa publicación (ya con su descuento por reputación y su peso). */
+export function leerEnvio(r: unknown) {
+  const todo = o(o(o(r).coverage).all_country);
+  return { costo: num(todo.list_cost), peso: num(todo.billable_weight) };
+}
+
+/** Las visitas de los últimos 30 días; ML las regresa como lista o como mapa según la versión. */
+export function leerVisitas(r: unknown): Map<string, number> {
+  const m = new Map<string, number>();
+  if (Array.isArray(r)) for (const x of r as Obj[]) { const id = txt(x.item_id); const n = num(x.total_visits); if (id && n != null) m.set(id, n); }
+  else for (const [id, n] of Object.entries(o(r))) if (typeof n === "number") m.set(id, n);
+  return m;
+}
+
+/** La descripción y los atributos de una publicación (para contestar con lo que dice). */
+async function traerFicha(e: Entorno, admin: SupabaseClient, access: string, item: string) {
+  const [desc, it] = await Promise.all([
+    apiML(e, access, `/items/${item}/description`).catch(() => ({} as Obj)),
+    apiML(e, access, `/items/${item}?attributes=attributes`).catch(() => ({} as Obj)),
+  ]);
+  const atributos = normalizarPublicacion(it).atributos;
+  await admin.rpc("ml_registrar_descripcion", { p_item: item, p_texto: txt(desc.plain_text) ?? txt(desc.text) ?? "", p_atributos: atributos });
+}
+
+/** Como Promise.all, pero de pocos en pocos: ML limita cuántas consultas por segundo acepta. */
+async function enParalelo<T, R>(lista: T[], cuantos: number, fn: (x: T) => Promise<R>): Promise<R[]> {
+  const fuera: R[] = new Array(lista.length);
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(cuantos, lista.length) }, async () => {
+    while (i < lista.length) { const k = i++; fuera[k] = await fn(lista[k]); }
+  }));
+  return fuera;
+}
+
+export async function publicacionesML(e: Entorno, admin: SupabaseClient) {
+  const { cuenta, access } = await token(e, admin);
+  const vendedor = cuenta.ml_user_id;
+  // Las activas y las pausadas (una pausada con preguntas también importa). Hasta 1,000.
+  const ids: string[] = [];
+  for (const estado of ["active", "paused"]) {
+    for (let offset = 0; offset < 1000; offset += 100) {
+      const r = await apiML(e, access, `/users/${vendedor}/items/search?status=${estado}&limit=100&offset=${offset}`);
+      const lista = (Array.isArray(r.results) ? r.results : []) as unknown[];
+      for (const id of lista) if (typeof id === "string") ids.push(id);
+      if (lista.length < 100) break;
+    }
+  }
+  const hoy = new Date(), hace30 = new Date(hoy.getTime() - 30 * 86400_000);
+  const dia = (d: Date) => d.toISOString().slice(0, 10);
+  const publicaciones: ReturnType<typeof normalizarPublicacion>[] = [];
+  for (let i = 0; i < ids.length; i += 20) {
+    const lote = ids.slice(i, i + 20);
+    const [items, visitas] = await Promise.all([
+      apiMLLista(e, access, `/items?ids=${lote.join(",")}&attributes=id,title,status,price,available_quantity,sold_quantity,pictures,permalink,listing_type_id,shipping,attributes,category_id`),
+      // Sin visitas el tablero sigue sirviendo: no frena lo demás.
+      apiMLLista(e, access, `/visits/items?ids=${lote.join(",")}&date_from=${dia(hace30)}&date_to=${dia(hoy)}`).then(leerVisitas).catch(() => new Map<string, number>()),
+    ]);
+    // El multiget llega como lista de {code, body}.
+    const lista = (Array.isArray(items) ? items : []) as Obj[];
+    for (const x of lista) {
+      const it = o(x.body ?? x);
+      const id = txt(it.id);
+      if (id) publicaciones.push(normalizarPublicacion(it, visitas.get(id) ?? null));
+    }
+  }
+  // Lo que cobra ML de verdad en cada una: comisión clásica y premium de su categoría, y lo que
+  // cuesta su envío gratis (cambia por peso, reputación y tipo de envío). Si ML no responde, el ERP
+  // usa sus valores de respaldo y lo dice.
+  const categorias = new Map<string, string | null>();
+  const conTarifas = await enParalelo(publicaciones, 5, async (p) => {
+    const [tarifas, envio] = await Promise.all([
+      p.categoria_id && p.precio != null
+        ? apiMLLista(e, access, `/sites/MLM/listing_prices?price=${p.precio}&category_id=${p.categoria_id}&currency_id=MXN`).then((x) => leerTarifas(x, p.precio)).catch(() => null)
+        : Promise.resolve(null),
+      apiML(e, access, `/users/${vendedor}/shipping_options/free?item_id=${p.item_id}`).then(leerEnvio).catch(() => null),
+    ]);
+    if (p.categoria_id && !categorias.has(p.categoria_id)) {
+      categorias.set(p.categoria_id, null);
+      categorias.set(p.categoria_id, await apiML(e, access, `/categories/${p.categoria_id}`).then((c) => txt(c.name)).catch(() => null));
+    }
+    return { ...p, comision_clasica: tarifas?.clasica?.pct ?? null, fijo_clasica: tarifas?.clasica?.fijo ?? null,
+      comision_premium: tarifas?.premium?.pct ?? null, fijo_premium: tarifas?.premium?.fijo ?? null,
+      costo_envio: envio?.costo ?? null, peso_facturable: envio?.peso ?? null };
+  });
+  for (const p of conTarifas) (p as Record<string, unknown>).categoria = p.categoria_id ? categorias.get(p.categoria_id) ?? null : null;
+  const { data: n, error } = await admin.rpc("ml_registrar_publicaciones", { p: { publicaciones: conTarifas, completo: true } });
+  if (error) throw new ErrorML(error.message);
+  const yo = await apiML(e, access, `/users/${vendedor}`).catch(() => ({} as Obj));
+  if (yo.seller_reputation) await admin.rpc("ml_registrar_reputacion", { p: yo.seller_reputation });
+  return { publicaciones: n as number, reputacion: !!yo.seller_reputation };
 }
 
 // -----------------------------------------------------------------------------
@@ -453,6 +594,11 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
     const desde = txt(b.ventas_desde);
     if (desde && !/^\d{4}-\d{2}-\d{2}$/.test(desde)) return json({ error: "La fecha va como AAAA-MM-DD" }, 400);
     try { return json(await sincronizar(e, admin, desde ?? null)); } catch (err) { return json({ error: err instanceof Error ? err.message : String(err) }, 502); }
+  }
+
+  if (accion === "publicaciones") {
+    if (!(await puede(u.db, "mercadolibre", 1)) && !(await esDireccion(u.db))) return json({ error: "Sin permiso" }, 403);
+    try { return json(await publicacionesML(e, admin)); } catch (err) { return json({ error: err instanceof Error ? err.message : String(err) }, 502); }
   }
 
   if (accion === "responder") {

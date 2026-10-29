@@ -6,7 +6,7 @@ import { describe, expect, it, beforeAll } from "vitest";
 import { readFileSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
-import { atender, DOCUMENTOS, ejecutarHerramienta, ejemploDocumento, explicarError, mismaVista, validarEsquema, vista, type Evento, type TipoDocumento } from "./nucleo.ts";
+import { atender, DOCUMENTOS, ejecutarHerramienta, ejemploDocumento, explicarError, limpiarRespuestaML, mismaVista, respuestaMLSinIA, validarEsquema, vista, type DatosRespuestaML, type Evento, type TipoDocumento } from "./nucleo.ts";
 
 const env = Object.fromEntries(
   readFileSync(new URL("../../../.env.local", import.meta.url), "utf8").split("\n")
@@ -375,6 +375,20 @@ describe.skipIf(!hayBase)("leer documentos de importación", () => {
     const fp = await (await pedir(fin.token, { tipo: "factura_proveedor", media_type: "application/pdf", datos: pdf })).json();
     expect(fp.campos.total).toBeGreaterThan(0);
     expect((await pedir(almacen.token, { tipo: "factura_proveedor", media_type: "application/pdf", datos: pdf })).status).toBe(403);
+  });
+});
+
+describe("respuestas de Mercado Libre", () => {
+  it("lo que ML castiga se quita aunque Claude lo haya puesto", () => {
+    expect(limpiarRespuestaML("¡Hola! Llámanos al 33 1234 5678 o escribe a ventas@hegamex.com, o entra a https://hegamex.com. Saludos"))
+      .not.toMatch(/1234|@|http/);
+    // Las medidas y cantidades no son teléfonos.
+    expect(limpiarRespuestaML("¡Hola! Es de 4 pulgadas, barreno de 1 in, y tenemos 12 piezas.")).toBe("¡Hola! Es de 4 pulgadas, barreno de 1 in, y tenemos 12 piezas.");
+  });
+  it("sin Claude, arranca con lo que sí se sabe", () => {
+    const d = { articulo: { nombre: "Polea 4 in", disponibles_para_vender: 3 } } as unknown as DatosRespuestaML;
+    expect(respuestaMLSinIA(d).respuesta).toContain("Sí tenemos disponible Polea 4 in");
+    expect(respuestaMLSinIA({ articulo: null } as unknown as DatosRespuestaML).respuesta).toMatch(/^¡Hola!/);
   });
 });
 
