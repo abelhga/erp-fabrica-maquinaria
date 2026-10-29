@@ -51,11 +51,14 @@ begin
   -- La otra persona no se ve afectada.
   assert (select saldo from v_vacaciones where empleado_id = v_emp2) = 16, 'el arranque es por persona';
 
-  -- Un arranque de un periodo anterior ya no cuenta: al cumplir otro año se calcula por ley.
-  update vacaciones_arranque set fecha = current_date - interval '3 months' where empleado_id = v_emp;
+  -- Un arranque del periodo anterior no se pierde al cumplir año (193): lo que quedaba de ese
+  -- periodo se usa primero, hasta que vence, y el periodo nuevo llega completo.
+  update vacaciones_arranque set fecha = current_date - interval '3 months', periodo = 2 where empleado_id = v_emp;
+  select sum(dias) into v_d from incidencias where empleado_id = v_emp and estado = 'aprobada';
   select * into r from v_vacaciones where empleado_id = v_emp;
-  assert r.saldo_arranque is null and r.saldo = 16 - v_d - (select dias from incidencias where empleado_id = v_emp and inicio = current_date - 20), format('arranque del periodo anterior: %s', row_to_json(r));
-  update vacaciones_arranque set fecha = current_date - 10 where empleado_id = v_emp;
+  assert r.saldo_arranque = 5 and r.saldo = 16 + 5 - v_d and r.dias_vence_primero = 5 - v_d, format('arranque del periodo anterior: %s', row_to_json(r));
+  update vacaciones_arranque set fecha = current_date - 10, periodo = 3 where empleado_id = v_emp;
+  select sum(dias) into v_d from incidencias where empleado_id = v_emp and estado = 'aprobada' and inicio >= current_date - 10;
 
   -- La gerencia de producción ve el saldo (rrhh 1) pero no lo corrige ni ve el expediente.
   perform pg_temp.como(v_ger);
