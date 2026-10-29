@@ -26,6 +26,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/ventas/para-llamar", texto: "A quién llamar hoy", icono: PhoneCall, modulo: "ventas" },
       { ruta: "/ventas/oportunidades", texto: "Oportunidades", icono: KanbanSquare, modulo: "ventas" },
       { ruta: "/ventas/cotizaciones", texto: "Cotizaciones", icono: FileText, modulo: "ventas" },
+      { ruta: "/ventas/cotizado", texto: "Lo cotizado", icono: Waypoints, modulo: "ventas", nivel: 2 },
       { ruta: "/ventas/solicitudes", texto: "Solicitudes de precio", icono: MessageSquareQuote, modulo: "ventas", nivel: 2 },
       { ruta: "/ventas/pedidos", texto: "Pedidos", icono: ShoppingCart, modulo: "ventas" },
       { ruta: "/ventas/clientes", texto: "Clientes", icono: Users, modulo: "ventas" },

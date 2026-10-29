@@ -15,6 +15,12 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     "Los días en ámbar dicen que lleva más de 14 en la misma etapa; la tarea en rojo, que ya venció. La etiqueta “Seguimiento” dice cuándo toca preguntarle al cliente qué pasó con su cotización (en rojo si ya venció); dale clic para anotarlo ahí mismo. Ganadas y perdidas se quedan 60 días en el tablero; después solo en la vista de lista, que también se descarga a CSV.",
     "No todo se mueve a mano: enviar una cotización pasa su oportunidad a “Cotizado” (y la crea si no existía) y le agenda su seguimiento a 3 días hábiles, convertirla en pedido la marca “Ganada”, y rechazarla la cierra como “Perdida” si no tiene otra cotización viva. Al anotar qué pasó, “Negociando” la pasa a Negociación y “Se perdió” la cierra con su motivo.",
   ],
+  "/ventas/cotizado": [
+    "Aquí ves qué pasó con lo que cotizas: cuánto se volvió pedido, cuánto se perdió y por qué, y cuánto sigue abierto y qué le falta. Cada vendedor ve lo suyo; la gerencia de ventas ve a todo el equipo y puede elegir a un vendedor arriba.",
+    "El diagrama se lee de izquierda a derecha: lo cotizado se divide en lo que se envió y lo que nunca salió, y lo enviado en ganado, perdido y abierto. El grueso de cada franja es el dinero sin IVA; con «En cotizaciones» cuenta cuántas son. Toca un bloque (o un indicador) para ver abajo sus cotizaciones, y un renglón para abrirla.",
+    "Lo perdido se agrupa por el motivo que anotaste al rechazarla o al decir qué pasó: si casi todo dice «No respondió», el problema es el seguimiento, no el precio. Lo abierto se divide por lo que le falta: «Seguimiento atrasado» y «No contesta» son las que hay que llamar hoy.",
+    "Cada cotización cuenta una vez aunque tenga varias versiones, con el monto de la última, y entra en el periodo por la fecha de su primera versión.",
+  ],
   "/ventas/cotizaciones": [
     "El registro de todas las cotizaciones, cada una con su folio y versión. Los vendedores ven las suyas; la gerencia de ventas ve las de todo el equipo y autoriza precios.",
     "Las pestañas filtran por estado y “Solo vencidas” deja las que pasaron su vigencia sin cerrarse (renglones en rojo). Clic en un renglón la abre. Abajo ves cuánto suma lo filtrado en pesos y sin IVA; con CSV te la llevas a Excel.",

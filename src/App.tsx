@@ -18,6 +18,7 @@ const Margenes = p(() => import("./modulos/costeo/Margenes"));
 const PreciosVentas = p(() => import("./modulos/analisis/PreciosVentas"));
 const Oportunidades = p(() => import("./modulos/ventas/Oportunidades"));
 const Cotizaciones = p(() => import("./modulos/ventas/Cotizaciones"));
+const LoCotizado = p(() => import("./modulos/ventas/LoCotizado"));
 const EditorCotizacion = p(() => import("./modulos/ventas/EditorCotizacion"));
 const ImprimirCotizacion = p(() => import("./modulos/ventas/ImprimirCotizacion"));
 const Pedidos = p(() => import("./modulos/ventas/Pedidos"));
@@ -160,6 +161,7 @@ export function App() {
           <Route path="ventas/para-llamar" element={<Con m="ventas"><ParaLlamar /></Con>} />
           <Route path="ventas/oportunidades" element={<Con m="ventas"><Oportunidades /></Con>} />
           <Route path="ventas/cotizaciones" element={<Con m="ventas"><Cotizaciones /></Con>} />
+          <Route path="ventas/cotizado" element={<Con m="ventas" n={2}><LoCotizado /></Con>} />
           <Route path="ventas/cotizaciones/nueva" element={<Con m="ventas" n={2}><EditorCotizacion /></Con>} />
           <Route path="ventas/cotizaciones/:id" element={<Con m="ventas"><EditorCotizacion /></Con>} />
           <Route path="ventas/pedidos" element={<Con m="ventas"><Pedidos /></Con>} />
