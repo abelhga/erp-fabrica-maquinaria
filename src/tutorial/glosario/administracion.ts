@@ -87,4 +87,16 @@ export const ADMINISTRACION = {
   saldoCaja: "El efectivo que debería haber en caja chica: todas las entradas menos todas las salidas, desde que empezó la hoja. Si el conteo no cuadra, el arqueo lo corrige.",
   arqueo: "Contar el efectivo de la caja y compararlo con lo que dice el sistema. La diferencia (sobrante o faltante) queda registrada como un movimiento, con quién lo contó.",
   topesCaja: "Abajo del mínimo toca reponer el efectivo; arriba del máximo hay dinero que debería estar en el banco.",
+
+  // --- Resultados (lo ven dirección y finanzas: trae márgenes) ---
+  ventasResultados: "Lo vendido en el periodo: el importe sin IVA de las partidas de los pedidos con fecha en el periodo, sin los cancelados. Un pedido en dólares se pasa a pesos con su tipo de cambio.",
+  costoFabricacion: "Lo que cuesta hacer lo que se vende: el material de lo vendido, los sueldos de la gente de Producción y las compras del taller que no se quedan en el equipo (consumibles, gases, reparaciones).",
+  materialVendido: "El material de lo vendido. Si la partida es de un artículo con costeo: su costo de material de hoy por la cantidad. Si es de texto (casi todas las que vienen de la hoja), se estima: su importe por lo que el material suele pesar en el precio de esa línea. Ese peso sale de lo vendido con costeo en el último año si hay al menos 10 partidas; si no, del catálogo.",
+  manoObraTaller: "Los sueldos de la gente del departamento de Producción en el periodo. De una semana de nómina cerrada, lo que se pagó; de las demás, su sueldo semanal ÷ 7 por cada día que estaba dada de alta. Se paga haya o no trabajo en el taller.",
+  gastosFabricacion: "Compras del libro de compras con categoría de taller: consumibles, gases, equipo de seguridad, reparación de máquinas. Sin IVA si la compra tiene factura.",
+  gastosOperacion: "Lo que cuesta vender y administrar: sueldos de oficina (todos los departamentos menos Producción), comisiones de los vendedores, compras de oficina y servicios, salidas de caja chica, lo que se queda Mercado Libre de cada venta y las guías pagadas en Envíos.",
+  utilidadPeriodo: "Ventas menos costo de fabricación menos gastos de operación, antes de impuestos. Solo cuenta lo que pasa por el ERP: lo que se paga por fuera (renta, impuestos o cuotas del IMSS que no se capturan como compra) no está, así que la utilidad de verdad es menor.",
+  tipoCategoriaCompra: "Cómo cuenta cada categoría del libro de compras. Material: no se suma como gasto, porque ya va en el material de lo vendido y se contaría dos veces. Gasto de fabricación: del taller, pero no se queda en el equipo. Gasto de operación: todo lo demás. Una categoría nueva cuenta como operación hasta que alguien la clasifique.",
+  estimadoResultados: "Un número con ≈ es estimado, no exacto. En «De dónde sale cada número» ves cómo se calculó y qué hace falta para que sea exacto.",
+  parcialResultados: "Al número le faltan datos: el periodo empieza antes de que el ERP tuviera esa información (el libro de compras con categoría o la caja chica), o tu rol no ve las comisiones de todos.",
 } satisfies Record<string, string>;

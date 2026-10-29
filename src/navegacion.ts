@@ -5,13 +5,14 @@ import {
   Ship,
   type LucideIcon,
 } from "lucide-react";
-import { Award, Banknote, Coins, Hash, ListChecks, Target } from "lucide-react";
+import { Award, Banknote, Coins, Hash, ListChecks, Target, Waypoints } from "lucide-react";
 import { AlertTriangle, CalendarDays, CalendarRange, Hand, Wrench } from "lucide-react";
 import { BookOpen, Calendar, Inbox, MessageSquareQuote, PackageCheck, Store, Undo2 } from "lucide-react";
 import { GanttChart, Gauge, HardHat, Lightbulb, Map as MapaIcono } from "lucide-react";
 import type { Modulo, Rol } from "./lib/sesion";
 
-export interface EntradaMenu { ruta: string; texto: string; icono: LucideIcon; modulo: Modulo; nivel?: number }
+// `tambien`: un segundo permiso que también hace falta (Resultados: finanzas y costos, porque trae márgenes).
+export interface EntradaMenu { ruta: string; texto: string; icono: LucideIcon; modulo: Modulo; nivel?: number; tambien?: { modulo: Modulo; nivel?: number } }
 export interface SeccionMenu { titulo: string; entradas: EntradaMenu[] }
 
 // El menú se arma solo con lo que el rol puede ver: un soldador en la terminal
@@ -119,6 +120,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/finanzas/cobranza", texto: "Cobranza", icono: Wallet, modulo: "finanzas" },
       { ruta: "/finanzas/pagos", texto: "Pagos a proveedores", icono: Receipt, modulo: "finanzas" },
       { ruta: "/finanzas/caja-chica", texto: "Caja chica", icono: Coins, modulo: "finanzas", nivel: 2 },
+      { ruta: "/finanzas/resultados", texto: "Resultados", icono: Waypoints, modulo: "finanzas", tambien: { modulo: "costos" } },
     ],
   },
   {

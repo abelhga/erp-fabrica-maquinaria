@@ -55,7 +55,7 @@ export function Shell() {
   // del que la persona eligió. Lo fijado va arriba, sin quitarlo de su sección.
   const menuPersonal = useMenuPersonal(perfil?.id);
   const { prefs } = menuPersonal;
-  const visibles = MENU.map((s) => ({ ...s, entradas: s.entradas.filter((e) => puede(e.modulo, e.nivel ?? 1)) }))
+  const visibles = MENU.map((s) => ({ ...s, entradas: s.entradas.filter((e) => puede(e.modulo, e.nivel ?? 1) && (!e.tambien || puede(e.tambien.modulo, e.tambien.nivel ?? 1))) }))
     .filter((s) => s.entradas.length);
   const porPuesto = ordenPorRol(roles);
   const orden = [...new Set([...(prefs.orden ?? []), ...porPuesto])];

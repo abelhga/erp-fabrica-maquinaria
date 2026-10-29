@@ -96,6 +96,9 @@
       placeholder:text-tenue/70 focus:outline-none focus:ring-2 focus:ring-marca/40 focus:border-marca
       disabled:opacity-60;
   }
+  /* Franjas del diagrama de Resultados: tenues para que se lean las etiquetas; al pasar el mouse se marcan. */
+  .liga-sankey { stroke-opacity: 0.32; transition: stroke-opacity 0.15s; }
+  .liga-sankey:hover { stroke-opacity: 0.6; }
   .tabla { @apply w-full text-sm; }
   /* :where() deja la especificidad en una clase: así text-right en una columna sí gana. */
   .tabla :where(th) { @apply text-left font-medium text-tenue text-xs uppercase tracking-wide px-3 py-2 border-b border-borde bg-fondo/60 sticky top-0 z-10; }
