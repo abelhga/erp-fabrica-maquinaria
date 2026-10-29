@@ -61,9 +61,9 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
     "El saldo es la suma de todo lo que ha entrado menos lo que ha salido desde que empezó la hoja. Se pinta en rojo abajo del mínimo (toca reponer) y en amarillo arriba del máximo (sobra efectivo).",
   ],
   "/finanzas/resultados": [
-    "Aquí ves cuánto deja de verdad lo que se vende: de las ventas del periodo, cuánto se va en fabricar, cuánto en vender y administrar, y cuánto queda. La ven dirección, finanzas y la gerencia administrativa.",
-    "Elige el periodo arriba. El diagrama se lee de izquierda a derecha: las ventas por línea se juntan y se reparten en costo de fabricación, gastos de operación y utilidad; el grueso de cada franja es el dinero. Pasa el mouse por una franja para ver cuánto es y qué parte de las ventas. Con el botón de tabla ves lo mismo en números.",
-    "Los números con ≈ son estimados: casi todas las ventas que vienen de la hoja no tienen costeo y la nómina todavía no se cierra en el ERP. La tabla de abajo dice de dónde sale cada número; los avisos de arriba dicen qué falta para que el periodo esté completo.",
-    "En «Categorías de compra» decides cómo cuenta cada categoría del libro de compras: material (ya va en lo vendido), gasto de fabricación o gasto de operación. Finanzas la cambia; el cambio se ve en todos los periodos.",
+    "Aquí ves cuánto deja de verdad lo que se vende, desde 2018: de las ventas del periodo, cuánto se va en fabricar, cuánto en vender y administrar, cuánto en impuestos e intereses, y cuánto queda. La ven dirección, finanzas y la gerencia administrativa.",
+    "Elige el periodo arriba (también «Año pasado» o un rango desde 2018). El diagrama se lee de izquierda a derecha: las ventas por línea se juntan y se reparten en costo de fabricación, gastos de operación, impuestos e intereses y utilidad; el grueso de cada franja es el dinero. Pasa el mouse por una franja para ver cuánto es y qué parte de las ventas. Con el botón de tabla ves lo mismo en números. «Año por año» compara cada año desde 2018.",
+    "Antes del 12 de octubre de 2026 los números salen de las hojas (ventas y compras como se registraron ahí, cada compra por la categoría de su proveedor); desde ahí, del ERP. Los números con ≈ son estimados: lo vendido de la hoja no tiene costeo y la nómina de la hoja se reparte entre taller y oficina con la proporción de hoy. La tabla de abajo dice de dónde sale cada número, y lo que no es gasto (retiros de socios, préstamos, compra de activos) se enseña aparte sin restarse.",
+    "En «Categorías de compra» decides cómo cuenta cada categoría: material, gasto de fabricación, gasto de operación, nómina, impuestos, intereses o «no es gasto». Finanzas la cambia; el cambio se ve en todos los periodos.",
   ],
 };
