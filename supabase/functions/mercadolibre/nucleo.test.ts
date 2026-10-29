@@ -6,7 +6,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import pg from "pg";
-import { API_ML, API_MP, atender, leerEnvio, leerTarifas, leerVisitas, normalizarOrden, normalizarPago, normalizarPregunta, normalizarPublicacion, normalizarReclamo } from "./nucleo.ts";
+import { API_ML, API_MP, atender, cuerpoCambio, leerEnvio, leerTarifas, leerVisitas, normalizarOrden, normalizarPago, normalizarPregunta, normalizarPublicacion, normalizarReclamo } from "./nucleo.ts";
 
 describe("traducciones de ML", () => {
   it("una venta Full con su SKU y precio con IVA", () => {
@@ -90,6 +90,19 @@ describe("traducciones de ML", () => {
   });
 });
 
+describe("cambiar una publicación", () => {
+  it("con variantes el precio va en cada una y la existencia no se reparte sola", () => {
+    const it = { price: 500, available_quantity: 3, variations: [{ id: 11 }, { id: 12 }] };
+    expect(cuerpoCambio(it, { campo: "precio", actual: 500, propuesto: 520 })).toEqual({ cuerpo: { variations: [{ id: 11, price: 520 }, { id: 12, price: 520 }] } });
+    expect(cuerpoCambio(it, { campo: "existencia", actual: 3, propuesto: 1 })).toEqual({ omitir: expect.stringContaining("variantes") });
+    expect(cuerpoCambio({ ...it, variations: [{ id: 11 }] }, { campo: "existencia", actual: 3, propuesto: 1 }))
+      .toEqual({ cuerpo: { variations: [{ id: 11, available_quantity: 1 }] } });
+    expect(cuerpoCambio({ price: 500, available_quantity: 3 }, { campo: "existencia", actual: 3, propuesto: 1 })).toEqual({ cuerpo: { available_quantity: 1 } });
+    // Si ya no es lo que vio el tablero, no se toca.
+    expect(cuerpoCambio({ price: 510 }, { campo: "precio", actual: 500, propuesto: 520 })).toEqual({ omitir: expect.stringContaining("ya está en 510") });
+  });
+});
+
 // -----------------------------------------------------------------------------
 const ruta = new URL("../../../.env.local", import.meta.url);
 const env = existsSync(ruta) ? Object.fromEntries(
@@ -109,6 +122,8 @@ const enviados: { ruta: string; cuerpo: unknown }[] = [];
 let envioML: Record<string, unknown> = { id: 99, logistic_type: "fulfillment", status: "ready_to_ship", substatus: "ready_to_print", tracking_number: "MEL-T-99" };
 const ORDEN = 7000000000 + Math.floor(Math.random() * 1e6);
 const VIEJA = ORDEN + 1;
+// Cómo está la publicación en ML cuando se le pregunta antes de cambiarla (cambia en la prueba).
+let enML = { price: 1300, available_quantity: 5 };
 const falsa: typeof fetch = async (entrada, init) => {
   const u = new URL(String(entrada));
   const r = (d: unknown, status = 200) => new Response(JSON.stringify(d), { status, headers: { "Content-Type": "application/json" } });
@@ -125,7 +140,14 @@ const falsa: typeof fetch = async (entrada, init) => {
     order_items: [{ item: { id: "MLM-T-ML", title: "Polea prueba ML", seller_sku: "T-ML-POLEA" }, quantity: 1, unit_price: 1160 }] });
   if (u.pathname === "/shipments/99") return r(envioML);
   if (u.pathname === "/questions/880001") return r({ id: 880001, item_id: "MLM-T-ML", text: "¿Tienen factura?", status: "UNANSWERED", date_created: "2026-10-16T11:00:00Z", from: { id: 555 } });
-  if (u.pathname === "/items/MLM-T-ML") return r({ title: "Polea prueba ML", status: "active", attributes: [{ id: "DIAMETER", name: "Diámetro", value_name: "4 pulgadas" }] });
+  if (u.pathname === "/items/MLM-T-ML" && init?.method === "PUT") {
+    const cuerpo = JSON.parse(String(init.body));
+    enviados.push({ ruta: "/items/MLM-T-ML", cuerpo });
+    enML = { ...enML, ...cuerpo };
+    return r({ id: "MLM-T-ML", ...enML });
+  }
+  if (u.pathname === "/items/MLM-T-ML") return r({ id: "MLM-T-ML", title: "Polea prueba ML", status: "active", ...enML,
+    attributes: [{ id: "DIAMETER", name: "Diámetro", value_name: "4 pulgadas" }] });
   if (u.pathname === "/items/MLM-T-ML/description") return r({ plain_text: "Polea de fierro de 4 pulgadas, 1 ranura B, barreno de 1 pulgada." });
   // El tablero: la publicación como la ve ML, sus visitas de 30 días y la reputación de la cuenta.
   if (u.pathname === "/items") return r([{ code: 200, body: { id: "MLM-T-ML", title: "Polea prueba ML", status: "active", price: 1300, available_quantity: 5,
@@ -187,6 +209,9 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
       await c.query("delete from public.ml_avisos where resource = any($1)", [[`/orders/${ORDEN}`, "/questions/880001", "/questions/880002", "/shipments/99"]]);
       await c.query("delete from public.ml_crudo where order_id = $1", [String(ORDEN)]);
       await c.query("delete from public.publicaciones where id_externo = 'MLM-T-ML'");
+      await c.query("delete from public.ml_cambios where item_id = 'MLM-T-ML'");
+      if (articulo) await c.query("delete from public.precios_lista where articulo_id = $1", [articulo]);
+      await c.query(`update public.configuracion set valor = '{"precio": false, "existencia": false}' where clave = 'mercadolibre_automatico'`);
       if (articulo) await c.query("delete from public.articulos where id = $1", [articulo]);
       await c.query("delete from public.ml_cuenta where id = 1");
       await c.query("delete from public.ml_publicaciones_estado where item_id = 'MLM-T-ML'");
@@ -284,6 +309,53 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
     expect(error).toBeNull();
     expect((t as { item_id: string; clave: string; preguntas_30d: number }[]).find((x) => x.item_id === "MLM-T-ML")).toMatchObject({ clave: "T-ML-POLEA" });
   });
+
+  it("los cambios sugeridos se mandan a ML con el botón, y solos solo si el interruptor está prendido", async () => {
+    // Polea: lista $980 → $1,136.80 con IVA + $118.50 de envío, entre 0.85 = $1,477. En ML está a $1,300 (sube 13.6 %).
+    await admin.from("precios_lista").upsert({ articulo_id: articulo, precio: 980 });
+    const db = createClient(URL_SB, ANON, { auth: { persistSession: false } });
+    const { data: s } = await db.auth.signInWithPassword({ email: "isaac@hegamex.com", password: "hegamex-local" });
+    const pedir = (accion: string, cuerpo: object, token = s.session!.access_token, extra: Record<string, string> = {}) =>
+      atender(new Request(`http://x/functions/v1/mercadolibre/${accion}`, { method: "POST",
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...extra }, body: JSON.stringify(cuerpo) }), entorno);
+    const { data: prop } = await db.rpc("ml_cambios_propuestos");
+    expect((prop as { item_id: string; campo: string }[]).filter((x) => x.item_id === "MLM-T-ML"))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ campo: "precio", actual: 1300, propuesto: 1477, automatico: true })]));
+
+    // Alguien movió la existencia en ML después de la lectura: esa no se pisa. El precio sí se manda.
+    enML = { price: 1300, available_quantity: 7 };
+    const r = await pedir("aplicar", { cambios: [{ item_id: "MLM-T-ML", campo: "precio" }, { item_id: "MLM-T-ML", campo: "existencia" }] });
+    expect(r.status).toBe(200);
+    expect(await r.json()).toMatchObject({ aplicados: 1, omitidos: 1, errores: 0 });
+    expect(enviados).toContainEqual({ ruta: "/items/MLM-T-ML", cuerpo: { price: 1477 } });
+    expect(enviados.filter((x) => x.ruta === "/items/MLM-T-ML").length).toBe(1);
+    const { data: hist } = await admin.from("ml_cambios").select("campo, antes, despues, origen, estado, detalle").eq("item_id", "MLM-T-ML").order("id");
+    expect(hist).toEqual([
+      { campo: "precio", antes: 1300, despues: 1477, origen: "boton", estado: "aplicado", detalle: null },
+      { campo: "existencia", antes: 5, despues: 0, origen: "boton", estado: "omitido", detalle: expect.stringContaining("ya está en 7") }]);
+    expect((await admin.from("ml_publicaciones_estado").select("precio").eq("item_id", "MLM-T-ML").single()).data!.precio).toBe(1477);
+
+    // Almacén no cambia publicaciones; sin la llave no se despierta la vuelta automática.
+    const { data: a } = await db.auth.signInWithPassword({ email: "almacen@hegamex.com", password: "hegamex-local" });
+    expect((await pedir("aplicar", { cambios: [{ item_id: "MLM-T-ML", campo: "precio" }] }, a.session!.access_token)).status).toBe(403);
+    expect((await pedir("automatico", {}, "", { "x-llave": "no-es" })).status).toBe(401);
+
+    // Con el interruptor de precio prendido, la vuelta lee ML (otra vez $1,300) y lo corrige sola;
+    // la existencia no, porque está apagada (y dejarla en 0 nunca es automático).
+    const { data: cuenta } = await admin.from("ml_cuenta").select("llave_automatico").eq("id", 1).single();
+    await admin.from("configuracion").update({ valor: { precio: true, existencia: false } }).eq("clave", "mercadolibre_automatico");
+    enML = { price: 1300, available_quantity: 5 };
+    const v = await pedir("automatico", {}, "", { "x-llave": cuenta!.llave_automatico });
+    expect(v.status).toBe(200);
+    expect(await v.json()).toMatchObject({ aplicados: 1, errores: 0 });
+    expect(enviados.filter((x) => x.ruta === "/items/MLM-T-ML").length).toBe(2);
+    const { data: auto } = await admin.from("ml_cambios").select("campo, origen, estado, usuario_id").eq("item_id", "MLM-T-ML").eq("origen", "automatico");
+    expect(auto).toEqual([{ campo: "precio", origen: "automatico", estado: "aplicado", usuario_id: null }]);
+    const { data: cfg } = await admin.from("configuracion").select("valor").eq("clave", "mercadolibre_automatico").single();
+    expect(cfg!.valor.ultima_corrida).toMatchObject({ aplicados: 1, errores: 0, pendientes: 0 });
+    // Y dejó anotado a dónde la llama pg_cron.
+    expect((await admin.from("ml_cuenta").select("url_funciones").eq("id", 1).single()).data!.url_funciones).toBe(URL_SB);
+  }, 20_000);
 
   it("sincronizar trae lo que ya estaba: la pregunta pendiente y, si se pide, las ventas desde una fecha", async () => {
     const db = createClient(URL_SB, ANON, { auth: { persistSession: false } });

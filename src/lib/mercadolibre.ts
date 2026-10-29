@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 
 export const URL_ML = import.meta.env.VITE_MERCADOLIBRE_URL || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mercadolibre`;
 
-export async function llamarML<T = { ok: boolean }>(accion: "iniciar" | "procesar" | "responder" | "desconectar" | "sincronizar" | "publicaciones", cuerpo: object = {}): Promise<T> {
+export async function llamarML<T = { ok: boolean }>(accion: "iniciar" | "procesar" | "responder" | "desconectar" | "sincronizar" | "publicaciones" | "aplicar", cuerpo: object = {}): Promise<T> {
   const { data } = await supabase.auth.getSession();
   const r = await fetch(`${URL_ML}/${accion}`, {
     method: "POST",

@@ -5,6 +5,9 @@
 //   POST procesar     "Revisar ahora": procesa los avisos pendientes
 //   POST responder    contestar una pregunta desde el ERP
 //   POST desconectar  dirección quita la conexión
+//   POST publicaciones el tablero: trae cada publicación, su comisión y su envío
+//   POST aplicar      «Cambios sugeridos»: manda a ML el precio o la existencia que sugiere el ERP
+//   POST automatico   pg_cron cada hora (con la llave de ml_cuenta, sin sesión) si el interruptor está prendido
 //
 // Reglas:
 //   * Al aviso no se le cree: solo dice qué recurso cambió. Se vuelve a pedir a la API con
@@ -497,9 +500,89 @@ export async function publicacionesML(e: Entorno, admin: SupabaseClient) {
   for (const p of conTarifas) (p as Record<string, unknown>).categoria = p.categoria_id ? categorias.get(p.categoria_id) ?? null : null;
   const { data: n, error } = await admin.rpc("ml_registrar_publicaciones", { p: { publicaciones: conTarifas, completo: true } });
   if (error) throw new ErrorML(error.message);
+  // La vuelta automática (pg_cron) necesita saber a dónde llamar; así no se configura a mano.
+  await admin.rpc("ml_fijar_url", { p: e.supabaseUrl });
   const yo = await apiML(e, access, `/users/${vendedor}`).catch(() => ({} as Obj));
   if (yo.seller_reputation) await admin.rpc("ml_registrar_reputacion", { p: yo.seller_reputation });
   return { publicaciones: n as number, reputacion: !!yo.seller_reputation };
+}
+
+// -----------------------------------------------------------------------------
+// Cambios de precio y existencia (fase 2): lo que propone ml_cambios_propuestos()
+// -----------------------------------------------------------------------------
+export interface CambioML {
+  item_id: string; titulo: string | null; campo: "precio" | "existencia"; actual: number; propuesto: number;
+  motivo: string; automatico: boolean; por_que_no: string | null;
+}
+type Resultado = { item_id: string; campo: string; estado: "aplicado" | "omitido" | "error"; detalle: string | null };
+
+/**
+ * Lo que se le manda a ML para cambiar una publicación, o por qué no se toca. Se lee la
+ * publicación otra vez antes: si su precio o existencia ya no es lo que vio el tablero, alguien la
+ * cambió en ML después de la última lectura y no se pisa. Con variantes, el precio va en cada una
+ * (ML exige el mismo en todas); la existencia no se puede repartir sola entre variantes.
+ */
+export function cuerpoCambio(it: Obj, c: Pick<CambioML, "campo" | "actual" | "propuesto">): { cuerpo: Obj } | { omitir: string } {
+  const variantes = (Array.isArray(it.variations) ? it.variations : []) as Obj[];
+  const ahora = c.campo === "precio" ? num(it.price) : num(it.available_quantity);
+  if (ahora == null || Math.abs(ahora - Number(c.actual)) > 0.005) {
+    return { omitir: `En Mercado Libre ya está en ${ahora ?? "—"} (el tablero decía ${c.actual}): vuelve a traer las publicaciones` };
+  }
+  if (c.campo === "precio") {
+    return { cuerpo: variantes.length ? { variations: variantes.map((v) => ({ id: v.id, price: c.propuesto })) } : { price: c.propuesto } };
+  }
+  if (variantes.length > 1) return { omitir: "Tiene variantes: la existencia de cada una se cambia en Mercado Libre" };
+  return { cuerpo: variantes.length ? { variations: [{ id: variantes[0].id, available_quantity: c.propuesto }] } : { available_quantity: c.propuesto } };
+}
+
+async function aplicarCambios(e: Entorno, admin: SupabaseClient, cambios: CambioML[], origen: "boton" | "automatico", usuario: string | null) {
+  const { access } = await token(e, admin);
+  // De uno en uno: son pocos y ML limita las escrituras por segundo.
+  const resultados: Resultado[] = [];
+  for (const c of cambios) {
+    let r: Resultado;
+    try {
+      const it = await apiML(e, access, `/items/${c.item_id}?attributes=id,price,available_quantity,variations`);
+      const plan = cuerpoCambio(it, c);
+      if ("omitir" in plan) r = { item_id: c.item_id, campo: c.campo, estado: "omitido", detalle: plan.omitir };
+      else {
+        await apiML(e, access, `/items/${c.item_id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(plan.cuerpo) });
+        r = { item_id: c.item_id, campo: c.campo, estado: "aplicado", detalle: null };
+      }
+    } catch (err) {
+      r = { item_id: c.item_id, campo: c.campo, estado: "error", detalle: err instanceof Error ? err.message : String(err) };
+    }
+    resultados.push(r);
+    await admin.rpc("ml_registrar_cambio", { p: { item_id: c.item_id, titulo: c.titulo, campo: c.campo, antes: c.actual, despues: c.propuesto,
+      origen, usuario_id: usuario, estado: r.estado, detalle: r.detalle } });
+  }
+  const cuenta = (x: Resultado["estado"]) => resultados.filter((r) => r.estado === x).length;
+  return { aplicados: cuenta("aplicado"), omitidos: cuenta("omitido"), errores: cuenta("error"), resultados };
+}
+
+/** Lo que hace la vuelta de cada hora: leer ML al día y aplicar solo lo seguro de lo que esté prendido. */
+export const MAX_AUTOMATICOS = 30;
+export async function vueltaAutomatica(e: Entorno, admin: SupabaseClient) {
+  const { data: cfg } = await admin.from("configuracion").select("valor").eq("clave", "mercadolibre_automatico").maybeSingle();
+  const v = o((cfg as { valor: unknown } | null)?.valor);
+  const prendido = { precio: v.precio === true, existencia: v.existencia === true };
+  if (!prendido.precio && !prendido.existencia) return { aplicados: 0, omitidos: 0, errores: 0, apagado: true };
+  try {
+    await publicacionesML(e, admin);
+    const { data, error } = await admin.rpc("ml_cambios_propuestos");
+    if (error) throw new ErrorML(error.message);
+    // Un tope por vuelta: si de pronto hay muchos, algo cambió en grande (un precio de lista mal
+    // capturado en todo un grupo) y es mejor que lo vea una persona.
+    const todos = ((data ?? []) as CambioML[]).filter((c) => c.automatico && prendido[c.campo]);
+    const r = await aplicarCambios(e, admin, todos.slice(0, MAX_AUTOMATICOS), "automatico", null);
+    const fuera = Math.max(0, todos.length - MAX_AUTOMATICOS);
+    await admin.rpc("ml_registrar_corrida", { p: { aplicados: r.aplicados, omitidos: r.omitidos, errores: r.errores, pendientes: fuera } });
+    return { aplicados: r.aplicados, omitidos: r.omitidos, errores: r.errores, pendientes: fuera };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await admin.rpc("ml_registrar_corrida", { p: { error: msg.slice(0, 300) } });
+    throw err;
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -561,6 +644,15 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
     }
   }
 
+  // pg_cron: sin sesión, con la llave que solo conocen la base y esta función.
+  if (accion === "automatico" && req.method === "POST") {
+    const { data: ok } = await admin.rpc("ml_llave_valida", { p: req.headers.get("x-llave") ?? "" });
+    if (ok !== true) return json({ error: "Llave no válida" }, 401);
+    const trabajo = vueltaAutomatica(e, admin).catch(() => undefined);
+    if (e.enSegundoPlano) { e.enSegundoPlano(trabajo); return json({ ok: true }); }
+    return json(await trabajo ?? { ok: false });
+  }
+
   if (req.method !== "POST") return json({ error: "Ruta no válida" }, 404);
   const u = await quien(req, e);
   if (!u) return json({ error: "Falta la sesión" }, 401);
@@ -599,6 +691,24 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
   if (accion === "publicaciones") {
     if (!(await puede(u.db, "mercadolibre", 1)) && !(await esDireccion(u.db))) return json({ error: "Sin permiso" }, 403);
     try { return json(await publicacionesML(e, admin)); } catch (err) { return json({ error: err instanceof Error ? err.message : String(err) }, 502); }
+  }
+
+  if (accion === "aplicar") {
+    const b = o(await req.json().catch(() => ({})));
+    const pedidos = (Array.isArray(b.cambios) ? b.cambios : []).map(o)
+      .map((x) => ({ item_id: txt(x.item_id), campo: txt(x.campo) })).filter((x) => x.item_id && x.campo);
+    if (!pedidos.length) return json({ error: "No elegiste ningún cambio" }, 400);
+    if (pedidos.length > 100) return json({ error: "Son demasiados de una vez: hasta 100" }, 400);
+    // Con la sesión de quien pide: la base revisa que atienda ML y calcula el valor. Nunca se manda
+    // un número que venga de la pantalla, solo el sugerido de la base.
+    const { data, error } = await u.db.rpc("ml_cambios_propuestos");
+    if (error) return json({ error: error.message }, error.code === "42501" ? 403 : 400);
+    const propuestos = (data ?? []) as CambioML[];
+    const elegidos = propuestos.filter((c) => pedidos.some((p) => p.item_id === c.item_id && p.campo === c.campo));
+    try {
+      const r = await aplicarCambios(e, admin, elegidos, "boton", u.id);
+      return json({ ...r, ya_no_hacen_falta: pedidos.length - elegidos.length });
+    } catch (err) { return json({ error: err instanceof Error ? err.message : String(err) }, 502); }
   }
 
   if (accion === "responder") {
