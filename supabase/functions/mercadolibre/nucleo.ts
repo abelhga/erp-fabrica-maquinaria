@@ -123,7 +123,9 @@ export function normalizarReclamo(r: Obj, razon?: string | null) {
     .map((a) => txt(o(a).due_date)).filter((d): d is string => !!d).sort();
   return {
     id: txt(r.id),
-    order_id: txt(r.resource) === "order" || !txt(r.resource) ? txt(r.resource_id) : txt(r.resource_id),
+    // El reclamo puede colgar de la venta, del envío o del carrito (pack): procesarUno lo traduce a venta.
+    order_id: txt(r.resource_id),
+    recurso: (txt(r.resource) ?? "order") as string,
     tipo,
     motivo: [razon ?? txt(r.reason_id), txt(r.stage) === "dispute" ? "en disputa (mediación de ML)" : null].filter(Boolean).join(" · ") || "Reclamo en Mercado Libre",
     fecha_limite: limites[0] ?? null,
@@ -238,6 +240,21 @@ async function leerVenta(e: Entorno, admin: SupabaseClient, access: string, ruta
 // -----------------------------------------------------------------------------
 // Procesar avisos
 // -----------------------------------------------------------------------------
+/** La venta de un reclamo que cuelga de un envío o de un carrito: primero lo que ya sabe el ERP, si no, ML. */
+async function ventaDelReclamo(e: Entorno, admin: SupabaseClient, access: string, recurso: string, id: string): Promise<string> {
+  const columna = recurso === "shipment" ? "envio_id" : recurso === "pack" ? "pack_id" : null;
+  if (!columna) return id;
+  const { data } = await admin.from("ml_ventas").select("order_id").eq(columna, id).order("order_id").limit(1);
+  const ya = (data as { order_id: string }[] | null)?.[0]?.order_id;
+  if (ya) return ya;
+  if (recurso === "shipment") {
+    const envio = await apiML(e, access, `/shipments/${id}`, { headers: { "x-format-new": "true" } });
+    return txt(envio.order_id) ?? txt(o((Array.isArray(envio.items) ? envio.items[0] : null)).order_id) ?? id;
+  }
+  const pack = await apiML(e, access, `/packs/${id}`);
+  return txt(o((Array.isArray(pack.orders) ? pack.orders[0] : null)).id) ?? id;
+}
+
 async function procesarUno(e: Entorno, admin: SupabaseClient, access: string, topic: string, resource: string, conectadaEn?: string | null) {
   const rpc = async (fn: string, p: unknown) => {
     const { error } = await admin.rpc(fn, { p });
@@ -259,6 +276,9 @@ async function procesarUno(e: Entorno, admin: SupabaseClient, access: string, to
     const razonId = txt(reclamo.reason_id);
     const razon = razonId ? await apiML(e, access, `/post-purchase/v1/claims/reasons/${razonId}`).then((x) => txt(x.name) ?? txt(x.detail)).catch(() => null) : null;
     const datos = normalizarReclamo(reclamo, razon);
+    // Un reclamo de un carrito cuelga del envío o del pack, no de una venta (el 5600732707 traía el
+    // envío 48326462274 y se buscaba como venta: «Order do not exists»). Se toma la primera venta.
+    if (datos.recurso !== "order" && datos.order_id) datos.order_id = await ventaDelReclamo(e, admin, access, datos.recurso, datos.order_id);
     try {
       await rpc("ml_registrar_reclamo", datos);
     } catch (err) {

@@ -61,7 +61,9 @@ describe("traducciones de ML", () => {
                                                    { action: "refund", due_date: "2026-10-20T12:00:00Z" }] },
       ],
     }, "Llegó dañado");
-    expect(r).toEqual({ id: "5001", order_id: "2000012345", tipo: "reclamo", motivo: "Llegó dañado", fecha_limite: "2026-10-20T12:00:00Z", abierto: true });
+    expect(r).toEqual({ id: "5001", order_id: "2000012345", recurso: "order", tipo: "reclamo", motivo: "Llegó dañado", fecha_limite: "2026-10-20T12:00:00Z", abierto: true });
+    // De un carrito: cuelga del envío; la conexión lo traduce a la venta.
+    expect(normalizarReclamo({ id: 2, resource: "shipment", resource_id: 48326462274 })).toMatchObject({ order_id: "48326462274", recurso: "shipment" });
     expect(normalizarReclamo({ id: 1, type: "returns", status: "closed" }).tipo).toBe("devolucion");
     expect(normalizarReclamo({ id: 1, type: "cancel_purchase" }).tipo).toBe("cancelacion");
   });
@@ -174,6 +176,9 @@ const falsa: typeof fetch = async (entrada, init) => {
   // Un reclamo de una venta de antes de conectar: no está en el ERP y nunca va a llegar sola.
   if (u.pathname === "/post-purchase/v1/claims/search") return r({ data: [{ id: 5009 }] });
   if (u.pathname === "/post-purchase/v1/claims/5009") return r({ id: 5009, resource: "order", resource_id: VIEJA, type: "mediations", status: "opened", players: [] });
+  // Un reclamo de carrito: cuelga del envío de la venta de prueba, no de la venta.
+  if (u.pathname === "/post-purchase/v1/claims/5010") return r({ id: 5010, resource: "shipment", resource_id: 99, type: "mediations", status: "opened",
+    players: [{ role: "respondent", available_actions: [{ action: "refund", due_date: "2026-11-02T12:00:00Z" }] }] });
   if (u.pathname === `/orders/${VIEJA}`) return r({ id: VIEJA, status: "paid", date_closed: "2026-09-01T10:00:00Z", order_items: [] });
   if (u.pathname === "/orders/search") return r({ results: [{ id: ORDEN }] });
   if (u.pathname === "/users/4242/items/search") return r(u.searchParams.get("limit") === "100"
@@ -200,12 +205,14 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
         await c.query(`delete from public.${t} where envio_id in (select id from public.envios where pedido_id in (select id from _p))`);
       }
       await c.query("delete from public.envios where pedido_id in (select id from _p)");
+      await c.query("delete from public.avisos where tipo in ('ml_reclamo', 'devolucion_nueva') and registro_id in (select id::text from public.devoluciones where pedido_id in (select id from _p))");
+      await c.query("delete from public.devoluciones where pedido_id in (select id from _p)");
       await c.query("delete from public.ml_ventas where pedido_id in (select id from _p)");
       await c.query("delete from public.pedido_lineas where pedido_id in (select id from _p)");
       await c.query("delete from public.pedidos where id in (select id from _p)");
       await c.query("delete from public.ml_preguntas where id in (880001, 880002, 880003)");
       await c.query("delete from public.avisos where tipo = 'ml_reclamo_sin_venta' and registro_id = '5009'");
-      await c.query("delete from public.ml_avisos where resource like '/post-purchase/v1/claims/5009%'");
+      await c.query("delete from public.ml_avisos where resource like '/post-purchase/v1/claims/5009%' or resource = '/post-purchase/v1/claims/5010'");
       await c.query("delete from public.ml_avisos where resource = any($1)", [[`/orders/${ORDEN}`, "/questions/880001", "/questions/880002", "/shipments/99"]]);
       await c.query("delete from public.ml_crudo where order_id = $1", [String(ORDEN)]);
       await c.query("delete from public.publicaciones where id_externo = 'MLM-T-ML'");
@@ -389,6 +396,15 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
     expect(av).toMatchObject({ error: null });
     expect(av!.procesado_en).toBeTruthy();
     expect((await admin.from("avisos").select("id").eq("tipo", "ml_reclamo_sin_venta").eq("registro_id", "5009")).data!.length).toBeGreaterThan(0);
+  });
+
+  it("un reclamo de carrito (cuelga del envío) cae en su venta", async () => {
+    await aviso({ topic: "post_purchase", resource: "/post-purchase/v1/claims/5010", user_id: 4242, application_id: "APP-PRUEBA" });
+    const { data: av } = await admin.from("ml_avisos").select("procesado_en, error").eq("resource", "/post-purchase/v1/claims/5010").single();
+    expect(av).toMatchObject({ error: null });
+    const { data: ped } = await admin.from("pedidos").select("id").eq("id_externo", String(ORDEN)).single();
+    const { data: dev } = await admin.from("devoluciones").select("tipo, fecha_limite").eq("pedido_id", ped!.id);
+    expect(dev).toEqual([{ tipo: "reclamo", fecha_limite: expect.stringContaining("2026-11-02") }]);
   });
 
   it("sin sesión no se contesta ni se conecta", async () => {
