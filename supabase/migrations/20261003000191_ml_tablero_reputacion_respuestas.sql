@@ -8,8 +8,11 @@
 -- lista, lo libre en planta, las piezas por venta).
 --
 -- 1. ml_publicaciones_estado: cómo está cada publicación en ML (precio, existencia, visitas,
---    fotos, envío, atributos y descripción). ml_tablero() la cruza con el ERP: precio sugerido,
---    existencia que se podría publicar, preguntas y ventas de 30 días.
+--    fotos, envío, atributos y descripción) y lo que ML cobra de verdad por venderla: la comisión
+--    clásica y la premium de su categoría y lo que le cuesta a la cuenta su envío gratis (cambia con
+--    el peso, la reputación y el tipo de envío). ml_tablero() la cruza con el ERP: precio sugerido
+--    para clásica y para premium, existencia que se podría publicar, preguntas y ventas de 30 días.
+--    Juan Carlos veía una sola tarifa: la de canales (12 % y $110 de envío para todo).
 -- 2. ml_reputacion: el termómetro de ML. ml_reclamos_abiertos(): los reclamos de ML que siguen
 --    abiertos, sin montos (marketing no ve dinero).
 -- 3. Para contestar: los datos fijos de la empresa (factura, envíos, garantía, horario) y las
@@ -31,6 +34,14 @@ create table if not exists public.ml_publicaciones_estado (
   logistica text,                       -- fulfillment (Full), xd_drop_off, cross_docking…
   envio_gratis boolean,
   atributos jsonb,                      -- [{nombre, valor}] tal cual los tiene ML
+  categoria_id text,
+  categoria text,
+  comision_clasica numeric(6,3),        -- % que cobra ML en clásica (gold_special) en esa categoría
+  fijo_clasica numeric(10,2),           -- cuota fija por unidad al precio de hoy (abajo de $299)
+  comision_premium numeric(6,3),        -- % en premium (gold_pro)
+  fijo_premium numeric(10,2),
+  costo_envio numeric(10,2),            -- lo que paga la cuenta por el envío gratis de esta publicación
+  peso_facturable numeric(10,3),
   descripcion text,                     -- se trae cuando hay preguntas de esa publicación
   descripcion_en timestamptz,
   actualizado_en timestamptz not null default now()
@@ -50,15 +61,27 @@ begin
     continue when nullif(x->>'item_id', '') is null;
     v_ids := v_ids || (x->>'item_id');
     insert into ml_publicaciones_estado (item_id, titulo, estado, precio, stock, vendidas, visitas_30d, fotos, permalink,
-      tipo_publicacion, logistica, envio_gratis, atributos, actualizado_en)
+      tipo_publicacion, logistica, envio_gratis, atributos, categoria_id, categoria, comision_clasica, fijo_clasica,
+      comision_premium, fijo_premium, costo_envio, peso_facturable, actualizado_en)
     values (x->>'item_id', x->>'titulo', x->>'estado', (x->>'precio')::numeric, (x->>'stock')::int, (x->>'vendidas')::int,
       (x->>'visitas_30d')::int, (x->>'fotos')::int, x->>'permalink', x->>'tipo_publicacion', x->>'logistica',
-      (x->>'envio_gratis')::boolean, x->'atributos', now())
+      (x->>'envio_gratis')::boolean, x->'atributos', x->>'categoria_id', x->>'categoria',
+      (x->>'comision_clasica')::numeric, (x->>'fijo_clasica')::numeric, (x->>'comision_premium')::numeric, (x->>'fijo_premium')::numeric,
+      (x->>'costo_envio')::numeric, (x->>'peso_facturable')::numeric, now())
     on conflict (item_id) do update set titulo = excluded.titulo, estado = excluded.estado, precio = excluded.precio,
       stock = excluded.stock, vendidas = excluded.vendidas, visitas_30d = coalesce(excluded.visitas_30d, ml_publicaciones_estado.visitas_30d),
       fotos = excluded.fotos, permalink = excluded.permalink, tipo_publicacion = excluded.tipo_publicacion,
       logistica = excluded.logistica, envio_gratis = excluded.envio_gratis,
-      atributos = coalesce(excluded.atributos, ml_publicaciones_estado.atributos), actualizado_en = now();
+      atributos = coalesce(excluded.atributos, ml_publicaciones_estado.atributos),
+      categoria_id = coalesce(excluded.categoria_id, ml_publicaciones_estado.categoria_id),
+      categoria = coalesce(excluded.categoria, ml_publicaciones_estado.categoria),
+      -- Si ML no respondió esta vez, se queda lo último que dijo.
+      comision_clasica = coalesce(excluded.comision_clasica, ml_publicaciones_estado.comision_clasica),
+      fijo_clasica = coalesce(excluded.fijo_clasica, ml_publicaciones_estado.fijo_clasica),
+      comision_premium = coalesce(excluded.comision_premium, ml_publicaciones_estado.comision_premium),
+      fijo_premium = coalesce(excluded.fijo_premium, ml_publicaciones_estado.fijo_premium),
+      costo_envio = coalesce(excluded.costo_envio, ml_publicaciones_estado.costo_envio),
+      peso_facturable = coalesce(excluded.peso_facturable, ml_publicaciones_estado.peso_facturable), actualizado_en = now();
     v_n := v_n + 1;
   end loop;
   if coalesce((p->>'completo')::boolean, false) then
@@ -80,18 +103,30 @@ begin
 end $$;
 revoke execute on function public.ml_registrar_descripcion(text, text, jsonb) from public, anon, authenticated;
 
--- El precio sugerido para ML, como precio_canal (003) pero con piezas por venta con fracción
--- (1 juego = 0.25 de caja, 186). Con IVA.
-create or replace function public.precio_ml_sugerido(p_articulo uuid, p_con_envio boolean, p_piezas numeric default 1)
-returns numeric language sql stable set search_path = public as $$
-  select round(case when bruto * 1.16 < c.umbral_cuota_fija then (bruto + c.cuota_fija) * 1.16 else bruto * 1.16 end, 2)
-  from canales c
-  cross join lateral (
-    select (pl.precio * coalesce(nullif(p_piezas, 0), 1)) / (1 - c.comision_pct) + case when p_con_envio then c.costo_envio else 0 end as bruto
-    from precios_lista pl where pl.articulo_id = p_articulo
-  ) x
-  where c.canal = 'mercadolibre'
-$$;
+-- La comisión premium de respaldo (cuando ML no la dio): canales solo tenía la clásica.
+alter table public.canales add column if not exists comision_premium_pct numeric(6,4);
+update public.canales set comision_premium_pct = 0.165 where canal = 'mercadolibre' and comision_premium_pct is null;
+
+-- El precio que deja, después de la comisión, la cuota fija y el envío, lo que se quiere recibir
+-- (p_base: el precio de lista con IVA por las piezas de cada venta). En ML México el envío gratis
+-- es obligatorio desde $299 en artículos nuevos y lo paga el vendedor; abajo de $299 lo paga el
+-- comprador, pero se cobra una cuota fija por unidad ($25 abajo de $99, $30 abajo de $149, $37
+-- abajo de $299). Redondeado al peso hacia arriba.
+create or replace function public.precio_ml_para(p_base numeric, p_pct numeric, p_envio numeric,
+  p_con_cuota boolean default true, p_envio_siempre boolean default false)
+returns numeric language plpgsql immutable as $$
+declare v numeric; t record;
+begin
+  if p_base is null or p_pct is null or p_pct >= 100 then return null; end if;
+  v := (p_base + coalesce(p_envio, 0)) / (1 - p_pct / 100);
+  if v >= 299 or p_envio_siempre then return ceil(v); end if;
+  if not p_con_cuota then return ceil(p_base / (1 - p_pct / 100)); end if;
+  for t in select * from (values (99, 25), (149, 30), (299, 37)) x(lim, cuota) loop
+    v := (p_base + t.cuota) / (1 - p_pct / 100);
+    if v < t.lim then return ceil(v); end if;
+  end loop;
+  return 299;   -- con la cuota pasaría de $299, y ahí ya va con envío: el escalón mismo
+end $$;
 
 -- Lo libre en planta: existencia en almacenes de planta menos lo apartado (Full no cuenta).
 create or replace function public.libre_en_planta(p_articulo uuid) returns numeric
@@ -105,37 +140,58 @@ revoke execute on function public.libre_en_planta(uuid) from public, anon;
 grant execute on function public.libre_en_planta(uuid) to authenticated;
 
 -- El tablero: cada publicación con lo que dice ML y lo que dice el ERP. Unidades, no dinero de
--- ventas: lo ve marketing. El precio sugerido solo sale a quien ve precios de venta (149).
+-- ventas: lo ve marketing. Los precios sugeridos solo salen a quien ve precios de venta (149). La
+-- comisión y el envío son los de ML para esa publicación; si ML no los dio, los de respaldo de
+-- canales (y tarifas_de_ml = false lo dice).
 create or replace function public.ml_tablero()
 returns table (item_id text, titulo text, estado text, logistica text, envio_gratis boolean, permalink text, fotos int,
-  tipo_publicacion text, precio_ml numeric, stock_ml int, vendidas_total int, visitas_30d int,
+  tipo_publicacion text, categoria text, precio_ml numeric, stock_ml int, vendidas_total int, visitas_30d int,
   articulo_id uuid, clave text, articulo text, imagen_url text, piezas numeric,
-  precio_sugerido numeric, libre_planta numeric, stock_sugerido int,
+  comision_clasica numeric, comision_premium numeric, costo_envio numeric, tarifas_de_ml boolean,
+  precio_recibir numeric, sugerido_clasica numeric, sugerido_premium numeric, precio_sugerido numeric,
+  libre_planta numeric, stock_sugerido int,
   preguntas_30d int, sin_contestar int, ventas_30d int, unidades_30d numeric, actualizado_en timestamptz)
 language plpgsql stable security definer set search_path = public as $$
-declare v_precios boolean := ve_precios_venta();
+declare v_precios boolean := ve_precios_venta(); c canales;
 begin
   if not puede('mercadolibre', 1) then raise exception 'El tablero de Mercado Libre es de quien atiende ML' using errcode = '42501'; end if;
+  select * into c from canales where canal = 'mercadolibre';
   return query
-  select e.item_id, e.titulo, e.estado, e.logistica, e.envio_gratis, e.permalink, e.fotos, e.tipo_publicacion,
-    case when v_precios then e.precio end, e.stock, e.vendidas, e.visitas_30d,
-    pub.articulo_id, a.clave, a.nombre, a.imagen_url, pub.piezas_por_paquete,
-    case when v_precios and pub.articulo_id is not null then precio_ml_sugerido(pub.articulo_id, coalesce(e.envio_gratis, false), pub.piezas_por_paquete) end,
-    case when pub.articulo_id is not null then libre_en_planta(pub.articulo_id) end,
-    case when pub.articulo_id is not null and coalesce(e.logistica, '') <> 'fulfillment'
-         then floor(libre_en_planta(pub.articulo_id) / nullif(pub.piezas_por_paquete, 0))::int end,
-    (select count(*)::int from ml_preguntas q where q.item_id = e.item_id and q.recibida_en > now() - interval '30 days'),
-    (select count(*)::int from ml_preguntas q where q.item_id = e.item_id and q.estado = 'pendiente'),
+  with b as (
+    select e.*, pub.articulo_id art, pub.piezas_por_paquete pz, a.clave a_clave, a.nombre a_nombre, a.imagen_url a_img,
+      coalesce(e.comision_clasica, c.comision_pct * 100) pct_c, coalesce(e.comision_premium, c.comision_premium_pct * 100) pct_p,
+      coalesce(e.costo_envio, c.costo_envio) envio,
+      (select pl.precio * coalesce(nullif(pub.piezas_por_paquete, 0), 1) * 1.16 from precios_lista pl where pl.articulo_id = pub.articulo_id) base
+    from ml_publicaciones_estado e
+    left join publicaciones pub on pub.canal = 'mercadolibre' and pub.id_externo = e.item_id
+    left join articulos a on a.id = pub.articulo_id
+    where e.titulo is not null
+  ), s as (
+    select b.*,
+      -- Abajo de $299, una cuota fija de 0 en lo que ML cobró dice que ese tipo no la lleva.
+      precio_ml_para(b.base, b.pct_c, b.envio, not (b.precio < 299 and b.fijo_clasica = 0), coalesce(b.envio_gratis, false) and b.precio < 299) sc,
+      precio_ml_para(b.base, b.pct_p, b.envio, not (b.precio < 299 and b.fijo_premium = 0), coalesce(b.envio_gratis, false) and b.precio < 299) sp
+    from b
+  )
+  select s.item_id, s.titulo, s.estado, s.logistica, s.envio_gratis, s.permalink, s.fotos, s.tipo_publicacion, s.categoria,
+    case when v_precios then s.precio end, s.stock, s.vendidas, s.visitas_30d,
+    s.art, s.a_clave, s.a_nombre, s.a_img, s.pz,
+    s.pct_c, s.pct_p, case when v_precios then s.envio end, s.comision_clasica is not null and s.costo_envio is not null,
+    case when v_precios then round(s.base, 2) end,
+    case when v_precios then s.sc end, case when v_precios then s.sp end,
+    case when v_precios then case when s.tipo_publicacion = 'gold_pro' then s.sp else s.sc end end,
+    case when s.art is not null then libre_en_planta(s.art) end,
+    case when s.art is not null and coalesce(s.logistica, '') <> 'fulfillment'
+         then floor(libre_en_planta(s.art) / nullif(s.pz, 0))::int end,
+    (select count(*)::int from ml_preguntas q where q.item_id = s.item_id and q.recibida_en > now() - interval '30 days'),
+    (select count(*)::int from ml_preguntas q where q.item_id = s.item_id and q.estado = 'pendiente'),
     (select count(distinct pe.id)::int from pedido_lineas pl join pedidos pe on pe.id = pl.pedido_id
-      where pe.canal = 'mercadolibre' and pe.estado <> 'cancelado' and pl.referencia_externa = e.item_id and pe.fecha > hoy_mx() - 30),
-    (select coalesce(sum(pl.cantidad / coalesce(nullif(pub.piezas_por_paquete, 0), 1)), 0) from pedido_lineas pl join pedidos pe on pe.id = pl.pedido_id
-      where pe.canal = 'mercadolibre' and pe.estado <> 'cancelado' and pl.referencia_externa = e.item_id and pe.fecha > hoy_mx() - 30),
-    e.actualizado_en
-  from ml_publicaciones_estado e
-  left join publicaciones pub on pub.canal = 'mercadolibre' and pub.id_externo = e.item_id
-  left join articulos a on a.id = pub.articulo_id
-  where e.titulo is not null
-  order by e.visitas_30d desc nulls last, e.titulo;
+      where pe.canal = 'mercadolibre' and pe.estado <> 'cancelado' and pl.referencia_externa = s.item_id and pe.fecha > hoy_mx() - 30),
+    (select coalesce(sum(pl.cantidad / coalesce(nullif(s.pz, 0), 1)), 0) from pedido_lineas pl join pedidos pe on pe.id = pl.pedido_id
+      where pe.canal = 'mercadolibre' and pe.estado <> 'cancelado' and pl.referencia_externa = s.item_id and pe.fecha > hoy_mx() - 30),
+    s.actualizado_en
+  from s
+  order by s.visitas_30d desc nulls last, s.titulo;
 end $$;
 revoke execute on function public.ml_tablero() from public, anon;
 grant execute on function public.ml_tablero() to authenticated;

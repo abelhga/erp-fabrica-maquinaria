@@ -14,19 +14,29 @@ begin
   insert into movimientos_inventario (tipo, articulo_id, almacen_id, cantidad, motivo) values ('inicial', v_art, v_pb, 3, 'prueba 191');
   insert into publicaciones (articulo_id, canal, id_externo, titulo, piezas_por_paquete) values (v_art, 'mercadolibre', 'MLM191', 'Juego de grapas', 0.25);
   perform ml_registrar_publicaciones('{"completo": false, "publicaciones": [{"item_id": "MLM191", "titulo": "Juego de grapas", "estado": "active",
-    "precio": 400, "stock": 20, "vendidas": 7, "visitas_30d": 150, "fotos": 2, "logistica": "xd_drop_off", "envio_gratis": false}]}');
+    "precio": 400, "stock": 20, "vendidas": 7, "visitas_30d": 150, "fotos": 2, "logistica": "xd_drop_off", "envio_gratis": true,
+    "tipo_publicacion": "gold_special", "categoria": "Grapas para bandas", "comision_clasica": 15, "fijo_clasica": 0, "comision_premium": 19.5,
+    "fijo_premium": 0, "costo_envio": 120}]}');
+  -- Si ML no responde la próxima vez, se queda lo último que dijo de las tarifas.
+  perform ml_registrar_publicaciones('{"publicaciones": [{"item_id": "MLM191", "titulo": "Juego de grapas", "estado": "active", "precio": 400, "stock": 20,
+    "fotos": 2, "logistica": "xd_drop_off", "envio_gratis": true, "tipo_publicacion": "gold_special"}]}');
   perform ml_registrar_reputacion('{"level_id": "5_green", "power_seller_status": "gold"}');
   v_ped := ml_registrar_orden('{"id": "T191-1", "estado": "paid", "items": [{"item_id": "MLM191", "cantidad": 2, "precio": 400}]}');
   insert into devoluciones (pedido_id, tipo, motivo, fecha_limite, monto_reclamado) values (v_ped, 'reclamo', 'Llegó incompleto', now() + interval '1 day', 500);
 
-  -- Marketing ve el tablero: 3 cajas libres = 12 juegos; el sugerido es el de un juego (0.25 de caja).
-  v_sug := precio_ml_sugerido(v_art, false, 0.25);
-  assert v_sug > 0, 'sin precio sugerido';
+  -- Marketing ve el tablero: 3 cajas libres = 12 juegos. El sugerido es el de un juego (0.25 de caja):
+  -- lista $1,000 × 0.25 × 1.16 = $290 a recibir, más $120 de envío, entre (1 − 15 %) = $482.35 → $483 en
+  -- clásica; con 19.5 % de premium, $510.
+  v_sug := 483;
   perform pg_temp.como(v_mkt);
   select * into t from ml_tablero() x where x.item_id = 'MLM191';
   assert t.clave = 'T191-GRAPAS' and t.piezas = 0.25 and t.stock_ml = 20 and t.visitas_30d = 150, format('tablero: %s', row_to_json(t));
   assert t.libre_planta = 3 and t.stock_sugerido = 12, format('existencia: %s y %s', t.libre_planta, t.stock_sugerido);
-  assert t.precio_sugerido = v_sug and t.precio_ml = 400, format('precio: %s vs %s, ML %s', t.precio_sugerido, v_sug, t.precio_ml);
+  assert t.precio_sugerido = v_sug and t.sugerido_clasica = 483 and t.sugerido_premium = 510 and t.precio_ml = 400 and t.precio_recibir = 290,
+    format('precio: %s / %s / %s, ML %s', t.precio_sugerido, t.sugerido_clasica, t.sugerido_premium, t.precio_ml);
+  assert t.tarifas_de_ml and t.comision_clasica = 15 and t.costo_envio = 120 and t.categoria = 'Grapas para bandas', format('tarifas: %s', row_to_json(t));
+  -- Abajo de $299 el comprador paga el envío y entra la cuota fija: $60 a recibir con 15 % → $106.
+  assert precio_ml_para(60, 15, 120) = 106 and precio_ml_para(60, 15, 120, false) = 71, 'cuota fija abajo de $299';
   assert t.ventas_30d = 1 and t.unidades_30d = 2, format('ventas: %s y %s', t.ventas_30d, t.unidades_30d);
   assert (select datos->>'level_id' from ml_reputacion) = '5_green', 'marketing no ve la reputación';
   assert exists (select 1 from ml_reclamos_abiertos() r where r.motivo = 'Llegó incompleto' and r.venta_ml = 'T191-1'), 'marketing no ve el reclamo';

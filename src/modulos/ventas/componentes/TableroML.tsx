@@ -16,9 +16,10 @@ import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface FilaTablero {
   item_id: string; titulo: string; estado: string | null; logistica: string | null; envio_gratis: boolean | null; permalink: string | null;
-  fotos: number | null; tipo_publicacion: string | null; precio_ml: number | null; stock_ml: number | null; vendidas_total: number | null;
+  fotos: number | null; tipo_publicacion: string | null; categoria: string | null; precio_ml: number | null; stock_ml: number | null; vendidas_total: number | null;
   visitas_30d: number | null; articulo_id: string | null; clave: string | null; articulo: string | null; imagen_url: string | null;
-  piezas: number | null; precio_sugerido: number | null; libre_planta: number | null; stock_sugerido: number | null;
+  piezas: number | null; comision_clasica: number | null; comision_premium: number | null; costo_envio: number | null; tarifas_de_ml: boolean;
+  precio_recibir: number | null; sugerido_clasica: number | null; sugerido_premium: number | null; precio_sugerido: number | null; libre_planta: number | null; stock_sugerido: number | null;
   preguntas_30d: number; sin_contestar: number; ventas_30d: number; unidades_30d: number; actualizado_en: string;
 }
 
@@ -34,6 +35,8 @@ export function senales(f: FilaTablero) {
   if (f.estado === "paused") s.push({ clave: "pausada", texto: "Pausada", tono: "info" });
   return s;
 }
+
+const esPremium = (f: FilaTablero) => f.tipo_publicacion === "gold_pro";
 
 const LOGISTICA: Record<string, string> = { fulfillment: "Full", xd_drop_off: "Colecta / punto", cross_docking: "Colecta", drop_off: "Punto de entrega", self_service: "Envío propio" };
 
@@ -85,7 +88,7 @@ export function TableroPublicaciones({ puedeActualizar }: { puedeActualizar: boo
             <span className="truncate">{f.titulo}</span>
             {f.permalink && <a href={f.permalink} target="_blank" rel="noreferrer" className="text-tenue hover:text-marca-texto shrink-0" aria-label="Ver en Mercado Libre"><ExternalLink className="h-3.5 w-3.5" /></a>}
           </p>
-          <p className="text-xs text-tenue truncate">{f.item_id}{f.clave ? ` · ${f.clave}` : ""}{f.piezas && Number(f.piezas) !== 1 ? ` · ${numero(Number(f.piezas))} por venta` : ""}
+          <p className="text-xs text-tenue truncate">{f.categoria ? `${f.categoria} · ` : ""}{f.item_id}{f.clave ? ` · ${f.clave}` : ""}{f.piezas && Number(f.piezas) !== 1 ? ` · ${numero(Number(f.piezas))} por venta` : ""}
             {f.logistica ? ` · ${LOGISTICA[f.logistica] ?? f.logistica}` : ""}{f.envio_gratis ? " · envío gratis" : ""}</p>
           <div className="mt-1 flex flex-wrap gap-1">{senales(f).map((s) => <Insignia key={s.clave} tono={s.tono}>{s.texto}</Insignia>)}</div>
         </div>
@@ -96,8 +99,18 @@ export function TableroPublicaciones({ puedeActualizar }: { puedeActualizar: boo
       clave: "precio_ml", titulo: "Precio", alinear: "der", sinBusqueda: true, valor: (f) => f.precio_ml, explica: GLOSARIO.precioSugeridoML,
       celda: (f) => (
         <div className="whitespace-nowrap">
-          <p className="cifra">{f.precio_ml != null ? dinero(f.precio_ml) : "—"}</p>
+          <p className="cifra">{f.precio_ml != null ? dinero(f.precio_ml) : "—"} <span className="text-xs text-tenue">{esPremium(f) ? "premium" : "clásica"}</span></p>
           {f.precio_sugerido != null && <p className={cn("text-xs cifra", senales(f).some((s) => s.clave === "precio") ? "text-aviso" : "text-tenue")}>sugerido {dinero(f.precio_sugerido)}</p>}
+          {f.precio_sugerido != null && (
+            <p className="text-xs cifra text-tenue">{esPremium(f) ? `en clásica ${dinero(f.sugerido_clasica)}` : `en premium ${dinero(f.sugerido_premium)}`}</p>
+          )}
+          {f.comision_clasica != null && (
+            <p className="text-xs text-tenue" data-explain={GLOSARIO.tarifaML} data-explain-title="Lo que cobra ML">
+              comisión {porcentaje(Number(esPremium(f) ? f.comision_premium : f.comision_clasica) / 100)}
+              {f.costo_envio != null && Number(f.costo_envio) > 0 && (f.envio_gratis || Number(f.precio_ml) >= 299) ? ` · envío ${dinero(f.costo_envio)}` : ""}
+              {!f.tarifas_de_ml && <span className="text-aviso"> · estimado</span>}
+            </p>
+          )}
         </div>
       ),
     },

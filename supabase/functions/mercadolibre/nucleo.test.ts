@@ -6,7 +6,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import pg from "pg";
-import { API_ML, API_MP, atender, leerVisitas, normalizarOrden, normalizarPago, normalizarPregunta, normalizarPublicacion, normalizarReclamo } from "./nucleo.ts";
+import { API_ML, API_MP, atender, leerEnvio, leerTarifas, leerVisitas, normalizarOrden, normalizarPago, normalizarPregunta, normalizarPublicacion, normalizarReclamo } from "./nucleo.ts";
 
 describe("traducciones de ML", () => {
   it("una venta Full con su SKU y precio con IVA", () => {
@@ -79,6 +79,11 @@ describe("traducciones de ML", () => {
         atributos: [{ nombre: "Material", valor: "Fierro" }] });
     expect([...leerVisitas([{ item_id: "MLM1", total_visits: 7 }])]).toEqual([["MLM1", 7]]);
     expect([...leerVisitas({ MLM1: 9 })]).toEqual([["MLM1", 9]]);
+    // La cuota fija sale de lo cobrado menos el porcentaje si ML no la desglosa.
+    expect(leerTarifas([{ listing_type_id: "gold_special", sale_fee_amount: 67, sale_fee_details: { percentage_fee: 15 } },
+      { listing_type_id: "gold_pro", sale_fee_amount: 39, sale_fee_details: { percentage_fee: 19.5, fixed_fee: 0 } }], 200))
+      .toEqual({ clasica: { pct: 15, fijo: 37 }, premium: { pct: 19.5, fijo: 0 } });
+    expect(leerEnvio({ coverage: { all_country: { list_cost: 99.9, billable_weight: 2 } } })).toEqual({ costo: 99.9, peso: 2 });
     expect(normalizarPregunta({ id: 78, status: "ANSWERED", answer: { text: "Sí", date_created: "2026-10-16T10:00:00Z" } }).respuesta).toBe("Sí");
     // Publicación pausada o cerrada: la base la deja fuera de las pendientes.
     expect(normalizarPregunta({ id: 79, status: "UNANSWERED" }, "Polea", false).item_activo).toBe(false);
@@ -125,8 +130,16 @@ const falsa: typeof fetch = async (entrada, init) => {
   // El tablero: la publicación como la ve ML, sus visitas de 30 días y la reputación de la cuenta.
   if (u.pathname === "/items") return r([{ code: 200, body: { id: "MLM-T-ML", title: "Polea prueba ML", status: "active", price: 1300, available_quantity: 5,
     sold_quantity: 12, pictures: [{}, {}], permalink: "https://articulo.mercadolibre.com.mx/MLM-T-ML", listing_type_id: "gold_special",
-    shipping: { logistic_type: "xd_drop_off", free_shipping: true }, attributes: [{ id: "DIAMETER", name: "Diámetro", value_name: "4 pulgadas" }] } }]);
+    shipping: { logistic_type: "xd_drop_off", free_shipping: true }, category_id: "MLM1234",
+    attributes: [{ id: "DIAMETER", name: "Diámetro", value_name: "4 pulgadas" }] } }]);
   if (u.pathname === "/visits/items") return r({ "MLM-T-ML": 321 });
+  // Lo que cobra ML en esa categoría: clásica 15 % y premium 19.5 %; y lo que cuesta su envío gratis.
+  if (u.pathname === "/sites/MLM/listing_prices") return r([
+    { listing_type_id: "gold_special", sale_fee_amount: 195, sale_fee_details: { percentage_fee: 15 } },
+    { listing_type_id: "gold_pro", sale_fee_amount: 253.5, sale_fee_details: { percentage_fee: 19.5 } },
+    { listing_type_id: "free", sale_fee_amount: 0, sale_fee_details: { percentage_fee: 0 } }]);
+  if (u.pathname === "/users/4242/shipping_options/free") return r({ coverage: { all_country: { list_cost: 118.5, billable_weight: 1.2 } } });
+  if (u.pathname === "/categories/MLM1234") return r({ id: "MLM1234", name: "Poleas" });
   if (u.pathname === "/users/4242") return r({ id: 4242, seller_reputation: { level_id: "5_green", power_seller_status: "gold", transactions: { total: 120 } } });
   // Lo que ya estaba en ML al conectar (sincronizar).
   // Lo que ese comprador ya había preguntado en la publicación (con y sin la pregunta nueva).
@@ -170,7 +183,7 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
       await c.query("delete from public.pedidos where id in (select id from _p)");
       await c.query("delete from public.ml_preguntas where id in (880001, 880002, 880003)");
       await c.query("delete from public.avisos where tipo = 'ml_reclamo_sin_venta' and registro_id = '5009'");
-      await c.query("delete from public.ml_avisos where resource = '/post-purchase/v1/claims/5009'");
+      await c.query("delete from public.ml_avisos where resource like '/post-purchase/v1/claims/5009%'");
       await c.query("delete from public.ml_avisos where resource = any($1)", [[`/orders/${ORDEN}`, "/questions/880001", "/questions/880002", "/shipments/99"]]);
       await c.query("delete from public.ml_crudo where order_id = $1", [String(ORDEN)]);
       await c.query("delete from public.publicaciones where id_externo = 'MLM-T-ML'");
@@ -259,10 +272,11 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
       method: "POST", headers: { Authorization: `Bearer ${s.session!.access_token}` } }), entorno);
     expect(r.status).toBe(200);
     expect(await r.json()).toEqual({ publicaciones: 1, reputacion: true });
-    const { data: e } = await admin.from("ml_publicaciones_estado").select("precio, stock, vendidas, visitas_30d, fotos, logistica, envio_gratis, descripcion")
+    const { data: e } = await admin.from("ml_publicaciones_estado").select("precio, stock, vendidas, visitas_30d, fotos, logistica, envio_gratis, descripcion, categoria, comision_clasica, fijo_clasica, comision_premium, costo_envio")
       .eq("item_id", "MLM-T-ML").single();
     // La descripción que se trajo con la pregunta no se pierde al actualizar el tablero.
-    expect(e).toMatchObject({ precio: 1300, stock: 5, vendidas: 12, visitas_30d: 321, fotos: 2, logistica: "xd_drop_off", envio_gratis: true });
+    expect(e).toMatchObject({ precio: 1300, stock: 5, vendidas: 12, visitas_30d: 321, fotos: 2, logistica: "xd_drop_off", envio_gratis: true,
+      categoria: "Poleas", comision_clasica: 15, fijo_clasica: 0, comision_premium: 19.5, costo_envio: 118.5 });
     expect(e!.descripcion).toContain("Polea de fierro");
     expect((await admin.from("ml_reputacion").select("datos").eq("id", 1).single()).data!.datos).toMatchObject({ level_id: "5_green" });
     // Lo cruza con el ERP: ligada al artículo de la venta de prueba, con sus preguntas.
@@ -293,6 +307,16 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
     const { data: avisos } = await admin.from("avisos").select("usuario_id").eq("tipo", "ml_reclamo_sin_venta").eq("registro_id", "5009");
     expect(avisos!.length).toBeGreaterThan(0);
     expect(new Set(avisos!.map((a) => a.usuario_id)).size).toBe(avisos!.length);
+  });
+
+  it("un reclamo que ML avisa como «post_purchase» se atiende igual que «claims»", async () => {
+    // Así manda ML los reclamos nuevos (a veces del historial de acciones); antes se marcaban vistos sin leerlos.
+    const r = await aviso({ topic: "post_purchase", resource: "/post-purchase/v1/claims/5009/actions-history", user_id: 4242, application_id: "APP-PRUEBA" });
+    expect(r.status).toBe(200);
+    const { data: av } = await admin.from("ml_avisos").select("procesado_en, error").eq("resource", "/post-purchase/v1/claims/5009/actions-history").single();
+    expect(av).toMatchObject({ error: null });
+    expect(av!.procesado_en).toBeTruthy();
+    expect((await admin.from("avisos").select("id").eq("tipo", "ml_reclamo_sin_venta").eq("registro_id", "5009")).data!.length).toBeGreaterThan(0);
   });
 
   it("sin sesión no se contesta ni se conecta", async () => {
