@@ -31,10 +31,10 @@ export const ANALISIS: Record<string, AyudaPantalla> = {
   "/analisis/entregas": [
     "Si cumplimos lo que prometemos. Arriba, cuántos pedidos con fecha compromiso en el periodo se entregaron a tiempo y con cuánto atraso los que no; abajo, por mes, por vendedor y por familia de equipo.",
     "«Lo que viene» es lo más útil: cada orden del taller con la fecha a la que sale de verdad. En rojo las que ya no llegan a su fecha; dale clic para abrir el pedido. Bájala en CSV para revisarla con producción.",
-    "La fila va por fecha compromiso: cada orden sale cuando la etapa más cargada acaba lo prometido antes que ella más lo suyo, con la capacidad semanal de Configuración. Cambia cada día con lo que el taller termina y lo que entra.",
+    "La fila va por fecha compromiso: cada orden sale cuando la etapa más cargada acaba lo prometido antes que ella más lo suyo, con la capacidad semanal de cada área (la calcula el ERP con la gente asignada). Cambia cada día con lo que el taller termina y lo que entra.",
   ],
   "/analisis/capacidad": [
-    "Si prometemos más de lo que el taller saca. Todo va en semanas de la etapa más cargada (hoy suele ser pailería), para compararlo con el calendario.",
+    "Si prometemos más de lo que el taller saca. Todo va en semanas de la etapa más cargada (la que más trabajo tiene en fila contra su gente), para compararlo con el calendario.",
     "La primera gráfica dice cuánto trabajo se prometió para cada mes contra las semanas que tiene el mes; «Ya vencido» es lo que debió salir y sigue en el taller. La segunda, lo que entra y sale del taller cada mes: si entra más, la fila crece.",
     "«Se pone al día» es cuándo acabaría el taller todo lo que tiene si no entrara nada más. Para acortar la fila hay que sacar más (gente, horas extra, maquila) o prometer con la fecha realista que da el cotizador.",
   ],

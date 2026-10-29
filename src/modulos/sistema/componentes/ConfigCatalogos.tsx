@@ -13,10 +13,11 @@ import { q, useAccion } from "@/lib/consultas";
 import { numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { CeldaCheck, CeldaTexto, SoloLectura } from "./Editables";
+import { CapacidadTaller } from "@/modulos/produccion/componentes/CapacidadTaller";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Almacen { id: number; nombre: string; tipo: "fisico" | "mercadolibre"; disponible_para_planta: boolean; descripcion: string | null; activo: boolean }
-interface Etapa { id: number; nombre: string; orden: number; color: string; activa: boolean; capacidad_horas_semana: number; en_paralelo: boolean }
+interface Etapa { id: number; nombre: string; orden: number; color: string; activa: boolean; capacidad_horas_semana: number; en_paralelo: boolean; capacidad_automatica: boolean }
 
 export function ConfigAlmacenes() {
   const { puede } = useSesion();
@@ -174,7 +175,9 @@ export function ConfigTaller() {
                     <td><CeldaTexto tipo="color" valor={e.color} deshabilitado={!editable} ariaLabel={`Color de ${e.nombre}`} alGuardar={(v) => cambiar.mutate({ id: e.id, datos: { color: v } })} /></td>
                     <td><CeldaTexto valor={e.nombre} deshabilitado={!editable} ariaLabel="Nombre" className="font-medium min-w-[140px]" alGuardar={(v) => v.trim() && cambiar.mutate({ id: e.id, datos: { nombre: v.trim() } })} /></td>
                     <td><CeldaTexto tipo="number" paso="1" valor={e.orden} deshabilitado={!editable} ariaLabel="Orden" className="w-20 ml-auto" alGuardar={(v) => cambiar.mutate({ id: e.id, datos: { orden: Number(v) } })} /></td>
-                    <td><CeldaTexto tipo="number" paso="0.5" valor={e.capacidad_horas_semana} deshabilitado={!editable} ariaLabel="Capacidad" className="w-28 ml-auto" alGuardar={(v) => cambiar.mutate({ id: e.id, datos: { capacidad_horas_semana: Number(v) } })} /></td>
+                    <td>{e.capacidad_automatica
+                      ? <span className="block text-right cifra pr-3" data-explain={GLOSARIO.capacidadAutomatica}>{numero(Number(e.capacidad_horas_semana))} <span className="text-xs text-tenue">auto</span></span>
+                      : <CeldaTexto tipo="number" paso="0.5" valor={e.capacidad_horas_semana} deshabilitado={!editable} ariaLabel="Capacidad" className="w-28 ml-auto" alGuardar={(v) => cambiar.mutate({ id: e.id, datos: { capacidad_horas_semana: Number(v) } })} />}</td>
                     <td className="text-center"><CeldaCheck valor={e.en_paralelo} deshabilitado={!editable} ariaLabel={`${e.nombre} en paralelo`} alCambiar={(v) => cambiar.mutate({ id: e.id, datos: { en_paralelo: v } })} /></td>
                     <td className="text-center"><CeldaCheck valor={e.activa} deshabilitado={!editable} ariaLabel="Activa" alCambiar={(v) => cambiar.mutate({ id: e.id, datos: { activa: v } })} /></td>
                   </tr>
@@ -189,7 +192,8 @@ export function ConfigTaller() {
             <Boton type="submit" variante="secundario" cargando={agregar.isPending} disabled={!nombre.trim()}><Plus className="h-4 w-4" /> Agregar</Boton>
           </form>
         )}
-        <p className="text-xs text-tenue">Las horas de cada equipo por etapa se capturan en su lista de materiales (Ingeniería). 45 h por persona a la semana es una buena base.</p>
+        <CapacidadTaller />
+        <p className="text-xs text-tenue">Las horas de cada equipo por etapa se capturan en su lista de materiales (Ingeniería). La gente de cada área se acomoda en Cuadrillas → Personal de piso.</p>
       </div>
     </Tarjeta>
   );
