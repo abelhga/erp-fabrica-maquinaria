@@ -2,6 +2,10 @@ import { useState } from "react";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 
+/** Abre la hoja para imprimir lo que se vendió, sin precios (de una orden: solo su partida). */
+export const abrirDescripcion = (pedido: string, op?: string) =>
+  window.open(`/produccion/pedidos/${pedido}/imprimir${op ? `?op=${op}` : ""}`, "_blank", "noopener");
+
 /**
  * Lo que se le cotizó al cliente en esa partida (calibres, motor, acabado), sin precio.
  * Las largas se abren con un clic para que el pedido no se vuelva una pared de texto.

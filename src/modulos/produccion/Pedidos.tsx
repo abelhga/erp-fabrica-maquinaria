@@ -19,7 +19,7 @@ import { CLAVE } from "./componentes/datos";
 import { DialogoRegresarStock } from "./componentes/DialogosOrden";
 import { GanttCompacto } from "./Gantt";
 import { GLOSARIO } from "@/tutorial/glosario";
-import { DescripcionVenta } from "./componentes/DescripcionVenta";
+import { DescripcionVenta, abrirDescripcion } from "./componentes/DescripcionVenta";
 
 /**
  * Los pedidos vistos desde la planta: qué se vendió, para cuándo y cómo va cada equipo,
@@ -177,20 +177,29 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
   const enTaller = ordenes.filter((o) => o.estado !== "entregada" && o.estado !== "cancelada");
   return (
     <div className="space-y-4">
-      {/* Con una entrega parcial sigue habiendo qué entregar: la hoja imprime lo que falta. */}
-      {p.estado !== "cancelado" && (activo || !hoja.data?.salidas.some((s) => !s.anulada_en)) && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Boton variante="secundario" tamano="sm" onClick={() => abrirHojaSalida(p.id)} data-explain={GLOSARIO.hojaSalida} data-explain-title="Hoja de salida">
-            <Printer className="h-3.5 w-3.5" />Hoja de salida
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Para el taller: lo que se vendió, sin precios, sin copiar y pegar. */}
+        {p.partidas.some((x) => x.descripcion) && (
+          <Boton variante="secundario" tamano="sm" onClick={() => abrirDescripcion(p.id)}
+            data-explain={GLOSARIO.imprimirDescripcion} data-explain-title="Imprimir descripción">
+            <Printer className="h-3.5 w-3.5" />Imprimir descripción
           </Boton>
-          {activo && hoja.data?.puede_entregar && (
-            <BotonEntregar pedido={p.id} invalidar={[CLAVE_PED, CLAVE]} antes={() => {
-              const pendientes = p.ordenes - p.ordenes_terminadas;
-              return pendientes <= 0 || confirm(`Hay ${pendientes} orden(es) de producción sin terminar. ¿Entregar de todos modos?`);
-            }} />
-          )}
-        </div>
-      )}
+        )}
+        {/* Con una entrega parcial sigue habiendo qué entregar: la hoja imprime lo que falta. */}
+        {p.estado !== "cancelado" && (activo || !hoja.data?.salidas.some((s) => !s.anulada_en)) && (
+          <>
+            <Boton variante="secundario" tamano="sm" onClick={() => abrirHojaSalida(p.id)} data-explain={GLOSARIO.hojaSalida} data-explain-title="Hoja de salida">
+              <Printer className="h-3.5 w-3.5" />Hoja de salida
+            </Boton>
+            {activo && hoja.data?.puede_entregar && (
+              <BotonEntregar pedido={p.id} invalidar={[CLAVE_PED, CLAVE]} antes={() => {
+                const pendientes = p.ordenes - p.ordenes_terminadas;
+                return pendientes <= 0 || confirm(`Hay ${pendientes} orden(es) de producción sin terminar. ¿Entregar de todos modos?`);
+              }} />
+            )}
+          </>
+        )}
+      </div>
       {hoja.data && <RecuadroEntrega hoja={hoja.data} invalidar={[CLAVE_PED, CLAVE]} />}
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <span className="text-tenue">Compromiso</span>

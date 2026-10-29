@@ -64,6 +64,7 @@ const Configuracion = p(() => import("./modulos/sistema/Configuracion"));
 const ParaLlamar = p(() => import("./modulos/asistente/ParaLlamar"));
 const Semana = p(() => import("./modulos/asistente/Semana"));
 const HojaSalida = p(() => import("./modulos/ventas/HojaSalida"));
+const ImprimirPedido = p(() => import("./modulos/produccion/ImprimirPedido"));
 const Pendientes = p(() => import("./modulos/pendientes/Pendientes"));
 const Calendario = p(() => import("./modulos/calendario/Calendario"));
 const Planos = p(() => import("./modulos/costeo/Planos"));
@@ -143,6 +144,7 @@ export function App() {
           <Route path="/ventas/cotizaciones/:id/imprimir" element={<Con m="ventas"><ImprimirCotizacion /></Con>} />
           {/* La hoja de salida la imprime quien ve el pedido, almacén incluido: el permiso lo revisa la base. */}
           <Route path="/pedidos/:id/salida" element={<HojaSalida />} />
+          <Route path="/produccion/pedidos/:id/imprimir" element={<Con m="produccion"><ImprimirPedido /></Con>} />
           <Route path="/importaciones/oc/:id/imprimir" element={<Con m="compras" n={2}><ImprimirOCImportacion /></Con>} />
           <Route path="/rrhh/documento/:tipo/:id" element={<Con m="nomina"><DocumentoNomina /></Con>} />
         </Route>
