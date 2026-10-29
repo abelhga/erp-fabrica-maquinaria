@@ -13,6 +13,7 @@ import { dinero, fechaYHora, hace, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { llamarML } from "@/lib/mercadolibre";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { AutomaticoML, BotonCambiosML, HistorialCambiosML } from "./CambiosML";
 
 export interface FilaTablero {
   item_id: string; titulo: string; estado: string | null; logistica: string | null; envio_gratis: boolean | null; permalink: string | null;
@@ -43,7 +44,7 @@ const LOGISTICA: Record<string, string> = { fulfillment: "Full", xd_drop_off: "C
 type FiltroT = "todas" | "revisar" | "precio" | "stock" | "fotos" | "no_vende" | "sin_ligar";
 
 /** Cada publicación con lo que dice ML y lo que dice el ERP: precio, existencia, visitas, preguntas y ventas de 30 días. */
-export function TableroPublicaciones({ puedeActualizar }: { puedeActualizar: boolean }) {
+export function TableroPublicaciones({ puedeActualizar, puedeCambiar, puedeAutomatico }: { puedeActualizar: boolean; puedeCambiar: boolean; puedeAutomatico: boolean }) {
   const qc = useQueryClient();
   const [filtro, setFiltro] = useState<FiltroT>("revisar");
   const [trayendo, setTrayendo] = useState(false);
@@ -56,6 +57,7 @@ export function TableroPublicaciones({ puedeActualizar }: { puedeActualizar: boo
       toast.success(`${numero(r.publicaciones)} publicaciones al día con Mercado Libre`);
       qc.invalidateQueries({ queryKey: ["ml_tablero"] });
       qc.invalidateQueries({ queryKey: ["ml_reputacion"] });
+      qc.invalidateQueries({ queryKey: ["ml_cambios_propuestos"] });
     } catch (e) { toast.error(mensajeError(e)); } finally { setTrayendo(false); }
   }
 
@@ -148,13 +150,20 @@ export function TableroPublicaciones({ puedeActualizar }: { puedeActualizar: boo
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-tenue">
-        <span>Últimos 30 días{ultima && ` · actualizado ${hace(ultima)}`}. Solo lee de Mercado Libre: no cambia nada allá.</span>
-        {puedeActualizar && <Boton variante="secundario" tamano="sm" onClick={traer} cargando={trayendo}><RefreshCw className="h-3.5 w-3.5" /> Traer de Mercado Libre</Boton>}
+        <span>Últimos 30 días{ultima && ` · actualizado ${hace(ultima)}`}. Traer solo lee; lo único que cambia algo en Mercado Libre es «Cambios sugeridos».</span>
+        <div className="flex flex-wrap gap-2">
+          {puedeActualizar && <Boton variante="secundario" tamano="sm" onClick={traer} cargando={trayendo}><RefreshCw className="h-3.5 w-3.5" /> Traer de Mercado Libre</Boton>}
+          {puedeCambiar && <BotonCambiosML />}
+        </div>
       </div>
       <TablaDatos filas={filas} columnas={columnas} claveFila={(f) => f.item_id} exportarComo="publicaciones-ml"
         placeholder="Buscar publicación, clave o artículo…"
         filtros={<Filtro opciones={opciones} valor={filtro} alCambiar={setFiltro} />}
         vacio={{ icono: Store, titulo: filtro === "revisar" ? "Nada que revisar" : "Nada con este filtro", texto: filtro === "revisar" ? "Precios, existencias y fotos cuadran con el catálogo." : "Prueba con otro filtro." }} />
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] pt-3">
+        <AutomaticoML puedeCambiar={puedeAutomatico} />
+        <HistorialCambiosML />
+      </div>
     </div>
   );
 }

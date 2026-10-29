@@ -82,7 +82,7 @@ export default function MercadoLibre() {
           ...(veDinero ? [{ valor: "dinero", texto: "Dinero", explica: GLOSARIO.dineroML }] : []),
         ]} />
         <ContenidoPestana value="publicaciones" className="pt-4">
-          <TableroPublicaciones puedeActualizar={puede("mercadolibre", 1)} />
+          <TableroPublicaciones puedeActualizar={puede("mercadolibre", 1)} puedeCambiar={puede("mercadolibre", 2)} puedeAutomatico={puede("mercadolibre", 3)} />
         </ContenidoPestana>
         <ContenidoPestana value="reputacion" className="pt-4">
           <ReputacionML />
