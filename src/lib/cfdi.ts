@@ -18,6 +18,8 @@ export interface Cfdi {
   emisor: { rfc: string | null; nombre: string | null };
   receptor: { rfc: string | null; nombre: string | null };
   conceptos: string[];
+  /** Clave de producto o servicio del SAT de cada concepto, con su importe: de ahí se sugiere la categoría. */
+  claves: { clave: string; importe: number }[];
   /** Complemento de pago (tipo P): cada pago y las facturas que liquida. */
   pagos: PagoCfdi[];
 }
@@ -69,6 +71,7 @@ export function leerCfdi(xml: string): Cfdi {
     emisor: { rfc: txt(e.Rfc)?.toUpperCase() ?? null, nombre: txt(e.Nombre) },
     receptor: { rfc: txt(r.Rfc)?.toUpperCase() ?? null, nombre: txt(r.Nombre) },
     conceptos: todas(xml, "Concepto").map((k) => txt(k.Descripcion)).filter((x): x is string => !!x),
+    claves: todas(xml, "Concepto").map((k) => ({ clave: txt(k.ClaveProdServ) ?? "", importe: num(k.Importe) ?? 0 })).filter((k) => /^\d{8}$/.test(k.clave)),
     pagos: leerPagos(xml),
   };
 }
@@ -134,6 +137,8 @@ export function cfdiDeLectura(c: Record<string, unknown>): Cfdi {
     emisor: { rfc: rfc("rfc_emisor"), nombre: t("nombre_emisor") },
     receptor: { rfc: rfc("rfc_receptor"), nombre: null },
     conceptos: Array.isArray(c.conceptos) ? (c.conceptos as unknown[]).filter((x): x is string => typeof x === "string" && !!x.trim()) : [],
+    // De un PDF no se confía en la clave del SAT: un dígito mal leído sugeriría otra cosa.
+    claves: [],
     pagos: [],
   };
 }
