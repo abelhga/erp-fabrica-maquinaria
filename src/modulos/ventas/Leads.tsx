@@ -7,7 +7,7 @@ import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos"
 import { SelectorCliente, type ClienteBreve } from "@/components/datos/SelectorCliente";
 import { Boton } from "@/components/ui/boton";
 import { Dialogo, Lateral } from "@/components/ui/dialogo";
-import { Seleccion } from "@/components/ui/campo";
+import { AreaTexto, Seleccion } from "@/components/ui/campo";
 import { Insignia } from "@/components/ui/insignia";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion, useTiempoReal } from "@/lib/consultas";
@@ -18,7 +18,7 @@ import { LINEA, enlaceWhatsApp } from "./comun";
 import { DialogoMotivo } from "./componentes/dialogos";
 import { DialogoLead } from "./leads/DialogoLead";
 import { ConfigLeads } from "./leads/ConfigLeads";
-import { CLAVE_LEADS, MODOS, estadoLead, hace, useConfigLeads, useVendedoresLeads, type Lead, type ModoLeads } from "./leads/datos";
+import { CANAL_INTENTO, CLAVE_LEADS, MODOS, estadoLead, hace, useConfigLeads, useVendedoresLeads, type CanalIntento, type IntentoLead, type Lead, type ModoLeads } from "./leads/datos";
 
 type Vista = "abiertos" | "por_tomar" | "mios" | "registre" | "cerrados" | "todos";
 const COMO: Record<NonNullable<Lead["como_se_asigno"]>, string> = {
@@ -80,6 +80,10 @@ export default function Leads() {
     { clave: "interes", titulo: "Qué busca", clase: "max-w-[340px]", celda: (l) => <span className="line-clamp-2">{l.interes}</span> },
     { clave: "estado", titulo: "En qué va", explica: GLOSARIO.estadoLead, valor: (l) => estadoLead(l, modo).texto,
       celda: (l) => { const e = estadoLead(l, modo); return <span title={l.motivo_descarte ?? undefined}><Insignia tono={e.tono}>{e.texto}</Insignia></span>; } },
+    { clave: "intentos", titulo: "Intentos", explica: GLOSARIO.intentoLead, oculta: !gerencia && !vende, alinear: "der", valor: (l) => l.intentos,
+      celda: (l) => l.estado !== "asignado" ? <span className="text-tenue">—</span> : l.contesto ? <Insignia tono="ok">Contestó</Insignia>
+        : l.intentos ? <span className="whitespace-nowrap text-sm">{l.intentos} sin respuesta<span className="block text-[11px] text-tenue">{hace(l.ultimo_intento)}</span></span>
+        : <span className="text-sm text-aviso">Ninguno</span> },
     { clave: "capturo", titulo: "Lo registró", clase: "whitespace-nowrap text-tenue", oculta: !gerencia && !vende },
   ];
 
@@ -125,7 +129,19 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
   const [descartar, setDescartar] = useState(false);
   const [para, setPara] = useState("");
   const [cliente, setCliente] = useState<ClienteBreve | null>(null);
+  const [canal, setCanal] = useState<CanalIntento>("whatsapp");
+  const [dijo, setDijo] = useState("");
   const vendedores = useVendedoresLeads(!!l && gerencia);
+  const intentos = useQuery({
+    queryKey: [...CLAVE_LEADS, l?.id, "intentos"], enabled: !!l,
+    queryFn: () => q<IntentoLead[]>(supabase.from("lead_intentos").select("id, canal, resultado, nota, en, usuario:perfiles(nombre)").eq("lead_id", l!.id).order("en", { ascending: false }).returns<IntentoLead[]>()),
+  });
+  // ¿Su teléfono ya es de un cliente? Se ofrece esa cuenta antes de dar de alta otra (la base no deja duplicar).
+  const yaExiste = useQuery({
+    queryKey: [...CLAVE_LEADS, l?.id, "ya-existe"], enabled: !!l && l.estado === "asignado" && !l.cliente_id && !!(l.telefono || l.correo), staleTime: 60_000,
+    queryFn: async () => (await q<{ cliente_id: string; nombre: string; ciudad: string | null; vendedor: string | null; coincide: string }[]>(
+      supabase.rpc("buscar_cliente_lead", { p_texto: l!.telefono ?? l!.correo }))).find((c) => c.coincide !== "nombre") ?? null,
+  });
   const invalidar = [[...CLAVE_LEADS], ["indicadores"]];
 
   const tomar = useAccion((id: string) => q(supabase.rpc("tomar_lead", { p_lead: id })), { exito: "Es tuyo: llámale y vuélvelo oportunidad", invalidar });
@@ -135,6 +151,10 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
     await q(supabase.rpc("convertir_lead", { p_lead: a.id, p_cliente: a.cliente }));
     return q<{ cliente_id: string }>(supabase.from("leads").select("cliente_id").eq("id", a.id).single());
   }, { exito: "Listo: ya es oportunidad de su cliente", invalidar: [...invalidar, ["v_oportunidades"], ["v_clientes"]], alTerminar: (r) => alConvertir(r.cliente_id) });
+  const intento = useAccion(async (a: { id: string; resultado: "contesto" | "no_contesto" }) => {
+    await q(supabase.rpc("registrar_intento_lead", { p_lead: a.id, p_canal: canal, p_resultado: a.resultado, p_nota: a.resultado === "contesto" ? dijo : null }));
+    return a.resultado;
+  }, { exito: (r) => (r === "contesto" ? "Anotado: ya lo puedes volver oportunidad" : "Anotado: vuelve a intentarlo más tarde"), invalidar, alTerminar: () => setDijo("") });
   const descarte = useAccion((a: { id: string; motivo: string }) => q(supabase.rpc("descartar_lead", { p_lead: a.id, p_motivo: a.motivo })),
     { exito: "Lead descartado", invalidar, alTerminar: () => setDescartar(false) });
 
@@ -192,15 +212,57 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
           </div>
         )}
 
+        {(puedeAtender || (intentos.data ?? []).length > 0) && (
+          <div className="space-y-2" data-explain={GLOSARIO.intentoLead} data-explain-title="Intentos de contacto">
+            <p className="text-sm font-medium">Intentos de contacto</p>
+            {(intentos.data ?? []).length > 0 && (
+              <ul className="space-y-1.5">
+                {intentos.data!.map((x) => (
+                  <li key={x.id} className="text-sm flex gap-2">
+                    <Insignia tono={x.resultado === "contesto" ? "ok" : "neutro"} className="shrink-0 h-fit">{x.resultado === "contesto" ? "Contestó" : "No contestó"}</Insignia>
+                    <span className="min-w-0"><span className="text-tenue">{CANAL_INTENTO[x.canal]} · {hace(x.en)}{x.usuario ? ` · ${x.usuario.nombre}` : ""}</span>
+                      {x.nota && <span className="block">{x.nota}</span>}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {puedeAtender && (
+              <div className="rounded-lg border border-borde p-3 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Seleccion value={canal} onChange={(ev) => setCanal(ev.target.value as CanalIntento)} aria-label="Por dónde" className="w-auto">
+                    {Object.entries(CANAL_INTENTO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  </Seleccion>
+                  <Boton variante="secundario" tamano="sm" cargando={intento.isPending && intento.variables?.resultado === "no_contesto"}
+                    onClick={() => intento.mutate({ id: l.id, resultado: "no_contesto" })}>No contestó</Boton>
+                </div>
+                <AreaTexto rows={2} value={dijo} onChange={(ev) => setDijo(ev.target.value)} aria-label="Qué te dijo"
+                  placeholder="Si contestó: qué te dijo (qué busca, para cuándo, si pidió cotización)" />
+                <div className="flex justify-end">
+                  <Boton tamano="sm" disabled={dijo.trim().length < 5} cargando={intento.isPending && intento.variables?.resultado === "contesto"}
+                    onClick={() => intento.mutate({ id: l.id, resultado: "contesto" })}>Contestó</Boton>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {puedeAtender && (
           <div className="rounded-lg border border-borde p-3 space-y-2" data-explain={GLOSARIO.convertirLead} data-explain-title="Volverlo oportunidad">
             <p className="text-sm font-medium">Volverlo oportunidad</p>
-            {l.cliente_id ? <p className="text-xs text-tenue">Va a la cuenta de {l.cliente_nombre}, con su contacto.</p> : <>
+            {!l.contesto ? <p className="text-xs text-tenue">Cuando te conteste (o te pida cotización), anótalo arriba con lo que te dijo y aquí se vuelve oportunidad. Mientras, sigue siendo lead.</p>
+            : l.cliente_id ? <p className="text-xs text-tenue">Va a la cuenta de {l.cliente_nombre}, con su contacto.</p> : <>
               <p className="text-xs text-tenue">Si ya existe la empresa, elígela; si no, se da de alta como cliente nuevo con este contacto.</p>
+              {yaExiste.data && cliente?.id !== yaExiste.data.cliente_id && (
+                <div className="rounded-md bg-aviso-suave px-3 py-2 text-xs flex flex-wrap items-center gap-2">
+                  <span className="flex-1">Su {yaExiste.data.coincide} ya es de <b>{yaExiste.data.nombre}</b>{yaExiste.data.vendedor ? ` (de ${yaExiste.data.vendedor})` : ""}.</span>
+                  <Boton tamano="sm" variante="secundario" onClick={() => setCliente({ id: yaExiste.data!.cliente_id, nombre: yaExiste.data!.nombre, razon_social: null,
+                    ciudad: yaExiste.data!.ciudad, vendedor: yaExiste.data!.vendedor, vendedor_id: null })}>Usar ese cliente</Boton>
+                </div>
+              )}
               <SelectorCliente valor={cliente} alCambiar={setCliente} />
             </>}
             <div className="flex justify-end">
-              <Boton variante="exito" cargando={convertir.isPending} onClick={() => convertir.mutate({ id: l.id, cliente: l.cliente_id ? null : cliente?.id ?? null })}>
+              <Boton variante="exito" disabled={!l.contesto} cargando={convertir.isPending} onClick={() => convertir.mutate({ id: l.id, cliente: l.cliente_id ? null : cliente?.id ?? null })}>
                 <Sparkles className="h-4 w-4" />Crear oportunidad</Boton>
             </div>
           </div>

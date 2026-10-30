@@ -15,7 +15,13 @@ export interface Lead {
   como_se_asigno: "cliente" | "bandeja" | "gerente" | "recepcion" | null; asignado_en: string | null; atendido_en: string | null;
   oportunidad_id: string | null; etapa_oportunidad: EtapaOportunidad | null; motivo_descarte: string | null;
   capturado_por: string | null; capturo: string | null; creado_en: string;
+  intentos: number; contesto: boolean; ultimo_intento: string | null; ultimo_resultado: "contesto" | "no_contesto" | null;
 }
+
+/** Cada vez que el vendedor le llamó o escribió, y si le contestó. */
+export interface IntentoLead { id: string; canal: CanalIntento; resultado: "contesto" | "no_contesto"; nota: string | null; en: string; usuario: { nombre: string } | null }
+export type CanalIntento = "llamada" | "whatsapp" | "correo" | "visita";
+export const CANAL_INTENTO: Record<CanalIntento, string> = { llamada: "Llamada", whatsapp: "WhatsApp", correo: "Correo", visita: "Visita" };
 
 export const CLAVE_LEADS = ["v_leads"] as const;
 

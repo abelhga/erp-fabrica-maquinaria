@@ -67,9 +67,13 @@ begin
 
   -- A lo atiende: nace el cliente, su contacto y la oportunidad.
   perform pg_temp.como(v_a);
+  -- Sin que conteste no es oportunidad (214); al contestar, nace en «Contactado».
+  begin perform convertir_lead(v_l1); v_ok := true; exception when check_violation then v_ok := false; end;
+  assert not v_ok, 'se volvió oportunidad sin que contestara';
+  perform registrar_intento_lead(v_l1, 'llamada', 'contesto', 'Quiere una banda de 10 m para marzo');
   v_op := convertir_lead(v_l1);
   select * into l from leads where id = v_l1;
-  assert l.estado = 'convertido' and l.oportunidad_id = v_op and l.etapa_oportunidad = 'prospecto', 'el lead no quedó convertido';
+  assert l.estado = 'convertido' and l.oportunidad_id = v_op and l.etapa_oportunidad = 'contactado', 'el lead no quedó convertido';
   assert (select vendedor_id from clientes where id = l.cliente_id) = v_a and (select nombre from clientes where id = l.cliente_id) = 'Luis Ortega', 'no se dio de alta el cliente';
   assert (select count(*) from contactos where cliente_id = l.cliente_id and telefono = '5551112233') = 1, 'no se guardó el contacto';
   -- La oportunidad avanza y recepción lo ve en su lista, sin leer el embudo.

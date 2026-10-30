@@ -1075,7 +1075,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Aquí se anota a quien llama o escribe interesado y todavía no es cliente ni oportunidad, para que no se pierda en un papel. Lo usan recepción, los vendedores, la gerencia de ventas y marketing, que los ve todos para saber de dónde llegan y qué pasó con ellos.",
    "Con «Registrar lead» anotas quién es, su teléfono o correo y qué busca, con sus palabras. Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es y dices «Es este», le llega directo a su vendedor. Enter lo guarda.",
    "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma o nadie lo atiende a tiempo, se le avisa a la gerencia.",
-   "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. El vendedor que lo tiene lo vuelve oportunidad con «Crear oportunidad» (si no era cliente, se da de alta) o lo descarta con el motivo. Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad."
+   "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota: «No contestó», o «Contestó» con lo que te dijo. Hasta que contesta (o pide cotización) se habilita «Crear oportunidad» (si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta). Si no le interesa, se descarta con el motivo. La columna «Intentos» dice cuántas veces se le buscó. Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad."
   ]
  },
  {
@@ -2078,7 +2078,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Atenderlo es volverlo oportunidad: si ya era cliente va a su cuenta; si no, eliges la empresa si ya existe o se da de alta como cliente nuevo con este contacto. La oportunidad nace en Prospecto, a tu nombre, y quien registró el lead ve en qué etapa va."
+  "texto": "Un lead se vuelve oportunidad cuando ya te contestó: primero anotas en «Intentos de contacto» que contestó y qué te dijo, y entonces se habilita «Crear oportunidad». Si ya era cliente va a su cuenta; si no, eliges la empresa si ya existe o se da de alta como cliente nuevo con este contacto. Si su teléfono o correo ya es de otro cliente, no deja darlo de alta otra vez: te dice cuál es para que lo elijas. La oportunidad nace en Contactado, a tu nombre, con lo que te dijo, y quien registró el lead ve en qué etapa va."
  },
  {
   "clave": "correccionUbicacion",
@@ -3800,6 +3800,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Lo que lleva la cuadrilla o la reparación: sale de almacén con el folio del servicio, o se pide a compras si no hay."
+ },
+ {
+  "clave": "intentoLead",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cada vez que le llamas, le escribes o lo visitas, anótalo: «No contestó» o «Contestó» con lo que te dijo. Mientras no conteste, sigue siendo lead (no se da de alta como cliente). Los leads que alguien tiene varios días sin ningún intento, o que se volvieron oportunidad y no se cotizan, le aparecen a dirección en «Por revisar»."
  },
  {
   "clave": "invitacion",
