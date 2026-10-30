@@ -11,13 +11,13 @@ import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos"
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { fecha, hace, numero } from "@/lib/formato";
-import { CLAVE, ESTADO_MAQUINA, ESTADO_MTO, TIPO_MAQUINA, horas, useMaquinas, useServicioEnVivo, type Maquina, type OrdenMto, type Plan } from "./datos";
+import { CLAVE, ESTADO_MAQUINA, ESTADO_MTO, TIPO_MAQUINA, cadaPlan, horas, useMaquinas, useServicioEnVivo, type Maquina, type OrdenMto, type Plan } from "./datos";
 import { EnlaceBoton, InsigniaMaquina, InsigniaMto, usePermisosServicio } from "./componentes/piezas";
 import { LateralMantenimiento } from "./componentes/LateralMantenimiento";
 import { DialogoMaquina } from "./componentes/DialogoMaquina";
 import { GLOSARIO } from "@/tutorial/glosario";
 
-type Vista = "todas" | "problemas" | "herramienta" | "prestadas";
+type Vista = "todas" | "problemas" | "herramienta" | "prestadas" | "bajas";
 
 const SITUACION = {
   vencido: { texto: "Vencido", tono: "peligro" },
@@ -54,7 +54,8 @@ export default function Maquinas() {
   const conFalla = activas.filter((m) => m.estado === "con_falla");
   const vencidos = (planes.data ?? []).filter((x) => x.situacion === "vencido");
   const prestadas = activas.filter((m) => m.resguardo_id);
-  const filtradas = activas.filter((m) =>
+  const bajas = lista.filter((m) => m.estado === "baja");
+  const filtradas = vista === "bajas" ? bajas : activas.filter((m) =>
     vista === "problemas" ? m.estado !== "operando" || m.preventivo_situacion === "vencido"
       : vista === "herramienta" ? m.tipo === "herramienta" || m.prestable
       : vista === "prestadas" ? !!m.resguardo_id : true);
@@ -70,7 +71,8 @@ export default function Maquinas() {
     { clave: "etapa", titulo: "Área", celda: (m) => m.etapa ? <span className="inline-flex items-center gap-1.5 whitespace-nowrap"><span className="h-2 w-2 rounded-full" style={{ background: m.etapa_color ?? undefined }} />{m.etapa}</span> : <span className="text-tenue">{m.ubicacion ?? "—"}</span> },
     { clave: "estado", titulo: "Estado", valor: (m) => ESTADO_MAQUINA[m.estado].texto, explica: GLOSARIO.estadoMaquina, celda: (m) => (
       <div><InsigniaMaquina estado={m.estado} />
-        {m.orden_falla && m.orden_tipo === "correctivo" && <p className="text-[11px] text-tenue mt-0.5 max-w-[240px] truncate" title={m.orden_falla}>{m.orden_falla} · {hace(m.orden_desde)}</p>}</div>
+        {m.orden_falla && m.orden_tipo === "correctivo" && <p className="text-[11px] text-tenue mt-0.5 max-w-[240px] truncate" title={m.orden_falla}>{m.orden_falla} · {hace(m.orden_desde)}</p>}
+        {m.estado === "baja" && m.motivo_baja && <p className="text-[11px] text-tenue mt-0.5 max-w-[240px] truncate" title={m.motivo_baja}>{m.baja_en ? `${fecha(m.baja_en)} · ` : ""}{m.motivo_baja}</p>}</div>
     ) },
     { clave: "preventivo_fecha", titulo: "Preventivo", explica: GLOSARIO.situacionPreventivo, valor: (m) => m.preventivo_fecha ?? (m.preventivo_horas != null ? `h${m.preventivo_horas}` : null), celda: (m) => m.preventivo ? (
       <div className="whitespace-nowrap"><Insignia tono={SITUACION[m.preventivo_situacion ?? "al_dia"].tono}>{SITUACION[m.preventivo_situacion ?? "al_dia"].texto}</Insignia>
@@ -98,7 +100,7 @@ export default function Maquinas() {
   const colPlanes: Columna<Plan>[] = [
     { clave: "maquina", titulo: "Máquina", valor: (x) => `${x.numero} ${x.maquina}`, celda: (x) => <span className="whitespace-nowrap">{x.numero} · {x.maquina}</span> },
     { clave: "nombre", titulo: "Plan", celda: (x) => <div className="min-w-[180px]"><p>{x.nombre}</p>{x.tareas && <p className="text-xs text-tenue line-clamp-1">{x.tareas}</p>}</div> },
-    { clave: "cada", titulo: "Cada", explica: GLOSARIO.planPreventivo, valor: (x) => x.cada_dias ?? x.cada_horas, celda: (x) => <span className="whitespace-nowrap">{[x.cada_dias && `${x.cada_dias} días`, x.cada_horas && horas(x.cada_horas)].filter(Boolean).join(" o ")}</span> },
+    { clave: "cada", titulo: "Cuándo toca", explica: GLOSARIO.planPreventivo, valor: (x) => cadaPlan(x), celda: (x) => <span className="text-sm">{cadaPlan(x)}</span> },
     { clave: "ultima_fecha", titulo: "Último", celda: (x) => <span className="whitespace-nowrap">{fecha(x.ultima_fecha)}</span> },
     { clave: "proxima_fecha", titulo: "Toca", valor: (x) => x.proxima_fecha ?? x.proximas_horas, celda: (x) => (
       <span className="whitespace-nowrap">{x.proxima_fecha ? fecha(x.proxima_fecha) : `a las ${horas(x.proximas_horas)}`}
@@ -147,9 +149,11 @@ export default function Maquinas() {
               { valor: "problemas", texto: "Con algo pendiente", cuenta: activas.filter((m) => m.estado !== "operando" || m.preventivo_situacion === "vencido").length },
               { valor: "herramienta", texto: "Herramienta", cuenta: activas.filter((m) => m.tipo === "herramienta" || m.prestable).length },
               { valor: "prestadas", texto: "Prestadas", cuenta: prestadas.length },
+              { valor: "bajas", texto: "Dadas de baja", cuenta: bajas.length, explica: GLOSARIO.maquinaDeBaja },
             ]} />}
-            vacio={{ icono: Wrench, titulo: vista === "todas" ? "Todavía no hay máquinas en el catálogo" : "Nada aquí",
-                     texto: p.gerencia ? "Da de alta las soldadoras, el compresor, el torno… con el número que tienen pintado." : undefined,
+            vacio={{ icono: Wrench, titulo: vista === "todas" ? "Todavía no hay máquinas en el catálogo" : vista === "bajas" ? "Nada dado de baja" : "Nada aquí",
+                     texto: vista === "bajas" ? "Lo que ya no conviene reparar se da de baja desde su ficha, con el motivo; aquí se sigue viendo con su historial."
+                       : p.gerencia ? "Da de alta las soldadoras, el compresor, el torno… con el número que tienen pintado." : undefined,
                      accion: p.gerencia && vista === "todas" ? <Boton onClick={() => setNueva(true)}><Plus className="h-4 w-4" />Nueva máquina</Boton> : undefined }} />
         </ContenidoPestana>
         <ContenidoPestana value="ordenes" className="pt-3">

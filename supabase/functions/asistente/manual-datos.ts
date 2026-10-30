@@ -830,9 +830,10 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   ],
   "nivel": 1,
   "texto": [
-   "El catálogo de máquinas, herramienta y vehículos del taller: en qué estado está cada una, cuánto ha fallado y qué mantenimiento preventivo le toca. La lleva mantenimiento (o la gerencia de producción); el personal de producción reporta fallas y presta herramienta.",
+   "El catálogo de máquinas, herramienta, vehículos, instalaciones y equipo de oficina: en qué estado está cada uno, cuánto ha fallado y qué mantenimiento preventivo le toca. La lleva mantenimiento (o la gerencia de producción); el personal de producción reporta fallas y presta herramienta.",
    "El estado no se captura: sale de las órdenes de mantenimiento abiertas. Operando, Con falla (sigue trabajando pero alguien reportó algo), Parada (la falla la detiene) y En reparación. \"Reportar falla\" abre el formulario rápido y \"Resguardos\" lleva la herramienta prestada.",
-   "Pestañas: Máquinas (clic abre su ficha), Órdenes abiertas (fallas y preventivos; clic abre el detalle a un lado) y Preventivos. Un preventivo se programa por fecha, por horas de uso o lo que pase primero, y su orden se genera sola con el checklist de su rutina.",
+   "Pestañas: Máquinas (clic abre su ficha), Órdenes abiertas (fallas y preventivos; clic abre el detalle a un lado) y Preventivos. Un preventivo se programa por fecha (cada tantos días, «el primer lunes de cada mes» o «el día 15»), por horas de uso o lo que pase primero, y su orden se genera sola con el checklist de su rutina, siempre en un día que el taller trabaja.",
+   "En Máquinas, el filtro «Dadas de baja» muestra lo que ya no conviene reparar, con la fecha y el motivo. Al dar de alta, la categoría se elige de la lista o se escribe una nueva (impresora, aire acondicionado…); el tipo «Equipo de oficina» es para computadoras, impresoras y lo demás que no es del taller.",
    "Al abrir una orden preventiva, cada punto del checklist se marca Bien o Falla (con qué tiene); la orden no se cierra mientras falte alguno. Al cerrarla, mantenimiento anota qué se hizo y las horas que le dedicó (no las que estuvo parada la máquina)."
   ]
  },
@@ -846,7 +847,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "La ficha de una máquina o herramienta: sus datos, su historial de mantenimiento, sus planes preventivos y, si se presta, quién la tiene.",
    "Fallas y tiempo parada cuentan los últimos 12 meses. \"Criticidad\" va de muy alta a muy baja; muy alta o alta es crítica: si se para, se para el área. También dice el tipo de mantenimiento (preventivo, predictivo o autónomo), quién lo hace y, si es herramienta que siempre trae la misma persona, a quién está asignada. Si tiene horómetro, registra sus horas con \"Registrar horas\": la lectura no puede ser menor que la anterior y, al guardarla, si ya toca un preventivo por horas, su orden sale en ese momento.",
-   "En \"Plan preventivo\" mantenimiento o la gerencia agregan o editan los planes (cada tantos días, cada tantas horas o lo que pase primero) y le ponen su rutina: la lista de puntos que se palomean. La orden se genera sola: por fecha, unos días antes de vencer; por horas, al llegar a ellas.",
+   "En \"Plan preventivo\" mantenimiento o la gerencia agregan o editan los planes y le ponen su rutina: la lista de puntos que se palomean. En «Cuándo toca» eliges cada tantos días, un día de la semana del mes (el primer lunes, el último viernes) o un día fijo del mes, cada uno o cada varios meses; además puede ser cada tantas horas de uso, lo que pase primero. Abajo te dice qué día toca el siguiente. Si cae en fin de semana, feriado o descanso, pasa al siguiente día que se trabaja (en los planes por mes, sin brincarse al mes siguiente). La orden se genera sola: por fecha, unos días antes de vencer; por horas, al llegar a ellas.",
+   "Lo que ya no conviene reparar se da de baja con «Dar de baja» y el motivo: sus órdenes abiertas se cancelan, sus planes se apagan y deja de contar en las métricas. Si estaba prestada, primero se recibe en Resguardos. Se puede reactivar desde la misma ficha; sus planes se quedan apagados hasta que los prendas.",
    "Abajo, \"Refacciones de este tipo de máquina\" lista las piezas que lleva (por tipo y modelo) y cuántas hay en planta; se piden desde una orden de mantenimiento."
   ]
  },
@@ -861,7 +863,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Cómo anda el mantenimiento: si las máquinas están disponibles, cada cuánto fallan, cuánto tardan en volver a trabajar y si el preventivo se hace a tiempo. La usan mantenimiento, la gerencia de producción, ingeniería de procesos y dirección.",
    "Arriba eliges el periodo. Los indicadores: disponibilidad (qué parte del tiempo estuvieron listas), MTBF (cada cuánto fallan), MTTR (cuánto tardan en repararse), preventivo a tiempo, cuánto del trabajo de mantenimiento es preventivo y lo que sigue abierto.",
    "«Las que más paran» dice dónde se va el tiempo de máquina; «Vuelven a fallar», las reparaciones que no duraron 30 días. En «Por máquina» ves todo por máquina (clic abre su ficha) y lo descargas en CSV.",
-   "Los números salen de las órdenes de mantenimiento: cuándo se reportó, cuándo se paró y volvió la máquina, cuándo se cerró y las horas del técnico. Si una orden se cierra sin esos datos, no cuenta bien. Quien ve costos también ve lo que costó cada máquina."
+   "Los números salen de las órdenes de mantenimiento: cuándo se reportó, cuándo se paró y volvió la máquina, cuándo se cerró y las horas del técnico. Si una orden se cierra sin esos datos, no cuenta bien. Quien ve costos también ve lo que costó cada máquina.",
+   "Todos los tiempos (disponibilidad, horas paradas, MTBF y MTTR) son horas laborales del taller: no cuentan noches, fines de semana, feriados ni descansos, con el horario que pone la gerencia de producción. Lo dado de baja cuenta solo hasta el día de su baja."
   ]
  },
  {
@@ -1736,6 +1739,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cada cliente es de un vendedor hasta la fecha que ves: la más lejana entre su última venta con él + 12 meses, su último seguimiento (cotización, oportunidad o actividad) + 90 días y, si es nuevo, su alta + 90 días. Los plazos se ajustan en Configuración. Pasada esa fecha la cuenta vence y puede quedar libre."
  },
  {
+  "clave": "categoriaMaquina",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Qué clase de equipo es (soldadora, compresor, impresora, aire acondicionado…). Es libre: si no está en la lista, se escribe. Agrupa las refacciones que lleva y las rutinas de mantenimiento, así que conviene usar la misma palabra para lo mismo."
+ },
+ {
   "clave": "categoriaSugeridaSat",
   "modulos": [
    "rrhh",
@@ -2477,6 +2488,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Un día con otro horario: tiempo extra (un sábado de 8:00 a 14:00, salir a las 7 de la noche) o un día que no se trabaja. Manda sobre el horario de ese día, y también sobre un feriado si deciden trabajarlo. Cuenta en las horas hombre y en el plan. Si lo quitas después, las horas de ese día se vuelven a contar sin él."
  },
  {
+  "clave": "diaHabilPreventivo",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Si la fecha del preventivo cae en sábado, domingo, feriado de ley o un descanso de la empresa, pasa al siguiente día que el taller trabaja (según el horario que pone la gerencia de producción). En los planes por mes, si ese día ya es del mes siguiente, se adelanta al último día hábil del mes, para que ningún mes se salte."
+ },
+ {
   "clave": "diasAtraso",
   "modulos": [
    "analisis"
@@ -2616,7 +2635,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "Qué parte del periodo la máquina estuvo lista para trabajar: 1 menos las horas que estuvo fuera de servicio entre las horas del periodo (horas de calendario, como se captura el paro). Verde arriba de 98 %, ámbar arriba de 95 %, rojo abajo. «Críticas» es lo mismo solo de las máquinas de criticidad alta o muy alta."
+  "texto": "Qué parte del periodo la máquina estuvo lista para trabajar: 1 menos las horas que estuvo fuera de servicio entre las horas del periodo, todo en horas laborales del taller (sin noches, fines de semana, feriados ni descansos). Verde arriba de 98 %, ámbar arriba de 95 %, rojo abajo. «Críticas» es lo mismo solo de las máquinas de criticidad alta o muy alta. Una máquina dada de baja cuenta solo hasta el día de su baja."
  },
  {
   "clave": "disponible",
@@ -3587,6 +3606,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Las horas de trabajo de las personas, no del reloj: si tres trabajan 4 horas en una etapa son 12 horas hombre, y si una se fue a la hora, 9. Salen de lo que se anota en la terminal (quién inició, quién se unió y quién salió) y se comparan contra las horas estimadas del costeo; en ámbar si ya se pasaron. «Sin nombre» son las personas que se contaron sin decir quiénes. Cuántas horas cuenta un tiempo abierto depende de cómo las cuente la gerencia (solo el horario del taller, o lo marcado tal cual)."
  },
  {
+  "clave": "horasParadaLaborales",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Las horas laborales del periodo que la máquina estuvo fuera de servicio por sus órdenes de mantenimiento: de que se paró a que volvió a operar, sin contar noches, fines de semana, feriados ni descansos."
+ },
+ {
   "clave": "horasRealesVsEstimadas",
   "modulos": [
    "produccion",
@@ -3616,7 +3643,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "Cuántas horas le dedicó la persona de mantenimiento a esta orden (no cuánto estuvo parada la máquina). Con ellas sale el tiempo promedio de reparación y la mano de obra."
+  "texto": "Cuántas horas le dedicó la persona de mantenimiento a esta orden (no cuánto estuvo parada la máquina). Con ellas sale la mano de obra y qué parte del trabajo de mantenimiento es preventivo."
  },
  {
   "clave": "horometro",
@@ -3929,6 +3956,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Una máquina que, si se para, para el área completa."
  },
  {
+  "clave": "maquinaDeBaja",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Una máquina o herramienta que ya no conviene reparar o que ya no está en el taller. Se da de baja desde su ficha con el motivo: sus órdenes abiertas se cancelan, sus planes preventivos se apagan y deja de contar en las métricas desde ese día. Su historial se queda y se puede reactivar."
+ },
+ {
   "clave": "marcaChecklist",
   "modulos": [
    "rrhh",
@@ -4171,7 +4206,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "Tiempo promedio entre fallas: las horas que la máquina estuvo operando entre el número de fallas (órdenes correctivas) del periodo. Más alto es mejor. «Sin fallas» quiere decir que no falló en el periodo."
+  "texto": "Tiempo promedio entre fallas: las horas laborales que la máquina estuvo operando entre el número de fallas (órdenes correctivas) del periodo. Más alto es mejor. «Sin fallas» quiere decir que no falló en el periodo."
  },
  {
   "clave": "mttr",
@@ -4179,7 +4214,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "Tiempo promedio de reparación: de que se reporta la falla a que se cierra su orden. Más bajo es mejor. El «paro promedio» es solo de las fallas que detuvieron la máquina, de que se paró a que volvió a operar."
+  "texto": "Tiempo promedio de reparación, en horas laborales: de que se reporta la falla a que se cierra su orden. Si se paró el viernes a las 5 y quedó el lunes a las 9, cuenta una hora, no todo el fin de semana. Más bajo es mejor. El «paro promedio» es solo de las fallas que detuvieron la máquina, de que se paró a que volvió a operar, también en horas laborales."
  },
  {
   "clave": "netoML",
@@ -4654,7 +4689,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "El mantenimiento que le toca a una máquina cada cierto tiempo o cada tantas horas de uso, lo que pase primero. Su orden se genera sola: por fecha, unos días antes de vencer; por horas, al llegar a ellas."
+  "texto": "El mantenimiento que le toca a una máquina por fecha, por horas de uso o lo que pase primero. La fecha puede ser cada tantos días, un día de la semana del mes (el primer lunes, el último viernes) o un día fijo del mes (el 15), cada uno o cada varios meses. Su orden se genera sola: por fecha, unos días antes de vencer; por horas, al llegar a ellas. Si cambias el calendario de un plan, la orden que ya salió y nadie ha tocado se mueve a la fecha nueva, o se cancela y vuelve a salir cuando toque."
  },
  {
   "clave": "planTaller",
