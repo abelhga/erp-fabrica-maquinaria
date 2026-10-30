@@ -833,6 +833,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "El catálogo de máquinas, herramienta, vehículos, instalaciones y equipo de oficina: en qué estado está cada uno, cuánto ha fallado y qué mantenimiento preventivo le toca. La lleva mantenimiento (o la gerencia de producción); el personal de producción reporta fallas y presta herramienta.",
    "El estado no se captura: sale de las órdenes de mantenimiento abiertas. Operando, Con falla (sigue trabajando pero alguien reportó algo), Parada (la falla la detiene) y En reparación. \"Reportar falla\" abre el formulario rápido y \"Resguardos\" lleva la herramienta prestada.",
    "Pestañas: Máquinas (clic abre su ficha), Órdenes abiertas (fallas y preventivos; clic abre el detalle a un lado) y Preventivos. Un preventivo se programa por fecha (cada tantos días, «el primer lunes de cada mes» o «el día 15»), por horas de uso o lo que pase primero, y su orden se genera sola con el checklist de su rutina, siempre en un día que el taller trabaja.",
+   "\"Etiquetas QR\" abre una hoja para imprimir y recortar las etiquetas de todas las máquinas (o de las del filtro que tengas puesto). Pegada en la máquina, quien vea una falla la escanea con el celular y le sale el reporte de esa máquina, sin buscarla.",
    "En Máquinas, el filtro «Dadas de baja» muestra lo que ya no conviene reparar, con la fecha y el motivo. Al dar de alta, la categoría se elige de la lista o se escribe una nueva (impresora, aire acondicionado…); el tipo «Equipo de oficina» es para computadoras, impresoras y lo demás que no es del taller.",
    "Al abrir una orden preventiva, cada punto del checklist se marca Bien o Falla (con qué tiene); la orden no se cierra mientras falte alguno. Al cerrarla, mantenimiento anota qué se hizo y las horas que le dedicó (no las que estuvo parada la máquina)."
   ]
@@ -848,6 +849,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "La ficha de una máquina o herramienta: sus datos, su historial de mantenimiento, sus planes preventivos y, si se presta, quién la tiene.",
    "Fallas y tiempo parada cuentan los últimos 12 meses. \"Criticidad\" va de muy alta a muy baja; muy alta o alta es crítica: si se para, se para el área. También dice el tipo de mantenimiento (preventivo, predictivo o autónomo), quién lo hace y, si es herramienta que siempre trae la misma persona, a quién está asignada. Si tiene horómetro, registra sus horas con \"Registrar horas\": la lectura no puede ser menor que la anterior y, al guardarla, si ya toca un preventivo por horas, su orden sale en ese momento.",
    "En \"Plan preventivo\" mantenimiento o la gerencia agregan o editan los planes y le ponen su rutina: la lista de puntos que se palomean. En «Cuándo toca» eliges cada tantos días, un día de la semana del mes (el primer lunes, el último viernes) o un día fijo del mes, cada uno o cada varios meses; además puede ser cada tantas horas de uso, lo que pase primero. Abajo te dice qué día toca el siguiente. Si cae en fin de semana, feriado o descanso, pasa al siguiente día que se trabaja (en los planes por mes, sin brincarse al mes siguiente). La orden se genera sola: por fecha, unos días antes de vencer; por horas, al llegar a ellas.",
+   "\"Manuales y fichas técnicas\" junta el manual, la ficha técnica, diagramas y garantía: un PDF, una foto o una liga de Drive. Al agregarlo eliges si es solo de esta máquina o de todas las de su tipo y modelo. \"Etiqueta QR\" la enseña para imprimirla y pegarla en la máquina; en un Android con Chrome también la graba en una etiqueta NFC.",
    "Lo que ya no conviene reparar se da de baja con «Dar de baja» y el motivo: sus órdenes abiertas se cancelan, sus planes se apagan y deja de contar en las métricas. Si estaba prestada, primero se recibe en Resguardos. Se puede reactivar desde la misma ficha; sus planes se quedan apagados hasta que los prendas.",
    "Abajo, \"Refacciones de este tipo de máquina\" lista las piezas que lleva (por tipo y modelo) y cuántas hay en planta; se piden desde una orden de mantenimiento."
   ]
@@ -876,8 +878,21 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "nivel": 2,
   "texto": [
    "Aquí se anota quién se lleva una herramienta del taller (a campo o a otra área), desde cuándo y cómo la regresó. Lo usan mantenimiento, la gerencia y el personal de producción. La herramienta que siempre trae la misma persona (su soldadora) no se presta aquí: se asigna en la ficha de la máquina.",
-   "\"Prestar herramienta\" registra quién se la lleva, para qué servicio y cuándo debe regresar. \"Recibir\" la cierra con su estado: bien, dañada o incompleta; si regresa dañada o incompleta, la falla se reporta sola. Una máquina parada o en reparación no se presta.",
+   "\"Prestar herramienta\" registra quién se la lleva, para qué (o para qué servicio; uno de los dos es obligatorio) y cuándo debe regresar. \"Recibir\" la cierra con su estado: bien, dañada o incompleta, y si quieres una foto de cómo regresó; si regresa dañada o incompleta, la falla se reporta sola, con la foto. Una máquina parada o en reparación no se presta.",
    "Sale en rojo lo que pasó de su fecha de regreso o lleva más días fuera que el límite. El límite lo cambias junto a los filtros (\"Marcar después de … días\")."
+  ]
+ },
+ {
+  "ruta": "/servicio/rutinas",
+  "nombre": "Rutinas (checklist)",
+  "modulos": [
+   "mantenimiento"
+  ],
+  "nivel": 1,
+  "texto": [
+   "Las rutinas de mantenimiento: la lista de puntos que se palomea en cada preventivo, por tipo de máquina y frecuencia. Las edita el encargado de mantenimiento (o la gerencia de producción); los demás las ven.",
+   "Clic en una rutina la abre a un lado. Cada punto lleva su sección (Seguridad, Limpieza, Eléctrico…) y qué se revisa; Enter agrega otro debajo, y con las flechas los acomodas. Las recomendaciones salen arriba del checklist en cada orden. «Duplicar» sirve para hacer la trimestral a partir de la mensual.",
+   "Al guardar, los preventivos que ya salieron con esa rutina y nadie ha empezado toman la lista nueva; los que ya se están palomeando se quedan como estaban. La columna «La usan» dice qué máquinas la tienen en su plan; una rutina en uso no se puede desactivar. A cada plan se le pone su rutina en la ficha de la máquina."
   ]
  },
  {
@@ -2669,6 +2684,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Los que el agente aduanal necesita antes de que la mercancía llegue (factura, packing list, BL…). Si faltan a pocos días del arribo, salen como riesgo."
  },
  {
+  "clave": "documentosMaquina",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "El manual, la ficha técnica, los diagramas o la garantía de la máquina: un archivo (PDF o foto, hasta 50 MB) o una liga de Drive. Puede ser solo de esta máquina o de todas las de su tipo y modelo, para no subir el mismo manual a cada inversora. Los ve todo el que ve mantenimiento; los agrega o quita el encargado."
+ },
+ {
   "clave": "duplicarConParametros",
   "modulos": [
    "costeo",
@@ -3083,6 +3106,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Una etapa que empezó y el taller detuvo. La orden se marca en ámbar hasta que la reanudan."
  },
  {
+  "clave": "etiquetaQR",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Una etiqueta para pegar en la máquina con su número y un código QR. Al escanearlo con la cámara del celular se abre «Reportar falla» con esa máquina ya elegida. La misma liga se puede grabar en una etiqueta NFC: basta acercar el celular. Si quien escanea no ha entrado al sistema, primero entra y luego llega directo al reporte."
+ },
+ {
   "clave": "evaluacionMes",
   "modulos": [
    "rrhh",
@@ -3368,6 +3399,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "La foto con la que sale el artículo en el catálogo y en las cotizaciones nuevas. Marketing la pone: «Subir foto» desde la computadora o el celular, o pega la liga de Google Drive (se convierte sola en imagen). Solo cambia la foto, nada más de la ficha. Con el filtro «Sin foto» ves lo que falta."
+ },
+ {
+  "clave": "fotoDevolucion",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Una foto opcional de cómo regresó la herramienta, tomada al recibirla. Si regresó dañada o incompleta, la foto va también en el reporte de falla que se abre solo."
  },
  {
   "clave": "fotoRetirada",
@@ -4454,6 +4493,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Una medida del equipo (largo_m, ancho…) de la que dependen algunas cantidades u horas: cantidad = fija + por parámetro × valor. Así la banda de 22 m es la de 20 m con otro largo."
  },
  {
+  "clave": "paraQuePrestamo",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Qué va a hacer con la herramienta o en qué trabajo la va a usar. Es obligatorio, salvo que se la lleve a un servicio (entonces el servicio dice para qué)."
+ },
+ {
   "clave": "paraStock",
   "modulos": [
    "produccion",
@@ -5395,12 +5442,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El puesto de la persona dentro del ERP (Ventas, Almacén, RR. HH.…). Cada rol trae sus permisos por módulo; alguien puede tener varios y vale el nivel más alto. «Espera rol» = entró, pero todavía no puede ver nada."
  },
  {
+  "clave": "rutinaEnUso",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Las máquinas cuyo plan preventivo usa esta rutina. Una rutina que algún plan usa no se puede desactivar: primero se le cambia la rutina al plan."
+ },
+ {
   "clave": "rutinaMantenimiento",
   "modulos": [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "La lista de puntos que se revisan en un preventivo, por tipo de máquina y frecuencia (por ejemplo, inversoras AXT cada mes). Cada orden que sale del plan trae esa lista para palomearla."
+  "texto": "La lista de puntos que se revisan en un preventivo, por tipo de máquina y frecuencia (por ejemplo, inversoras AXT cada mes). Cada orden que sale del plan trae esa lista para palomearla, con sus recomendaciones arriba. Las edita el encargado de mantenimiento en Rutinas; si la cambia, los preventivos que ya salieron y nadie ha empezado toman la lista nueva, y los que ya se están palomeando se quedan como estaban."
  },
  {
   "clave": "saldoAhorro",

@@ -83,7 +83,7 @@ begin
 
   -- 5. Dar de baja: el taller y ventas no pueden; sin motivo no; prestada no.
   insert into maquinas (numero, nombre, tipo, categoria, prestable) values ('T212-H', 'Esmeril 212', 'herramienta', 'esmeriles', true) returning id into v_herr;
-  perform prestar_herramienta(v_herr, null, 'Juan 212');
+  perform prestar_herramienta(v_herr, null, 'Juan 212', p_para => 'Desbastar soportes');
   perform pg_temp.como(v_taller);
   begin perform dar_de_baja_maquina(v_maq, 'Ya no conviene repararlo'); v_ok := true; exception when insufficient_privilege then v_ok := false; end;
   assert not v_ok, 'el taller dio de baja una máquina';

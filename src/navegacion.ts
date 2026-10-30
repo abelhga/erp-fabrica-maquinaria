@@ -107,6 +107,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/servicio/metricas", texto: "Métricas de mantenimiento", icono: Gauge, modulo: "mantenimiento" },
       { ruta: "/servicio/reportar", texto: "Reportar falla", icono: AlertTriangle, modulo: "mantenimiento", nivel: 2 },
       { ruta: "/servicio/resguardos", texto: "Resguardo de herramienta", icono: Hand, modulo: "mantenimiento", nivel: 2 },
+      { ruta: "/servicio/rutinas", texto: "Rutinas (checklist)", icono: ListChecks, modulo: "mantenimiento" },
     ],
   },
   {

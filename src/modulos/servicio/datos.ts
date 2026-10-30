@@ -168,6 +168,7 @@ export interface Resguardo {
   entregado_en: string; entregado_por_nombre: string | null; devolver_en: string | null; devuelto_en: string | null;
   recibido_por_nombre: string | null; estado_devolucion: "bien" | "con_dano" | "incompleta" | null; notas: string | null;
   notas_devolucion: string | null; abierto: boolean; dias: number; vencido: boolean;
+  para: string | null; foto_devolucion: string | null;
 }
 
 export interface Material {

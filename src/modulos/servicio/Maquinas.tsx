@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertOctagon, AlertTriangle, CalendarCheck, CheckCircle2, Hand, Plus, Wrench } from "lucide-react";
+import { AlertOctagon, AlertTriangle, CalendarCheck, CheckCircle2, Hand, Plus, QrCode, Wrench } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
 import { Boton } from "@/components/ui/boton";
@@ -120,6 +120,9 @@ export default function Maquinas() {
       acciones={<>
         {p.pedir && <EnlaceBoton a="/servicio/reportar?volver=/servicio/maquinas" variante="peligro"><AlertTriangle className="h-4 w-4" />Reportar falla</EnlaceBoton>}
         <EnlaceBoton a="/servicio/resguardos"><Hand className="h-4 w-4" />Resguardos</EnlaceBoton>
+        {/* Las etiquetas de lo que está en la lista de abajo (todas, o las del filtro elegido). */}
+        {p.gerencia && <span data-explain={GLOSARIO.etiquetaQR}><EnlaceBoton a={vista === "todas" || vista === "bajas" ? "/servicio/etiquetas" : `/servicio/etiquetas?ids=${filtradas.map((m) => m.id).join(",")}`}>
+          <QrCode className="h-4 w-4" />Etiquetas QR</EnlaceBoton></span>}
         {p.gerencia && <Boton onClick={() => setNueva(true)}><Plus className="h-4 w-4" />Nueva máquina</Boton>}
       </>}
     >

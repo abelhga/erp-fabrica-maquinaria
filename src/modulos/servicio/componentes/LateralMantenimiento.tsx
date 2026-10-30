@@ -23,7 +23,15 @@ function Seccion({ titulo, children, explica }: { titulo: string; children: Reac
 }
 
 /** Los puntos de la rutina: cada uno bien, o con falla y qué tiene. Agrupados por sección como en la hoja. */
-function Checklist({ ordenId, editable }: { ordenId: string; editable: boolean }) {
+function Checklist({ ordenId, planId, editable }: { ordenId: string; planId: string | null; editable: boolean }) {
+  // Las recomendaciones de la rutina (desenergizar, EPP…) van arriba: se leen antes de empezar.
+  const rutina = useQuery({
+    queryKey: [...CLAVE, "mto", ordenId, "recomendaciones", planId],
+    enabled: !!planId,
+    staleTime: 5 * 60_000,
+    queryFn: () => q<{ rutina: { recomendaciones: string | null } | null } | null>(
+      supabase.from("planes_preventivos").select("rutina:rutinas_mantenimiento(recomendaciones)").eq("id", planId!).maybeSingle()),
+  });
   const puntos = useQuery({
     queryKey: [...CLAVE, "mto", ordenId, "checklist"],
     queryFn: () => q<PuntoChecklist[]>(supabase.from("orden_checklist").select("id, orden, seccion, texto, bien, nota").eq("orden_id", ordenId).order("orden")),
@@ -39,6 +47,9 @@ function Checklist({ ordenId, editable }: { ordenId: string; editable: boolean }
   let seccion: string | null = null;
   return (
     <div className="space-y-1">
+      {rutina.data?.rutina?.recomendaciones && (
+        <p className="rounded-lg bg-aviso-suave px-3 py-2 text-sm whitespace-pre-line">{rutina.data.rutina.recomendaciones}</p>
+      )}
       <p className="text-xs text-tenue cifra">{revisados} de {lista.length} revisados{lista.some((x) => x.bien === false) && ` · ${lista.filter((x) => x.bien === false).length} con falla`}</p>
       <ul className="divide-y divide-borde/60 rounded-lg border border-borde">
         {lista.map((x) => {
@@ -139,7 +150,7 @@ export function LateralMantenimiento({ id, alCerrar }: { id: string | null; alCe
 
           {o.puntos > 0 && (
             <Seccion titulo="Checklist" explica={GLOSARIO.checklistMantenimiento}>
-              <Checklist ordenId={o.id} editable={abierta && p.personal} />
+              <Checklist ordenId={o.id} planId={o.plan_id} editable={abierta && p.personal} />
             </Seccion>
           )}
 

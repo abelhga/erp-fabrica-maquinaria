@@ -21,14 +21,10 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
 
 ## Mantenimiento (junta con Esteban, 30 oct)
 
-Ya hecho (212): preventivos por mes en día hábil, categorías libres y equipo de oficina, dar de
-baja, MTBF y MTTR en horas laborales. Falta:
+Ya hecho: preventivos por mes en día hábil, categorías libres y equipo de oficina, dar de baja,
+MTBF y MTTR en horas laborales (212); editor de rutinas, manuales por máquina, préstamo con para
+qué y foto, etiquetas QR/NFC (213). Falta:
 
-- **Segunda entrega:**
-  - que el encargado de mantenimiento edite las rutinas (plantillas de checklist);
-  - manuales y fichas técnicas por máquina (PDF, imagen o liga de Drive);
-  - préstamo de herramienta: para qué o para qué servicio; foto opcional al recibirla;
-  - QR o NFC por máquina para reportar falla acercando el celular.
 - **Tercera entrega:**
   - terminal de mantenimiento con play y pausa (arriba: preventivos pendientes y lo último en pausa);
   - criticidad calculada sola: impacto en producción, riesgo de seguridad, frecuencia de fallas y

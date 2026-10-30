@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlarmClock, Hand, PackageCheck, Plus, Undo2 } from "lucide-react";
+import { AlarmClock, Camera, Hand, PackageCheck, Plus, Undo2, X } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
 import { Boton } from "@/components/ui/boton";
@@ -10,10 +10,10 @@ import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { Insignia } from "@/components/ui/insignia";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { supabase } from "@/lib/supabase";
-import { q, useAccion } from "@/lib/consultas";
+import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { fecha, fechaYHora, hace, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
-import { CLAVE, isoLocal, useMaquinas, usePersonal, useServicioEnVivo, useServicios, type Resguardo } from "./datos";
+import { CLAVE, comprimirImagen, isoLocal, subirArchivo, useMaquinas, usePersonal, useServicioEnVivo, useServicios, useUrlsFirmadas, type Resguardo } from "./datos";
 import { usePermisosServicio } from "./componentes/piezas";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -48,6 +48,7 @@ export default function Resguardos() {
   const abiertos = (lista.data ?? []).filter((r) => r.abierto);
   const vencidos = abiertos.filter(tarde);
   const filas = vista === "prestadas" ? abiertos : vista === "vencidas" ? vencidos : (lista.data ?? []).filter((r) => !r.abierto);
+  const fotos = useUrlsFirmadas(vista === "historial" ? filas.map((r) => r.foto_devolucion).filter(Boolean) as string[] : []);
   const cerrarPrestar = () => { setPrestar(null); if (params.get("prestar")) setParams((x) => { x.delete("prestar"); return x; }, { replace: true }); };
 
   const columnas: Columna<Resguardo>[] = [
@@ -61,11 +62,20 @@ export default function Resguardos() {
     { clave: "dias", titulo: "Días", alinear: "der", explica: GLOSARIO.herramientaSinRegresar, celda: (r) => (
       <span className={cn("cifra font-semibold", tarde(r) && "text-peligro")}>{numero(r.dias)}</span>
     ) },
-    { clave: "servicio_folio", titulo: "Para", celda: (r) => r.servicio_folio ?? <span className="text-tenue">{r.notas ?? "—"}</span> },
+    { clave: "para", titulo: "Para qué", explica: GLOSARIO.paraQuePrestamo, valor: (r) => [r.servicio_folio, r.para].filter(Boolean).join(" · ") || r.notas, celda: (r) => (
+      <span className="text-sm max-w-[260px] inline-block">{r.servicio_folio && <span className="cifra font-medium">{r.servicio_folio}</span>}
+        {r.para && <span className="block leading-tight">{r.para}</span>}
+        {!r.servicio_folio && !r.para && <span className="text-tenue">{r.notas ?? "—"}</span>}
+        {(r.servicio_folio || r.para) && r.notas && <span className="block text-xs text-tenue">{r.notas}</span>}</span>
+    ) },
     { clave: "devolver_en", titulo: vista === "historial" ? "Regresó" : "Regresa", valor: (r) => r.devuelto_en ?? r.devolver_en, celda: (r) => r.devuelto_en ? (
       <span className="whitespace-nowrap">{fecha(r.devuelto_en)}
         {r.estado_devolucion !== "bien" && <Insignia tono="peligro" className="ml-1">{r.estado_devolucion === "con_dano" ? "Dañada" : "Incompleta"}</Insignia>}
-        <span className="block text-xs text-tenue">recibió {r.recibido_por_nombre ?? "—"}</span></span>
+        <span className="block text-xs text-tenue">recibió {r.recibido_por_nombre ?? "—"}</span>
+        {r.foto_devolucion && fotos.data?.[r.foto_devolucion] && (
+          <a href={fotos.data[r.foto_devolucion]} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}
+             className="inline-flex items-center gap-1 text-xs text-marca-texto"><Camera className="h-3 w-3" />Foto al regresar</a>
+        )}</span>
     ) : r.devolver_en ? <span className={cn(r.devolver_en < hoy && "text-peligro")}>{fecha(r.devolver_en)}</span> : <span className="text-tenue">Sin fecha</span> },
     { clave: "accion", titulo: "", sinBusqueda: true, oculta: vista === "historial" || !p.personal, celda: (r) => r.abierto && (
       <Boton tamano="sm" variante="secundario" onClick={(e) => { e.stopPropagation(); setDevolver(r); }}><Undo2 className="h-3.5 w-3.5" />Recibir</Boton>
@@ -119,14 +129,15 @@ function DialogoPrestar({ maquinaInicial, alCerrar }: { maquinaInicial: string |
   const [servicio, setServicio] = useState("");
   const [devolverEn, setDevolverEn] = useState("");
   const [notas, setNotas] = useState("");
+  const [para, setPara] = useState("");
   const disponibles = (maquinas.data ?? []).filter((m) => (m.prestable || m.tipo === "herramienta") && !m.resguardo_id
     && !["baja", "fuera_de_servicio", "en_mantenimiento"].includes(m.estado));
   const enCampo = (servicios.data ?? []).filter((s) => s.estado === "programada" || s.estado === "en_curso");
   const prestar = useAccion(() => q(supabase.rpc("prestar_herramienta", {
     p_maquina: maquina, p_empleado: quien && quien !== "otro" ? quien : null, p_persona: quien === "otro" ? persona : null,
-    p_devolver_en: devolverEn || null, p_servicio: servicio || null, p_notas: notas || null,
+    p_devolver_en: devolverEn || null, p_servicio: servicio || null, p_notas: notas || null, p_para: para || null,
   })), { exito: "Préstamo registrado", invalidar: [CLAVE], alTerminar: alCerrar });
-  const listo = maquina && (quien && (quien !== "otro" || persona.trim()));
+  const listo = maquina && (quien && (quien !== "otro" || persona.trim())) && (servicio || para.trim().length >= 3);
   return (
     <Dialogo abierto alCambiar={(v) => !v && alCerrar()} titulo="Prestar herramienta" ancho="max-w-xl"
       pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton type="submit" form="form-prestar" disabled={!listo} cargando={prestar.isPending}>Registrar préstamo</Boton></>}>
@@ -154,6 +165,11 @@ function DialogoPrestar({ maquinaInicial, alCerrar }: { maquinaInicial: string |
           </Campo>
           <Campo etiqueta="La regresa el"><Entrada type="date" value={devolverEn} onChange={(e) => setDevolverEn(e.target.value)} /></Campo>
         </div>
+        <Campo etiqueta={servicio ? "¿Para qué? (opcional, ya va al servicio)" : "¿Para qué?"} ayuda="Qué va a hacer con ella o en qué orden la va a usar.">
+          <span data-explain={GLOSARIO.paraQuePrestamo} className="block">
+            <Entrada value={para} onChange={(e) => setPara(e.target.value)} placeholder="Desbastar la tolva del PED-26-810, soldar soportes en Planta Alta…" />
+          </span>
+        </Campo>
         <Campo etiqueta="Notas"><Entrada value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Con estuche, con 2 discos…" /></Campo>
       </form>
     </Dialogo>
@@ -163,13 +179,24 @@ function DialogoPrestar({ maquinaInicial, alCerrar }: { maquinaInicial: string |
 function DialogoDevolver({ r, alCerrar }: { r: Resguardo; alCerrar: () => void }) {
   const [estado, setEstado] = useState<"bien" | "con_dano" | "incompleta">("bien");
   const [notas, setNotas] = useState("");
-  const devolver = useAccion(() => q(supabase.rpc("devolver_herramienta", { p_resguardo: r.id, p_estado: estado, p_notas: notas || null })), {
+  const [foto, setFoto] = useState<File | null>(null);
+  const vista = useMemo(() => (foto ? URL.createObjectURL(foto) : null), [foto]);
+  useEffect(() => () => { if (vista) URL.revokeObjectURL(vista); }, [vista]);
+  const devolver = useAccion(async () => {
+    // La foto se sube primero a la carpeta de la herramienta; la base revisa que esté ahí.
+    let ruta: string | null = null;
+    if (foto) {
+      try { ruta = await subirArchivo(`mantenimiento/${r.maquina_id}/resguardos`, await comprimirImagen(foto, 1600)); }
+      catch (e) { throw new Error(`No se pudo subir la foto: ${mensajeError(e)}`); }
+    }
+    await q(supabase.rpc("devolver_herramienta", { p_resguardo: r.id, p_estado: estado, p_notas: notas || null, p_foto: ruta }));
+  }, {
     exito: estado === "bien" ? "Herramienta recibida" : "Recibida; la falla quedó reportada a la gerencia", invalidar: [CLAVE], alTerminar: alCerrar,
   });
   const listo = estado === "bien" || notas.trim().length >= 3;
   return (
     <Dialogo abierto alCambiar={(v) => !v && alCerrar()} titulo={`Recibir ${r.herramienta}`}
-      descripcion={`La tiene ${r.quien} desde el ${fechaYHora(r.entregado_en)} (${hace(r.entregado_en)}).`}
+      descripcion={`La tiene ${r.quien} desde el ${fechaYHora(r.entregado_en)} (${hace(r.entregado_en)})${r.para ? ` · ${r.para}` : ""}.`}
       pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton type="submit" form="form-devolver" disabled={!listo} cargando={devolver.isPending}>Recibir</Boton></>}>
       <form id="form-devolver" className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (listo) devolver.mutate(); }}>
         <div className="grid grid-cols-3 gap-2">
@@ -185,6 +212,20 @@ function DialogoDevolver({ r, alCerrar }: { r: Resguardo; alCerrar: () => void }
             <AreaTexto rows={2} value={notas} onChange={(e) => setNotas(e.target.value)} autoFocus />
           </Campo>
         )}
+        <div data-explain={GLOSARIO.fotoDevolucion}>
+          {vista ? (
+            <div className="flex items-center gap-3">
+              <img src={vista} alt="Cómo regresó" className="h-20 w-20 rounded-lg object-cover border border-borde" />
+              <Boton type="button" variante="fantasma" tamano="sm" onClick={() => setFoto(null)}><X className="h-3.5 w-3.5" />Quitar foto</Boton>
+            </div>
+          ) : (
+            <label className="inline-flex items-center gap-2 h-10 px-3 rounded-lg border border-borde text-sm cursor-pointer hover:bg-fondo">
+              <Camera className="h-4 w-4" />Foto de cómo regresó (opcional)
+              <input type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => setFoto(e.target.files?.[0] ?? null)} />
+            </label>
+          )}
+          {estado !== "bien" && foto && <p className="text-xs text-tenue mt-1">La foto también va en el reporte de falla.</p>}
+        </div>
       </form>
     </Dialogo>
   );

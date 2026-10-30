@@ -462,9 +462,9 @@ begin
   exception when insufficient_privilege then null;
   end;
   perform pg_temp.como(v_alm);
-  v_res := prestar_herramienta(v_pinza, null, 'Ingeniería (Miguel)');
+  v_res := prestar_herramienta(v_pinza, null, 'Ingeniería (Miguel)', p_para => 'Medir en la línea de pruebas');
   begin
-    perform prestar_herramienta(v_pinza, v_e1);
+    perform prestar_herramienta(v_pinza, v_e1, p_para => 'Soldar soportes');
     assert false, 'se prestó una herramienta que nadie ha regresado';
   exception when others then
     if sqlerrm not like '%la tiene Ingeniería (Miguel)%' then raise; end if;
