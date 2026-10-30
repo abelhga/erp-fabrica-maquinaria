@@ -50,6 +50,22 @@ un movimiento no se edite), va en SQL con su prueba, no en un `if` de React.
   función `security definer` por renglón (`pedido_visible(id)`) o `puede()` dentro del `where`
   de una función de conjunto le costaba 0.5 s a cada consulta de un vendedor (ver `086`).
 
+## Revisión nocturna (209)
+
+Cada madrugada `revision_noche()` corre las reglas `revision_r_<clave>()` (una función por regla,
+su renglón en `revision_reglas` y su caso en `209_revision_nocturna.sql`) y, si está prendido, manda
+a Claude lo de ayer por la API de lotes (función `revision`). Lo que encuentra va a «Por revisar».
+- **A Claude no le llegan costos de artículos, márgenes, sueldos ni datos personales**
+  (`revision_datos_noche`, `revision_datos_consejos`); comparar costos se hace en SQL, como
+  `costo_compra_atipico`. Los importes de caja chica y pagos sí van (finanzas), y lo que Claude
+  encuentra ahí solo regresa a quien los capturó o a dirección.
+- Lo que podría señalar a una persona (robo hormiga, ajustes que se repiten) es `para = 'direccion'`:
+  nunca le llega al responsable y se escribe como patrón, sin acusar.
+- Nada se corrige solo. «Corrígelo» solo existe para correcciones seguras definidas en
+  `revision_aplicar_accion`, y cada una revisa `puede()` como si la persona lo hiciera a mano.
+- Una regla nueva se mide primero contra la nube (ensayo con `raise exception`): con datos reales
+  una regla razonable puede sacar cientos de hallazgos o tardar minutos.
+
 ## Cómo se prueba aquí
 
 Nada se da por bueno sin correrlo contra Supabase y el navegador de verdad.

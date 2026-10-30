@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Award, Banknote, Coins, Hash, ListChecks, Target, Waypoints } from "lucide-react";
 import { AlertTriangle, CalendarDays, CalendarRange, Hand, Wrench } from "lucide-react";
-import { BookOpen, Calendar, Inbox, MessageSquareQuote, PackageCheck, Store, Undo2 } from "lucide-react";
+import { BookOpen, Calendar, Inbox, MessageSquareQuote, PackageCheck, ScanSearch, Store, Undo2 } from "lucide-react";
 import { GanttChart, Gauge, HardHat, Lightbulb, Map as MapaIcono } from "lucide-react";
 import type { Modulo, Rol } from "./lib/sesion";
 
@@ -138,6 +138,8 @@ export const MENU: SeccionMenu[] = [
 export const INICIO: EntradaMenu = { ruta: "/", texto: "Inicio", icono: LayoutDashboard, modulo: "ventas" };
 // Todos tienen pendientes (los pide y los recibe cualquiera con rol): va junto a Inicio.
 export const PENDIENTES: EntradaMenu = { ruta: "/pendientes", texto: "Pendientes", icono: ListTodo, modulo: "ventas" };
+// Lo que la revisión de la madrugada encontró: también es de todos (la base le da a cada quien lo suyo).
+export const REVISION: EntradaMenu = { ruta: "/revision", texto: "Por revisar", icono: ScanSearch, modulo: "ventas" };
 // El calendario es de todos: cada quien ve lo que su puesto puede ver (lo decide la base).
 export const CALENDARIO: EntradaMenu = { ruta: "/calendario", texto: "Calendario", icono: Calendar, modulo: "ventas" };
 // El resumen de la semana lo arma el asistente: lo ve quien tiene asistente.
