@@ -9,6 +9,7 @@
 // vendedor porque la base no se lo da. Nada aquí usa la llave de servicio.
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { buscarEnManual, RUTAS_MANUAL, type Permisos } from "./manual.ts";
 
 export interface Entorno {
   supabaseUrl: string;
@@ -104,6 +105,12 @@ const OPERADORES = ["igual", "distinto", "mayor", "mayor_o_igual", "menor", "men
 const sinNada = { type: "object" as const, properties: {}, required: [] as string[], additionalProperties: false };
 
 export const HERRAMIENTAS: Anthropic.Beta.BetaTool[] = [
+  {
+    name: "como_se_usa",
+    description: "El manual del ERP: para qué sirve cada pantalla, cómo se usa paso a paso y qué significa cada concepto (el mismo texto que la gente ve en el modo tutorial). Úsala SIEMPRE que pregunten cómo, dónde o con qué se hace algo en el ERP (capturar, corregir, surtir, autorizar, dar de alta), o qué significa una columna, un estado o un número de una pantalla. Solo trae lo que esa persona puede abrir.",
+    strict: true,
+    input_schema: { type: "object", properties: { buscar: { type: "string", description: "Palabras clave de la pregunta, por ejemplo «horas extra cuadrilla» o «surtir material orden»" } }, required: ["buscar"], additionalProperties: false },
+  },
   {
     name: "hallazgos",
     description: "Lo que hoy merece atención en un área, calculado por reglas en la base: riesgos, pendientes y lo que va bien. Úsala primero para cualquier pregunta tipo '¿cómo vamos?' o '¿qué hago hoy?'.",
@@ -287,6 +294,10 @@ function revisar<T>(r: { data: T; error: { message: string; code?: string } | nu
 /** Ejecuta una herramienta con la sesión de quien pregunta. Valida todo: el modelo propone, la base dispone. */
 export async function ejecutarHerramienta(db: SupabaseClient, nombre: string, entrada: Record<string, unknown>): Promise<string> {
   switch (nombre) {
+    case "como_se_usa": {
+      const s = revisar(await db.rpc("mi_sesion")) as { permisos?: Permisos } | null;
+      return compacto(buscarEnManual(String(entrada.buscar ?? ""), s?.permisos ?? {}));
+    }
     case "hallazgos": {
       const area = AREAS.includes(entrada.area as Area) ? entrada.area : "direccion";
       return compacto(revisar(await db.rpc("hallazgos", { p_area: area })));
@@ -416,16 +427,17 @@ Cómo trabajas:
 - Empieza por la herramienta más específica (hallazgos, tablero_direccion, oportunidades_de_venta, historial_cliente, reabasto, comisiones_del_mes) y usa consultar para lo demás.
 - Si una herramienta dice "Sin permiso", esa persona no puede ver ese dato: díselo con naturalidad y no intentes conseguirlo por otro camino. Nunca menciones costos, márgenes ni utilidades si no te llegaron de una herramienta.
 - Solo lees. No puedes crear, cambiar ni borrar nada. Si te piden una acción, explica dónde hacerla en el ERP con un enlace.
+- Para preguntas de cómo, dónde o con qué se hace algo en el ERP, o qué significa algo de una pantalla, consulta primero como_se_usa: es el manual del ERP, el mismo que la gente ve en el modo tutorial. Contesta con los pasos y el enlace a la pantalla. No inventes pantallas, botones ni pasos que no salgan del manual; si no lo cubre, dilo. Si la pregunta tiene dos lados (por ejemplo, horas extra: el horario del taller para el plan y las horas, y el pago en prenómina), explica los dos.
 
 Cómo escribes:
 - Español de México, claro y directo, de tú. Sin rodeos ni frases de relleno.
 - Dinero como $1,234,567 o $1.2 M; fechas como "3 oct 2026". Aclara si algo está en dólares.
 - Breve: primero la respuesta, luego el porqué en 2 a 4 viñetas, al final la acción. Tablas en markdown solo si comparas varias cosas.
-- Para mandar a la persona a una pantalla usa enlaces markdown con rutas del ERP, por ejemplo [Reabasto](/almacen/reabasto) o [Cotizaciones](/ventas/cotizaciones). Rutas válidas: ${RUTAS.join(", ")}.
+- Para mandar a la persona a una pantalla usa enlaces markdown con rutas del ERP, por ejemplo [Reabasto](/almacen/reabasto) o [Cotizaciones](/ventas/cotizaciones). Rutas válidas: ${[...new Set([...RUTAS, ...RUTAS_MANUAL])].join(", ")}.
 - Si te piden un mensaje para un cliente, escríbelo listo para mandar por WhatsApp: corto, cálido, sin presionar, con un motivo concreto para escribirle (lo que compró, cuánto tiempo lleva, una cotización por vencer) y una pregunta que invite a contestar. Fírmalo con el nombre de quien pregunta.
 
 Reglas del negocio útiles:
-- Precio de equipo = costo × (1 + recargos sobre costo) ÷ (1 − utilidad/(1 − ISR 25 %) − recargos sobre precio), redondeado hacia arriba a $100 (o $1,000 arriba de $100 mil). Componentes: costo ÷ 0.70.
+- Cómo se calcula un precio lo dice el manual (como_se_usa), y solo a quien puede ver el costeo: a nadie más le expliques la fórmula.
 - Stock mínimo: un artículo genera demanda si tuvo salidas en 3 de los últimos 6 meses; reorden = demanda/22 × días de entrega + seguridad; cobertura de 1 mes nacional y 6 meses importado.
 - Comisiones: 2 % sin IVA de todo lo que no es refacción, más bonos por escalón de meta de maquinaria y de refacciones.
 - Almacenes: Planta Baja, Mallado, Planta Alta, Contenedor 1 y 2, Revolución y Almacén ML (Full de Mercado Libre, no cuenta para planta).

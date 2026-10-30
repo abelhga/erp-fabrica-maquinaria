@@ -155,6 +155,10 @@ tutorial en el mismo commit.** Concretamente:
 - Cambio sin efecto visible (SQL interno, refactor, rendimiento, estilo) → no aplica; dilo en
   una línea en tu resumen ("tutorial: sin cambios, no cambia nada visible").
 
+El tutorial también es **el manual del asistente** (herramienta `como_se_usa`): `npm run manual`
+lo copia a `supabase/functions/asistente/manual-datos.ts` y `manual.test.ts` falla si se te olvida.
+Por eso lo que el tutorial no explica, el asistente tampoco lo sabe.
+
 Cómo se escribe: español de México llano, segunda persona, frases cortas, sin jerga técnica
 (nada de RLS, RPC, vista) ni nombres de archivo. Cada afirmación sale del código o del SQL, no
 de lo que "debería" pasar. Primero para qué sirve, luego cómo se usa, luego de dónde salen los
