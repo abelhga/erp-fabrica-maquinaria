@@ -13,6 +13,7 @@ import { BuscadorArticulo, type ArticuloEncontrado } from "@/components/datos/Bu
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { cn, coincide } from "@/lib/utilidades";
+import { unoDe, usePreferencia } from "@/lib/preferencias";
 import { CLAVE, consulta, usePersonalPiso, type MaterialOP } from "./datos";
 import { cifra, grupoRuta } from "./util";
 import { GLOSARIO } from "@/tutorial/glosario";
@@ -24,15 +25,9 @@ const SIN_CATEGORIA = "Sin categoría";
 /**
  * Agrupar por categoría junta lo eléctrico, lo de aire, la tornillería… (lo pidió el taller). Abre por
  * categoría: en 45 de 53 órdenes todo el material es «Directo al equipo» y por subensamble sale un solo
- * grupo. Si alguien elige «Subensamble», se recuerda en su navegador.
+ * grupo. Lo que cada quien elija se le recuerda (preferencias.ts).
  */
-function useAgrupar(): [Agrupar, (v: Agrupar) => void] {
-  const llave = "hegamex.material.agrupar";
-  const [v, setV] = useState<Agrupar>(() => {
-    try { return localStorage.getItem(llave) === "subensamble" ? "subensamble" : "categoria"; } catch { return "categoria"; }
-  });
-  return [v, (n) => { setV(n); try { localStorage.setItem(llave, n); } catch { /* modo privado: dura la pestaña */ } }];
-}
+const useAgrupar = () => usePreferencia<Agrupar>("material.agrupar", "categoria", unoDe(["categoria", "subensamble"] as const));
 
 /** Busca por nombre, clave, categoría o nota, sin acentos y con las palabras en cualquier orden. */
 const enBusqueda = (m: MaterialOP, buscar: string) => !buscar.trim() || coincide(`${m.nombre} ${m.clave} ${m.categoria ?? ""} ${m.notas ?? ""}`, buscar);
@@ -300,21 +295,26 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
 
   const [cant, setCant] = useState<Record<string, string>>({});
   const [alm, setAlm] = useState<Record<string, string>>({});
-  // Al abrir: lo apartado como propuesta, del almacén que más tiene.
+  // Al abrir, todo vacío: en la demostración se surtió todo lo apartado por no ver que ya venía
+  // escrito. Se llena a propósito: tocando el número de «Por surtir» o de «Apartado», o con los botones.
   useEffect(() => {
     if (!abierto) return;
-    setCant(Object.fromEntries(pendientes.map((m) => [m.articulo_id, m.apartado > 0 ? String(Math.min(m.apartado, m.por_surtir)) : ""])));
+    setCant({});
     setExtras([]);
     setPrevio(false);
     setRecibe("");
     setBuscar("");
   }, [abierto]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Lo de la hoja se registra completo por omisión: casi siempre ya se entregó todo lo que falta.
   const cambiarPrevio = (v: boolean) => {
     setPrevio(v);
-    setCant(Object.fromEntries(pendientes.map((m) => [m.articulo_id, v ? String(m.por_surtir) : m.apartado > 0 ? String(Math.min(m.apartado, m.por_surtir)) : ""])));
+    setCant({});
     if (v) setExtras([]);
   };
+  const llenar = (m: MaterialOP, n: number) => setCant((c) => ({ ...c, [m.articulo_id]: String(n) }));
+  const llenarTodos = (de: (m: MaterialOP) => number) =>
+    setCant(Object.fromEntries(pendientes.map((m) => [m.articulo_id, de(m) > 0 ? String(de(m)) : ""])));
+  // De una partida de la lista no sale más de lo que falta (la base lo rechaza igual): se avisa antes.
+  const excede = (m: MaterialOP) => Number(cant[m.articulo_id]) > m.por_surtir + 0.0005;
   useEffect(() => {
     setAlm((a) => {
       const n = { ...a };
@@ -342,6 +342,11 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
         .map((x) => ({ articulo_id: x.art.id, cantidad: Number(x.cantidad), almacen_id: Number(x.almacen || alm[x.art.id]) || null, motivo: x.motivo.trim() })),
     ];
     if (lineas.length === 0) { toast.error("Escribe al menos una cantidad"); return; }
+    const deMas = pendientes.find(excede);
+    if (deMas) {
+      toast.error(`De "${deMas.nombre}" solo faltan ${cifra(deMas.por_surtir)} por surtir. Si hace falta más, pide el cambio a ingeniería («Solicitar cambio a ingeniería» en la orden).`);
+      return;
+    }
     if (!previo && !recibe.trim()) { toast.error("Elige quién recibe el material"); return; }
     const sinMotivo = extras.find((x) => Number(x.cantidad) > 0 && !x.motivo.trim() && !esDelTaller(x.art.id));
     if (sinMotivo) { toast.error(`Escribe por qué sale "${sinMotivo.art.nombre}" si no está en la lista`); return; }
@@ -365,7 +370,7 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
     <Dialogo abierto={abierto} alCambiar={alCambiar} ancho="max-w-4xl" titulo={`Surtir material · ${folio}`}
              descripcion={previo
                ? "Lo que ya se le había entregado a esta orden con la hoja de salidas, antes del ERP. Cuenta como surtido y no descuenta inventario (el inventario que se cargó ya venía sin eso)."
-               : "Se propone lo apartado para esta orden. Si das una parte, escribe solo lo que sale: lo demás queda «por surtir». La salida queda ligada a la orden y descuenta su reserva."}
+               : "Escribe lo que sale o toca el número de «Por surtir» o de «Apartado» para llenarlo. Si das una parte, lo demás queda «por surtir»; de una partida no sale más de lo que falta. La salida queda ligada a la orden y descuenta su reserva."}
              pie={<>
                <span className="mr-auto text-sm text-tenue self-center">{total} partida(s) {previo ? "ya entregada(s)" : "a surtir"}</span>
                <Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
@@ -392,10 +397,10 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
       {pendientes.length === 0 && extras.length === 0 && <p className="text-sm text-tenue mb-3">Todo lo de la lista ya se surtió.</p>}
       {pendientes.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 mb-2">
-          {!previo && <>
-            <Boton tamano="sm" variante="fantasma" onClick={() => setCant(Object.fromEntries(pendientes.map((m) => [m.articulo_id, m.apartado > 0 ? String(Math.min(m.apartado, m.por_surtir)) : ""])))}>Proponer lo apartado</Boton>
-            <Boton tamano="sm" variante="fantasma" onClick={() => setCant({})}>Limpiar</Boton>
-          </>}
+          {previo
+            ? <Boton tamano="sm" variante="fantasma" onClick={() => llenarTodos((m) => m.por_surtir)}>Llenar con todo lo que falta</Boton>
+            : <Boton tamano="sm" variante="fantasma" onClick={() => llenarTodos((m) => Math.min(m.apartado, m.por_surtir))}>Llenar con lo apartado</Boton>}
+          <Boton tamano="sm" variante="fantasma" onClick={() => setCant({})}>Limpiar</Boton>
           <CajaBuscar valor={buscar} alCambiar={setBuscar} className="w-full sm:w-64 sm:ml-auto" />
         </div>
       )}
@@ -419,10 +424,19 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
                 )}
                 <tr className={cn(m.apartado === 0 && "text-tenue")}>
                   <td className="max-w-[300px]"><p className="truncate text-texto" title={m.nombre}>{m.nombre}</p><p className="text-xs text-tenue">{m.clave}</p></td>
-                  <td className="text-right cifra whitespace-nowrap">{cifra(m.por_surtir)} <span className="text-xs text-tenue">{m.unidad}</span></td>
-                  <td className="text-right cifra">{m.apartado > 0 ? cifra(m.apartado) : "—"}</td>
+                  <td className="text-right cifra whitespace-nowrap">
+                    <button type="button" className="rounded px-1 hover:bg-marca-suave hover:text-marca-texto" title="Llenar con lo que falta"
+                            onClick={() => llenar(m, m.por_surtir)} data-explain={GLOSARIO.llenarSurtido} data-explain-title="Tocar para llenar">
+                      {cifra(m.por_surtir)} <span className="text-xs text-tenue">{m.unidad}</span>
+                    </button>
+                  </td>
+                  <td className="text-right cifra">{m.apartado > 0
+                    ? <button type="button" className="rounded px-1 hover:bg-marca-suave hover:text-marca-texto" title="Llenar con lo apartado"
+                              onClick={() => llenar(m, Math.min(m.apartado, m.por_surtir))}>{cifra(m.apartado)}</button>
+                    : "—"}</td>
                   <td className="text-right">
-                    <input className="campo h-8 text-right cifra" inputMode="decimal" value={cant[m.articulo_id] ?? ""} placeholder="0"
+                    <input className={cn("campo h-8 text-right cifra", excede(m) && "border-peligro focus:ring-peligro/30")} inputMode="decimal"
+                           value={cant[m.articulo_id] ?? ""} placeholder="0" title={excede(m) ? `Solo faltan ${cifra(m.por_surtir)}` : undefined}
                            aria-label={`Cantidad que sale de ${m.nombre}`}
                            onChange={(e) => setCant((c) => ({ ...c, [m.articulo_id]: e.target.value }))} />
                   </td>

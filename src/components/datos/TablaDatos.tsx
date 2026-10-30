@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { usePreferencia } from "@/lib/preferencias";
 import { ArrowDown, ArrowUp, Download, Search, type LucideIcon } from "lucide-react";
 import { cn, coincide } from "@/lib/utilidades";
 import { Vacio, Cargando, ErrorCarga } from "@/components/ui/estados";
@@ -18,6 +19,11 @@ export interface Columna<T> {
   explica?: string;
 }
 
+/** La ruta sin ids: el orden de «Pedidos» es el mismo en la ficha de cualquier pedido. */
+function rutaGenerica() {
+  return window.location.pathname.split("/").map((t) => (/^[0-9a-f-]{8,}$/i.test(t) || /^\d+$/.test(t) ? ":id" : t)).join("/");
+}
+
 /**
  * Tabla estándar del ERP: búsqueda sin acentos, orden por columna, filas
  * clicables y exportar a CSV (la gente viene de hojas de cálculo y lo va a pedir).
@@ -33,7 +39,10 @@ export function TablaDatos<T>({
   claseFila?: (f: T) => string | undefined; compacta?: boolean;
 }) {
   const [busqueda, setBusqueda] = useState("");
-  const [orden, setOrden] = useState<{ clave: string; asc: boolean } | null>(null);
+  // El orden que cada quien elige se le recuerda por tabla (la pantalla y sus columnas); la búsqueda no.
+  const [orden, setOrden] = usePreferencia<{ clave: string; asc: boolean } | null>(
+    `tabla.${rutaGenerica()}.${columnas.map((c) => c.clave).join(",")}`, null,
+    (v): v is { clave: string; asc: boolean } | null => v === null || (typeof v === "object" && typeof (v as { clave?: unknown }).clave === "string"));
   const [mostrar, setMostrar] = useState(limite);
   const visibles = columnas.filter((c) => !c.oculta);
 
@@ -106,7 +115,7 @@ export function TablaDatos<T>({
                 {visibles.map((c) => (
                   <th key={c.clave} className={cn(alinear(c), "cursor-pointer select-none whitespace-nowrap", c.clase)}
                       data-explain={c.explica} data-explain-title={c.explica && typeof c.titulo === "string" ? c.titulo : undefined}
-                      onClick={() => setOrden((o) => (o?.clave === c.clave ? (o.asc ? { clave: c.clave, asc: false } : null) : { clave: c.clave, asc: true }))}>
+                      onClick={() => setOrden(orden?.clave === c.clave ? (orden.asc ? { clave: c.clave, asc: false } : null) : { clave: c.clave, asc: true })}>
                     <span className="inline-flex items-center gap-1">
                       {c.titulo}
                       {orden?.clave === c.clave && (orden.asc ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
