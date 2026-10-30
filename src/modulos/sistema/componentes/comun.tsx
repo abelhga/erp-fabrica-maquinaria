@@ -35,6 +35,7 @@ export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; ale
   { modulo: "produccion", nombre: "Producción", descripcion: "1: ver el avance de las órdenes, sin lista de materiales, horas ni planos (lo tienen los vendedores) · 2: personal de piso: también cómo se fabrica, y todos los pedidos sin montos · 3: gerencia." },
   { modulo: "rrhh", nombre: "Recursos humanos", descripcion: "Personal y vacaciones. 3: además CURP, RFC, NSS, salario y cuenta bancaria." },
   { modulo: "finanzas", nombre: "Finanzas", descripcion: "Cobranza y pagos. 2: registra cobros, facturas y pagos." },
+  { modulo: "caja_chica", nombre: "Caja chica", descripcion: "El efectivo de la oficina, aparte de finanzas. 1: ver el saldo y los movimientos · 2: anotar entradas y salidas · 3: arqueo, borrar y topes." },
   { modulo: "comisiones", nombre: "Comisiones", descripcion: "1: ve las comisiones de todos los vendedores (cada vendedor ve la suya sin este permiso) · 2: las marca pagadas." },
   { modulo: "objetivos", nombre: "Objetivos", descripcion: "1: ve y califica solo a su gente (jefe directo) · 3: todos, plantillas, revisión y ajustes. Sin montos." },
   { modulo: "nomina", nombre: "Nómina", descripcion: "Sueldos, prenómina, préstamos y el bono en pesos. 2: captura conceptos · 3: cierra la semana y registra sueldos.",

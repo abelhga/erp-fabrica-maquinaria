@@ -26,6 +26,8 @@ export type Modulo = "ventas" | "costeo" | "costos" | "compras" | "inventario" |
   | "servicio"
   // mantenimiento: máquinas y herramienta del taller. 1 ver · 2 reportar fallas · 3 administrar y cerrar.
   | "mantenimiento"
+  // caja_chica: el efectivo de la oficina, aparte de finanzas. 1 ver · 2 registrar entradas y salidas · 3 arqueo y borrar.
+  | "caja_chica"
   // analisis: el BI de dirección (mapa, tendencias, clientes, producto, metas). Sin costos.
   | "analisis"
   // mercadolibre: preguntas y publicaciones de ML. 1 ver · 2 contestar y ligar. Aparte de ventas para que marketing lo tenga sin clientes ni cotizaciones.

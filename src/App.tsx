@@ -211,7 +211,7 @@ export function App() {
           <Route path="rrhh/mi-desempeno" element={<Con m="mi_desempeno"><MiDesempeno /></Con>} />
           <Route path="finanzas/cobranza" element={<Con m="finanzas"><Cobranza /></Con>} />
           <Route path="finanzas/pagos" element={<Con m="finanzas"><Pagos /></Con>} />
-          <Route path="finanzas/caja-chica" element={<Con m="finanzas" n={2}><CajaChica /></Con>} />
+          <Route path="finanzas/caja-chica" element={<Con m="caja_chica"><CajaChica /></Con>} />
           <Route path="finanzas/resultados" element={<Con m="finanzas"><Con m="costos"><Resultados /></Con></Con>} />
           <Route path="sistema/usuarios" element={<Con m="admin" n={3}><Usuarios /></Con>} />
           <Route path="sistema/importar" element={<Con m="admin" n={3}><Importar /></Con>} />

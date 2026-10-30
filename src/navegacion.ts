@@ -120,7 +120,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/rrhh/mi-desempeno", texto: "Mi desempeño", icono: Award, modulo: "mi_desempeno" },
       { ruta: "/finanzas/cobranza", texto: "Cobranza", icono: Wallet, modulo: "finanzas" },
       { ruta: "/finanzas/pagos", texto: "Pagos a proveedores", icono: Receipt, modulo: "finanzas" },
-      { ruta: "/finanzas/caja-chica", texto: "Caja chica", icono: Coins, modulo: "finanzas", nivel: 2 },
+      { ruta: "/finanzas/caja-chica", texto: "Caja chica", icono: Coins, modulo: "caja_chica" },
       { ruta: "/finanzas/resultados", texto: "Resultados", icono: Waypoints, modulo: "finanzas", tambien: { modulo: "costos" } },
     ],
   },
