@@ -23,6 +23,7 @@ import { useSaldoHoja } from "@/modulos/finanzas/componentes/SaldosArranque";
 import { contenidoInicio } from "./porRol";
 import { usePorVendedor } from "@/modulos/ventas/componentes/Seguimiento";
 import { PorSurtir } from "./PorSurtir";
+import { ConsejosSemana, ICONO_REVISION, useMisPorRevisar } from "@/modulos/revision/PorRevisar";
 
 interface Indicadores {
   ventas?: { mes: number; mes_anterior: number; anio: number; pedidos_mes: number };
@@ -101,6 +102,8 @@ function InicioPorArea() {
 
   // Seguimiento de cotizaciones: al vendedor los suyos; a la gerencia, el equipo y quién está frenado.
   const seguimientos = usePorVendedor(avisar.has("seguimientos") && puede("ventas"));
+  // Lo que la revisión de la madrugada le dejó a esta persona (a todos los puestos).
+  const porRevisar = useMisPorRevisar().data ?? 0;
   const seg = (() => {
     const filas = seguimientos.data ?? [];
     if (!filas.length) return null;
@@ -134,6 +137,7 @@ function InicioPorArea() {
   const conversion = i.cotizaciones && i.cotizaciones.cerradas_90d > 0 ? i.cotizaciones.ganadas_90d / i.cotizaciones.cerradas_90d : null;
 
   const pendientes = [
+    porRevisar ? { texto: `La revisión de anoche encontró ${porRevisar} cosa(s) tuya(s) por revisar`, ruta: "/revision", icono: ICONO_REVISION, tono: "aviso" as const } : null,
     seg ? { texto: seg.texto, ruta: "/ventas/cotizaciones?estado=seguimiento", icono: MessageCircleQuestionMark, tono: seg.tono } : null,
     i.leads?.por_tomar && avisar.has("leads_por_tomar") ? { texto: `${i.leads.por_tomar} lead(s) esperando vendedor`, ruta: "/ventas/leads?filtro=por_tomar", icono: Inbox, tono: "peligro" as const } : null,
     i.leads?.mios_sin_atender && avisar.has("leads_mios") ? { texto: `${i.leads.mios_sin_atender} lead(s) tuyos por atender`, ruta: "/ventas/leads?filtro=mios", icono: Inbox, tono: "aviso" as const } : null,
@@ -155,6 +159,7 @@ function InicioPorArea() {
       descripcion={new Date().toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
     >
       {area && <ResumenIA area={area} conClaude={puede("asistente")} />}
+      <ConsejosSemana />
       {ver.has("por_surtir") && puede("inventario", 2) && <PorSurtir />}
       {ind.isLoading ? <Cargando filas={4} /> : (
         <>

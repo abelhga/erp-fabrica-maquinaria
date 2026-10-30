@@ -66,6 +66,7 @@ const Semana = p(() => import("./modulos/asistente/Semana"));
 const HojaSalida = p(() => import("./modulos/ventas/HojaSalida"));
 const ImprimirPedido = p(() => import("./modulos/produccion/ImprimirPedido"));
 const Pendientes = p(() => import("./modulos/pendientes/Pendientes"));
+const PorRevisar = p(() => import("./modulos/revision/PorRevisar"));
 const Calendario = p(() => import("./modulos/calendario/Calendario"));
 const Planos = p(() => import("./modulos/costeo/Planos"));
 const Embarques = p(() => import("./modulos/importaciones/Embarques"));
@@ -158,6 +159,7 @@ export function App() {
           <Route path="costeo/margenes" element={<Con m="margenes"><Margenes /></Con>} />
           <Route path="costeo/precios-ventas" element={<Con m="margenes"><PreciosVentas /></Con>} />
           <Route path="pendientes" element={<Pendientes />} />
+          <Route path="revision" element={<PorRevisar />} />
           <Route path="calendario" element={<Calendario />} />
           <Route path="semana" element={<Con m="asistente"><Semana /></Con>} />
           <Route path="ventas/para-llamar" element={<Con m="ventas"><ParaLlamar /></Con>} />

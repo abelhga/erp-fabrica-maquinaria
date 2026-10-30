@@ -17,6 +17,7 @@ import { useSesion } from "@/lib/sesion";
 import { dinero, dineroCompacto, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { ResumenIA } from "./ResumenIA";
+import { ConsejosSemana } from "@/modulos/revision/PorRevisar";
 import { DondeVendemos } from "@/modulos/analisis/DondeVendemos";
 import { SeguimientoEquipo } from "@/modulos/ventas/componentes/Seguimiento";
 import { Explicacion } from "@/tutorial/Explicacion";
@@ -189,6 +190,7 @@ export function TableroDireccion() {
       <Explicacion>{PANTALLAS["/"].map((p) => <p key={p}>{p}</p>)}</Explicacion>
 
       <ResumenIA />
+      <ConsejosSemana />
 
       {/* Indicadores principales */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">

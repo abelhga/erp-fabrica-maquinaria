@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CALENDARIO, INICIO, MENU, PENDIENTES, SEMANA } from "@/navegacion";
+import { CALENDARIO, INICIO, MENU, PENDIENTES, REVISION, SEMANA } from "@/navegacion";
 import { PANTALLAS, SECCIONES, ayudaDe } from "./pantallas";
 import { GLOSARIO, SECCIONES_GLOSARIO } from "./glosario";
 
@@ -13,7 +13,7 @@ import { GLOSARIO, SECCIONES_GLOSARIO } from "./glosario";
 const SIN_MARCO = new Set(["/piso", "/produccion/terminal", "/servicio/reportar"]);
 
 describe("modo tutorial", () => {
-  const rutas = [INICIO, PENDIENTES, CALENDARIO, SEMANA, ...MENU.flatMap((s) => s.entradas)].map((e) => e.ruta);
+  const rutas = [INICIO, PENDIENTES, REVISION, CALENDARIO, SEMANA, ...MENU.flatMap((s) => s.entradas)].map((e) => e.ruta);
 
   it.each(rutas.filter((r) => !SIN_MARCO.has(r)))("la pantalla %s explica para qué sirve", (ruta) => {
     const ayuda = ayudaDe(ruta);

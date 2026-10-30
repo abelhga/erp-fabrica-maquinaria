@@ -76,6 +76,22 @@ transacción y se detiene si algo real depende de lo que iba a borrar).
      función. Cada consulta corre con la sesión de quien pregunta, así que Claude ve lo mismo
      que esa persona y nada más.
 
+9. **Revisión nocturna** (función de borde `revision`, migración 209):
+   ```bash
+   npx supabase functions deploy revision --no-verify-jwt
+   ```
+   - Usa la misma `ANTHROPIC_API_KEY` del asistente. Sin `--no-verify-jwt` pg_cron no puede
+     llamarla (no manda sesión): las rutas de pg_cron revisan la llave de `revision_cuenta`.
+   - pg_cron corre las reglas a las 2:07 de la planta y, si Claude está prendido, le pega a
+     `/revision/enviar` (un lote de la API de Message Batches: mitad de precio). A las 6:07,
+     7:07 y 8:07 le pega a `/revision/recoger`; a las 8:07 lo que no regresó se da por perdido
+     y la corrida se cierra con las reglas. Los avisos salen al cerrar la corrida, nunca de noche.
+   - pg_cron sabe a dónde llamar por `revision_cuenta.url_funciones` (o, si está vacía, la de
+     Mercado Libre). La primera vez que dirección abre **Por revisar → Reglas** con la
+     función desplegada, la función anota su dirección sola.
+   - Tope: `configuracion.revision_nocturna.tope_tokens_mes` (30 millones). Al llegar, esa noche
+     solo corren las reglas y «Anoche» dice «Tope del mes».
+
 ### Sin `supabase link`: por la API de administración
 
 Si no hay salida directa a Postgres (puerto 5432/6543), como en una sesión de Claude en la
