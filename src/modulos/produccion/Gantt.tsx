@@ -19,8 +19,8 @@ import { fecha, hoyISO, numero } from "@/lib/formato";
 import { cn, coincide } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import {
-  CLAVE, useAsignaciones, useCarga, useCuadrillas, useEtapas, usePersonalPiso, useProduccionEnVivo, useTablero,
-  type Etapa, type EstadoOperacion, type OrdenTablero,
+  CLAVE, useAsignaciones, useCarga, useCuadrillas, useEspecialidades, useEtapas, usePersonalPiso, useProduccionEnVivo, useTablero,
+  type Especialidad, type Etapa, type EstadoOperacion, type OrdenTablero,
 } from "./componentes/datos";
 import { ESTADO_OPERACION, abreviarEquipo, folioCorto, horas } from "./componentes/util";
 
@@ -36,9 +36,11 @@ interface FilaPlan {
   operacion_id: string; orden_id: string; etapa_id: number; estado: EstadoOperacion; horas_estimadas: number;
   horas_restantes: number; gente: number; inicio_real: string | null; fin_real: string | null;
   inicio_plan: string | null; fin_plan: string | null; posicion: number | null;
+  /** La especialidad del área que hace esta familia de equipo (la cuadrilla de cribadoras…). */
+  especialidad_id: number | null;
 }
 interface Barra {
-  id: string; orden_id: string; etapa: Etapa; estado: EstadoOperacion; desde: number | null; hasta: number | null;
+  id: string; orden_id: string; etapa: Etapa; estado: EstadoOperacion; desde: number | null; hasta: number | null; esp: number | null;
   horasEst: number; horasRest: number; inicioReal: string | null; finReal: string | null; inicioPlan: string | null; finPlan: string | null;
 }
 interface OrdenGantt {
@@ -48,7 +50,9 @@ interface OrdenGantt {
 type Item =
   | { tipo: "grupo"; clave: string; y: number; h: number; titulo: string; detalle: string; ordenes: OrdenGantt[]; espera?: boolean }
   | { tipo: "orden"; clave: string; y: number; h: number; g: OrdenGantt }
-  | { tipo: "area"; clave: string; y: number; h: number; etapa: Etapa; semanas: number | null; carriles: { b: Barra; g: OrdenGantt; carril: number }[] };
+  | { tipo: "area"; clave: string; y: number; h: number; etapa: Etapa; semanas: number | null; carriles: { b: Barra; g: OrdenGantt; carril: number }[];
+      /** Un área con especialidades va en un renglón por especialidad (y uno con lo que hace cualquiera). */
+      sub: string | null; horasSemana: number };
 
 type Zoom = "dia" | "semana" | "mes";
 type Vista = "orden" | "pedido" | "area";
@@ -129,7 +133,7 @@ function armar(plan: FilaPlan[], ordenes: OrdenTablero[], etapas: Etapa[], hoy: 
     }
     const r = rango(f, hoy);
     g.barras.push({
-      id: f.operacion_id, orden_id: o.id, etapa, estado: f.estado, desde: r?.[0] ?? null, hasta: r?.[1] ?? null,
+      id: f.operacion_id, orden_id: o.id, etapa, estado: f.estado, desde: r?.[0] ?? null, hasta: r?.[1] ?? null, esp: f.especialidad_id ?? null,
       horasEst: Number(f.horas_estimadas), horasRest: Number(f.horas_restantes),
       inicioReal: f.inicio_real, finReal: f.fin_real, inicioPlan: f.inicio_plan, finPlan: f.fin_plan,
     });
@@ -175,6 +179,7 @@ export default function Gantt() {
   const tablero = useTablero();
   const etapas = useEtapas();
   const carga = useCarga();
+  const especialidades = useEspecialidades();
   const cuadrillas = useCuadrillaPorEtapa();
   const [params, setParams] = useSearchParams();
   const zoom: Zoom = (["dia", "semana", "mes"] as const).find((z) => z === params.get("zoom")) ?? (window.innerWidth < 640 ? "semana" : "dia");
@@ -274,7 +279,7 @@ export default function Gantt() {
           </div>
 
           <Diagrama zoom={zoom} vista={vista} hoy={hoy} activas={activas} enEspera={enEspera} etapas={etapas.data ?? []}
-            carga={carga.data ?? []} buscar={buscar} ver={ver} cuadrillas={cuadrillas}
+            carga={carga.data ?? []} especialidades={especialidades.data ?? []} buscar={buscar} ver={ver} cuadrillas={cuadrillas}
             arrastrable={gestionar && vista === "orden" && !buscar && ver === "todas"}
             alAbrir={setAbierta} alReordenar={reordenar} />
           {gestionar && vista === "orden" && (
@@ -349,6 +354,8 @@ interface PropsDiagrama {
   carga: { etapa_id: number; capacidad_horas_semana: number; horas_pendientes: number; horas_planeadas: number }[];
   buscar: string; ver: Ver; cuadrillas: Map<string, { nombres: string[]; trabajando: boolean }>;
   arrastrable: boolean; alAbrir: (id: string) => void; alReordenar: (ids: string[]) => void;
+  /** Para partir las áreas en sus especialidades en la vista por área. */
+  especialidades?: Especialidad[];
   /** En la ficha de un pedido u orden: alto según los renglones, sin la fila. */
   compacto?: boolean;
   /** Horas y cuadrilla en el globo: solo para la planta (el vendedor ve fechas). */
@@ -358,7 +365,7 @@ interface PropsDiagrama {
 }
 
 function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, ver, cuadrillas, arrastrable, alAbrir, alReordenar,
-  compacto = false, detalleTaller = true, pxDia }: PropsDiagrama) {
+  compacto = false, detalleTaller = true, pxDia, especialidades = [] }: PropsDiagrama) {
   const px = pxDia ?? PX[zoom];
   const caja = useRef<HTMLDivElement>(null);
   const [sobre, setSobre] = useState<{ b: Barra; g: OrdenGantt; x: number; y: number } | null>(null);
@@ -394,20 +401,40 @@ function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, 
     };
     if (vista === "area") {
       for (const e of etapas.filter((x) => x.capacidad_horas_semana > 0)) {
-        const barras = visibles.flatMap((g) => g.barras.filter((b) => b.etapa.id === e.id && b.desde != null && b.hasta != null).map((b) => ({ b, g })))
-          .sort((a, b) => a.b.desde! - b.b.desde! || a.b.hasta! - b.b.hasta!);
-        // Carriles: cada etapa en el primero donde ya terminó la anterior (se ve cuántas van a la vez).
-        const finCarril: number[] = [];
-        const carriles = barras.map(({ b, g }) => {
-          let c = finCarril.findIndex((h) => h < b.desde!);
-          if (c < 0) { c = finCarril.length; finCarril.push(b.hasta!); } else finCarril[c] = b.hasta!;
-          return { b, g, carril: c };
-        });
-        const k = carga.find((c) => c.etapa_id === e.id);
-        const semanas = k && k.capacidad_horas_semana > 0 ? (Number(k.horas_pendientes) + Number(k.horas_planeadas)) / Number(k.capacidad_horas_semana) : null;
-        const h = Math.max(finCarril.length, 1) * ALTO_CARRIL + 16;
-        lista.push({ tipo: "area", clave: `a${e.id}`, y, h, etapa: e, semanas, carriles });
-        y += h;
+        const deArea = visibles.flatMap((g) => g.barras.filter((b) => b.etapa.id === e.id).map((b) => ({ b, g })));
+        // Con especialidades, un renglón por cada una con lo de sus equipos, y uno con lo demás
+        // (lo que hace quien no tiene especialidad, o cualquiera). Las horas son las de su gente.
+        const esps = especialidades.filter((x) => x.etapa_id === e.id);
+        const partes = esps.length === 0
+          ? [{ clave: `a${e.id}`, sub: null as string | null, cap: Number(e.capacidad_horas_semana), lista: deArea }]
+          : [
+            ...esps.map((x) => ({ clave: `a${e.id}-${x.id}`, sub: x.nombre, cap: Number(x.horas_semana), lista: deArea.filter(({ b }) => b.esp === x.id) })),
+            { clave: `a${e.id}-resto`, sub: "Lo demás", cap: Math.max(Number(e.capacidad_horas_semana) - esps.reduce((s, x) => s + Number(x.horas_semana), 0), 0),
+              lista: deArea.filter(({ b }) => !esps.some((x) => x.id === b.esp)) },
+          ];
+        for (const parte of partes) {
+          const barras = parte.lista.filter(({ b }) => b.desde != null && b.hasta != null)
+            .sort((a, b) => a.b.desde! - b.b.desde! || a.b.hasta! - b.b.hasta!);
+          // Carriles: cada etapa en el primero donde ya terminó la anterior (se ve cuántas van a la vez).
+          const finCarril: number[] = [];
+          const carriles = barras.map(({ b, g }) => {
+            let c = finCarril.findIndex((h) => h < b.desde!);
+            if (c < 0) { c = finCarril.length; finCarril.push(b.hasta!); } else finCarril[c] = b.hasta!;
+            return { b, g, carril: c };
+          });
+          let semanas: number | null;
+          if (parte.sub == null) {
+            const k = carga.find((c) => c.etapa_id === e.id);
+            semanas = k && k.capacidad_horas_semana > 0 ? (Number(k.horas_pendientes) + Number(k.horas_planeadas)) / Number(k.capacidad_horas_semana) : null;
+          } else {
+            // La fila de la especialidad: lo que le falta a sus etapas entre las horas de su gente.
+            const resta = parte.lista.reduce((s, { b }) => s + (b.estado === "terminada" ? 0 : Number(b.horasRest) || 0), 0);
+            semanas = parte.cap > 0 && resta > 0 ? resta / parte.cap : null;
+          }
+          const h = Math.max(finCarril.length, 1) * ALTO_CARRIL + 16;
+          lista.push({ tipo: "area", clave: parte.clave, y, h, etapa: e, semanas, carriles, sub: parte.sub, horasSemana: parte.cap });
+          y += h;
+        }
       }
       return lista;
     }
@@ -430,7 +457,7 @@ function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, 
       esperaVisibles.forEach(fila);
     }
     return lista;
-  }, [vista, visibles, esperaVisibles, etapas, carga]);
+  }, [vista, visibles, esperaVisibles, etapas, carga, especialidades]);
   const alto = items.reduce((s, it) => Math.max(s, it.y + it.h), 0);
 
   // Al abrir y al cambiar el zoom, hoy queda cerca de la orilla izquierda (lo de atrás se ve con desplazar).
@@ -525,9 +552,9 @@ function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, 
                   <div className="sticky left-0 z-20 w-[var(--izq)] shrink-0 border-r border-b border-borde bg-superficie px-3 flex items-center gap-2 min-w-0">
                     <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: it.etapa.color }} />
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold truncate">{it.etapa.nombre}</p>
+                      <p className="text-sm font-semibold truncate">{it.etapa.nombre}{it.sub && <span className="font-normal" data-explain={GLOSARIO.especialidad} data-explain-title="Especialidad"> · {it.sub}</span>}</p>
                       <p className="text-[11px] text-tenue truncate">
-                        {it.semanas != null ? `≈ ${numero(Math.round(it.semanas * 10) / 10)} sem. de fila` : ""} · {numero(Number(it.etapa.capacidad_horas_semana))} h/sem
+                        {it.semanas != null ? `≈ ${numero(Math.round(it.semanas * 10) / 10)} sem. de fila · ` : ""}{numero(Math.round(it.horasSemana))} h/sem
                       </p>
                     </div>
                   </div>

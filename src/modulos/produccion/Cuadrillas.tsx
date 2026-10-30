@@ -1,10 +1,10 @@
-import { useMemo, useState, type DragEvent } from "react";
+import { Fragment, useMemo, useState, type DragEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, ChevronRight, Clock, ExternalLink, GripVertical, HardHat, Moon, Plus, Tablet, Trash2, UserCog, UserMinus, Users } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Boton } from "@/components/ui/boton";
-import { Entrada, Seleccion } from "@/components/ui/campo";
+import { Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { Interruptor } from "@/components/ui/interruptor";
 import { Filtro } from "@/components/datos/TablaDatos";
 import { Dialogo, Lateral } from "@/components/ui/dialogo";
@@ -12,13 +12,13 @@ import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
-import { fecha, hoyISO } from "@/lib/formato";
+import { fecha, hoyISO, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { CapacidadTaller } from "./componentes/CapacidadTaller";
 import {
-  CLAVE, cuandoAbre, textoDescansos, textoHorario, useAsignaciones, useCuadrillas, useEtapas, useHorarioAhora, useHorasTaller, useJornadas,
-  usePersonalPiso, usePiso, useProduccionEnVivo, type Etapa, type HorasTaller, type OperacionPiso, type PersonaPiso, type TramoAbierto,
+  CLAVE, cuandoAbre, textoDescansos, textoHorario, useAsignaciones, useCuadrillas, useEspecialidades, useEtapas, useHorarioAhora, useHorasTaller, useJornadas,
+  usePersonalPiso, usePiso, useProduccionEnVivo, type Especialidad, type Etapa, type HorasTaller, type OperacionPiso, type PersonaPiso, type TramoAbierto,
 } from "./componentes/datos";
 import { BotonLink } from "./componentes/BotonLink";
 import { abreviarEquipo, folioCorto, haceRato, horas, textoDias, tonoCompromiso } from "./componentes/util";
@@ -55,6 +55,7 @@ export default function Cuadrillas() {
   const personal = usePersonalPiso();
   const tramos = useCuadrillas();
   const asignaciones = useAsignaciones();
+  const especialidades = useEspecialidades();
   const horario = useHorarioAhora();
   // Fuera de horario el tiempo abierto no es «trabajando»: en modo horario no cuenta hasta que abra.
   const fuera = horario.data && !horario.data.en_horario ? horario.data : null;
@@ -222,7 +223,7 @@ export default function Cuadrillas() {
       {error ? <ErrorCarga error={error} /> : cargando ? <Cargando filas={6} /> : (
         <>
           {fuera && trabajaEn.size > 0 && <FueraDeHorario n={trabajaEn.size} reposo={reposo} />}
-          <PanelPersonal personal={personal.data ?? []} etapas={etapas.data ?? []} trabajaEn={trabajaEn} carga={veFabricacion ? carga : null}
+          <PanelPersonal personal={personal.data ?? []} etapas={etapas.data ?? []} especialidades={especialidades.data ?? []} trabajaEn={trabajaEn} carga={veFabricacion ? carga : null}
             gestionar={gestionar} sobre={sobre === "personal"} reposo={reposo}
             alArrastrar={(emp) => setArrastre({ tipo: "persona", empleado: emp, desde: trabajaEn.get(emp)?.id ?? null })}
             alTerminar={() => { setArrastre(null); setSobre(null); }}
@@ -363,14 +364,21 @@ function FueraDeHorario({ n, reposo }: { n: number; reposo: string | null }) {
 }
 
 /** Todo el personal arriba, por área: de aquí se arrastra a una tarjeta, y aquí se suelta para sacar a alguien. */
-function PanelPersonal({ personal, etapas, trabajaEn, carga, gestionar, sobre, reposo, alArrastrar, alTerminar, alPasar, alSoltar }: {
-  personal: PersonaPiso[]; etapas: Etapa[]; trabajaEn: Map<string, Trabajo>; carga: Map<string, number> | null; gestionar: boolean; sobre: boolean;
+function PanelPersonal({ personal, etapas, especialidades, trabajaEn, carga, gestionar, sobre, reposo, alArrastrar, alTerminar, alPasar, alSoltar }: {
+  personal: PersonaPiso[]; etapas: Etapa[]; especialidades: Especialidad[]; trabajaEn: Map<string, Trabajo>; carga: Map<string, number> | null; gestionar: boolean; sobre: boolean;
   /** Fuera de horario (modo horario): cuándo vuelve a contar el tiempo abierto. */
   reposo: string | null;
   alArrastrar: (emp: string) => void; alTerminar: () => void; alPasar: (e: DragEvent) => void; alSoltar: (e: DragEvent) => void;
 }) {
+  // En un área con especialidades, su gente sale junta por especialidad y al final quien hace de todo.
+  const nombreEsp = new Map(especialidades.map((e) => [e.id, e.nombre]));
+  const claveEsp = (p: PersonaPiso) => (p.especialidad_id != null ? nombreEsp.get(p.especialidad_id) ?? "" : "\uffff");
   const areas = [...etapas.map((e) => ({ id: e.id as number | null, nombre: e.nombre })), { id: null, nombre: "Sin área" }]
-    .map((a) => ({ ...a, gente: personal.filter((p) => p.etapa_id === a.id) })).filter((a) => a.gente.length > 0);
+    .map((a) => {
+      const gente = personal.filter((p) => p.etapa_id === a.id);
+      const conEsp = gente.some((p) => p.especialidad_id != null);
+      return { ...a, conEsp, gente: conEsp ? [...gente].sort((x, y) => claveEsp(x).localeCompare(claveEsp(y), "es")) : gente };
+    }).filter((a) => a.gente.length > 0);
   if (personal.length === 0) {
     return <div className="tarjeta p-4 text-sm text-tenue">No hay personal activo dado de alta. Recursos Humanos lo registra en Personal (con su área), y aquí aparece para armar las cuadrillas.</div>;
   }
@@ -386,11 +394,18 @@ function PanelPersonal({ personal, etapas, trabajaEn, carga, gestionar, sobre, r
         {areas.map((a) => (
           <div key={a.nombre} className="flex flex-wrap items-center gap-1.5">
             <span className="text-xs text-tenue mr-0.5">{a.nombre}</span>
-            {a.gente.map((p) => {
+            {a.gente.map((p, k) => {
               const en = trabajaEn.get(p.id);
               const h = carga?.get(p.id);
+              const otraEsp = a.conEsp && (k === 0 || a.gente[k - 1].especialidad_id !== p.especialidad_id);
               return (
-                <span key={p.id} draggable={gestionar} onDragStart={() => alArrastrar(p.id)} onDragEnd={alTerminar}
+                <Fragment key={p.id}>
+                {otraEsp && (
+                  <span className="text-[11px] italic text-tenue ml-1" data-explain={GLOSARIO.especialidad} data-explain-title="Especialidad">
+                    {p.especialidad_id != null ? nombreEsp.get(p.especialidad_id) : "Hace de todo"}:
+                  </span>
+                )}
+                <span draggable={gestionar} onDragStart={() => alArrastrar(p.id)} onDragEnd={alTerminar}
                   title={en ? (reposo ? `Fuera de horario: su tiempo sigue abierto en ${en.etapa} de ${folioCorto(en.folio)} y vuelve a contar ${reposo}`
                     : `Trabajando en ${en.etapa} de ${folioCorto(en.folio)}`) : "Libre"}
                   className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
@@ -399,6 +414,7 @@ function PanelPersonal({ personal, etapas, trabajaEn, carga, gestionar, sobre, r
                   {p.nombre}
                   {h != null && h > 0 && <span className="text-tenue cifra" data-explain={GLOSARIO.cargaPersona} data-explain-title="Horas encima">{horas(Math.round(h))}</span>}
                 </span>
+                </Fragment>
               );
             })}
           </div>
@@ -447,6 +463,7 @@ function TarjetaTrabajo({ t, ahora, gestionar, veHoras, sobre, conEtapa, reposo,
         {t.gente === 0 && <span className="text-xs text-tenue" data-explain={GLOSARIO.cuadrillaPlaneada} data-explain-title="Cuadrilla">{gestionar ? "Suelta aquí a quien le toca" : "Sin cuadrilla"}</span>}
       </div>
       <div className="mt-1.5 flex flex-wrap gap-x-2 text-[11px] text-tenue">
+        {t.especialidad && <span className="font-medium text-texto" data-explain={GLOSARIO.especialidad} data-explain-title="Especialidad">{t.especialidad}</span>}
         {t.estado === "en_proceso" && t.desde && <span>desde {haceRato(t.desde, ahora).replace("hace ", "")}</span>}
         {f && <span className="cifra" data-explain={GLOSARIO.faltanHoras} data-explain-title="Faltan">{f}</span>}
         {deCola && !t.lista && <span className="text-aviso">Antes: {t.espera_a}</span>}
@@ -462,8 +479,10 @@ function DetalleTrabajo({ t, personal, trabajaEn, gestionar, veHoras, reposo, al
   alAgregar: (emp: string) => void; alQuitar: (emp: string) => void; alMover: (paso: -1 | 1) => void;
 }) {
   const [elegido, setElegido] = useState("");
+  // Primero la gente de su área, y dentro de ella la de su especialidad.
+  const cerca = (p: PersonaPiso) => (p.etapa_id === t.etapa_id ? 1 : 0) + (t.especialidad_id != null && p.especialidad_id === t.especialidad_id ? 1 : 0);
   const fuera = personal.filter((p) => !t.personas.some((x) => x.id === p.id))
-    .sort((a, b) => Number(b.etapa_id === t.etapa_id) - Number(a.etapa_id === t.etapa_id) || a.nombre.localeCompare(b.nombre));
+    .sort((a, b) => cerca(b) - cerca(a) || a.nombre.localeCompare(b.nombre));
   const f = veHoras ? faltan(t) : null;
   return (
     <div className="space-y-5 text-sm">
@@ -471,6 +490,7 @@ function DetalleTrabajo({ t, personal, trabajaEn, gestionar, veHoras, reposo, al
         <div><dt className="text-xs text-tenue">Estado</dt><dd>{t.estado === "en_proceso" ? "En proceso" : t.estado === "pausada" ? "Pausada" : t.lista ? "En cola, lista para empezar" : `En cola · antes: ${t.espera_a}`}</dd></div>
         <div><dt className="text-xs text-tenue">Compromiso</dt><dd className="cifra">{fecha(t.fecha_compromiso)} · {textoDias(t.dias_restantes)}</dd></div>
         <div><dt className="text-xs text-tenue">Cliente</dt><dd>{t.cliente ?? "Para stock"}</dd></div>
+        {t.especialidad && <div data-explain={GLOSARIO.especialidad} data-explain-title="Especialidad"><dt className="text-xs text-tenue">Especialidad</dt><dd>{t.especialidad}</dd></div>}
         {veHoras && <div data-explain={GLOSARIO.faltanHoras} data-explain-title="Horas"><dt className="text-xs text-tenue">Horas</dt>
           <dd className="cifra">{horas(Number(t.horas_reales))} de {horas(Number(t.horas_estimadas))}{f && ` · ${f}`}</dd></div>}
       </dl>
@@ -520,11 +540,17 @@ function DetalleTrabajo({ t, personal, trabajaEn, gestionar, veHoras, reposo, al
  * cuadrillas (solo esa sale en la terminal y en el tablero). Altas, bajas, departamento y
  * datos personales siguen siendo de Recursos Humanos.
  */
-interface PersonaProduccion { id: string; nombre: string; puesto: string | null; etapa_id: number | null; en_cuadrillas: boolean; trabajando_en: string | null }
+interface PersonaProduccion {
+  id: string; nombre: string; puesto: string | null; etapa_id: number | null; en_cuadrillas: boolean; trabajando_en: string | null; especialidad_id: number | null;
+}
 function PersonalPiso({ etapas }: { etapas: Etapa[] }) {
   const lista = useQuery({ queryKey: [...CLAVE, "personal_produccion"], queryFn: () => q<PersonaProduccion[]>(supabase.rpc("personal_produccion")) });
+  const especialidades = useEspecialidades();
   const ajustar = useAccion((a: { p: PersonaProduccion; etapa: number | null; cuadrillas: boolean }) =>
     q(supabase.rpc("ajustar_personal_piso", { p_empleado: a.p.id, p_etapa: a.etapa, p_en_cuadrillas: a.cuadrillas })),
+  { invalidar: [CLAVE], exito: "Guardado" });
+  const ponerEspecialidad = useAccion((a: { p: PersonaProduccion; esp: number | null }) =>
+    q(supabase.rpc("ajustar_especialidad", { p_empleado: a.p.id, p_especialidad: a.esp })),
   { invalidar: [CLAVE], exito: "Guardado" });
   if (lista.error) return <ErrorCarga error={lista.error} />;
   if (lista.isLoading) return <Cargando filas={6} />;
@@ -534,6 +560,7 @@ function PersonalPiso({ etapas }: { etapas: Etapa[] }) {
     <div className="space-y-3 text-sm">
       <ModoHoras />
       <CapacidadTaller />
+      <Especialidades etapas={etapas} lista={especialidades.data ?? []} />
       <p className="text-tenue" data-explain={GLOSARIO.enCuadrillas} data-explain-title="Entra a cuadrillas">
         {dentro} de {gente.length} entran a cuadrillas. Quien no entra no sale en la terminal ni aquí para asignarle trabajo.
         Para dar de alta o de baja, o cambiar a alguien de departamento, pídeselo a Recursos Humanos.
@@ -551,6 +578,14 @@ function PersonalPiso({ etapas }: { etapas: Etapa[] }) {
               <option value="">Sin área</option>
               {etapas.map((et) => <option key={et.id} value={et.id}>{et.nombre}</option>)}
             </Seleccion>
+            {(especialidades.data ?? []).some((e) => e.etapa_id === p.etapa_id) && (
+              <Seleccion className="w-40" value={p.especialidad_id ?? ""} aria-label={`Especialidad de ${p.nombre}`}
+                data-explain={GLOSARIO.especialidad} data-explain-title="Especialidad"
+                onChange={(e) => ponerEspecialidad.mutate({ p, esp: e.target.value ? Number(e.target.value) : null })}>
+                <option value="">Hace de todo</option>
+                {(especialidades.data ?? []).filter((e) => e.etapa_id === p.etapa_id).map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
+              </Seleccion>
+            )}
             <label className="flex items-center gap-2 text-xs text-tenue">
               <Interruptor activo={p.en_cuadrillas} cargando={ajustar.isPending} aria-label={`${p.nombre} entra a cuadrillas`}
                 alCambiar={(v) => ajustar.mutate({ p, etapa: p.etapa_id, cuadrillas: v })} />
@@ -560,6 +595,108 @@ function PersonalPiso({ etapas }: { etapas: Etapa[] }) {
         ))}
       </ul>
     </div>
+  );
+}
+
+/**
+ * Las cuadrillas por tipo de equipo dentro de un área (en Pailería: cribadoras, dosificadoras…).
+ * Cada una dice qué familias de equipo hace; el plan le da la parte de las horas del área que es
+ * de su gente. La regla vive en la base (plan_produccion): aquí solo se acomoda.
+ */
+function Especialidades({ etapas, lista }: { etapas: Etapa[]; lista: Especialidad[] }) {
+  const [editar, setEditar] = useState<Especialidad | "nueva" | null>(null);
+  const nombreArea = (id: number) => etapas.find((e) => e.id === id)?.nombre ?? "—";
+  return (
+    <section className="rounded-lg border border-borde p-3 space-y-2" data-explain={GLOSARIO.especialidad} data-explain-title="Especialidades">
+      <div className="flex items-center gap-2">
+        <h3 className="font-medium flex-1">Especialidades</h3>
+        <Boton variante="secundario" tamano="sm" onClick={() => setEditar("nueva")}><Plus className="h-3.5 w-3.5" />Especialidad</Boton>
+      </div>
+      <p className="text-xs text-tenue">
+        Cuadrillas por tipo de equipo dentro de un área, como las de cribadoras y de dosificadoras en Pailería. Cada una dice qué equipos hace,
+        y el plan le da la parte de las horas del área que es de su gente. Quien no tiene especialidad hace de todo.
+      </p>
+      {lista.length === 0 ? (
+        <p className="text-xs text-tenue">Todavía no hay ninguna. Crea la primera y luego elige la especialidad de cada persona en la lista de abajo.</p>
+      ) : (
+        <ul className="divide-y divide-borde">
+          {lista.map((e) => (
+            <li key={e.id} className="py-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">{nombreArea(e.etapa_id)} · {e.nombre}</p>
+                <p className="text-xs text-tenue">{e.familias.length ? e.familias.join(", ") : "Sin equipos asignados"}</p>
+              </div>
+              <span className={cn("text-xs cifra", e.personas === 0 ? "text-aviso" : "text-tenue")}>
+                {e.personas === 0 ? "Sin gente: sus equipos los hace cualquiera" : `${e.personas} ${e.personas === 1 ? "persona" : "personas"} · ${numero(Number(e.horas_semana))} h/sem`}
+              </span>
+              <Boton variante="fantasma" tamano="sm" onClick={() => setEditar(e)}>Cambiar</Boton>
+            </li>
+          ))}
+        </ul>
+      )}
+      {editar && <DialogoEspecialidad esp={editar === "nueva" ? null : editar} etapas={etapas} lista={lista} alCerrar={() => setEditar(null)} />}
+    </section>
+  );
+}
+
+interface Familia { id: number; nombre: string; articulos: number }
+function DialogoEspecialidad({ esp, etapas, lista, alCerrar }: { esp: Especialidad | null; etapas: Etapa[]; lista: Especialidad[]; alCerrar: () => void }) {
+  const familias = useQuery({ queryKey: [...CLAVE, "familias_taller"], staleTime: 300_000, queryFn: () => q<Familia[]>(supabase.rpc("familias_taller")) });
+  const activas = etapas.filter((e) => e.activa);
+  const [f, setF] = useState(() => ({
+    etapa: esp?.etapa_id ?? lista[0]?.etapa_id ?? activas[0]?.id ?? 0, nombre: esp?.nombre ?? "", cats: new Set(esp?.categorias ?? []),
+  }));
+  const [borrar, setBorrar] = useState(false);
+  // Una familia es de una sola especialidad por área: las de otra salen apagadas con su nombre.
+  const ocupadas = new Map(lista.filter((x) => x.etapa_id === f.etapa && x.id !== esp?.id).flatMap((x) => x.categorias.map((c) => [c, x.nombre] as const)));
+  const guardar = useAccion(() => q(supabase.rpc("guardar_especialidad", {
+    p_id: esp?.id ?? null, p_etapa: f.etapa, p_nombre: f.nombre, p_categorias: [...f.cats].filter((c) => !ocupadas.has(c)),
+  })), { invalidar: [CLAVE], exito: "Especialidad guardada", alTerminar: alCerrar });
+  const quitar = useAccion(() => q(supabase.rpc("borrar_especialidad", { p_id: esp!.id })), { invalidar: [CLAVE], exito: "Especialidad borrada", alTerminar: alCerrar });
+  const marcar = (id: number, si: boolean) => setF((x) => { const cats = new Set(x.cats); if (si) cats.add(id); else cats.delete(id); return { ...x, cats }; });
+  return (
+    <Dialogo abierto alCambiar={(v) => { if (!v) alCerrar(); }} titulo={esp ? `Cambiar «${esp.nombre}»` : "Nueva especialidad"}
+      descripcion="Qué equipos hace esta cuadrilla. Cada tipo de equipo es de una sola especialidad por área."
+      pie={<>
+        {esp && (
+          <Boton variante={borrar ? "peligro" : "fantasma"} className="mr-auto" cargando={quitar.isPending}
+            onClick={() => (borrar ? quitar.mutate(undefined) : setBorrar(true))}>
+            <Trash2 className="h-4 w-4" />{borrar ? (esp.personas ? `Sí, borrar (${esp.personas} quedan haciendo de todo)` : "Sí, borrar") : "Borrar"}
+          </Boton>
+        )}
+        <Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton>
+        <Boton type="submit" form="especialidad" cargando={guardar.isPending} disabled={!f.nombre.trim()}>Guardar</Boton>
+      </>}>
+      <form id="especialidad" className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (f.nombre.trim()) guardar.mutate(undefined); }}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Campo etiqueta="Área">
+            <Seleccion value={f.etapa} onChange={(e) => setF((x) => ({ ...x, etapa: Number(e.target.value) }))}>
+              {activas.map((et) => <option key={et.id} value={et.id}>{et.nombre}</option>)}
+            </Seleccion>
+          </Campo>
+          <Campo etiqueta="Nombre" ayuda="Ej. «Cribadoras».">
+            <Entrada autoFocus value={f.nombre} onChange={(e) => setF((x) => ({ ...x, nombre: e.target.value }))} />
+          </Campo>
+        </div>
+        <fieldset>
+          <legend className="text-sm font-medium mb-1.5">Equipos que hace</legend>
+          {familias.error ? <ErrorCarga error={familias.error} /> : familias.isLoading ? <Cargando filas={3} /> : (
+            <div className="grid gap-0.5 sm:grid-cols-2">
+              {(familias.data ?? []).map((c) => {
+                const otra = ocupadas.get(c.id);
+                return (
+                  <label key={c.id} className={cn("flex items-center gap-2 text-sm rounded px-2 py-1", otra ? "text-tenue" : "hover:bg-fondo cursor-pointer")}>
+                    <input type="checkbox" disabled={!!otra} checked={!otra && f.cats.has(c.id)} onChange={(e) => marcar(c.id, e.target.checked)} />
+                    <span className="flex-1 truncate">{c.nombre}</span>
+                    <span className="text-xs text-tenue cifra">{otra ? `la hace ${otra}` : `${numero(c.articulos)} modelos`}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </fieldset>
+      </form>
+    </Dialogo>
   );
 }
 
