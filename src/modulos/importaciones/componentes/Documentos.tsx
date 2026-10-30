@@ -76,7 +76,7 @@ export function Documentos({ e }: { e: Embarque }) {
     <>
       <Tarjeta>
         <EncabezadoTarjeta titulo="Documentos" explica={GLOSARIO.documentosAntesArribo} descripcion={`${listos} de ${lista.length} listos. Los marcados “antes del arribo” los pide el agente aduanal antes de que llegue.`}
-          acciones={captura && <Boton tamano="sm" onClick={() => setLeer({})}><Sparkles className="h-4 w-4" /> Leer con Claude</Boton>} />
+          acciones={captura && <Boton tamano="sm" onClick={() => setLeer({})}><Sparkles className="h-4 w-4" /> Leer con IA</Boton>} />
         {lista.length === 0 ? <Vacio icono={FileCheck2} titulo="Sin documentos" texto="Al dar de alta el embarque se arma su lista según la modalidad." /> : (
           <ul className="divide-y divide-borde border-t border-borde">
             {lista.map((d) => {
@@ -114,7 +114,7 @@ export function Documentos({ e }: { e: Embarque }) {
                           <ExternalLink className="h-3.5 w-3.5" /> Abrir
                         </Boton>)}
                     {captura && !d.archivo && tipoClaude && (
-                      <Boton variante="fantasma" tamano="sm" onClick={() => setLeer({ tipo: tipoClaude })} title="Leer con Claude y revisar antes de guardar">
+                      <Boton variante="fantasma" tamano="sm" onClick={() => setLeer({ tipo: tipoClaude })} title="Leer con IA y revisar antes de guardar">
                         <Sparkles className="h-3.5 w-3.5" /> Leer
                       </Boton>
                     )}

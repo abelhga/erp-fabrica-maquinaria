@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Boxes, PackageOpen, Plus, Trash2, X } from "lucide-react";
+import { Boxes, PackageOpen, Plus, Search, Trash2, X } from "lucide-react";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/insignia";
@@ -12,12 +12,37 @@ import { Filtro } from "@/components/datos/TablaDatos";
 import { BuscadorArticulo, type ArticuloEncontrado } from "@/components/datos/BuscadorArticulo";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
-import { cn } from "@/lib/utilidades";
+import { cn, coincide } from "@/lib/utilidades";
 import { CLAVE, consulta, usePersonalPiso, type MaterialOP } from "./datos";
 import { cifra, grupoRuta } from "./util";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 type Vista = "todo" | "falta" | "por_surtir";
+type Agrupar = "subensamble" | "categoria";
+const SIN_CATEGORIA = "Sin categoría";
+
+/** Agrupar por categoría junta lo eléctrico, lo de aire, la tornillería… (lo pidió el taller). Se recuerda por navegador. */
+function useAgrupar(): [Agrupar, (v: Agrupar) => void] {
+  const llave = "hegamex.material.agrupar";
+  const [v, setV] = useState<Agrupar>(() => {
+    try { return localStorage.getItem(llave) === "categoria" ? "categoria" : "subensamble"; } catch { return "subensamble"; }
+  });
+  return [v, (n) => { setV(n); try { localStorage.setItem(llave, n); } catch { /* modo privado: dura la pestaña */ } }];
+}
+
+/** Busca por nombre, clave, categoría o nota, sin acentos y con las palabras en cualquier orden. */
+const enBusqueda = (m: MaterialOP, buscar: string) => !buscar.trim() || coincide(`${m.nombre} ${m.clave} ${m.categoria ?? ""} ${m.notas ?? ""}`, buscar);
+
+function CajaBuscar({ valor, alCambiar, className }: { valor: string; alCambiar: (v: string) => void; className?: string }) {
+  return (
+    <label className={cn("relative block", className)}>
+      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-tenue" />
+      <input className="campo h-8 pl-8 pr-7 text-sm" value={valor} onChange={(e) => alCambiar(e.target.value)} placeholder="Buscar material o categoría…"
+             aria-label="Buscar en el material" onKeyDown={(e) => { if (e.key === "Escape") alCambiar(""); }} />
+      {valor && <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-tenue hover:text-texto" aria-label="Borrar búsqueda" onClick={() => alCambiar("")}><X className="h-3.5 w-3.5" /></button>}
+    </label>
+  );
+}
 
 /**
  * Material de la orden agrupado por subensamble: requerido, apartado, surtido y
@@ -29,18 +54,21 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
   acciones: React.ReactNode; editable: boolean;
 }) {
   const [vista, setVista] = useState<Vista>("todo");
+  const [agrupar, setAgrupar] = useAgrupar();
+  const [buscar, setBuscar] = useState("");
   const [agregando, setAgregando] = useState(false);
   const lista = material ?? [];
-  const filtradas = lista.filter((m) => vista === "todo" || (vista === "falta" ? m.faltante > 0 : m.por_surtir > 0));
+  const filtradas = lista.filter((m) => (vista === "todo" || (vista === "falta" ? m.faltante > 0 : m.por_surtir > 0)) && enBusqueda(m, buscar));
   const grupos = useMemo(() => {
     const g = new Map<string, MaterialOP[]>();
     for (const m of filtradas) {
-      const k = grupoRuta(m.ruta, equipo);
+      const k = agrupar === "categoria" ? m.categoria ?? SIN_CATEGORIA : grupoRuta(m.ruta, equipo);
       g.set(k, [...(g.get(k) ?? []), m]);
     }
-    // "Directo al equipo" primero; los subensambles en orden alfabético.
-    return [...g.entries()].sort(([a], [b]) => (a === "Directo al equipo" ? -1 : b === "Directo al equipo" ? 1 : a.localeCompare(b, "es")));
-  }, [filtradas, equipo]);
+    // Por subensamble: "Directo al equipo" primero. Por categoría: "Sin categoría" al final. Lo demás, alfabético.
+    const primero = agrupar === "categoria" ? null : "Directo al equipo", ultimo = agrupar === "categoria" ? SIN_CATEGORIA : null;
+    return [...g.entries()].sort(([a], [b]) => (a === primero || b === ultimo ? -1 : b === primero || a === ultimo ? 1 : a.localeCompare(b, "es")));
+  }, [filtradas, equipo, agrupar]);
 
   const conFaltante = lista.filter((m) => m.faltante > 0).length;
   const porSurtir = lista.filter((m) => m.por_surtir > 0).length;
@@ -66,14 +94,22 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
           {acciones}
           {editable && <Boton tamano="sm" variante="secundario" onClick={() => setAgregando(true)}><Plus className="h-3.5 w-3.5" />Agregar material</Boton>}
         </div>} />
-      <div className="px-5 pb-3">
+      <div className="px-5 pb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
         <Filtro<Vista> valor={vista} alCambiar={setVista} opciones={[
           { valor: "todo", texto: "Todo", cuenta: lista.length },
           { valor: "falta", texto: "Lo que falta", cuenta: conFaltante },
           { valor: "por_surtir", texto: "Por surtir", cuenta: porSurtir },
         ]} />
+        <span className="flex items-center gap-2 text-xs text-tenue" data-explain={GLOSARIO.agruparMaterial} data-explain-title="Agrupar por">
+          Agrupar por
+          <Filtro<Agrupar> valor={agrupar} alCambiar={setAgrupar} opciones={[
+            { valor: "subensamble", texto: "Subensamble" }, { valor: "categoria", texto: "Categoría" },
+          ]} />
+        </span>
+        {lista.length > 0 && <CajaBuscar valor={buscar} alCambiar={setBuscar} className="w-full sm:w-64 sm:ml-auto" />}
       </div>
       {error ? <ErrorCarga error={error} /> : cargando ? <Cargando filas={6} /> : filtradas.length === 0 ? (
+        buscar.trim() && lista.length > 0 ? <Vacio icono={Search} titulo={`Nada coincide con «${buscar.trim()}»`} texto="Busca por nombre, clave o categoría (por ejemplo «eléctricos» o «aire»)." /> :
         <Vacio icono={Boxes} titulo={vista === "todo" ? "La orden no tiene material" : vista === "falta" ? "No falta nada" : "Todo está surtido"}
                texto={vista === "todo" ? "Ingeniería puede agregar el material que lleva." : undefined} />
       ) : (
@@ -94,7 +130,9 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
               {grupos.map(([grupo, filas]) => (
                 <Fragment key={grupo}>
                   <tr className="hover:bg-transparent">
-                    <td colSpan={7} className="bg-fondo/70 text-xs font-semibold text-tenue uppercase tracking-wide py-1.5">{grupo}</td>
+                    <td colSpan={7} className="bg-fondo/70 text-xs font-semibold text-tenue uppercase tracking-wide py-1.5">
+                      {grupo} <span className="font-normal normal-case tracking-normal">· {filas.length}</span>
+                    </td>
                   </tr>
                   {filas.map((m) => (
                     <tr key={m.id} className={cn(m.faltante > 0 && "bg-peligro-suave/50")}>
@@ -102,6 +140,7 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
                         <p>{m.nombre}</p>
                         <p className="text-xs text-tenue flex flex-wrap items-center gap-1.5">
                           <span>{m.clave}</span>
+                          {agrupar === "categoria" ? <span>· {grupoRuta(m.ruta, equipo)}</span> : m.categoria && <span>· {m.categoria}</span>}
                           {m.agregado && <Insignia tono={m.requerido === 0 ? "aviso" : "info"}>{m.requerido === 0 ? "Fuera de lista" : "Agregado"}</Insignia>}
                           {m.del_taller && <span data-explain={GLOSARIO.consumibleTaller}><Insignia tono="neutro">Del taller</Insignia></span>}
                           {m.notas && <span className="italic truncate">{m.notas}</span>}
@@ -216,8 +255,12 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
   });
   const puedePrevio = !!corte.data && !!creadaEn && creadaEn.slice(0, 10) <= String(corte.data);
   const [previo, setPrevio] = useState(false);
+  // Por categoría (lo eléctrico junto, lo de aire junto…) y dentro, lo apartado primero.
   const pendientes = useMemo(() => material.filter((m) => m.por_surtir > 0)
-    .sort((a, b) => Number(b.apartado > 0) - Number(a.apartado > 0) || a.nombre.localeCompare(b.nombre, "es")), [material]);
+    .sort((a, b) => Number(!a.categoria) - Number(!b.categoria) || (a.categoria ?? "").localeCompare(b.categoria ?? "", "es")
+      || Number(b.apartado > 0) - Number(a.apartado > 0) || a.nombre.localeCompare(b.nombre, "es")), [material]);
+  const [buscar, setBuscar] = useState("");
+  const visibles = pendientes.filter((m) => enBusqueda(m, buscar));
   const [extras, setExtras] = useState<Extra[]>([]);
   // Con el switch de almacén, lo de las categorías consumibles sale al taller a nombre de quien recibe.
   const idsExtras = extras.map((x) => x.art.id);
@@ -260,6 +303,7 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
     setExtras([]);
     setPrevio(false);
     setRecibe("");
+    setBuscar("");
   }, [abierto]); // eslint-disable-line react-hooks/exhaustive-deps
   // Lo de la hoja se registra completo por omisión: casi siempre ya se entregó todo lo que falta.
   const cambiarPrevio = (v: boolean) => {
@@ -301,6 +345,8 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
   }
 
   const total = pendientes.filter((m) => Number(cant[m.articulo_id]) > 0).length + extras.filter((x) => Number(x.cantidad) > 0).length;
+  // Lo que tiene cantidad y la búsqueda esconde también sale: que no se olvide.
+  const ocultasConCantidad = pendientes.filter((m) => Number(cant[m.articulo_id]) > 0 && !enBusqueda(m, buscar)).length;
   const selAlmacen = (id: string, valor: string, cambiar: (v: string) => void) => {
     const lista = porArticulo.get(id) ?? [];
     if (lista.length === 0) return <span className="text-xs text-peligro">Sin existencia</span>;
@@ -340,19 +386,34 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
         )}
       </div>
       {pendientes.length === 0 && extras.length === 0 && <p className="text-sm text-tenue mb-3">Todo lo de la lista ya se surtió.</p>}
-      {pendientes.length > 0 && !previo && (
-        <div className="flex gap-2 mb-2">
-          <Boton tamano="sm" variante="fantasma" onClick={() => setCant(Object.fromEntries(pendientes.map((m) => [m.articulo_id, m.apartado > 0 ? String(Math.min(m.apartado, m.por_surtir)) : ""])))}>Proponer lo apartado</Boton>
-          <Boton tamano="sm" variante="fantasma" onClick={() => setCant({})}>Limpiar</Boton>
+      {pendientes.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-2">
+          {!previo && <>
+            <Boton tamano="sm" variante="fantasma" onClick={() => setCant(Object.fromEntries(pendientes.map((m) => [m.articulo_id, m.apartado > 0 ? String(Math.min(m.apartado, m.por_surtir)) : ""])))}>Proponer lo apartado</Boton>
+            <Boton tamano="sm" variante="fantasma" onClick={() => setCant({})}>Limpiar</Boton>
+          </>}
+          <CajaBuscar valor={buscar} alCambiar={setBuscar} className="w-full sm:w-64 sm:ml-auto" />
         </div>
       )}
-      {pendientes.length > 0 && (
+      {ocultasConCantidad > 0 && (
+        <p className="text-xs text-aviso mb-2">{ocultasConCantidad} partida(s) con cantidad no se ven por la búsqueda; también salen.</p>
+      )}
+      {pendientes.length > 0 && visibles.length === 0 && <p className="text-sm text-tenue mb-3">Nada coincide con «{buscar.trim()}».</p>}
+      {visibles.length > 0 && (
         <div className="overflow-x-auto -mx-5 px-5">
           <table className="tabla">
             <thead><tr><th>Material</th><th className="text-right">Por surtir</th><th className="text-right">Apartado</th><th className="text-right w-32">{previo ? "Ya se entregó" : "Sale"}</th>{!previo && <th className="w-56">De</th>}</tr></thead>
             <tbody>
-              {pendientes.map((m) => (
-                <tr key={m.id} className={cn(m.apartado === 0 && "text-tenue")}>
+              {visibles.map((m, i) => (
+                <Fragment key={m.id}>
+                {(i === 0 || visibles[i - 1].categoria !== m.categoria) && (
+                  <tr className="hover:bg-transparent">
+                    <td colSpan={previo ? 4 : 5} className="bg-fondo/70 text-xs font-semibold text-tenue uppercase tracking-wide py-1.5">
+                      {m.categoria ?? SIN_CATEGORIA} <span className="font-normal normal-case tracking-normal">· {visibles.filter((x) => x.categoria === m.categoria).length}</span>
+                    </td>
+                  </tr>
+                )}
+                <tr className={cn(m.apartado === 0 && "text-tenue")}>
                   <td className="max-w-[300px]"><p className="truncate text-texto" title={m.nombre}>{m.nombre}</p><p className="text-xs text-tenue">{m.clave}</p></td>
                   <td className="text-right cifra whitespace-nowrap">{cifra(m.por_surtir)} <span className="text-xs text-tenue">{m.unidad}</span></td>
                   <td className="text-right cifra">{m.apartado > 0 ? cifra(m.apartado) : "—"}</td>
@@ -363,6 +424,7 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
                   </td>
                   {!previo && <td>{existencias.isLoading ? <span className="text-xs text-tenue">…</span> : selAlmacen(m.articulo_id, alm[m.articulo_id] ?? "", (v) => setAlm((a) => ({ ...a, [m.articulo_id]: v })))}</td>}
                 </tr>
+                </Fragment>
               ))}
             </tbody>
           </table>

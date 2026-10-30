@@ -141,9 +141,9 @@ export function BorradorMensaje({ objetivo, alt = 40 }: { objetivo: ParaAnotar; 
         aria-label="Mensaje para el cliente" />
       {d?.consejo && <p className="flex gap-2 rounded-lg bg-marca-suave text-marca-texto px-3 py-2 text-xs">
         <Lightbulb className="h-4 w-4 shrink-0" /><span><b>Para ti:</b> {d.consejo}</span></p>}
-      <p className="text-xs text-tenue" data-explain={GLOSARIO.mensajeSeguimiento} data-explain-title="Mensaje con Claude">
-        {d?.simulado ? "Plantilla básica: con Claude conectado, el mensaje se escribe con lo que anotaste."
-          : d?.notas ? `Claude lo escribió con ${d.notas === 1 ? "1 nota" : `${d.notas} notas`} de esta venta. Entre más anotes qué pasó, más a la medida sale.`
+      <p className="text-xs text-tenue" data-explain={GLOSARIO.mensajeSeguimiento} data-explain-title="Mensaje con IA">
+        {d?.simulado ? "Plantilla básica: con la IA conectada, el mensaje se escribe con lo que anotaste."
+          : d?.notas ? `La IA lo escribió con ${d.notas === 1 ? "1 nota" : `${d.notas} notas`} de esta venta. Entre más anotes qué pasó, más a la medida sale.`
           : "Esta venta todavía no tiene notas: el mensaje es general. Anota lo que te diga el cliente en «¿Qué pasó?» y el siguiente saldrá a la medida."}
       </p>
       <div className="flex flex-wrap gap-2">
@@ -232,7 +232,7 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
                 <Phone className="h-3.5 w-3.5" />Llamar</a>
             </>}
             {puede("asistente", 1) && !redactar && (
-              <button type="button" onClick={() => setRedactar(true)} data-explain={GLOSARIO.mensajeSeguimiento} data-explain-title="Mensaje con Claude"
+              <button type="button" onClick={() => setRedactar(true)} data-explain={GLOSARIO.mensajeSeguimiento} data-explain-title="Mensaje con IA"
                 className="inline-flex items-center gap-1 rounded-md border border-marca/30 bg-marca-suave text-marca-texto px-2 py-1 text-xs hover:ring-1 hover:ring-marca/40">
                 <Sparkles className="h-3.5 w-3.5" />Redactar mensaje</button>
             )}
@@ -348,7 +348,7 @@ export function ColaSeguimientos({ filas, cargando, conVendedor }: { filas: Segu
                   {s.telefono && <a href={enlaceWhatsApp(s.telefono, "")} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp a ${s.cliente ?? "cliente"}`}
                     className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-borde text-tenue hover:text-texto hover:bg-fondo"><MessageCircle className="h-4 w-4" /></a>}
                   {puede("asistente", 1) && <button type="button" onClick={() => setParaMensaje(s)} aria-label={`Redactar mensaje para ${s.cliente ?? "el cliente"}`}
-                    data-explain={GLOSARIO.mensajeSeguimiento} data-explain-title="Mensaje con Claude"
+                    data-explain={GLOSARIO.mensajeSeguimiento} data-explain-title="Mensaje con IA"
                     className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg border border-marca/30 bg-marca-suave text-marca-texto text-xs font-medium hover:ring-1 hover:ring-marca/40"><Sparkles className="h-4 w-4" />Mensaje</button>}
                   <Boton tamano="sm" variante={s.vence <= hoy ? "primario" : "secundario"} onClick={() => setActual(s.id)}>¿Qué pasó?</Boton>
                 </div>

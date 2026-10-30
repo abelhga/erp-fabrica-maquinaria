@@ -52,7 +52,7 @@ export function AyudaRespuesta({ preguntaId, alPoner }: { preguntaId: number; al
         <div className="text-xs space-y-0.5">
           {nota.usados.length > 0 && <p className="text-tenue">Usó: {nota.usados.join(" · ")}</p>}
           {nota.falta && <p className="text-aviso">Revisa antes de mandar: {nota.falta}</p>}
-          {nota.simulado && <p className="text-tenue">Sin Claude: es un arranque, complétala.</p>}
+          {nota.simulado && <p className="text-tenue">Sin IA: es un arranque, complétala.</p>}
         </div>
       )}
     </div>
@@ -66,13 +66,13 @@ export function DialogoDatosContestar({ abierto, alCambiar }: { abierto: boolean
   const [texto, setTexto] = useState("");
   const [nueva, setNueva] = useState({ titulo: "", texto: "" });
   useEffect(() => { if (politicas.data != null) setTexto(politicas.data); }, [politicas.data]);
-  const guardar = useAccion(() => q(supabase.rpc("fijar_politicas_ml", { p_texto: texto })), { exito: "Guardado: Claude ya contesta con esto", invalidar: [["politicas_ml"]] });
+  const guardar = useAccion(() => q(supabase.rpc("fijar_politicas_ml", { p_texto: texto })), { exito: "Guardado: la IA ya contesta con esto", invalidar: [["politicas_ml"]] });
   const agregar = useAccion(() => q(supabase.from("ml_respuestas_rapidas").insert({ titulo: nueva.titulo.trim(), texto: nueva.texto.trim() })),
     { exito: "Respuesta rápida agregada", invalidar: [CLAVE_RAPIDAS], alTerminar: () => setNueva({ titulo: "", texto: "" }) });
   const quitar = useAccion((id: string) => q(supabase.from("ml_respuestas_rapidas").delete().eq("id", id)), { exito: "Quitada", invalidar: [CLAVE_RAPIDAS] });
   return (
     <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="Datos para contestar" ancho="max-w-2xl"
-      descripcion="Lo que siempre aplica en Mercado Libre. Claude lo toma como la verdad de la empresa al sugerir respuestas.">
+      descripcion="Lo que siempre aplica en Mercado Libre. La IA lo toma como la verdad de la empresa al sugerir respuestas.">
       <div className="space-y-5">
         <Campo etiqueta="Lo que siempre aplica" ayuda="Factura, tiempos de envío, garantía, horario, si se hacen medidas especiales… Un dato por renglón.">
           <textarea className="campo min-h-[140px]" value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={4000}

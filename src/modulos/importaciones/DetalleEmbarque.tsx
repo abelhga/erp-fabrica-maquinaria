@@ -50,7 +50,7 @@ export default function DetalleEmbarque() {
         <Boton asChild variante="fantasma"><Link to="/importaciones"><ArrowLeft className="h-4 w-4" /> Embarques</Link></Boton>
         {e.carpeta_url && <Boton asChild variante="secundario"><a href={e.carpeta_url} target="_blank" rel="noreferrer"><FolderOpen className="h-4 w-4" /> Expediente</a></Boton>}
         {puede("importaciones", 2) && <Boton variante="secundario" onClick={() => setEditando(true)}><Pencil className="h-4 w-4" /> Datos</Boton>}
-        {puede("importaciones", 2) && <Boton onClick={() => setLeyendo(true)}><Sparkles className="h-4 w-4" /> Leer con Claude</Boton>}
+        {puede("importaciones", 2) && <Boton onClick={() => setLeyendo(true)}><Sparkles className="h-4 w-4" /> Leer con IA</Boton>}
       </>}
     >
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">

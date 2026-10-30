@@ -405,6 +405,7 @@ async function consultar(db: SupabaseClient, e: Record<string, unknown>): Promis
 // cobre completa en cada pregunta; lo de cada persona va en un bloque aparte.
 // -----------------------------------------------------------------------------
 const INSTRUCCIONES = `Eres el asistente del ERP de Hegamex (Máquinas y Herramientas Gamex S.A. de C.V., Atotonilco el Alto, Jalisco).
+Si te preguntan qué IA o qué modelo eres, di que eres el asistente con IA del ERP; no nombres al proveedor ni al modelo (la empresa puede cambiarlo).
 
 Hegamex fabrica bandas transportadoras, dosificadoras, cribadoras, tolvas, silos, elevadores de cangilones y bazucas, y vende componentes (colectores, poleas, cangilones, catarinas, cosedoras de costales) directo, por Mercado Libre y por su sitio web. Sus clientes son agrícolas, mineros, concreteras, constructoras, destilerías de tequila e industria.
 
@@ -455,11 +456,11 @@ export const mismaVista = (c: unknown, p: Pick<Perfil, "roles">) => (c as { role
 // -----------------------------------------------------------------------------
 export function explicarError(e: unknown): { mensaje: string; codigo: string } {
   if (e instanceof Anthropic.AuthenticationError)
-    return { codigo: "llave", mensaje: "La llave de Claude no es válida. Sistemas tiene que revisar ANTHROPIC_API_KEY en Supabase." };
+    return { codigo: "llave", mensaje: "La llave de la IA no es válida. Sistemas tiene que revisarla en los secretos de Supabase." };
   if (e instanceof Anthropic.RateLimitError)
-    return { codigo: "saturado", mensaje: "Claude está recibiendo demasiadas consultas. Intenta en un minuto." };
+    return { codigo: "saturado", mensaje: "La IA está recibiendo demasiadas consultas. Intenta en un minuto." };
   if (e instanceof Anthropic.APIConnectionError)
-    return { codigo: "red", mensaje: "No hubo conexión con Claude. Intenta de nuevo." };
+    return { codigo: "red", mensaje: "No hubo conexión con la IA. Intenta de nuevo." };
   if (e instanceof Anthropic.APIError) {
     // El mensaje de la API se queda en el log de la función: "tope de gasto" cubre
     // varios rechazos (402, 403, 400 sin reintento) y sin el original no se sabe
@@ -470,9 +471,9 @@ export function explicarError(e: unknown): { mensaje: string; codigo: string } {
     // facturación cuando lo que fallaba era el esquema del BL.
     const deCuenta = /usage limit|credit balance|billing|spend/i.test(e.message);
     if (e.type === "billing_error" || e.status === 402 || e.status === 403 || (e.status === 400 && deCuenta))
-      return { codigo: "cuenta", mensaje: "La cuenta de Claude no aceptó la consulta (tope de gasto o facturación). Se sube en console.anthropic.com → Settings → Limits." };
-    if ((e.status ?? 0) >= 500) return { codigo: "saturado", mensaje: "Claude tuvo un problema de su lado. Intenta en un minuto." };
-    return { codigo: "api", mensaje: `Claude no aceptó la consulta (${e.status}).` };
+      return { codigo: "cuenta", mensaje: "La cuenta de la IA no aceptó la consulta (tope de gasto o facturación). Sistemas lo sube en la consola del proveedor de la IA, en Settings → Limits." };
+    if ((e.status ?? 0) >= 500) return { codigo: "saturado", mensaje: "El servicio de IA tuvo un problema de su lado. Intenta en un minuto." };
+    return { codigo: "api", mensaje: `La IA no aceptó la consulta (${e.status}).` };
   }
   if (e instanceof ErrorHerramienta) return { codigo: "datos", mensaje: e.message };
   return { codigo: "interno", mensaje: "Algo falló en el asistente. Intenta de nuevo." };
@@ -624,10 +625,10 @@ export async function resumir(opts: { anthropic: Pick<Anthropic, "beta">; db: Su
     }],
   });
   const r = await flujo.finalMessage();
-  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso escribir este resumen.");
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("La IA no quiso escribir este resumen.");
   if (r.stop_reason === "max_tokens") throw new ErrorHerramienta("El resumen salió demasiado largo; intenta de nuevo.");
   const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
-  if (!bloque) throw new ErrorHerramienta("Claude no devolvió el resumen.");
+  if (!bloque) throw new ErrorHerramienta("La IA no devolvió el resumen.");
   const resumen = JSON.parse(bloque.text) as Resumen;
   return { resumen, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
 }
@@ -640,7 +641,7 @@ export async function resumenSinIA(db: SupabaseClient, area: Area): Promise<Resu
   return {
     titular: bueno?.titulo ?? (hallazgos[0]?.titulo ?? "Sin pendientes urgentes hoy"),
     resumen: hallazgos.length
-      ? `${riesgos ? `${riesgos} ${riesgos === 1 ? "riesgo pide" : "riesgos piden"} atención hoy. ` : ""}Esto sale de las reglas de la base; con la llave de Claude conectada el asistente además los cruza y propone qué hacer.`
+      ? `${riesgos ? `${riesgos} ${riesgos === 1 ? "riesgo pide" : "riesgos piden"} atención hoy. ` : ""}Esto sale de las reglas de la base; con la llave de la IA conectada el asistente además los cruza y propone qué hacer.`
       : "No hay nada fuera de lo normal en lo que puedes ver.",
     puntos: hallazgos.slice(0, 6).map((h) => ({
       tono: h.tono as Resumen["puntos"][number]["tono"], titulo: h.titulo, detalle: h.detalle,
@@ -685,10 +686,10 @@ export async function resumirSemana(opts: { anthropic: Pick<Anthropic, "beta">; 
     }],
   });
   const r = await flujo.finalMessage();
-  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso escribir este resumen.");
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("La IA no quiso escribir este resumen.");
   if (r.stop_reason === "max_tokens") throw new ErrorHerramienta("El resumen salió demasiado largo; intenta de nuevo.");
   const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
-  if (!bloque) throw new ErrorHerramienta("Claude no devolvió el resumen.");
+  if (!bloque) throw new ErrorHerramienta("La IA no devolvió el resumen.");
   const resumen = JSON.parse(bloque.text) as Resumen;
   return { resumen, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
 }
@@ -729,7 +730,7 @@ export function semanaSinIA(n: NumerosSemana): Resumen {
   const rutas = RUTAS as readonly string[];
   return {
     titular: v ? `La semana pasada: ${pesos(v.monto)} en ventas${cambio(v.monto, v.monto_anterior)}` : "Tu semana en números",
-    resumen: "Estos son los números de la base, sin interpretación; con la llave de Claude conectada el asistente además los cruza y propone qué hacer.",
+    resumen: "Estos son los números de la base, sin interpretación; con la llave de la IA conectada el asistente además los cruza y propone qué hacer.",
     puntos: puntos.slice(0, 6).map((x) => ({ ...x, ruta: rutas.includes(x.ruta) ? x.ruta : "/" })),
   };
 }
@@ -769,7 +770,7 @@ export async function redactar(opts: {
     }],
   });
   const r = await flujo.finalMessage();
-  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso redactar este mensaje.");
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("La IA no quiso redactar este mensaje.");
   const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
   if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("No salió el mensaje; intenta de nuevo.");
   return { ...(JSON.parse(bloque.text) as { asunto: string; mensaje: string }), modelo: r.model,
@@ -855,7 +856,7 @@ export async function redactarSeguimiento(opts: { anthropic: Pick<Anthropic, "be
     }],
   });
   const r = await flujo.finalMessage();
-  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso redactar este mensaje.");
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("La IA no quiso redactar este mensaje.");
   const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
   if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("No salió el mensaje; intenta de nuevo.");
   return { ...(JSON.parse(bloque.text) as { mensaje: string; consejo: string }), modelo: r.model,
@@ -969,7 +970,7 @@ export async function redactarRespuestaML(opts: { anthropic: Pick<Anthropic, "be
     }],
   });
   const r = await flujo.finalMessage();
-  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso sugerir esta respuesta.");
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("La IA no quiso sugerir esta respuesta.");
   const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
   if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("No salió la respuesta; intenta de nuevo.");
   const x = JSON.parse(bloque.text) as { respuesta: string; usados: string[]; falta: string };
@@ -994,7 +995,7 @@ export function respuestaMLSinIA(d: DatosRespuestaML) {
   const respuesta = "¡Hola! Gracias por tu pregunta. " +
     (hay != null ? (hay > 0 ? `Sí tenemos disponible${a?.nombre ? ` ${a.nombre}` : ""}. ` : "Por ahora lo fabricamos o surtimos sobre pedido. ") : "") +
     "Quedamos atentos para cualquier otra duda.";
-  return { respuesta, usados: hay != null ? [`${hay} disponibles en planta`] : [], falta: "Sin Claude: completa la respuesta con la ficha de abajo." };
+  return { respuesta, usados: hay != null ? [`${hay} disponibles en planta`] : [], falta: "Sin IA: completa la respuesta con la ficha de abajo." };
 }
 
 // -----------------------------------------------------------------------------
@@ -1034,7 +1035,7 @@ export async function pulirDescripcion(opts: {
     messages: [{ role: "user", content: `${opts.tipo === "equipo" ? "Equipo" : "Artículo"}: ${opts.nombre}\nDescripción:\n${opts.texto}` }],
   });
   const r = await flujo.finalMessage();
-  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso corregir este texto.");
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("La IA no quiso corregir este texto.");
   const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
   if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("No salió el texto corregido; intenta de nuevo.");
   const salida = JSON.parse(bloque.text) as { texto: string; dudas: string[] };
@@ -1314,22 +1315,22 @@ export async function leerDocumento(opts: {
     }],
   });
   const r = await flujo.finalMessage();
-  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso leer este documento. Captúralo a mano.");
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("La IA no quiso leer este documento. Captúralo a mano.");
   if (r.stop_reason === "max_tokens") throw new ErrorHerramienta("El documento es demasiado largo para leerlo de una vez: sube solo las páginas que importan.");
   const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
-  if (!bloque) throw new ErrorHerramienta("Claude no devolvió los datos del documento.");
+  if (!bloque) throw new ErrorHerramienta("La IA no devolvió los datos del documento.");
   let campos: unknown;
-  try { campos = JSON.parse(bloque.text); } catch { throw new ErrorHerramienta("Claude devolvió algo que no se puede leer. Intenta de nuevo."); }
+  try { campos = JSON.parse(bloque.text); } catch { throw new ErrorHerramienta("La IA devolvió algo que no se puede leer. Intenta de nuevo."); }
   const errores = validarEsquema(campos, doc.esquema);
   if (errores.length) {
-    throw new ErrorHerramienta(`Claude devolvió datos que no cumplen el formato (${errores.slice(0, 3).join("; ")}). No se guardó nada: intenta de nuevo o captúralo a mano.`);
+    throw new ErrorHerramienta(`La IA devolvió datos que no cumplen el formato (${errores.slice(0, 3).join("; ")}). No se guardó nada: intenta de nuevo o captúralo a mano.`);
   }
   return { campos: campos as Record<string, unknown>, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
 }
 
 /** Sin llave de Claude: un ejemplo con la forma de cada documento, marcado como tal. */
 export function ejemploDocumento(tipo: TipoDocumento): Record<string, unknown> {
-  const aviso = ["MODO DEMOSTRACIÓN: falta la llave de Claude. Estos datos son un ejemplo, no se leyeron de tu archivo."];
+  const aviso = ["MODO DEMOSTRACIÓN: falta la llave de la IA. Estos datos son un ejemplo, no se leyeron de tu archivo."];
   const partida = (descripcion: string, modelo: string, cantidad: number, precio: number) =>
     ({ descripcion, modelo, cantidad, unidad: "pcs", precio_unitario: precio, importe: cantidad * precio });
   switch (tipo) {
@@ -1480,10 +1481,10 @@ export async function sugerirMejoras(opts: { anthropic: Pick<Anthropic, "beta">;
     }],
   });
   const r = await flujo.finalMessage();
-  if (r.stop_reason === "refusal") throw new ErrorHerramienta("Claude no quiso sugerir mejoras con estos datos.");
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("La IA no quiso sugerir mejoras con estos datos.");
   if (r.stop_reason === "max_tokens") throw new ErrorHerramienta("Las sugerencias salieron demasiado largas; intenta de nuevo.");
   const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
-  if (!bloque) throw new ErrorHerramienta("Claude no devolvió sugerencias.");
+  if (!bloque) throw new ErrorHerramienta("La IA no devolvió sugerencias.");
   const sugerencias = JSON.parse(bloque.text) as Sugerencias;
   const fallas = validarEsquema(sugerencias, esquema as Esquema);
   if (fallas.length) throw new ErrorHerramienta("Las sugerencias llegaron incompletas; intenta de nuevo.");
@@ -1518,7 +1519,7 @@ export function mejorasSinIA(d: DatosMejoras): Sugerencias {
       evidencia: "Lo que el piso reportó y todavía no tiene mejora.", ahorro_horas_mes: 0 });
   }
   return {
-    lectura: "Modo demostración: falta conectar la llave de Claude, así que estas sugerencias salen de reglas fijas sobre los mismos datos.",
+    lectura: "Modo demostración: falta conectar la llave de la IA, así que estas sugerencias salen de reglas fijas sobre los mismos datos.",
     sugerencias: sugerencias.slice(0, 6),
   };
 }
@@ -1589,7 +1590,7 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
       const { data: cupo } = await db.rpc("asistente_cupo");
       if (typeof cupo === "number" && cupo <= 0) {
         const r = await resumenSinIA(db, area);
-        return json({ ...r, generado_en: new Date().toISOString(), simulado: true, aviso: "Sin consultas de Claude por hoy: estos son los hallazgos de la base." });
+        return json({ ...r, generado_en: new Date().toISOString(), simulado: true, aviso: "Sin consultas de IA por hoy: estos son los hallazgos de la base." });
       }
       const r = await resumir({ anthropic, db, perfil, config, area });
       await Promise.all([
@@ -1614,7 +1615,7 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
       const { data: cupo } = anthropic ? await db.rpc("asistente_cupo") : { data: 0 };
       if (!anthropic || (typeof cupo === "number" && cupo <= 0))
         return json({ ...semanaSinIA(numeros), numeros, generado_en: new Date().toISOString(), simulado: true,
-          ...(anthropic ? { aviso: "Sin consultas de Claude por hoy: estos son los números de la base." } : {}) });
+          ...(anthropic ? { aviso: "Sin consultas de IA por hoy: estos son los números de la base." } : {}) });
       const r = await resumirSemana({ anthropic, perfil, config, numeros });
       await Promise.all([
         registrar(r),
@@ -1638,7 +1639,7 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
       const { data: cupo } = anthropic ? await db.rpc("asistente_cupo") : { data: 0 };
       if (!anthropic || (typeof cupo === "number" && cupo <= 0))
         return json({ ...mejorasSinIA(datos), generado_en: new Date().toISOString(), simulado: true,
-          ...(anthropic ? { aviso: "Sin consultas de Claude por hoy: estas salen de reglas sobre los mismos datos." } : {}) });
+          ...(anthropic ? { aviso: "Sin consultas de IA por hoy: estas salen de reglas sobre los mismos datos." } : {}) });
       // Claude tarda alrededor de un minuto, y Safari en el celular corta una petición que pasa
       // un minuto sin recibir nada: el 23 oct las sugerencias se hicieron (63 s) pero no llegaron.
       // Se manda una línea vacía cada 15 s y al final el resultado, como evento.
@@ -1720,7 +1721,7 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
       const tipo = texto(cuerpo.tipo) as TipoDocumento;
       if (!(tipo in DOCUMENTOS)) return json({ error: "Tipo de documento desconocido" }, 400);
       const mediaType = texto(cuerpo.media_type) as TipoArchivo;
-      if (!TIPOS_ARCHIVO.includes(mediaType)) return json({ error: "Claude lee PDF, JPG o PNG" }, 400);
+      if (!TIPOS_ARCHIVO.includes(mediaType)) return json({ error: "La IA lee PDF, JPG o PNG" }, 400);
       const datos = texto(cuerpo.datos);
       if (!datos || !/^[A-Za-z0-9+/]+=*$/.test(datos)) return json({ error: "Falta el archivo" }, 400);
       if (datos.length > MAX_BASE64) return json({ error: "El archivo pesa más de 15 MB: sube solo las páginas que importan." }, 413);
@@ -1746,7 +1747,7 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
             if (!anthropic) {
               const r = await resumenSinIA(db, ruta?.startsWith("/ventas") ? "ventas" : "direccion");
               emitir({ tipo: "texto", texto:
-                "Estoy en **modo demostración**: falta conectar la llave de Claude (`ANTHROPIC_API_KEY`), así que todavía no puedo contestar preguntas abiertas.\n\n" +
+                "Estoy en **modo demostración**: falta conectar la llave de la IA, así que todavía no puedo contestar preguntas abiertas.\n\n" +
                 "Mientras, esto es lo que la base marca hoy:\n\n" + r.puntos.map((p) => `- **${p.titulo}.** ${p.detalle} [Ver](${p.ruta})`).join("\n") });
               emitir({ tipo: "fin", modelo: "demostracion", simulado: true });
             } else {

@@ -19,7 +19,7 @@ export const COMPRAS: Record<string, AyudaPantalla> = {
   ],
   "/compras/ordenes/nueva": [
     "Para armar una orden de compra nueva. Empieza por el proveedor: de él salen la moneda, el crédito y los días de entrega.",
-    "Si tienes la cotización del proveedor en PDF o foto, súbela: Claude lee las partidas y las empareja con el catálogo, y tú revisas todo antes de crear la orden. Si no, elige al proveedor y «Crear orden en borrador»; las partidas se agregan después.",
+    "Si tienes la cotización del proveedor en PDF o foto, súbela: la IA lee las partidas y las empareja con el catálogo, y tú revisas todo antes de crear la orden. Si no, elige al proveedor y «Crear orden en borrador»; las partidas se agregan después.",
   ],
   "/compras/ordenes/:id": [
     "Una orden de compra completa: sus partidas, los datos para el proveedor, lo que ya se recibió en almacén y, para quien ve dinero, sus pagos.",

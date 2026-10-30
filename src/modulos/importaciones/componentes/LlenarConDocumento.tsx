@@ -105,14 +105,14 @@ export function LlenarConDocumento({ leido, alLeer, alQuitar, llenados }: {
 
   const leer = async (f: File) => {
     setError(null);
-    if (!["application/pdf", "image/jpeg", "image/png"].includes(f.type)) { setError("Claude lee PDF, JPG o PNG."); return; }
+    if (!["application/pdf", "image/jpeg", "image/png"].includes(f.type)) { setError("La IA lee PDF, JPG o PNG."); return; }
     if (f.size > 15 * 1024 * 1024) { setError("El archivo pesa más de 15 MB: sube solo las páginas que importan."); return; }
     setArchivo(f); setLeyendo(true);
     abortar.current = new AbortController();
     try {
       const r = await leerDocumento(tipo, f, abortar.current.signal);
       // En modo demostración los datos son un ejemplo: no se meten al alta de algo real.
-      if (r.simulado) { setError("Falta conectar la llave de Claude: por ahora llena el alta a mano."); return; }
+      if (r.simulado) { setError("Falta conectar la llave de la IA: por ahora llena el alta a mano."); return; }
       alLeer({ tipo, archivo: f, campos: r.campos });
     } catch (e) {
       if ((e as Error).name !== "AbortError") setError(mensajeError(e));
@@ -126,7 +126,7 @@ export function LlenarConDocumento({ leido, alLeer, alQuitar, llenados }: {
         <div className="flex items-start gap-3">
           <Sparkles className="h-5 w-5 text-marca shrink-0 mt-0.5" />
           <p className="text-sm flex-1 min-w-0">
-            <b>Claude llenó {llenados} {llenados === 1 ? "campo" : "campos"}</b> desde {EL_DOC[leido.tipo]}{" "}
+            <b>La IA llenó {llenados} {llenados === 1 ? "campo" : "campos"}</b> desde {EL_DOC[leido.tipo]}{" "}
             <span className="text-tenue">({leido.archivo.name})</span>. Revísalos: van marcados. El archivo se guarda en el expediente al dar de alta.
           </p>
           {vista && (
@@ -153,7 +153,7 @@ export function LlenarConDocumento({ leido, alLeer, alQuitar, llenados }: {
       <div className="flex flex-wrap items-center gap-3">
         <Sparkles className="h-5 w-5 text-marca shrink-0" />
         <p className="text-sm flex-1 min-w-[200px]">
-          <b>¿Ya tienes el documento?</b> Súbelo y Claude llena el embarque. <span className="text-tenue">PDF o foto, escaneado o en chino.</span>
+          <b>¿Ya tienes el documento?</b> Súbelo y la IA llena el embarque. <span className="text-tenue">PDF o foto, escaneado o en chino.</span>
         </p>
         <Seleccion className="w-auto h-9" value={tipo} onChange={(e) => setTipo(e.target.value as TipoAlta)} disabled={leyendo} aria-label="Qué documento es">
           {Object.entries(TIPOS_ALTA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -164,7 +164,7 @@ export function LlenarConDocumento({ leido, alLeer, alQuitar, llenados }: {
         <input ref={entrada} type="file" accept="application/pdf,image/jpeg,image/png" className="hidden" aria-label="Documento para llenar el embarque"
           onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) leer(f); }} />
       </div>
-      {leyendo && <p className="mt-2 text-sm text-tenue flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Claude está leyendo {archivo?.name}… (unos segundos)</p>}
+      {leyendo && <p className="mt-2 text-sm text-tenue flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> La IA está leyendo {archivo?.name}… (unos segundos)</p>}
       {error && <p className="mt-2 text-sm text-peligro flex items-start gap-2"><AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />{error}</p>}
     </div>
   );

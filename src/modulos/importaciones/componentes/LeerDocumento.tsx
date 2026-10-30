@@ -66,7 +66,7 @@ export function LeerDocumento({ abierto, alCambiar, embarque, tipoInicial }: {
   const elegir = (f: File | undefined | null) => {
     setResultado(null); setError(null);
     if (!f) return;
-    if (!["application/pdf", "image/jpeg", "image/png"].includes(f.type)) { setError("Claude lee PDF, JPG o PNG."); return; }
+    if (!["application/pdf", "image/jpeg", "image/png"].includes(f.type)) { setError("La IA lee PDF, JPG o PNG."); return; }
     if (f.size > 15 * 1024 * 1024) { setError("El archivo pesa más de 15 MB: sube solo las páginas que importan."); return; }
     setArchivo(f);
   };
@@ -110,7 +110,7 @@ export function LeerDocumento({ abierto, alCambiar, embarque, tipoInicial }: {
 
   return (
     <Dialogo abierto={abierto} alCambiar={alCambiar} ancho={resultado ? "max-w-6xl" : "max-w-xl"}
-      titulo={<span className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-marca" /> Leer documento con Claude</span>}
+      titulo={<span className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-marca" /> Leer documento con IA</span>}
       descripcion={resultado ? "Revisa lo que leyó junto al archivo. Corrige lo que haga falta: nada se guarda hasta que confirmes." : `${embarque.folio} · ${embarque.descripcion}`}
       pie={resultado ? <>
         <Boton variante="secundario" onClick={() => { setResultado(null); }}>Leer otro</Boton>
@@ -119,7 +119,7 @@ export function LeerDocumento({ abierto, alCambiar, embarque, tipoInicial }: {
         </Boton>
       </> : <>
         <Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
-        <Boton onClick={leer} cargando={leyendo} disabled={!archivo}><Sparkles className="h-4 w-4" /> Leer con Claude</Boton>
+        <Boton onClick={leer} cargando={leyendo} disabled={!archivo}><Sparkles className="h-4 w-4" /> Leer con IA</Boton>
       </>}>
       {!resultado ? (
         <div className="space-y-4">
@@ -140,7 +140,7 @@ export function LeerDocumento({ abierto, alCambiar, embarque, tipoInicial }: {
             <p className="text-xs text-tenue mt-1">{archivo ? `${(archivo.size / 1024).toFixed(0)} KB` : "PDF, JPG o PNG de hasta 15 MB. Sirve escaneado o en chino."}</p>
             <input ref={entrada} type="file" accept="application/pdf,image/jpeg,image/png" className="hidden" onChange={(e) => elegir(e.target.files?.[0])} aria-label="Archivo" />
           </div>
-          {leyendo && <p className="text-sm text-tenue flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Claude está leyendo el documento…</p>}
+          {leyendo && <p className="text-sm text-tenue flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> La IA está leyendo el documento…</p>}
           {error && <p className="text-sm text-peligro flex items-start gap-2"><AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />{error}</p>}
           <p className="text-xs text-tenue">{TIPOS_CLAUDE[tipo].efecto}</p>
         </div>
@@ -156,7 +156,7 @@ export function LeerDocumento({ abierto, alCambiar, embarque, tipoInicial }: {
           <div className="space-y-4 min-w-0">
             {resultado.simulado && (
               <div className="rounded-lg border border-aviso/40 bg-aviso-suave text-aviso px-3 py-2 text-sm">
-                <b>Modo demostración.</b> Falta conectar la llave de Claude: estos datos son un ejemplo, no salen de tu archivo, y no se pueden guardar.
+                <b>Modo demostración.</b> Falta conectar la llave de la IA: estos datos son un ejemplo, no salen de tu archivo, y no se pueden guardar.
               </div>
             )}
             {advertencias.length > 0 && !resultado.simulado && (
