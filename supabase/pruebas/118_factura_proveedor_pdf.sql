@@ -5,7 +5,7 @@ declare v_fin uuid; v_ven uuid; v_prov uuid; v_id uuid; v_uuid text := 'AAAABBBB
 begin
   v_fin := pg_temp.usuario('fin118@hegamex.com', '{ventas,administracion}');
   v_ven := pg_temp.usuario('ven118@hegamex.com', '{ventas}');
-  insert into proveedores (nombre, rfc, dias_credito) values ('T118 Rodamientos', 'TRO010101AB1', 30) returning id into v_prov;
+  insert into proveedores (nombre, rfc, dias_credito, categoria) values ('T118 Rodamientos', 'TRO010101AB1', 30, 'Rodamientos y chumaceras') returning id into v_prov;
 
   perform pg_temp.como(v_fin);
   v_id := registrar_movimiento_proveedor(p_proveedor => v_prov, p_tipo => 'compra', p_monto => 1160, p_factura => 'A 1',

@@ -7,8 +7,9 @@ begin
   v_fin := pg_temp.usuario('fin131@hegamex.com', '{finanzas}');
   v_comp := pg_temp.usuario('comp131@hegamex.com', '{compras}');
   v_ven := pg_temp.usuario('ven131@hegamex.com', '{ventas}');
-  insert into proveedores (nombre) values ('T131 Doris') returning id into v_prov;
-  insert into proveedores (nombre) values ('T131 Otra') returning id into v_otro;
+  -- Con categoría: sin orden de compra es obligatoria (203).
+  insert into proveedores (nombre, categoria) values ('T131 Doris', 'Publicidad') returning id into v_prov;
+  insert into proveedores (nombre, categoria) values ('T131 Otra', 'Publicidad') returning id into v_otro;
   insert into historial_compras_hoja (fecha, proveedor_id, proveedor_nombre, proveedor_llave, tipo, monto, factura) values
     (current_date - 30, v_prov, 'T131 Doris', 't131', 'Compra', 1000, 'H-500');
   insert into historial_compras_hoja (fecha, proveedor_id, proveedor_nombre, proveedor_llave, tipo, monto, factura)

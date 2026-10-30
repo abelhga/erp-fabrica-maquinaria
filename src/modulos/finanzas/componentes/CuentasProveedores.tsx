@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Ban, FilePlus2, Link2, Pencil, Trash2, Undo2, Users, Wallet } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Ban, ClipboardList, FilePlus2, Link2, Pencil, Trash2, Undo2, Users, Wallet } from "lucide-react";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { Lateral } from "@/components/ui/dialogo";
 import { Insignia } from "@/components/ui/insignia";
@@ -19,6 +20,7 @@ import {
 } from "./cuentas";
 import { BotonRepetida, DialogoNoCuenta, InsigniaRepetida, type Ignorada } from "./Repetida";
 import { SelectorProveedor } from "@/modulos/compras/componentes/comun";
+import { DialogoLigarOrdenes } from "./ElegirOrdenes";
 
 /**
  * Cuenta de cada proveedor: lo que venía en el libro de compras de la hoja más lo que se
@@ -69,7 +71,7 @@ export function CuentasProveedores({ cuentas, cargando, error, alAbrir, vistaIni
 }
 
 interface MovErp {
-  id: string; fecha: string; tipo: "compra" | "pago" | "reembolso_pendiente" | "reembolso_realizado"; monto: number; cuenta: string | null;
+  id: string; proveedor_id: string; fecha: string; tipo: "compra" | "pago" | "reembolso_pendiente" | "reembolso_realizado"; monto: number; cuenta: string | null;
   factura: string | null; descripcion: string | null; categoria: string | null; vence_el: string | null; metodo_pago: string | null; en_hoja: boolean;
 }
 interface MovHoja { id: number; fecha: string; tipo: string; monto: number; cuenta: string | null; descripcion: string | null; factura: string | null }
@@ -102,7 +104,7 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
   });
   const erp = useQuery({
     queryKey: ["v_movimientos_proveedor", llave], enabled: !!llave,
-    queryFn: () => q<MovErp[]>(supabase.from("v_movimientos_proveedor").select("id, fecha, tipo, monto, cuenta, factura, descripcion, categoria, vence_el, metodo_pago, en_hoja")
+    queryFn: () => q<MovErp[]>(supabase.from("v_movimientos_proveedor").select("id, proveedor_id, fecha, tipo, monto, cuenta, factura, descripcion, categoria, vence_el, metodo_pago, en_hoja")
       .eq("proveedor_llave", llave!).order("fecha", { ascending: false })),
   });
   const hoja = useQuery({
@@ -116,6 +118,15 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
     queryFn: () => q<Ignorada[]>(supabase.from("v_compras_hoja_ignoradas").select("id, motivo, marcada_en, razon")
       .in("id", (hoja.data ?? []).filter((m) => m.tipo === "Compra" || m.tipo === "Pago").map((m) => m.id))),
   });
+  // De qué orden de compra es cada compra del ERP (la categoría sale de sus partidas).
+  const idsCompras = (erp.data ?? []).filter((m) => m.tipo === "compra").map((m) => m.id);
+  const ligas = useQuery({
+    queryKey: ["compra_oc", llave, idsCompras.join()], enabled: idsCompras.length > 0,
+    queryFn: () => q<{ movimiento_id: string; orden_compra_id: string; como: "folio" | "a_mano"; ordenes_compra: { folio: string } | null }[]>(
+      supabase.from("compra_oc").select("movimiento_id, orden_compra_id, como, ordenes_compra(folio)").in("movimiento_id", idsCompras) as never),
+  });
+  const ordenesDe = (id: string) => (ligas.data ?? []).filter((x) => x.movimiento_id === id);
+  const [ligando, setLigando] = useState<MovErp | null>(null);
   const [noCuenta, setNoCuenta] = useState<Renglon | null>(null);
   const [ligarA, setLigarA] = useState<{ id: string; nombre: string } | null>(null);
   const ligar = useAccion(() => q<number>(supabase.rpc("ligar_hoja_proveedor", { p_llave: llave, p_proveedor: ligarA!.id })),
@@ -197,10 +208,23 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
                   {m.erp?.metodo_pago && <span className="text-xs text-tenue">{m.erp.metodo_pago}</span>}
                   {m.factura && <span className="text-tenue">Fact. {m.factura}</span>}
                   {m.cuenta && <span className="text-tenue">{m.cuenta}</span>}
+                  {m.erp && ordenesDe(m.erp.id).map((x) => (
+                    <span key={x.orden_compra_id} data-explain={GLOSARIO.ordenDeLaFactura} data-explain-title="Orden de compra de la factura">
+                      {puede("compras") ? <Link to={`/compras/ordenes/${x.orden_compra_id}`} onClick={(e) => e.stopPropagation()}><Insignia tono="marca">{x.ordenes_compra?.folio}</Insignia></Link>
+                        : <Insignia tono="marca">{x.ordenes_compra?.folio}</Insignia>}
+                    </span>
+                  ))}
+                  {m.erp?.tipo === "compra" && !ordenesDe(m.erp.id).length && m.erp.categoria && <span className="text-xs text-tenue">{m.erp.categoria}</span>}
                 </p>
                 {m.descripcion && <p className="text-tenue mt-0.5 whitespace-pre-line break-words">{m.descripcion}</p>}
               </div>
               <span className={cn("cifra shrink-0 font-medium", m.repetida && "line-through")}>{m.resta ? "−" : ""}{dinero(m.monto)}</span>
+              {editable && m.erp?.tipo === "compra" && (
+                <button type="button" onClick={() => setLigando(m.erp!)} className="shrink-0 p-1 rounded text-tenue hover:text-marca-texto hover:bg-fondo"
+                  aria-label="Orden de compra" title="De qué orden de compra es" data-explain={GLOSARIO.ordenDeLaFactura} data-explain-title="Ligar a su orden de compra">
+                  <ClipboardList className="h-4 w-4" />
+                </button>
+              )}
               {editable && m.erp ? (
                 <button type="button" onClick={() => { if (confirm(`¿Borrar ${m.tipo.toLowerCase()} de ${dinero(m.monto)} del ${fecha(m.fecha)}?`)) borrar.mutate(m.erp!.id); }}
                   className="shrink-0 p-1 rounded text-tenue hover:text-peligro hover:bg-fondo" aria-label="Borrar movimiento" title="Borrar (mal capturado)">
@@ -216,6 +240,8 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
             </div>
           ))}
           {hoja.data?.length === 200 && <p className="py-2 text-xs text-tenue">De la hoja se muestran los 200 más recientes.</p>}
+          <DialogoLigarOrdenes compra={ligando && { id: ligando.id, proveedor_id: ligando.proveedor_id, factura: ligando.factura, monto: Number(ligando.monto), categoria: ligando.categoria, fecha: ligando.fecha }}
+            alCerrar={() => setLigando(null)} />
           {noCuenta && <DialogoNoCuenta hojaId={noCuenta.hojaId!} tipo={noCuenta.tipo as "Compra" | "Pago"}
             resumen={`${noCuenta.tipo} del ${fecha(noCuenta.fecha)}${noCuenta.factura ? ` · Fact. ${noCuenta.factura}` : ""} · ${dinero(noCuenta.monto)}`} alCerrar={() => setNoCuenta(null)} />}
         </div>

@@ -42,6 +42,8 @@ interface Datos {
   comisiones: number; comisiones_hoja: number; comisiones_completas: boolean;
   fabricacion: Monto[]; operacion: Monto[]; impuestos: Monto[]; fuera: Monto[];
   material_comprado: number; caja_chica: number; mercado_libre: number; envios: number;
+  /** Compras del ERP: las ligadas a su orden cuentan por partida; las demás, por la categoría de la factura. */
+  compras_erp?: { con_orden: number; sin_orden: number; sin_articulo: number };
   sin_clasificar: string[]; sin_categoria: number;
   desde_compras: string | null; desde_caja: string | null; desde_ventas: string | null;
   sin_sueldo: number;
@@ -333,6 +335,11 @@ function OrigenNumeros({ d }: { d: Datos }) {
   // Un total es tan exacto como su parte menos exacta.
   const peor = (...ps: Precision[]): Precision => ps.includes("estimado") ? "estimado" : ps.includes("parcial") ? "parcial" : "exacto";
   const fab = peor(mat, mo.precision, compras);
+  // Las facturas del ERP ligadas a su orden de compra cuentan por partida, no por la categoría que se tecleó.
+  const ce = d.compras_erp;
+  const porPartida = ce && ce.con_orden > 0
+    ? ` De las facturas del ERP, ${dinero(ce.con_orden)} están ligadas a su orden de compra y cuentan por partida (los consumibles del taller aquí, el material en lo vendido${ce.sin_articulo > 0 ? `, y ${dinero(ce.sin_articulo)} de partidas sin artículo con la categoría de la factura` : ""})${ce.sin_orden > 0 ? `; ${dinero(ce.sin_orden)} sin orden, con la categoría de la factura` : ""}.`
+    : "";
   const op = peor(so.precision, com, compras, caja);
   const filas: { concepto: string; importe: number; texto: string; precision: Precision; explica?: string; total?: boolean; aparte?: boolean }[] = [
     { concepto: "Ventas", importe: d.ventas_total, precision: "exacto", explica: GLOSARIO.ventasResultados, total: true,
@@ -344,7 +351,7 @@ function OrigenNumeros({ d }: { d: Datos }) {
           + (d.material.estimado > 0 ? ` El resto, ${dinero(d.material.estimado)}, con el peso del material en el precio: ${pesos || "50 % (no hay con qué compararlo)"}.` : "")].filter(Boolean).join(" ") || "Sin material en el periodo." },
     { concepto: "Mano de obra del taller", importe: t.mano_obra, precision: mo.precision, explica: GLOSARIO.manoObraTaller, texto: mo.texto },
     { concepto: "Gastos de fabricación", importe: t.gastos_fabricacion, precision: compras, explica: GLOSARIO.gastosFabricacion,
-      texto: d.fabricacion.length ? `Compras de taller: ${top(d.fabricacion)}.` : "Ninguna compra de categoría de taller en el periodo." },
+      texto: (d.fabricacion.length ? `Compras de taller: ${top(d.fabricacion)}.` : "Ninguna compra de categoría de taller en el periodo.") + porPartida },
     { concepto: "Costo de fabricación", importe: t.costo_fabricacion, precision: fab,
       texto: "Material + mano de obra del taller + gastos de fabricación.", total: true },
     { concepto: "Sueldos de oficina", importe: t.sueldos_oficina, precision: so.precision, texto: so.texto },
