@@ -6,6 +6,9 @@ import { Boton } from "@/components/ui/boton";
 import { Campo, Entrada } from "@/components/ui/campo";
 import { Logo } from "@/components/layout/Logo";
 
+/** Dónde estaba la persona antes de irse a Google (un QR de máquina, una liga que le mandaron). */
+export const VOLVER_A = "volver_a";
+
 export function Entrar() {
   const [conCorreo, setConCorreo] = useState(false);
   const [correo, setCorreo] = useState("");
@@ -14,6 +17,8 @@ export function Entrar() {
 
   async function google() {
     setCargando(true);
+    const aqui = window.location.pathname + window.location.search;
+    try { if (aqui !== "/") sessionStorage.setItem(VOLVER_A, aqui); } catch { /* sin almacenamiento: cae en el inicio */ }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

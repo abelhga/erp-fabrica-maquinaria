@@ -1,10 +1,10 @@
-import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
-import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { lazy, Suspense, useEffect, type ComponentType, type ReactNode } from "react";
+import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { Loader2, Lock } from "lucide-react";
 import { useSesion, type Modulo } from "./lib/sesion";
 import { Shell } from "./components/layout/Shell";
 import { AvisoVerComo } from "./components/layout/VerComo";
-import { Entrar, SinAcceso } from "./paginas/Entrar";
+import { Entrar, SinAcceso, VOLVER_A } from "./paginas/Entrar";
 import { EsperandoVistaPrevia } from "./paginas/VistaPrevia";
 import { EN_VISTA_PREVIA } from "./lib/supabase";
 
@@ -79,6 +79,8 @@ const MetricasMantenimiento = p(() => import("./modulos/servicio/MetricasManteni
 const FichaMaquina = p(() => import("./modulos/servicio/FichaMaquina"));
 const ReportarFalla = p(() => import("./modulos/servicio/ReportarFalla"));
 const Resguardos = p(() => import("./modulos/servicio/Resguardos"));
+const Rutinas = p(() => import("./modulos/servicio/Rutinas"));
+const Etiquetas = p(() => import("./modulos/servicio/Etiquetas"));
 const SolicitudesPrecio = p(() => import("./modulos/compras/Solicitudes"));
 const MisSolicitudesPrecio = p(() => import("./modulos/ventas/solicitudes/MisSolicitudes"));
 const Leads = p(() => import("./modulos/ventas/Leads"));
@@ -114,6 +116,16 @@ function SinMarco() {
 
 export function App() {
   const { cargando, session, perfil, roles, salir } = useSesion();
+  const ir = useNavigate();
+  const { pathname } = useLocation();
+  // Google regresa al inicio (la liga de regreso es una sola); si se entró desde un QR o una liga
+  // a una pantalla, Entrar la guardó y aquí se retoma.
+  useEffect(() => {
+    if (!session) return;
+    let destino: string | null = null;
+    try { destino = sessionStorage.getItem(VOLVER_A); sessionStorage.removeItem(VOLVER_A); } catch { /* sin almacenamiento */ }
+    if (destino && destino.startsWith("/") && pathname === "/") ir(destino, { replace: true });
+  }, [session, pathname, ir]);
   if (cargando) return <Cargando />;
   if (!session) return EN_VISTA_PREVIA ? <EsperandoVistaPrevia /> : <Entrar />;
   if (!perfil || roles.length === 0) return <SinAcceso correo={session.user.email ?? ""} salir={salir} />;
@@ -142,6 +154,7 @@ export function App() {
           <Route path="/piso" element={<Con m="produccion"><PantallaPiso /></Con>} />
           <Route path="/produccion/terminal" element={<Con m="produccion" n={2}><Terminal /></Con>} />
           <Route path="/servicio/reportar" element={<Con m="mantenimiento" n={2}><ReportarFalla /></Con>} />
+          <Route path="/servicio/etiquetas" element={<Con m="mantenimiento"><Etiquetas /></Con>} />
           <Route path="/ventas/cotizaciones/:id/imprimir" element={<Con m="ventas"><ImprimirCotizacion /></Con>} />
           {/* La hoja de salida la imprime quien ve el pedido, almacén incluido: el permiso lo revisa la base. */}
           <Route path="/pedidos/:id/salida" element={<HojaSalida />} />
@@ -204,6 +217,7 @@ export function App() {
           <Route path="servicio/metricas" element={<Con m="mantenimiento"><MetricasMantenimiento /></Con>} />
           <Route path="servicio/maquinas/:id" element={<Con m="mantenimiento"><FichaMaquina /></Con>} />
           <Route path="servicio/resguardos" element={<Con m="mantenimiento" n={2}><Resguardos /></Con>} />
+          <Route path="servicio/rutinas" element={<Con m="mantenimiento"><Rutinas /></Con>} />
           <Route path="servicio/:id" element={<Con m="servicio"><DetalleServicio /></Con>} />
           <Route path="rrhh/empleados" element={<Con m="rrhh"><Empleados /></Con>} />
           <Route path="rrhh/incidencias" element={<Con m="rrhh"><Incidencias /></Con>} />

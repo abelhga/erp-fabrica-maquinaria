@@ -338,7 +338,7 @@ begin
   select id into v_m from public.maquinas where numero = 'DEMO-PIN-01';
   if not exists (select 1 from public.resguardos where maquina_id = v_m) then
     perform pg_temp.soy('almacen@hegamex.com');
-    v_r := public.prestar_herramienta(v_m, null, 'Ingeniería (Miguel Ortiz)', null, null, 'Para medir en la línea de pruebas');
+    v_r := public.prestar_herramienta(v_m, null, 'Ingeniería (Miguel Ortiz)', null, null, null, 'Medir en la línea de pruebas');
     perform pg_temp.postgres();
     update public.resguardos set entregado_en = now() - interval '21 days' where id = v_r;
   end if;
@@ -364,7 +364,7 @@ begin
   if not exists (select 1 from public.resguardos where maquina_id = v_m) then
     v_e := pg_temp.emp('Ricardo Pérez Navarro');
     perform pg_temp.soy('almacen@hegamex.com');
-    v_r := public.prestar_herramienta(v_m, v_e, null, null, null, null);
+    v_r := public.prestar_herramienta(v_m, v_e, null, null, null, null, 'Desbastar soportes de la banda');
     perform public.devolver_herramienta(v_r, 'bien', null);
     perform pg_temp.postgres();
     update public.resguardos set entregado_en = now() - interval '9 days', devuelto_en = now() - interval '5 days' where id = v_r;

@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, Archive, ArchiveRestore, ArrowLeft, Camera, CalendarPlus, Gauge, Hand, History, Pencil, Wrench } from "lucide-react";
+import { AlertTriangle, Archive, ArchiveRestore, ArrowLeft, Camera, CalendarPlus, ExternalLink, FileText, Gauge, Hand, History, Link2, Pencil, Plus, QrCode, Trash2, Wrench } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Boton } from "@/components/ui/boton";
@@ -18,6 +18,7 @@ import { CLAVE, CRITICIDAD, DIA_SEMANA, ESPECIALIDAD, SEMANA_MES, TIPO_EQUIPO, T
 import { Dato, EnlaceBoton, InsigniaMaquina, InsigniaMto, usePermisosServicio } from "./componentes/piezas";
 import { LateralMantenimiento } from "./componentes/LateralMantenimiento";
 import { DialogoMaquina } from "./componentes/DialogoMaquina";
+import { DialogoEtiqueta } from "./componentes/EtiquetaQR";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 interface CostoOrden { mantenimiento_id: string; material: number | null; servicio_externo: number | null; mano_obra: number | null; otro: number | null; total: number }
@@ -60,7 +61,7 @@ export default function FichaMaquina() {
   });
   const foto = useUrlsFirmadas(maq.data?.foto_ruta ? [maq.data.foto_ruta] : []);
   const [orden, setOrden] = useState<string | null>(null);
-  const [dialogo, setDialogo] = useState<null | "editar" | "horas" | "plan" | "baja">(null);
+  const [dialogo, setDialogo] = useState<null | "editar" | "horas" | "plan" | "baja" | "etiqueta" | "documento">(null);
   const [plan, setPlan] = useState<Plan | null>(null);
   const entradaFoto = useRef<HTMLInputElement>(null);
   const [subiendo, setSubiendo] = useState(false);
@@ -101,6 +102,7 @@ export default function FichaMaquina() {
         {m.usa_horometro && p.personal && !deBaja && <Boton variante="secundario" onClick={() => setDialogo("horas")}><Gauge className="h-4 w-4" />Registrar horas</Boton>}
         {(m.prestable || m.tipo === "herramienta") && !abierto && p.personal && !deBaja && <EnlaceBoton a={`/servicio/resguardos?prestar=${m.id}`}><Hand className="h-4 w-4" />Prestar</EnlaceBoton>}
         {p.gerencia && <Boton variante="secundario" onClick={() => setDialogo("editar")}><Pencil className="h-4 w-4" />Editar</Boton>}
+        {p.gerencia && !deBaja && <Boton variante="secundario" onClick={() => setDialogo("etiqueta")}><QrCode className="h-4 w-4" />Etiqueta QR</Boton>}
         {p.gerencia && !deBaja && <Boton variante="secundario" onClick={() => setDialogo("baja")}><Archive className="h-4 w-4" />Dar de baja</Boton>}
       </>}
     >
@@ -228,6 +230,8 @@ export default function FichaMaquina() {
         </div>
       </div>
 
+      <Documentos m={m} gerencia={p.gerencia} alAgregar={() => setDialogo("documento")} />
+
       {(refacciones.data ?? []).length > 0 && (
         <Tarjeta className="mt-4">
           <EncabezadoTarjeta titulo="Refacciones de este tipo de máquina" explica={GLOSARIO.refaccionesMaquina}
@@ -251,6 +255,8 @@ export default function FichaMaquina() {
       {dialogo === "horas" && <DialogoHoras m={m} alCerrar={() => setDialogo(null)} />}
       {dialogo === "plan" && <DialogoPlan maquinaId={m.id} plan={plan} horasActuales={m.horas_uso} alCerrar={() => setDialogo(null)} />}
       {dialogo === "baja" && <DialogoBaja m={m} alCerrar={() => setDialogo(null)} />}
+      {dialogo === "etiqueta" && <DialogoEtiqueta m={m} alCerrar={() => setDialogo(null)} />}
+      {dialogo === "documento" && <DialogoDocumento m={m} alCerrar={() => setDialogo(null)} />}
     </Pagina>
   );
 }
@@ -265,6 +271,114 @@ function DialogoHoras({ m, alCerrar }: { m: Maquina; alCerrar: () => void }) {
       pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton type="submit" form="form-horas" cargando={registrar.isPending} disabled={!(Number(h) >= m.horas_uso)}>Guardar</Boton></>}>
       <form id="form-horas" onSubmit={(e) => { e.preventDefault(); registrar.mutate(); }}>
         <Campo etiqueta="Lectura de hoy (horas)"><Entrada type="number" min={m.horas_uso} step="0.1" value={h} onChange={(e) => setH(e.target.value)} autoFocus /></Campo>
+      </form>
+    </Dialogo>
+  );
+}
+
+interface Documento { id: string; tipo: TipoDocumento; titulo: string; ruta: string | null; url: string | null; compartido: boolean; alcance: string; creado_por_nombre: string | null; creado_en: string }
+type TipoDocumento = "manual" | "ficha_tecnica" | "diagrama" | "garantia" | "otro";
+const TIPO_DOCUMENTO: Record<TipoDocumento, string> = { manual: "Manual", ficha_tecnica: "Ficha técnica", diagrama: "Diagrama", garantia: "Garantía", otro: "Otro" };
+
+/** Manuales y fichas técnicas: los de esta máquina y los de todas las de su tipo y modelo. */
+function Documentos({ m, gerencia, alAgregar }: { m: Maquina; gerencia: boolean; alAgregar: () => void }) {
+  const docs = useQuery({
+    queryKey: [...CLAVE, "maquina", m.id, "documentos"],
+    queryFn: () => q<Documento[]>(supabase.rpc("documentos_maquina", { p_maquina: m.id })),
+  });
+  const urls = useUrlsFirmadas((docs.data ?? []).map((d) => d.ruta).filter(Boolean) as string[]);
+  const quitar = useAccion((id: string) => q(supabase.from("maquina_documentos").delete().eq("id", id)), { exito: "Documento quitado", invalidar: [CLAVE] });
+  const lista = docs.data ?? [];
+  if (!gerencia && lista.length === 0) return null;
+  return (
+    <Tarjeta className="mt-4">
+      <EncabezadoTarjeta titulo="Manuales y fichas técnicas" explica={GLOSARIO.documentosMaquina}
+        descripcion={lista.length ? `${lista.length} ${lista.length === 1 ? "documento" : "documentos"}` : "Sube el manual o pon la liga de Drive: así está a la mano cuando se repara."}
+        acciones={gerencia && <Boton variante="secundario" tamano="sm" onClick={alAgregar}><Plus className="h-3.5 w-3.5" />Agregar</Boton>} />
+      {lista.length > 0 && (
+        <ul className="px-5 pb-4 divide-y divide-borde/60">
+          {lista.map((d) => {
+            const liga = d.url ?? (d.ruta ? urls.data?.[d.ruta] : undefined);
+            return (
+              <li key={d.id} className="flex items-center gap-3 py-2.5">
+                {d.url ? <Link2 className="h-4 w-4 text-tenue shrink-0" /> : <FileText className="h-4 w-4 text-tenue shrink-0" />}
+                <div className="flex-1 min-w-0">
+                  {liga ? <a href={liga} target="_blank" rel="noreferrer" className="font-medium text-sm hover:underline inline-flex items-center gap-1">{d.titulo}<ExternalLink className="h-3 w-3 text-tenue" /></a>
+                    : <span className="font-medium text-sm">{d.titulo}</span>}
+                  <p className="text-xs text-tenue">{TIPO_DOCUMENTO[d.tipo]} · {d.alcance}{d.creado_por_nombre ? ` · subió ${d.creado_por_nombre}` : ""}</p>
+                </div>
+                {gerencia && <Boton variante="fantasma" tamano="sm" aria-label={`Quitar ${d.titulo}`} cargando={quitar.isPending && quitar.variables === d.id}
+                  onClick={() => { if (window.confirm(`¿Quitar «${d.titulo}»${d.compartido ? " de todas las máquinas donde aparece" : ""}?`)) quitar.mutate(d.id); }}>
+                  <Trash2 className="h-3.5 w-3.5" /></Boton>}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Tarjeta>
+  );
+}
+
+function DialogoDocumento({ m, alCerrar }: { m: Maquina; alCerrar: () => void }) {
+  const [tipo, setTipo] = useState<TipoDocumento>("manual");
+  const [titulo, setTitulo] = useState("");
+  const [origen, setOrigen] = useState<"archivo" | "liga">("archivo");
+  const [archivo, setArchivo] = useState<File | null>(null);
+  const [url, setUrl] = useState("");
+  // De quién es: esta máquina, todas las de su categoría y modelo, o todas las de la categoría.
+  const [alcance, setAlcance] = useState<"maquina" | "modelo" | "categoria">(m.modelo ? "modelo" : "maquina");
+  const guardar = useAccion(async () => {
+    let ruta: string | null = null;
+    if (origen === "archivo" && archivo) {
+      const ext = (archivo.name.split(".").pop() ?? "pdf").toLowerCase();
+      ruta = await subirArchivo(`maquinas/${m.id}/docs`, archivo, ext);
+    }
+    await q(supabase.from("maquina_documentos").insert({
+      maquina_id: alcance === "maquina" ? m.id : null,
+      categoria: alcance === "maquina" ? null : m.categoria,
+      modelo: alcance === "modelo" ? m.modelo : null,
+      tipo, titulo: titulo.trim(), ruta, url: origen === "liga" ? url.trim() : null,
+    }));
+  }, { exito: "Documento agregado", invalidar: [CLAVE], alTerminar: alCerrar });
+  const grande = !!archivo && archivo.size > 50 * 1024 * 1024;
+  const listo = titulo.trim().length >= 3 && (origen === "archivo" ? !!archivo && !grande : /^https?:\/\//i.test(url.trim()));
+  return (
+    <Dialogo abierto alCambiar={(v) => !v && alCerrar()} titulo="Agregar manual o ficha técnica" ancho="max-w-xl"
+      pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton type="submit" form="form-doc" disabled={!listo} cargando={guardar.isPending}>Agregar</Boton></>}>
+      <form id="form-doc" className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (listo) guardar.mutate(); }}>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Campo etiqueta="Qué es">
+            <Seleccion value={tipo} onChange={(e) => setTipo(e.target.value as TipoDocumento)}>
+              {Object.entries(TIPO_DOCUMENTO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </Seleccion>
+          </Campo>
+          <Campo etiqueta="Título" className="sm:col-span-2"><Entrada value={titulo} onChange={(e) => setTitulo(e.target.value)} autoFocus placeholder="Manual de usuario AXT MIG 252" /></Campo>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {([["archivo", "Subir archivo (PDF o foto)"], ["liga", "Liga de Drive"]] as const).map(([v, t]) => (
+            <button key={v} type="button" onClick={() => setOrigen(v)} aria-pressed={origen === v}
+                    className={`h-10 rounded-lg border text-sm ${origen === v ? "border-marca bg-marca/10 text-marca-texto font-medium" : "border-borde"}`}>{t}</button>
+          ))}
+        </div>
+        {origen === "archivo" ? (
+          <Campo etiqueta="Archivo" ayuda="PDF o imagen, hasta 50 MB." error={grande ? "Pesa más de 50 MB: súbelo a Drive y pon la liga." : undefined}>
+            <Entrada type="file" accept="application/pdf,image/*" onChange={(e) => {
+              const a = e.target.files?.[0] ?? null; setArchivo(a);
+              if (a && !titulo.trim()) setTitulo(a.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " "));
+            }} />
+          </Campo>
+        ) : (
+          <Campo etiqueta="Liga" ayuda="Que esté compartida con la gente de Hegamex para que la puedan abrir.">
+            <Entrada type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://drive.google.com/…" />
+          </Campo>
+        )}
+        <Campo etiqueta="¿De qué máquinas es?">
+          <Seleccion value={alcance} onChange={(e) => setAlcance(e.target.value as typeof alcance)}>
+            <option value="maquina">Solo de {m.numero}</option>
+            {m.modelo && <option value="modelo">De todas las «{m.categoria}» modelo {m.modelo}</option>}
+            <option value="categoria">De todas las «{m.categoria}», de cualquier modelo</option>
+          </Seleccion>
+        </Campo>
       </form>
     </Dialogo>
   );
@@ -346,7 +460,7 @@ function DialogoPlan({ maquinaId, plan, horasActuales, alCerrar }: { maquinaId: 
       pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton type="submit" form="form-plan" disabled={!listo} cargando={guardar.isPending}>Guardar</Boton></>}>
       <form id="form-plan" className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (listo) guardar.mutate(); }}>
         <Campo etiqueta="Nombre"><Entrada value={f.nombre} onChange={(e) => set("nombre", e.target.value)} placeholder="Cambio de aceite y filtros" autoFocus /></Campo>
-        <Campo etiqueta="Rutina (checklist)" ayuda="Sus puntos salen en cada orden para palomearlos.">
+        <Campo etiqueta="Rutina (checklist)" ayuda={<>Sus puntos salen en cada orden para palomearlos. Se escriben en <Link to="/servicio/rutinas" className="text-marca-texto">Rutinas</Link>.</>}>
           <span data-explain={GLOSARIO.rutinaMantenimiento} className="block">
             <Seleccion value={f.rutina_id} onChange={(e) => set("rutina_id", e.target.value)}>
               <option value="">Sin checklist (solo las tareas de abajo)</option>
