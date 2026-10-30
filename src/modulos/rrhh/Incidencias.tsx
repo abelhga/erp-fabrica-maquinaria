@@ -16,7 +16,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { fecha, fechaYHora, hace, numero } from "@/lib/formato";
 import {
-  Avatar, ESTADOS, TABLA_LFT, TIPOS, antiguedad, useVacaciones, type Incidencia, type TipoIncidencia, type Vacaciones,
+  AvisoCargos, Avatar, ESTADOS, TABLA_LFT, TIPOS, antiguedad, useSimularVacaciones, useVacaciones, type Incidencia, type TipoIncidencia, type Vacaciones,
 } from "./componentes/comun";
 import { NuevaIncidencia } from "./componentes/NuevaIncidencia";
 import { CalendarioAusencias } from "./componentes/CalendarioAusencias";
@@ -96,7 +96,6 @@ function Pendientes({ pendientes, todas, vacaciones }: { pendientes: IncidenciaC
         // Quién más falta en esas fechas: lo primero que pregunta el gerente antes de aprobar.
         const coinciden = [...new Set(todas.filter((o) => o.id !== i.id && o.empleado_id !== i.empleado_id && o.estado === "aprobada"
           && TIPOS[o.tipo].ausencia && o.inicio <= i.fin && o.fin >= i.inicio).map((o) => o.empleado?.nombre.split(" ")[0]))];
-        const excede = i.tipo === "vacaciones" && v && v.anios >= 1 && Number(i.dias) > v.saldo;
         return (
           <div key={i.id} className="tarjeta p-4 flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -111,9 +110,7 @@ function Pendientes({ pendientes, todas, vacaciones }: { pendientes: IncidenciaC
                 {i.motivo && <p className="text-sm text-tenue">“{i.motivo}”</p>}
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-tenue">
                   <span>Pedida {hace(i.creado_en)}</span>
-                  {i.tipo === "vacaciones" && v && (v.anios < 1
-                    ? <span className="text-aviso">Aún no cumple un año (sería adelanto)</span>
-                    : <span className={excede ? "text-peligro font-medium" : ""}>Saldo {numero(v.saldo)} días → quedarían {numero(v.saldo - Number(i.dias))}</span>)}
+                  {i.tipo === "vacaciones" && v && <CargoSolicitud incidencia={i} saldo={v.saldo} />}
                   {coinciden.length > 0 && <span>Esos días también faltan: {coinciden.join(", ")}</span>}
                 </div>
               </div>
@@ -131,6 +128,17 @@ function Pendientes({ pendientes, todas, vacaciones }: { pendientes: IncidenciaC
       })}
       <DialogoRechazo incidencia={rechazo} alCerrar={() => setRechazo(null)} />
     </div>
+  );
+}
+
+/** Con qué días se cubriría la solicitud si se aprueba: de qué periodo y cuántos serían adelanto. */
+function CargoSolicitud({ incidencia: i, saldo }: { incidencia: IncidenciaCompleta; saldo: number }) {
+  const sim = useSimularVacaciones(i.empleado_id, i.inicio, Number(i.dias));
+  return (
+    <span>
+      <span data-explain={GLOSARIO.saldoVacaciones} data-explain-title="Saldo">Saldo hoy {numero(saldo)} días</span>
+      {sim.data && <> · <AvisoCargos cargos={sim.data} className="font-medium" /></>}
+    </span>
   );
 }
 
@@ -163,19 +171,28 @@ function Saldos({ vacaciones, cargando }: { vacaciones: Vacaciones[] | undefined
     { clave: "tomados", titulo: "Tomados", explica: GLOSARIO.diasTomados, alinear: "der", sinBusqueda: true, valor: (v) => Number(v.tomados), celda: (v) => numero(v.tomados) },
     { clave: "solicitados", titulo: "Por aprobar", explica: GLOSARIO.diasPorAprobar, alinear: "der", sinBusqueda: true, valor: (v) => Number(v.solicitados), celda: (v) => (Number(v.solicitados) ? numero(v.solicitados) : <span className="text-tenue">—</span>) },
     {
+      clave: "disponible", titulo: "Vigentes", explica: GLOSARIO.periodoVacaciones, alinear: "der", sinBusqueda: true, valor: (v) => Number(v.disponible),
+      celda: (v) => (Number(v.disponible) ? numero(v.disponible) : <span className="text-tenue">—</span>),
+    },
+    {
+      clave: "adelantados", titulo: "Adelantados", explica: GLOSARIO.adelantoVacaciones, alinear: "der", sinBusqueda: true, valor: (v) => Number(v.adelantados),
+      celda: (v) => (Number(v.adelantados) ? <span className="text-aviso">{numero(v.adelantados)}</span> : <span className="text-tenue">—</span>),
+    },
+    {
       clave: "saldo", titulo: "Saldo", explica: GLOSARIO.saldoVacaciones, alinear: "der", sinBusqueda: true, valor: (v) => Number(v.saldo),
-      celda: (v) => v.anios < 1 ? <span className="text-xs text-tenue">—</span> : <b className={v.saldo < 0 ? "text-peligro" : v.saldo > 0 ? "text-ok" : ""}>{numero(v.saldo)}</b>,
+      celda: (v) => <b className={v.saldo < 0 ? "text-peligro" : v.saldo > 0 ? "text-ok" : ""}>{numero(v.saldo)}</b>,
     },
     {
       clave: "proximo_aniversario", titulo: "Próximo aniversario", explica: GLOSARIO.proximoAniversario, valor: (v) => v.proximo_aniversario, sinBusqueda: true,
       celda: (v) => <span className="whitespace-nowrap">{fecha(v.proximo_aniversario)} <span className="text-tenue">→ {v.dias_proximo_periodo} días</span></span>,
     },
     {
-      clave: "disfrutar_antes_de", titulo: "Disfrutar antes de", explica: GLOSARIO.disfrutarAntesDe, valor: (v) => v.disfrutar_antes_de, sinBusqueda: true,
+      clave: "vence_primero", titulo: "Vencen primero", explica: GLOSARIO.venceVacaciones, valor: (v) => v.vence_primero ?? "9999", sinBusqueda: true,
       celda: (v) => {
-        if (v.anios < 1 || v.saldo <= 0) return <span className="text-tenue">—</span>;
-        const dias = Math.round((new Date(v.disfrutar_antes_de + "T12:00:00").getTime() - Date.now()) / 86_400_000);
-        return dias < 0 ? <Insignia tono="peligro">Plazo vencido</Insignia> : dias <= 45 ? <Insignia tono="aviso">{fecha(v.disfrutar_antes_de)}</Insignia> : fecha(v.disfrutar_antes_de);
+        if (!v.vence_primero) return <span className="text-tenue">—</span>;
+        const dias = Math.round((new Date(v.vence_primero + "T12:00:00").getTime() - Date.now()) / 86_400_000);
+        const texto = `${numero(v.dias_vence_primero ?? 0)} el ${fecha(v.vence_primero)}`;
+        return dias <= 60 ? <Insignia tono={dias <= 30 ? "peligro" : "aviso"}>{texto}</Insignia> : <span className="whitespace-nowrap">{texto}</span>;
       },
     },
   ];
@@ -196,8 +213,9 @@ function Saldos({ vacaciones, cargando }: { vacaciones: Vacaciones[] | undefined
           </div>
           <ul className="space-y-1.5 text-tenue">
             <li className="flex gap-2"><Info className="h-4 w-4 shrink-0 mt-0.5" />12 días al cumplir el primer año, 2 más por año hasta 20 a los 5 años; después, 2 más cada 5 años. Antes del primer año no hay (art. 76).</li>
-            <li className="flex gap-2"><Info className="h-4 w-4 shrink-0 mt-0.5" />Saldo = lo que le tocó en su último aniversario menos lo aprobado desde entonces, en días hábiles (semana laboral de Configuración, sin feriados de ley).</li>
-            <li className="flex gap-2"><Info className="h-4 w-4 shrink-0 mt-0.5" />Se disfrutan dentro de los 6 meses siguientes al aniversario (art. 81), con prima vacacional de al menos 25 %.</li>
+            <li className="flex gap-2"><Info className="h-4 w-4 shrink-0 mt-0.5" />Cada aniversario abre un periodo con los días de la ley. Cada vacación aprobada se carga al periodo más viejo que siga vigente, en días hábiles (semana laboral de Configuración, sin feriados de ley).</li>
+            <li className="flex gap-2"><Info className="h-4 w-4 shrink-0 mt-0.5" />Si ya no le queda nada vigente, o no ha cumplido el primer año, lo que tome es adelanto del periodo siguiente: se le descuenta cuando llega, no se perdona al cumplir año.</li>
+            <li className="flex gap-2"><Info className="h-4 w-4 shrink-0 mt-0.5" />Se disfrutan dentro de los 6 meses siguientes al aniversario (art. 81), con prima vacacional de al menos 25 %. Lo que no se toma vence 18 meses después del aniversario (art. 516).</li>
           </ul>
         </div>
       </Tarjeta>
