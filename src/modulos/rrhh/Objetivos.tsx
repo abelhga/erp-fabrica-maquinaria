@@ -335,7 +335,7 @@ function EditorPlantilla({ inicial, puesto, indicadores, areas, alCerrar }: {
               <div key={i} className="rounded-lg border border-borde p-3 grid gap-2 md:grid-cols-[1fr_80px_190px_auto] items-start">
                 <div className="space-y-2 min-w-0">
                   <Seleccion value={l.indicador_id} onChange={(e) => cambiar(i, { indicador_id: Number(e.target.value) })} aria-label="Indicador">
-                    {["ventas", "compras", "ingenieria", "produccion", "almacen", "general"].map((a) => (
+                    {["ventas", "compras", "ingenieria", "produccion", "almacen", "mantenimiento", "general"].map((a) => (
                       <optgroup key={a} label={a === "ingenieria" ? "Ingeniería" : a === "produccion" ? "Producción" : a === "almacen" ? "Almacén" : a[0].toUpperCase() + a.slice(1)}>
                         {activos.filter((x) => x.area === a).map((x) => <option key={x.id} value={x.id}>{x.nombre} · {FUENTES[x.fuente].texto}</option>)}
                       </optgroup>

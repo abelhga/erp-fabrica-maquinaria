@@ -26,8 +26,10 @@ begin
   assert (select nivel from permisos_rol where rol = 'gerente_produccion' and modulo = 'objetivos') = 1, 'gerencia de producción: objetivos 1';
   assert (select nivel from permisos_rol where rol = 'finanzas' and modulo = 'nomina') = 1, 'finanzas: nómina 1';
   assert not exists (select 1 from permisos_rol where rol in ('ventas', 'almacen', 'gerente_produccion') and modulo = 'nomina'), 'nadie más tiene nómina';
-  assert (select count(*) from objetivo_indicadores) = 61, 'los 61 indicadores de la hoja';
-  assert (select count(*) from objetivo_indicadores where fuente = 'automatica') = 17, 'los 17 que ya se miden solos';
+  -- Los 61 de la hoja (1 a 61) más los que el ERP mide desde 208 (62 en adelante).
+  assert (select count(*) from objetivo_indicadores where id <= 61) = 61, 'los 61 indicadores de la hoja';
+  assert (select count(*) from objetivo_indicadores where fuente = 'automatica') = 17 + 4 + (select count(*) from objetivo_indicadores where id > 61),
+    'los que se miden solos: 17 de la hoja, 4 que pasaron a automáticos en 208 y los nuevos';
   assert not exists (select 1 from objetivo_plantillas t where (select sum(peso) from objetivo_plantilla_lineas l where l.plantilla_id = t.id) <> 100),
     'las plantillas sembradas suman 100';
 
