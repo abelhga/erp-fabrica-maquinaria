@@ -19,6 +19,8 @@ import { INVALIDAR_PROVEEDORES, SelectorCuenta, sumarDias } from "./cuentas";
 import { ElegirOrdenes, ListaCategorias, useOrdenesParaLigar } from "./ElegirOrdenes";
 
 interface Proveedor { id: string; nombre: string; categoria: string | null; dias_credito: number; rfc: string | null }
+/** La categoría que sugiere lo que dice la factura (sugerir_categoria_sat). */
+interface Sugerencia { categoria: string; fuente: "aprendida" | "catalogo"; clave: string; descripcion: string | null }
 /**
  * Una factura de la fila: leída, o con el porqué no se puede registrar. El XML se lee aquí,
  * exacto; un PDF o una foto los lee Claude (deClaude) y quien registra lo revisa.
@@ -189,6 +191,21 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
     if (!tocoOcs && ordenes.data) setOcs(ordenes.data.filter((o) => o.casa_folio).map((o) => o.id));
   }, [ordenes.data, tocoOcs]);
   const conOrden = !notaCredito && ocs.length > 0;
+  // La clave del SAT de cada concepto dice qué se compró: su categoría manda sobre la del
+  // proveedor (a quién se compró) mientras quien registra no la cambie.
+  const claves = cfdi?.claves ?? [];
+  const sugerida = useQuery({
+    queryKey: ["sugerir_categoria_sat", claves.map((k) => `${k.clave}:${k.importe}`).join()], enabled: claves.length > 0, staleTime: 5 * 60_000,
+    queryFn: async () => (await q<Sugerencia[]>(supabase.rpc("sugerir_categoria_sat", {
+      p_claves: claves.map((k) => k.clave), p_importes: claves.map((k) => k.importe),
+    })))[0] ?? null,
+  });
+  const [tocoCategoria, setTocoCategoria] = useState(false);
+  useEffect(() => setTocoCategoria(false), [idx]);
+  useEffect(() => {
+    if (!tocoCategoria && sugerida.data) setF((x) => ({ ...x, categoria: sugerida.data!.categoria }));
+  }, [sugerida.data, tocoCategoria, prov?.id, cfdi]);
+  const usaSugerida = !!sugerida.data && f.categoria === sugerida.data.categoria;
   // Sin orden, la categoría es lo único que dice en qué se gastó (la base también lo revisa).
   const faltaCategoria = !notaCredito && !conOrden && !f.categoria.trim();
   const venceCalculado = prov ? sumarDias(f.fecha, prov.dias_credito ?? 0) : null;
@@ -208,6 +225,7 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
       // De dónde salió: el contador pide el XML de las que vinieron de un PDF.
       p_leido_de: actual?.deClaude ? "pdf" : cfdi ? "xml" : "captura",
       p_ordenes: notaCredito ? null : ocs,
+      p_claves_sat: claves.length ? claves.map((k) => k.clave) : null,
     }));
     // De contado: el pago va en el mismo paso. Se marca como anticipo para que, si el
     // proveedor tenía saldo a favor, no se rechace un pago que es exacto a la factura.
@@ -218,7 +236,7 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
     }
   }, {
     exito: notaCredito ? "Nota de crédito registrada" : f.pagada ? "Compra y pago registrados" : "Compra registrada",
-    invalidar: [...INVALIDAR_PROVEEDORES, ["compra_oc"], ["ordenes_para_ligar"], ["v_por_pagar"], ["facturas_de_oc"]], alTerminar: siguiente,
+    invalidar: [...INVALIDAR_PROVEEDORES, ["compra_oc"], ["ordenes_para_ligar"], ["v_por_pagar"], ["facturas_de_oc"], ["sugerir_categoria_sat"]], alTerminar: siguiente,
   });
 
   function enviar(e: FormEvent) {
@@ -329,12 +347,24 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
               <ElegirOrdenes ordenes={ordenes.data!} elegidas={ocs} alCambiar={(ids) => { setTocoOcs(true); setOcs(ids); }} />
             </div>
           )}
-          <Campo etiqueta={conOrden ? "Categoría (partidas sin artículo)" : "Categoría"}
-            ayuda={conOrden ? "Fletes y servicios de la orden toman esta; lo demás, la de su artículo."
-              : notaCredito ? "La del proveedor si la dejas igual." : "Obligatoria sin orden de compra: dice en qué se gastó (Fletes, Luz, Publicidad…). Viene la del proveedor."}>
-            <Entrada value={f.categoria} list="categorias-compra" onChange={(e) => setF({ ...f, categoria: e.target.value })} required={faltaCategoria} />
-            <ListaCategorias id="categorias-compra" />
-          </Campo>
+          <div className="space-y-1">
+            <Campo etiqueta={conOrden ? "Categoría (partidas sin artículo)" : "Categoría"}
+              ayuda={usaSugerida ? undefined : conOrden ? "Fletes y servicios de la orden toman esta; lo demás, la de su artículo."
+                : notaCredito ? "La del proveedor si la dejas igual." : "Obligatoria sin orden de compra: dice en qué se gastó (Fletes, Luz, Publicidad…). Viene la del proveedor."}>
+              <Entrada value={f.categoria} list="categorias-compra" onChange={(e) => { setTocoCategoria(true); setF({ ...f, categoria: e.target.value }); }} required={faltaCategoria} />
+              <ListaCategorias id="categorias-compra" />
+            </Campo>
+            {/* Fuera del Campo (que es un <label>): el botón no debe activar la caja de texto. */}
+            {usaSugerida && (
+              <p className="text-xs text-tenue" data-explain={GLOSARIO.categoriaSugeridaSat} data-explain-title="Sugerida por la factura">
+                <Sparkles className="inline h-3 w-3 mr-1 text-marca-texto" />
+                {sugerida.data!.fuente === "aprendida" ? `Así registraste antes la clave del SAT ${sugerida.data!.clave}.`
+                  : `Por la clave del SAT ${sugerida.data!.clave}: ${sugerida.data!.descripcion}.`}
+                {prov?.categoria && prov.categoria !== f.categoria && <> <button type="button" className="text-marca-texto hover:underline"
+                  onClick={() => { setTocoCategoria(true); setF((x) => ({ ...x, categoria: prov.categoria! })); }}>Usar la del proveedor ({prov.categoria})</button></>}
+              </p>
+            )}
+          </div>
           <Campo etiqueta="Concepto" className="sm:col-span-2">
             <Entrada value={f.descripcion} onChange={(e) => setF({ ...f, descripcion: e.target.value })} placeholder="Qué se compró" />
           </Campo>

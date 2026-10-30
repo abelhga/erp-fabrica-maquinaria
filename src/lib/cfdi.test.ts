@@ -24,6 +24,7 @@ describe("CFDI", () => {
       receptor: { rfc: "MHG160202UX1" },
     });
     expect(c.conceptos).toEqual(["Banda PVC 120 blanca"]);
+    expect(c.claves).toEqual([{ clave: "31151600", importe: 10000 }]);
     expect(folioCfdi(c)).toBe("A 3354");
   });
   it("avisa si el archivo no es una factura", () => {
