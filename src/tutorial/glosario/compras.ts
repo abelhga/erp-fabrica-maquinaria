@@ -2,7 +2,7 @@
 // arma el precio de venta: eso vive en el glosario de costeo.
 export const COMPRAS = {
   // --- Recibir ---
-  partidaSinArticulo: "Una partida escrita a mano, sin artículo del catálogo (vienen así de la hoja o de un PDF). Si es material, búscala y elige su artículo: entra al almacén con el costo de la orden, como cualquier otra. Si es un cobro como «Manejo» o un flete, recíbela tal cual: cuenta como recibida y no toca el inventario.",
+  partidaSinArticulo: "Una partida escrita a mano, sin artículo del catálogo (vienen así de la hoja o de un PDF). Si es material, búscala y elige su artículo: entra al almacén con el costo de la orden, como cualquier otra. Si es un cobro como «Manejo» o un flete, recíbela tal cual: cuenta como recibida y no toca el inventario. Cuando finanzas liga la factura a la orden, una partida sin artículo cuenta con la categoría de la factura; con artículo, como material o consumible del taller.",
   // --- Solicitudes de precio (la cola que manda ventas) ---
   semaforoSolicitud: "Verde: a tiempo. Amarillo: vence en menos de una hora hábil. Rojo: ya venció y el vendedor sigue esperando. Las vencidas van arriba de la lista.",
   plazoSolicitud: "Cuánto tiempo tiene compras para contestar: unas horas hábiles que se fijan en Configuración (al arrancar: un día hábil, o medio día si el vendedor la marcó urgente porque el cliente está esperando). Solo corre en horario de la planta: una solicitud del domingo empieza a contar el lunes.",
@@ -34,8 +34,9 @@ export const COMPRAS = {
   creditoProveedor: "Días que da el proveedor para pagar. El vencimiento de cada orden se fija al recibirla: fecha de recepción más estos días. Sin crédito, es de contado.",
   entregaProveedor: "Días hábiles que tarda en entregar desde que se le manda la orden. Sin dato se usa 7. De aquí sale la fecha de entrega de sus órdenes.",
   ordenesAbiertasProveedor: "Órdenes enviadas o recibidas en parte que todavía esperan mercancía. «Tarde» cuenta las que ya pasaron su fecha de entrega.",
-  compradoDoceMeses: "Lo que se le compró en los últimos 12 meses, en pesos y con IVA: sus facturas (las de la hoja y las registradas en el ERP, sin las repetidas) más sus órdenes de compra no canceladas. Solo proveedores: la nómina, los impuestos y los préstamos no son compras y van en finanzas. Una orden se paga desde la orden y no tiene factura aparte, así que nada se cuenta dos veces.",
+  compradoDoceMeses: "Lo que se le compró en los últimos 12 meses, en pesos y con IVA: sus facturas (las de la hoja y las registradas en el ERP, sin las repetidas) más sus órdenes de compra no canceladas que todavía no tienen su factura registrada. Solo proveedores: la nómina, los impuestos y los préstamos no son compras y van en finanzas. Una orden con su factura cuenta por la factura, así que nada se cuenta dos veces.",
   indicePreciosProveedor: "Cómo se han movido sus precios, con 100 en el primer mes con datos. Cada mes promedia cuánto cambió el costo de cada artículo que nos vende (los que no cambiaron cuentan como 0 %): 110 quiere decir 10 % más caro.",
   quienCambioQue: "Cada alta o cambio del proveedor queda registrado con el nombre de quien lo hizo, la fecha y qué datos cambió. Solo dirección y sistemas ven esta lista.",
   datosBancariosProveedor: "La cuenta donde se le paga. Si alguien la cambia, dirección recibe un aviso para revisarla antes del siguiente pago: un correo de «cambiamos de cuenta» es el engaño más común.",
+  facturaDeLaOrden: "La factura de esta orden que finanzas registró en la cuenta del proveedor. Si el folio que anotó almacén al recibir casa con el de la factura, se liga sola; si no, finanzas la liga al registrarla. Con su factura, lo que se debe se paga por la factura y la orden ya no sale en «Órdenes de compra» por pagar.",
 } satisfies Record<string, string>;

@@ -8,9 +8,19 @@ import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, hoyISO } from "@/lib/formato";
+import { GLOSARIO } from "@/tutorial/glosario";
 import type { OrdenCompra } from "./comun";
 
 interface Pago { id: string; fecha: string; monto: number; metodo: string; referencia: string | null; registrado_por: string | null }
+
+/** Las facturas de la orden que finanzas registró en la cuenta del proveedor (el monto, solo a finanzas). */
+export function useFacturasDeOC(oc: string, activo = true) {
+  return useQuery({
+    queryKey: ["facturas_de_oc", oc], enabled: activo,
+    queryFn: () => q<{ movimiento_id: string; factura: string | null; fecha: string; monto: number | null; como: "folio" | "a_mano" }[]>(
+      supabase.rpc("facturas_de_oc", { p_oc: oc })),
+  });
+}
 
 /** Pagos de la orden. Los ve compras; los captura solo finanzas (la base lo exige). */
 export function PagosOC({ oc }: { oc: OrdenCompra }) {
@@ -26,6 +36,9 @@ export function PagosOC({ oc }: { oc: OrdenCompra }) {
     staleTime: 10 * 60_000,
     queryFn: () => q<{ id: string; nombre: string }[]>(supabase.from("perfiles").select("id, nombre").eq("activo", true).order("nombre")),
   });
+  // Con su factura en la cuenta del proveedor, la deuda es la factura: pagarla también aquí la contaría dos veces.
+  const facturas = useFacturasDeOC(oc.id);
+  const facturada = (facturas.data?.length ?? 0) > 0;
   const pagado = (pagos.data ?? []).reduce((s, p) => s + Number(p.monto), 0);
   const saldo = Math.round((Number(oc.total) - pagado) * 100) / 100;
   const [monto, setMonto] = useState("");
@@ -46,7 +59,7 @@ export function PagosOC({ oc }: { oc: OrdenCompra }) {
     <Tarjeta>
       <EncabezadoTarjeta titulo={<span className="flex items-center gap-2"><Wallet className="h-4 w-4 text-tenue" /> Pagos</span>}
         descripcion={oc.vence_pago ? `Vence el ${fecha(oc.vence_pago)}` : "El vencimiento se fija al recibir (días de crédito del proveedor)."}
-        acciones={<span className={saldo <= 0 ? "text-ok text-sm font-medium" : "text-sm"}>{saldo <= 0 ? "Pagada" : <>Saldo <b className="cifra">{dinero(saldo, m)}</b></>}</span>} />
+        acciones={facturada ? undefined : <span className={saldo <= 0 ? "text-ok text-sm font-medium" : "text-sm"}>{saldo <= 0 ? "Pagada" : <>Saldo <b className="cifra">{dinero(saldo, m)}</b></>}</span>} />
       <div className="px-5 pb-4 space-y-3">
         {(pagos.data?.length ?? 0) === 0 ? <p className="text-sm text-tenue">Sin pagos registrados.</p> : (
           <ul className="text-sm divide-y divide-borde">
@@ -60,7 +73,12 @@ export function PagosOC({ oc }: { oc: OrdenCompra }) {
             ))}
           </ul>
         )}
-        {captura && saldo > 0 && (
+        {facturada && (
+          <p className="text-sm rounded-lg bg-info-suave px-3 py-2" data-explain={GLOSARIO.facturaDeLaOrden} data-explain-title="Se paga por su factura">
+            Su factura ({facturas.data!.map((x) => x.factura ?? "sin folio").join(", ")}) ya está en la cuenta del proveedor: se paga ahí, en Pagos a proveedores.
+          </p>
+        )}
+        {captura && saldo > 0 && !facturada && (
           <form className="grid grid-cols-2 gap-2 pt-1" onSubmit={(e) => { e.preventDefault(); if (n > 0) registrar.mutate(undefined); }}>
             <input type="date" className="campo" value={f} onChange={(e) => setF(e.target.value)} aria-label="Fecha del pago" />
             <input inputMode="decimal" className="campo text-right cifra" placeholder={String(saldo)} value={monto} aria-label="Monto"
@@ -74,7 +92,7 @@ export function PagosOC({ oc }: { oc: OrdenCompra }) {
             <Boton type="submit" className="col-span-2" disabled={!(n > 0)} cargando={registrar.isPending}>Registrar pago</Boton>
           </form>
         )}
-        {!captura && <p className="text-xs text-tenue">Los pagos los registra finanzas.</p>}
+        {!captura && !facturada && <p className="text-xs text-tenue">Los pagos los registra finanzas.</p>}
       </div>
     </Tarjeta>
   );

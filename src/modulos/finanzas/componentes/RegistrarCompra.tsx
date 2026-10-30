@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, FileCode2, Loader2, Sparkles, Upload } from "lucide-react";
 import { Dialogo } from "@/components/ui/dialogo";
@@ -16,6 +16,7 @@ import { useEmpresa } from "@/modulos/ventas/comun";
 import { SelectorProveedor } from "@/modulos/compras/componentes/comun";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { INVALIDAR_PROVEEDORES, SelectorCuenta, sumarDias } from "./cuentas";
+import { ElegirOrdenes, ListaCategorias, useOrdenesParaLigar } from "./ElegirOrdenes";
 
 interface Proveedor { id: string; nombre: string; categoria: string | null; dias_credito: number; rfc: string | null }
 /**
@@ -179,6 +180,17 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
   });
   const hayParecidas = (parecidas.data?.length ?? 0) > 0;
   useEffect(() => setEsOtra(false), [prov?.id, monto, f.fecha, f.factura, idx]);
+  // De qué orden de compra es: de entrada, las que casan por folio con lo que anotó almacén.
+  const ordenes = useOrdenesParaLigar(notaCredito ? null : prov?.id, f.factura, monto);
+  const [ocs, setOcs] = useState<string[]>([]);
+  const [tocoOcs, setTocoOcs] = useState(false);
+  useEffect(() => { setOcs([]); setTocoOcs(false); }, [prov?.id, idx]);
+  useEffect(() => {
+    if (!tocoOcs && ordenes.data) setOcs(ordenes.data.filter((o) => o.casa_folio).map((o) => o.id));
+  }, [ordenes.data, tocoOcs]);
+  const conOrden = !notaCredito && ocs.length > 0;
+  // Sin orden, la categoría es lo único que dice en qué se gastó (la base también lo revisa).
+  const faltaCategoria = !notaCredito && !conOrden && !f.categoria.trim();
   const venceCalculado = prov ? sumarDias(f.fecha, prov.dias_credito ?? 0) : null;
   const vence = tocoVence ? f.vence : venceCalculado ?? "";
   const siguiente = () => { setVerArchivo(false); if (idx + 1 < cola.length) setIdx(idx + 1); else alCerrar(); };
@@ -195,6 +207,7 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
       p_cfdi_uuid: cfdi?.uuid ?? null, p_metodo_pago: cfdi?.metodoPago ?? null,
       // De dónde salió: el contador pide el XML de las que vinieron de un PDF.
       p_leido_de: actual?.deClaude ? "pdf" : cfdi ? "xml" : "captura",
+      p_ordenes: notaCredito ? null : ocs,
     }));
     // De contado: el pago va en el mismo paso. Se marca como anticipo para que, si el
     // proveedor tenía saldo a favor, no se rechace un pago que es exacto a la factura.
@@ -205,15 +218,14 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
     }
   }, {
     exito: notaCredito ? "Nota de crédito registrada" : f.pagada ? "Compra y pago registrados" : "Compra registrada",
-    invalidar: INVALIDAR_PROVEEDORES, alTerminar: siguiente,
+    invalidar: [...INVALIDAR_PROVEEDORES, ["compra_oc"], ["ordenes_para_ligar"], ["v_por_pagar"], ["facturas_de_oc"]], alTerminar: siguiente,
   });
 
   function enviar(e: FormEvent) {
     e.preventDefault();
-    if (prov && monto > 0 && !actual?.error && (!f.pagada || f.cuenta) && (!hayParecidas || esOtra)) guardar.mutate(undefined);
+    if (prov && monto > 0 && !actual?.error && (!f.pagada || f.cuenta) && (!hayParecidas || esOtra) && !faltaCategoria) guardar.mutate(undefined);
   }
 
-  const categorias = useCategorias();
   const bloqueado = !!actual?.error;
 
   return (
@@ -224,7 +236,7 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
         {cola.length > 1 && <span className="mr-auto text-sm text-tenue">Factura {idx + 1} de {cola.length}</span>}
         {cola.length > 1 && <Boton variante="secundario" type="button" onClick={siguiente}>Saltar</Boton>}
         <Boton variante="secundario" type="button" onClick={alCerrar}>Cerrar</Boton>
-        <Boton type="submit" form="registrar-compra" cargando={guardar.isPending} disabled={!prov || monto <= 0 || bloqueado || (f.pagada && !f.cuenta) || (hayParecidas && !esOtra)}>
+        <Boton type="submit" form="registrar-compra" cargando={guardar.isPending} disabled={!prov || monto <= 0 || bloqueado || (f.pagada && !f.cuenta) || (hayParecidas && !esOtra) || faltaCategoria}>
           {notaCredito ? "Registrar nota de crédito" : f.pagada ? "Registrar compra y pago" : "Registrar compra"}
         </Boton>
       </>}>
@@ -312,9 +324,16 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
           <Campo etiqueta="Factura (serie y folio)">
             <Entrada value={f.factura} onChange={(e) => setF({ ...f, factura: e.target.value })} placeholder="A 3354" />
           </Campo>
-          <Campo etiqueta="Categoría" ayuda="Material, Fletes, Luz, Nómina… la del proveedor si la dejas igual.">
-            <Entrada value={f.categoria} list="categorias-compra" onChange={(e) => setF({ ...f, categoria: e.target.value })} />
-            <datalist id="categorias-compra">{categorias.map((c) => <option key={c} value={c} />)}</datalist>
+          {(ordenes.data?.length ?? 0) > 0 && (
+            <div className="sm:col-span-2">
+              <ElegirOrdenes ordenes={ordenes.data!} elegidas={ocs} alCambiar={(ids) => { setTocoOcs(true); setOcs(ids); }} />
+            </div>
+          )}
+          <Campo etiqueta={conOrden ? "Categoría (partidas sin artículo)" : "Categoría"}
+            ayuda={conOrden ? "Fletes y servicios de la orden toman esta; lo demás, la de su artículo."
+              : notaCredito ? "La del proveedor si la dejas igual." : "Obligatoria sin orden de compra: dice en qué se gastó (Fletes, Luz, Publicidad…). Viene la del proveedor."}>
+            <Entrada value={f.categoria} list="categorias-compra" onChange={(e) => setF({ ...f, categoria: e.target.value })} required={faltaCategoria} />
+            <ListaCategorias id="categorias-compra" />
           </Campo>
           <Campo etiqueta="Concepto" className="sm:col-span-2">
             <Entrada value={f.descripcion} onChange={(e) => setF({ ...f, descripcion: e.target.value })} placeholder="Qué se compró" />
@@ -335,13 +354,4 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
       </div>
     </Dialogo>
   );
-}
-
-/** Las categorías que ya existen, para no escribir "Fletes" de tres formas. */
-function useCategorias() {
-  const datos = useQuery({
-    queryKey: ["proveedores", "categorias"], staleTime: 10 * 60_000,
-    queryFn: () => q<{ categoria: string | null }[]>(supabase.from("proveedores").select("categoria").not("categoria", "is", null).limit(2000)),
-  });
-  return useMemo(() => [...new Set((datos.data ?? []).map((d) => d.categoria!.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es")), [datos.data]);
 }

@@ -19,7 +19,7 @@ import { InsigniaOC, SelectorProveedor, useTiposCambio, type Moneda, type OrdenC
 import { DialogoRecibir } from "./componentes/DialogoRecibir";
 import { RevisarCotizacion, SubirCotizacion, type CotizacionLeida } from "./componentes/LeerCotizacion";
 import { ImpresionOC, type Empresa } from "./componentes/ImpresionOC";
-import { PagosOC } from "./componentes/PagosOC";
+import { PagosOC, useFacturasDeOC } from "./componentes/PagosOC";
 import { DialogoCambiarPartida, HistorialCambiosOC } from "./componentes/CambiarPartida";
 import type { LineaOC, ProveedorCompleto } from "./componentes/tipos";
 import { GLOSARIO } from "@/tutorial/glosario";
@@ -112,6 +112,7 @@ function Detalle({ id }: { id: string }) {
     queryFn: () => q<{ id: number; en: string; nombre: string; unidad: string; almacen: string; cantidad: number; usuario: string | null; motivo: string | null }[]>(
       supabase.from("v_movimientos").select("id, en, nombre, unidad, almacen, cantidad, usuario, motivo").eq("orden_compra_id", id).order("en", { ascending: false })),
   });
+  const facturas = useFacturasDeOC(id, verDinero);
   const empresa = useQuery({
     queryKey: ["configuracion", "empresa"], staleTime: 10 * 60_000,
     queryFn: async () => (await q<{ valor: Empresa }>(supabase.from("configuracion").select("valor").eq("clave", "empresa").single())).valor,
@@ -194,6 +195,7 @@ function Detalle({ id }: { id: string }) {
                             <tr key={l.id}>
                               <td className="min-w-[240px]">
                                 <p>{l.nombre}</p>
+                                {!l.articulo_id && <p className="text-[11px] text-aviso" data-explain={GLOSARIO.partidaSinArticulo} data-explain-title="Partida sin artículo">Sin artículo del catálogo: si es material, ponle su artículo</p>}
                                 <p className="text-xs text-tenue">{[l.clave, l.unidad, l.empaque && Number(l.empaque) > 1 ? `empaque de ${numero(l.empaque)}` : null, l.para && `para ${l.para}`].filter(Boolean).join(" · ")}</p>
                               </td>
                               <td className="text-right">
@@ -306,7 +308,16 @@ function Detalle({ id }: { id: string }) {
                       </Seleccion>
                     </Dato>
                   )}
-                  {!borrador && <Dato etiqueta="Factura del proveedor">{o.factura_proveedor ?? <span className="text-tenue">se captura al recibir</span>}</Dato>}
+                  {!borrador && <Dato etiqueta="Factura del proveedor">
+                    {o.factura_proveedor ?? <span className="text-tenue">se captura al recibir</span>}
+                    {verDinero && (facturas.data?.length ? facturas.data.map((x) => (
+                      <p key={x.movimiento_id} className="text-xs text-ok" data-explain={GLOSARIO.facturaDeLaOrden} data-explain-title="Registrada en finanzas">
+                        Registrada en finanzas: {x.factura ?? "sin folio"} del {fecha(x.fecha)}{x.monto != null ? ` · ${dinero(x.monto)}` : ""}
+                      </p>
+                    )) : (o.estado === "recibida" || o.estado === "parcial") && facturas.isSuccess && (
+                      <p className="text-xs text-tenue" data-explain={GLOSARIO.facturaDeLaOrden} data-explain-title="Factura en finanzas">Finanzas aún no registra su factura</p>
+                    ))}
+                  </Dato>}
                   <Dato etiqueta="Notas para el proveedor">
                     {compra && o.estado !== "cancelada" ? <CampoTexto valor={o.notas} multilinea alGuardar={(v) => actualizar.mutate({ notas: v })} placeholder="Entregar en planta Atotonilco, horario…" />
                       : <p className="whitespace-pre-line">{o.notas ?? "—"}</p>}
