@@ -12,6 +12,7 @@ import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos"
 import { supabase } from "@/lib/supabase";
 import { q, useAccion, useTiempoReal } from "@/lib/consultas";
 import { dinero, dineroCompacto, fecha, hoyISO } from "@/lib/formato";
+import { useSesion } from "@/lib/sesion";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -26,6 +27,10 @@ const INVALIDAR = [["v_caja_chica"], ["hallazgos"]];
  * fórmula por renglón que se rompía al insertar uno; aquí sale de sumar los movimientos.
  */
 export default function CajaChica() {
+  const { puede } = useSesion();
+  // Recepción y compras registran cuando finanzas no está; arqueo y borrar son de finanzas.
+  const registra = puede("caja_chica", 2);
+  const administra = puede("caja_chica", 3);
   const [elegida, setVista] = useState<"mes" | "todo" | null>(null);
   const [arqueo, setArqueo] = useState(false);
   const datos = useQuery({
@@ -70,7 +75,7 @@ export default function CajaChica() {
     { clave: "salida", titulo: "Sale", alinear: "der", sinBusqueda: true, valor: (m) => (Number(m.importe) < 0 ? -Number(m.importe) : 0),
       celda: (m) => (Number(m.importe) < 0 ? dinero(-Number(m.importe)) : null) },
     { clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, explica: GLOSARIO.saldoCaja, valor: (m) => Number(m.saldo), celda: (m) => <b>{dinero(m.saldo)}</b> },
-    { clave: "acciones", titulo: "", sinBusqueda: true, celda: (m) => m.origen === "erp" ? (
+    { clave: "acciones", titulo: "", sinBusqueda: true, oculta: !administra, celda: (m) => m.origen === "erp" ? (
       <button type="button" onClick={(e) => { e.stopPropagation(); if (confirm(`¿Borrar «${m.concepto}» de ${dinero(Math.abs(Number(m.importe)))}?`)) borrar.mutate(m.id); }}
         className="p-1 rounded text-tenue hover:text-peligro hover:bg-fondo" aria-label="Borrar movimiento" title="Borrar (mal capturado)"><Trash2 className="h-4 w-4" /></button>
     ) : null },
@@ -78,16 +83,16 @@ export default function CajaChica() {
 
   return (
     <Pagina titulo="Caja chica" descripcion="El efectivo de la oficina: cada entrada y salida con su saldo, y el arqueo cuando se cuenta."
-      acciones={<Boton variante="secundario" onClick={() => setArqueo(true)}><Calculator className="h-4 w-4" /> Arqueo</Boton>}>
+      acciones={administra && <Boton variante="secundario" onClick={() => setArqueo(true)}><Calculator className="h-4 w-4" /> Arqueo</Boton>}>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi titulo="Saldo" valor={dinero(saldo)} icono={Coins} tono={estado.tono} explica={GLOSARIO.saldoCaja} detalle={<span data-explain={GLOSARIO.topesCaja} data-explain-title="Mínimo y máximo">{estado.texto}</span>} />
         <Kpi titulo="Salidas del mes" valor={dineroCompacto(salidasMes)} icono={ArrowUpRight} tono="neutro" detalle={`${delMes.filter((m) => m.tipo === "salida").length} gastos`} />
         <Kpi titulo="Entradas del mes" valor={dineroCompacto(entradasMes)} icono={ArrowDownLeft} tono="info" detalle={`${delMes.filter((m) => m.tipo === "entrada").length} reposiciones`} />
         <Kpi titulo="Último arqueo" valor={ultimoArqueo ? fecha(ultimoArqueo.fecha) : "Nunca"} icono={ScanLine} tono={ultimoArqueo ? "neutro" : "aviso"} explica={GLOSARIO.arqueo}
-          detalle={ultimoArqueo ? `${Number(ultimoArqueo.importe) < 0 ? "Faltaron" : "Sobraron"} ${dinero(Math.abs(Number(ultimoArqueo.importe)))}` : "Cuenta el efectivo y regístralo"} alClic={() => setArqueo(true)} />
+          detalle={ultimoArqueo ? `${Number(ultimoArqueo.importe) < 0 ? "Faltaron" : "Sobraron"} ${dinero(Math.abs(Number(ultimoArqueo.importe)))}` : "Cuenta el efectivo y regístralo"} alClic={administra ? () => setArqueo(true) : undefined} />
       </div>
 
-      <Captura />
+      {registra && <Captura />}
 
       <TablaDatos filas={filas} columnas={columnas} cargando={datos.isLoading} error={datos.error} claveFila={(m) => String(m.id)}
         exportarComo="caja-chica" placeholder="Buscar concepto o persona…" limite={200}

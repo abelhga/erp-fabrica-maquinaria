@@ -132,7 +132,7 @@ begin
   end;
   assert v_estado = 'negado', 'caja chica sin concepto';
 
-  -- Compras (finanzas 1) no registra ni ve la cuenta corriente ni la caja.
+  -- Compras (finanzas 1) no registra ni ve la cuenta corriente.
   perform pg_temp.como(v_com);
   begin
     perform registrar_movimiento_proveedor(v_prov, 'compra', 100);
@@ -141,13 +141,14 @@ begin
   end;
   assert v_estado = 'negado', 'compras registró una compra en la cuenta corriente';
   assert not exists (select 1 from movimientos_proveedor where proveedor_id = v_prov), 'compras vio la cuenta corriente';
-  assert not exists (select 1 from caja_chica), 'compras vio la caja chica';
+  -- La caja chica sí la registra (Susana lo pidió, ver 202), pero el arqueo se queda con finanzas.
+  perform registrar_caja_chica('salida', 10, 'x');
   begin
-    perform registrar_caja_chica('salida', 10, 'x');
-    v_estado := 'registró';
+    perform arqueo_caja_chica(0);
+    v_estado := 'contó';
   exception when insufficient_privilege then v_estado := 'negado';
   end;
-  assert v_estado = 'negado', 'compras movió la caja chica';
+  assert v_estado = 'negado', 'compras hizo el arqueo de la caja chica';
   begin
     perform alta_proveedor_finanzas('T101 Colado', 'COL010101AA1');
     v_estado := 'dio de alta';
