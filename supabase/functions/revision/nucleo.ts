@@ -118,6 +118,7 @@ Reglas:
 - «para»: "responsable" si es un error que quien lo capturó puede corregir; "direccion" si es un patrón que podría señalar un mal uso (faltantes que se repiten, gastos raros, salidas que no se parecen a las demás). En ese caso describe el patrón con hechos y NUNCA acuses a nadie ni supongas intención.
 - No repitas nada de «ya_dicho». Si alguien contestó que algo está bien así, eso es normal en esta empresa: no lo vuelvas a señalar ni algo igual.
 - Las reglas automáticas ya revisan artículos y clientes repetidos por nombre, pagos repetidos, costos de compra fuera de lo normal y compras atrasadas; busca lo que una regla no ve.
+- No te nombres ni nombres al modelo o a su proveedor: para la gente esto es «la revisión» o «la IA».
 - Escribe en español de México, de tú, claro y corto: el título en una línea (qué y en qué registro), el detalle en dos o tres frases (qué viste, por qué parece error, qué revisar). Sin jerga técnica.
 - «lectura»: dos o tres frases de cómo se vio el día en este módulo, para dirección.`;
 }
@@ -144,6 +145,7 @@ Reglas:
 - Cada consejo sale de un número de sus datos y lo dice en «por_que» («Solo 2 de tus 52 cotizaciones tuvieron llamada»). Nada genérico.
 - Si sus datos no alcanzan para decir algo útil, da menos consejos o ninguno.
 - No repitas un consejo que marcó «no_util». Si en semanas anteriores se le propuso un experimento, comenta cómo va con sus números de ahora.
+- No te nombres ni nombres al modelo o a su proveedor: para la persona esto es «el ERP» o «la IA».
 - Nunca menciones costos, márgenes, utilidad ni sueldos. Nunca nombres ni compares con compañeros. Nada de regaños: de tú, con respeto, como un buen jefe que conoce el sistema.
 - Español de México llano, sin jerga técnica. Título en una línea; texto de dos a cuatro frases; «experimento» solo si propones uno (si no, null).`;
 
@@ -256,9 +258,9 @@ export async function enviar(e: Entorno, admin: SupabaseClient): Promise<Dict> {
   const anotarError = (nota: string) => rpc(admin, "revision_anotar_error", { p_corrida: corrida, p_nota: nota.slice(0, 300) });
   try {
     const estado = await rpc<string>(admin, "revision_estado_claude");
-    if (estado !== "si") { await anotarError(`Claude: ${estado}`); return { ok: false, motivo: estado }; }
+    if (estado !== "si") { await anotarError(`IA: ${estado}`); return { ok: false, motivo: estado }; }
     const cliente = anthropic(e);
-    if (!cliente) { await anotarError("Falta ANTHROPIC_API_KEY en los secretos de la función"); return { ok: false, motivo: "sin llave" }; }
+    if (!cliente) { await anotarError("Falta la llave de la IA en los secretos de la función"); return { ok: false, motivo: "sin llave" }; }
 
     const { data: cfg } = await admin.from("configuracion").select("valor").eq("clave", "revision_nocturna").maybeSingle();
     const c = o((cfg as { valor?: unknown } | null)?.valor);

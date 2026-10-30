@@ -28,7 +28,7 @@ export const COMPRAS = {
   fechaEntregaOrden: "Si no la capturas, al enviar la orden se calcula con los días hábiles de entrega del proveedor (7 si no tiene). Pasada esa fecha, la orden sale como atrasada.",
   costoContraVigente: "Cuánto difiere el costo de esta partida del costo vigente del artículo. Rojo: más de 10 % arriba; amarillo: arriba; verde: abajo.",
   recibirOrden: "Almacén captura lo que de verdad llegó, a qué almacén y con qué factura; lo que falte se queda pendiente. No deja recibir más de 10 % arriba de lo pendiente. Con la casilla marcada, el costo de la orden pasa a ser el costo vigente del artículo.",
-  leerCotizacionProveedor: "Sube el PDF o la foto de la cotización del proveedor y Claude lee proveedor, partidas, cantidades y precios y los empareja con el catálogo. Tú lo revisas: nada se guarda hasta crear la orden.",
+  leerCotizacionProveedor: "Sube el PDF o la foto de la cotización del proveedor y la IA lee proveedor, partidas, cantidades y precios y los empareja con el catálogo. Tú lo revisas: nada se guarda hasta crear la orden.",
 
   // --- Proveedores ---
   creditoProveedor: "Días que da el proveedor para pagar. El vencimiento de cada orden se fija al recibirla: fecha de recepción más estos días. Sin crédito, es de contado.",

@@ -57,14 +57,14 @@ export function SubirCotizacion({ alLeer }: { alLeer: (c: CotizacionLeida) => vo
 
   const leer = async (f: File) => {
     setError(null);
-    if (!["application/pdf", "image/jpeg", "image/png"].includes(f.type)) { setError("Claude lee PDF, JPG o PNG. Si la cotización es de Excel, guárdala como PDF."); return; }
+    if (!["application/pdf", "image/jpeg", "image/png"].includes(f.type)) { setError("La IA lee PDF, JPG o PNG. Si la cotización es de Excel, guárdala como PDF."); return; }
     if (f.size > 15 * 1024 * 1024) { setError("El archivo pesa más de 15 MB: sube solo las páginas que importan."); return; }
     setArchivo(f); setLeyendo(true);
     abortar.current = new AbortController();
     try {
       const r = await leerDocumento("cotizacion_proveedor", f, abortar.current.signal);
       // En modo demostración los datos son un ejemplo: no se arma una orden real con ellos.
-      if (r.simulado) { setError("Falta conectar la llave de Claude: por ahora arma la orden a mano."); return; }
+      if (r.simulado) { setError("Falta conectar la llave de la IA: por ahora arma la orden a mano."); return; }
       alLeer({ archivo: f, campos: r.campos });
     } catch (e) {
       if ((e as Error).name !== "AbortError") setError(mensajeError(e));
@@ -77,7 +77,7 @@ export function SubirCotizacion({ alLeer }: { alLeer: (c: CotizacionLeida) => vo
       <div className="flex flex-wrap items-center gap-3">
         <Sparkles className="h-5 w-5 text-marca shrink-0" />
         <p className="text-sm flex-1 min-w-[200px]">
-          <b data-explain={GLOSARIO.leerCotizacionProveedor}>¿Tienes la cotización del proveedor?</b> Súbela y Claude arma la orden. <span className="text-tenue">PDF o foto.</span>
+          <b data-explain={GLOSARIO.leerCotizacionProveedor}>¿Tienes la cotización del proveedor?</b> Súbela y la IA arma la orden. <span className="text-tenue">PDF o foto.</span>
         </p>
         <Boton type="button" variante="secundario" onClick={() => entrada.current?.click()} cargando={leyendo}>
           {!leyendo && <FileUp className="h-4 w-4" />}{leyendo ? "Leyendo…" : "Subir cotización"}
@@ -85,7 +85,7 @@ export function SubirCotizacion({ alLeer }: { alLeer: (c: CotizacionLeida) => vo
         <input ref={entrada} type="file" accept="application/pdf,image/jpeg,image/png" className="hidden" aria-label="Cotización del proveedor"
           onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) leer(f); }} />
       </div>
-      {leyendo && <p className="mt-2 text-sm text-tenue flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Claude está leyendo {archivo?.name}… (unos segundos)</p>}
+      {leyendo && <p className="mt-2 text-sm text-tenue flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> La IA está leyendo {archivo?.name}… (unos segundos)</p>}
       {error && <p className="mt-2 text-sm text-peligro flex items-start gap-2"><AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />{error}</p>}
     </div>
   );
@@ -162,7 +162,7 @@ export function RevisarCotizacion({ leida, alQuitar, alCrear }: { leida: Cotizac
         <div className="flex items-start gap-3">
           <Sparkles className="h-5 w-5 text-marca shrink-0 mt-0.5" />
           <p className="text-sm flex-1 min-w-0">
-            <b>Claude leyó {lineas.length} {lineas.length === 1 ? "partida" : "partidas"}</b> de <span className="text-tenue">{leida.archivo.name}</span>.
+            <b>La IA leyó {lineas.length} {lineas.length === 1 ? "partida" : "partidas"}</b> de <span className="text-tenue">{leida.archivo.name}</span>.
             {" "}Revisa proveedor, artículos, cantidades y precios: nada se guarda hasta crear la orden.
           </p>
           <a href={vista} target="_blank" rel="noreferrer" className="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-marca-texto hover:underline">

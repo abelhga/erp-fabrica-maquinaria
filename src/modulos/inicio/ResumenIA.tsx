@@ -79,10 +79,10 @@ export function ResumenIA({ area = "direccion", conClaude = true }: { area?: Are
           </div>
           <div className="flex items-center gap-2 text-xs text-tenue">
             {analizando
-              ? <Insignia tono="marca"><Sparkles className="h-3 w-3 animate-pulse" />Claude está analizando…</Insignia>
+              ? <Insignia tono="marca"><Sparkles className="h-3 w-3 animate-pulse" />La IA está analizando…</Insignia>
               : datos && (datos.simulado
                 ? <span data-explain={GLOSARIO.avisosDeReglas} data-explain-title="Sin IA"><Insignia tono="neutro">Reglas de la base · sin IA</Insignia></span>
-                : <Insignia tono="marca"><Sparkles className="h-3 w-3" />Claude · {hace(datos.generado_en)}</Insignia>)}
+                : <Insignia tono="marca"><Sparkles className="h-3 w-3" />IA · {hace(datos.generado_en)}</Insignia>)}
             <button onClick={actualizar} disabled={r.isFetching} title="Volver a analizar"
               className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo disabled:opacity-50">
               <RefreshCw className={cn("h-4 w-4", r.isFetching && "animate-spin")} />

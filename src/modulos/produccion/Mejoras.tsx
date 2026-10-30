@@ -75,7 +75,7 @@ export default function Mejoras() {
   return (
     <Pagina titulo="Mejoras (kaizen)" descripcion="Las ideas y los problemas del piso, convertidos en mejoras con quién las lleva y qué se logró"
       acciones={<>
-        {decide && <Boton variante="secundario" onClick={() => setSugerir(true)}><Sparkles className="h-4 w-4" />Sugerir con Claude</Boton>}
+        {decide && <Boton variante="secundario" onClick={() => setSugerir(true)}><Sparkles className="h-4 w-4" />Sugerir con IA</Boton>}
         <Boton onClick={() => setIdea({})}><Lightbulb className="h-4 w-4" />Tengo una idea</Boton>
       </>}>
       {mejoras.error ? <ErrorCarga error={mejoras.error} /> : mejoras.isLoading ? <Cargando filas={6} /> : (
@@ -165,7 +165,7 @@ export default function Mejoras() {
       )}
 
       {idea && <DialogoIdea abierto alCambiar={(v) => !v && setIdea(null)} semilla={idea} alCrear={(id) => abrir(id)} />}
-      <Lateral abierto={sugerir} alCambiar={setSugerir} ancho="max-w-3xl" titulo="Sugerencias de Claude"
+      <Lateral abierto={sugerir} alCambiar={setSugerir} ancho="max-w-3xl" titulo="Sugerencias de la IA"
         subtitulo="Mejoras que salen de los datos del taller de los últimos 90 días. Tú decides cuáles se proponen.">
         {sugerir && <PanelSugerencias existentes={lista} />}
       </Lateral>
@@ -419,7 +419,7 @@ function PanelSugerencias({ existentes }: { existentes: Mejora[] }) {
     const etapa = (etapas.data ?? []).find((e) => e.nombre === s.etapa)?.id ?? null;
     const id = await q<string>(supabase.rpc("proponer_mejora", {
       p_titulo: s.titulo.slice(0, 140), p_problema: `${s.problema}\n\nDe dónde sale: ${s.evidencia}`, p_propuesta: s.propuesta,
-      p_etapa: etapa, p_quien: "Claude (sugerencia)", p_desperdicio: s.desperdicio,
+      p_etapa: etapa, p_quien: "IA (sugerencia)", p_desperdicio: s.desperdicio,
     }));
     if (s.tipo === "a3" || s.ahorro_horas_mes > 0)
       await q(supabase.rpc("editar_mejora", { p_id: id, p_datos: { tipo: s.tipo, ...(s.ahorro_horas_mes > 0 ? { ahorro_horas_mes: s.ahorro_horas_mes } : {}) } }));
@@ -430,14 +430,14 @@ function PanelSugerencias({ existentes }: { existentes: Mejora[] }) {
   if (sug.isLoading) return (
     <div className="py-16 flex flex-col items-center gap-3 text-sm text-tenue">
       <Loader2 className="h-8 w-8 animate-spin" />
-      <p>Claude está revisando las métricas, los problemas del piso y las fallas de los últimos 90 días…</p>
+      <p>La IA está revisando las métricas, los problemas del piso y las fallas de los últimos 90 días…</p>
       <p className="text-xs">Tarda alrededor de un minuto.</p>
     </div>
   );
   if (sug.error) return <ErrorCarga error={sug.error} />;
   const d = sug.data!;
   return (
-    <div className="space-y-4 text-sm" data-explain={GLOSARIO.sugerenciasClaude} data-explain-title="Sugerencias de Claude">
+    <div className="space-y-4 text-sm" data-explain={GLOSARIO.sugerenciasClaude} data-explain-title="Sugerencias de la IA">
       {d.simulado && d.aviso && <p className="rounded-lg border border-aviso/40 bg-aviso-suave px-3 py-2 text-aviso">{d.aviso}</p>}
       <p className="rounded-lg bg-fondo px-3 py-2 leading-relaxed">{d.lectura}</p>
       {d.sugerencias.length === 0 && <Vacio icono={Sparkles} titulo="Sin sugerencias" texto="Con estos datos no hay nada claro que proponer. Cuando el piso marque más en la terminal, vuelve a pedirlas." />}
@@ -463,7 +463,7 @@ function PanelSugerencias({ existentes }: { existentes: Mejora[] }) {
         })}
       </ul>
       <div className="flex flex-wrap items-center gap-3 border-t border-borde pt-3 text-xs text-tenue">
-        <span>{d.guardado ? "Guardadas" : "Hechas"} {hace(d.generado_en)}{d.modelo ? ` con ${d.modelo}` : ""}.</span>
+        <span>{d.guardado ? "Guardadas" : "Hechas"} {hace(d.generado_en)}{d.modelo ? " con IA" : ""}.</span>
         <Boton variante="fantasma" tamano="sm" className="ml-auto" onClick={() => setForzar((n) => n + 1)} disabled={sug.isFetching}>
           <RefreshCw className="h-3.5 w-3.5" />Volver a pedirlas
         </Boton>

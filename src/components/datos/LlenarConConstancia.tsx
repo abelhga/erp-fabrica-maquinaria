@@ -72,13 +72,13 @@ export function LlenarConConstancia({ para, alLeer, excluir, className }: {
 
   const leer = async (f: File) => {
     setError(null);
-    if (!["application/pdf", "image/jpeg", "image/png"].includes(f.type)) { setError("Claude lee PDF, JPG o PNG."); return; }
+    if (!["application/pdf", "image/jpeg", "image/png"].includes(f.type)) { setError("La IA lee PDF, JPG o PNG."); return; }
     if (f.size > 15 * 1024 * 1024) { setError("El archivo pesa más de 15 MB."); return; }
     setArchivo(f); setLeyendo(true);
     abortar.current = new AbortController();
     try {
       const r = await leerDocumento("constancia_fiscal", f, abortar.current.signal);
-      if (r.simulado) { setError("Falta conectar la llave de Claude: por ahora captura los datos a mano."); return; }
+      if (r.simulado) { setError("Falta conectar la llave de la IA: por ahora captura los datos a mano."); return; }
       const datos = datosDeConstancia(r.campos);
       const registrado = datos.rfc ? await q<Registrado>(supabase.rpc("rfc_registrado", { p_rfc: datos.rfc })).catch(() => null) : null;
       setLeida({ campos: r.campos, datos, registrado });
@@ -146,7 +146,7 @@ export function LlenarConConstancia({ para, alLeer, excluir, className }: {
       <div className="flex flex-wrap items-center gap-3">
         <Sparkles className="h-5 w-5 text-marca shrink-0" />
         <p className="text-sm flex-1 min-w-[200px]">
-          <b>¿Tienes su constancia de situación fiscal?</b> Súbela y Claude llena los datos fiscales. <span className="text-tenue">PDF o foto.</span>
+          <b>¿Tienes su constancia de situación fiscal?</b> Súbela y la IA llena los datos fiscales. <span className="text-tenue">PDF o foto.</span>
         </p>
         <Boton type="button" variante="secundario" onClick={() => entrada.current?.click()} cargando={leyendo}>
           {!leyendo && <FileUp className="h-4 w-4" />}{leyendo ? "Leyendo…" : "Subir constancia"}
@@ -154,7 +154,7 @@ export function LlenarConConstancia({ para, alLeer, excluir, className }: {
         <input ref={entrada} type="file" accept="application/pdf,image/jpeg,image/png" className="hidden" aria-label="Constancia de situación fiscal"
           onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) leer(f); }} />
       </div>
-      {leyendo && <p className="mt-2 text-sm text-tenue flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Claude está leyendo {archivo?.name}…</p>}
+      {leyendo && <p className="mt-2 text-sm text-tenue flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> La IA está leyendo {archivo?.name}…</p>}
       {error && <p className="mt-2 text-sm text-peligro flex items-start gap-2"><AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />{error}</p>}
     </div>
   );

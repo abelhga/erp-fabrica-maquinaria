@@ -114,7 +114,7 @@ export function DineroEmbarque({ e }: { e: Embarque }) {
         <Tarjeta className="overflow-hidden">
           <EncabezadoTarjeta titulo="Gastos" descripcion="Sin IVA y con su criterio de prorrateo. Los estimados entran al costeo preliminar, no al final."
             acciones={captura && <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("gasto")}><Plus className="h-4 w-4" /> Gasto</Boton>} />
-          {!gastos.data?.length ? <Vacio icono={Receipt} titulo="Sin gastos" texto="Flete, cargos locales, honorarios, flete a Atotonilco… o lee la cuenta de gastos con Claude." className="py-8" /> : (
+          {!gastos.data?.length ? <Vacio icono={Receipt} titulo="Sin gastos" texto="Flete, cargos locales, honorarios, flete a Atotonilco… o lee la cuenta de gastos con IA." className="py-8" /> : (
             <ul className="divide-y divide-borde border-t border-borde">
               {gastos.data.map((g) => (
                 <li key={g.id} className="px-5 py-2.5 flex items-center gap-3 text-sm">
@@ -296,7 +296,7 @@ function DialogoPedimento({ abierto, alCambiar, e, invalidar }: { abierto: boole
   })), { exito: "Pedimento registrado: ya se puede calcular el costeo preliminar", invalidar, alTerminar: () => alCambiar(false) });
   const listo = d.numero.replace(/\D/g, "").length === 15 && !!d.fecha_pago;
   return (
-    <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="Pedimento pagado" ancho="max-w-xl" descripcion="O léelo con Claude desde Documentos."
+    <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="Pedimento pagado" ancho="max-w-xl" descripcion="O léelo con IA desde Documentos."
       pie={<><Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton><Boton type="submit" form="form-ped" disabled={!listo} cargando={guardar.isPending}>Guardar</Boton></>}>
       <form id="form-ped" className="grid gap-4 grid-cols-2 sm:grid-cols-3" onSubmit={(ev: FormEvent) => { ev.preventDefault(); if (listo) guardar.mutate(undefined); }}>
         <Campo etiqueta="Número" className="col-span-2" ayuda="15 dígitos: 26 16 1943 6004373"><Entrada autoFocus value={d.numero} onChange={poner("numero")} /></Campo>

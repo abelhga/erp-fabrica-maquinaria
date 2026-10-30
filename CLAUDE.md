@@ -5,7 +5,8 @@ dosificadoras, cribadoras, tolvas, silos y elevadores, que además vende compone
 (colectores, poleas, cangilones, catarinas, cosedoras) directo, por Mercado Libre y por
 su sitio web. Reemplaza un sistema de hojas de Google Sheets ligadas con IMPORTRANGE.
 
-**Todo lo que ve el usuario va en español de México.** Comentarios y commits también,
+**Todo lo que ve el usuario va en español de México.** Y nunca dice «Claude», «Anthropic» ni un
+id de modelo (el proveedor de la IA puede cambiar): en pantalla es «IA» o el ícono de destellos (`Sparkles`). Comentarios y commits también,
 y explican **por qué**, no qué. Mira `git log` antes del primer commit.
 
 ## Arquitectura en un párrafo

@@ -88,6 +88,8 @@ export interface MaterialOP {
   por_surtir: number; disponible_planta: number; tipo: string;
   /** Consumible del taller (discos, soldadura, EPP…): sale a nombre de quien lo recibe, no a la orden. */
   del_taller: boolean;
+  /** La categoría del artículo (Eléctricos, Material para aire…), para agrupar y buscar. */
+  categoria: string | null;
 }
 
 export function useTablero() {

@@ -27,11 +27,13 @@ type Estado = "abierto" | "hecho" | "cancelado" | "cubierto";
 interface Pendiente {
   id: string; titulo: string; detalle: string | null; vence: string | null; estado: Estado;
   ruta: string | null; nota_cierre: string | null; creado_en: string; cerrado_en: string | null;
-  responsable_id: string; creado_por: string; grupo_id: string | null; modo: "uno" | "todos" | null;
+  responsable_id: string; creado_por: string | null; grupo_id: string | null; modo: "uno" | "todos" | null;
   /** Quien lo tiene preguntó algo y espera a quien lo pidió: mientras, no cuenta como su retraso. */
   esperando_respuesta: boolean;
   responsable: { nombre: string } | null; creador: { nombre: string } | null;
 }
+/** El de la revisión nocturna no lo pidió una persona (no tiene creado_por). */
+const quienPidio = (p: Pendiente) => p.creador?.nombre ?? (p.creado_por ? "…" : "Revisión nocturna");
 interface Mensaje { id: number; pendiente_id: string; autor_id: string; texto: string; en: string; autor: { nombre: string } | null }
 interface Cumplimiento {
   persona_id: string; persona: string; abiertos: number; vencidos: number; cerrados: number; a_tiempo: number; tarde: number;
@@ -191,7 +193,7 @@ function FilaPendiente({ p, i, hoy, yo, conQuien, alCerrar, alAbrir }: {
         <p className={cn("text-sm font-medium", p.estado !== "abierto" && "line-through text-tenue")}>{p.titulo}</p>
         {p.detalle && <p className="text-xs text-tenue mt-0.5 whitespace-pre-wrap">{p.detalle}</p>}
         <p className="text-xs text-tenue mt-1">
-          {conQuien === "para" ? <>Para <b className="text-texto font-medium">{p.responsable?.nombre}</b></> : <>De {p.creador?.nombre}</>}
+          {conQuien === "para" ? <>Para <b className="text-texto font-medium">{p.responsable?.nombre}</b></> : <>De {quienPidio(p)}</>}
           {" · "}{hace(p.creado_en)}
           {p.modo && <> · <span data-explain={GLOSARIO.pendienteVarios} data-explain-title="A varias personas">a varias personas: {MODO[p.modo]}</span></>}
           {p.nota_cierre && <> · <span className="text-texto">“{p.nota_cierre}”</span></>}
@@ -326,7 +328,7 @@ function Equipo({ todos, alAbrir }: { todos: Pendiente[]; alAbrir: (id: string) 
                     <span className="min-w-0 flex-1">
                       <span className="font-medium">{p.titulo}</span>
                       <span className="block text-xs text-tenue">
-                        {p.responsable_id === persona.persona_id ? <>Le toca · lo pidió <b className="text-texto font-medium">{p.creador?.nombre}</b></>
+                        {p.responsable_id === persona.persona_id ? <>Le toca · lo pidió <b className="text-texto font-medium">{quienPidio(p)}</b></>
                           : <>Lo pidió · lo tiene <b className="text-texto font-medium">{p.responsable?.nombre}</b></>} · {hace(p.creado_en)}
                       </span>
                     </span>
@@ -348,7 +350,7 @@ function Equipo({ todos, alAbrir }: { todos: Pendiente[]; alAbrir: (id: string) 
                     <Check className="h-4 w-4 mt-0.5 shrink-0 text-ok" />
                     <span className="min-w-0 flex-1">
                       <span className="font-medium">{p.titulo}</span>
-                      <span className="block text-xs text-tenue">Lo pidió <b className="text-texto font-medium">{p.creador?.nombre}</b> · lo cerró {fechaYHora(p.cerrado_en)}</span>
+                      <span className="block text-xs text-tenue">Lo pidió <b className="text-texto font-medium">{quienPidio(p)}</b> · lo cerró {fechaYHora(p.cerrado_en)}</span>
                       {p.nota_cierre
                         ? <span className="block text-xs mt-0.5">Respuesta: <span className="text-texto">“{p.nota_cierre}”</span></span>
                         : <span className="block text-xs text-tenue mt-0.5">Lo cerró sin dejar respuesta.</span>}
@@ -407,14 +409,15 @@ function FichaPendiente({ p, cargando, yo, hoy, alCerrar, alHecho, alCancelar }:
   useEffect(() => { fin.current?.scrollIntoView({ block: "end" }); }, [mensajes.data?.length]);
   const abierto = p?.estado === "abierto";
   const soyResp = !!p && p.responsable_id === yo, soyCreador = !!p && p.creado_por === yo;
-  const escribe = abierto && (soyResp || soyCreador) && p!.responsable_id !== p!.creado_por;
-  const otro = soyResp ? p?.creador?.nombre : p?.responsable?.nombre;
+  // Al de la revisión nocturna no hay a quién preguntarle: se contesta en «Por revisar».
+  const escribe = abierto && (soyResp || soyCreador) && !!p!.creado_por && p!.responsable_id !== p!.creado_por;
+  const otro = soyResp ? (p ? quienPidio(p) : undefined) : p?.responsable?.nombre;
   const vencido = abierto && p?.vence && p.vence < hoy;
   const mandar = () => { if (texto.trim() && !enviar.isPending) enviar.mutate(undefined); };
   return (
     <Lateral abierto={!!p || cargando} alCambiar={(v) => !v && alCerrar()} ancho="max-w-xl"
       titulo={p?.titulo ?? "Pendiente"}
-      subtitulo={p && <>De <b>{p.creador?.nombre}</b> para <b>{p.responsable?.nombre}</b> · {hace(p.creado_en)}</>}
+      subtitulo={p && <>De <b>{quienPidio(p)}</b> para <b>{p.responsable?.nombre}</b> · {hace(p.creado_en)}</>}
       acciones={p && abierto && (
         <div className="flex gap-2">
           {soyCreador && <Boton variante="secundario" tamano="sm" onClick={alCancelar}><X className="h-4 w-4" />{p.grupo_id ? "Cancelar para todos" : "Cancelar"}</Boton>}
@@ -442,7 +445,7 @@ function FichaPendiente({ p, cargando, yo, hoy, alCerrar, alHecho, alCancelar }:
             <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
               {mensajes.isLoading ? <Cargando filas={2} /> : (mensajes.data ?? []).length === 0 ? (
                 <p className="text-sm text-tenue">{soyResp && escribe ? `¿Te falta un dato para terminarlo? Pregúntale a ${otro ?? "quien lo pidió"} aquí: le llega un aviso y, mientras contesta, no cuenta como retraso tuyo.`
-                  : "Sin preguntas todavía."}</p>
+                  : p.creado_por ? "Sin preguntas todavía." : "Lo puso la revisión nocturna. Ábrelo en «Por revisar» (la flecha de arriba): ahí lo corriges o, si no es error, contestas «Está bien así»."}</p>
               ) : (mensajes.data ?? []).map((m) => {
                 const mio = m.autor_id === yo;
                 return (

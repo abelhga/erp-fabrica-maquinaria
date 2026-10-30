@@ -268,11 +268,11 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
               <span className="font-medium break-all">{actual.nombre}</span>
               {cfdi && <span className="block text-tenue">{cfdi.emisor.nombre} · {cfdi.emisor.rfc} · {dinero(cfdi.total)}{cfdi.moneda && cfdi.moneda !== "MXN" ? ` ${cfdi.moneda}` : ""} · {fecha(cfdi.fecha)}</span>}
             </> : leyendo > 0 ? <>
-              <span className="font-medium inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Claude está leyendo {leyendo === 1 ? "la factura" : `${leyendo} facturas`}…</span>
+              <span className="font-medium inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> La IA está leyendo {leyendo === 1 ? "la factura" : `${leyendo} facturas`}…</span>
               <span className="block text-tenue">Unos segundos por archivo.</span>
             </> : <>
               <span className="font-medium">Sube el XML de la factura</span>
-              <span className="block text-tenue">Se llena solo. Puedes elegir varios a la vez. Sin XML, sube el PDF o una foto y revisa lo que lea Claude; o captura a mano abajo.</span>
+              <span className="block text-tenue">Se llena solo. Puedes elegir varios a la vez. Sin XML, sube el PDF o una foto y revisa lo que lea la IA; o captura a mano abajo.</span>
             </>}
           </span>
           {cfdi?.metodoPago && <span data-explain={GLOSARIO.puePpd} data-explain-title="PUE o PPD"><Insignia tono={cfdi.metodoPago === "PUE" ? "ok" : "info"}>{cfdi.metodoPago === "PUE" ? "De contado (PUE)" : "A crédito (PPD)"}</Insignia></span>}
@@ -285,7 +285,7 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
         {actual?.deClaude && !actual.error && (
           <div className="rounded-lg bg-info-suave px-3 py-2 text-sm space-y-1" data-explain={GLOSARIO.facturaLeidaPdf} data-explain-title="Leída de un PDF">
             <p className="flex items-start gap-2"><Sparkles className="h-4 w-4 mt-0.5 text-info shrink-0" />
-              <span><b>Leída por Claude de {actual.url && /\.pdf$/i.test(actual.nombre) ? "un PDF" : "un archivo"}</b>{actual.simulado ? " (modo demostración: datos de ejemplo)" : ""}: revisa total, fecha, folio y proveedor antes de registrar.
+              <span><b>Leída por la IA de {actual.url && /\.pdf$/i.test(actual.nombre) ? "un PDF" : "un archivo"}</b>{actual.simulado ? " (modo demostración: datos de ejemplo)" : ""}: revisa total, fecha, folio y proveedor antes de registrar.
                 {actual.url && <> <button type="button" className="text-marca-texto hover:underline" onClick={() => setVerArchivo((v) => !v)}>{verArchivo ? "Ocultar archivo" : "Ver archivo"}</button></>}</span></p>
             {(actual.advertencias ?? []).map((a) => <p key={a} className="pl-6 text-tenue">• {a}</p>)}
           </div>

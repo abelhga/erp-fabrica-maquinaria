@@ -54,7 +54,7 @@ function NuevaOrden() {
 
   if (!puede("compras", 2)) return <Pagina titulo="Nueva orden de compra"><div className="tarjeta"><Vacio icono={Truck} titulo="Las órdenes las crea compras" /></div></Pagina>;
   if (cotizacion) return (
-    <Pagina titulo="Nueva orden desde la cotización" descripcion="Lo que leyó Claude, emparejado con el catálogo. Revísalo y crea la orden en borrador.">
+    <Pagina titulo="Nueva orden desde la cotización" descripcion="Lo que leyó la IA, emparejado con el catálogo. Revísalo y crea la orden en borrador.">
       <div className="max-w-5xl">
         <RevisarCotizacion leida={cotizacion} alQuitar={() => setCotizacion(null)} alCrear={(id) => ir(`/compras/ordenes/${id}`, { replace: true })} />
       </div>

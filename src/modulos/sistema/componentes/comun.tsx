@@ -47,8 +47,8 @@ export const MODULOS: { modulo: Modulo; nombre: string; descripcion: string; ale
   { modulo: "leads", nombre: "Leads", descripcion: "Recados de gente interesada que capturan recepción y ventas. 1: ver los suyos · 2: capturar y tomar · 3: asignar, ver todos y decidir a quién le llegan." },
   { modulo: "mercadolibre", nombre: "Mercado Libre", descripcion: "Preguntas de compradores y publicaciones de ML. 1: ver · 2: contestar preguntas y ligar publicaciones a su artículo. El dinero de cada venta es de Ventas y Finanzas." },
   { modulo: "procesos", nombre: "Ingeniería de procesos", descripcion: "Métricas de la planta (entregas a tiempo, lead time, eficiencia del flujo, horas reales contra estimadas, paros y mantenimiento). Los costos dentro de las métricas solo los ve quien además tiene Costos. 3: administrar las herramientas lean cuando se habiliten." },
-  { modulo: "asistente", nombre: "Asistente (Claude)", descripcion: "1: Claude escribe su resumen «Lo que importa hoy» y puede hacerle preguntas con «Pregúntale al ERP» (solo sobre lo que su puesto ya puede ver) · 3: además lee las conversaciones de los demás. Sin este permiso, el resumen sale con reglas fijas y sin chat.",
-    alerta: "Cada pregunta y cada resumen de Claude gasta crédito de la API." },
+  { modulo: "asistente", nombre: "Asistente (IA)", descripcion: "1: la IA escribe su resumen «Lo que importa hoy» y puede hacerle preguntas con «Pregúntale al ERP» (solo sobre lo que su puesto ya puede ver) · 3: además lee las conversaciones de los demás. Sin este permiso, el resumen sale con reglas fijas y sin chat.",
+    alerta: "Cada pregunta y cada resumen de la IA gasta crédito de la API." },
   { modulo: "admin", nombre: "Sistema", descripcion: "1: ver la bitácora · 3: usuarios, roles, invitaciones y configuración." },
   { modulo: "importaciones", nombre: "Importaciones", descripcion: "1: ver embarques y cuándo llegan (montos solo con compras, finanzas o costos) · 2: capturar · 3: administrar." },
 ];

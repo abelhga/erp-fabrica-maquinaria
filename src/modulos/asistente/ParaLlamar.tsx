@@ -261,7 +261,7 @@ function Redactar({ o, alCerrar, alEnviar }: { o: Oportunidad; alCerrar: () => v
 
   return (
     <Dialogo abierto alCambiar={(a) => !a && alCerrar()} titulo={`Mensaje para ${o.cliente}`} ancho="max-w-xl"
-      descripcion={borrador.data?.simulado ? "Plantilla básica: con la llave de Claude conectada, el mensaje se escribe con su historial de compras." : "Lo escribió Claude con el historial del cliente. Revísalo y ajústalo antes de mandarlo."}
+      descripcion={borrador.data?.simulado ? "Plantilla básica: con la llave de la IA conectada, el mensaje se escribe con su historial de compras." : "Lo escribió la IA con el historial del cliente. Revísalo y ajústalo antes de mandarlo."}
       pie={
         <div className="flex flex-wrap justify-end gap-2">
           <Boton variante="secundario" onClick={() => { navigator.clipboard.writeText(mensaje); toast.success("Mensaje copiado"); }} disabled={!mensaje}>

@@ -82,7 +82,9 @@ begin
   -- 5. Ideas de mejora: la suya cuenta; la que sugirió el sistema a su nombre de usuario, no.
   insert into mejoras (titulo, propuesta_por) values ('P208 idea', v_ven) returning id into i1;
   insert into mejoras (titulo, propuesta_por, quien_propone) values ('P208 sugerida', v_ven, 'Claude (sugerencia)') returning id into i2;
-  update mejoras set propuesta_en = t0 where id in (i1, i2);
+  --    La de hoy dice «IA (sugerencia)»; las de antes decían «Claude (sugerencia)»: ninguna cuenta.
+  insert into mejoras (titulo, propuesta_por, quien_propone) values ('P208 sugerida IA', v_ven, 'IA (sugerencia)');
+  update mejoras set propuesta_en = t0 where id in (i1, i2) or titulo = 'P208 sugerida IA';
   m := objetivo_medir('ideas_mejora', null, e_ven, mes);
   assert (m->>'valor')::int = 1, format('ideas de mejora: %s', m);
 

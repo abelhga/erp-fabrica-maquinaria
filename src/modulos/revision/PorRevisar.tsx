@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Bot, Check, CheckCircle2, Lightbulb, Moon, Play, ScanSearch, ShieldAlert, ThumbsDown, ThumbsUp, Wand2 } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, Lightbulb, Moon, Play, ScanSearch, ShieldAlert, Sparkles, ThumbsDown, ThumbsUp, Wand2 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Boton } from "@/components/ui/boton";
 import { Dialogo } from "@/components/ui/dialogo";
@@ -44,7 +44,7 @@ const ESTADO: Record<Hallazgo["estado"], { texto: string; tono: Tono }> = {
   corregido: { texto: "Corregido", tono: "ok" }, resuelto: { texto: "Se corrigió solo", tono: "ok" },
 };
 const CLAUDE: Record<string, string> = {
-  no: "Sin Claude", enviado: "Esperando a Claude", recogido: "Claude leyó", error: "Claude falló", apagado: "Claude apagado", tope: "Tope del mes",
+  no: "Sin IA", enviado: "Esperando a la IA", recogido: "La IA leyó", error: "La IA falló", apagado: "IA apagada", tope: "Tope del mes",
 };
 
 const claves = { abiertos: ["revision", "abiertos"], cerrados: ["revision", "cerrados"] };
@@ -147,7 +147,7 @@ export function TarjetaHallazgo({ h, para }: { h: Hallazgo; yo?: string; para?: 
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <span data-explain={GLOSARIO.revisionGravedad}><Insignia tono={GRAVEDAD[h.gravedad]} punto>{h.gravedad === "alta" ? "Urgente" : h.gravedad === "media" ? "Revisar" : "Cuando puedas"}</Insignia></span>
         <span data-explain={h.origen === "claude" ? GLOSARIO.revisionClaude : GLOSARIO.revisionRegla}>
-          <Insignia tono={h.origen === "claude" ? "marca" : "neutro"}>{h.origen === "claude" ? <><Bot className="h-3 w-3" />Claude</> : "Regla"}</Insignia>
+          <Insignia tono={h.origen === "claude" ? "marca" : "neutro"}>{h.origen === "claude" ? <><Sparkles className="h-3 w-3" />IA</> : "Regla"}</Insignia>
         </span>
         <span className="text-tenue">{MODULOS[h.modulo] ?? h.modulo} · {hace(h.creado_en)}</span>
         {para && <span className="text-tenue">· Para: {para}</span>}
@@ -244,11 +244,11 @@ function Anoche() {
     <div className="space-y-4">
       <Tarjeta>
         <EncabezadoTarjeta titulo={`Corrida del ${fechaYHora(ultima.empezo_en)}`} explica={GLOSARIO.revisionLectura}
-          descripcion={`${ultima.hallazgos_reglas} de reglas · ${ultima.hallazgos_claude} de Claude · ${ultima.consejos} consejos · ${CLAUDE[ultima.claude_estado] ?? ultima.claude_estado}`} />
+          descripcion={`${ultima.hallazgos_reglas} de reglas · ${ultima.hallazgos_claude} de la IA · ${ultima.consejos} consejos · ${CLAUDE[ultima.claude_estado] ?? ultima.claude_estado}`} />
         <div className="px-5 pb-5 space-y-3">
           {lecturas.length ? lecturas.map(([m, t]) => (
             <div key={m}><p className="text-xs font-semibold uppercase tracking-wide text-tenue">{MODULOS[m] ?? m}</p><p className="text-sm">{t}</p></div>
-          )) : <p className="text-sm text-tenue">Claude no dejó lectura en esta corrida{ultima.nota ? `: ${ultima.nota}` : "."}</p>}
+          )) : <p className="text-sm text-tenue">La IA no dejó lectura en esta corrida{ultima.nota ? `: ${ultima.nota}` : "."}</p>}
           {lecturas.length > 0 && ultima.nota && <p className="text-xs text-tenue">Nota: {ultima.nota}</p>}
         </div>
       </Tarjeta>
@@ -258,7 +258,7 @@ function Anoche() {
             <div key={c.id} className="px-4 py-2.5 flex flex-wrap gap-x-4 gap-y-1">
               <span className="w-36">{fechaYHora(c.empezo_en)}</span>
               <span className="cifra">{c.hallazgos_reglas} reglas</span>
-              <span className="cifra">{c.hallazgos_claude} Claude</span>
+              <span className="cifra">{c.hallazgos_claude} IA</span>
               <span className="cifra">{c.consejos} consejos</span>
               <span className="text-tenue">{CLAUDE[c.claude_estado] ?? c.claude_estado}</span>
               {c.nota && <span className="text-tenue truncate max-w-md">{c.nota}</span>}
@@ -278,7 +278,7 @@ function ConsejosDeTodos() {
   const nombres = useNombres((r.data ?? []).map((c) => c.usuario_id));
   if (r.error) return <ErrorCarga error={r.error} />;
   if (r.isLoading) return <Cargando filas={4} />;
-  if (!r.data?.length) return <Vacio icono={Lightbulb} titulo="Sin consejos todavía" texto="Los lunes en la madrugada Claude le escribe a cada quien hasta tres consejos con sus números. Aquí ves lo que le dijo a cada persona y si le sirvió." />;
+  if (!r.data?.length) return <Vacio icono={Lightbulb} titulo="Sin consejos todavía" texto="Los lunes en la madrugada la IA le escribe a cada quien hasta tres consejos con sus números. Aquí ves lo que le dijo a cada persona y si le sirvió." />;
   const utiles = r.data.filter((c) => c.opinion === "util").length, no = r.data.filter((c) => c.opinion === "no_util").length;
   return (
     <div className="space-y-3">
@@ -327,8 +327,8 @@ function Reglas() {
         <EncabezadoTarjeta titulo="La revisión" descripcion="Corre cada madrugada a las 2:07; los avisos salen a las 6 de la mañana."
           acciones={<Boton tamano="sm" variante="secundario" onClick={() => correr.mutate(undefined)} cargando={correr.isPending}><Play className="h-4 w-4" />Correr las reglas ahora</Boton>} />
         <div className="divide-y divide-borde border-t border-borde">
-          {fila("Revisión nocturna", "Si la apagas, no corre nada: ni reglas ni Claude.", v.activa, "activa")}
-          {fila("Que Claude lea lo de ayer", `Además de las reglas, Claude (${v.modelo}) lee lo capturado por módulo y señala lo que una regla no ve. Sin costos de artículos, sueldos ni datos personales.`, v.claude, "claude")}
+          {fila("Revisión nocturna", "Si la apagas, no corre nada: ni reglas ni IA.", v.activa, "activa")}
+          {fila("Que la IA lea lo de ayer", "Además de las reglas, la IA lee lo capturado por módulo y señala lo que una regla no ve. Sin costos de artículos, sueldos ni datos personales.", v.claude, "claude")}
           {fila("Consejos de los lunes", "Hasta tres consejos para cada persona con sus propios números (cómo vende, cómo usa el ERP).", v.consejos, "consejos")}
         </div>
       </Tarjeta>

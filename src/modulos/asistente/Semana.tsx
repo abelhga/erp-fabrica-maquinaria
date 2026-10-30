@@ -87,7 +87,7 @@ export default function SemanaPagina() {
                   <div className="flex items-center gap-2 text-xs text-tenue">
                     {r.data && (r.data.simulado
                       ? <Insignia tono="neutro">Reglas de la base · sin IA</Insignia>
-                      : <Insignia tono="marca"><Sparkles className="h-3 w-3" />Claude · {hace(r.data.generado_en)}</Insignia>)}
+                      : <Insignia tono="marca"><Sparkles className="h-3 w-3" />IA · {hace(r.data.generado_en)}</Insignia>)}
                     <button onClick={regenerar} disabled={r.isFetching} title="Volver a escribirla"
                       className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo disabled:opacity-50">
                       <RefreshCw className={cn("h-4 w-4", r.isFetching && "animate-spin")} />

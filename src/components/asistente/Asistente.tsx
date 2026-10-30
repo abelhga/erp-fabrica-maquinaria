@@ -182,7 +182,7 @@ export function Asistente() {
                 className="h-8 w-8 shrink-0 grid place-items-center rounded-full bg-marca text-white disabled:opacity-40"><ArrowUp className="h-4 w-4" /></button>
             )}
           </div>
-          <p className="mt-1.5 text-[11px] text-tenue text-center">Claude puede equivocarse: confirma las cifras importantes en su pantalla.</p>
+          <p className="mt-1.5 text-[11px] text-tenue text-center">La IA puede equivocarse: confirma las cifras importantes en su pantalla.</p>
         </form>
       </aside>
     </>

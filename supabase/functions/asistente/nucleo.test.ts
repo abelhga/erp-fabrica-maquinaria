@@ -432,7 +432,9 @@ describe("errores de la API en español", () => {
     const sinReintento = new Headers({ "x-should-retry": "false" });
     const tope = new Anthropic.BadRequestError(400, cuerpo("invalid_request_error", "You have reached your specified API usage limits."), undefined, sinReintento);
     expect(explicarError(tope).codigo).toBe("cuenta");
-    expect(explicarError(tope).mensaje).toMatch(/console\.anthropic\.com/);
+    expect(explicarError(tope).mensaje).toMatch(/Settings → Limits/);
+    // Lo lee quien usa el ERP: dice dónde se arregla sin nombrar al proveedor ni al modelo.
+    expect(explicarError(tope).mensaje).not.toMatch(/claude|anthropic/i);
     expect(explicarError(new Anthropic.RateLimitError(429, {}, "x", new Headers())).codigo).toBe("saturado");
     expect(explicarError(new Anthropic.AuthenticationError(401, {}, "x", new Headers())).codigo).toBe("llave");
     expect(explicarError(new Anthropic.BadRequestError(400, {}, "x", new Headers())).codigo).toBe("api");
