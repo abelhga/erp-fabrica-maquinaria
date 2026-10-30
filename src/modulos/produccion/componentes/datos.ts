@@ -54,10 +54,14 @@ export interface OperacionPiso {
   cuadrilla: string | null; avance_etapa: number | null;
   /** En proceso y con alguien con su tiempo corriendo (si no, la cuadrilla es la planeada). */
   con_tiempo: boolean;
+  /** La especialidad del área que hace esta familia de equipo (la cuadrilla de cribadoras…), si hay. */
+  especialidad_id: number | null; especialidad: string | null;
 }
 
 /** El personal para elegir en la terminal y el tablero: nombre, su área y dónde está ahorita. */
-export interface PersonaPiso { id: string; nombre: string; etapa_id: number | null; trabajando_en: string | null; tiempo_id: string | null }
+export interface PersonaPiso { id: string; nombre: string; etapa_id: number | null; trabajando_en: string | null; tiempo_id: string | null; especialidad_id: number | null }
+/** Una especialidad de un área: qué familias de equipo hace, cuánta gente tiene y lo que le toca del área a la semana. */
+export interface Especialidad { id: number; etapa_id: number; nombre: string; categorias: number[]; familias: string[]; personas: number; horas_semana: number }
 /** Un tiempo abierto: alguien (o "N sin nombre") trabajando una etapa desde `inicio`. */
 export interface TramoAbierto { tiempo_id: string; operacion_id: string; empleado_id: string | null; nombre: string; personas: number; inicio: string }
 /** La cuadrilla de una etapa: la que trabaja (en proceso) o la que la va a trabajar. */
@@ -195,6 +199,10 @@ export function cuandoAbre(abre: string | null) {
 export function textoDescansos(d: HorasTaller["descansos"]) {
   const t = d.map((x) => (x.minutos ? `${x.minutos} min entre ${x.de} y ${x.a}` : `de ${x.de} a ${x.a}`));
   return t.length > 1 ? `${t.slice(0, -1).join(", ")} y ${t[t.length - 1]}` : t[0] ?? "ninguno";
+}
+
+export function useEspecialidades() {
+  return useQuery({ queryKey: [...CLAVE, "especialidades"], staleTime: 60_000, queryFn: () => q<Especialidad[]>(supabase.rpc("especialidades_taller")) });
 }
 
 export function usePersonalPiso() {
