@@ -184,4 +184,5 @@ modo encendido, y `SOBRE="texto"` pasa el mouse por algo para ver su explicació
 - **Almacenes**: Planta Baja, Mallado, Planta Alta, Contenedor 1 y 2, Revolución y
   Almacén ML (Full de Mercado Libre: existe, pero no cuenta para planta).
 
-Los análisis completos de cada hoja original están en `docs/analisis/`.
+Los análisis completos de cada hoja original están en `docs/analisis/`. Lo acordado para después
+está en `docs/pendientes.md`: léelo al empezar y borra de ahí lo que termines.
