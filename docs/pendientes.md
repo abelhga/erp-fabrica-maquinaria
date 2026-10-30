@@ -19,6 +19,23 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
 - **Cuentas sin ficha de empleado:** RRHH liga las cuentas a sus fichas (la revisión nocturna ya
   lo pide: Luis Eduardo, Esteban; Isaac no tiene ficha).
 
+## Mantenimiento (junta con Esteban, 30 oct)
+
+1. Preventivos «cada primer lunes del mes» (por mes, no solo cada N días) y que no caigan en
+   sábado, domingo ni feriado.
+2. Criticidad calculada sola: impacto en producción, riesgo de seguridad, frecuencia de fallas y
+   costo de reparación (sugerido agregar: si tiene respaldo y cuánto tarda conseguir refacción).
+3. Dar de alta otras categorías (equipo de oficina…).
+4. Que el encargado de mantenimiento edite las rutinas (plantillas de checklist).
+5. Archivar (dar de baja) lo que ya no conviene reparar.
+6. Terminal de mantenimiento con play y pausa (arriba: preventivos pendientes y lo último en pausa).
+7. Manuales y fichas técnicas por máquina (PDF, imagen o liga de Drive).
+8. Préstamo de herramienta: para qué o para qué servicio; foto opcional al recibirla.
+9. QR o NFC por máquina para reportar falla acercando el celular.
+10. MTBF y MTTR en horas laborales.
+
+Orden: 1, 3, 5 y 10 primero; luego 4, 7, 8 y 9; al final 6 y 2.
+
 ## Para hacer
 
 - **Correo desde el ERP con Gmail** (Hegamex usa Google Workspace). Cada quien conecta su Gmail.
