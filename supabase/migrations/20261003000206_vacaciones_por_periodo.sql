@@ -61,12 +61,16 @@ language sql immutable as $$ select (p_ingreso + make_interval(years => p_period
 
 -- A qué periodo se carga cada vacación aprobada (una vacación puede partirse entre dos). Con los
 -- permisos de quien pregunta: el empleado ve las suyas, RRHH las de todos.
-create or replace function public.vacaciones_cargos(p_empleado uuid)
-returns table (incidencia_id uuid, inicio date, periodo int, dias numeric, adelanto boolean)
+-- Con p_inicio y p_dias contesta «¿y si se aprueba esta?»: la acomoda con las demás por su fecha y
+-- la regresa con incidencia_id vacío. Así la solicitud y la aprobación dicen, con la misma regla,
+-- de qué periodo saldrían los días y cuántos serían adelanto, sin que la pantalla los calcule.
+drop function if exists public.vacaciones_cargos(uuid);
+create or replace function public.vacaciones_cargos(p_empleado uuid, p_inicio date default null, p_dias numeric default null)
+returns table (incidencia_id uuid, inicio date, periodo int, dias numeric, adelanto boolean, desde date)
 language plpgsql stable security invoker set search_path = public as $$
 #variable_conflict use_column
 declare
-  v_ingreso date; a record; v record; v_hasta date;
+  v_ingreso date; a record; v record; v_hasta date; v_desde date;
   n_max int; rem numeric[]; ini date[]; ven date[]; falta numeric; toma numeric; k int;
 begin
   select e.fecha_ingreso into v_ingreso from empleados e where e.id = p_empleado;
@@ -77,7 +81,7 @@ begin
     select null::date fecha, greatest(1, extract(year from age(vacaciones_corte(), v_ingreso))::int) periodo, null::numeric saldo into a;
     a.saldo := dias_vacaciones(a.periodo);
   end if;
-  select greatest(current_date, coalesce(max(i.fin), current_date)) into v_hasta
+  select greatest(current_date, coalesce(max(i.fin), current_date), coalesce(p_inicio, current_date)) into v_hasta
   from incidencias i where i.empleado_id = p_empleado and i.tipo = 'vacaciones';
   n_max := extract(year from age(v_hasta, v_ingreso))::int + 3;
   for k in 1..n_max loop
@@ -86,11 +90,20 @@ begin
     rem[k] := case when k > a.periodo then dias_vacaciones(k)
                    when k = a.periodo then a.saldo else 0 end;
   end loop;
+  -- Desde dónde cuentan las vacaciones: con arranque, desde su fecha (lo de antes ya venía
+  -- descontado en la hoja); sin arranque, desde que empezó el periodo que corría en el corte (las de
+  -- antes eran de periodos que se dan por usados: contarlas las volvía adelanto del periodo nuevo),
+  -- o desde el ingreso si en el corte no tenía un año.
+  v_desde := case when a.fecha is not null then a.fecha
+                  when extract(year from age(vacaciones_corte(), v_ingreso)) < 1 then v_ingreso
+                  else ini[a.periodo] end;
   for v in
-    select i.id, i.inicio, i.dias from incidencias i
+    select i.id, i.inicio, i.dias, i.creado_en from incidencias i
     where i.empleado_id = p_empleado and i.tipo = 'vacaciones' and i.estado = 'aprobada'
-      and (a.fecha is null or i.inicio >= a.fecha)
-    order by i.inicio, i.creado_en
+      and i.inicio >= v_desde
+    union all
+    select null, p_inicio, p_dias, now() where p_inicio is not null and coalesce(p_dias, 0) > 0
+    order by 2, 4
   loop
     falta := v.dias;
     -- Lo que ya le tocó y sigue vigente ese día, del periodo más viejo al más nuevo.
@@ -98,7 +111,7 @@ begin
       exit when falta <= 0;
       if ini[k] <= v.inicio and v.inicio < ven[k] and rem[k] > 0 then
         toma := least(falta, rem[k]); rem[k] := rem[k] - toma; falta := falta - toma;
-        incidencia_id := v.id; inicio := v.inicio; periodo := k; dias := toma; adelanto := false; return next;
+        incidencia_id := v.id; inicio := v.inicio; periodo := k; dias := toma; adelanto := false; desde := ini[k]; return next;
       end if;
     end loop;
     -- Adelanto: de los periodos que todavía no empiezan, el más cercano primero.
@@ -106,7 +119,7 @@ begin
       exit when falta <= 0;
       if ini[k] > v.inicio and rem[k] > 0 then
         toma := least(falta, rem[k]); rem[k] := rem[k] - toma; falta := falta - toma;
-        incidencia_id := v.id; inicio := v.inicio; periodo := k; dias := toma; adelanto := true; return next;
+        incidencia_id := v.id; inicio := v.inicio; periodo := k; dias := toma; adelanto := true; desde := ini[k]; return next;
       end if;
     end loop;
     -- Ya adelantó todo lo que hay a la vista (no debería pasar): el siguiente periodo queda en negativo.
@@ -114,12 +127,12 @@ begin
       select min(x) into k from generate_series(1, n_max) x where ini[x] > v.inicio;
       k := coalesce(k, n_max);
       rem[k] := rem[k] - falta;
-      incidencia_id := v.id; inicio := v.inicio; periodo := k; dias := falta; adelanto := true; return next;
+      incidencia_id := v.id; inicio := v.inicio; periodo := k; dias := falta; adelanto := true; desde := ini[k]; return next;
     end if;
   end loop;
 end $$;
-revoke execute on function public.vacaciones_cargos(uuid) from public, anon;
-grant execute on function public.vacaciones_cargos(uuid) to authenticated;
+revoke execute on function public.vacaciones_cargos(uuid, date, numeric) from public, anon;
+grant execute on function public.vacaciones_cargos(uuid, date, numeric) to authenticated;
 
 -- Cada periodo de la persona: cuándo empieza y vence, cuántos días da, cuántos se usaron (lo del
 -- arranque más lo cargado en el ERP), cuántos de esos fueron adelanto y cuántos quedan.

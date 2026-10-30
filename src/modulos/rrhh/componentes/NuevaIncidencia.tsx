@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { fecha, hoyISO, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
-import { TIPOS, useEmpleados, useVacaciones, type TipoIncidencia } from "./comun";
+import { TIPOS, textoCargos, useEmpleados, useSimularVacaciones, useVacaciones, type TipoIncidencia } from "./comun";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 const UN_DIA: TipoIncidencia[] = ["retardo", "horas_extra"];
@@ -40,7 +40,10 @@ export function NuevaIncidencia({ abierto, alCambiar, empleadoId, inicioSugerido
   const naturales = Math.round((new Date(fin + "T12:00:00").getTime() - new Date(f.inicio + "T12:00:00").getTime()) / 86_400_000) + 1;
   const dias = f.tipo === "incapacidad" ? naturales : f.medio && f.inicio === fin ? 0.5 : habiles.data ?? 0;
   const saldo = vacaciones.data?.find((v) => v.empleado_id === f.empleado_id);
-  const excede = f.tipo === "vacaciones" && saldo && saldo.anios >= 1 && dias > saldo.saldo;
+  // De qué periodo saldrían y cuántos serían adelanto, con la regla de la base (cuenta la fecha:
+  // después del aniversario ya no son adelanto).
+  const sim = useSimularVacaciones(f.tipo === "vacaciones" ? f.empleado_id : null, f.inicio, dias);
+  const cargo = sim.data?.length ? textoCargos(sim.data) : null;
 
   const guardar = useAccion(() => q(supabase.from("incidencias").insert({
     empleado_id: f.empleado_id, tipo: f.tipo, inicio: f.inicio, fin, motivo: f.motivo.trim() || null,
@@ -117,18 +120,13 @@ export function NuevaIncidencia({ abierto, alCambiar, empleadoId, inicioSugerido
             )}
           </div>
         )}
-        {f.tipo === "vacaciones" && saldo && (
-          saldo.anios < 1 ? (
-            <p className="text-sm rounded-lg bg-aviso-suave text-aviso px-3 py-2 flex gap-2">
-              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-              Aún no cumple un año (lo cumple el {fecha(saldo.proximo_aniversario)}). Si se aprueban serían días adelantados.
-            </p>
-          ) : (
-            <p className={cn("text-sm rounded-lg px-3 py-2 flex gap-2", excede ? "bg-peligro-suave text-peligro" : "bg-ok-suave text-ok")}>
-              {excede && <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />}
-              Saldo actual: {numero(saldo.saldo)} días. {excede ? `Se pasa por ${numero(dias - saldo.saldo)} días.` : `Le quedarían ${numero(saldo.saldo - dias)}.`}
-            </p>
-          )
+        {f.tipo === "vacaciones" && saldo && cargo && (
+          <p className={cn("text-sm rounded-lg px-3 py-2 flex gap-2", cargo.adelanto ? "bg-aviso-suave text-aviso" : "bg-ok-suave text-ok")}
+            data-explain={cargo.adelanto ? GLOSARIO.adelantoVacaciones : GLOSARIO.periodoVacaciones}
+            data-explain-title={cargo.adelanto ? "Adelanto de vacaciones" : "Periodo de vacaciones"}>
+            {cargo.adelanto && <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />}
+            <span>Saldo hoy: {numero(saldo.saldo)} días{saldo.anios < 1 ? ` (cumple su primer año el ${fecha(saldo.proximo_aniversario)})` : ""}. Si se aprueban: {cargo.texto.charAt(0).toLowerCase() + cargo.texto.slice(1)}</span>
+          </p>
         )}
         <Campo etiqueta="Motivo o comentario" ayuda={f.tipo === "incapacidad" ? "Anota el folio de la incapacidad del IMSS." : undefined}>
           <Entrada value={f.motivo} onChange={(e) => setF({ ...f, motivo: e.target.value })} />

@@ -15,7 +15,6 @@ export const ADMINISTRACION = {
   diasTomados: "Días usados del periodo que corre (el de su último aniversario), incluidos los que adelantó antes de que empezara y los que ya había tomado según el control de vacaciones.",
   diasPorAprobar: "Días de vacaciones que ya pidió y que nadie ha aprobado. Todavía no se restan del saldo.",
   proximoAniversario: "Cuándo cumple otro año en la empresa y cuántos días de vacaciones le tocarán a partir de esa fecha.",
-  disfrutarAntesDe: "La ley pide tomar las vacaciones dentro de los 6 meses siguientes al aniversario (art. 81). En amarillo si faltan 45 días o menos; «Plazo vencido» si ya pasó y aún le quedan días.",
   tipoIncidencia: "Vacaciones: se restan del saldo. Permiso con goce: se paga y no toca las vacaciones. Permiso sin goce y falta: no se pagan. Incapacidad: la paga el IMSS y cuenta días naturales. Retardo y horas extra: un solo día, en horas.",
   estadoIncidencia: "Por aprobar: la pidió alguien y espera a Recursos Humanos. Aprobada: cuenta en el saldo, en el calendario y en la prenómina. Rechazada: no cuenta; el motivo queda en el historial.",
   calendarioAusencias: "Quién falta cada día del mes, con un color por tipo. Las solicitudes por aprobar se ven punteadas y los días que no se trabajan, en gris. Clic en un día para registrar algo en esa fecha.",

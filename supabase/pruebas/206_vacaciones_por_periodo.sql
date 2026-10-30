@@ -3,7 +3,7 @@
 -- sobra de un periodo vence 18 meses después de su aniversario.
 do $$
 declare
-  v_rrhh uuid; v_vend uuid; v_trab uuid; e1 uuid; e2 uuid; e3 uuid; e4 uuid; e5 uuid; r record; v_d numeric; v_inc uuid;
+  v_rrhh uuid; v_vend uuid; v_trab uuid; e1 uuid; e2 uuid; e3 uuid; e4 uuid; e5 uuid; e6 uuid; r record; v_d numeric; v_inc uuid;
 begin
   v_rrhh := pg_temp.usuario('rh193@hegamex.com', '{rrhh}');
   v_vend := pg_temp.usuario('ven193@hegamex.com', '{ventas}');
@@ -21,6 +21,17 @@ begin
   assert r.anios = 2 and r.disponible = 0 and r.adelantados = 4 and r.saldo = -4, format('adelanto en el arranque: %s', row_to_json(r));
   select * into r from vacaciones_periodos(e1) p where p.periodo = 3;
   assert r.estado = 'por_venir' and r.restan = 12 and r.adelantados = 4, format('periodo que viene: %s', row_to_json(r));
+
+  --    ¿Y si pide 2 días? Antes de su aniversario son adelanto del periodo 3; después del
+  --    aniversario salen del periodo 3, que ya corre, y no son adelanto. La pregunta no guarda nada.
+  assert (select bool_and(c.adelanto) and min(c.periodo) = 3 and sum(c.dias) = 2 and min(c.desde) = (current_date + 4)
+          from vacaciones_cargos(e1, current_date + 1, 2) c where c.incidencia_id is null),
+    format('antes del aniversario: %s', (select json_agg(c) from vacaciones_cargos(e1, current_date + 1, 2) c));
+  assert (select not bool_or(c.adelanto) and min(c.periodo) = 3 and sum(c.dias) = 2
+          from vacaciones_cargos(e1, current_date + 10, 2) c where c.incidencia_id is null),
+    format('después del aniversario: %s', (select json_agg(c) from vacaciones_cargos(e1, current_date + 10, 2) c));
+  assert not exists (select 1 from vacaciones_cargos(e1) c where c.incidencia_id is null), 'sin pregunta salió una vacación de más';
+  assert (select saldo from v_vacaciones where empleado_id = e1) = -4, 'preguntar cambió el saldo';
 
   --    El mismo caso dos días después del aniversario: le quedan 12, no 16 (la regla vieja le daba 16).
   insert into empleados (nombre, fecha_ingreso, departamento_id) values ('P193 Ya cumplió', (current_date - interval '3 years' - interval '2 days')::date, departamento_produccion())
@@ -67,6 +78,17 @@ begin
   -- 5. Sin arranque: lo de antes del corte se da por usado (el ERP no sabe qué tomó).
   delete from vacaciones_arranque where empleado_id = e5;
   assert (select saldo from v_vacaciones where empleado_id = e5) = 14, 'sin arranque cambió el periodo que corre';
+  --    Sin arranque, las vacaciones de antes del periodo que corría en el corte eran de periodos que
+  --    se dan por usados: no cuentan ni se vuelven adelanto (le pasó a Luis Gerardo). Las que caen ya
+  --    en ese periodo, sí.
+  insert into empleados (nombre, fecha_ingreso, departamento_id) values ('P193 Sin arranque', (current_date - 13 - interval '3 years' - interval '2 days')::date, departamento_produccion())
+    returning id into e6;
+  insert into incidencias (empleado_id, tipo, inicio, fin, estado, dias) values (e6, 'vacaciones', current_date - 80, current_date - 70, 'aprobada', 1);
+  insert into incidencias (empleado_id, tipo, inicio, fin, estado, dias) values (e6, 'vacaciones', current_date - 14, current_date - 14, 'aprobada', 1)
+    returning dias into v_d;
+  select * into r from v_vacaciones where empleado_id = e6;
+  assert r.adelantados = 0 and r.saldo = 16 - v_d, format('sin arranque contó vacaciones de periodos dados por usados: %s', row_to_json(r));
+
   --    Un arranque sin periodo es del que corría ese día.
   insert into vacaciones_arranque (empleado_id, fecha, saldo) values (e5, current_date - 13, 9);
   assert (select periodo from vacaciones_arranque where empleado_id = e5) = 2, 'no se le puso el periodo que corría';

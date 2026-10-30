@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
-import { hoyISO } from "@/lib/formato";
+import { fecha, hoyISO, numero } from "@/lib/formato";
+import { GLOSARIO } from "@/tutorial/glosario";
 import type { Tono } from "@/components/ui/insignia";
 
 export interface Empleado {
@@ -37,8 +38,47 @@ export interface PeriodoVacaciones {
   periodo: number; desde: string; vence: string; dias: number; usados: number; adelantados: number; restan: number;
   estado: "vigente" | "por_venir" | "vencido";
 }
-/** A qué periodo se cargó cada vacación aprobada; una puede partirse entre dos. */
-export interface CargoVacaciones { incidencia_id: string; inicio: string; periodo: number; dias: number; adelanto: boolean }
+/** A qué periodo se cargó cada vacación aprobada; una puede partirse entre dos. «desde»: cuándo empieza ese periodo. */
+export interface CargoVacaciones { incidencia_id: string | null; inicio: string; periodo: number; dias: number; adelanto: boolean; desde: string }
+
+/**
+ * ¿Y si se aprueban? De qué periodo saldrían esos días y cuántos serían adelanto, con la misma regla
+ * que la base aplica a las aprobadas (vacaciones_cargos con la vacación de prueba; no guarda nada).
+ */
+export function useSimularVacaciones(empleado: string | null | undefined, inicio: string | null | undefined, dias: number) {
+  return useQuery({
+    queryKey: ["vacaciones_cargos", "si", empleado, inicio, dias], enabled: !!empleado && !!inicio && dias > 0, staleTime: 30_000,
+    queryFn: async () => (await q<CargoVacaciones[]>(supabase.rpc("vacaciones_cargos", { p_empleado: empleado, p_inicio: inicio, p_dias: dias })))
+      .filter((c) => c.incidencia_id == null),
+  });
+}
+
+/** «Salen del periodo 2025–2026» y, si no alcanza, cuántos días serían adelanto y de cuál. */
+export function textoCargos(cargos: CargoVacaciones[]): { texto: string; adelanto: boolean } {
+  const suma = (cs: CargoVacaciones[]) => cs.reduce((t, c) => t + Number(c.dias), 0);
+  const dias = (n: number) => `${numero(n)} ${n === 1 ? "día" : "días"}`;
+  const normales = cargos.filter((c) => !c.adelanto);
+  const adelantos = cargos.filter((c) => c.adelanto);
+  const partes: string[] = [];
+  if (normales.length === 1 && !adelantos.length) partes.push(`Salen del periodo ${nombrePeriodo(normales[0].desde)}`);
+  else if (normales.length) partes.push(`${normales.map((c) => `${dias(Number(c.dias))} del periodo ${nombrePeriodo(c.desde)}`).join(" y ")}`);
+  if (adelantos.length) {
+    const desde = adelantos.map((c) => c.desde).sort()[0];
+    const n = suma(adelantos);
+    partes.push(`${dias(n)} ${n === 1 ? "sería" : "serían"} adelanto del periodo que empieza el ${fecha(desde)}: se le ${n === 1 ? "descuenta" : "descuentan"} cuando llegue`);
+  }
+  return { texto: partes.join("; ") + ".", adelanto: adelantos.length > 0 };
+}
+
+/** El aviso con su explicación del tutorial: adelanto en amarillo, lo demás en verde. */
+export function AvisoCargos({ cargos, className }: { cargos: CargoVacaciones[] | undefined; className?: string }) {
+  if (!cargos?.length) return null;
+  const { texto, adelanto } = textoCargos(cargos);
+  return (
+    <span className={cn(adelanto ? "text-aviso" : "text-ok", className)} data-explain={adelanto ? GLOSARIO.adelantoVacaciones : GLOSARIO.periodoVacaciones}
+      data-explain-title={adelanto ? "Adelanto de vacaciones" : "Periodo de vacaciones"}>{texto}</span>
+  );
+}
 
 /** «2025–2026»: el periodo con los años en que empieza y termina. */
 export const nombrePeriodo = (desde: string) => { const a = Number(desde.slice(0, 4)); return `${a}–${a + 1}`; };
