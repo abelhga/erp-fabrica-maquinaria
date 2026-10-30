@@ -12,6 +12,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Arriba, “Lo que importa hoy” junta lo urgente de tu área: en rojo los riesgos, en ámbar lo que pide atención, en verde lo que va bien. Dale clic a una tarjeta para ir directo a donde se atiende; el botón de flechas lo vuelve a analizar. A almacén le sale primero «Por surtir»: las órdenes con material pendiente, en el orden en que el taller las va a trabajar. A los supervisores de piso les sale lo del taller y a mantenimiento lo de las máquinas (paradas, fallas sin atender, preventivos vencidos o por vencer, herramienta sin regresar), calculado por reglas, sin IA.",
    "Casi todos los indicadores se abren con un clic y te llevan a la lista de donde salen (Ventas del mes abre los pedidos, por ejemplo). Todo se calcula con tus permisos: un vendedor ve lo suyo, no el total de la empresa.",
    "En el tablero de área, la tarjeta “Pendientes” reúne lo que espera algo de ti según tu puesto: lo que la revisión de la madrugada encontró en algo tuyo, precios por autorizar, seguimientos de cotizaciones vencidos o para hoy (a la gerencia, los del equipo y quién está frenado), tareas con clientes vencidas, ajustes de inventario, compras atrasadas, documentos de embarques que faltan. En el centro de mando las cifras se actualizan solas cuando alguien registra un pedido, un cobro o un avance del taller; abajo del embudo comercial ves cómo va cada vendedor con el seguimiento de sus cotizaciones y quién está frenado.",
+   "El ERP recuerda cómo dejaste las cosas: el orden de cada lista (la columna por la que ordenaste), «Agrupar por» en el material de una orden y la vista y el zoom del Gantt. Los filtros y las búsquedas no se recuerdan, para que nunca se te esconda algo sin darte cuenta. Se guarda en tu computadora o celular, por persona.",
    "Los lunes, si hay, te salen «Tus consejos de la semana»: hasta tres, escritos por la IA con tus propios números (cómo capturas, y si vendes, qué podrías probar para cerrar más). Solo los ves tú. Dale «Me sirve» o «No me sirve»: los de la semana siguiente lo toman en cuenta."
   ]
  },
@@ -371,7 +372,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Lo de adentro de un subensamble sale en gris y no se edita aquí: se cambia en el propio subensamble, porque el cambio llega a todos los equipos que lo usan.",
    "Si una cantidad depende de una medida (largo, ancho), defínela en la pestaña Parámetros. Para la misma banda con otra medida sin tocar esta, usa «Duplicar con otros parámetros».",
    "En «Fotos» se suben una o varias fotos (o se pega la liga de Drive). La primera es la principal y sale junto a la partida de la cotización; las demás, en la hoja de fotos del PDF. Con las flechas o «Hacerla principal» cambias el orden.",
-   "Para cambiar una pieza por otra con la misma cantidad, usa el botón de flechas de su línea. «Editar datos» cambia el nombre, el tipo de equipo y la descripción; las cotizaciones que ya existen conservan el nombre anterior. Junto a la descripción, «Pulir redacción» le pide al asistente que corrija ortografía y estilo: ves la propuesta y decides si la usas.",
+   "Para cambiar una pieza por otra con la misma cantidad, usa el botón de flechas de su línea. «Editar datos» cambia el nombre, el tipo de equipo y la descripción (sale arriba, en «Descripción»: qué es, para qué sirve y lo que conviene saber al armarlo); las cotizaciones que ya existen conservan el nombre anterior. Junto a la descripción, «Pulir redacción» le pide al asistente que corrija ortografía y estilo: ves la propuesta y decides si la usas.",
    "«Inhabilitar» lo saca del cotizador y de pedidos nuevos cuando ya no se fabrica; arriba sale la marca «Inhabilitado» y el botón cambia a «Reactivar»."
   ]
  },
@@ -555,7 +556,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "El plan del taller en el tiempo: cuándo empieza y termina cada etapa de cada orden y si llega a su fecha compromiso. No se captura nada: el ERP lo calcula con las horas estimadas de cada etapa, lo que puede trabajar cada área, la cuadrilla de cada etapa y el orden de la fila, y lo recalcula al momento con lo que se marca en el piso. Lo ven la gerencia de producción, los supervisores, almacén e ingeniería de procesos.",
    "Cómo se lee: cada barra es una etapa con el color de su área. Apagada, ya se hizo; llena con rayas que se mueven, se está trabajando (llena hasta hoy, translúcida en lo que le falta); rayada, pausada; translúcida, planeada. El rombo es la fecha compromiso: verde si el plan llega antes, rojo si no, y la franja roja son los días que faltarían. La línea azul es hoy.",
-   "Arriba cambias la vista y el zoom. «Por orden»: un renglón por orden, en el orden de la fila. «Por pedido»: las órdenes juntas por pedido, con cuándo acaba el pedido completo. «Por área»: un renglón por área con lo que va a trabajar, y si el área tiene especialidades, un renglón por especialidad (Pailería · Cribadoras) y uno con lo demás; al pasar el mouse por una orden se resaltan sus etapas en todas las áreas. Días, semanas o meses cambia cuánto tiempo cabe en la pantalla, y puedes buscar una orden o ver solo las que van tarde.",
+   "Arriba cambias la vista y el zoom. «Por orden»: un renglón por orden, en el orden de la fila. «Por pedido»: las órdenes juntas por pedido, con cuándo acaba el pedido completo. «Por área»: un renglón por área con lo que va a trabajar, y si el área tiene especialidades, un renglón por especialidad (Pailería · Cribadoras) y uno con lo demás; al pasar el mouse por una orden se resaltan sus etapas en todas las áreas. Días, semanas o meses cambia cuánto tiempo cabe en la pantalla, y puedes buscar una orden o ver solo las que van tarde. La vista y el zoom que dejes se quedan para la próxima vez.",
    "Pasa el mouse por una barra para ver sus fechas, cuánto le falta y quién la trabaja; clic abre la orden con todas sus etapas. La gerencia de producción acomoda la fila arrastrando una orden por su asa, o con Subir y Bajar en su detalle: el plan se recalcula y la cola de Cuadrillas y de la terminal queda en ese mismo orden.",
    "De dónde salen las fechas: el plan sigue el horario del taller (los días que no se trabaja se los salta). Cada área trabaja cada día su parte de sus horas por semana, y cada etapa avanza al día lo que dura la jornada por cada persona de su cuadrilla (sin cuadrilla, cuenta 2). En un área con especialidades, cada una trabaja con las horas de su gente: una cribadora solo avanza con la cuadrilla de cribadoras y con quien hace de todo, y lo que no es de ninguna especialidad lo hace cualquiera del área; una etapa empieza al día siguiente de que acaban las anteriores, salvo las que van en paralelo (Torno), que arrancan sin esperar. Las órdenes en espera no entran al plan: salen abajo con su motivo. Es un plan, no una promesa: si algo se atrasa en el piso, las barras se recorren solas."
   ]
@@ -626,8 +627,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Todo lo de una orden de producción en una pantalla: para quién es, su compromiso y avance, lo que se le vendió al cliente (la descripción de su partida, sin precio; «Imprimir» la saca en una hoja para el taller), el material, las etapas del taller y quién hizo qué y cuándo. Clic en el recuadro «Pedido y cliente» abre el pedido de la orden. Ventas y quien solo sigue el avance ven el compromiso, las etapas y la historia; el material, los planos y las horas son de planta, almacén, ingeniería y compras.",
    "\"Validación de material\" son los cinco pasos antes del taller, en orden: ingeniería revisa la lista, se aparta el material, se piden los faltantes a compras, almacén revisa la existencia física y la gerencia la libera. Cada paso guarda quién y cuándo, y cada quien ve el botón del suyo. Sin la revisión de ingeniería no se puede liberar.",
-   "En Material, la lista sale agrupada por categoría (todo lo eléctrico junto, todo el material para aire, la tornillería…); con «Agrupar por» la cambias a subensamble (la parte del equipo donde va), y el buscador encuentra por nombre, clave o categoría, sin acentos. Al surtir, la lista también sale por categoría y con buscador; si escribiste cantidades en partidas que la búsqueda esconde, te avisa que también salen.",
-   "En Material, Falta es lo requerido que todavía no está surtido ni apartado; Pedido es lo que ya se pidió a compras para esta orden; Disponible es lo que hay en planta sin apartar para nadie. Almacén entrega con el botón Surtir: anota quién recibe y lo que sale (si es una parte, lo demás queda por surtir); no puede llevarse lo apartado para otra orden. En las órdenes que venían de la hoja, «Ya se había entregado con la hoja» registra lo que ya se dio antes del ERP sin descontar inventario otra vez. Si «Consumibles del taller» está encendido, lo marcado «Del taller» (discos, lijas, soldadura, EPP) no falta ni se surte a la orden: almacén lo da a nombre de quien lo recibe. En la línea de tiempo, «Ver partidas» en cada surtido dice qué salió, cuánto y de qué almacén.",
+   "En Material, la lista sale agrupada por categoría (todo lo eléctrico junto, todo el material para aire, la tornillería…); con «Agrupar por» la cambias a subensamble (la parte del equipo donde va) y la próxima vez te sale como la dejaste; el buscador encuentra por nombre, clave o categoría, sin acentos. Al surtir, la lista también sale por categoría y con buscador; si escribiste cantidades en partidas que la búsqueda esconde, te avisa que también salen.",
+   "En Material, Falta es lo requerido que todavía no está surtido ni apartado; Pedido es lo que ya se pidió a compras para esta orden; Disponible es lo que hay en planta sin apartar para nadie. Almacén entrega con el botón Surtir: anota quién recibe y lo que sale (si es una parte, lo demás queda por surtir). Las cantidades empiezan vacías: toca el número de «Por surtir» o de «Apartado» para llenarlo. De una partida no sale más de lo que falta: si hace falta más, pide el cambio a ingeniería con «Solicitar cambio a ingeniería», para que la lista del equipo quede como en la realidad; y no puede llevarse lo apartado para otra orden. En las órdenes que venían de la hoja, «Ya se había entregado con la hoja» registra lo que ya se dio antes del ERP sin descontar inventario otra vez. Si «Consumibles del taller» está encendido, lo marcado «Del taller» (discos, lijas, soldadura, EPP) no falta ni se surte a la orden: almacén lo da a nombre de quien lo recibe. En la línea de tiempo, «Ver partidas» en cada surtido dice qué salió, cuánto y de qué almacén.",
    "En Etapas, el taller inicia, pausa, reanuda y termina cada una; el avance sale de las horas de las etapas terminadas. Si una se terminó por error, el aviso trae «Deshacer» (15 minutos para quien la terminó) y la gerencia tiene «Reabrir» en la etapa, con el motivo: regresa a pausada. Si algo de la lista está mal, usa \"Solicitar cambio a ingeniería\": queda en la orden y en la línea de tiempo.",
    "Las etapas de la orden salen de las horas por etapa del equipo, y la orden se termina sola al acabar la última. Si al equipo le falta una (por ejemplo Detallado), la gerencia usa «Agregar etapa» con sus horas: queda pendiente para el taller y, si la orden ya estaba terminada, regresa a «en proceso».",
    "Si el equipo se detiene sin cancelarse (el cliente dejó anticipo y no ha regresado), la gerencia usa \"Poner en espera\" con el motivo: deja de contar en la carga del taller y en los tiempos de entrega, no sale atrasada y la terminal no la muestra. \"Reactivar\" la regresa tal como estaba.",
@@ -2388,6 +2389,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que se descuenta del horario cada día. Si el descanso va por turnos (unos desayunan de 10:00 a 10:40 y otros de 10:20 a 11:00), se pone la ventana completa y cuánto dura: de lo que un tiempo abierto cubra de esa ventana, se descuenta la parte que dura el descanso."
  },
  {
+  "clave": "descripcionFabricado",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Qué es el equipo o subensamble en palabras: para qué sirve y lo que conviene saber al armarlo. La captura ingeniería en «Editar datos». En un equipo, además, sale en la cotización debajo del nombre."
+ },
+ {
   "clave": "descripcionVenta",
   "modulos": [
    "produccion",
@@ -3859,6 +3868,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "importaciones"
   ],
   "texto": "Cuándo llega a planta. Mientras está en el mar o en puerto, es el arribo (o la ETA) más lo que normalmente tarda en salir del puerto; ya despachado, el día siguiente; ya en planta, la fecha real (si nadie la anotó, dice que falta)."
+ },
+ {
+  "clave": "llenarSurtido",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Al surtir, las cantidades empiezan vacías para que no salga nada sin querer. Toca el número de «Por surtir» para llenar lo que falta, o el de «Apartado» para llenar lo apartado; luego ajusta si das solo una parte. De una partida de la lista no sale más de lo que falta: si hace falta más, pide el cambio a ingeniería desde la orden para que la lista quede como en la realidad. Los consumibles del taller y lo que no está en la lista no tienen ese tope."
  },
  {
   "clave": "loCotizado",

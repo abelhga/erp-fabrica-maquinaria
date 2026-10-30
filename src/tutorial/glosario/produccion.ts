@@ -14,6 +14,7 @@ export const PRODUCCION = {
   ordenAtrasada: "Ya pasó su fecha compromiso y no está terminada.",
   avanceOrden: "Cuánto lleva: las horas de las etapas terminadas, más lo que lleva la que está en proceso según lo reportó el piso (¼, ½, ¾), contra las horas estimadas de todas sus etapas.",
   avanceEtapa: "Cuánto lleva una etapa empezada, como se dice en el piso: ¼, ½, ¾ o casi. Lo reporta el supervisor en la terminal o la gerencia en la orden. Cuenta en el avance de la orden, en lo que le falta a su área y en el plan del Gantt. Para acabarla se sigue usando «Terminar».",
+  llenarSurtido: "Al surtir, las cantidades empiezan vacías para que no salga nada sin querer. Toca el número de «Por surtir» para llenar lo que falta, o el de «Apartado» para llenar lo apartado; luego ajusta si das solo una parte. De una partida de la lista no sale más de lo que falta: si hace falta más, pide el cambio a ingeniería desde la orden para que la lista quede como en la realidad. Los consumibles del taller y lo que no está en la lista no tienen ese tope.",
   faltanteMaterial: "Lo que la orden necesita y todavía no está ni surtido ni apartado. Después de apartar, lo que queda es lo que no había libre en planta. En las tarjetas: ámbar si todo ya se pidió a compras, rojo si algo nadie lo ha pedido.",
   faltanteSinPedir: "Material que falta para la orden y todavía no se pidió a compras. Es lo primero que hay que resolver.",
   apartadoOrden: "Material reservado para esta orden: sigue en el almacén, pero nadie más lo puede tomar.",

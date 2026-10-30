@@ -18,7 +18,7 @@ export const COSTEO: Record<string, AyudaPantalla> = {
     "Lo de adentro de un subensamble sale en gris y no se edita aquí: se cambia en el propio subensamble, porque el cambio llega a todos los equipos que lo usan.",
     "Si una cantidad depende de una medida (largo, ancho), defínela en la pestaña Parámetros. Para la misma banda con otra medida sin tocar esta, usa «Duplicar con otros parámetros».",
     "En «Fotos» se suben una o varias fotos (o se pega la liga de Drive). La primera es la principal y sale junto a la partida de la cotización; las demás, en la hoja de fotos del PDF. Con las flechas o «Hacerla principal» cambias el orden.",
-    "Para cambiar una pieza por otra con la misma cantidad, usa el botón de flechas de su línea. «Editar datos» cambia el nombre, el tipo de equipo y la descripción; las cotizaciones que ya existen conservan el nombre anterior. Junto a la descripción, «Pulir redacción» le pide al asistente que corrija ortografía y estilo: ves la propuesta y decides si la usas.",
+    "Para cambiar una pieza por otra con la misma cantidad, usa el botón de flechas de su línea. «Editar datos» cambia el nombre, el tipo de equipo y la descripción (sale arriba, en «Descripción»: qué es, para qué sirve y lo que conviene saber al armarlo); las cotizaciones que ya existen conservan el nombre anterior. Junto a la descripción, «Pulir redacción» le pide al asistente que corrija ortografía y estilo: ves la propuesta y decides si la usas.",
     "«Inhabilitar» lo saca del cotizador y de pedidos nuevos cuando ya no se fabrica; arriba sale la marca «Inhabilitado» y el botón cambia a «Reactivar».",
   ],
   "/costeo/componentes": [

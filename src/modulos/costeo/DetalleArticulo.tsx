@@ -54,6 +54,23 @@ function ComparacionCopia({ origen, copia }: { origen: string; copia: ArticuloCa
   );
 }
 
+/**
+ * Qué es el equipo o subensamble, en palabras. Se capturaba en «Editar datos» pero no se veía en
+ * ningún lado, y Miguel pidió poder describir los subensambles.
+ */
+function DescripcionFabricado({ a }: { a: ArticuloCatalogo }) {
+  const { puede } = useSesion();
+  if (!a.descripcion && !puede("costeo", 2)) return null;
+  return (
+    <Tarjeta className="px-5 py-4" >
+      <p className="text-xs font-semibold uppercase tracking-wide text-tenue mb-1" data-explain={GLOSARIO.descripcionFabricado} data-explain-title="Descripción">Descripción</p>
+      {a.descripcion
+        ? <p className="text-sm whitespace-pre-line">{a.descripcion}</p>
+        : <p className="text-sm text-tenue">Sin descripción. Agrégala con «Editar datos»: qué es, para qué sirve y lo que conviene saber al armarlo.</p>}
+    </Tarjeta>
+  );
+}
+
 function Encabezado({ a }: { a: ArticuloCatalogo }) {
   const { puede, vePrecios } = useSesion();
   const costos = puede("costos");
@@ -180,6 +197,7 @@ export default function DetalleArticulo() {
     >
       {state?.origen && state.origen !== a.id && <ComparacionCopia origen={state.origen} copia={a} />}
       <Encabezado a={a} />
+      {fab && <DescripcionFabricado a={a} />}
 
       {fab ? (
         <Pestanas value={pestana} onValueChange={(v) => setParams(v === "lista" ? {} : { pestana: v }, { replace: true, state })}>

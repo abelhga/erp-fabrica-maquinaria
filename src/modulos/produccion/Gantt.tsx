@@ -1,4 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent, type MouseEvent } from "react";
+import { unoDe, usePreferencia } from "@/lib/preferencias";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -182,8 +183,12 @@ export default function Gantt() {
   const especialidades = useEspecialidades();
   const cuadrillas = useCuadrillaPorEtapa();
   const [params, setParams] = useSearchParams();
-  const zoom: Zoom = (["dia", "semana", "mes"] as const).find((z) => z === params.get("zoom")) ?? (window.innerWidth < 640 ? "semana" : "dia");
-  const vista: Vista = (["orden", "pedido", "area"] as const).find((v) => v === params.get("vista")) ?? "orden";
+  // La vista y el zoom que cada quien deja se le recuerdan; la liga con ?vista= o ?zoom= manda.
+  const [vistaGuardada, guardarVista] = usePreferencia<Vista>("gantt.vista", "orden", unoDe(["orden", "pedido", "area"] as const));
+  const [zoomGuardado, guardarZoom] = usePreferencia<Zoom | null>("gantt.zoom", null,
+    (v): v is Zoom | null => v === null || unoDe(["dia", "semana", "mes"] as const)(v));
+  const zoom: Zoom = (["dia", "semana", "mes"] as const).find((z) => z === params.get("zoom")) ?? zoomGuardado ?? (window.innerWidth < 640 ? "semana" : "dia");
+  const vista: Vista = (["orden", "pedido", "area"] as const).find((v) => v === params.get("vista")) ?? vistaGuardada;
   const ver: Ver = params.get("ver") === "tarde" ? "tarde" : "todas";
   const cambiar = (clave: string, valor: string, omision: string) => {
     const p = new URLSearchParams(params);
@@ -245,8 +250,8 @@ export default function Gantt() {
           { valor: "orden" as Vista, texto: "Por orden", explica: GLOSARIO.ganttPorOrden },
           { valor: "pedido" as Vista, texto: "Por pedido" },
           { valor: "area" as Vista, texto: "Por área", explica: GLOSARIO.ganttPorArea },
-        ]} valor={vista} alCambiar={(v) => cambiar("vista", v, "orden")} />
-        <Filtro opciones={ZOOMS} valor={zoom} alCambiar={(v) => cambiar("zoom", v, window.innerWidth < 640 ? "semana" : "dia")} />
+        ]} valor={vista} alCambiar={(v) => { guardarVista(v); cambiar("vista", v, "orden"); }} />
+        <Filtro opciones={ZOOMS} valor={zoom} alCambiar={(v) => { guardarZoom(v); cambiar("zoom", v, window.innerWidth < 640 ? "semana" : "dia"); }} />
       </div>}>
       {error ? <ErrorCarga error={error} /> : cargando ? <Cargando filas={8} /> : !ordenes.length ? (
         <Vacio icono={GanttChart} titulo="No hay órdenes abiertas en el taller"

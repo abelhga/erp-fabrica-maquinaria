@@ -42,7 +42,7 @@ export function EditarDatos({ a }: { a: ArticuloCatalogo }) {
               </Seleccion>
             </Campo>
           )}
-          <Campo etiqueta="Descripción" ayuda="Sale en la cotización debajo del nombre: una viñeta por renglón.">
+          <Campo etiqueta="Descripción" ayuda={a.tipo === "equipo" ? "Sale en la cotización debajo del nombre: una viñeta por renglón." : "Qué es, para qué sirve y lo que conviene saber al armarlo. Se ve en la ficha del subensamble."}>
             <div className="space-y-1">
               <textarea className="campo min-h-24 py-2" value={f.descripcion} onChange={(e) => setF({ ...f, descripcion: e.target.value })} />
               <PulirDescripcion leer={() => f.descripcion} nombre={f.nombre || a.nombre} tipo={a.tipo} alUsar={(v) => setF((x) => ({ ...x, descripcion: v }))} />

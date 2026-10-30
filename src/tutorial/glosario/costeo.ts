@@ -31,6 +31,7 @@ export const COSTEO = {
   costoViejo: "Un costo capturado hace más de 6 meses. Ya no es confiable para cotizar: conviene confirmarlo con el proveedor.",
   importeLinea: "Cantidad efectiva por el costo unitario de la pieza. La suma de la lista más la mano de obra propia da el costo del equipo.",
   tarifaManoObra: "Costo por hora hombre de cada etapa del taller. Se multiplica por las horas de esa etapa en cada equipo; al cambiarla se recalculan costos y precios.",
+  descripcionFabricado: "Qué es el equipo o subensamble en palabras: para qué sirve y lo que conviene saber al armarlo. La captura ingeniería en «Editar datos». En un equipo, además, sale en la cotización debajo del nombre.",
   formulaPrecio: "Cómo sale el precio de un equipo: al costo se le suman los recargos sobre costo (y el de medida especial, si aplica). Eso se divide entre lo que queda del precio después de apartar la utilidad (subida para cubrir el ISR) y los recargos sobre precio. Al final se redondea hacia arriba según la política: en equipos, a $100 abajo de $100,000 y a $1,000 arriba. Lo que se revende sale del costo con el margen sobre precio de su política.",
   politicaPrecio: "La regla de precio de un tipo de equipo: utilidad, recargos, medida especial, redondeo y descuento máximo. Cada categoría con política propia la usa; lo que no tiene categoría usa la de por defecto.",
   utilidadPolitica: "La utilidad que pide la política. En equipos es neta de ISR: lo que queda libre después del impuesto. En lo que se revende es un margen sobre el precio.",
