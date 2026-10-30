@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowLeft, Camera, CalendarPlus, Gauge, Hand, History, Pencil, Wrench } from "lucide-react";
+import { AlertTriangle, Archive, ArchiveRestore, ArrowLeft, Camera, CalendarPlus, Gauge, Hand, History, Pencil, Wrench } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Boton } from "@/components/ui/boton";
@@ -14,7 +14,7 @@ import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { supabase } from "@/lib/supabase";
 import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, fechaYHora, hace, numero } from "@/lib/formato";
-import { CLAVE, CRITICIDAD, ESPECIALIDAD, TIPO_EQUIPO, TIPO_MAQUINA, TIPO_MTTO, comprimirImagen, horas, subirArchivo, useServicioEnVivo, useUrlsFirmadas, type Maquina, type OrdenMto, type Plan, type Resguardo } from "./datos";
+import { CLAVE, CRITICIDAD, DIA_SEMANA, ESPECIALIDAD, SEMANA_MES, TIPO_EQUIPO, TIPO_MAQUINA, TIPO_MTTO, cadaPlan, comprimirImagen, horas, subirArchivo, useServicioEnVivo, useUrlsFirmadas, type Maquina, type ModoPlan, type OrdenMto, type Plan, type Resguardo } from "./datos";
 import { Dato, EnlaceBoton, InsigniaMaquina, InsigniaMto, usePermisosServicio } from "./componentes/piezas";
 import { LateralMantenimiento } from "./componentes/LateralMantenimiento";
 import { DialogoMaquina } from "./componentes/DialogoMaquina";
@@ -60,10 +60,12 @@ export default function FichaMaquina() {
   });
   const foto = useUrlsFirmadas(maq.data?.foto_ruta ? [maq.data.foto_ruta] : []);
   const [orden, setOrden] = useState<string | null>(null);
-  const [dialogo, setDialogo] = useState<null | "editar" | "horas" | "plan">(null);
+  const [dialogo, setDialogo] = useState<null | "editar" | "horas" | "plan" | "baja">(null);
   const [plan, setPlan] = useState<Plan | null>(null);
   const entradaFoto = useRef<HTMLInputElement>(null);
   const [subiendo, setSubiendo] = useState(false);
+  const reactivar = useAccion(() => q(supabase.rpc("reactivar_maquina", { p_maquina: id })),
+    { exito: "Reactivada. Sus planes preventivos siguen apagados: prende los que sigan", invalidar: [CLAVE] });
 
   if (maq.error) return <Pagina titulo="Máquina"><ErrorCarga error={maq.error} /></Pagina>;
   if (maq.isLoading) return <Pagina titulo="Máquina"><Cargando filas={8} /></Pagina>;
@@ -76,6 +78,7 @@ export default function FichaMaquina() {
   const total12 = (costos.data ?? []).filter((c) => (historial.data ?? []).some((o) => o.id === c.mantenimiento_id && new Date(o.reportado_en).getTime() > hace12))
     .reduce((s, c) => s + Number(c.total), 0);
   const abierto = (resguardos.data ?? []).find((r) => r.abierto);
+  const deBaja = m.estado === "baja";
 
   async function cambiarFoto(archivo: File | undefined) {
     if (!archivo) return;
@@ -95,11 +98,22 @@ export default function FichaMaquina() {
       acciones={<>
         <Link to="/servicio/maquinas" className="inline-flex items-center gap-1 text-sm text-tenue hover:text-texto mr-2"><ArrowLeft className="h-4 w-4" />Máquinas</Link>
         {p.pedir && m.estado !== "baja" && <EnlaceBoton a={`/servicio/reportar?maquina=${m.id}&volver=/servicio/maquinas/${m.id}`} variante="peligro"><AlertTriangle className="h-4 w-4" />Reportar falla</EnlaceBoton>}
-        {m.usa_horometro && p.personal && <Boton variante="secundario" onClick={() => setDialogo("horas")}><Gauge className="h-4 w-4" />Registrar horas</Boton>}
-        {(m.prestable || m.tipo === "herramienta") && !abierto && p.personal && <EnlaceBoton a={`/servicio/resguardos?prestar=${m.id}`}><Hand className="h-4 w-4" />Prestar</EnlaceBoton>}
+        {m.usa_horometro && p.personal && !deBaja && <Boton variante="secundario" onClick={() => setDialogo("horas")}><Gauge className="h-4 w-4" />Registrar horas</Boton>}
+        {(m.prestable || m.tipo === "herramienta") && !abierto && p.personal && !deBaja && <EnlaceBoton a={`/servicio/resguardos?prestar=${m.id}`}><Hand className="h-4 w-4" />Prestar</EnlaceBoton>}
         {p.gerencia && <Boton variante="secundario" onClick={() => setDialogo("editar")}><Pencil className="h-4 w-4" />Editar</Boton>}
+        {p.gerencia && !deBaja && <Boton variante="secundario" onClick={() => setDialogo("baja")}><Archive className="h-4 w-4" />Dar de baja</Boton>}
       </>}
     >
+      {deBaja && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-borde bg-fondo px-4 py-3 text-sm" data-explain={GLOSARIO.maquinaDeBaja}>
+          <Archive className="h-5 w-5 text-tenue shrink-0" aria-hidden />
+          <p className="flex-1 min-w-[200px]">
+            <strong>Dada de baja{m.baja_en ? ` el ${fecha(m.baja_en)}` : ""}</strong>{m.baja_por_nombre && <span className="text-tenue"> por {m.baja_por_nombre}</span>}
+            {m.motivo_baja && <span className="block text-tenue">{m.motivo_baja}</span>}
+          </p>
+          {p.gerencia && <Boton variante="secundario" tamano="sm" cargando={reactivar.isPending} onClick={() => reactivar.mutate()}><ArchiveRestore className="h-3.5 w-3.5" />Reactivar</Boton>}
+        </div>
+      )}
       <div className="grid gap-4 lg:grid-cols-3 items-start">
         <Tarjeta className="overflow-hidden">
           <div className="aspect-[4/3] bg-fondo flex items-center justify-center relative">
@@ -171,7 +185,7 @@ export default function FichaMaquina() {
           <div className="grid gap-4 md:grid-cols-2 items-start">
             <Tarjeta>
               <EncabezadoTarjeta titulo="Plan preventivo" explica={GLOSARIO.planPreventivo} descripcion="La orden sale sola cuando vence (por fecha o por horas)."
-                acciones={p.gerencia && <Boton variante="secundario" tamano="sm" onClick={() => { setPlan(null); setDialogo("plan"); }}><CalendarPlus className="h-3.5 w-3.5" />Agregar</Boton>} />
+                acciones={p.gerencia && !deBaja && <Boton variante="secundario" tamano="sm" onClick={() => { setPlan(null); setDialogo("plan"); }}><CalendarPlus className="h-3.5 w-3.5" />Agregar</Boton>} />
               <div className="px-5 pb-4 space-y-2">
                 {(planes.data ?? []).length === 0 ? <p className="text-sm text-tenue">Sin plan. Un preventivo a tiempo cuesta menos que la falla.</p>
                   : planes.data!.map((x) => (
@@ -184,7 +198,7 @@ export default function FichaMaquina() {
                         </Insignia>
                       </div>
                       <p className="text-xs text-tenue mt-1">
-                        Cada {[x.cada_dias && `${x.cada_dias} días`, x.cada_horas && horas(x.cada_horas)].filter(Boolean).join(" o ")} ·
+                        {cadaPlan(x)} ·
                         último {fecha(x.ultima_fecha)} · toca {x.proxima_fecha ? fecha(x.proxima_fecha) : `a las ${horas(x.proximas_horas)}`}
                         {x.orden_folio && ` · ${x.orden_folio}`}
                       </p>
@@ -236,6 +250,7 @@ export default function FichaMaquina() {
       {dialogo === "editar" && <DialogoMaquina m={m} alCerrar={() => setDialogo(null)} />}
       {dialogo === "horas" && <DialogoHoras m={m} alCerrar={() => setDialogo(null)} />}
       {dialogo === "plan" && <DialogoPlan maquinaId={m.id} plan={plan} horasActuales={m.horas_uso} alCerrar={() => setDialogo(null)} />}
+      {dialogo === "baja" && <DialogoBaja m={m} alCerrar={() => setDialogo(null)} />}
     </Pagina>
   );
 }
@@ -255,9 +270,36 @@ function DialogoHoras({ m, alCerrar }: { m: Maquina; alCerrar: () => void }) {
   );
 }
 
+function DialogoBaja({ m, alCerrar }: { m: Maquina; alCerrar: () => void }) {
+  const [motivo, setMotivo] = useState("");
+  const baja = useAccion(() => q(supabase.rpc("dar_de_baja_maquina", { p_maquina: m.id, p_motivo: motivo.trim() })), {
+    exito: `${m.numero} quedó dada de baja`, invalidar: [CLAVE], alTerminar: alCerrar,
+  });
+  const listo = motivo.trim().length >= 5;
+  return (
+    <Dialogo abierto alCambiar={(v) => !v && alCerrar()} titulo={`Dar de baja ${m.numero}`}
+      descripcion="Para lo que ya no conviene reparar o ya no está en el taller. Queda su historial; se puede reactivar."
+      pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton type="submit" form="form-baja" variante="peligro" disabled={!listo} cargando={baja.isPending}><Archive className="h-4 w-4" />Dar de baja</Boton></>}>
+      <form id="form-baja" className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (listo) baja.mutate(); }}>
+        <Campo etiqueta="¿Por qué?"><AreaTexto rows={2} value={motivo} onChange={(e) => setMotivo(e.target.value)} autoFocus
+          placeholder="Ya no conviene repararla: el motor cuesta más que una nueva" /></Campo>
+        <ul className="text-sm text-tenue list-disc pl-5 space-y-1">
+          {m.ordenes_abiertas > 0 && <li>{m.ordenes_abiertas === 1 ? "Su orden abierta se cancela" : `Sus ${m.ordenes_abiertas} órdenes abiertas se cancelan`} con este motivo.</li>}
+          <li>Sus planes preventivos se apagan y ya no generan órdenes.</li>
+          <li>Sale de la lista de máquinas y de las métricas desde hoy (sigue en «Dadas de baja»).</li>
+          {m.prestada_a && <li className="text-peligro">La tiene {m.prestada_a}: primero recíbela en Resguardos.</li>}
+        </ul>
+      </form>
+    </Dialogo>
+  );
+}
+
 function DialogoPlan({ maquinaId, plan, horasActuales, alCerrar }: { maquinaId: string; plan: Plan | null; horasActuales: number; alCerrar: () => void }) {
   const [f, setF] = useState({
-    nombre: plan?.nombre ?? "", tareas: plan?.tareas ?? "", cada_dias: plan?.cada_dias ? String(plan.cada_dias) : "",
+    nombre: plan?.nombre ?? "", tareas: plan?.tareas ?? "", modo: plan?.modo ?? ("dias" as ModoPlan),
+    cada_dias: plan?.cada_dias ? String(plan.cada_dias) : "", cada_meses: String(plan?.cada_meses ?? 1),
+    semana_mes: String(plan?.semana_mes ?? 1), dia_semana: String(plan?.dia_semana ?? 1), dia_mes: String(plan?.dia_mes ?? 1),
+    solo_laborables: plan?.solo_laborables ?? true,
     cada_horas: plan?.cada_horas ? String(plan.cada_horas) : "", ultima_fecha: plan?.ultima_fecha ?? new Date().toLocaleDateString("en-CA"),
     ultima_horas: plan ? String(plan.ultima_horas) : String(horasActuales), anticipacion_dias: plan ? String(plan.anticipacion_dias) : "7",
     activo: plan?.activo ?? true, rutina_id: plan?.rutina_id ?? "",
@@ -265,10 +307,29 @@ function DialogoPlan({ maquinaId, plan, horasActuales, alCerrar }: { maquinaId: 
   const rutinas = useQuery({ queryKey: [...CLAVE, "rutinas"], staleTime: 5 * 60_000,
     queryFn: () => q<{ id: string; nombre: string; puntos: unknown[] }[]>(supabase.from("rutinas_mantenimiento").select("id, nombre, puntos").eq("activa", true).order("nombre")) });
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
+  // Lo que se guarda: cada modo solo lleva sus campos (la base revisa que estén completos).
+  const regla = {
+    p_modo: f.modo, p_ultima: f.ultima_fecha || null,
+    p_cada_dias: f.modo === "dias" && f.cada_dias ? Number(f.cada_dias) : null,
+    p_cada_meses: f.modo === "dias" ? null : Number(f.cada_meses) || 1,
+    p_semana_mes: f.modo === "mes_semana" ? Number(f.semana_mes) : null,
+    p_dia_semana: f.modo === "mes_semana" ? Number(f.dia_semana) : null,
+    p_dia_mes: f.modo === "mes_dia" ? Math.min(31, Math.max(1, Number(f.dia_mes) || 1)) : null,
+    p_solo_laborables: f.solo_laborables,
+  };
+  // La fecha que va a tocar con lo que lleva capturado, calculada por la misma regla que genera la orden.
+  const proxima = useQuery({
+    queryKey: [...CLAVE, "plan", "proxima", plan?.id, regla],
+    enabled: !!regla.p_ultima && (f.modo !== "dias" || !!regla.p_cada_dias),
+    staleTime: 60_000,
+    queryFn: () => q<string | null>(supabase.rpc("preventivo_fecha", { ...regla, p_plan: plan?.id ?? null })),
+  });
   const guardar = useAccion(async () => {
     const fila = {
       maquina_id: maquinaId, nombre: f.nombre.trim(), tareas: f.tareas.trim() || null,
-      cada_dias: f.cada_dias ? Number(f.cada_dias) : null, cada_horas: f.cada_horas ? Number(f.cada_horas) : null,
+      modo: regla.p_modo, cada_dias: regla.p_cada_dias, cada_meses: regla.p_cada_meses, semana_mes: regla.p_semana_mes,
+      dia_semana: regla.p_dia_semana, dia_mes: regla.p_dia_mes, solo_laborables: f.solo_laborables,
+      cada_horas: f.cada_horas ? Number(f.cada_horas) : null,
       ultima_fecha: f.ultima_fecha, ultima_horas: Number(f.ultima_horas) || 0, anticipacion_dias: Number(f.anticipacion_dias) || 0, activo: f.activo,
       rutina_id: f.rutina_id || null,
     };
@@ -277,7 +338,8 @@ function DialogoPlan({ maquinaId, plan, horasActuales, alCerrar }: { maquinaId: 
     // Si ya vence, la orden sale de una vez (no hasta mañana).
     await q(supabase.rpc("generar_preventivos", { p_maquina: maquinaId }));
   }, { exito: "Plan guardado", invalidar: [CLAVE], alTerminar: alCerrar });
-  const listo = f.nombre.trim() && (f.cada_dias || f.cada_horas);
+  const listo = f.nombre.trim() && f.ultima_fecha && (f.modo === "dias" ? f.cada_dias || f.cada_horas : Number(f.cada_meses) >= 1);
+  const diaDe = (d: string) => DIA_SEMANA[((new Date(`${d}T12:00`).getDay() + 6) % 7) + 1];
   return (
     <Dialogo abierto alCambiar={(v) => !v && alCerrar()} titulo={plan ? "Editar plan preventivo" : "Nuevo plan preventivo"} ancho="max-w-xl"
       descripcion="Por fecha, por horas de uso o lo que pase primero. La orden se genera sola unos días antes de vencer."
@@ -293,13 +355,46 @@ function DialogoPlan({ maquinaId, plan, horasActuales, alCerrar }: { maquinaId: 
           </span>
         </Campo>
         <Campo etiqueta="Tareas"><AreaTexto rows={2} value={f.tareas} onChange={(e) => set("tareas", e.target.value)} placeholder="Aceite, filtro, purga del tanque…" /></Campo>
+        <Campo etiqueta="Cuándo toca">
+          <span data-explain={GLOSARIO.planPreventivo} className="block">
+            <Seleccion value={f.modo} onChange={(e) => set("modo", e.target.value as ModoPlan)}>
+              <option value="dias">Cada tantos días (o solo por horas de uso)</option>
+              <option value="mes_semana">Un día de la semana del mes (el primer lunes…)</option>
+              <option value="mes_dia">Un día fijo del mes (el 15…)</option>
+            </Seleccion>
+          </span>
+        </Campo>
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
-          <Campo etiqueta="Cada (días)"><Entrada type="number" min="1" value={f.cada_dias} onChange={(e) => set("cada_dias", e.target.value)} /></Campo>
-          <Campo etiqueta="Cada (horas de uso)"><Entrada type="number" min="1" value={f.cada_horas} onChange={(e) => set("cada_horas", e.target.value)} /></Campo>
+          {f.modo === "dias" && <Campo etiqueta="Cada (días)"><Entrada type="number" min="1" value={f.cada_dias} onChange={(e) => set("cada_dias", e.target.value)} /></Campo>}
+          {f.modo === "mes_semana" && <>
+            <Campo etiqueta="El">
+              <Seleccion value={f.semana_mes} onChange={(e) => set("semana_mes", e.target.value)}>
+                {Object.entries(SEMANA_MES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </Seleccion>
+            </Campo>
+            <Campo etiqueta="Día">
+              <Seleccion value={f.dia_semana} onChange={(e) => set("dia_semana", e.target.value)}>
+                {Object.entries(DIA_SEMANA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </Seleccion>
+            </Campo>
+          </>}
+          {f.modo === "mes_dia" && <Campo etiqueta="Día del mes" ayuda="El 31 en un mes de 30 es el 30."><Entrada type="number" min="1" max="31" value={f.dia_mes} onChange={(e) => set("dia_mes", e.target.value)} /></Campo>}
+          {f.modo !== "dias" && <Campo etiqueta="Cada (meses)"><Entrada type="number" min="1" max="24" value={f.cada_meses} onChange={(e) => set("cada_meses", e.target.value)} /></Campo>}
+          <Campo etiqueta="Cada (horas de uso)"><Entrada type="number" min="1" value={f.cada_horas} onChange={(e) => set("cada_horas", e.target.value)} placeholder="Opcional" /></Campo>
           <Campo etiqueta="Avisar días antes"><Entrada type="number" min="0" value={f.anticipacion_dias} onChange={(e) => set("anticipacion_dias", e.target.value)} /></Campo>
           <Campo etiqueta="Último hecho"><Entrada type="date" value={f.ultima_fecha} onChange={(e) => set("ultima_fecha", e.target.value)} /></Campo>
           <Campo etiqueta="A las (horas)"><Entrada type="number" min="0" step="0.1" value={f.ultima_horas} onChange={(e) => set("ultima_horas", e.target.value)} /></Campo>
         </div>
+        <label className="flex items-start gap-2 text-sm cursor-pointer" data-explain={GLOSARIO.diaHabilPreventivo}>
+          <input type="checkbox" checked={f.solo_laborables} onChange={(e) => set("solo_laborables", e.target.checked)} className="accent-[hsl(var(--marca))] mt-0.5" />
+          <span>Si cae en sábado, domingo, feriado o descanso, pasarlo al siguiente día que se trabaja</span>
+        </label>
+        {proxima.data && (
+          <p className="rounded-lg bg-fondo px-3 py-2 text-sm">
+            Con esto, el siguiente toca el <strong>{diaDe(proxima.data)} {fecha(proxima.data)}</strong>
+            {Number(f.anticipacion_dias) > 0 && <span className="text-tenue"> · la orden sale {f.anticipacion_dias} {Number(f.anticipacion_dias) === 1 ? "día" : "días"} antes</span>}
+          </p>
+        )}
         <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
           <input type="checkbox" checked={f.activo} onChange={(e) => set("activo", e.target.checked)} className="accent-[hsl(var(--marca))]" />Plan activo
         </label>

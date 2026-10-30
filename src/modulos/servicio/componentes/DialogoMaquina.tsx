@@ -8,8 +8,10 @@ import { q, useAccion } from "@/lib/consultas";
 import { CLAVE, CRITICIDAD, ESPECIALIDAD, TIPO_EQUIPO, TIPO_MAQUINA, TIPO_MTTO, usePersonal, type Maquina } from "../datos";
 import { GLOSARIO } from "@/tutorial/glosario";
 
+// Sugerencias para empezar; la categoría es libre (Esteban da de alta equipo de oficina, aires…)
+// y la lista también ofrece las que ya existen, para que no salgan «compresor» y «compresores».
 const CATEGORIAS = ["soldadora", "rectificador", "taladro", "esmeril", "mototool", "compresor", "torno", "roladora", "dobladora",
-  "cortadora", "montacargas", "conmutador", "motor", "pinzas", "otra"];
+  "cortadora", "montacargas", "conmutador", "motor", "pinzas", "computadora", "impresora", "aire acondicionado", "mobiliario"];
 
 /** Alta o cambio de una máquina o herramienta (lo hace la gerencia; la RLS lo exige). */
 export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerrar: () => void; alGuardar?: (id: string) => void }) {
@@ -18,8 +20,14 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
     staleTime: 10 * 60_000,
     queryFn: () => q<{ id: number; nombre: string }[]>(supabase.from("etapas").select("id, nombre").eq("activa", true).order("orden")),
   });
+  const categorias = useQuery({
+    queryKey: [...CLAVE, "categorias"],
+    staleTime: 5 * 60_000,
+    queryFn: async () => [...new Set([...(await q<{ categoria: string }[]>(supabase.from("maquinas").select("categoria"))).map((x) => x.categoria), ...CATEGORIAS])]
+      .sort((a, b) => a.localeCompare(b, "es")),
+  });
   const [f, setF] = useState({
-    numero: m?.numero ?? "", nombre: m?.nombre ?? "", tipo: m?.tipo ?? "maquina", categoria: m?.categoria ?? "soldadora",
+    numero: m?.numero ?? "", nombre: m?.nombre ?? "", tipo: m?.tipo ?? "maquina", categoria: m?.categoria ?? "",
     marca: m?.marca ?? "", modelo: m?.modelo ?? "", numero_serie: m?.numero_serie ?? "", etapa_id: m?.etapa_id ? String(m.etapa_id) : "",
     ubicacion: m?.ubicacion ?? "", critica: m?.critica ?? false, prestable: m?.prestable ?? false, usa_horometro: m?.usa_horometro ?? false,
     horas_uso: m ? String(m.horas_uso) : "0", notas: m?.notas ?? "",
@@ -30,7 +38,7 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
   const guardar = useAccion(async () => {
     const fila = {
-      numero: f.numero.trim().toUpperCase(), nombre: f.nombre.trim(), tipo: f.tipo, categoria: f.categoria,
+      numero: f.numero.trim().toUpperCase(), nombre: f.nombre.trim(), tipo: f.tipo, categoria: f.categoria.trim().toLowerCase(),
       marca: f.marca.trim() || null, modelo: f.modelo.trim() || null, numero_serie: f.numero_serie.trim() || null,
       etapa_id: f.etapa_id ? Number(f.etapa_id) : null, ubicacion: f.ubicacion.trim() || null, critica: f.critica,
       criticidad: f.criticidad || null, tipo_mantenimiento: f.tipo_mantenimiento || null, especialidad: f.especialidad || null,
@@ -43,7 +51,7 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
       : await q<{ id: string }>(supabase.from("maquinas").insert(fila).select("id").single());
     return r.id;
   }, { exito: m ? "Cambios guardados" : "Máquina dada de alta", invalidar: [CLAVE], alTerminar: (id) => { alGuardar?.(id); alCerrar(); } });
-  const listo = f.numero.trim() && f.nombre.trim();
+  const listo = f.numero.trim() && f.nombre.trim() && f.categoria.trim();
 
   return (
     <Dialogo abierto alCambiar={(v) => !v && alCerrar()} titulo={m ? `Editar ${m.numero}` : "Nueva máquina o herramienta"} ancho="max-w-2xl"
@@ -61,10 +69,11 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
               {Object.entries(TIPO_MAQUINA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </Seleccion>
           </Campo>
-          <Campo etiqueta="Categoría">
-            <Seleccion value={f.categoria} onChange={(e) => set("categoria", e.target.value)}>
-              {[...new Set([...CATEGORIAS, f.categoria])].map((c) => <option key={c} value={c}>{c}</option>)}
-            </Seleccion>
+          <Campo etiqueta="Categoría" ayuda="Elige una o escribe una nueva.">
+            <span data-explain={GLOSARIO.categoriaMaquina} className="block">
+              <Entrada list="categorias-maquina" value={f.categoria} onChange={(e) => set("categoria", e.target.value)} placeholder="soldadora, impresora…" />
+              <datalist id="categorias-maquina">{(categorias.data ?? CATEGORIAS).map((c) => <option key={c} value={c} />)}</datalist>
+            </span>
           </Campo>
           <Campo etiqueta="Área del taller">
             <Seleccion value={f.etapa_id} onChange={(e) => set("etapa_id", e.target.value)}>

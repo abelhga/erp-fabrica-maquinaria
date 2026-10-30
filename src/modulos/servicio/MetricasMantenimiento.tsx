@@ -78,7 +78,7 @@ function Contenido({ d }: { d: Datos }) {
     { clave: "disponibilidad", titulo: "Disponibilidad", alinear: "der", valor: (x) => x.disponibilidad, explica: GLOSARIO.disponibilidadMaquina,
       celda: (x) => <span className={cn("cifra font-medium", tonoDisp(x.disponibilidad) === "peligro" ? "text-peligro" : tonoDisp(x.disponibilidad) === "aviso" ? "text-aviso" : "")}>{porcentaje(x.disponibilidad, 1)}</span> },
     { clave: "fallas", titulo: "Fallas", alinear: "der", valor: (x) => x.fallas, celda: (x) => <span className="cifra">{numero(x.fallas)}</span> },
-    { clave: "horas_fuera", titulo: "Horas parada", alinear: "der", valor: (x) => x.horas_fuera, celda: (x) => <span className="cifra">{numero(x.horas_fuera)}</span> },
+    { clave: "horas_fuera", titulo: "Horas parada", alinear: "der", valor: (x) => x.horas_fuera, explica: GLOSARIO.horasParadaLaborales, celda: (x) => <span className="cifra">{numero(x.horas_fuera)}</span> },
     { clave: "mtbf_h", titulo: "MTBF", alinear: "der", valor: (x) => x.mtbf_h ?? Infinity, explica: GLOSARIO.mtbf, celda: (x) => <span className="cifra">{x.mtbf_h == null ? "Sin fallas" : `${numero(x.mtbf_h)} h`}</span> },
     { clave: "mttr_h", titulo: "MTTR", alinear: "der", valor: (x) => x.mttr_h ?? -1, explica: GLOSARIO.mttr, celda: (x) => <span className="cifra">{x.mttr_h == null ? "—" : `${numero(x.mttr_h)} h`}</span> },
     { clave: "prev_programados", titulo: "Preventivos a tiempo", alinear: "der", valor: (x) => x.prev_programados ? x.prev_a_tiempo / x.prev_programados : -1, explica: GLOSARIO.cumplimientoPreventivo,
@@ -92,7 +92,7 @@ function Contenido({ d }: { d: Datos }) {
         <Kpi titulo="Disponibilidad" valor={porcentaje(r.disponibilidad, 1)} icono={Gauge} tono={tonoDisp(r.disponibilidad)}
           detalle={`críticas ${porcentaje(r.disponibilidad_criticas, 1)} · ${numero(r.paradas_ahora)} paradas ahorita`} explica={GLOSARIO.disponibilidadMaquina} />
         <Kpi titulo="MTBF" valor={r.mtbf_h == null ? "Sin fallas" : `${numero(r.mtbf_h)} h`} icono={Timer} tono="info"
-          detalle={`${numero(r.fallas ?? 0)} fallas en el periodo`} explica={GLOSARIO.mtbf} />
+          detalle={`${numero(r.fallas ?? 0)} ${r.fallas === 1 ? "falla" : "fallas"} en el periodo`} explica={GLOSARIO.mtbf} />
         <Kpi titulo="MTTR" valor={r.mttr_h == null ? "—" : `${numero(r.mttr_h)} h`} icono={AlarmClock} tono="info"
           detalle={r.paro_por_falla_h == null ? "de reporte a cierre" : `paro promedio ${numero(r.paro_por_falla_h)} h`} explica={GLOSARIO.mttr} />
         <Kpi titulo="Preventivo a tiempo" valor={porcentaje(cumplimiento, 0)} icono={CalendarCheck}

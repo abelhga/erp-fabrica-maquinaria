@@ -92,7 +92,7 @@ export interface CargaSemana {
 }
 
 export interface Maquina {
-  id: string; numero: string; nombre: string; tipo: "maquina" | "herramienta" | "vehiculo" | "instalacion"; categoria: string;
+  id: string; numero: string; nombre: string; tipo: "maquina" | "herramienta" | "vehiculo" | "instalacion" | "oficina"; categoria: string;
   marca: string | null; modelo: string | null; numero_serie: string | null; etapa_id: number | null; etapa: string | null;
   etapa_color: string | null; ubicacion: string | null; estado: EstadoMaquina; critica: boolean; prestable: boolean;
   usa_horometro: boolean; horas_uso: number; horas_actualizado_en: string | null; foto_ruta: string | null; fecha_alta: string | null;
@@ -104,6 +104,7 @@ export interface Maquina {
   resguardo_id: string | null; prestada_a: string | null; prestada_desde: string | null;
   criticidad: Criticidad | null; tipo_mantenimiento: TipoMtto | null; especialidad: Especialidad | null; tipo_equipo: TipoEquipo | null;
   asignada_a: string | null; asignada_nombre: string | null;
+  baja_en: string | null; motivo_baja: string | null; baja_por_nombre: string | null;
 }
 
 export type Criticidad = "muy_alta" | "alta" | "media" | "baja" | "muy_baja";
@@ -119,7 +120,7 @@ export const ESPECIALIDAD: Record<Especialidad, string> = { tecnico: "Técnico d
 export const TIPO_EQUIPO: Record<TipoEquipo, string> = { electrico: "Eléctrico", neumatico: "Neumático", hidraulico: "Hidráulico", mecanico: "Mecánico" };
 
 export const TIPO_MAQUINA: Record<Maquina["tipo"], string> = {
-  maquina: "Máquina", herramienta: "Herramienta", vehiculo: "Vehículo", instalacion: "Instalación",
+  maquina: "Máquina", herramienta: "Herramienta", vehiculo: "Vehículo", instalacion: "Instalación", oficina: "Equipo de oficina",
 };
 
 export interface OrdenMto {
@@ -142,6 +143,23 @@ export interface Plan {
   activo: boolean; proxima_fecha: string | null; proximas_horas: number | null; dias_restantes: number | null;
   horas_restantes: number | null; situacion: "vencido" | "por_vencer" | "al_dia"; orden_id: string | null; orden_folio: string | null;
   rutina_id: string | null; rutina: string | null; rutina_puntos: number | null;
+  modo: ModoPlan; cada_meses: number | null; semana_mes: number | null; dia_semana: number | null; dia_mes: number | null;
+  solo_laborables: boolean;
+}
+
+/** Cómo se programa un preventivo por fecha: cada N días, «el primer lunes» o «el día 15» de cada N meses. */
+export type ModoPlan = "dias" | "mes_semana" | "mes_dia";
+export const SEMANA_MES: Record<number, string> = { 1: "Primer", 2: "Segundo", 3: "Tercer", 4: "Cuarto", 5: "Último" };
+export const DIA_SEMANA: Record<number, string> = { 1: "lunes", 2: "martes", 3: "miércoles", 4: "jueves", 5: "viernes", 6: "sábado", 7: "domingo" };
+
+/** «Primer lunes de cada mes o 250 h», «Cada 30 días»… como lo diría Esteban. */
+export function cadaPlan(x: Pick<Plan, "modo" | "cada_dias" | "cada_meses" | "semana_mes" | "dia_semana" | "dia_mes" | "cada_horas">) {
+  const meses = (x.cada_meses ?? 1) === 1 ? "de cada mes" : `cada ${x.cada_meses} meses`;
+  const fecha = x.modo === "mes_semana" ? `${SEMANA_MES[x.semana_mes ?? 1]} ${DIA_SEMANA[x.dia_semana ?? 1]} ${meses}`
+    : x.modo === "mes_dia" ? `El día ${x.dia_mes} ${meses}`
+    : x.cada_dias ? `Cada ${x.cada_dias} días` : null;
+  const h = x.cada_horas ? `${fecha ? "o cada " : "Cada "}${horas(x.cada_horas)} de uso` : null;
+  return [fecha, h].filter(Boolean).join(" ");
 }
 
 export interface Resguardo {
