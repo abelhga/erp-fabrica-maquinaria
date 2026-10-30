@@ -21,11 +21,15 @@ type Vista = "todo" | "falta" | "por_surtir";
 type Agrupar = "subensamble" | "categoria";
 const SIN_CATEGORIA = "Sin categoría";
 
-/** Agrupar por categoría junta lo eléctrico, lo de aire, la tornillería… (lo pidió el taller). Se recuerda por navegador. */
+/**
+ * Agrupar por categoría junta lo eléctrico, lo de aire, la tornillería… (lo pidió el taller). Abre por
+ * categoría: en 45 de 53 órdenes todo el material es «Directo al equipo» y por subensamble sale un solo
+ * grupo. Si alguien elige «Subensamble», se recuerda en su navegador.
+ */
 function useAgrupar(): [Agrupar, (v: Agrupar) => void] {
   const llave = "hegamex.material.agrupar";
   const [v, setV] = useState<Agrupar>(() => {
-    try { return localStorage.getItem(llave) === "categoria" ? "categoria" : "subensamble"; } catch { return "subensamble"; }
+    try { return localStorage.getItem(llave) === "subensamble" ? "subensamble" : "categoria"; } catch { return "categoria"; }
   });
   return [v, (n) => { setV(n); try { localStorage.setItem(llave, n); } catch { /* modo privado: dura la pestaña */ } }];
 }
@@ -103,7 +107,7 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
         <span className="flex items-center gap-2 text-xs text-tenue" data-explain={GLOSARIO.agruparMaterial} data-explain-title="Agrupar por">
           Agrupar por
           <Filtro<Agrupar> valor={agrupar} alCambiar={setAgrupar} opciones={[
-            { valor: "subensamble", texto: "Subensamble" }, { valor: "categoria", texto: "Categoría" },
+            { valor: "categoria", texto: "Categoría" }, { valor: "subensamble", texto: "Subensamble" },
           ]} />
         </span>
         {lista.length > 0 && <CajaBuscar valor={buscar} alCambiar={setBuscar} className="w-full sm:w-64 sm:ml-auto" />}
