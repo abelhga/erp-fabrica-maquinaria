@@ -241,6 +241,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Una orden de compra completa: sus partidas, los datos para el proveedor, lo que ya se recibió en almacén y, para quien ve dinero, sus pagos.",
    "En borrador agregas artículos con el buscador de abajo (Enter) y editas cantidad y costo en su lugar; el costo sugerido es el vigente del artículo, y debajo ves si el del proveedor sale más caro o más barato. «Enviar al proveedor» fija las partidas; no se envía con partidas en $0. Después imprímela o mándala.",
+   "«Por correo» la manda desde tu propio Gmail con el PDF de la orden adjunto (el mismo que sale al imprimir), al correo del proveedor que está en su ficha; puedes cambiar a quién, el asunto y el mensaje. Si estaba en borrador, al mandarla queda enviada, con las mismas reglas que «Enviar al proveedor». La primera vez te pide conectar tu Gmail.",
    "Cuando llega mercancía, almacén usa «Recibir»: captura lo que de verdad llegó y lo que falte queda pendiente. Si todavía no se recibe nada, compras la puede cancelar y sus requisiciones vuelven a pendientes.",
    "Si después de enviarla se acuerda con el proveedor otro artículo, otra cantidad u otro precio, compras da el lápiz de esa partida, la corrige y escribe por qué. El folio se queda (el proveedor ya lo tiene) y la orden sube de revisión: «Rev. 2» en el título y en lo impreso, para mandársela otra vez. Abajo de las partidas queda cada cambio con su antes y después, quién lo hizo y por qué. Una partida de la que ya llegó algo no se cambia.",
    "Las partidas escritas a mano (sin artículo del catálogo) también se reciben. Si son material, en «Recibir» busca su artículo para que entren al almacén; si son un cobro, como «Manejo» o un flete, recíbelas tal cual: cuentan como recibidas y no tocan el inventario.",
@@ -1048,7 +1049,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "El editor de la cotización: la plantilla de la hoja, pero cada versión se guarda y no pisa la anterior. Se guarda solo mientras escribes; arriba dice “Guardado” con la hora.",
    "Agrega partidas escribiendo parte del nombre o la clave y Enter: precio de lista, descripción y foto se llenan solos (clic en la foto para pegar otra liga o subir una). Para fletes, instalación o servicios usa “Partida libre”; con “Flete con Skydropx” cotizas el envío con el código postal del cliente y los bultos de las partidas, y se agrega la partida de flete con su precio (no se genera guía ni se cobra); si algo no tiene precio, “Pedir precio a compras” y aquí ves cuando contestan. Clic en una partida muestra su ficha de venta: precio mínimo, existencia y entrega.",
    "Si un precio queda abajo del mínimo, la partida se marca en rojo y la cotización pasa a “Por autorizar”: pide la autorización a la gerencia antes de enviarla. Ya enviada no se edita; para cambiarla saca una nueva versión.",
-   "El botón principal cambia según el estado: Enviar (por WhatsApp o PDF; la deja como enviada y agenda preguntar qué pasó en 3 días hábiles; con más de 10 seguimientos vencidos no deja enviar, ni sacar el PDF o la vista previa de una cotización que todavía no envías, hasta ponerte al día), Convertir a pedido (eliges partidas y fecha compromiso) o Nueva versión. En el menú “···” están imprimir, duplicar y marcar rechazada con su motivo. “Vista previa” te enseña la hoja tal como la recibe el cliente sin salir del editor. Si el equipo tiene más fotos, salen en miniatura bajo la partida y en la hoja de fotos al final del PDF; pasa el mouse por una y con la × la quitas de esta cotización.",
+   "El botón principal cambia según el estado: Enviar (por WhatsApp, por correo o PDF; la deja como enviada y agenda preguntar qué pasó en 3 días hábiles; con más de 10 seguimientos vencidos no deja enviar, ni sacar el PDF o la vista previa de una cotización que todavía no envías, hasta ponerte al día), Convertir a pedido (eliges partidas y fecha compromiso) o Nueva versión. En el menú “···” están imprimir, duplicar y marcar rechazada con su motivo. “Vista previa” te enseña la hoja tal como la recibe el cliente sin salir del editor. Si el equipo tiene más fotos, salen en miniatura bajo la partida y en la hoja de fotos al final del PDF; pasa el mouse por una y con la × la quitas de esta cotización.",
+   "«Por correo» (en Enviar o en el menú “···”) manda la cotización desde tu propio Gmail con el PDF adjunto: el mismo que sale en Imprimir. Propone el correo del contacto y los demás contactos del cliente con correo; puedes cambiar el asunto y el mensaje. Las respuestas te llegan a tu Gmail, como siempre. La primera vez te pide conectar tu Gmail. Si la cotización no se puede enviar (precios abajo del mínimo sin autorizar, seguimientos vencidos), te dice por qué y no sale nada. Ya mandada queda como enviada, con su seguimiento, y en la bitácora del cliente queda a qué correo se fue.",
    "Abajo de “Tiempo de entrega” ves cuándo sale de verdad con el taller como está hoy: lo que tarda el equipo o lo que tarda la fila del taller, lo que sea más tarde. Con “Usar” lo pones en la cotización; si prometes menos días, se pone en amarillo. Al convertir a pedido, la fecha compromiso ya viene con esa fecha."
   ]
  },
@@ -3637,6 +3639,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Lo que cuesta vender y administrar: sueldos de oficina (todos los departamentos menos Producción), comisiones de los vendedores, compras de oficina y servicios, salidas de caja chica, lo que se queda Mercado Libre de cada venta y las guías pagadas en Envíos."
+ },
+ {
+  "clave": "gmailConectado",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Tu cuenta de Gmail, conectada una vez para mandar cotizaciones y órdenes de compra desde el ERP. El correo sale de tu cuenta, así que lo ves en tus enviados y las respuestas te llegan a ti. Google te pide permiso de enviar y de leer: leer servirá para ligar al ERP las respuestas a lo que mandes desde aquí. Nadie más puede mandar desde tu cuenta."
  },
  {
   "clave": "herramientaAsignada",

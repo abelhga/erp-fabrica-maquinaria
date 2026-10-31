@@ -1,4 +1,5 @@
 export const VENTAS = {
+  gmailConectado: "Tu cuenta de Gmail, conectada una vez para mandar cotizaciones y órdenes de compra desde el ERP. El correo sale de tu cuenta, así que lo ves en tus enviados y las respuestas te llegan a ti. Google te pide permiso de enviar y de leer: leer servirá para ligar al ERP las respuestas a lo que mandes desde aquí. Nadie más puede mandar desde tu cuenta.",
   // --- Leads ---
   lead: "Alguien que llamó o escribió interesado y todavía no es oportunidad: quién es, cómo contactarlo y qué busca. Lo registra recepción (o cualquier vendedor) y se vuelve oportunidad cuando un vendedor lo atiende.",
   modoLeads: "A quién le llega un lead nuevo. Hay tres formas, se escoge en Configuración: bandeja (se avisa a los vendedores y el primero que lo toma se lo queda), la gerencia de ventas lo asigna, o quien lo registra escoge al vendedor. En las tres, si ya es cliente y tiene vendedor vigente, le llega directo a su vendedor.",

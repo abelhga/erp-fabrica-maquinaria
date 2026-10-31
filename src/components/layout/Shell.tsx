@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp, LogOut, Menu, Moon, Pin, PinOff, RotateCcw, Search, Sun, X } from "lucide-react";
 import { MENU, INICIO, PENDIENTES, REVISION, CALENDARIO, SEMANA, ordenPorRol, type EntradaMenu } from "@/navegacion";
 import { useMenuPersonal } from "@/lib/menuPersonal";
+import { useRegresoDeGoogle } from "@/lib/correo";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { useSesion, NOMBRE_ROL } from "@/lib/sesion";
 import { cn } from "@/lib/utilidades";
@@ -43,6 +44,7 @@ export function Shell() {
   const { pathname } = useLocation();
 
   useEffect(() => setAbiertoMovil(false), [pathname]);
+  useRegresoDeGoogle();
   useEffect(() => {
     const atajo = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setBuscando(true); }

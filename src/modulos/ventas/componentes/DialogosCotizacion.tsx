@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertTriangle, FileText, MessageCircle, Send } from "lucide-react";
+import { AlertTriangle, FileText, Mail, MessageCircle, Send } from "lucide-react";
 import { textoFichas } from "./Fichas";
 import type { Estimacion } from "./EntregaRealista";
 import { Dialogo } from "@/components/ui/dialogo";
@@ -19,7 +19,7 @@ import {
  * cotización como "enviada" para darle seguimiento. wa.me no permite adjuntar:
  * el PDF se descarga con "Abrir PDF" y se arrastra al chat.
  */
-export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vendedor, plan, yaEnviada, alMarcarEnviada, alAbrirPdf, enviando, fichas = [], frenado }: {
+export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vendedor, plan, yaEnviada, alMarcarEnviada, alAbrirPdf, enviando, fichas = [], frenado, alPorCorreo }: {
   abierto: boolean; alCambiar: (v: boolean) => void; c: Cotizacion; partidas: Partida[]; contacto: Contacto | null | undefined;
   vendedor: { nombre?: string | null; telefono?: string | null } | null | undefined; plan: PlanMeses | null | undefined;
   yaEnviada: boolean; alMarcarEnviada: () => Promise<unknown>; alAbrirPdf: () => void; enviando?: boolean;
@@ -27,6 +27,8 @@ export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vende
   fichas?: { titulo: string; drive_url: string }[];
   /** Con más seguimientos vencidos que el tope, no se envía (ni se abre WhatsApp) hasta ponerse al día. */
   frenado?: { vencidos: number; tope: number } | null;
+  /** Abre el envío por correo (con el PDF adjunto, desde el Gmail del vendedor). */
+  alPorCorreo?: () => void;
 }) {
   const bloqueado = !!frenado && !yaEnviada;
   const [tel, setTel] = useState("");
@@ -63,6 +65,7 @@ export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vende
       pie={<>
         {!yaEnviada && <Boton variante="secundario" cargando={enviando} disabled={bloqueado} onClick={async () => { await alMarcarEnviada(); alCambiar(false); }}><Send className="h-4 w-4" />Solo marcar enviada</Boton>}
         <Boton variante="secundario" onClick={alAbrirPdf} disabled={bloqueado}><FileText className="h-4 w-4" />Abrir PDF</Boton>
+        {alPorCorreo && <Boton variante="secundario" onClick={() => { alCambiar(false); alPorCorreo(); }} disabled={bloqueado}><Mail className="h-4 w-4" />Por correo</Boton>}
         <Boton variante="exito" onClick={porWhatsApp} cargando={enviando} disabled={bloqueado}><MessageCircle className="h-4 w-4" />Enviar por WhatsApp</Boton>
       </>}>
       <div className="space-y-3">

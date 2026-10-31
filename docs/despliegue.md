@@ -182,3 +182,13 @@ DATABASE_URL='postgresql://…' npx tsx scripts/detectar-subensambles.ts
 Antes, poner en `scripts/importar.config.json` los correos reales de los vendedores y que
 cada uno ya exista como usuario (invitado y con su primer acceso hecho).
 El resultado se ve en **Sistema → Importar de Sheets**: debe decir 474 de 474 precios iguales.
+
+### Correo con Gmail (función de borde `correo`)
+
+```bash
+npx supabase functions deploy correo --no-verify-jwt
+```
+- Sin JWT porque Google regresa del permiso sin uno; cada ruta que actúa a nombre de alguien
+  revisa su sesión adentro.
+- Secretos `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`: cómo sacarlos y la URI de regreso en
+  [`correo-gmail.md`](correo-gmail.md).

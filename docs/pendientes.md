@@ -32,12 +32,14 @@ qué y foto, etiquetas QR/NFC (213); terminal con play y pausa, y criticidad cal
 
 ## Para hacer
 
-- **Correo desde el ERP con Gmail** (Hegamex usa Google Workspace). Cada quien conecta su Gmail.
-  - Primera etapa: enviar la cotización y la orden de compra en PDF desde su propio correo, y
-    que se anote como seguimiento.
-  - Segunda etapa: leer las respuestas (el cliente contestó, el proveedor mandó su cotización).
-  - Hace falta que el administrador de Google Workspace dé de alta un permiso «interno» en la
-    consola de Google.
+- **Correo con Gmail, segunda etapa: leer.** La primera (mandar cotización y OC con su PDF desde
+  el Gmail de cada quien, 217) ya está; el permiso de leer ya se pide al conectar. Falta:
+  - **Importaciones primero** (lo pidió dirección): los hilos de un embarque llegan a 80 correos
+    y se pierde en qué va. Ligar los hilos de Gmail al embarque y que la IA proponga cómo va
+    (fechas, documentos, pendientes) para que Alondra lo confirme; nada se actualiza solo.
+    Antes de construir, decidir qué del correo puede leer la IA (los hilos traen precios).
+  - Ventas y compras: ver en la cotización o la OC si el cliente o el proveedor contestó.
+  - Configurar Google (docs/correo-gmail.md) antes de que alguien conecte su Gmail.
 - **Kit o subensamble:** el subensamble se fabrica en el taller y lleva horas; el kit son
   piezas compradas que solo se surten juntas. Marcar cuáles son kits (sin horas, se surten como
   paquete).
