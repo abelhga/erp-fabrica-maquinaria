@@ -123,6 +123,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/finanzas/pagos", texto: "Pagos a proveedores", icono: Receipt, modulo: "finanzas" },
       { ruta: "/finanzas/caja-chica", texto: "Caja chica", icono: Coins, modulo: "caja_chica" },
       { ruta: "/finanzas/resultados", texto: "Resultados", icono: Waypoints, modulo: "finanzas", tambien: { modulo: "costos" } },
+      { ruta: "/finanzas/facturas-anteriores", texto: "Facturas anteriores (XML)", icono: History, modulo: "finanzas" },
     ],
   },
   {

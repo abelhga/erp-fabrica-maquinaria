@@ -76,6 +76,15 @@ export function leerCfdi(xml: string): Cfdi {
   };
 }
 
+/** Cada concepto con su detalle (para la historia: qué se compró, cuánto y a qué precio). */
+export interface ConceptoCfdi { clave: string | null; codigo: string | null; descripcion: string | null; cantidad: number | null; unidad: string | null; importe: number | null }
+export function conceptosCfdi(xml: string): ConceptoCfdi[] {
+  return todas(xml, "Concepto").map((k) => ({
+    clave: txt(k.ClaveProdServ), codigo: txt(k.NoIdentificacion), descripcion: txt(k.Descripcion),
+    cantidad: num(k.Cantidad), unidad: txt(k.Unidad) ?? txt(k.ClaveUnidad), importe: num(k.Importe),
+  }));
+}
+
 /**
  * Los pagos de un complemento de pago (pago10 o pago20). "Pago" seguido de otra letra
  * ("Pagos", "PagoTotales") es otra etiqueta: por eso el \b.
