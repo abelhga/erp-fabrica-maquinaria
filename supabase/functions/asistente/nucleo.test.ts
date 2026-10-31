@@ -6,7 +6,7 @@ import { describe, expect, it, beforeAll } from "vitest";
 import { readFileSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
-import { atender, DOCUMENTOS, ejecutarHerramienta, ejemploDocumento, explicarError, limpiarRespuestaML, mismaVista, respuestaMLSinIA, validarEsquema, vista, type DatosRespuestaML, type Evento, type TipoDocumento } from "./nucleo.ts";
+import { atender, DOCUMENTOS, ejecutarHerramienta, ejemploDocumento, esquemaPropuesta, explicarError, limpiarRespuestaML, mismaVista, respuestaMLSinIA, validarEsquema, vista, type DatosRespuestaML, type Evento, type TipoDocumento } from "./nucleo.ts";
 
 const env = Object.fromEntries(
   readFileSync(new URL("../../../.env.local", import.meta.url), "utf8").split("\n")
@@ -423,6 +423,85 @@ function camposConUnion(e: unknown): number {
 describe("esquemas de documentos", () => {
   it("ninguno pasa del tope de la API de 16 campos que pueden ser null", () => {
     for (const [tipo, d] of Object.entries(DOCUMENTOS)) expect(camposConUnion(d.esquema), tipo).toBeLessThanOrEqual(16);
+    expect(camposConUnion(esquemaPropuesta(["zarpe"], ["bl"])), "propuesta de correos").toBeLessThanOrEqual(16);
+  });
+});
+
+describe.skipIf(!hayBase)("leer los correos de un embarque", () => {
+  let emb = "";
+  const pedir = (token: string, falso?: Pick<Anthropic, "beta">) =>
+    atender(new Request("http://x/", {
+      method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ modo: "leer_correos_embarque", embarque_id: emb }),
+    }), { supabaseUrl: URL_SB, supabaseAnonKey: ANON, ...(falso ? { crearAnthropic: () => falso } : {}) });
+  const respuesta = (p: unknown) => ({ stop_reason: "end_turn" as const, content: [{ type: "text", text: JSON.stringify(p), citations: null }] as Anthropic.Beta.BetaContentBlock[] });
+  const propuesta = (extra: Record<string, unknown> = {}) => ({
+    resumen: "Zarpó el 20 de octubre en el COSCO AFRICA; el agente ya tiene el BL y pide la carta 3.1.8.",
+    eventos: [{ tipo: "zarpe", fecha: "2026-10-20", correo: 1, cita: "The vessel sailed on Oct 20" }],
+    eta: { fecha: "2026-11-24", correo: 1, cita: "ETA Manzanillo Nov 24" }, etd: null,
+    campos: [{ campo: "buque", valor: "COSCO AFRICA", correo: 1, cita: "COSCO AFRICA" }],
+    documentos: [{ tipo: "bl", fecha: "2026-10-22", correo: 2, cita: "Recibimos el BL" }],
+    pendientes: [{ que: "Carta 3.1.8", quien: "hegamex", desde: "2026-10-22", correo: 2 }],
+    montos: [{ concepto: "Flete", monto: 1850, moneda: "USD", correo: 1 }], advertencias: [], ...extra });
+  const conDb = async <T>(f: (db: { query: (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, string>[] }> }) => Promise<T>) => {
+    const { default: pg } = await import("pg");
+    const db = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres" });
+    await db.connect();
+    try { return await f(db); } finally { await db.end(); }
+  };
+
+  beforeAll(async () => {
+    emb = await conDb(async (db) => {
+      const e = (await db.query("insert into embarques (descripcion, modalidad) values ('Prueba IA correos 225', 'fcl') returning id")).rows[0].id;
+      const h = (await db.query(`insert into embarque_hilos (embarque_id, usuario_id, cuenta, gmail_hilo, asunto, mensajes)
+        select $1, id, 'alondra@hegamex.com', 'hilo-ia-225', 'Booking MEHE 225', 2 from perfiles where correo = 'importaciones@hegamex.com' returning id`, [e])).rows[0].id;
+      await db.query(`insert into embarque_correos (hilo_id, gmail_id, enviado_en, de, asunto, texto, adjuntos) values
+        ($1, 'a1', '2026-10-20 15:00+00', 'lily@forwarder.cn', 'Booking MEHE 225', 'The vessel COSCO AFRICA sailed on Oct 20. ETA Manzanillo Nov 24. Freight USD 1,850.', '{BL MEHE225.pdf}'),
+        ($1, 'a2', '2026-10-22 16:00+00', 'agente@aduana.mx', 'RE: Booking MEHE 225', 'Recibimos el BL. Favor de mandar la carta 3.1.8.', '{}')`, [h]);
+      return e;
+    });
+    return () => conDb((db) => db.query("delete from embarques where id = $1", [emb]));
+  });
+
+  it("lee todos los correos con el estado del ERP y guarda la propuesta; una etapa futura pasa a advertencias", async () => {
+    const alondra = await sesion("importaciones@hegamex.com");
+    const futura = { tipo: "arribo", fecha: "2031-01-01", correo: 2, cita: "arribo" };
+    const { falso, recibido } = claudeFalso([respuesta(propuesta({ eventos: [...propuesta().eventos, futura] }))]);
+    const r = await pedir(alondra.token, falso);
+    const j = await r.json();
+    expect(r.status, JSON.stringify(j)).toBe(200);
+    expect(j.correos).toBe(2);
+    expect(j.propuesta.eventos).toEqual([expect.objectContaining({ tipo: "zarpe" })]);
+    expect(j.propuesta.advertencias[0]).toContain("fecha futura");
+    const textos = (recibido[0].messages[0].content as Anthropic.Beta.BetaTextBlockParam[]).map((b) => b.text).join("\n");
+    expect(textos).toContain("### Correo 1");
+    expect(textos).toContain("Adjuntos: BL MEHE225.pdf");
+    expect(textos).toContain("Recibimos el BL");
+    const esquema = recibido[0].output_config?.format as unknown as { schema: { properties: { eventos: { items: { properties: { tipo: { enum: string[] } } } } } } };
+    expect(esquema.schema.properties.eventos.items.properties.tipo.enum).toContain("zarpe");
+    const guardada = await alondra.db.from("embarque_propuestas").select("estado, correos, contenido").eq("id", j.id).single();
+    expect(guardada.data).toMatchObject({ estado: "nueva", correos: 2 });
+  });
+
+  it("si la IA devuelve algo que no cumple el formato, no se guarda nada", async () => {
+    const alondra = await sesion("importaciones@hegamex.com");
+    const antes = (await alondra.db.from("embarque_propuestas").select("id", { count: "exact", head: true }).eq("embarque_id", emb)).count ?? 0;
+    const { falso } = claudeFalso([respuesta({ resumen: "x" })]);
+    const r = await pedir(alondra.token, falso);
+    expect(r.status).toBe(400);
+    const despues = (await alondra.db.from("embarque_propuestas").select("id", { count: "exact", head: true }).eq("embarque_id", emb)).count ?? 0;
+    expect(despues).toBe(antes);
+  });
+
+  it("sin llave es un ejemplo marcado que no se guarda; almacén no lee correos", async () => {
+    const alondra = await sesion("importaciones@hegamex.com");
+    const r = await pedir(alondra.token);
+    const j = await r.json();
+    expect(j.simulado).toBe(true);
+    expect(j.id).toBeUndefined();
+    const almacen = await sesion("almacen@hegamex.com");
+    const { falso } = claudeFalso([respuesta(propuesta())]);
+    expect((await pedir(almacen.token, falso)).status).toBe(403);
   });
 });
 

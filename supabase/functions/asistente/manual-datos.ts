@@ -530,7 +530,9 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "La ficha de un embarque: dónde va, qué sigue y quién lo debe, con sus fechas por etapa, sus documentos y las órdenes de compra que trae.",
    "Arriba ves el siguiente paso, la llegada (ETA o fecha real, y cuándo se espera en planta) y, ya que arribó, los días libres en puerto y del contenedor. En Etapas se captura la fecha real de cada paso (Enter guarda; no acepta fechas futuras, para eso está la ETA). Documentos es la lista de lo que necesita este embarque, con quién debe cada uno; los marcados \"antes del arribo\" los pide el agente aduanal antes de que llegue.",
-   "\"Leer con IA\" lee un PDF o una foto (proforma, factura, packing list, BL, pedimento, cuenta de gastos) y te propone los datos junto al archivo; nada se guarda hasta que lo revisas y confirmas. Las pestañas de dinero y costeo solo aparecen si tu puesto las ve."
+   "\"Leer con IA\" lee un PDF o una foto (proforma, factura, packing list, BL, pedimento, cuenta de gastos) y te propone los datos junto al archivo; nada se guarda hasta que lo revisas y confirmas. Las pestañas de dinero y costeo solo aparecen si tu puesto las ve.",
+   "En Correos ligas los hilos de tu Gmail donde se lleva el embarque (con el proveedor, el forwarder, la naviera o el agente): «Ligar hilo» busca en tu Gmail como lo harías allá, por BL, referencia del agente o proveedor. El ERP guarda cada correo sin lo citado de los anteriores, así que lo ve cualquiera de importaciones aunque no sea su Gmail; «Traer lo nuevo» lo pone al día y solo lo puede hacer quien ligó el hilo. Como los correos traen montos, esta pestaña solo la ve quien ve el dinero de importaciones.",
+   "«Leer con IA», en Correos, lee todos los correos del embarque y te dice en qué va: fechas de etapas que ya pasaron, ETA, datos como BL, buque o contenedor, documentos que llegaron y lo que está pendiente y de quién. Cada punto dice de qué correo salió (dale clic para verlo). Nada cambia hasta que lo revisas: vienen todos marcados, quitas lo que no es y le das «Aplicar»; se aplica igual que si lo capturaras a mano (una fecha futura no entra como etapa y un cambio de ETA queda en la historia). Los montos que menciona solo se muestran."
   ]
  },
  {
@@ -2195,6 +2197,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Con el lápiz corriges una factura que ya registraste: le pones el UUID que le faltaba o arreglas folio, fecha o total. Si se registró por error, desde ahí la quitas. Una factura se registra una sola vez: si el folio o el UUID ya están en otra, el sistema no la deja entrar y te dice en qué pedido está, para que corrijas esa."
  },
  {
+  "clave": "correosEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Los correos de los hilos de Gmail ligados a este embarque, guardados en el ERP sin lo citado de correos anteriores. Traen montos: solo los ve quien ve el dinero de importaciones."
+ },
+ {
   "clave": "costoArticulo",
   "modulos": [
    "costeo",
@@ -3726,6 +3735,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Las herramientas que ingeniería de procesos irá usando conforme se capacite. Se habilitan una por una, cuando el equipo las vaya a usar; ninguna está activa todavía."
  },
  {
+  "clave": "hiloCorreo",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Una conversación de Gmail (el correo y todas sus respuestas). Se liga desde el Gmail de quien lo busca, y solo esa persona lo pone al día con «Traer lo nuevo», porque es su cuenta."
+ },
+ {
   "clave": "historialCambiosML",
   "modulos": [
    "ventas",
@@ -4811,6 +4827,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "De tus pendientes con fecha de los últimos 30 días, cuántos cerraste a tiempo, contando como fallas los que cerraste tarde y los que hoy siguen vencidos. Verde de 90 % para arriba, ámbar de 70 % a 89 %, rojo abajo de 70 %. Los que no tenían fecha no cuentan aquí."
  },
  {
+  "clave": "pendientesCorreos",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Lo que alguien pidió en los correos y todavía no se contesta o entrega, con quién lo debe. Es para que lo veas; no se guarda como pendiente del ERP."
+ },
+ {
   "clave": "pendientesDiasCerrar",
   "modulos": [],
   "texto": "En promedio, cuántos días pasan desde que te piden algo hasta que lo marcas hecho, con lo cerrado en el periodo."
@@ -5150,6 +5173,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "analisis"
   ],
   "texto": "Barra: el trabajo de las órdenes que se prometieron para ese mes, en semanas de la etapa más cargada. Línea: las semanas que tiene el mes. Si la barra pasa la línea, ese mes ya se prometió más de lo que cabe."
+ },
+ {
+  "clave": "propuestaCorreos",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Lo que la IA encontró al leer todos los correos del embarque: fechas de etapas que ya pasaron, ETA, datos y documentos que llegaron, cada uno con el correo de donde salió. Es una propuesta: nada cambia hasta que la revisas y la aplicas."
  },
  {
   "clave": "proximaTarea",

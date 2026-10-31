@@ -21,4 +21,8 @@ export const IMPORTACIONES = {
   porPagarProveedores: "Lo que falta pagar a proveedores del extranjero de las órdenes que van en embarques. Los pesos son aproximados al tipo de cambio de hoy.",
   tiempoProveedor: "Cuánto tarda de verdad cada proveedor, de la orden (o la PI) a planta: la mediana de sus embarques. El reabasto usa estos días hábiles en vez del tiempo capturado a mano.",
   eir: "El comprobante de que el contenedor vacío se devolvió a la naviera. Sin él no se recupera la garantía.",
+  correosEmbarque: "Los correos de los hilos de Gmail ligados a este embarque, guardados en el ERP sin lo citado de correos anteriores. Traen montos: solo los ve quien ve el dinero de importaciones.",
+  hiloCorreo: "Una conversación de Gmail (el correo y todas sus respuestas). Se liga desde el Gmail de quien lo busca, y solo esa persona lo pone al día con «Traer lo nuevo», porque es su cuenta.",
+  propuestaCorreos: "Lo que la IA encontró al leer todos los correos del embarque: fechas de etapas que ya pasaron, ETA, datos y documentos que llegaron, cada uno con el correo de donde salió. Es una propuesta: nada cambia hasta que la revisas y la aplicas.",
+  pendientesCorreos: "Lo que alguien pidió en los correos y todavía no se contesta o entrega, con quién lo debe. Es para que lo veas; no se guarda como pendiente del ERP.",
 } satisfies Record<string, string>;

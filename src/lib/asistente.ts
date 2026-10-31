@@ -114,6 +114,23 @@ export async function leerDocumento(tipo: TipoDocumento, archivo: File, signal?:
   return r.json() as Promise<{ tipo: TipoDocumento; campos: Record<string, unknown>; simulado?: boolean; modelo?: string }>;
 }
 
+/** Lo que la IA propone para un embarque después de leer sus correos (se guarda sin aplicar nada). */
+export interface PropuestaEmbarque {
+  resumen: string;
+  eventos: { tipo: string; fecha: string; correo: number; cita: string }[];
+  eta: { fecha: string; correo: number; cita: string } | null;
+  etd: { fecha: string; correo: number; cita: string } | null;
+  campos: { campo: string; valor: string; correo: number; cita: string }[];
+  documentos: { tipo: string; fecha: string | null; correo: number; cita: string }[];
+  pendientes: { que: string; quien: string; desde: string | null; correo: number }[];
+  montos: { concepto: string; monto: number; moneda: string; correo: number }[];
+  advertencias: string[];
+}
+export async function leerCorreosEmbarque(embarqueId: string, signal?: AbortSignal) {
+  const r = await llamar({ modo: "leer_correos_embarque", embarque_id: embarqueId }, signal);
+  return r.json() as Promise<{ id?: string; propuesta: PropuestaEmbarque; correos: number; fuera?: number; simulado?: boolean }>;
+}
+
 /** Conversación en streaming: cada evento llega en cuanto Claude lo escribe. */
 export async function conversar(mensajes: MensajeChat[], ruta: string, alEvento: (e: Evento) => void, signal?: AbortSignal) {
   const r = await llamar({ modo: "chat", mensajes, ruta }, signal);

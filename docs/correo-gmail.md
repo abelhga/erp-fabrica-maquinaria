@@ -45,3 +45,21 @@ Si Google le pregunta por casillas, **deben quedar marcadas las dos** (enviar y 
 - «Google ya no deja usar tu Gmail desde el ERP»: la persona quitó el permiso, cambió su
   contraseña o el administrador bloqueó la app. Que vuelva a conectar.
 - Viendo el ERP como otra persona no se conecta ni se manda nada: saldría de su cuenta.
+
+## Correos de los embarques (segunda etapa, importaciones)
+
+En la ficha del embarque, pestaña **Correos** (solo quien ve el dinero de importaciones):
+
+1. **Ligar hilo** busca en el Gmail de quien lo pide (como en Gmail: BL, referencia del agente,
+   proveedor) y liga el hilo. La función `correo` (rutas `buscar`, `ligar`, `actualizar`) guarda
+   el texto de cada correo sin lo citado de los anteriores y los nombres de los adjuntos.
+2. **Traer lo nuevo** pone al día un hilo; solo quien lo ligó, porque es su Gmail.
+3. **Leer correos con IA** (función `asistente`, modo `leer_correos_embarque`) lee todos los
+   correos del embarque y guarda una propuesta: fechas de etapas, ETA/ETD, datos, documentos que
+   llegaron y pendientes, cada uno con el correo de donde salió.
+4. Alondra marca lo correcto y **Aplicar** lo registra con las reglas de siempre
+   (`aplicar_propuesta_embarque`). Nada se cambia solo.
+
+- Base: `supabase/migrations/20261003000225_correos_de_embarques.sql` (prueba `225_correos_de_embarques.sql`).
+- Si Gmail dice que falta el permiso de leer: la persona vuelve a conectar y deja las dos casillas.
+

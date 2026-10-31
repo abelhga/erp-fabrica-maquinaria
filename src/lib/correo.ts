@@ -9,7 +9,7 @@ export const URL_CORREO = import.meta.env.VITE_CORREO_URL || `${import.meta.env.
 /** Un error del servidor que pide conectar (o reconectar) el Gmail. */
 export class ErrorCorreo extends Error { constructor(msg: string, readonly conectar = false) { super(msg); } }
 
-export async function llamarCorreo<T = { ok: boolean }>(accion: "iniciar" | "enviar" | "desconectar", cuerpo: object = {}): Promise<T> {
+export async function llamarCorreo<T = { ok: boolean }>(accion: "iniciar" | "enviar" | "desconectar" | "buscar" | "ligar" | "actualizar", cuerpo: object = {}): Promise<T> {
   const { data } = await supabase.auth.getSession();
   const r = await fetch(`${URL_CORREO}/${accion}`, {
     method: "POST",
