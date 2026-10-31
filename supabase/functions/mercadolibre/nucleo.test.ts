@@ -124,11 +124,17 @@ const enviados: { ruta: string; cuerpo: unknown }[] = [];
 let envioML: Record<string, unknown> = { id: 99, logistic_type: "fulfillment", status: "ready_to_ship", substatus: "ready_to_print", tracking_number: "MEL-T-99" };
 const ORDEN = 7000000000 + Math.floor(Math.random() * 1e6);
 const VIEJA = ORDEN + 1;
+// Una venta de antes de conectar (el historial la trae solo por sus cargos).
+const HIST = ORDEN + 2;
 // Cómo está la publicación en ML cuando se le pregunta antes de cambiarla (cambia en la prueba).
 let enML = { price: 1300, available_quantity: 5 };
 const falsa: typeof fetch = async (entrada, init) => {
   const u = new URL(String(entrada));
   const r = (d: unknown, status = 200) => new Response(JSON.stringify(d), { status, headers: { "Content-Type": "application/json" } });
+  if (String(entrada) === `${API_MP}/v1/payments/7771`) return r({ id: 7771, status: "approved", date_approved: "2026-03-10T10:00:00Z",
+    transaction_amount: 2320, transaction_amount_refunded: 0, transaction_details: { net_received_amount: 1900 },
+    charges_details: [{ name: "meli_fee", type: "fee", amounts: { original: 348, refunded: 0 }, accounts: { from: "collector" } },
+                      { name: "shp_cross_docking", type: "shipping", amounts: { original: 72, refunded: 0 }, accounts: { from: "collector" } }] });
   if (String(entrada) === `${API_MP}/v1/payments/5551`) return r({ id: 5551, status: "approved", date_approved: "2026-10-16T10:00:00Z",
     transaction_amount: 1160, transaction_amount_refunded: 0, transaction_details: { net_received_amount: 870.6 },
     money_release_date: "2026-10-30T10:00:00Z", money_release_status: "pending",
@@ -180,6 +186,11 @@ const falsa: typeof fetch = async (entrada, init) => {
   if (u.pathname === "/post-purchase/v1/claims/5010") return r({ id: 5010, resource: "shipment", resource_id: 99, type: "mediations", status: "opened",
     players: [{ role: "respondent", available_actions: [{ action: "refund", due_date: "2026-11-02T12:00:00Z" }] }] });
   if (u.pathname === `/orders/${VIEJA}`) return r({ id: VIEJA, status: "paid", date_closed: "2026-09-01T10:00:00Z", order_items: [] });
+  // El historial pide un mes cerrado (con fecha «hasta»): una venta vieja y otra que el ERP ya conoce.
+  if (u.pathname === "/orders/search" && u.searchParams.get("order.date_created.to")) return r({ results: [
+    { id: HIST, status: "paid", date_created: "2026-03-10T09:00:00Z", buyer: { nickname: "COMPRADOR_VIEJO" },
+      payments: [{ id: 7771, status: "approved", transaction_amount: 2320, marketplace_fee: 348 }], order_items: [] },
+    { id: ORDEN, status: "paid", payments: [{ id: 5551 }], order_items: [] }] });
   if (u.pathname === "/orders/search") return r({ results: [{ id: ORDEN }] });
   if (u.pathname === "/users/4242/items/search") return r(u.searchParams.get("limit") === "100"
     ? { results: u.searchParams.get("status") === "active" ? ["MLM-T-ML"] : [] } : { paging: { total: 37 } });
@@ -208,6 +219,10 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
       await c.query("delete from public.avisos where tipo in ('ml_reclamo', 'devolucion_nueva') and registro_id in (select id::text from public.devoluciones where pedido_id in (select id from _p))");
       await c.query("delete from public.devoluciones where pedido_id in (select id from _p)");
       await c.query("delete from public.ml_ventas where pedido_id in (select id from _p)");
+      // Con los disparadores apagados no hay cascada: el pago de prueba se borra a mano.
+      await c.query("delete from public.ml_pagos where pago_id = '7771'");
+      await c.query("delete from public.ml_ventas where order_id = $1", [String(HIST)]);
+      await c.query("update public.configuracion set valor = valor - '2026-03-01' where clave = 'ml_historial'");
       await c.query("delete from public.pedido_lineas where pedido_id in (select id from _p)");
       await c.query("delete from public.pedidos where id in (select id from _p)");
       await c.query("delete from public.ml_preguntas where id in (880001, 880002, 880003)");
@@ -427,4 +442,30 @@ describe.skipIf(!hayBase)("Mercado Libre contra la base local", () => {
     expect(url).toContain("client_id=APP-PRUEBA");
     expect(url).toContain(encodeURIComponent(`${URL_SB}/functions/v1/mercadolibre/autorizar`));
   });
+
+  it("el historial trae lo que se quedó ML de una venta de antes, sin pedido ni cobro", async () => {
+    // Sin la llave de la base ni sesión de dirección, no.
+    const sin = await atender(new Request("http://x/functions/v1/mercadolibre/historial", { method: "POST", body: JSON.stringify({ mes: "2026-03-01" }) }), entorno);
+    expect(sin.status).toBe(401);
+    const { data: llave } = await admin.from("ml_cuenta").select("llave_automatico").eq("id", 1).single();
+    const pedir = (mes: string) => atender(new Request("http://x/functions/v1/mercadolibre/historial", {
+      method: "POST", headers: { "x-llave": (llave as { llave_automatico: string }).llave_automatico }, body: JSON.stringify({ mes }) }), entorno);
+    expect((await pedir("2026-03")).status).toBe(400);
+    const r = await pedir("2026-03-01");
+    const d = await r.json();
+    expect(r.status, JSON.stringify(d)).toBe(200);
+    // La venta que el ERP ya conocía no se toca.
+    expect(d).toMatchObject({ vistas: 2, nuevas: 1, ya_estaban: 1, errores: 0 });
+    const { data: v } = await admin.from("ml_ventas").select("pedido_id, historial, comprador").eq("order_id", String(HIST)).single();
+    expect(v).toEqual({ pedido_id: null, historial: true, comprador: "COMPRADOR_VIEJO" });
+    const { data: p } = await admin.from("ml_pagos").select("comision, envio, estado").eq("order_id", String(HIST)).single();
+    expect(p).toEqual({ comision: 348, envio: 72, estado: "approved" });
+    const { data: cobros } = await admin.from("cobros").select("id").eq("referencia", "Mercado Pago 7771");
+    expect(cobros).toEqual([]);
+    expect((await admin.from("pedidos").select("id").eq("id_externo", String(HIST))).data).toEqual([]);
+    const { data: c } = await admin.from("configuracion").select("valor").eq("clave", "ml_historial").single();
+    expect((c as { valor: Record<string, unknown> }).valor["2026-03-01"]).toMatchObject({ nuevas: 1 });
+    // Otra vez el mismo mes: no repite nada.
+    expect(await (await pedir("2026-03-01")).json()).toMatchObject({ nuevas: 0, ya_estaban: 2 });
+  }, 20_000);
 });

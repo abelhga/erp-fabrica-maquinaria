@@ -8,6 +8,7 @@
 //   POST publicaciones el tablero: trae cada publicación, su comisión y su envío
 //   POST aplicar      «Cambios sugeridos»: manda a ML el precio o la existencia que sugiere el ERP
 //   POST automatico   pg_cron cada hora (con la llave de ml_cuenta, sin sesión) si el interruptor está prendido
+//   POST historial    un mes de ventas de antes de conectar, solo por sus cargos (llave de la base o dirección)
 //
 // Reglas:
 //   * Al aviso no se le cree: solo dice qué recurso cambió. Se vuelve a pedir a la API con
@@ -398,6 +399,49 @@ export async function sincronizar(e: Entorno, admin: SupabaseClient, ventasDesde
     reclamos: avisos.filter((a) => a.topic === "claims").length, ventas, procesados, errores };
 }
 
+/**
+ * Las ventas de un mes de antes de conectar la cuenta, solo por lo que se quedó ML de cada una
+ * (comisión, envío que pagamos, otros cargos), para que Resultados de esos meses no salga en $0.
+ * No pasan por ml_registrar_orden: esas ventas ya están en la hoja y crearían pedidos repetidos.
+ * Las que el ERP ya conoce ni se piden a Mercado Pago. Lo que pasó queda en configuración
+ * (ml_historial), mes por mes.
+ */
+export async function historialMes(e: Entorno, admin: SupabaseClient, mes: string) {
+  const { cuenta, access } = await token(e, admin);
+  const [a, m] = mes.split("-").map(Number);
+  const fin = new Date(Date.UTC(a, m, 0)).toISOString().slice(0, 10);
+  let nuevas = 0, yaEstaban = 0, errores = 0, vistas = 0;
+  let ultimoError: string | null = null;
+  for (let offset = 0; offset < 2000; offset += 50) {
+    const r = await apiML(e, access, `/orders/search?seller=${cuenta.ml_user_id}&order.date_created.from=${mes}T00:00:00.000-06:00` +
+      `&order.date_created.to=${fin}T23:59:59.999-06:00&sort=date_asc&limit=50&offset=${offset}`);
+    const lista = (Array.isArray(r.results) ? r.results : []) as Obj[];
+    vistas += lista.length;
+    const ids = lista.map((v) => txt(v.id)).filter((x): x is string => !!x);
+    const { data: ya } = ids.length ? await admin.from("ml_ventas").select("order_id").in("order_id", ids) : { data: [] };
+    const conocidas = new Set(((ya ?? []) as { order_id: string }[]).map((x) => x.order_id));
+    for (const orden of lista) {
+      const id = txt(orden.id);
+      if (!id || conocidas.has(id)) { yaEstaban++; continue; }
+      try {
+        const datos = normalizarOrden(orden, null, await pagosMP(e, access, orden));
+        const { data, error } = await admin.rpc("ml_registrar_historial", { p: datos });
+        if (error) throw new ErrorML(error.message);
+        if (data === "nueva") nuevas++; else yaEstaban++;
+      } catch (err) {
+        errores++; ultimoError = (err instanceof Error ? err.message : String(err)).slice(0, 200);
+      }
+    }
+    if (lista.length < 50) break;
+  }
+  const resultado = { mes, vistas, nuevas, ya_estaban: yaEstaban, errores, error: ultimoError, en: new Date().toISOString() };
+  const { data: c } = await admin.from("configuracion").select("valor").eq("clave", "ml_historial").maybeSingle();
+  const previo = o((c as { valor: unknown } | null)?.valor);
+  await admin.from("configuracion").upsert({ clave: "ml_historial", valor: { ...previo, [mes]: resultado },
+    descripcion: "Ventas de Mercado Libre de antes de conectar la cuenta, traídas solo por sus cargos (por mes)." });
+  return resultado;
+}
+
 // -----------------------------------------------------------------------------
 // Publicaciones y reputación (solo lectura): el tablero de Mercado Libre
 // -----------------------------------------------------------------------------
@@ -662,6 +706,19 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
     } catch (err) {
       return volver("error", err instanceof Error ? err.message : String(err));
     }
+  }
+
+  // Ventas de antes de conectar (un mes por llamada): la base, con la llave de pg_cron, o dirección.
+  if (accion === "historial" && req.method === "POST") {
+    const llave = req.headers.get("x-llave");
+    const permitido = llave ? (await admin.rpc("ml_llave_valida", { p: llave })).data === true
+      : await quien(req, e).then((u) => (u ? esDireccion(u.db) : false));
+    if (!permitido) return json({ error: "Sin permiso" }, 401);
+    const mes = txt(o(await req.json().catch(() => ({}))).mes);
+    if (!mes || !/^\d{4}-\d{2}-01$/.test(mes)) return json({ error: "El mes va como AAAA-MM-01" }, 400);
+    const trabajo = historialMes(e, admin, mes);
+    if (e.enSegundoPlano) { e.enSegundoPlano(trabajo.catch(() => undefined)); return json({ ok: true, mes }); }
+    try { return json(await trabajo); } catch (err) { return json({ error: err instanceof Error ? err.message : String(err) }, 502); }
   }
 
   // pg_cron: sin sesión, con la llave que solo conocen la base y esta función.
