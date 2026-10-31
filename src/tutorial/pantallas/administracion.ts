@@ -61,6 +61,12 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
     "El arqueo y borrar un movimiento son de finanzas: quien toma el dinero no es quien cuenta la caja. Cuando cuentes el efectivo, usa «Arqueo»: escribe cuánto hay y, si no cuadra con el saldo, la diferencia queda anotada como sobrante o faltante con tu nombre.",
     "El saldo es la suma de todo lo que ha entrado menos lo que ha salido desde que empezó la hoja. Se pinta en rojo abajo del mínimo (toca reponer) y en amarillo arriba del máximo (sobra efectivo).",
   ],
+  "/finanzas/sin-registrar": [
+    "Lo que el SAT dice que nos facturaron y que nadie ha registrado: ni en la hoja de compras, ni en las compras del ERP, ni en caja chica. Sale de los XML cargados en «Facturas anteriores (XML)»; carga ahí los del mes y aquí aparece lo que falta. La usa finanzas.",
+    "Arriba: cuántas faltan y cuánto suman, cuánto es a crédito (cuentas por pagar que no salen en Pagos a proveedores) y cuántas son de un proveedor que todavía no está dado de alta. Clic en un indicador filtra la lista.",
+    "«Registrar» abre «Registrar compra o gasto» ya lleno con la factura, igual que si subieras su XML; si el proveedor no existe, se da de alta ahí con su RFC. «Registrar las…» las pasa todas, una por una. Ya registrada, sale sola de la lista.",
+    "Las que no se registran aquí (las cobra el banco directo, son de un socio, se pagaron con un anticipo ya registrado) se sacan con el botón de cada renglón y su motivo; quedan en «No se registran» y se pueden regresar. Las canceladas nunca salen.",
+  ],
   "/finanzas/facturas-anteriores": [
     "Aquí entran los XML de años pasados (la carpeta FACTURAS de Drive) para que la historia de antes del ERP diga qué se compró y no solo a quién. La usa finanzas; lo ve también dirección.",
     "Descarga de Drive la carpeta (un año a la vez, o todo) y elígela con «Elegir carpeta», o elige los ZIP que da Drive con «XML o ZIP». Los XML se leen en tu navegador y solo sube lo que dicen; puede tardar unos minutos por año. Volver a cargar lo mismo no duplica nada: cada factura se guarda una vez por su folio fiscal. Las que no son de Hegamex (ni la emitió ni la recibió) no se guardan.",
