@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { unzip } from "fflate";
 import { toast } from "sonner";
-import { ExternalLink, FileArchive, FolderOpen, History, Link2, RefreshCw } from "lucide-react";
+import { Ban, ExternalLink, FileArchive, FolderOpen, History, Link2, RefreshCw, Undo2 } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Boton } from "@/components/ui/boton";
@@ -19,7 +19,7 @@ const CLAVE = ["cfdi_historico"] as const;
 const LOTE = 150;
 
 interface Resumen {
-  total: number;
+  total: number; canceladas: number;
   por_anio: { anio: number; recibidas: number; recibidas_amarradas: number; con_clave_sat: number; con_orden: number; emitidas: number;
     emitidas_amarradas: number; nomina: number; pagos_notas: number; hoja_compras: number; hoja_ventas: number }[];
   sin_amarrar: { proveedor: string | null; rfc: string; n: number; monto: number }[];
@@ -28,7 +28,7 @@ interface Fila {
   uuid: string; rol: "recibida" | "emitida"; tipo: string; fecha: string; serie: string | null; folio: string | null;
   emisor_nombre: string | null; emisor_rfc: string; receptor_nombre: string | null; receptor_rfc: string; total_mxn: number;
   amarre: "folio" | "monto" | null; categoria: string | null; categoria_origen: "clave_sat" | "proveedor" | null;
-  orden_hoja: string | null; factura_hoja: string | null; amarrada: boolean; carpeta: string | null;
+  orden_hoja: string | null; factura_hoja: string | null; amarrada: boolean; carpeta: string | null; cancelada: boolean;
 }
 interface Avance { leidos: number; total: number; nuevas: number; repetidas: number; ajenas: number; invalidas: number; amarradas: number; noLeidos: number }
 type Vista = "recibidas" | "emitidas" | "sin_amarrar";
@@ -61,10 +61,11 @@ export default function FacturasAnteriores() {
   const lista = useQuery({
     queryKey: [...CLAVE, "lista", vista, anioVista],
     queryFn: () => {
-      let c = supabase.from("v_cfdi_historico").select("uuid, rol, tipo, fecha, serie, folio, emisor_nombre, emisor_rfc, receptor_nombre, receptor_rfc, total_mxn, amarre, categoria, categoria_origen, orden_hoja, factura_hoja, amarrada, carpeta")
+      let c = supabase.from("v_cfdi_historico").select("uuid, rol, tipo, fecha, serie, folio, emisor_nombre, emisor_rfc, receptor_nombre, receptor_rfc, total_mxn, amarre, categoria, categoria_origen, orden_hoja, factura_hoja, amarrada, carpeta, cancelada")
         .gte("fecha", `${anioVista}-01-01`).lte("fecha", `${anioVista}-12-31`).eq("tipo", "I").order("fecha", { ascending: false }).limit(2000);
       c = vista === "emitidas" ? c.eq("rol", "emitida") : c.eq("rol", "recibida");
-      if (vista === "sin_amarrar") c = c.eq("amarrada", false);
+      // Lo cancelado no está pendiente de nada: sale en «Recibidas» y «Emitidas», con su marca.
+      if (vista === "sin_amarrar") c = c.eq("amarrada", false).eq("cancelada", false);
       return q<Fila[]>(c);
     },
   });
@@ -129,13 +130,23 @@ export default function FacturasAnteriores() {
   async function reamarrar() {
     setTrabajando(true);
     try {
-      const pend = await q<{ uuid: string }[]>(supabase.from("v_cfdi_historico").select("uuid").or("amarrada.eq.false,and(rol.eq.recibida,categoria_origen.is.null),and(rol.eq.recibida,categoria_origen.eq.proveedor)").limit(20000));
+      const pend = await q<{ uuid: string }[]>(supabase.from("v_cfdi_historico").select("uuid").eq("cancelada", false).or("amarrada.eq.false,and(rol.eq.recibida,categoria_origen.is.null),and(rol.eq.recibida,categoria_origen.eq.proveedor)").limit(20000));
       let n = 0;
       for (let i = 0; i < pend.length; i += LOTE) {
         n += await q<number>(supabase.rpc("amarrar_cfdi_historico", { p_uuids: pend.slice(i, i + LOTE).map((p) => p.uuid) }));
       }
       toast.success(`Se amarraron ${numero(n)} más`);
     } catch (e) { toast.error(mensajeError(e)); } finally { setTrabajando(false); qc.invalidateQueries({ queryKey: CLAVE }); }
+  }
+
+  // La que el SAT dice cancelada (y no venía en la carpeta de canceladas), o la que se marcó por error.
+  async function cancelar(f: Fila) {
+    const si = !f.cancelada;
+    if (si && !confirm(`¿Marcar ${[f.serie, f.folio].filter(Boolean).join(" ") || f.uuid.slice(0, 8)} como cancelada? Deja de contar y suelta su renglón de la hoja.`)) return;
+    try {
+      const n = await q<number>(supabase.rpc("marcar_cfdi_cancelada", { p_uuid: f.uuid, p_cancelada: si }));
+      toast.success(si ? `Marcada cancelada${n ? `; ${numero(n)} del mismo proveedor se amarraron` : ""}` : "Ya no está cancelada");
+    } catch (e) { toast.error(mensajeError(e)); } finally { qc.invalidateQueries({ queryKey: CLAVE }); }
   }
 
   const ligaOc = (orden: string | null) => orden && driveOc.data?.valor.carpeta
@@ -150,6 +161,7 @@ export default function FacturasAnteriores() {
     { clave: "amarre", titulo: "En la hoja", explica: GLOSARIO.amarreXml, valor: (f) => f.factura_hoja ?? "", celda: (f) => f.amarrada
       ? <span className="text-sm whitespace-nowrap"><Insignia tono={f.amarre === "folio" ? "ok" : "info"}>{f.amarre === "folio" ? "Por folio" : "Por monto"}</Insignia>
           <span className="block text-[11px] text-tenue">factura {f.factura_hoja ?? "—"}</span></span>
+      : f.cancelada ? <span data-explain={GLOSARIO.cfdiCancelada}><Insignia tono="neutro">Cancelada</Insignia></span>
       : <span className="text-tenue text-sm">Sin renglón</span> },
     { clave: "orden_hoja", titulo: "OC", oculta: vista === "emitidas", celda: (f) => {
       const liga = ligaOc(f.orden_hoja);
@@ -159,6 +171,12 @@ export default function FacturasAnteriores() {
     { clave: "categoria", titulo: "Categoría", oculta: vista === "emitidas", explica: GLOSARIO.categoriaXml, celda: (f) => f.categoria
       ? <span className="text-sm">{f.categoria}<span className="block text-[11px] text-tenue">{f.categoria_origen === "clave_sat" ? "por lo comprado" : "por el proveedor"}</span></span>
       : <span className="text-tenue">—</span> },
+    ...(carga ? [{ clave: "acciones", titulo: "", celda: (f: Fila) => (
+      <Boton tamano="sm" variante="fantasma" onClick={(e) => { e.stopPropagation(); cancelar(f); }} title={f.cancelada ? "No está cancelada" : "Cancelada en el SAT"}
+             aria-label={f.cancelada ? "Quitar cancelada" : "Marcar cancelada"}>
+        {f.cancelada ? <Undo2 className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
+      </Boton>
+    ) } as Columna<Fila>] : []),
   ];
 
   const filasAnio = resumen.data?.por_anio ?? [];
@@ -191,7 +209,7 @@ export default function FacturasAnteriores() {
 
       <Tarjeta>
         <EncabezadoTarjeta titulo="Qué tanto de la historia tiene su XML" explica={GLOSARIO.coberturaXml}
-          descripcion={resumen.data?.total ? `${numero(resumen.data.total)} facturas cargadas` : "Todavía no hay facturas cargadas"} />
+          descripcion={resumen.data?.total ? `${numero(resumen.data.total)} facturas cargadas${resumen.data.canceladas ? `; ${numero(resumen.data.canceladas)} ${resumen.data.canceladas === 1 ? "cancelada, que no cuenta" : "canceladas, que no cuentan"}` : ""}` : "Todavía no hay facturas cargadas"} />
         {filasAnio.length === 0 ? (
           <div className="px-5 pb-5 text-sm text-tenue space-y-2">
             <p>Descarga la carpeta FACTURAS de Drive (un año a la vez, o todo) y elige aquí la carpeta, o los ZIP que da Drive al descargar. Se leen en este navegador: puede tardar unos minutos por año.</p>
@@ -232,7 +250,7 @@ export default function FacturasAnteriores() {
             {resumen.data!.sin_amarrar.map((p) => (
               <li key={p.rfc} className="flex items-center gap-3 py-2"><Link2 className="h-4 w-4 text-tenue shrink-0" />
                 <span className="flex-1 min-w-0">{p.proveedor ?? "—"}<span className="text-tenue cifra"> · {p.rfc}</span></span>
-                <span className="cifra text-tenue">{numero(p.n)} facturas</span><span className="cifra w-28 text-right">{dinero(p.monto)}</span></li>
+                <span className="cifra text-tenue">{numero(p.n)} {p.n === 1 ? "factura" : "facturas"}</span><span className="cifra w-28 text-right">{dinero(p.monto)}</span></li>
             ))}
           </ul>
         </Tarjeta>
