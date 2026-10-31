@@ -23,12 +23,10 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
 
 Ya hecho: preventivos por mes en día hábil, categorías libres y equipo de oficina, dar de baja,
 MTBF y MTTR en horas laborales (212); editor de rutinas, manuales por máquina, préstamo con para
-qué y foto, etiquetas QR/NFC (213). Falta:
+qué y foto, etiquetas QR/NFC (213); terminal con play y pausa, y criticidad calculada (216). Falta:
 
-- **Tercera entrega:**
-  - terminal de mantenimiento con play y pausa (arriba: preventivos pendientes y lo último en pausa);
-  - criticidad calculada sola: impacto en producción, riesgo de seguridad, frecuencia de fallas y
-    costo de reparación (sugerido agregar: si tiene respaldo y cuánto tarda conseguir refacción).
+- **Para Esteban:** calificar en cada máquina «si se para…» y «riesgo de seguridad» (Editar →
+  Criticidad). Hasta entonces se queda la criticidad de la hoja; con las dos, se calcula sola.
 - **Para Esteban:** los 62 planes «Rutina mensual» están como «cada 30 o 31 días»; si en realidad son
   «el primer lunes» (o el día que sea), cambiarlos en la ficha de cada máquina.
 

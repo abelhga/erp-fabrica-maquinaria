@@ -140,6 +140,11 @@ export function LateralMantenimiento({ id, alCerrar }: { id: string | null; alCe
             {o.tipo === "preventivo" && <Dato etiqueta="Vence">{o.vence ? fecha(o.vence) : `${horas(o.vence_horas)} de uso`}</Dato>}
             <Dato etiqueta="Tiempo parada">{o.horas_paro == null ? "No se paró" : o.horas_paro >= 48 ? `${Math.round(o.horas_paro / 24)} días` : horas(o.horas_paro)}
               {o.fuera_desde && o.abierta && <span className="block text-xs text-tenue">desde {hace(o.fuera_desde)}</span>}</Dato>
+            {o.horas_tramos != null && (
+              <Dato etiqueta="Trabajado" explica={GLOSARIO.tramoMantenimiento}>{horas(o.horas_tramos)}
+                {o.en_play?.length ? <span className="block text-xs text-ok">En play: {o.en_play.join(", ")}</span>
+                  : o.ultima_pausa && <span className="block text-xs text-tenue">pausada {hace(o.ultima_pausa)}</span>}</Dato>
+            )}
             <Dato etiqueta="Máquina"><Link className="text-marca-texto hover:underline" to={`/servicio/maquinas/${o.maquina_id}`}>{o.numero} {o.maquina}</Link>
               <span className="block text-xs text-tenue">{o.etapa ?? o.categoria}</span></Dato>
           </div>
@@ -197,9 +202,10 @@ export function LateralMantenimiento({ id, alCerrar }: { id: string | null; alCe
               <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); if (trabajo.trim().length >= 5) cerrar.mutate(); }}>
                 <AreaTexto rows={2} value={trabajo} onChange={(e) => setTrabajo(e.target.value)} placeholder="Qué se hizo: qué se cambió o reparó" />
                 <div className="flex flex-wrap gap-2 items-end">
-                  <Campo etiqueta="Horas trabajadas" className="w-36" ayuda="De mantenimiento, no de paro">
+                  <Campo etiqueta="Horas trabajadas" className="w-40" ayuda={o.horas_tramos != null ? `Vacío: las ${horas(o.horas_tramos)} de la terminal` : "De mantenimiento, no de paro"}>
                     <span data-explain={GLOSARIO.horasTrabajadas} className="block">
-                      <Entrada type="number" min="0" step="0.25" value={horasTrab} onChange={(e) => setHorasTrab(e.target.value)} placeholder="1.5" />
+                      <Entrada type="number" min="0" step="0.25" value={horasTrab} onChange={(e) => setHorasTrab(e.target.value)}
+                               placeholder={o.horas_tramos != null ? String(o.horas_tramos) : "1.5"} />
                     </span>
                   </Campo>
                   {maquina.data?.usa_horometro && (

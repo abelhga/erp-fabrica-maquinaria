@@ -847,9 +847,10 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "El catálogo de máquinas, herramienta, vehículos, instalaciones y equipo de oficina: en qué estado está cada uno, cuánto ha fallado y qué mantenimiento preventivo le toca. La lleva mantenimiento (o la gerencia de producción); el personal de producción reporta fallas y presta herramienta.",
    "El estado no se captura: sale de las órdenes de mantenimiento abiertas. Operando, Con falla (sigue trabajando pero alguien reportó algo), Parada (la falla la detiene) y En reparación. \"Reportar falla\" abre el formulario rápido y \"Resguardos\" lleva la herramienta prestada.",
    "Pestañas: Máquinas (clic abre su ficha), Órdenes abiertas (fallas y preventivos; clic abre el detalle a un lado) y Preventivos. Un preventivo se programa por fecha (cada tantos días, «el primer lunes de cada mes» o «el día 15»), por horas de uso o lo que pase primero, y su orden se genera sola con el checklist de su rutina, siempre en un día que el taller trabaja.",
+   "\"Terminal\" abre la pantalla de mantenimiento para darle play a la máquina que vas a trabajar y pausa al dejarla.",
    "\"Etiquetas QR\" abre una hoja para imprimir y recortar las etiquetas de todas las máquinas (o de las del filtro que tengas puesto). Pegada en la máquina, quien vea una falla la escanea con el celular y le sale el reporte de esa máquina, sin buscarla.",
    "En Máquinas, el filtro «Dadas de baja» muestra lo que ya no conviene reparar, con la fecha y el motivo. Al dar de alta, la categoría se elige de la lista o se escribe una nueva (impresora, aire acondicionado…); el tipo «Equipo de oficina» es para computadoras, impresoras y lo demás que no es del taller.",
-   "Al abrir una orden preventiva, cada punto del checklist se marca Bien o Falla (con qué tiene); la orden no se cierra mientras falte alguno. Al cerrarla, mantenimiento anota qué se hizo y las horas que le dedicó (no las que estuvo parada la máquina)."
+   "Al abrir una orden preventiva, cada punto del checklist se marca Bien o Falla (con qué tiene); la orden no se cierra mientras falte alguno. Al cerrarla, mantenimiento anota qué se hizo y las horas que le dedicó (no las que estuvo parada la máquina); si le dieron play en la terminal, las horas ya vienen llenas."
   ]
  },
  {
@@ -861,7 +862,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "nivel": 1,
   "texto": [
    "La ficha de una máquina o herramienta: sus datos, su historial de mantenimiento, sus planes preventivos y, si se presta, quién la tiene.",
-   "Fallas y tiempo parada cuentan los últimos 12 meses. \"Criticidad\" va de muy alta a muy baja; muy alta o alta es crítica: si se para, se para el área. También dice el tipo de mantenimiento (preventivo, predictivo o autónomo), quién lo hace y, si es herramienta que siempre trae la misma persona, a quién está asignada. Si tiene horómetro, registra sus horas con \"Registrar horas\": la lectura no puede ser menor que la anterior y, al guardarla, si ya toca un preventivo por horas, su orden sale en ese momento.",
+   "La tarjeta «Criticidad» dice por qué la máquina tiene la que tiene: los puntos de cada factor. Dos los califica mantenimiento con el lápiz (qué pasa si se para y su riesgo de seguridad); las fallas y el costo del año salen de sus órdenes; el respaldo y los días de refacción los busca el sistema, y se pueden corregir. Se recalcula sola al reportar o cerrar una falla y cada madrugada. Mientras falten los dos que se califican, se queda la de la hoja.",
+   "Fallas y tiempo parada cuentan los últimos 12 meses. Muy alta o alta es crítica: sus fallas van primero. También dice el tipo de mantenimiento (preventivo, predictivo o autónomo), quién lo hace y, si es herramienta que siempre trae la misma persona, a quién está asignada. Si tiene horómetro, registra sus horas con \"Registrar horas\": la lectura no puede ser menor que la anterior y, al guardarla, si ya toca un preventivo por horas, su orden sale en ese momento.",
    "En \"Plan preventivo\" mantenimiento o la gerencia agregan o editan los planes y le ponen su rutina: la lista de puntos que se palomean. En «Cuándo toca» eliges cada tantos días, un día de la semana del mes (el primer lunes, el último viernes) o un día fijo del mes, cada uno o cada varios meses; además puede ser cada tantas horas de uso, lo que pase primero. Abajo te dice qué día toca el siguiente. Si cae en fin de semana, feriado o descanso, pasa al siguiente día que se trabaja (en los planes por mes, sin brincarse al mes siguiente). La orden se genera sola: por fecha, unos días antes de vencer; por horas, al llegar a ellas.",
    "\"Manuales y fichas técnicas\" junta el manual, la ficha técnica, diagramas y garantía: un PDF, una foto o una liga de Drive. Al agregarlo eliges si es solo de esta máquina o de todas las de su tipo y modelo. \"Etiqueta QR\" la enseña para imprimirla y pegarla en la máquina; en un Android con Chrome también la graba en una etiqueta NFC.",
    "Lo que ya no conviene reparar se da de baja con «Dar de baja» y el motivo: sus órdenes abiertas se cancelan, sus planes se apagan y deja de contar en las métricas. Si estaba prestada, primero se recibe en Resguardos. Se puede reactivar desde la misma ficha; sus planes se quedan apagados hasta que los prendas.",
@@ -907,6 +909,20 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Las rutinas de mantenimiento: la lista de puntos que se palomea en cada preventivo, por tipo de máquina y frecuencia. Las edita el encargado de mantenimiento (o la gerencia de producción); los demás las ven.",
    "Clic en una rutina la abre a un lado. Cada punto lleva su sección (Seguridad, Limpieza, Eléctrico…) y qué se revisa; Enter agrega otro debajo, y con las flechas los acomodas. Las recomendaciones salen arriba del checklist en cada orden. «Duplicar» sirve para hacer la trimestral a partir de la mensual.",
    "Al guardar, los preventivos que ya salieron con esa rutina y nadie ha empezado toman la lista nueva; los que ya se están palomeando se quedan como estaban. La columna «La usan» dice qué máquinas la tienen en su plan; una rutina en uso no se puede desactivar. A cada plan se le pone su rutina en la ficha de la máquina."
+  ]
+ },
+ {
+  "ruta": "/servicio/terminal",
+  "nombre": "Servicios y cuadrillas › terminal",
+  "modulos": [
+   "servicio"
+  ],
+  "nivel": 1,
+  "texto": [
+   "La terminal de mantenimiento: para llevar el tiempo de cada reparación o preventivo sin anotarlo. Le das play a la orden que vas a trabajar y pausa cuando la dejas; al cerrarla, las horas trabajadas salen solas. La usan mantenimiento y el personal de piso que atiende máquinas.",
+   "Arriba está lo que traes en play (con cuánto llevas) y luego lo que está en pausa, primero lo último que pausaste, para regresar rápido. Abajo, los preventivos por hacer (los vencidos primero) y las fallas reportadas (las que tienen la máquina parada y las más críticas primero). El buscador encuentra la máquina por número o nombre.",
+   "Dar play en otra orden pausa la que traías: una persona trabaja una a la vez. Al pausar eliges por qué (esperando refacción, te vas a otra, fin del día) o solo pausas. Si dos personas trabajan la misma máquina, cada quien le da play y sus horas se suman.",
+   "Toca la tarjeta para abrir la orden: ahí palomeas el checklist, escribes el diagnóstico, pides refacciones y la cierras. El play no pide diagnóstico; ese se escribe cuando ya sabes qué tiene."
   ]
  },
  {
@@ -2193,6 +2209,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La fecha del costo más antiguo entre las piezas del equipo. Si pasa de un año se marca en amarillo: el costo del equipo ya no es el de hoy."
  },
  {
+  "clave": "costoReparacionCriticidad",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Lo que se ha gastado en reparar esta máquina en los últimos 12 meses (refacciones, servicio externo, mano de obra), en escalones: casi nada, bajo, medio o alto. Suma hasta 3 puntos a la criticidad. Aquí no se ve el monto; quien ve costos lo ve en la ficha."
+ },
+ {
   "clave": "costoViejo",
   "modulos": [
    "costeo",
@@ -2289,7 +2313,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "Qué tanto afecta si la máquina se para, de muy alta a muy baja (como en el programa de mantenimiento). Muy alta o alta cuenta como crítica: si se para, se para el área, y sus fallas van primero."
+  "texto": "Qué tanto importa la máquina, de muy alta a muy baja. Se calcula sola con seis factores: qué pasa si se para, su riesgo de seguridad, cuántas veces falló en el año, cuánto costó repararla, si hay otra con qué suplirla y cuánto tarda en llegar su refacción. Con 20 puntos o más (de 30) es muy alta, con 14 alta, con 8 media y con 4 baja; un riesgo grave, o parar el área sin respaldo, la deja en alta por lo menos. Mientras no se califiquen los dos primeros, se queda la de la hoja. Muy alta o alta cuenta como crítica: sus fallas van primero."
  },
  {
   "clave": "cuadrilla",
@@ -2659,6 +2683,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Días de vacaciones que da la Ley Federal del Trabajo por los años cumplidos: 12 al primer año, 2 más por año hasta 20 a los 5 años, y después 2 más cada 5 años."
+ },
+ {
+  "clave": "diasRefaccion",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Cuántos días tarda en llegar la refacción más lenta. Si no lo escribes, sale de las refacciones de su tipo de máquina (el tiempo de entrega del artículo o de su proveedor; si es importada y no tiene dato, 60 días). Hasta 2 días no suma; más de 30 suma lo más (3 puntos)."
  },
  {
   "clave": "diasSinGoce",
@@ -3732,7 +3764,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "Cuántas horas le dedicó la persona de mantenimiento a esta orden (no cuánto estuvo parada la máquina). Con ellas sale la mano de obra y qué parte del trabajo de mantenimiento es preventivo."
+  "texto": "Cuántas horas le dedicó la persona de mantenimiento a esta orden (no cuánto estuvo parada la máquina). Si le dieron play en la terminal, se llenan solas con sus tramos; quien cierra puede escribir otra cifra si alguien olvidó darle play. Con ellas sale la mano de obra y qué parte del trabajo de mantenimiento es preventivo."
  },
  {
   "clave": "horometro",
@@ -3749,6 +3781,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "margenes"
   ],
   "texto": "La foto del artículo: sale en el buscador, en la ficha de venta y en la cotización que recibe el cliente. Puedes pegar la liga de Drive tal cual (el archivo tiene que estar compartido con «Cualquier persona con el enlace») o la de cualquier imagen, o subir la foto desde la computadora o el celular. La subida no depende de Drive: si alguien mueve o deja de compartir el archivo, sigue viéndose."
+ },
+ {
+  "clave": "impactoProduccion",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Qué pasa en el taller si esta máquina se para: no afecta, la hace más lenta, detiene una parte o para el área. Lo califica mantenimiento. Pesa hasta 9 de los 30 puntos de la criticidad; si hay otra con qué suplirla, cuenta un escalón menos."
  },
  {
   "clave": "importeLinea",
@@ -5351,6 +5391,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El registro de quién se llevó una herramienta, desde cuándo y para qué. Se cierra cuando alguien la recibe de regreso y anota cómo llegó."
  },
  {
+  "clave": "respaldoMaquina",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Si hay otra máquina con qué suplirla. Si no lo calificas, el sistema la busca solo: otra de la misma categoría, en la misma área y que no esté dada de baja. Con respaldo, «si se para» cuenta un escalón menos."
+ },
+ {
   "clave": "respuestaRapidaML",
   "modulos": [
    "ventas",
@@ -5476,6 +5524,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "clave": "revisionRegla",
   "modulos": [],
   "texto": "Lo encontró una regla fija del ERP (por ejemplo: mismo tipo, unidad y medidas y un nombre casi igual). Siempre revisa lo mismo y de la misma forma."
+ },
+ {
+  "clave": "riesgoSeguridad",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Qué tan peligrosa es la máquina si falla o al repararla: ninguno, golpe o corte leve, lesión que incapacita o grave (eléctrico, atrapamiento, presión). Lo califica mantenimiento. Pesa hasta 9 de 30 puntos, y un riesgo grave hace la criticidad alta por lo menos."
  },
  {
   "clave": "ritmoCompra",
@@ -6095,6 +6151,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Mercado Libre solo avisa lo que pasa después de conectar la cuenta. Este botón trae lo que ya estaba: las preguntas sin contestar y los reclamos abiertos. Un reclamo de una venta que no está en el ERP (de antes de conectar) te llega como aviso para que lo atiendas en Mercado Libre. Las ventas anteriores solo se traen si las ventas están prendidas y eliges desde qué fecha, porque las que ya se capturaron a mano en Pedidos quedarían repetidas. Puedes usarlo las veces que quieras: lo que ya entró no se duplica."
+ },
+ {
+  "clave": "tramoMantenimiento",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Cada vez que alguien le da play a una orden de mantenimiento empieza un tramo, y la pausa lo cierra. Al cerrar la orden, las horas trabajadas son la suma de los tramos de todos los que le dieron play, contadas como las del taller (sin noches, fines de semana ni descansos). Dar play en otra orden pausa la que traías."
  },
  {
   "clave": "traspaso",
