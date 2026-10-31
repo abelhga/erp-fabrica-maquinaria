@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertOctagon, AlertTriangle, CalendarCheck, CheckCircle2, Hand, Plus, QrCode, Wrench } from "lucide-react";
+import { AlertOctagon, AlertTriangle, CalendarCheck, CheckCircle2, Hand, Play, Plus, QrCode, Wrench } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
 import { Boton } from "@/components/ui/boton";
@@ -118,6 +118,8 @@ export default function Maquinas() {
       descripcion="Lo que tiene el taller, en qué estado está, cuánto ha fallado y qué preventivo le toca."
       ancho="max-w-[1500px]"
       acciones={<>
+        {/* No va en el menú: es la herramienta de quien repara, a un toque desde su lista. */}
+        {p.personal && <span data-explain={GLOSARIO.tramoMantenimiento}><EnlaceBoton a="/servicio/terminal" variante="primario"><Play className="h-4 w-4" />Terminal</EnlaceBoton></span>}
         {p.pedir && <EnlaceBoton a="/servicio/reportar?volver=/servicio/maquinas" variante="peligro"><AlertTriangle className="h-4 w-4" />Reportar falla</EnlaceBoton>}
         <EnlaceBoton a="/servicio/resguardos"><Hand className="h-4 w-4" />Resguardos</EnlaceBoton>
         {/* Las etiquetas de lo que está en la lista de abajo (todas, o las del filtro elegido). */}

@@ -105,6 +105,25 @@ export interface Maquina {
   criticidad: Criticidad | null; tipo_mantenimiento: TipoMtto | null; especialidad: Especialidad | null; tipo_equipo: TipoEquipo | null;
   asignada_a: string | null; asignada_nombre: string | null;
   baja_en: string | null; motivo_baja: string | null; baja_por_nombre: string | null;
+  impacto_produccion: number | null; riesgo_seguridad: number | null; tiene_respaldo: boolean | null; dias_refaccion: number | null;
+  criticidad_puntos: number | null; criticidad_calculada: boolean;
+}
+
+/** Los dos factores de la criticidad que califica quien conoce la máquina (0 a 3). */
+export const IMPACTO_PRODUCCION = ["No afecta", "La hace más lenta", "Detiene una parte", "Para el área"] as const;
+export const RIESGO_SEGURIDAD = ["Ninguno", "Golpe o corte leve", "Lesión que incapacita", "Grave (eléctrico, atrapamiento, presión)"] as const;
+
+/** Lo que regresa criticidad_factores(): cada factor con sus puntos; el costo como escalón, nunca el monto. */
+export interface FactoresCriticidad {
+  completa: boolean; nivel: Criticidad | null; puntos: number; maximo: number;
+  factores: (
+    | { clave: "impacto"; valor: number | null; efectivo: number | null; puntos: number; maximo: number; de: "captura" }
+    | { clave: "seguridad"; valor: number | null; puntos: number; maximo: number; de: "captura" }
+    | { clave: "fallas"; valor: number; puntos: number; maximo: number; de: "ordenes" }
+    | { clave: "costo"; valor: "minimo" | "bajo" | "medio" | "alto"; puntos: number; maximo: number; de: "ordenes" }
+    | { clave: "respaldo"; valor: boolean; con: string | null; de: "calculado" | "captura" }
+    | { clave: "refaccion"; valor: number | null; puntos: number; maximo: number; de: "captura" | "refacciones" | "sin_dato" }
+  )[];
 }
 
 export type Criticidad = "muy_alta" | "alta" | "media" | "baja" | "muy_baja";
@@ -132,6 +151,9 @@ export interface OrdenMto {
   fuera_hasta: string | null; horas_paro: number | null; horas_uso_al_cerrar: number | null; motivo_cancelacion: string | null;
   abierta: boolean; vencida: boolean; refacciones: number; refacciones_pendientes: number; fotos: number;
   horas_trabajadas: number | null; puntos: number; puntos_revisados: number; puntos_con_falla: number;
+  /** De la terminal: horas que suman los tramos de play, quién la trae en play y su última pausa. */
+  horas_tramos: number | null; en_play: string[] | null; yo_en_play: boolean; ultima_pausa: string | null;
+  ultima_pausa_motivo: string | null; mi_ultima_pausa: string | null; criticidad: Criticidad | null;
 }
 
 /** Un punto del checklist de un preventivo: null = sin revisar. */

@@ -5,7 +5,7 @@ import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
-import { CLAVE, CRITICIDAD, ESPECIALIDAD, TIPO_EQUIPO, TIPO_MAQUINA, TIPO_MTTO, usePersonal, type Maquina } from "../datos";
+import { CLAVE, CRITICIDAD, ESPECIALIDAD, IMPACTO_PRODUCCION, RIESGO_SEGURIDAD, TIPO_EQUIPO, TIPO_MAQUINA, TIPO_MTTO, usePersonal, type Maquina } from "../datos";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 // Sugerencias para empezar; la categoría es libre (Esteban da de alta equipo de oficina, aires…)
@@ -33,7 +33,13 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
     horas_uso: m ? String(m.horas_uso) : "0", notas: m?.notas ?? "",
     criticidad: m?.criticidad ?? "", tipo_mantenimiento: m?.tipo_mantenimiento ?? "", especialidad: m?.especialidad ?? "",
     tipo_equipo: m?.tipo_equipo ?? "", asignada_a: m?.asignada_a ?? "",
+    impacto_produccion: m?.impacto_produccion != null ? String(m.impacto_produccion) : "",
+    riesgo_seguridad: m?.riesgo_seguridad != null ? String(m.riesgo_seguridad) : "",
+    tiene_respaldo: m?.tiene_respaldo == null ? "" : m.tiene_respaldo ? "si" : "no",
+    dias_refaccion: m?.dias_refaccion != null ? String(m.dias_refaccion) : "",
   });
+  // Con los dos factores que solo sabe quien conoce la máquina, la base calcula la criticidad.
+  const calculada = f.impacto_produccion !== "" && f.riesgo_seguridad !== "";
   const personal = usePersonal();
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
   const guardar = useAccion(async () => {
@@ -43,6 +49,10 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
       etapa_id: f.etapa_id ? Number(f.etapa_id) : null, ubicacion: f.ubicacion.trim() || null, critica: f.critica,
       criticidad: f.criticidad || null, tipo_mantenimiento: f.tipo_mantenimiento || null, especialidad: f.especialidad || null,
       tipo_equipo: f.tipo_equipo || null, asignada_a: f.asignada_a || null,
+      impacto_produccion: f.impacto_produccion === "" ? null : Number(f.impacto_produccion),
+      riesgo_seguridad: f.riesgo_seguridad === "" ? null : Number(f.riesgo_seguridad),
+      tiene_respaldo: f.tiene_respaldo === "" ? null : f.tiene_respaldo === "si",
+      dias_refaccion: f.dias_refaccion.trim() === "" ? null : Math.max(0, Math.round(Number(f.dias_refaccion))),
       prestable: f.prestable || f.tipo === "herramienta", usa_horometro: f.usa_horometro, notas: f.notas.trim() || null,
       ...(m ? {} : { horas_uso: Number(f.horas_uso) || 0 }),
     };
@@ -85,14 +95,6 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
           <Campo etiqueta="Modelo"><Entrada value={f.modelo} onChange={(e) => set("modelo", e.target.value)} /></Campo>
           <Campo etiqueta="Número de serie"><Entrada value={f.numero_serie} onChange={(e) => set("numero_serie", e.target.value)} /></Campo>
           <Campo etiqueta="Ubicación" className="sm:col-span-2"><Entrada value={f.ubicacion} onChange={(e) => set("ubicacion", e.target.value)} placeholder="Nave 1, mesa 3" /></Campo>
-          <Campo etiqueta="Criticidad" ayuda="Muy alta o alta: si se para, se para el área.">
-            <span data-explain={GLOSARIO.criticidadMaquina} className="block">
-              <Seleccion value={f.criticidad} onChange={(e) => set("criticidad", e.target.value)}>
-                <option value="">Sin calificar</option>
-                {Object.entries(CRITICIDAD).map(([k, v]) => <option key={k} value={k}>{v.texto}</option>)}
-              </Seleccion>
-            </span>
-          </Campo>
           <Campo etiqueta="Tipo de mantenimiento">
             <span data-explain={GLOSARIO.tipoMantenimiento} className="block">
               <Seleccion value={f.tipo_mantenimiento} onChange={(e) => set("tipo_mantenimiento", e.target.value)}>
@@ -123,8 +125,53 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
           </Campo>
           {!m && f.usa_horometro && <Campo etiqueta="Horas de uso hoy"><Entrada type="number" min="0" step="0.1" value={f.horas_uso} onChange={(e) => set("horas_uso", e.target.value)} /></Campo>}
         </div>
+        <fieldset className="rounded-lg border border-borde p-3 space-y-3">
+          <legend className="px-1 text-sm font-semibold" data-explain={GLOSARIO.criticidadMaquina} data-explain-title="Criticidad">Criticidad</legend>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Campo etiqueta="Si se para…">
+              <span data-explain={GLOSARIO.impactoProduccion} className="block">
+                <Seleccion value={f.impacto_produccion} onChange={(e) => set("impacto_produccion", e.target.value)}>
+                  <option value="">Sin calificar</option>
+                  {IMPACTO_PRODUCCION.map((t, i) => <option key={t} value={i}>{t}</option>)}
+                </Seleccion>
+              </span>
+            </Campo>
+            <Campo etiqueta="Riesgo de seguridad">
+              <span data-explain={GLOSARIO.riesgoSeguridad} className="block">
+                <Seleccion value={f.riesgo_seguridad} onChange={(e) => set("riesgo_seguridad", e.target.value)}>
+                  <option value="">Sin calificar</option>
+                  {RIESGO_SEGURIDAD.map((t, i) => <option key={t} value={i}>{t}</option>)}
+                </Seleccion>
+              </span>
+            </Campo>
+            <Campo etiqueta="Respaldo">
+              <span data-explain={GLOSARIO.respaldoMaquina} className="block">
+                <Seleccion value={f.tiene_respaldo} onChange={(e) => set("tiene_respaldo", e.target.value)}>
+                  <option value="">Buscarlo solo</option>
+                  <option value="si">Sí hay con qué suplirla</option>
+                  <option value="no">No hay con qué suplirla</option>
+                </Seleccion>
+              </span>
+            </Campo>
+            <Campo etiqueta="Días para conseguir refacción" ayuda="Vacío: lo que tardan sus refacciones.">
+              <span data-explain={GLOSARIO.diasRefaccion} className="block">
+                <Entrada type="number" min="0" step="1" value={f.dias_refaccion} onChange={(e) => set("dias_refaccion", e.target.value)} />
+              </span>
+            </Campo>
+          </div>
+          {calculada ? (
+            <p className="text-xs text-tenue">La criticidad se calcula sola con esto, las fallas y el costo de reparación del último año.</p>
+          ) : (
+            <Campo etiqueta="Mientras, la de la hoja" ayuda="Al calificar «si se para» y el riesgo, se calcula sola.">
+              <Seleccion value={f.criticidad} onChange={(e) => set("criticidad", e.target.value)}>
+                <option value="">Sin calificar</option>
+                {Object.entries(CRITICIDAD).map(([k, v]) => <option key={k} value={k}>{v.texto}</option>)}
+              </Seleccion>
+            </Campo>
+          )}
+        </fieldset>
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          {([...(f.criticidad ? [] : [["critica", "Crítica (si se para, se para el área)"]] as const), ["prestable", "Se presta con resguardo"], ["usa_horometro", "Tiene horómetro"]] as const).map(([k, t]) => (
+          {([...(f.criticidad || calculada ? [] : [["critica", "Crítica (si se para, se para el área)"]] as const), ["prestable", "Se presta con resguardo"], ["usa_horometro", "Tiene horómetro"]] as const).map(([k, t]) => (
             <label key={k} className="inline-flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={f[k] || (k === "prestable" && f.tipo === "herramienta")} disabled={k === "prestable" && f.tipo === "herramienta"}
                      onChange={(e) => set(k, e.target.checked)} className="accent-[hsl(var(--marca))]" />{t}

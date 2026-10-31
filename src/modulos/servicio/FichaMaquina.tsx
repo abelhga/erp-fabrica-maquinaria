@@ -19,6 +19,7 @@ import { Dato, EnlaceBoton, InsigniaMaquina, InsigniaMto, usePermisosServicio } 
 import { LateralMantenimiento } from "./componentes/LateralMantenimiento";
 import { DialogoMaquina } from "./componentes/DialogoMaquina";
 import { DialogoEtiqueta } from "./componentes/EtiquetaQR";
+import { TarjetaCriticidad } from "./componentes/Criticidad";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 interface CostoOrden { mantenimiento_id: string; material: number | null; servicio_externo: number | null; mano_obra: number | null; otro: number | null; total: number }
@@ -158,6 +159,8 @@ export default function FichaMaquina() {
               <Kpi titulo="Órdenes abiertas" valor={numero(m.ordenes_abiertas)} icono={Wrench} tono={m.ordenes_abiertas ? "aviso" : "ok"} detalle={m.orden_folio ?? "Ninguna"} />
             )}
           </div>
+
+          {!deBaja && <TarjetaCriticidad m={m} alEditar={p.gerencia ? () => setDialogo("editar") : undefined} />}
 
           <Tarjeta>
             <EncabezadoTarjeta titulo="Historial de mantenimiento" descripcion={`${(historial.data ?? []).length} ${(historial.data ?? []).length === 1 ? "orden" : "órdenes"}${p.costos ? " · costo por orden" : ""}`} />

@@ -82,6 +82,7 @@ const ReportarFalla = p(() => import("./modulos/servicio/ReportarFalla"));
 const Resguardos = p(() => import("./modulos/servicio/Resguardos"));
 const Rutinas = p(() => import("./modulos/servicio/Rutinas"));
 const Etiquetas = p(() => import("./modulos/servicio/Etiquetas"));
+const TerminalMantenimiento = p(() => import("./modulos/servicio/TerminalMantenimiento"));
 const SolicitudesPrecio = p(() => import("./modulos/compras/Solicitudes"));
 const MisSolicitudesPrecio = p(() => import("./modulos/ventas/solicitudes/MisSolicitudes"));
 const Leads = p(() => import("./modulos/ventas/Leads"));
@@ -219,6 +220,7 @@ export function App() {
           <Route path="servicio/maquinas/:id" element={<Con m="mantenimiento"><FichaMaquina /></Con>} />
           <Route path="servicio/resguardos" element={<Con m="mantenimiento" n={2}><Resguardos /></Con>} />
           <Route path="servicio/rutinas" element={<Con m="mantenimiento"><Rutinas /></Con>} />
+          <Route path="servicio/terminal" element={<Con m="mantenimiento" n={2}><TerminalMantenimiento /></Con>} />
           <Route path="servicio/:id" element={<Con m="servicio"><DetalleServicio /></Con>} />
           <Route path="rrhh/empleados" element={<Con m="rrhh"><Empleados /></Con>} />
           <Route path="rrhh/incidencias" element={<Con m="rrhh"><Incidencias /></Con>} />
