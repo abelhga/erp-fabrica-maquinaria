@@ -39,7 +39,7 @@ interface Datos {
   proporcion_taller: number;
   mano_obra: Sueldos; sueldos_oficina: Sueldos; nomina_hoja: number;
   semanas_cerradas: number;
-  comisiones: number; comisiones_hoja: number; comisiones_completas: boolean;
+  comisiones: number; comisiones_hoja: number; comisiones_pagadas?: number; comisiones_completas: boolean;
   fabricacion: Monto[]; operacion: Monto[]; impuestos: Monto[]; fuera: Monto[];
   material_comprado: number; caja_chica: number; mercado_libre: number; envios: number;
   /** Compras del ERP: las ligadas a su orden cuentan por partida; las demás, por la categoría de la factura. */
@@ -356,8 +356,9 @@ function OrigenNumeros({ d }: { d: Datos }) {
       texto: "Material + mano de obra del taller + gastos de fabricación.", total: true },
     { concepto: "Sueldos de oficina", importe: t.sueldos_oficina, precision: so.precision, texto: so.texto },
     { concepto: "Comisiones", importe: d.comisiones, precision: com,
-      texto: [d.comisiones_hoja > 0 && `${dinero(d.comisiones_hoja)} pagadas según el libro de la hoja.`,
-        d.comisiones - d.comisiones_hoja > 0 && "Desde el mes del arranque, lo que da la regla de comisiones de cada vendedor en cada mes que toca el periodo (un mes empezado cuenta completo)."].filter(Boolean).join(" ") || "Sin comisiones en el periodo." },
+      texto: [(d.comisiones_pagadas ?? 0) > 0 && `${dinero(d.comisiones_pagadas ?? 0)} pagadas a los vendedores antes del arranque, cada una en el mes de las ventas que la generaron.`,
+        d.comisiones_hoja > 0 && `${dinero(d.comisiones_hoja)} pagadas según el libro de la hoja.`,
+        d.comisiones - d.comisiones_hoja - (d.comisiones_pagadas ?? 0) > 0 && "Desde el mes del arranque, lo que da la regla de comisiones de cada vendedor en cada mes que toca el periodo (un mes empezado cuenta completo)."].filter(Boolean).join(" ") || "Sin comisiones en el periodo." },
     { concepto: "Compras de operación", importe: t.compras_operacion, precision: compras,
       texto: (d.operacion.length ? `Sin IVA si tienen factura: ${top(d.operacion)}.` : "Ninguna compra de operación en el periodo.")
         + (d.sin_categoria > 0 ? ` Incluye ${dinero(d.sin_categoria)} de proveedores sin categoría.` : "") },
