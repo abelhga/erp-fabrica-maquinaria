@@ -458,6 +458,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Aquí entran los XML de años pasados (la carpeta FACTURAS de Drive) para que la historia de antes del ERP diga qué se compró y no solo a quién. La usa finanzas; lo ve también dirección.",
    "Descarga de Drive la carpeta (un año a la vez, o todo) y elígela con «Elegir carpeta», o elige los ZIP que da Drive con «XML o ZIP». Los XML se leen en tu navegador y solo sube lo que dicen; puede tardar unos minutos por año. Volver a cargar lo mismo no duplica nada: cada factura se guarda una vez por su folio fiscal. Las que no son de Hegamex (ni la emitió ni la recibió) no se guardan.",
    "Cada factura recibida se amarra a su renglón del libro de compras de la hoja (por folio y monto, o por monto exacto y fecha cercana); de ahí sale su número de orden de compra, que abre el PDF de esa orden en Drive. Cada factura emitida se amarra a su venta por serie y folio. La tabla de arriba dice, por año, cuántas compras y ventas de la hoja ya tienen su XML; clic en un año para ver sus facturas.",
+   "Las facturas canceladas no cuentan: las que vienen de una carpeta «Canceladas» de Drive se marcan solas, y si el SAT dice que otra está cancelada, el botón al final de su renglón la marca (y su renglón de la hoja pasa a la factura que la reemplazó). Se ven en «Recibidas» o «Emitidas» con la marca «Cancelada»; no salen entre lo pendiente.",
    "Si un proveedor sale en «sin renglón en la hoja», casi siempre le falta su RFC en el ERP o se llama distinto en la hoja: dale su RFC y usa «Volver a amarrar». Con su XML, una compra de antes cuenta en Resultados por lo que se compró (su clave del SAT) y no por el giro del proveedor; salvo que el proveedor esté en una categoría que no es gasto, como «Sin efectos», retiros o compra de activos: esa la hoja la dejó fuera a propósito y así se queda."
   ]
  },
@@ -1852,6 +1853,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "El archivo XML de la factura electrónica (el que timbra el SAT, junto al PDF). Trae el RFC del proveedor, el folio, el total, la fecha y si es de contado o a crédito; al subirlo se llena todo. La misma factura no entra dos veces."
+ },
+ {
+  "clave": "cfdiCancelada",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Una factura que se canceló en el SAT (casi siempre porque salió mal y se volvió a timbrar). No cuenta: no se amarra a la hoja ni sale como pendiente. Las que vienen de una carpeta «Canceladas» de Drive se marcan solas; si el SAT dice que otra está cancelada, márcala con su botón y su renglón de la hoja pasa a la factura que la reemplazó."
  },
  {
   "clave": "checklistAplica",
