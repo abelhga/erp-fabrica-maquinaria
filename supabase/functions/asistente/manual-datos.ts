@@ -458,7 +458,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Aquí entran los XML de años pasados (la carpeta FACTURAS de Drive) para que la historia de antes del ERP diga qué se compró y no solo a quién. La usa finanzas; lo ve también dirección.",
    "Descarga de Drive la carpeta (un año a la vez, o todo) y elígela con «Elegir carpeta», o elige los ZIP que da Drive con «XML o ZIP». Los XML se leen en tu navegador y solo sube lo que dicen; puede tardar unos minutos por año. Volver a cargar lo mismo no duplica nada: cada factura se guarda una vez por su folio fiscal. Las que no son de Hegamex (ni la emitió ni la recibió) no se guardan.",
    "Cada factura recibida se amarra a su renglón del libro de compras de la hoja (por folio y monto, o por monto exacto y fecha cercana); de ahí sale su número de orden de compra, que abre el PDF de esa orden en Drive. Cada factura emitida se amarra a su venta por serie y folio. La tabla de arriba dice, por año, cuántas compras y ventas de la hoja ya tienen su XML; clic en un año para ver sus facturas.",
-   "Si un proveedor sale en «sin renglón en la hoja», casi siempre le falta su RFC en el ERP o se llama distinto en la hoja: dale su RFC y usa «Volver a amarrar». Con su XML, una compra de antes cuenta en Resultados por lo que se compró (su clave del SAT) y no por el giro del proveedor."
+   "Si un proveedor sale en «sin renglón en la hoja», casi siempre le falta su RFC en el ERP o se llama distinto en la hoja: dale su RFC y usa «Volver a amarrar». Con su XML, una compra de antes cuenta en Resultados por lo que se compró (su clave del SAT) y no por el giro del proveedor; salvo que el proveedor esté en una categoría que no es gasto, como «Sin efectos», retiros o compra de activos: esa la hoja la dejó fuera a propósito y así se queda."
   ]
  },
  {
@@ -487,7 +487,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Aquí ves cuánto deja de verdad lo que se vende, desde 2018: de las ventas del periodo, cuánto se va en fabricar, cuánto en vender y administrar, cuánto en impuestos e intereses, y cuánto queda. La ven dirección, finanzas y la gerencia administrativa.",
    "Elige el periodo arriba (también «Año pasado» o un rango desde 2018). El diagrama se lee de izquierda a derecha: las ventas por línea se juntan y se reparten en costo de fabricación, gastos de operación, impuestos e intereses y utilidad; el grueso de cada franja es el dinero. Pasa el mouse por una franja para ver cuánto es y qué parte de las ventas. Con el botón de tabla ves lo mismo en números. «Año por año» compara cada año desde 2018.",
-   "Antes del 12 de octubre de 2026 los números salen de las hojas (ventas y compras como se registraron ahí; cada compra por lo que se compró si su XML está cargado en «Facturas anteriores» y su clave del SAT lo dice, y si no, por la categoría de su proveedor); desde ahí, del ERP, donde una factura ligada a su orden de compra cuenta por sus partidas: los consumibles del taller como gasto de fabricación y el material en lo vendido. Los números con ≈ son estimados: lo vendido de la hoja no tiene costeo y la nómina de la hoja se reparte entre taller y oficina con la proporción de hoy. La tabla de abajo dice de dónde sale cada número, y lo que no es gasto (retiros de socios, préstamos, compra de activos) se enseña aparte sin restarse.",
+   "Antes del 12 de octubre de 2026 los números salen de las hojas (ventas y compras como se registraron ahí; cada compra por lo que se compró si su XML está cargado en «Facturas anteriores» y su clave del SAT lo dice, y si no, por la categoría de su proveedor; lo que la hoja tenía en «Sin efectos» u otra categoría que no es gasto se queda fuera aunque su XML diga otra cosa); desde ahí, del ERP, donde una factura ligada a su orden de compra cuenta por sus partidas: los consumibles del taller como gasto de fabricación y el material en lo vendido. Los números con ≈ son estimados: lo vendido de la hoja no tiene costeo y la nómina de la hoja se reparte entre taller y oficina con la proporción de hoy. La tabla de abajo dice de dónde sale cada número, y lo que no es gasto (retiros de socios, préstamos, compra de activos) se enseña aparte sin restarse.",
    "En «Categorías de compra» decides cómo cuenta cada categoría: material, gasto de fabricación, gasto de operación, nómina, impuestos, intereses o «no es gasto». Finanzas la cambia; el cambio se ve en todos los periodos."
   ]
  },
@@ -1827,7 +1827,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "En qué se gastó, según el XML: por lo comprado cuando las claves del SAT de sus conceptos lo dicen (como al registrar una compra de hoy); si no dicen nada, por el giro del proveedor. La de «por lo comprado» es la que cuenta en Resultados."
+  "texto": "En qué se gastó, según el XML: por lo comprado cuando las claves del SAT de sus conceptos lo dicen (como al registrar una compra de hoy); si no dicen nada, por el giro del proveedor. La de «por lo comprado» es la que cuenta en Resultados, salvo cuando el proveedor está en una categoría que no es gasto (como «Sin efectos»): ahí manda la del proveedor."
  },
  {
   "clave": "cerrarSemana",
