@@ -37,7 +37,7 @@ qué y foto, etiquetas QR/NFC (213); terminal con play y pausa, y criticidad cal
   - **Importaciones primero** (lo pidió dirección): los hilos de un embarque llegan a 80 correos
     y se pierde en qué va. Ligar los hilos de Gmail al embarque y que la IA proponga cómo va
     (fechas, documentos, pendientes) para que Alondra lo confirme; nada se actualiza solo.
-    Antes de construir, decidir qué del correo puede leer la IA (los hilos traen precios).
+    Decidido: la IA lee el hilo completo, con montos; lo que propone solo lo ve quien ve importaciones.
   - Ventas y compras: ver en la cotización o la OC si el cliente o el proveedor contestó.
   - Configurar Google (docs/correo-gmail.md) antes de que alguien conecte su Gmail.
 - **Kit o subensamble:** el subensamble se fabrica en el taller y lleva horas; el kit son
