@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Ban, Globe2, PackageCheck, Pencil, Plus, Printer, Send, Trash2, Truck } from "lucide-react";
+import { ArrowLeft, Ban, Globe2, Mail, PackageCheck, Pencil, Plus, Printer, Send, Trash2, Truck } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { BuscadorArticulo } from "@/components/datos/BuscadorArticulo";
 import { Boton } from "@/components/ui/boton";
@@ -10,6 +10,8 @@ import { Seleccion } from "@/components/ui/campo";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { useSesion } from "@/lib/sesion";
+import { DialogoCorreo } from "@/components/correo/DialogoCorreo";
+import { pdfDeCopia } from "@/lib/pdf";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, fechaYHora, numero, porcentaje } from "@/lib/formato";
@@ -81,11 +83,12 @@ function NuevaOrden() {
 }
 
 function Detalle({ id }: { id: string }) {
-  const { puede } = useSesion();
+  const { puede, perfil } = useSesion();
   const ir = useNavigate();
   const tc = useTiposCambio();
   const [recibiendo, setRecibiendo] = useState(false);
   const [cancelando, setCancelando] = useState(false);
+  const [porCorreo, setPorCorreo] = useState(false);
   const [motivo, setMotivo] = useState("");
   const [cambiando, setCambiando] = useState<LineaOC | null>(null);
   const verDinero = puede("costos", 1) || puede("finanzas", 1);
@@ -165,6 +168,10 @@ function Detalle({ id }: { id: string }) {
             {compra && (o.es_importacion || o.moneda !== "MXN") && o.estado !== "cancelada" && <Boton asChild variante="secundario"><Link to={`/importaciones/oc/${o.id}/imprimir`}><Globe2 className="h-4 w-4" /> OC y contrato para aduana</Link></Boton>}
             {compra && borrador && <Boton variante="fantasma" onClick={() => { if (confirm(`¿Eliminar el borrador ${o.folio}?`)) borrar.mutate(undefined); }}><Trash2 className="h-4 w-4" /> Eliminar</Boton>}
             {compra && o.estado === "enviada" && !recibido && <Boton variante="secundario" onClick={() => setCancelando(true)}><Ban className="h-4 w-4" /> Cancelar</Boton>}
+            {/* El PDF sale de la misma hoja que se imprime, así que pide ver el dinero. */}
+            {compra && verDinero && ["borrador", "enviada", "parcial"].includes(o.estado) && (
+              <Boton variante="secundario" onClick={() => setPorCorreo(true)} disabled={!lineas.data?.length}><Mail className="h-4 w-4" /> Por correo</Boton>
+            )}
             {compra && borrador && <Boton onClick={() => enviar.mutate(undefined)} cargando={enviar.isPending} disabled={!lineas.data?.length}><Send className="h-4 w-4" /> Enviar al proveedor</Boton>}
             {puede("inventario", 2) && (o.estado === "enviada" || o.estado === "parcial") && (
               <Boton onClick={() => setRecibiendo(true)} data-explain={GLOSARIO.recibirOrden}><PackageCheck className="h-4 w-4" /> Recibir</Boton>
@@ -331,6 +338,10 @@ function Detalle({ id }: { id: string }) {
       </div>
 
       {verDinero && <ImpresionOC oc={o} lineas={lineas.data ?? []} proveedor={proveedor.data} empresa={empresa.data} />}
+      {porCorreo && <DialogoCorreo abierto alCambiar={setPorCorreo} tipo="orden_compra" id={id}
+        generarPdf={() => pdfDeCopia(document.querySelector<HTMLElement>(".impresion-oc")!)}
+        cuerpo={(p) => ["Buen día:", "", `Les envío la orden de compra ${p.folio}. Por favor confirmen que la recibieron y la fecha de entrega.`, "",
+          "Saludos,", perfil?.nombre].filter((x) => x != null).join("\n")} />}
 
       {cambiando && <DialogoCambiarPartida linea={cambiando} folio={o.folio} moneda={m} alCerrar={() => setCambiando(null)} />}
       <DialogoRecibir abierto={recibiendo} alCambiar={setRecibiendo} ocId={id} folio={o.folio} lineas={lineas.data ?? []} />

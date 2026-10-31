@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronDown, Cloud, CloudOff, Copy, CopyPlus, Eye, FileText, Loader2, MessageCircle,
+  AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronDown, Cloud, CloudOff, Copy, CopyPlus, Eye, FileText, Loader2, Mail, MessageCircle,
   MoreHorizontal, PackageCheck, Plus, Printer, Send, ShieldCheck, ThumbsDown, Trash2, Truck, X,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -27,6 +27,8 @@ import { FichaVenta } from "./componentes/FichaVenta";
 import { DialogoFleteSkydropx } from "./componentes/FleteSkydropx";
 import { DialogoCliente, DialogoMotivo, ElegirCliente, MOTIVOS_PERDIDA, type ClienteNuevo } from "./componentes/dialogos";
 import { DialogoConvertir, DialogoEnviar, DialogoPedirAutorizacion } from "./componentes/DialogosCotizacion";
+import { DialogoCorreo } from "@/components/correo/DialogoCorreo";
+import { pdfDeRuta } from "@/lib/pdf";
 import { SIN_ENVIAR, mensajeFreno, useFreno } from "./componentes/Seguimiento";
 import { useFichas } from "./componentes/Fichas";
 import { EntregaRealista, useEstimacionEntrega } from "./componentes/EntregaRealista";
@@ -245,7 +247,7 @@ function Editor({ id }: { id: string }) {
   const vencida = !!c && ["borrador", "por_autorizar", "autorizada", "enviada"].includes(c.estado) && !!vence && vence < hoyMx();
 
   // ---------------------------------------------------------------- acciones
-  const [dlg, setDlg] = useState<null | "enviar" | "convertir" | "rechazar" | "autorizacion" | "cliente" | "flete">(null);
+  const [dlg, setDlg] = useState<null | "enviar" | "correo" | "convertir" | "rechazar" | "autorizacion" | "cliente" | "flete">(null);
   const [nombreCliente, setNombreCliente] = useState("");
 
   const agregar = useAccion(
@@ -478,6 +480,7 @@ function Editor({ id }: { id: string }) {
       <OpcionMenu icono={Eye} alElegir={abrirVista}>Vista previa</OpcionMenu>
       <OpcionMenu icono={Printer} alElegir={abrirPdf}>Imprimir / PDF</OpcionMenu>
       <OpcionMenu icono={MessageCircle} alElegir={() => setDlg("enviar")} deshabilitado={!["enviada", "aceptada"].includes(c.estado) && !puedeEnviar}>Compartir por WhatsApp</OpcionMenu>
+      <OpcionMenu icono={Mail} alElegir={() => setDlg("correo")} deshabilitado={!["enviada", "aceptada"].includes(c.estado) && !puedeEnviar}>Mandar por correo</OpcionMenu>
       <SeparadorMenu />
       <OpcionMenu icono={CopyPlus} alElegir={() => nuevaVersion.mutate(undefined)}>Nueva versión ({c.folio.replace(/-v\d+$/, "")}-v…)</OpcionMenu>
       <OpcionMenu icono={Copy} alElegir={() => duplicar.mutate(undefined)}>Duplicar con folio nuevo</OpcionMenu>
@@ -830,7 +833,13 @@ function Editor({ id }: { id: string }) {
       <DialogoEnviar abierto={dlg === "enviar"} alCambiar={(v) => setDlg(v ? "enviar" : null)} c={{ ...c, ...(tot ?? {}) }} partidas={lineas}
         contacto={contactoSel} vendedor={vendedor.data} plan={plan} yaEnviada={!["borrador", "autorizada"].includes(c.estado)}
         alMarcarEnviada={() => cambiarEstado.mutateAsync("enviada")} alAbrirPdf={abrirPdf} enviando={cambiarEstado.isPending} fichas={ligasFichas}
-        frenado={freno.data?.frenado ? freno.data : null} />
+        frenado={freno.data?.frenado ? freno.data : null} alPorCorreo={() => setDlg("correo")} />
+      <DialogoCorreo abierto={dlg === "correo"} alCambiar={(v) => setDlg(v ? "correo" : null)} tipo="cotizacion" id={id!}
+        // Lo que no se ha guardado también va en el PDF: se guarda y luego se toma la hoja de impresión.
+        generarPdf={async () => { await guardar(); return pdfDeRuta(`/ventas/cotizaciones/${id}/imprimir?vista=1`); }}
+        cuerpo={(p) => [`Buen día${p.para_nombre ? ` ${p.para_nombre}` : ""}:`, "",
+          `Le comparto la cotización ${p.folio}. Quedo a sus órdenes para cualquier duda.`, "", "Saludos,",
+          vendedor.data?.nombre, vendedor.data?.telefono].filter((x) => x != null).join("\n")} />
       <DialogoPedirPrecio abierto={!!pedirPara} alCambiar={(v) => !v && setPedirPara(null)} inicial={pedirPara ?? {}}
         crear={pedirPara?.nuevaPartida ? crearConPartida : undefined} />
       <DialogoConvertir estimacion={estimacion.data} abierto={dlg === "convertir"} alCambiar={(v) => setDlg(v ? "convertir" : null)} c={c} partidas={lineas}
