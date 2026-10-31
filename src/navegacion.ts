@@ -1,4 +1,4 @@
-import {
+import { FileX,
   LayoutDashboard, Users, FileText, ShoppingCart, Trophy, Boxes, Layers, Percent, Truck, Tags,
   ClipboardList, Warehouse, ArrowLeftRight, TrendingDown, Factory, ClipboardCheck, Monitor, Tablet,
   UserRound, CalendarOff, LineChart, Wallet, Receipt, Settings, ShieldCheck, Download, History, KanbanSquare, PhoneCall, ListTodo, FileStack,
@@ -123,6 +123,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/finanzas/pagos", texto: "Pagos a proveedores", icono: Receipt, modulo: "finanzas" },
       { ruta: "/finanzas/caja-chica", texto: "Caja chica", icono: Coins, modulo: "caja_chica" },
       { ruta: "/finanzas/resultados", texto: "Resultados", icono: Waypoints, modulo: "finanzas", tambien: { modulo: "costos" } },
+      { ruta: "/finanzas/sin-registrar", texto: "Facturas sin registrar", icono: FileX, modulo: "finanzas" },
       { ruta: "/finanzas/facturas-anteriores", texto: "Facturas anteriores (XML)", icono: History, modulo: "finanzas" },
     ],
   },

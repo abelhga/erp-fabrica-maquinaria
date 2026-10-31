@@ -41,8 +41,10 @@ const VACIO = { fecha: hoyISO(), monto: "", factura: "", descripcion: "", catego
  * fecha y si es de contado (PUE) o a crédito (PPD). Acepta varios XML a la vez y los va
  * pasando uno por uno, para capturar la carpeta de facturas del mes de corrido.
  */
-export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
+export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas }: {
   abierto: boolean; alCerrar: () => void; proveedorInicial?: { id: string; nombre: string } | null;
+  /** Facturas ya leídas (de «Facturas sin registrar»): entran a la fila como si se hubiera subido su XML. */
+  facturas?: Cfdi[];
 }) {
   const empresa = useEmpresa();
   const rfcPropio = (empresa.data?.fiscal.rfc ?? "").toUpperCase();
@@ -62,6 +64,7 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
     if (!abierto) return;
     setCola([]); setIdx(0); setF(VACIO); setTocoVence(false); setProv(null);
     if (proveedorInicial) cargarProveedor(proveedorInicial.id);
+    if (facturas?.length) prepararCola(facturas.map((c) => ({ nombre: `${folioCfdi(c) ?? c.uuid ?? "factura"}.xml`, cfdi: c, error: motivoDe(c) })));
   }, [abierto]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function cargarProveedor(id: string) {
@@ -140,7 +143,11 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial }: {
       }
       setLeyendo((n) => n - 1);
     }
-    const leidos = [...xmls, ...leidosPdf];
+    await prepararCola([...xmls, ...leidosPdf]);
+  }
+
+  // Antes de capturar: lo que ya está registrado se avisa de una vez, venga de un archivo o de la lista.
+  async function prepararCola(leidos: Archivo[]) {
     // Las que ya se registraron se avisan de una vez (subir la carpeta del mes dos veces no duplica).
     const uuids = leidos.map((l) => l.cfdi?.uuid).filter((u): u is string => !!u);
     if (uuids.length) {

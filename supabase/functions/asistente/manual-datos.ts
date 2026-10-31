@@ -493,6 +493,20 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   ]
  },
  {
+  "ruta": "/finanzas/sin-registrar",
+  "nombre": "Facturas sin registrar",
+  "modulos": [
+   "finanzas"
+  ],
+  "nivel": 1,
+  "texto": [
+   "Lo que el SAT dice que nos facturaron y que nadie ha registrado: ni en la hoja de compras, ni en las compras del ERP, ni en caja chica. Sale de los XML cargados en «Facturas anteriores (XML)»; carga ahí los del mes y aquí aparece lo que falta. La usa finanzas.",
+   "Arriba: cuántas faltan y cuánto suman, cuánto es a crédito (cuentas por pagar que no salen en Pagos a proveedores) y cuántas son de un proveedor que todavía no está dado de alta. Clic en un indicador filtra la lista.",
+   "«Registrar» abre «Registrar compra o gasto» ya lleno con la factura, igual que si subieras su XML; si el proveedor no existe, se da de alta ahí con su RFC. «Registrar las…» las pasa todas, una por una. Ya registrada, sale sola de la lista.",
+   "Las que no se registran aquí (las cobra el banco directo, son de un socio, se pagaron con un anticipo ya registrado) se sacan con el botón de cada renglón y su motivo; quedan en «No se registran» y se pueden regresar. Las canceladas nunca salen."
+  ]
+ },
+ {
   "ruta": "/importaciones",
   "nombre": "Embarques",
   "modulos": [
@@ -3310,6 +3324,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuando no hay XML, la IA lee el PDF o la foto de la factura y llena el formulario. Casi siempre acierta, pero no siempre: revisa total, fecha, folio y proveedor antes de registrar. Queda marcada como «leída de PDF» para que el contador pida su XML; si después llega el XML de la misma factura, el ERP la reconoce por su folio fiscal y no la duplica."
  },
  {
+  "clave": "facturaNoSeRegistra",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Facturas que finanzas sacó de la lista porque no se registran en estos libros (las cobra el banco directo, son de un socio, se pagaron con un anticipo que ya está registrado). Cada una dice por qué y quién la sacó; se pueden regresar."
+ },
+ {
   "clave": "facturaRepetida",
   "modulos": [
    "rrhh",
@@ -3320,6 +3346,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Una factura con el mismo folio del mismo proveedor no se puede registrar dos veces (ni si ya está en la hoja): el sistema dice cuándo y quién la registró. Si no tiene folio o el folio es otro pero el monto es igual y la fecha está a una semana o menos, solo avisa: marca «Sí, es otra compra» si de verdad lo es."
+ },
+ {
+  "clave": "facturaSinRegistrar",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Una factura que el SAT dice que nos hicieron (está en los XML cargados) y que no está en ningún libro: ni en la hoja de compras, ni en las compras del ERP, ni en caja chica. Para saber si ya está, se busca por su folio fiscal, por su folio con el mismo proveedor o por el mismo monto del mismo proveedor en una fecha cercana. Mientras no se registre, Resultados sale con menos gasto del real."
  },
  {
   "clave": "facturasPendientes",
@@ -4266,6 +4304,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "analisis"
   ],
   "texto": "La sugerida reparte la meta del año con lo que pesó cada estado en los últimos 3 años. Dirección puede poner otra; vacía regresa a la sugerida."
+ },
+ {
+  "clave": "metodoPagoCfdi",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Lo dice la factura. De contado (PUE): ya se pagó o se paga al momento. A crédito (PPD): se paga después; si no se registra, es una cuenta por pagar que no sale en Pagos a proveedores."
  },
  {
   "clave": "mlFull",
