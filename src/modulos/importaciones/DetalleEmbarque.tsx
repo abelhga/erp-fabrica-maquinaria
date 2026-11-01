@@ -1,5 +1,6 @@
 // Un embarque: dónde va, qué sigue y quién lo debe, sus documentos (con "Leer con
-// Claude"), las órdenes que trae, su dinero y su costo puesto en planta.
+// Claude"), sus correos (y lo que la IA lee en ellos), las órdenes que trae, su dinero
+// y su costo puesto en planta.
 import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -19,6 +20,7 @@ import { Documentos } from "./componentes/Documentos";
 import { Ordenes } from "./componentes/Ordenes";
 import { DineroEmbarque } from "./componentes/DineroEmbarque";
 import { Costeo } from "./componentes/Costeo";
+import { CorreosEmbarque } from "./componentes/CorreosEmbarque";
 import { DialogoEmbarque } from "./componentes/DialogoEmbarque";
 import { LeerDocumento } from "./componentes/LeerDocumento";
 import { GLOSARIO } from "@/tutorial/glosario";
@@ -113,12 +115,13 @@ export default function DetalleEmbarque() {
           { valor: "etapas", texto: "Etapas" },
           { valor: "documentos", texto: "Documentos", cuenta: e.docs_pendientes || undefined },
           { valor: "ordenes", texto: "Órdenes", cuenta: e.ordenes.length },
-          ...(veDinero ? [{ valor: "dinero", texto: "Dinero" }] : []),
+          ...(veDinero ? [{ valor: "correos", texto: "Correos", explica: GLOSARIO.correosEmbarque }, { valor: "dinero", texto: "Dinero" }] : []),
           ...(puede("costos") ? [{ valor: "costeo", texto: "Costeo" }] : []),
         ]} />
         <ContenidoPestana value="etapas" className="pt-5"><Etapas e={e} /></ContenidoPestana>
         <ContenidoPestana value="documentos" className="pt-5"><Documentos e={e} /></ContenidoPestana>
         <ContenidoPestana value="ordenes" className="pt-5"><Ordenes e={e} /></ContenidoPestana>
+        {veDinero && <ContenidoPestana value="correos" className="pt-5"><CorreosEmbarque e={e} /></ContenidoPestana>}
         {veDinero && <ContenidoPestana value="dinero" className="pt-5"><DineroEmbarque e={e} /></ContenidoPestana>}
         {puede("costos") && <ContenidoPestana value="costeo" className="pt-5"><Costeo e={e} /></ContenidoPestana>}
       </Pestanas>

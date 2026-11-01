@@ -32,14 +32,11 @@ qué y foto, etiquetas QR/NFC (213); terminal con play y pausa, y criticidad cal
 
 ## Para hacer
 
-- **Correo con Gmail, segunda etapa: leer.** La primera (mandar cotización y OC con su PDF desde
-  el Gmail de cada quien, 217) ya está; el permiso de leer ya se pide al conectar. Falta:
-  - **Importaciones primero** (lo pidió dirección): los hilos de un embarque llegan a 80 correos
-    y se pierde en qué va. Ligar los hilos de Gmail al embarque y que la IA proponga cómo va
-    (fechas, documentos, pendientes) para que Alondra lo confirme; nada se actualiza solo.
-    Decidido: la IA lee el hilo completo, con montos; lo que propone solo lo ve quien ve importaciones.
-  - Ventas y compras: ver en la cotización o la OC si el cliente o el proveedor contestó.
-  - Configurar Google (docs/correo-gmail.md) antes de que alguien conecte su Gmail.
+- **Correo con Gmail, segunda etapa: leer.** Mandar (217) y los correos de importaciones (225:
+  hilos ligados al embarque y la IA que propone en qué va) ya están. Falta:
+  - Ventas y compras: ver en la cotización o la OC si el cliente o el proveedor contestó (el hilo
+    ya se guarda en correos_enviados.gmail_hilo).
+  - Importaciones, cuando se use: traer lo nuevo de los hilos cada noche en lugar de con el botón.
 - **Kit o subensamble:** el subensamble se fabrica en el taller y lleva horas; el kit son
   piezas compradas que solo se surten juntas. Marcar cuáles son kits (sin horas, se surten como
   paquete).

@@ -488,7 +488,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Aquí ves cuánto deja de verdad lo que se vende, desde 2018: de las ventas del periodo, cuánto se va en fabricar, cuánto en vender y administrar, cuánto en impuestos e intereses, y cuánto queda. La ven dirección, finanzas y la gerencia administrativa.",
    "Elige el periodo arriba (también «Año pasado» o un rango desde 2018). El diagrama se lee de izquierda a derecha: las ventas por línea se juntan y se reparten en costo de fabricación, gastos de operación, impuestos e intereses y utilidad; el grueso de cada franja es el dinero. Pasa el mouse por una franja para ver cuánto es y qué parte de las ventas. Con el botón de tabla ves lo mismo en números. «Año por año» compara cada año desde 2018.",
-   "Antes del 12 de octubre de 2026 los números salen de las hojas (ventas y compras como se registraron ahí; cada compra por lo que se compró si su XML está cargado en «Facturas anteriores» y su clave del SAT lo dice, y si no, por la categoría de su proveedor; lo que la hoja tenía en «Sin efectos» u otra categoría que no es gasto se queda fuera aunque su XML diga otra cosa); desde ahí, del ERP, donde una factura ligada a su orden de compra cuenta por sus partidas: los consumibles del taller como gasto de fabricación y el material en lo vendido. Los números con ≈ son estimados: lo vendido de la hoja no tiene costeo y la nómina de la hoja se reparte entre taller y oficina con la proporción de hoy. La tabla de abajo dice de dónde sale cada número, y lo que no es gasto (retiros de socios, préstamos, compra de activos) se enseña aparte sin restarse. Lo que se quedó Mercado Libre de cada venta (su comisión, el envío que pagamos y otros cargos) sale de Mercado Pago venta por venta, también de las ventas de antes de conectar la cuenta, desde fines de octubre de 2025 (Mercado Libre no da ventas más viejas; antes de eso esa línea sale en $0). En la hoja nunca pasó como compra porque Mercado Libre lo descuenta antes de depositar. Las comisiones de los vendedores van en el mes de las ventas que las generaron, aunque se hayan pagado después: antes del arranque, las que se registraron como pagadas en Comisiones (en un mes sin ninguna registrada, las que anotó la hoja); desde el arranque, lo que da la regla de cada vendedor.",
+   "Antes del 12 de octubre de 2026 los números salen de las hojas (ventas y compras como se registraron ahí; cada compra por lo que se compró si su XML está cargado en «Facturas anteriores» y su clave del SAT lo dice, y si no, por la categoría de su proveedor; lo que la hoja tenía en «Sin efectos» u otra categoría que no es gasto se queda fuera aunque su XML diga otra cosa); desde ahí, del ERP, donde una factura ligada a su orden de compra cuenta por sus partidas: los consumibles del taller como gasto de fabricación y el material en lo vendido. Los números con ≈ son estimados: lo vendido de la hoja no tiene costeo y la nómina de la hoja se reparte entre taller y oficina con la proporción de hoy. La tabla de abajo dice de dónde sale cada número, y lo que no es gasto (retiros de socios, préstamos, compra de activos) se enseña aparte sin restarse. Mercado Libre sale de Mercado Pago venta por venta desde fines de octubre de 2025 (Mercado Libre no da ventas más viejas): lo que pagó el comprador cuenta como venta y lo que se quedó Mercado Libre (su comisión, el envío que pagamos y otros cargos) como gasto. La hoja solo anotaba como venta las que se facturaban y nunca anotó esos cargos, porque Mercado Libre los descuenta antes de depositar; por eso, desde esa fecha, sus renglones de Mercado Libre ya no cuentan. Antes de esa fecha, las ventas de Mercado Libre son las de la hoja y sus cargos salen en $0. Las comisiones de los vendedores van en el mes de las ventas que las generaron, aunque se hayan pagado después: antes del arranque, las que se registraron como pagadas en Comisiones (en un mes sin ninguna registrada, las que anotó la hoja); desde el arranque, lo que da la regla de cada vendedor.",
    "En «Categorías de compra» decides cómo cuenta cada categoría: material, gasto de fabricación, gasto de operación, nómina, impuestos, intereses o «no es gasto». Finanzas la cambia; el cambio se ve en todos los periodos."
   ]
  },
@@ -530,7 +530,9 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "La ficha de un embarque: dónde va, qué sigue y quién lo debe, con sus fechas por etapa, sus documentos y las órdenes de compra que trae.",
    "Arriba ves el siguiente paso, la llegada (ETA o fecha real, y cuándo se espera en planta) y, ya que arribó, los días libres en puerto y del contenedor. En Etapas se captura la fecha real de cada paso (Enter guarda; no acepta fechas futuras, para eso está la ETA). Documentos es la lista de lo que necesita este embarque, con quién debe cada uno; los marcados \"antes del arribo\" los pide el agente aduanal antes de que llegue.",
-   "\"Leer con IA\" lee un PDF o una foto (proforma, factura, packing list, BL, pedimento, cuenta de gastos) y te propone los datos junto al archivo; nada se guarda hasta que lo revisas y confirmas. Las pestañas de dinero y costeo solo aparecen si tu puesto las ve."
+   "\"Leer con IA\" lee un PDF o una foto (proforma, factura, packing list, BL, pedimento, cuenta de gastos) y te propone los datos junto al archivo; nada se guarda hasta que lo revisas y confirmas. Las pestañas de dinero y costeo solo aparecen si tu puesto las ve.",
+   "En Correos ligas los hilos de tu Gmail donde se lleva el embarque (con el proveedor, el forwarder, la naviera o el agente): «Ligar hilo» busca en tu Gmail como lo harías allá, por BL, referencia del agente o proveedor. El ERP guarda cada correo sin lo citado de los anteriores, así que lo ve cualquiera de importaciones aunque no sea su Gmail; «Traer lo nuevo» lo pone al día y solo lo puede hacer quien ligó el hilo. Como los correos traen montos, esta pestaña solo la ve quien ve el dinero de importaciones.",
+   "«Leer con IA», en Correos, lee todos los correos del embarque y te dice en qué va: fechas de etapas que ya pasaron, ETA, datos como BL, buque o contenedor, documentos que llegaron y lo que está pendiente y de quién. Cada punto dice de qué correo salió (dale clic para verlo). Nada cambia hasta que lo revisas: vienen todos marcados, quitas lo que no es y le das «Aplicar»; se aplica igual que si lo capturaras a mano (una fecha futura no entra como etapa y un cambio de ETA queda en la historia). Los montos que menciona solo se muestran."
   ]
  },
  {
@@ -2195,6 +2197,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Con el lápiz corriges una factura que ya registraste: le pones el UUID que le faltaba o arreglas folio, fecha o total. Si se registró por error, desde ahí la quitas. Una factura se registra una sola vez: si el folio o el UUID ya están en otra, el sistema no la deja entrar y te dice en qué pedido está, para que corrijas esa."
  },
  {
+  "clave": "correosEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Los correos de los hilos de Gmail ligados a este embarque, guardados en el ERP sin lo citado de correos anteriores. Traen montos: solo los ve quien ve el dinero de importaciones."
+ },
+ {
   "clave": "costoArticulo",
   "modulos": [
    "costeo",
@@ -3726,6 +3735,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Las herramientas que ingeniería de procesos irá usando conforme se capacite. Se habilitan una por una, cuando el equipo las vaya a usar; ninguna está activa todavía."
  },
  {
+  "clave": "hiloCorreo",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Una conversación de Gmail (el correo y todas sus respuestas). Se liga desde el Gmail de quien lo busca, y solo esa persona lo pone al día con «Traer lo nuevo», porque es su cuenta."
+ },
+ {
   "clave": "historialCambiosML",
   "modulos": [
    "ventas",
@@ -4811,6 +4827,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "De tus pendientes con fecha de los últimos 30 días, cuántos cerraste a tiempo, contando como fallas los que cerraste tarde y los que hoy siguen vencidos. Verde de 90 % para arriba, ámbar de 70 % a 89 %, rojo abajo de 70 %. Los que no tenían fecha no cuentan aquí."
  },
  {
+  "clave": "pendientesCorreos",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Lo que alguien pidió en los correos y todavía no se contesta o entrega, con quién lo debe. Es para que lo veas; no se guarda como pendiente del ERP."
+ },
+ {
   "clave": "pendientesDiasCerrar",
   "modulos": [],
   "texto": "En promedio, cuántos días pasan desde que te piden algo hasta que lo marcas hecho, con lo cerrado en el periodo."
@@ -5150,6 +5173,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "analisis"
   ],
   "texto": "Barra: el trabajo de las órdenes que se prometieron para ese mes, en semanas de la etapa más cargada. Línea: las semanas que tiene el mes. Si la barra pasa la línea, ese mes ya se prometió más de lo que cabe."
+ },
+ {
+  "clave": "propuestaCorreos",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Lo que la IA encontró al leer todos los correos del embarque: fechas de etapas que ya pasaron, ETA, datos y documentos que llegaron, cada uno con el correo de donde salió. Es una propuesta: nada cambia hasta que la revisas y la aplicas."
  },
  {
   "clave": "proximaTarea",
@@ -6401,7 +6431,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Lo vendido en el periodo, sin IVA. Desde el arranque del ERP (12 oct 2026): las partidas de los pedidos con fecha en el periodo, sin cancelados; las de dólares, con su tipo de cambio. Antes: el libro de ventas de la hoja, sin IVA si tuvo factura, con la línea según la familia del producto. Es la misma regla de Análisis."
+  "texto": "Lo vendido en el periodo, sin IVA. Desde el arranque del ERP (12 oct 2026): las partidas de los pedidos con fecha en el periodo, sin cancelados; las de dólares, con su tipo de cambio. Antes: el libro de ventas de la hoja, sin IVA si tuvo factura, con la línea según la familia del producto. Las de Mercado Libre desde el 30 oct 2025 salen de lo que pagó el comprador en Mercado Pago, sin IVA, porque la hoja solo anotaba las facturadas. Es la misma regla de Análisis."
  },
  {
   "clave": "ventasSemana",

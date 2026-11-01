@@ -1340,6 +1340,141 @@ export async function leerDocumento(opts: {
   return { campos: campos as Record<string, unknown>, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
 }
 
+// -----------------------------------------------------------------------------
+// Leer los correos de un embarque y proponer en qué va. Los hilos de un embarque llegan a 80
+// correos con el proveedor, el forwarder, la naviera y el agente; lo que se apunta en el ERP va
+// atrás. La IA lee todos los hilos ligados (el texto ya guardado por la función «correo», sin lo
+// citado) y propone fechas reales, ETA/ETD, datos, documentos recibidos y pendientes, cada uno con
+// el correo de donde salió. No cambia nada: se guarda como propuesta y Alondra la aplica.
+// -----------------------------------------------------------------------------
+export const CAMPOS_EMBARQUE = ["bl", "bl_house", "contenedores", "buque", "viaje", "naviera", "forwarder", "agente_aduanal", "referencia_agente", "puerto_origen"] as const;
+const QUIEN_DEBE = ["proveedor", "agente", "naviera", "forwarder", "hegamex", "transportista"] as const;
+const MAX_LETRAS_CORREOS = 250_000;
+
+export function esquemaPropuesta(etapas: string[], documentos: string[]): Esquema {
+  const de = { correo: { type: "number", description: "Número del correo de donde sale (el de «### Correo N»)" } };
+  const cita = { cita: { type: "string", description: "Las palabras del correo que lo dicen, cortas y tal cual" } };
+  const fechaCita = objeto({ fecha: { type: "string", format: "date", description: "AAAA-MM-DD" }, ...de, ...cita });
+  return objeto({
+    resumen: { type: "string", description: "En qué va el embarque y qué sigue, en 2 a 5 frases para Alondra" },
+    eventos: lista(objeto({ tipo: { type: "string", enum: etapas }, fecha: { type: "string", format: "date", description: "Fecha REAL en que pasó (AAAA-MM-DD)" }, ...de, ...cita }),
+      "Etapas que los correos dicen que YA pasaron y que no están registradas o tienen otra fecha"),
+    eta: { anyOf: [fechaCita, { type: "null" }], description: "La ETA más reciente que dan los correos, si es distinta de la registrada" },
+    etd: { anyOf: [fechaCita, { type: "null" }], description: "La ETD (zarpe esperado) más reciente, si es distinta de la registrada" },
+    campos: lista(objeto({ campo: { type: "string", enum: [...CAMPOS_EMBARQUE] }, valor: { type: "string" }, ...de, ...cita }),
+      "Datos del embarque que vienen en los correos y faltan o son distintos de los registrados"),
+    documentos: lista(objeto({ tipo: { type: "string", enum: documentos }, fecha: nulo("string", "Día que llegó (AAAA-MM-DD) o null"), ...de, ...cita }),
+      "Documentos que llegaron por correo (adjuntos o mencionados como enviados) y siguen pendientes en el ERP"),
+    pendientes: lista(objeto({ que: { type: "string" }, quien: { type: "string", enum: [...QUIEN_DEBE] }, desde: nulo("string", "Desde cuándo se pidió (AAAA-MM-DD) o null"), ...de }),
+      "Lo que alguien pidió y nadie ha contestado o entregado todavía"),
+    montos: lista(objeto({ concepto: { type: "string" }, monto: { type: "number" }, moneda: { type: "string" }, ...de }),
+      "Cobros, cotizaciones o pagos que mencionan los correos (solo para que Alondra los vea; no se aplican)"),
+    advertencias,
+  });
+}
+
+type CorreoEmb = { id: string; hilo_id: string; enviado_en: string; de: string | null; para: string | null; asunto: string | null; texto: string; adjuntos: string[] };
+
+export async function datosCorreosEmbarque(db: SupabaseClient, embarqueId: string) {
+  const revisar = <T>(r: { data: T | null; error: { message: string } | null }) => {
+    if (r.error) throw new ErrorHerramienta(r.error.message);
+    return r.data as T;
+  };
+  const [emb, eventos, docs, etapas, catalogo, hilos] = await Promise.all([
+    db.from("embarques").select("id, folio, descripcion, modalidad, incoterm, puerto_origen, puerto_destino, naviera, forwarder, agente_aduanal, referencia_agente, bl, bl_house, contenedores, buque, viaje, etd, eta").eq("id", embarqueId).maybeSingle(),
+    db.from("embarque_eventos").select("tipo, fecha, detalle").eq("embarque_id", embarqueId).order("fecha"),
+    db.from("embarque_documentos").select("tipo, estado, recibido_en").eq("embarque_id", embarqueId),
+    db.from("etapas_importacion").select("tipo, nombre, descripcion").order("orden"),
+    db.from("documentos_importacion").select("tipo, nombre").order("orden"),
+    db.from("embarque_hilos").select("id, asunto, cuenta").eq("embarque_id", embarqueId),
+  ]);
+  const e = revisar(emb);
+  if (!e) throw new ErrorHerramienta("No existe ese embarque o no lo puedes ver.");
+  const hs = revisar(hilos) as { id: string; asunto: string | null; cuenta: string }[];
+  const correos = hs.length
+    ? revisar(await db.from("embarque_correos").select("id, hilo_id, enviado_en, de, para, asunto, texto, adjuntos").in("hilo_id", hs.map((h) => h.id)).order("enviado_en")) as CorreoEmb[]
+    : [];
+  return { embarque: e as Record<string, unknown>, eventos: revisar(eventos) as { tipo: string; fecha: string; detalle: string | null }[],
+    documentos: revisar(docs) as { tipo: string; estado: string; recibido_en: string | null }[],
+    etapas: revisar(etapas) as { tipo: string; nombre: string; descripcion: string | null }[],
+    catalogo: revisar(catalogo) as { tipo: string; nombre: string }[], hilos: hs, correos };
+}
+export type DatosCorreosEmbarque = Awaited<ReturnType<typeof datosCorreosEmbarque>>;
+
+/** Los correos que caben: si el hilo es enorme, se quedan los más nuevos (y se dice cuántos no). */
+function correosQueCaben(correos: CorreoEmb[]) {
+  let letras = 0, desde = correos.length;
+  for (let i = correos.length - 1; i >= 0; i--) {
+    letras += correos[i].texto.length + 300;
+    if (letras > MAX_LETRAS_CORREOS) break;
+    desde = i;
+  }
+  return { leidos: correos.slice(desde), fuera: desde };
+}
+
+export async function leerCorreosEmbarque(opts: { anthropic: Pick<Anthropic, "beta">; perfil: Perfil; config: Config; datos: DatosCorreosEmbarque; hoy: string }) {
+  const d = opts.datos;
+  const { leidos, fuera } = correosQueCaben(d.correos);
+  const esquema = esquemaPropuesta(d.etapas.map((x) => x.tipo), d.catalogo.map((x) => x.tipo));
+  const asunto = new Map(d.hilos.map((h) => [h.id, h.asunto]));
+  const correosTexto = leidos.map((c, i) => [
+    `### Correo ${fuera + i + 1} · ${c.enviado_en.slice(0, 16).replace("T", " ")} UTC`,
+    `De: ${c.de ?? "?"}`, `Para: ${c.para ?? "?"}`, `Asunto: ${c.asunto ?? asunto.get(c.hilo_id) ?? ""}`,
+    ...(c.adjuntos.length ? [`Adjuntos: ${c.adjuntos.join(", ")}`] : []), "", c.texto || "(sin texto)",
+  ].join("\n")).join("\n\n");
+  const contexto = [
+    `Hoy es ${opts.hoy}. Embarque ${d.embarque.folio} de Hegamex (importa equipo y componentes; casi todo llega por Manzanillo).`,
+    `Lo que ya está registrado en el ERP:\n${JSON.stringify(d.embarque)}`,
+    `Etapas registradas (fecha real): ${JSON.stringify(d.eventos)}`,
+    `Documentos y su estado: ${JSON.stringify(d.documentos)}`,
+    `Etapas posibles: ${d.etapas.map((x) => `${x.tipo} = ${x.nombre}${x.descripcion ? ` (${x.descripcion})` : ""}`).join("; ")}`,
+    `Documentos posibles: ${d.catalogo.map((x) => `${x.tipo} = ${x.nombre}`).join("; ")}`,
+    fuera ? `Los ${fuera} correos más viejos no caben y no se incluyen: lo que digan ya debería estar registrado.` : "",
+  ].filter(Boolean).join("\n\n");
+  const flujo = opts.anthropic.beta.messages.stream({
+    model: opts.config.modelo,
+    max_tokens: 16000,
+    betas: BETAS,
+    fallbacks: "default",
+    output_config: { effort: opts.config.esfuerzo, format: { type: "json_schema", schema: esquema } },
+    system: sistema(opts.perfil),
+    messages: [{ role: "user", content: [
+      { type: "text", text: contexto },
+      { type: "text", text: `Correos del embarque, del más viejo al más nuevo (vienen sin lo citado de correos anteriores):\n\n${correosTexto}` },
+      { type: "text", text:
+        "Propón cómo poner al día el embarque con lo que dicen estos correos. Reglas: solo lo que un correo dice; si no está claro, a advertencias. " +
+        "Una etapa va en eventos solo si ya pasó (fecha real, no esperada) y no está registrada con esa fecha; lo esperado es ETA o ETD. " +
+        "No repitas lo que ya está registrado igual. Cada punto lleva el número del correo y una cita corta. " +
+        "Si dos correos se contradicen, usa el más nuevo y dilo en advertencias. Fechas AAAA-MM-DD; si un correo dice «Oct 20» sin año, es el año del correo." },
+    ] }],
+  });
+  const r = await flujo.finalMessage();
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("La IA no quiso leer estos correos.");
+  if (r.stop_reason === "max_tokens") throw new ErrorHerramienta("La lectura salió demasiado larga; intenta de nuevo.");
+  const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
+  if (!bloque) throw new ErrorHerramienta("La IA no devolvió la propuesta.");
+  let p: Record<string, unknown>;
+  try { p = JSON.parse(bloque.text); } catch { throw new ErrorHerramienta("La IA devolvió algo que no se puede leer. Intenta de nuevo."); }
+  const errores = validarEsquema(p, esquema);
+  if (errores.length) throw new ErrorHerramienta(`La propuesta no cumple el formato (${errores.slice(0, 3).join("; ")}). No se guardó nada: intenta de nuevo.`);
+  // Una etapa con fecha futura no se puede registrar: se pasa a advertencias en lugar de proponerla.
+  const futuras = (p.eventos as { tipo: string; fecha: string }[]).filter((x) => x.fecha > opts.hoy);
+  if (futuras.length) {
+    p.eventos = (p.eventos as { fecha: string }[]).filter((x) => x.fecha <= opts.hoy);
+    p.advertencias = [...p.advertencias as string[], ...futuras.map((x) => `«${x.tipo}» viene con fecha futura (${x.fecha}): eso es lo esperado, no lo que pasó.`)];
+  }
+  return { propuesta: p, correos: leidos.length, fuera, hasta: leidos.at(-1)?.enviado_en ?? null,
+    modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+}
+
+/** Sin llave: una propuesta de ejemplo con la forma real, marcada como tal (no se guarda). */
+export function ejemploPropuesta(d: DatosCorreosEmbarque) {
+  const n = d.correos.length;
+  return { resumen: `MODO DEMOSTRACIÓN: falta la llave de la IA. Hay ${n} correo${n === 1 ? "" : "s"} guardado${n === 1 ? "" : "s"}; con la llave, aquí saldría en qué va el embarque.`,
+    eventos: [], eta: null, etd: null, campos: [], documentos: [], pendientes: [], montos: [],
+    advertencias: ["Estos datos son un ejemplo, no se leyeron de los correos."] };
+}
+
 /** Sin llave de Claude: un ejemplo con la forma de cada documento, marcado como tal. */
 export function ejemploDocumento(tipo: TipoDocumento): Record<string, unknown> {
   const aviso = ["MODO DEMOSTRACIÓN: falta la llave de la IA. Estos datos son un ejemplo, no se leyeron de tu archivo."];
@@ -1744,6 +1879,22 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
       const r = await leerDocumento({ anthropic, perfil, config, tipo, mediaType, datos });
       await registrar(r);
       return json({ tipo, campos: r.campos, modelo: r.modelo });
+    }
+
+    if (modo === "leer_correos_embarque") {
+      const embarque = texto(cuerpo.embarque_id);
+      if (!/^[0-9a-f-]{36}$/i.test(embarque)) return json({ error: "Falta el embarque" }, 400);
+      const [p1, p2] = await Promise.all([db.rpc("puede", { p_modulo: "importaciones", p_nivel: 2 }), db.rpc("ve_dinero_importacion")]);
+      if (p1.data !== true || p2.data !== true) return json({ error: "Leer los correos de un embarque es de importaciones." }, 403);
+      const datos = await datosCorreosEmbarque(db, embarque);
+      if (!datos.correos.length) return json({ error: "Este embarque todavía no tiene correos: liga sus hilos de Gmail primero." }, 400);
+      if (!anthropic) return json({ propuesta: ejemploPropuesta(datos), correos: datos.correos.length, simulado: true });
+      const hoy = new Date(Date.now() - 6 * 3600_000).toISOString().slice(0, 10);   // día en la planta
+      const r = await leerCorreosEmbarque({ anthropic, perfil, config, datos, hoy });
+      await registrar(r);
+      const g = await db.rpc("guardar_propuesta_embarque", { p_embarque: embarque, p_contenido: r.propuesta, p_correos: r.correos, p_hasta: r.hasta, p_modelo: r.modelo });
+      if (g.error) return json({ error: g.error.message }, g.error.code === "42501" ? 403 : 400);
+      return json({ id: g.data, propuesta: r.propuesta, correos: r.correos, fuera: r.fuera, modelo: r.modelo });
     }
 
     if (modo === "chat") {

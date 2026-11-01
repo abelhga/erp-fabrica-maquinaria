@@ -33,7 +33,7 @@ interface Datos {
   periodo: { desde: string; hasta: string };
   arranque: string; usa_hoja: boolean;
   ventas: { linea: string; importe: number }[];
-  ventas_total: number; ventas_hoja: number;
+  ventas_total: number; ventas_hoja: number; ventas_ml?: number;
   material: { exacto: number; estimado: number; cobertura: number | null; comprado_hoja: number };
   proporcion: Record<string, { r: number; fuente: "ventas" | "catalogo"; partidas: number }>;
   proporcion_taller: number;
@@ -329,7 +329,8 @@ function OrigenNumeros({ d }: { d: Datos }) {
   const caja: Precision = d.desde_caja && d.periodo.desde < d.desde_caja ? "parcial" : "exacto";
   const mo = sueldos("mano_obra", "La gente del departamento de Producción", d.proporcion_taller);
   const so = sueldos("sueldos_oficina", "Todos los demás departamentos", 1 - d.proporcion_taller);
-  const ventasErp = d.ventas_total - d.ventas_hoja;
+  const ventasMl = d.ventas_ml ?? 0;
+  const ventasErp = d.ventas_total - d.ventas_hoja - ventasMl;
   const mat: Precision = d.material.estimado > 0 ? "estimado" : "exacto";
   const com: Precision = d.comisiones_completas ? "exacto" : "parcial";
   // Un total es tan exacto como su parte menos exacta.
@@ -344,6 +345,7 @@ function OrigenNumeros({ d }: { d: Datos }) {
   const filas: { concepto: string; importe: number; texto: string; precision: Precision; explica?: string; total?: boolean; aparte?: boolean }[] = [
     { concepto: "Ventas", importe: d.ventas_total, precision: "exacto", explica: GLOSARIO.ventasResultados, total: true,
       texto: [d.ventas_hoja > 0 && `${dinero(d.ventas_hoja)} del libro de ventas de la hoja antes del ${fecha(d.arranque)} (sin IVA si tuvo factura; la línea sale de la familia del producto).`,
+        ventasMl > 0 && `${dinero(ventasMl)} de ventas de Mercado Libre sin pedido en el ERP: lo que pagó el comprador según Mercado Pago, menos reembolsos y sin IVA (la hoja solo anotaba las facturadas).`,
         ventasErp > 0 && `${dinero(ventasErp)} de las partidas de los pedidos del ERP, sin IVA y sin cancelados; los de dólares, con su tipo de cambio.`].filter(Boolean).join(" ") },
     { concepto: "Material", importe: t.material, precision: mat, explica: GLOSARIO.materialVendido,
       texto: [d.material.comprado_hoja > 0 && `Antes del arranque no hay costeo de lo vendido: ${dinero(d.material.comprado_hoja)} es lo que se compró de material según el libro de la hoja.`,

@@ -26,3 +26,7 @@ begin
   perform set_config('role', 'postgres', true);
   perform set_config('request.jwt.claims', '', true);
 end $$;
+
+-- Desde 223 una función nueva no nace ejecutable por PUBLIC: como() y como_postgres() se llaman
+-- ya cambiados a authenticated, así que necesitan su permiso explícito.
+grant execute on function pg_temp.usuario(text, public.app_rol[]), pg_temp.como(uuid), pg_temp.como_postgres() to public;
