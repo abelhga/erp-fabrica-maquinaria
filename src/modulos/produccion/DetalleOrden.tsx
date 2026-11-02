@@ -491,12 +491,15 @@ function LoVendido({ ordenId, pedidoId }: { ordenId: string; pedidoId: string })
     queryFn: () => q<PartidaVendida[]>(supabase.rpc("venta_de_orden", { p_op: ordenId })),
   });
   const filas = venta.data ?? [];
-  if (filas.length === 0 || !filas.some((f) => f.descripcion)) return null;
+  if (filas.length === 0) return null;
   const propia = filas.some((f) => f.de_la_orden);
+  // Las órdenes de pedidos cargados de la hoja traen solo el nombre de la partida: se muestra e imprime igual.
+  const sinTexto = !filas.some((f) => f.descripcion);
   return (
     <Tarjeta>
       <EncabezadoTarjeta titulo="Lo que se le vendió al cliente" explica={GLOSARIO.descripcionVenta}
-        descripcion={propia ? "La descripción de la partida del pedido, como se cotizó (sin precio)." : "La orden no está ligada a una partida: estas son todas las del pedido."}
+        descripcion={sinTexto ? "El pedido se cargó de la hoja y solo trae el nombre de lo que se vendió; la descripción completa está en el PDF del pedido."
+          : propia ? "La descripción de la partida del pedido, como se cotizó (sin precio)." : "La orden no está ligada a una partida: estas son todas las del pedido."}
         acciones={
           <Boton variante="secundario" tamano="sm" onClick={() => abrirDescripcion(pedidoId, ordenId)}
             data-explain={GLOSARIO.imprimirDescripcion} data-explain-title="Imprimir">

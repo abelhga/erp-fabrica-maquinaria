@@ -178,8 +178,10 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        {/* Para el taller: lo que se vendió, sin precios, sin copiar y pegar. */}
-        {p.partidas.some((x) => x.descripcion) && (
+        {/* Para el taller: lo que se vendió, sin precios, sin copiar y pegar. Los pedidos que se cargaron
+            de la hoja traen solo el nombre de cada partida (sin descripción): se imprimen igual, con sus
+            órdenes, porque el taller los necesita en papel aunque no tengan el texto de la cotización. */}
+        {(p.partidas.length > 0 || p.ordenes_sueltas.length > 0) && (
           <Boton variante="secundario" tamano="sm" onClick={() => abrirDescripcion(p.id)}
             data-explain={GLOSARIO.imprimirDescripcion} data-explain-title="Imprimir descripción">
             <Printer className="h-3.5 w-3.5" />Imprimir descripción
