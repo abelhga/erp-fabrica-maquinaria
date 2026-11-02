@@ -352,6 +352,14 @@ function Editor({ id }: { id: string }) {
     { exito: "Precios convertidos", invalidar: [["cotizacion", id], ["cotizacion_lineas", id]] },
   );
   const [tcLocal, setTcLocal] = useState<number | null>(null);
+  const sinIva = useAccion(
+    async (quitar: boolean) => {
+      await guardar();
+      await q(supabase.rpc("cotizacion_sin_iva", { p_id: id, p_sin_iva: quitar }));
+      return quitar;
+    },
+    { exito: (quitar: boolean) => (quitar ? "Cotización sin IVA" : "La cotización vuelve a llevar IVA"), invalidar: [["cotizacion", id], ["cotizacion_lineas", id]] },
+  );
 
   const cambiarEstado = useAccion(
     async (estado: "enviada") => {
@@ -498,7 +506,7 @@ function Editor({ id }: { id: string }) {
   // ---- bloques
   const totales = tot && (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Totales" descripcion={c.precios_con_iva ? "Precios con IVA incluido" : "Precios más IVA"}
+      <EncabezadoTarjeta titulo="Totales" descripcion={Number(c.tasa_iva) === 0 ? "Sin IVA: no lleva factura" : c.precios_con_iva ? "Precios con IVA incluido" : "Precios más IVA"}
         acciones={sucio ? <Loader2 className="h-4 w-4 animate-spin text-tenue" /> : null} />
       <div className="px-5 pb-4 space-y-2 text-sm">
         <div className="flex justify-between"><span className="text-tenue">Subtotal</span><span className="cifra">{dineroEn(tot.subtotal, c.moneda)}</span></div>
@@ -508,7 +516,9 @@ function Editor({ id }: { id: string }) {
             etiqueta="Descuento general" alCambiar={(n) => editarEnc({ descuento_pct: n })} />
         </div>
         {tot.descuento > 0 && <div className="flex justify-between text-peligro"><span>− Descuento</span><span className="cifra">{dineroEn(tot.descuento, c.moneda)}</span></div>}
-        <div className="flex justify-between"><span className="text-tenue">IVA {porcentaje(Number(c.tasa_iva), 0)}</span><span className="cifra">{dineroEn(tot.iva, c.moneda)}</span></div>
+        {Number(c.tasa_iva) === 0
+          ? <div className="flex justify-between"><span className="text-tenue" data-explain={GLOSARIO.sinIva} data-explain-title="Sin IVA">IVA</span><span className="text-tenue">Sin IVA</span></div>
+          : <div className="flex justify-between"><span className="text-tenue">IVA {porcentaje(Number(c.tasa_iva), 0)}</span><span className="cifra">{dineroEn(tot.iva, c.moneda)}</span></div>}
         <div className="flex justify-between items-baseline border-t border-borde pt-2">
           <span className="font-semibold">Total</span>
           <span className="text-2xl font-semibold cifra">{dineroEn(tot.total, c.moneda)}</span>
@@ -547,7 +557,7 @@ function Editor({ id }: { id: string }) {
       <EncabezadoTarjeta titulo="Ficha de venta" descripcion={`Partida ${lineas.indexOf(seleccionada) + 1}`} explica={GLOSARIO.fichaVenta} />
       <div className="px-5 pb-5">
         <FichaVenta articuloId={seleccionada.articulo_id} moneda={c.moneda} tipoCambio={Number(c.tipo_cambio)} conIva={c.precios_con_iva}
-          tasaIva={Number(c.tasa_iva)} precioActual={precioEfectivo(seleccionada)}
+          tasaIva={Number(c.tasa_iva) || 0.16} precioActual={precioEfectivo(seleccionada)}
           alAplicarPrecio={editable ? (p) => editarLinea(seleccionada.id, { precio_unitario: p }) : undefined} />
       </div>
     </Tarjeta>
@@ -690,10 +700,17 @@ function Editor({ id }: { id: string }) {
                 </select>
                 <span className={cn("block text-xs", vencida ? "text-peligro font-medium" : "text-tenue")}>{vencida ? "Venció" : "Vence"} el {fecha(vence)}</span>
               </label>
+              {Number(c.tasa_iva) > 0 && (
+                <label className="flex items-start gap-2 text-sm sm:col-span-2 cursor-pointer self-end pb-1">
+                  <input type="checkbox" className="mt-1" checked={c.precios_con_iva} disabled={!editable || moneda.isPending}
+                    onChange={(e) => moneda.mutate({ moneda: c.moneda, tc: Number(c.tipo_cambio), conIva: e.target.checked })} />
+                  <span data-explain={GLOSARIO.ivaIncluido}>Precios con IVA incluido<span className="block text-xs text-tenue">Convierte las partidas; el total no cambia.</span></span>
+                </label>
+              )}
               <label className="flex items-start gap-2 text-sm sm:col-span-2 cursor-pointer self-end pb-1">
-                <input type="checkbox" className="mt-1" checked={c.precios_con_iva} disabled={!editable || moneda.isPending}
-                  onChange={(e) => moneda.mutate({ moneda: c.moneda, tc: Number(c.tipo_cambio), conIva: e.target.checked })} />
-                <span data-explain={GLOSARIO.ivaIncluido}>Precios con IVA incluido<span className="block text-xs text-tenue">Convierte las partidas; el total no cambia.</span></span>
+                <input type="checkbox" className="mt-1" checked={Number(c.tasa_iva) === 0} disabled={!editable || sinIva.isPending}
+                  onChange={(e) => sinIva.mutate(e.target.checked)} />
+                <span data-explain={GLOSARIO.sinIva} data-explain-title="Sin IVA">Sin IVA (no lleva factura)<span className="block text-xs text-tenue">El precio de cada partida queda igual sin IVA; el total es el subtotal.</span></span>
               </label>
               {c.cliente_id && (oportunidades.data?.length ?? 0) > 0 && (
                 <label className="space-y-1.5 sm:col-span-2">
@@ -810,7 +827,7 @@ function Editor({ id }: { id: string }) {
         // pr-20: a la derecha flota el botón del asistente y tapaba la acción principal.
         <div className="fixed bottom-0 inset-x-0 lg:left-64 z-30 border-t border-borde bg-superficie/95 backdrop-blur pl-4 pr-20 py-2.5 flex items-center gap-3 no-imprimir">
           <div className="min-w-0">
-            <p className="text-[11px] text-tenue leading-none">Total {c.precios_con_iva ? "(IVA incl.)" : "con IVA"}</p>
+            <p className="text-[11px] text-tenue leading-none">Total {Number(c.tasa_iva) === 0 ? "sin IVA" : c.precios_con_iva ? "(IVA incl.)" : "con IVA"}</p>
             <p className="text-base font-semibold cifra leading-tight whitespace-nowrap">{dineroEn(tot.total, c.moneda)}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">{principal("sm")}</div>
@@ -855,7 +872,7 @@ function Editor({ id }: { id: string }) {
         ) : null} />
       <Lateral abierto={!!fichaMovil} alCambiar={(v) => !v && setFichaMovil(null)} titulo="Ficha de venta" subtitulo={fichaMovil?.titulo} ancho="max-w-md">
         {fichaMovil?.articulo_id && (
-          <FichaVenta articuloId={fichaMovil.articulo_id} moneda={c.moneda} tipoCambio={Number(c.tipo_cambio)} conIva={c.precios_con_iva} tasaIva={Number(c.tasa_iva)}
+          <FichaVenta articuloId={fichaMovil.articulo_id} moneda={c.moneda} tipoCambio={Number(c.tipo_cambio)} conIva={c.precios_con_iva} tasaIva={Number(c.tasa_iva) || 0.16}
             precioActual={precioEfectivo(fichaMovil)}
             alAplicarPrecio={editable ? (p) => { editarLinea(fichaMovil.id, { precio_unitario: p }); setFichaMovil(null); } : undefined} />
         )}

@@ -255,11 +255,11 @@ export default function ImprimirCotizacion() {
           <div>
             <table className="w-full text-[12px]">
               <tbody>
-                <tr><td className="py-1 text-tenue">Subtotal</td><td className="py-1 text-right tabular-nums">{dineroEn(Number(c.subtotal), m)}</td></tr>
+                {(Number(c.tasa_iva) > 0 || Number(c.descuento) > 0) && <tr><td className="py-1 text-tenue">Subtotal</td><td className="py-1 text-right tabular-nums">{dineroEn(Number(c.subtotal), m)}</td></tr>}
                 {Number(c.descuento) > 0 && (
                   <tr className="text-peligro"><td className="py-1">Descuento {porcentaje(descGeneral, descGeneral * 100 % 1 ? 1 : 0)}</td><td className="py-1 text-right tabular-nums">−{dineroEn(Number(c.descuento), m)}</td></tr>
                 )}
-                <tr><td className="py-1 text-tenue">IVA {porcentaje(Number(c.tasa_iva), 0)}{c.precios_con_iva ? " (incluido)" : ""}</td><td className="py-1 text-right tabular-nums">{dineroEn(Number(c.iva), m)}</td></tr>
+                {Number(c.tasa_iva) > 0 && <tr><td className="py-1 text-tenue">IVA {porcentaje(Number(c.tasa_iva), 0)}{c.precios_con_iva ? " (incluido)" : ""}</td><td className="py-1 text-right tabular-nums">{dineroEn(Number(c.iva), m)}</td></tr>}
                 <tr className="border-t-2 border-texto">
                   <td className="pt-2 text-[13px] font-bold">{c.precios_con_iva ? "TOTAL NETO" : "TOTAL"}</td>
                   <td className="pt-2 text-right text-[17px] font-bold tabular-nums">{dineroEn(Number(c.total), m)}</td>

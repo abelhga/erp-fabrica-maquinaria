@@ -29,6 +29,7 @@ export const VENTAS = {
   descuentoVsLista: "Cuánto abajo del precio de lista va lo cotizado del catálogo, sumando todos los descuentos (en pesos y sin IVA).",
   descuentoGeneral: "Porcentaje que se descuenta del subtotal de todas las partidas, además del descuento de cada una. Cuenta para el precio mínimo.",
   ivaIncluido: "Marcado, los precios de las partidas ya traen IVA y el total es su suma; sin marcar, el IVA se agrega al final. Cambiarlo convierte los precios y el total no se mueve.",
+  sinIva: "La venta va sin factura: el total es el subtotal, sin el 16 %. El precio de cada partida es el mismo que con factura; solo no se agrega el IVA. La comisión no cambia porque siempre se calcula sin IVA. Un pedido con factura registrada no puede quedar sin IVA.",
   mesesConTarjeta: "Plan de meses para pagar con tarjeta. La mensualidad ya incluye la comisión del plan: total ÷ (1 − tasa del plan) ÷ meses. Sale en la cotización y en el mensaje de WhatsApp.",
   partidaOpcional: "Partida que sale en la cotización como opción o alternativa, pero no suma al total ni cuenta para el precio mínimo.",
   partidaLibre: "Renglón escrito a mano que no viene del catálogo (flete, instalación, servicio). No tiene precio de lista ni precio mínimo.",
