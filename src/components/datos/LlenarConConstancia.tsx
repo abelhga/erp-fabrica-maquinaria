@@ -131,6 +131,7 @@ export function LlenarConConstancia({ para, alLeer, excluir, className }: {
               <span>
                 Ya hay {para === "cliente" ? "un cliente" : "un proveedor"} con este RFC: <b>{x.nombre}</b>{x.de}.{" "}
                 {x.editable ? <Link to={x.ruta} className="underline font-medium">Abrirlo</Link> : "Pídele que te lo pase en vez de darlo de alta otra vez."}
+                {excluir && para === "cliente" && " Si es la misma empresa, guarda y luego júntalos con «Juntar con otro», arriba en la ficha."}
               </span>
             </li>
           ))}
