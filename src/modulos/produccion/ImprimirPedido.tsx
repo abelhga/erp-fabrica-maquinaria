@@ -21,6 +21,20 @@ interface Pedido {
   partidas: Partida[]; ordenes_sueltas: (OrdenDePartida & { equipo: string })[];
 }
 
+/**
+ * La orden en grande: el taller busca el papel por su OP y su serie, y en letra chica debajo de la
+ * descripción se perdía. La de ?op= va resaltada.
+ */
+function Orden({ o, equipo, actual }: { o: OrdenDePartida; equipo?: string; actual: boolean }) {
+  return (
+    <div className={`inline-flex flex-wrap items-baseline gap-x-3 gap-y-0.5 rounded-md border-2 px-3 py-1.5 ${actual ? "border-texto bg-fondo" : "border-borde"}`}>
+      <span className="cifra text-[16px] font-bold tracking-tight">{o.folio}</span>
+      {equipo && <span className="text-[12.5px]">{equipo}</span>}
+      {o.serie && <span className="text-[12.5px]">Serie <b className="cifra">{o.serie}</b></span>}
+    </div>
+  );
+}
+
 const plural = (u: string, n: number) => (n === 1 || /s$/.test(u) ? u : /[aeiou]$/i.test(u) ? `${u}s` : `${u}es`);
 // La descripción viene como la escribió el vendedor, a veces entre comillas de la hoja.
 const limpia = (t: string | null) => (t ?? "").replace(/^\s*"+|"+\s*$/g, "").trim();
@@ -112,25 +126,25 @@ export default function ImprimirPedido() {
                 <p className="text-[14px] font-semibold">{numero(x.cantidad)} {plural(x.unidad, Number(x.cantidad))} · {x.titulo}</p>
                 {x.clave && <p className="text-[11px] text-tenue cifra shrink-0">{x.clave}</p>}
               </div>
-              {limpia(x.descripcion)
-                ? <p className="mt-2 whitespace-pre-line">{limpia(x.descripcion)}</p>
-                : <p className="mt-2 text-tenue">Sin descripción en el pedido.</p>}
               {x.ordenes.length > 0 && (
-                <p className="mt-2 text-[11px] text-tenue">
-                  {x.ordenes.length === 1 ? "Orden" : "Órdenes"}: {x.ordenes.map((o) => o.folio + (o.serie ? ` (serie ${o.serie})` : "")).join(", ")}
-                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {x.ordenes.map((o) => <Orden key={o.id} o={o} actual={o.id === op} />)}
+                </div>
               )}
+              {limpia(x.descripcion)
+                ? <p className="mt-3 whitespace-pre-line">{limpia(x.descripcion)}</p>
+                : <p className="mt-3 text-tenue">Sin descripción en el pedido.</p>}
             </section>
           ))}
         </div>
 
         {/* Las órdenes que vinieron de la hoja de Luis no cuelgan de una partida: que no falten en el papel. */}
         {!deLaOrden.length && p.ordenes_sueltas.length > 0 && (
-          <section className="bloque py-3 border-t border-borde text-[11.5px]">
-            <p className="text-[10px] uppercase tracking-wide text-tenue">También en el taller (sin partida en el pedido)</p>
-            <ul className="mt-1 space-y-0.5">
-              {p.ordenes_sueltas.map((o) => <li key={o.id}><span className="cifra">{o.folio}</span> · {o.equipo}{o.serie ? ` · serie ${o.serie}` : ""}</li>)}
-            </ul>
+          <section className="bloque py-4 border-t border-borde">
+            <p className="text-[10px] uppercase tracking-wide text-tenue">Órdenes en el taller</p>
+            <div className="mt-2 flex flex-col items-start gap-2">
+              {p.ordenes_sueltas.map((o) => <Orden key={o.id} o={o} equipo={o.equipo} actual={o.id === op} />)}
+            </div>
           </section>
         )}
 
