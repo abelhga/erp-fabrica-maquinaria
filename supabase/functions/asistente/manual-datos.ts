@@ -1022,7 +1022,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "La ficha del cliente: datos fiscales, contactos, seguimiento e historial completo (cotizaciones, pedidos, oportunidades y lo que compró antes del ERP).",
    "Arriba ves de quién es la cuenta y hasta cuándo. Si está libre, “Hacerlo mío” te la asigna. Si es de otro vendedor solo ves eso: contactos, compras y saldo quedan privados. Si te buscó a ti, pídele a la gerencia que lo reasigne o que compartan el crédito.",
    "En “Actividad” anota cada llamada, WhatsApp o visita en una línea y Enter; si le pones fecha se vuelve tarea. Tus seguimientos alargan la vigencia de la cuenta a tu nombre.",
-   "Para facturar bien captura RFC, régimen, CP fiscal y uso de CFDI, o llénalos con la constancia de situación fiscal. “Nueva cotización” sale ya ligada a este cliente."
+   "Para facturar bien captura RFC, régimen, CP fiscal y uso de CFDI, o llénalos con la constancia de situación fiscal. “Nueva cotización” sale ya ligada a este cliente.",
+   "Si el mismo cliente está dos veces (uno con el nombre del contacto y otro con el de la empresa), «Juntar con otro» pasa todo al que se queda: pedidos, cotizaciones, oportunidades, saldo de la hoja, facturas y contactos (los que ya tiene no se repiten). Lo que le falte (RFC, régimen, ciudad, vendedor) lo toma del otro, y el otro se borra. Si otro cliente tiene el mismo RFC, arriba sale el aviso con su botón «Juntar»; si es una sucursal, déjalo así. Lo hacen la gerencia de ventas, o tú si los dos clientes son tuyos o libres."
   ]
  },
  {
@@ -4030,6 +4031,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Quien califica a la persona. Solo ve y califica a su gente, y nadie puede ser su propio jefe. Si no tiene jefe asignado, califica Recursos Humanos."
+ },
+ {
+  "clave": "juntarClientes",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Para cuando el mismo cliente está dado de alta dos veces. Todo lo del repetido (pedidos, cotizaciones, saldo de la hoja, facturas, contactos) pasa al que se queda y el repetido se borra. Se queda el que tiene RFC; con RFC distinto no se pueden juntar."
  },
  {
   "clave": "kardex",

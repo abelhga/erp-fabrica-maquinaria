@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { FilePlus, History, Lock, Mail, MessageCircle, Pencil, Phone, Plus, Star, Trash2, UserPlus, Users } from "lucide-react";
+import { AlertTriangle, FilePlus, History, Lock, Mail, Merge, MessageCircle, Pencil, Phone, Plus, Star, Trash2, UserPlus, Users } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/insignia";
@@ -25,6 +25,7 @@ import {
   type Contacto, type VCotizacion, type VOportunidad, type VPedido, haceCuanto,
 } from "./comun";
 import { Barra } from "./componentes/campos";
+import { JuntarClientes } from "./componentes/JuntarClientes";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Cliente {
@@ -75,6 +76,18 @@ export default function DetalleCliente() {
     { exito: "Ahora este cliente es tuyo", invalidar: [["cliente_detalle", id], ["v_clientes"], ["v_cartera"]] },
   );
 
+  // Otro cliente con el mismo RFC casi siempre es el mismo dado de alta dos veces (el de la hoja y el
+  // del contacto). Las sucursales sí comparten RFC: por eso es un aviso y no un bloqueo.
+  const [juntarAbierto, setJuntarAbierto] = useState(false);
+  const [juntarCon, setJuntarCon] = useState<{ id: string; nombre: string } | null>(null);
+  const mismoRfc = useQuery({
+    queryKey: ["rfc_registrado", c?.rfc], enabled: !!c?.rfc && puede("ventas", 2),
+    queryFn: () => q<{ clientes: { id: string; nombre: string; vendedor: string | null }[] }>(supabase.rpc("rfc_registrado", { p_rfc: c!.rfc })),
+  });
+  const otrosRfc = (mismoRfc.data?.clientes ?? []).filter((x) => x.id !== c?.id);
+  const puedeJuntar = !!c && (esGerente || (puede("ventas", 2) && (!c.vendedor_id || mio)));
+  const abrirJuntar = (otro: { id: string; nombre: string } | null) => { setJuntarCon(otro); setJuntarAbierto(true); };
+
   if (cli.isLoading) return <div className="p-8"><Cargando filas={8} /></div>;
   if (!c) return <div className="p-8"><div className="tarjeta"><Vacio icono={Users} titulo="No encontramos este cliente" accion={<Boton asChild variante="secundario"><Link to="/ventas/clientes">Ir a clientes</Link></Boton>} /></div></div>;
 
@@ -93,8 +106,22 @@ export default function DetalleCliente() {
       }
       acciones={<>
         {!c.vendedor_id && puede("ventas", 2) && <Boton variante="secundario" onClick={() => tomar.mutate(undefined)} cargando={tomar.isPending}><Star className="h-4 w-4" />Hacerlo mío</Boton>}
+        {puedeJuntar && <Boton variante="secundario" onClick={() => abrirJuntar(null)} data-explain={GLOSARIO.juntarClientes} data-explain-title="Juntar con otro cliente"><Merge className="h-4 w-4" />Juntar con otro</Boton>}
         {puede("ventas", 2) && <Boton onClick={() => ir(`/ventas/cotizaciones/nueva?cliente=${c.id}`)}><FilePlus className="h-4 w-4" />Nueva cotización</Boton>}
       </>}>
+      {otrosRfc.length > 0 && (
+        <div className="rounded-xl border border-aviso/40 bg-aviso-suave px-4 py-3 text-sm flex flex-wrap items-center gap-x-3 gap-y-2">
+          <AlertTriangle className="h-4 w-4 text-aviso shrink-0" />
+          <p className="flex-1 min-w-[220px]">
+            {otrosRfc.length === 1 ? "Hay otro cliente con este RFC: " : "Hay otros clientes con este RFC: "}
+            {otrosRfc.map((x, i) => <span key={x.id}>{i > 0 && ", "}<Link to={`/ventas/clientes/${x.id}`} className="font-medium underline">{x.nombre}</Link>{x.vendedor ? ` (de ${x.vendedor})` : ""}</span>)}.
+            {" "}Si es la misma empresa, júntalos para que pedidos, saldo y facturas queden en uno; si es una sucursal, déjalos así.
+            {!puedeJuntar && " Pídeselo a la gerencia de ventas."}
+          </p>
+          {puedeJuntar && otrosRfc.length === 1 && <Boton tamano="sm" variante="secundario" onClick={() => abrirJuntar(otrosRfc[0])}><Merge className="h-3.5 w-3.5" />Juntar</Boton>}
+        </div>
+      )}
+      <JuntarClientes actual={{ id: c.id, nombre: c.nombre, rfc: c.rfc }} otroInicial={juntarCon} abierto={juntarAbierto} alCambiar={setJuntarAbierto} />
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
         {/* Lo que debía en la hoja va sumado: con los pedidos de hoy (todos de la hoja) el
             número grande decía $0 aunque el cliente debiera. Un saldo a favor no resta. */}

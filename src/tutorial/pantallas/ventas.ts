@@ -68,6 +68,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     "Arriba ves de quién es la cuenta y hasta cuándo. Si está libre, “Hacerlo mío” te la asigna. Si es de otro vendedor solo ves eso: contactos, compras y saldo quedan privados. Si te buscó a ti, pídele a la gerencia que lo reasigne o que compartan el crédito.",
     "En “Actividad” anota cada llamada, WhatsApp o visita en una línea y Enter; si le pones fecha se vuelve tarea. Tus seguimientos alargan la vigencia de la cuenta a tu nombre.",
     "Para facturar bien captura RFC, régimen, CP fiscal y uso de CFDI, o llénalos con la constancia de situación fiscal. “Nueva cotización” sale ya ligada a este cliente.",
+    "Si el mismo cliente está dos veces (uno con el nombre del contacto y otro con el de la empresa), «Juntar con otro» pasa todo al que se queda: pedidos, cotizaciones, oportunidades, saldo de la hoja, facturas y contactos (los que ya tiene no se repiten). Lo que le falte (RFC, régimen, ciudad, vendedor) lo toma del otro, y el otro se borra. Si otro cliente tiene el mismo RFC, arriba sale el aviso con su botón «Juntar»; si es una sucursal, déjalo así. Lo hacen la gerencia de ventas, o tú si los dos clientes son tuyos o libres.",
   ],
   "/ventas/comisiones": [
     "La comisión de cada mes, calculada sola con los pedidos: sin rangos de filas que mover a mano. Cada vendedor ve la suya; la gerencia de ventas, dirección y finanzas ven a todos (la gerencia administrativa, por ahora, solo la suya).",
