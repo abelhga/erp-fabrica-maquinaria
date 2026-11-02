@@ -81,6 +81,8 @@ export default function DetallePedido() {
   const agregar = useAccion((a: { id: string }) => q(supabase.rpc("agregar_partida_pedido", { p_pedido: id, p_articulo: a.id, p_cantidad: 1 })), { invalidar: inv });
   const editarLinea = useAccion((a: { id: string; cambios: Partial<LineaPedido> }) => q(supabase.from("pedido_lineas").update(a.cambios).eq("id", a.id)), { invalidar: inv });
   const quitarLinea = useAccion((lid: string) => q(supabase.from("pedido_lineas").delete().eq("id", lid)), { invalidar: inv });
+  const cambiarIva = useAccion(async (quitar: boolean) => { await q(supabase.rpc("pedido_sin_iva", { p_pedido: id, p_sin_iva: quitar })); return quitar; },
+    { exito: (quitar) => (quitar ? "Pedido sin IVA: el total es el subtotal" : "El pedido vuelve a llevar IVA"), invalidar: inv });
   const borrarCobro = useAccion((cid: string) => q(supabase.from("cobros").delete().eq("id", cid)), { exito: "Cobro borrado", invalidar: [...inv, ["cobros", id]] });
 
   if (ped.isLoading) return <div className="p-8"><Cargando filas={8} /></div>;
@@ -88,6 +90,9 @@ export default function DetallePedido() {
 
   const mio = p.vendedor_id === perfil?.id;
   const puedeCambiar = (mio && puede("ventas", 2)) || esGerente || puede("produccion", 2) || puede("finanzas", 2);
+  // Quitar o regresar el IVA: los mismos que la base deja (pedido_sin_iva), no producción.
+  const sinIva = Number(p.tasa_iva) === 0;
+  const puedeIva = p.estado !== "cancelado" && ((mio && puede("ventas", 2)) || esGerente || puede("finanzas", 2));
   const editablePartidas = !p.historico && p.estado === "confirmado" && ((mio && puede("ventas", 2)) || esGerente);
   // El precio que salió de una cotización ya pasó por la autorización: solo la
   // gerencia lo mueve (la base lo exige, trg_pedido_linea_reglas).
@@ -214,7 +219,21 @@ export default function DetallePedido() {
             <div className="flex justify-end px-5 py-4 border-t border-borde">
               <dl className="w-72 text-sm space-y-1">
                 <div className="flex justify-between"><dt className="text-tenue">Subtotal</dt><dd className="cifra">{dineroEn(Number(p.subtotal), p.moneda)}</dd></div>
-                <div className="flex justify-between"><dt className="text-tenue">IVA {porcentaje(Number(p.tasa_iva), 0)}</dt><dd className="cifra">{dineroEn(Number(p.iva), p.moneda)}</dd></div>
+                <div className="flex justify-between gap-2">
+                  <dt className="text-tenue">
+                    {sinIva ? <span data-explain={GLOSARIO.sinIva} data-explain-title="Sin IVA">IVA</span> : <>IVA {porcentaje(Number(p.tasa_iva), 0)}</>}
+                    {puedeIva && (
+                      <button type="button" className="ml-2 text-xs text-marca-texto hover:underline disabled:opacity-50" disabled={cambiarIva.isPending}
+                        onClick={() => {
+                          if (confirm(sinIva ? "¿El pedido sí lleva factura? Se le agrega el IVA y sube el total." : "¿El cliente no quiere factura? Se le quita el IVA: el total queda igual al subtotal."))
+                            cambiarIva.mutate(!sinIva);
+                        }}>
+                        {sinIva ? "Agregar IVA" : "Quitar IVA"}
+                      </button>
+                    )}
+                  </dt>
+                  <dd className={sinIva ? "text-tenue" : "cifra"}>{sinIva ? "Sin IVA" : dineroEn(Number(p.iva), p.moneda)}</dd>
+                </div>
                 <div className="flex justify-between font-semibold text-base border-t border-borde pt-1"><dt>Total</dt><dd className="cifra">{dineroEn(Number(p.total), p.moneda)}</dd></div>
                 {!p.historico && <>
                   <div className="flex justify-between text-ok"><dt>Cobrado</dt><dd className="cifra">{dineroEn(Number(r?.cobrado ?? 0), p.moneda)}</dd></div>

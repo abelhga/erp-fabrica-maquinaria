@@ -1068,6 +1068,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Si un precio queda abajo del mínimo, la partida se marca en rojo y la cotización pasa a “Por autorizar”: pide la autorización a la gerencia antes de enviarla. Ya enviada no se edita; para cambiarla saca una nueva versión.",
    "El botón principal cambia según el estado: Enviar (por WhatsApp, por correo o PDF; la deja como enviada y agenda preguntar qué pasó en 3 días hábiles; con más de 10 seguimientos vencidos no deja enviar, ni sacar el PDF o la vista previa de una cotización que todavía no envías, hasta ponerte al día), Convertir a pedido (eliges partidas y fecha compromiso) o Nueva versión. En el menú “···” están imprimir, duplicar y marcar rechazada con su motivo. “Vista previa” te enseña la hoja tal como la recibe el cliente sin salir del editor. Si el equipo tiene más fotos, salen en miniatura bajo la partida y en la hoja de fotos al final del PDF; pasa el mouse por una y con la × la quitas de esta cotización.",
    "«Por correo» (en Enviar o en el menú “···”) manda la cotización desde tu propio Gmail con el PDF adjunto: el mismo que sale en Imprimir. Propone el correo del contacto y los demás contactos del cliente con correo; puedes cambiar el asunto y el mensaje. Las respuestas te llegan a tu Gmail, como siempre. La primera vez te pide conectar tu Gmail. Si la cotización no se puede enviar (precios abajo del mínimo sin autorizar, seguimientos vencidos), te dice por qué y no sale nada. Ya mandada queda como enviada, con su seguimiento, y en la bitácora del cliente queda a qué correo se fue.",
+   "Si el cliente no quiere factura, marca «Sin IVA (no lleva factura)»: el precio de cada partida queda igual sin IVA y el total es el subtotal. Si los precios traían IVA incluido, se les quita. La hoja impresa dice «Precios sin IVA» y el pedido sale sin IVA. Se cambia mientras la cotización no se haya enviado; ya enviada, saca una nueva versión.",
    "Abajo de “Tiempo de entrega” ves cuándo sale de verdad con el taller como está hoy: lo que tarda el equipo o lo que tarda la fila del taller, lo que sea más tarde. Con “Usar” lo pones en la cotización; si prometes menos días, se pone en amarillo. Al convertir a pedido, la fecha compromiso ya viene con esa fecha."
   ]
  },
@@ -1204,6 +1205,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Arriba: “Mandar a producción” (lo usa producción) crea una orden por cada equipo con lista de materiales; “Marcar listo” avanza el estado; “Cancelar” pide el motivo. “Hoja de salida” imprime lo que firma el cliente (sin precios). “Entregar” pide qué sale de cada partida (todo o una parte: lo demás queda por entregar), quién recibió y la foto de la hoja firmada (la puedes subir después); lo que sale se descuenta del inventario. Cada entrega sale en el recuadro de entregas con su hoja. Si te equivocaste, el aviso trae “Deshacer” por 15 minutos, y después la reabre la gerencia de ventas con el motivo. Entregan almacén, el vendedor sus pedidos, la gerencia de ventas y dirección. Facturas y cobros los registra finanzas, y el saldo se recalcula solo; una factura ya registrada se corrige o se quita con su lápiz.",
    "Si el pedido tiene equipos en el taller, «Plan del taller» enseña cuándo entra y sale cada uno de cada área y si llega a la fecha compromiso (el rombo verde llega, el rojo no). Es el plan de la planta: se mueve solo con lo que pasa en el piso. Clic en un equipo abre su orden.",
    "Si es una venta de Mercado Libre, el recuadro «Mercado Libre» dice cómo va su envío allá (lista para enviar, en camino, entregada) y el dinero: lo que pagó el comprador, lo que se quedó Mercado Libre, las retenciones y lo que llega a Mercado Pago. El cobro entra solo en cuanto se aprueba el pago, y el envío y el pedido avanzan solos con lo que dice Mercado Libre.",
+   "Si el cliente no quiere factura, en los totales «Quitar IVA» deja el total igual al subtotal (y «Agregar IVA» lo regresa). Lo cambian el vendedor del pedido, la gerencia de ventas y finanzas; un pedido que ya tiene factura registrada no se puede quitar el IVA hasta que se quite la factura. La comisión no cambia: se calcula sin IVA.",
    "“Crédito de la venta” dice qué vendedor cobra comisión por este pedido; si la cerraron entre varios, la gerencia lo comparte en porcentajes que suman 100 %."
   ]
  },
@@ -5880,6 +5882,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Cotizaciones que nunca se mandaron al cliente: en borrador, esperando que la gerencia autorice el precio o canceladas antes de enviarse."
+ },
+ {
+  "clave": "sinIva",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "La venta va sin factura: el total es el subtotal, sin el 16 %. El precio de cada partida es el mismo que con factura; solo no se agrega el IVA. La comisión no cambia porque siempre se calcula sin IVA. Un pedido con factura registrada no puede quedar sin IVA."
  },
  {
   "clave": "sinOrden",
