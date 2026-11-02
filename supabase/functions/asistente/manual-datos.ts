@@ -3883,7 +3883,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Abre en otra pestaña la descripción de lo que se vendió, lista para imprimir o guardar en PDF: cliente, vendedor, compromiso y cada partida con su descripción y sus órdenes. Sin precios. Desde una orden sale solo su partida."
+  "texto": "Abre en otra pestaña la descripción de lo que se vendió, lista para imprimir o guardar en PDF: cliente, vendedor, compromiso y cada partida con su descripción y sus órdenes. Sin precios. Desde una orden sale solo su partida. Los pedidos que se cargaron de la hoja traen solo el nombre de cada partida: se imprimen igual, y la descripción completa está en el PDF del pedido."
  },
  {
   "clave": "impuestosFinancieros",
