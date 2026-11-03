@@ -71,7 +71,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Aquí se registra todo lo que sale, regresa o cambia de almacén, y se consulta la historia de cada movimiento. La usa almacén desde el celular o la computadora; la gerencia entra a autorizar ajustes.",
    "En Registrar elige Salida (consumo o venta), Devolución o Traspaso, busca el artículo, toca el almacén (cada botón dice cuánto hay ahí), escribe la cantidad y el motivo; en un consumo, también quién se lo lleva (se queda para la siguiente salida). Enter en la cantidad te pasa al motivo; Enter otra vez guarda. Los botones de motivo llenan el texto por ti. No deja sacar más de lo que hay en ese almacén. A la derecha ves lo que registraste hoy para confirmar que quedó bien.",
    "Historial filtra por tipo, almacén, persona y fechas (al abrir, los últimos 30 días) y se baja a Excel. «Recibió» es quién se llevó el material; «Quién» es quién lo registró. En Ajustes pides una corrección cuando lo del estante no cuadra, y la gerencia la aprueba o la rechaza. En Conteos físicos abres un conteo por almacén, capturas lo contado renglón por renglón (Enter guarda y baja al siguiente) y, al cerrarlo, cada diferencia se vuelve un ajuste por autorizar.",
-   "Nada se edita ni se borra. Si te equivocaste, no lo vuelvas a capturar al revés: pide un ajuste. La fecha, la hora y tu nombre los pone el sistema, así que no se puede capturar con fecha atrasada ni a nombre de otro."
+   "Nada se edita ni se borra. Si te equivocaste en una salida o un traspaso que registraste tú, en «Lo que registraste hoy» tienes 15 minutos para «Deshacer», con el motivo: queda el movimiento contrario ligado al original (sale como «corrección» y el original como «deshecho»), con tu nombre y la hora, y el consumo se compensa. Un traspaso solo regresa si lo que llegó sigue en el destino. Pasados los 15 minutos, o si lo registró otra persona, no lo vuelvas a capturar al revés: pide un ajuste. Lo surtido a una orden, lo recibido de una compra, las entregas de pedidos y los envíos se corrigen desde su propia pantalla. La fecha, la hora y tu nombre los pone el sistema, así que no se puede capturar con fecha atrasada ni a nombre de otro."
   ]
  },
  {
@@ -555,7 +555,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "nivel": 1,
   "texto": [
    "Aquí ves lo que te pidieron a ti y lo que tú les pediste a otros, con fecha. Reemplaza el “¿ya quedó?” por chat: cuando alguien termina, a quien lo pidió le llega un aviso en la campana.",
-   "“Me tocan” son los tuyos: dale clic al círculo para marcarlo hecho y, si quieres, deja una respuesta corta (un precio, una fecha). “Los que pedí” son los que esperas de otros; si ya no hace falta, cancélalo con la X. La flecha te lleva al pedido, orden o pantalla de donde salió.",
+   "“Me tocan” son los tuyos: dale clic al círculo para marcarlo hecho y, si quieres, deja una respuesta corta (un precio, una fecha). “Los que pedí” son los que esperas de otros; si ya no hace falta, cancélalo con la X: te pide confirmarlo y, si quieres, por qué (el motivo lo ve quien lo tenía). La flecha te lleva al pedido, orden o pantalla de donde salió.",
+   "Si lo cancelaste o lo marcaste hecho por error, tienes 15 minutos para regresarlo: con «Deshacer» en el aviso que sale, o con «Reabrir» en «Cerrados» o en su ficha. Lo reabre solo quien lo cerró; en la conversación del pendiente queda quién lo reabrió y por qué, y si estaba hecho a quien lo pidió le avisa. Pasados los 15 minutos, pide uno nuevo.",
    "Algunos los pone la revisión nocturna (dicen «De Revisión nocturna»): son errores urgentes en algo tuyo. Márcalo hecho cuando lo corrijas; si no es error, contéstalo en «Por revisar» con «Está bien así».",
    "La fecha sale en ámbar si vence hoy y en rojo si ya venció; mientras siga vencido, el sistema les recuerda a los dos. Para pedir algo nuevo usa “Pedir algo a alguien”: qué hay que hacer, quién y para cuándo. Puedes agregar a varias personas y elegir si basta con que uno lo haga o si cada quien lo tiene que hacer.",
    "Arriba ves tu propio cumplimiento de los últimos 30 días: qué tanto cierras a tiempo, a cuántas personas tienes esperando algo tuyo, cuántos días de retraso suman tus vencidos y cuánto tardas en cerrar. Dirección y Recursos Humanos ven además la pestaña “Equipo” con el de todos.",
@@ -2586,6 +2587,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuánto abajo del precio de lista va lo cotizado del catálogo, sumando todos los descuentos (en pesos y sin IVA)."
  },
  {
+  "clave": "deshacerMovimiento",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Si registraste mal una salida o un traspaso, tienes 15 minutos para deshacerlo tú, con el motivo. No se borra nada: queda el movimiento contrario ligado al original, con quién, cuándo y por qué, y el consumo se compensa. Pasados los 15 minutos, o si lo registró otra persona, se pide un ajuste y lo autoriza alguien más."
+ },
+ {
   "clave": "desperdicioLean",
   "modulos": [
    "produccion",
@@ -4444,6 +4453,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Por resolver: el estado o la ciudad no se reconocieron. Por confirmar: se ligó por parecido o a una ciudad de otro estado. Falta el dato en la ficha: no hay ciudad escrita y se arregla en el cliente. Por aproximación: el nombre corto o largo de un solo municipio."
  },
  {
+  "clave": "movimientoCorreccion",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "«Corrección» es el movimiento que deshizo otro (lo regresó al revés, con su motivo); «Deshecho» es el original que se corrigió. Los dos se quedan en el historial y se compensan."
+ },
+ {
   "clave": "mtbf",
   "modulos": [
    "servicio",
@@ -5326,6 +5343,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Regresa una etapa marcada «Terminada» por error. Queda pausada, con su hora de inicio, y el taller la reanuda en la terminal eligiendo quién la trabaja. Quien la terminó la deshace con «Deshacer» en los primeros 15 minutos; después, la reabre la gerencia de producción desde el detalle de la orden, escribiendo por qué. Si era la última etapa, la orden deja de estar terminada y su pedido de estar listo. Queda en la historia de la orden."
+ },
+ {
+  "clave": "reabrirPendiente",
+  "modulos": [],
+  "texto": "Regresa a abierto un pendiente que cerraste (cancelado o hecho) hace menos de 15 minutos. Solo lo puede hacer quien lo cerró; en su conversación queda quién lo reabrió y por qué."
  },
  {
   "clave": "recargosCosto",

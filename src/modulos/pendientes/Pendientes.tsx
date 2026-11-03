@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Check, CheckCircle2, Clock, Hourglass, ListTodo, MessageCircleQuestion, Send, Timer, Users, X } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, Clock, Hourglass, ListTodo, MessageCircleQuestion, RotateCcw, Send, Timer, Users, X } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Boton } from "@/components/ui/boton";
 import { Dialogo, Lateral } from "@/components/ui/dialogo";
@@ -26,7 +26,7 @@ import { GLOSARIO } from "@/tutorial/glosario";
 type Estado = "abierto" | "hecho" | "cancelado" | "cubierto";
 interface Pendiente {
   id: string; titulo: string; detalle: string | null; vence: string | null; estado: Estado;
-  ruta: string | null; nota_cierre: string | null; creado_en: string; cerrado_en: string | null;
+  ruta: string | null; nota_cierre: string | null; creado_en: string; cerrado_en: string | null; cerrado_por: string | null; tabla: string | null;
   responsable_id: string; creado_por: string | null; grupo_id: string | null; modo: "uno" | "todos" | null;
   /** Quien lo tiene preguntó algo y espera a quien lo pidió: mientras, no cuenta como su retraso. */
   esperando_respuesta: boolean;
@@ -48,12 +48,20 @@ const pctATiempo = (c: Pick<Cumplimiento, "a_tiempo" | "tarde" | "vencidos">) =>
   return base ? c.a_tiempo / base : null;
 };
 const MODO = { uno: "basta con que uno lo haga", todos: "cada quien lo tiene que hacer" } as const;
+/** Quien lo cerró lo puede reabrir durante 15 minutos (la base lo vuelve a revisar: reabrir_pendiente). */
+const MINUTOS_REABRIR = 15;
+const sePuedeReabrir = (p: Pendiente, yo: string | undefined) => p.estado !== "abierto" && p.estado !== "cubierto" && !!yo && p.cerrado_por === yo
+  && p.tabla !== "revision_hallazgos" && !!p.cerrado_en && Date.now() - new Date(p.cerrado_en).getTime() < MINUTOS_REABRIR * 60_000;
+const reabrir = (id: string, motivo: string | null) => q<number>(supabase.rpc("reabrir_pendiente", { p_pendiente: id, p_motivo: motivo }));
 
 export default function Pendientes() {
   const { perfil, puede, tieneRol } = useSesion();
   const supervisa = tieneRol("direccion") || puede("rrhh", 3);
   const [vista, setVista] = useState<Vista>("mios");
   const [cerrando, setCerrando] = useState<Pendiente | null>(null);
+  // Cancelar pide confirmación: dos pendientes se cancelaron por error el mismo día.
+  const [aCancelar, setACancelar] = useState<Pendiente | null>(null);
+  const [aReabrir, setAReabrir] = useState<Pendiente | null>(null);
   // La ficha abierta va en la dirección: el aviso de una pregunta lleva directo a ella.
   const [params, setParams] = useSearchParams();
   const fichaId = params.get("pendiente");
@@ -73,11 +81,17 @@ export default function Pendientes() {
     queryFn: async () => (await q<Cumplimiento[]>(supabase.rpc("mi_cumplimiento_pendientes")))[0] ?? null,
   });
   useTiempoReal("pendientes", [["pendientes"]]);
-  const cancelar = useAccion((p: Pendiente) => {
+  const cancelar = useAccion(({ p, motivo }: { p: Pendiente; motivo: string }) => {
     // Un pedido a varios se cancela completo: lo que siga abierto de su grupo.
-    const c = supabase.from("pendientes").update({ estado: "cancelado" }).eq("estado", "abierto").eq("creado_por", perfil!.id);
+    const c = supabase.from("pendientes").update({ estado: "cancelado", nota_cierre: motivo.trim() || null }).eq("estado", "abierto").eq("creado_por", perfil!.id);
     return q(p.grupo_id ? c.eq("grupo_id", p.grupo_id).select("id") : c.eq("id", p.id).select("id"));
-  }, { exito: "Pendiente cancelado", invalidar: [["pendientes"]] });
+  }, {
+    exito: `Pendiente cancelado. Si fue error, tienes ${MINUTOS_REABRIR} minutos para reabrirlo`, invalidar: [["pendientes"]],
+    alTerminar: () => setACancelar(null),
+    deshacer: (_r, { p }) => reabrir(p.id, "lo cancelé por error"),
+  });
+  const reabrirlo = useAccion(({ p, motivo }: { p: Pendiente; motivo: string }) => reabrir(p.id, motivo.trim() || null),
+    { exito: "Pendiente reabierto", invalidar: [["pendientes"], ["pendiente_mensajes"]], alTerminar: () => setAReabrir(null) });
 
   const hoy = hoyISO();
   const todos = lista.data ?? [];
@@ -130,7 +144,7 @@ export default function Pendientes() {
         vista === "pedidos" ? (
           pedidos.length === 0 ? <Vacio icono={ListTodo} titulo="No has pedido nada"
             texto="Desde un pedido, una orden o aquí mismo, pídele algo a una o varias personas con fecha: les llega un aviso y tú ves cuándo lo terminan." />
-            : <div className="tarjeta divide-y divide-borde">{pedidos.map((g) => <FilaPedido key={g[0].grupo_id ?? g[0].id} grupo={g} hoy={hoy} alCancelar={() => cancelar.mutate(g[0])} alAbrir={abrir} />)}</div>
+            : <div className="tarjeta divide-y divide-borde">{pedidos.map((g) => <FilaPedido key={g[0].grupo_id ?? g[0].id} grupo={g} hoy={hoy} alCancelar={() => setACancelar(g[0])} alAbrir={abrir} />)}</div>
         ) : (vista === "mios" ? mios : cerrados).length === 0 ? (
           <Vacio icono={vista === "mios" ? CheckCircle2 : ListTodo} titulo={vista === "mios" ? "Nada pendiente" : "Nada cerrado todavía"}
             texto="Cuando alguien te asigne algo, aparece aquí y en la campana." />
@@ -138,14 +152,27 @@ export default function Pendientes() {
           <div className="tarjeta divide-y divide-borde">
             {(vista === "mios" ? mios : cerrados).map((p, i) => (
               <FilaPendiente key={p.id} p={p} i={i} hoy={hoy} yo={perfil?.id} conQuien={vista === "cerrados" && p.creado_por === perfil?.id ? "para" : "de"}
-                alCerrar={() => setCerrando(p)} alAbrir={() => abrir(p.id)} />
+                alCerrar={() => setCerrando(p)} alAbrir={() => abrir(p.id)} alReabrir={sePuedeReabrir(p, perfil?.id) ? () => setAReabrir(p) : undefined} />
             ))}
           </div>
         )
       )}
       {cerrando && <Cerrar p={cerrando} alCerrar={() => setCerrando(null)} />}
+      {aCancelar && (
+        <ConMotivo titulo={aCancelar.grupo_id ? "¿Cancelar para todos?" : "¿Cancelar este pendiente?"} p={aCancelar}
+          texto={aCancelar.grupo_id ? "Se les quita a todas las personas a las que se lo pediste." : `Se le quita a ${aCancelar.responsable?.nombre ?? "quien lo tiene"} de su lista.`}
+          etiqueta="Por qué lo cancelas (opcional)" ejemplo="Ej. Ya no hace falta, lo resolví yo" boton="Sí, cancelar" peligro
+          cargando={cancelar.isPending} alConfirmar={(motivo) => cancelar.mutate({ p: aCancelar, motivo })} alCerrar={() => setACancelar(null)} />
+      )}
+      {aReabrir && (
+        <ConMotivo titulo="¿Reabrir este pendiente?" p={aReabrir}
+          texto={aReabrir.estado === "hecho" ? "Vuelve a tu lista y a quien lo pidió le avisa que se reabrió." : "Vuelve a la lista de quien lo tiene."}
+          etiqueta="Por qué (opcional)" ejemplo="Ej. Lo cancelé por error" boton="Reabrir"
+          cargando={reabrirlo.isPending} alConfirmar={(motivo) => reabrirlo.mutate({ p: aReabrir, motivo })} alCerrar={() => setAReabrir(null)} />
+      )}
       <FichaPendiente p={ficha} cargando={!!fichaId && lista.isLoading} yo={perfil?.id} hoy={hoy} alCerrar={() => abrir(null)}
-        alHecho={() => { if (ficha) setCerrando(ficha); }} alCancelar={() => { if (ficha) { cancelar.mutate(ficha); abrir(null); } }} />
+        alHecho={() => { if (ficha) setCerrando(ficha); }} alCancelar={() => { if (ficha) { setACancelar(ficha); abrir(null); } }}
+        alReabrir={ficha && sePuedeReabrir(ficha, perfil?.id) ? () => { setAReabrir(ficha); abrir(null); } : undefined} />
     </Pagina>
   );
 }
@@ -176,8 +203,8 @@ function MiCumplimiento({ c, cargando }: { c: Cumplimiento | null; cargando: boo
   );
 }
 
-function FilaPendiente({ p, i, hoy, yo, conQuien, alCerrar, alAbrir }: {
-  p: Pendiente; i: number; hoy: string; yo: string | undefined; conQuien: "de" | "para"; alCerrar: () => void; alAbrir: () => void;
+function FilaPendiente({ p, i, hoy, yo, conQuien, alCerrar, alAbrir, alReabrir }: {
+  p: Pendiente; i: number; hoy: string; yo: string | undefined; conQuien: "de" | "para"; alCerrar: () => void; alAbrir: () => void; alReabrir?: () => void;
 }) {
   const vencido = p.estado === "abierto" && p.vence && p.vence < hoy;
   const esHoy = p.vence === hoy;
@@ -200,6 +227,11 @@ function FilaPendiente({ p, i, hoy, yo, conQuien, alCerrar, alAbrir }: {
         </p>
       </button>
       <div className="flex items-center gap-2 shrink-0">
+        {alReabrir && (
+          <Boton variante="secundario" tamano="sm" onClick={alReabrir} data-explain={GLOSARIO.reabrirPendiente} data-explain-title="Reabrir">
+            <RotateCcw className="h-3.5 w-3.5" />Reabrir
+          </Boton>
+        )}
         {p.estado === "abierto" && p.esperando_respuesta && <EsperaRespuesta p={p} yo={yo} />}
         {p.vence && p.estado === "abierto" && (
           <Insignia tono={vencido ? "peligro" : esHoy ? "aviso" : "neutro"}>{vencido ? "Venció " : esHoy ? "Hoy" : "Para "}{!esHoy && fecha(p.vence)}</Insignia>
@@ -371,7 +403,8 @@ function Equipo({ todos, alAbrir }: { todos: Pendiente[]; alAbrir: (id: string) 
 function Cerrar({ p, alCerrar }: { p: Pendiente; alCerrar: () => void }) {
   const [nota, setNota] = useState("");
   const hecho = useAccion(() => q(supabase.from("pendientes").update({ estado: "hecho", nota_cierre: nota.trim() || null }).eq("id", p.id).select("id").single()),
-    { exito: "Listo: a quien lo pidió le llegó el aviso", invalidar: [["pendientes"]], alTerminar: alCerrar });
+    { exito: "Listo: a quien lo pidió le llegó el aviso", invalidar: [["pendientes"]], alTerminar: alCerrar,
+      deshacer: () => reabrir(p.id, "lo marqué hecho por error") });
   return (
     <Dialogo abierto alCambiar={(a) => !a && alCerrar()} titulo="¿Ya quedó?" descripcion={p.titulo}
       pie={<><Boton variante="secundario" onClick={alCerrar}>Todavía no</Boton><Boton variante="exito" cargando={hecho.isPending} onClick={() => hecho.mutate(undefined)}><Check className="h-4 w-4" />Hecho</Boton></>}>
@@ -391,8 +424,9 @@ function Cerrar({ p, alCerrar }: { p: Pendiente; alCerrar: () => void }) {
  * («¿de qué medida?») y queda esperando respuesta; quien lo pidió contesta. Lo demás que lo ve
  * (dirección, RH) solo lee. La conversación no se edita ni se borra.
  */
-function FichaPendiente({ p, cargando, yo, hoy, alCerrar, alHecho, alCancelar }: {
+function FichaPendiente({ p, cargando, yo, hoy, alCerrar, alHecho, alCancelar, alReabrir }: {
   p: Pendiente | null; cargando: boolean; yo: string | undefined; hoy: string; alCerrar: () => void; alHecho: () => void; alCancelar: () => void;
+  alReabrir?: () => void;
 }) {
   const [texto, setTexto] = useState("");
   const fin = useRef<HTMLDivElement>(null);
@@ -418,10 +452,11 @@ function FichaPendiente({ p, cargando, yo, hoy, alCerrar, alHecho, alCancelar }:
     <Lateral abierto={!!p || cargando} alCambiar={(v) => !v && alCerrar()} ancho="max-w-xl"
       titulo={p?.titulo ?? "Pendiente"}
       subtitulo={p && <>De <b>{quienPidio(p)}</b> para <b>{p.responsable?.nombre}</b> · {hace(p.creado_en)}</>}
-      acciones={p && abierto && (
+      acciones={p && (abierto || alReabrir) && (
         <div className="flex gap-2">
-          {soyCreador && <Boton variante="secundario" tamano="sm" onClick={alCancelar}><X className="h-4 w-4" />{p.grupo_id ? "Cancelar para todos" : "Cancelar"}</Boton>}
-          {soyResp && <Boton variante="exito" tamano="sm" onClick={alHecho}><Check className="h-4 w-4" />Ya quedó</Boton>}
+          {abierto && soyCreador && <Boton variante="secundario" tamano="sm" onClick={alCancelar}><X className="h-4 w-4" />{p.grupo_id ? "Cancelar para todos" : "Cancelar"}</Boton>}
+          {alReabrir && <Boton variante="secundario" tamano="sm" onClick={alReabrir} data-explain={GLOSARIO.reabrirPendiente} data-explain-title="Reabrir"><RotateCcw className="h-4 w-4" />Reabrir</Boton>}
+          {abierto && soyResp && <Boton variante="exito" tamano="sm" onClick={alHecho}><Check className="h-4 w-4" />Ya quedó</Boton>}
         </div>
       )}>
       {!p ? <Cargando filas={3} /> : (
@@ -436,7 +471,7 @@ function FichaPendiente({ p, cargando, yo, hoy, alCerrar, alHecho, alCancelar }:
               {p.modo && <span className="text-xs text-tenue" data-explain={GLOSARIO.pendienteVarios} data-explain-title="A varias personas">A varias personas: {MODO[p.modo]}</span>}
             </div>
             {p.detalle && <p className="whitespace-pre-wrap text-tenue">{p.detalle}</p>}
-            {p.nota_cierre && <p>Respuesta al cerrar: <span className="text-texto">“{p.nota_cierre}”</span></p>}
+            {p.nota_cierre && <p>{p.estado === "cancelado" ? "Por qué se canceló" : "Respuesta al cerrar"}: <span className="text-texto">“{p.nota_cierre}”</span></p>}
             {p.ruta && <Link to={p.ruta} className="inline-flex items-center gap-1 text-marca-texto hover:underline">Ir a donde salió <ArrowRight className="h-3.5 w-3.5" /></Link>}
           </div>
 
@@ -470,5 +505,26 @@ function FichaPendiente({ p, cargando, yo, hoy, alCerrar, alHecho, alCancelar }:
         </div>
       )}
     </Lateral>
+  );
+}
+
+/** Confirmar algo con un motivo opcional (cancelar, reabrir): el motivo queda en el pendiente. */
+function ConMotivo({ titulo, p, texto, etiqueta, ejemplo, boton, peligro, cargando, alConfirmar, alCerrar }: {
+  titulo: string; p: Pendiente; texto: string; etiqueta: string; ejemplo: string; boton: string; peligro?: boolean;
+  cargando: boolean; alConfirmar: (motivo: string) => void; alCerrar: () => void;
+}) {
+  const [motivo, setMotivo] = useState("");
+  return (
+    <Dialogo abierto alCambiar={(a) => !a && alCerrar()} titulo={titulo} descripcion={p.titulo}
+      pie={<><Boton variante="secundario" onClick={alCerrar}>No</Boton>
+        <Boton variante={peligro ? "peligro" : "primario"} cargando={cargando} onClick={() => alConfirmar(motivo)}>{boton}</Boton></>}>
+      <form onSubmit={(e) => { e.preventDefault(); alConfirmar(motivo); }} className="space-y-3">
+        <p className="text-sm text-tenue">{texto}</p>
+        <label className="block">
+          <span className="etiqueta">{etiqueta}</span>
+          <input autoFocus className="campo mt-1" value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder={ejemplo} />
+        </label>
+      </form>
+    </Dialogo>
   );
 }
