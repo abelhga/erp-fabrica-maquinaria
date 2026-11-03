@@ -353,7 +353,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "nivel": 1,
   "texto": [
    "Aquí viven los equipos que fabricamos y sus subensambles: qué lleva cada uno y cuántas horas toma hacerlo. Ingeniería los da de alta y los mantiene; ventas y producción los consultan.",
-   "Busca por clave o nombre y dale clic a un renglón para abrir su ficha. Las pestañas separan Equipos, Subensambles y Solicitudes de cambio (las correcciones que manda producción desde una orden). El filtro «Sin lista de materiales» te dice qué falta capturar, y el botón CSV baja la tabla para Excel.",
+   "Busca por clave o nombre y dale clic a un renglón para abrir su ficha. Las pestañas separan Equipos, Subensambles y Solicitudes de cambio (las correcciones que mandan producción o almacén desde una orden; cada una también te llega a Pendientes y se cierra sola al aplicarla o descartarla). El filtro «Sin lista de materiales» te dice qué falta capturar, y el botón CSV baja la tabla para Excel.",
    "Un subensamble se captura una vez y se comparte: si lo cambias, cambia en todos los equipos que lo usan. Para armar uno, abre un equipo, marca las líneas que siempre van juntas y usa «Convertir en subensamble».",
    "Si cambian una pieza en la maquinaria (se descontinuó, otro proveedor), «Reemplazar componente» la cambia en las listas que elijas con las mismas cantidades; la pieza vieja sigue en el catálogo para venderse como refacción. Lo hace ingeniería.",
    "Lo que ya no se fabrica ni se vende se inhabilita con el interruptor de la columna «Activo» (lo cambia ingeniería o compras): deja de salir en el cotizador y en pedidos nuevos, pero no cambia en los equipos que ya lo usan. Antes de inhabilitar te dice en cuántos equipos activos y pedidos abiertos está. Los inhabilitados se ven en el filtro «Inhabilitados», y ahí mismo se reactivan.",
@@ -5978,7 +5978,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Cuando algo de la lista de materiales está mal, producción, almacén o ventas lo reportan desde la orden; ingeniería lo corrige y lo marca como aplicado o descartado."
+  "texto": "Cuando algo de la lista de materiales está mal, producción, almacén o ventas lo reportan desde la orden. A ingeniería le llega como pendiente (con aviso en la campana) para dentro de dos días hábiles; cuando lo marca como aplicado o descartado, el pendiente se cierra solo y a quien lo pidió le llega el aviso."
  },
  {
   "clave": "solicitudesPorAprobar",
