@@ -14,7 +14,7 @@ import { CantidadConSigno, InsigniaMovimiento, TIPO_MOV, nombreCorto, todasLasFi
 interface Mov {
   id: number; en: string; tipo: TipoMovimiento; clave: string; nombre: string; unidad: string; almacen: string; cantidad: number;
   costo_unitario: number | null; motivo: string | null; usuario: string | null; referencia: string | null; fuera_de_lista: boolean;
-  recibio: string | null;
+  recibio: string | null; deshace_id: number | null; deshecho_por: number | null;
 }
 
 const GRUPOS: { valor: string; texto: string; tipos: TipoMovimiento[] }[] = [
@@ -55,7 +55,7 @@ export function Historial() {
       const tipos = GRUPOS.find((g) => g.valor === grupo)?.tipos ?? [];
       return todasLasFilas<Mov>((d, h) => {
         let c = supabase.from("v_movimientos")
-          .select("id, en, tipo, clave, nombre, unidad, almacen, cantidad, costo_unitario, motivo, usuario, referencia, fuera_de_lista, recibio")
+          .select("id, en, tipo, clave, nombre, unidad, almacen, cantidad, costo_unitario, motivo, usuario, referencia, fuera_de_lista, recibio, deshace_id, deshecho_por")
           .order("en", { ascending: false }).order("id", { ascending: false });
         if (tipos.length) c = c.in("tipo", tipos);
         if (almacen) c = c.eq("almacen_id", Number(almacen));
@@ -70,7 +70,8 @@ export function Historial() {
   const columnas: Columna<Mov>[] = [
     { clave: "en", titulo: "Fecha", clase: "whitespace-nowrap text-xs text-tenue px-2", valor: (m) => m.en, celda: (m) => fechaYHora(m.en) },
     { clave: "tipo", titulo: "Movimiento", valor: (m) => TIPO_MOV[m.tipo]?.texto ?? m.tipo, explica: GLOSARIO.tipoMovimiento,
-      clase: "px-2", celda: (m) => <><InsigniaMovimiento tipo={m.tipo} />{m.fuera_de_lista && <span data-explain={GLOSARIO.fueraDeLista}><Insignia tono="aviso" className="ml-1">fuera de lista</Insignia></span>}</> },
+      clase: "px-2", celda: (m) => <><InsigniaMovimiento tipo={m.tipo} />{m.fuera_de_lista && <span data-explain={GLOSARIO.fueraDeLista}><Insignia tono="aviso" className="ml-1">fuera de lista</Insignia></span>}
+        {(m.deshace_id || m.deshecho_por) && <span data-explain={GLOSARIO.movimientoCorreccion}><Insignia tono="neutro" className="ml-1">{m.deshace_id ? "corrección" : "deshecho"}</Insignia></span>}</> },
     // La clave va en su columna solo en pantallas muy anchas; el CSV la trae siempre.
     { clave: "clave", titulo: "Clave", clase: "whitespace-nowrap text-tenue text-xs hidden 2xl:table-cell" },
     { clave: "nombre", titulo: "Artículo", clase: "min-w-[220px]",

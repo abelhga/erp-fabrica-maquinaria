@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownToLine, ArrowRight, ArrowUpFromLine, ArrowLeftRight, Lock, X } from "lucide-react";
+import { ArrowDownToLine, ArrowRight, ArrowUpFromLine, ArrowLeftRight, Lock, RotateCcw, X } from "lucide-react";
 import { BuscadorArticulo, type ArticuloEncontrado } from "@/components/datos/BuscadorArticulo";
 import { Boton } from "@/components/ui/boton";
 import { Tarjeta } from "@/components/ui/tarjeta";
+import { Dialogo } from "@/components/ui/dialogo";
+import { Insignia } from "@/components/ui/insignia";
 import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
@@ -25,6 +27,18 @@ const MOTIVOS: Record<string, string[]> = {
 };
 
 interface ArticuloElegido { id: string; clave: string; nombre: string; unidad: string }
+interface MovHoy {
+  id: number; en: string; tipo: TipoMovimiento; clave: string; nombre: string; unidad: string; almacen: string; cantidad: number;
+  referencia: string | null; motivo: string | null; recibio: string | null; deshace_id: number | null; deshecho_por: number | null;
+  op_folio: string | null; pedido_folio: string | null;
+}
+/** Lo que registraste aquí (una salida o un traspaso) lo deshaces tú durante 15 minutos; la base lo vuelve a revisar. */
+const MINUTOS_DESHACER = 15;
+const DESHACIBLES: TipoMovimiento[] = ["salida_venta", "salida_consumo", "traspaso_salida", "traspaso_entrada"];
+const minutosParaDeshacer = (m: MovHoy, ahora: number) =>
+  !DESHACIBLES.includes(m.tipo) || m.deshace_id || m.deshecho_por || m.op_folio || m.pedido_folio ? 0
+    : Math.max(0, Math.ceil(MINUTOS_DESHACER - (ahora - new Date(m.en).getTime()) / 60_000));
+const MOTIVOS_DESHACER = ["Artículo equivocado", "Cantidad equivocada", "Almacén equivocado", "No era salida"];
 
 /**
  * Captura de una sola línea pensada para el celular del almacenista: artículo,
@@ -85,8 +99,8 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
   const mios = useQuery({
     queryKey: ["mis_movimientos_hoy", perfil?.id],
     enabled: !!perfil,
-    queryFn: () => q<{ id: number; en: string; tipo: TipoMovimiento; clave: string; nombre: string; unidad: string; almacen: string; cantidad: number; referencia: string | null; motivo: string | null; recibio: string | null }[]>(
-      supabase.from("v_movimientos").select("id, en, tipo, clave, nombre, unidad, almacen, cantidad, referencia, motivo, recibio")
+    queryFn: () => q<MovHoy[]>(
+      supabase.from("v_movimientos").select("id, en, tipo, clave, nombre, unidad, almacen, cantidad, referencia, motivo, recibio, deshace_id, deshecho_por, op_folio, pedido_folio")
         .eq("usuario_id", perfil!.id).gte("en", hoy.toISOString()).order("en", { ascending: false }).order("id", { ascending: false }).limit(30)),
   });
 
@@ -110,6 +124,11 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
     alTerminar: () => { setArticulo(null); setAlmacen(null); setDestino(null); setCantidad(""); setMotivo(""); },
   });
 
+  // El reloj para el botón «Deshacer»: cada 30 s se recalcula cuánto le queda.
+  const [ahora, setAhora] = useState(() => Date.now());
+  useEffect(() => { const t = setInterval(() => setAhora(Date.now()), 30_000); return () => clearInterval(t); }, []);
+  const [aDeshacer, setADeshacer] = useState<MovHoy | null>(null);
+
   const motivos = MOTIVOS[modo === "salida" ? tipoSalida : modo];
   const nombreAlm = (id: number | null) => almacenes.data?.find((a) => a.id === id)?.nombre ?? "";
 
@@ -119,7 +138,8 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
         <div className="rounded-xl border border-aviso/30 bg-aviso-suave px-4 py-3 text-sm flex gap-3">
           <Lock className="h-4 w-4 text-aviso shrink-0 mt-0.5" />
           <p>
-            <b>Un movimiento registrado no se edita ni se borra.</b> Si te equivocaste, no lo vuelvas a capturar al revés:{" "}
+            <b>Un movimiento registrado no se edita ni se borra.</b> Si te equivocaste en una salida o un traspaso, tienes {MINUTOS_DESHACER} minutos para{" "}
+            <span data-explain={GLOSARIO.deshacerMovimiento} data-explain-title="Deshacer">deshacerlo aquí abajo</span>, con el motivo. Después (o si no lo registraste tú), no lo vuelvas a capturar al revés:{" "}
             <button className="underline font-medium text-marca-texto" onClick={irAAjustes}>pide un ajuste</button> y lo autoriza otra persona.
           </p>
         </div>
@@ -259,10 +279,18 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
             {mios.data!.map((m) => (
               <li key={m.id} className="px-4 py-2.5 flex items-start gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm truncate">{m.nombre}</p>
+                  <p className={cn("text-sm truncate", m.deshecho_por && "line-through text-tenue")}>{m.nombre}</p>
                   <p className="text-xs text-tenue truncate">
-                    <InsigniaMovimiento tipo={m.tipo} /> <span className="ml-1">{nombreCorto(m.almacen)}{m.referencia ? ` · ${m.referencia}` : ""}{m.motivo ? ` · ${m.motivo}` : ""}{m.recibio ? ` · recibió ${m.recibio}` : ""}</span>
+                    <InsigniaMovimiento tipo={m.tipo} />
+                    {(m.deshace_id || m.deshecho_por) && <span data-explain={GLOSARIO.movimientoCorreccion}><Insignia tono="neutro" className="ml-1">{m.deshace_id ? "corrección" : "deshecho"}</Insignia></span>}
+                    <span className="ml-1">{nombreCorto(m.almacen)}{m.referencia ? ` · ${m.referencia}` : ""}{m.motivo ? ` · ${m.motivo}` : ""}{m.recibio ? ` · recibió ${m.recibio}` : ""}</span>
                   </p>
+                  {minutosParaDeshacer(m, ahora) > 0 && (
+                    <button type="button" onClick={() => setADeshacer(m)} data-explain={GLOSARIO.deshacerMovimiento} data-explain-title="Deshacer"
+                      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-marca-texto hover:underline">
+                      <RotateCcw className="h-3 w-3" />Deshacer <span className="text-tenue font-normal">(quedan {minutosParaDeshacer(m, ahora)} min)</span>
+                    </button>
+                  )}
                 </div>
                 <div className="text-right shrink-0">
                   <CantidadConSigno n={Number(m.cantidad)} unidad={m.unidad} />
@@ -273,6 +301,42 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
           </ul>
         )}
       </Tarjeta>
+      {aDeshacer && <Deshacer m={aDeshacer} alCerrar={() => setADeshacer(null)} />}
     </div>
+  );
+}
+
+/** Deshacer una salida o un traspaso propio: el motivo es obligatorio y queda en el historial. */
+function Deshacer({ m, alCerrar }: { m: MovHoy; alCerrar: () => void }) {
+  const [motivo, setMotivo] = useState("");
+  const traspaso = m.tipo.startsWith("traspaso");
+  const deshacer = useAccion(() => q<number>(supabase.rpc("deshacer_movimiento", { p_movimiento: m.id, p_motivo: motivo.trim() })), {
+    exito: traspaso ? "Traspaso deshecho: el material regresó a donde estaba" : "Salida deshecha: la existencia regresó",
+    invalidar: [["mis_movimientos_hoy"], ["v_existencias"], ["existencias_articulo"], ["kardex"], ["v_movimientos"]],
+    alTerminar: alCerrar,
+  });
+  const listo = motivo.trim().length >= 3;
+  return (
+    <Dialogo abierto alCambiar={(a) => !a && alCerrar()} titulo={traspaso ? "¿Deshacer este traspaso?" : "¿Deshacer esta salida?"}
+      descripcion={`${numero(Math.abs(Number(m.cantidad)))} ${unidadEn(m.unidad, Math.abs(Number(m.cantidad)))} de ${m.nombre} · ${nombreCorto(m.almacen)} · ${fechaYHora(m.en).split(", ").pop()}`}
+      pie={<><Boton variante="secundario" onClick={alCerrar}>No</Boton>
+        <Boton onClick={() => deshacer.mutate(undefined)} disabled={!listo} cargando={deshacer.isPending}><RotateCcw className="h-4 w-4" />Deshacer</Boton></>}>
+      <form onSubmit={(e) => { e.preventDefault(); if (listo) deshacer.mutate(undefined); }} className="space-y-3">
+        <p className="text-sm text-tenue">
+          {traspaso ? "El material regresa al almacén de donde salió." : "La existencia regresa al almacén."} No se borra nada: queda el movimiento
+          contrario con tu nombre, la hora y el motivo.
+        </p>
+        <label className="block">
+          <span className="etiqueta">¿Qué pasó?</span>
+          <input autoFocus className="campo mt-1" value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Ej. Era de Mercado Libre" />
+        </label>
+        <div className="flex flex-wrap gap-1.5">
+          {MOTIVOS_DESHACER.map((x) => (
+            <button key={x} type="button" onClick={() => setMotivo(x)}
+              className={cn("h-7 px-2.5 rounded-full border text-xs", motivo === x ? "border-marca bg-marca-suave text-marca-texto" : "border-borde hover:border-marca/40")}>{x}</button>
+          ))}
+        </div>
+      </form>
+    </Dialogo>
   );
 }
