@@ -69,6 +69,7 @@ export function ConfigEmpresa() {
         <Iva inicial={Number(c.iva?.valor ?? 0.16)} editable={editable} actualizado={c.iva?.actualizado_en} />
         <Arranque inicial={String(c.fecha_arranque?.valor ?? "")} editable={editable} />
         <Apariencia inicial={c.tema_por_defecto?.valor === "claro" ? "claro" : "oscuro"} editable={editable} />
+        <Deshacer inicial={(c.deshacer?.valor ?? {}) as { almacen?: number; pendientes?: number }} editable={editable} />
       </div>
       <div className="lg:col-span-2">
         <Calendario inicial={(c.calendario_laboral?.valor ?? { dias: [1, 2, 3, 4, 5, 6], descansos_empresa: [] }) as { dias: number[]; descansos_empresa: string[] }} editable={editable} />
@@ -166,6 +167,28 @@ function Arranque({ inicial, editable }: { inicial: string; editable: boolean })
       <Campo etiqueta="Fecha de arranque" ayuda={inicial ? `Hoy dice ${fecha(inicial)}. Cambiarla mueve el corte entre hoja y ERP en los reportes.` : undefined}>
         <Entrada type="date" value={v} onChange={(e) => setV(e.target.value)} className="w-48 block" />
       </Campo>
+    </TarjetaForm>
+  );
+}
+
+/** Cuántos minutos tiene quien se equivocó para deshacerlo él mismo. 0 lo apaga; después, ajuste o pendiente nuevo. */
+function Deshacer({ inicial, editable }: { inicial: { almacen?: number; pendientes?: number }; editable: boolean }) {
+  const [f, setF] = useState({ almacen: String(inicial.almacen ?? 15), pendientes: String(inicial.pendientes ?? 15) });
+  const guardar = useGuardarConfig("Minutos para deshacer guardados");
+  const minutos = (t: string) => Math.max(0, Math.min(240, Math.trunc(Number(t) || 0)));
+  const ayuda = (t: string, despues: string) => minutos(t) === 0 ? `Apagado: ${despues}.` : `Durante ${minutos(t)} minutos; después, ${despues}.`;
+  return (
+    <TarjetaForm titulo="Deshacer errores" explica={GLOSARIO.minutosDeshacer} editable={editable} quien="sistemas o dirección" guardando={guardar.isPending}
+      descripcion="Quien se equivocó lo deshace él mismo por un rato, con motivo y dejando rastro. Ponlo en 0 para apagarlo."
+      alGuardar={() => guardar.mutate({ clave: "deshacer", valor: { almacen: minutos(f.almacen), pendientes: minutos(f.pendientes) } })}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Campo etiqueta="Almacén: salidas y traspasos" ayuda={ayuda(f.almacen, "se pide un ajuste")}>
+          <Entrada type="number" min="0" max="240" step="1" value={f.almacen} onChange={(e) => setF({ ...f, almacen: e.target.value })} className="cifra w-28 block" />
+        </Campo>
+        <Campo etiqueta="Pendientes: reabrir" ayuda={ayuda(f.pendientes, "se pide uno nuevo")}>
+          <Entrada type="number" min="0" max="240" step="1" value={f.pendientes} onChange={(e) => setF({ ...f, pendientes: e.target.value })} className="cifra w-28 block" />
+        </Campo>
+      </div>
     </TarjetaForm>
   );
 }
