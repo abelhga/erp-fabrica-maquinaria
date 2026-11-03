@@ -68,7 +68,8 @@ begin
     assert false, 'el almacenista se autorizó su propio ajuste';
   exception when insufficient_privilege then null;
   end;
-  -- Entre la solicitud y la autorización salen 10 piezas: el ajuste respeta lo contado (195 → 185 no, se deja en 195).
+  -- Lo autoriza otro y se aplica la diferencia encontrada (−5). Lo que se mueva entre tanto se respeta:
+  -- ese caso está en 233_ajuste_aplica_diferencia.sql.
   perform pg_temp.como(v_jefe);
   perform resolver_ajuste(v_aj, true, 'Revisado en piso');
   assert (select cantidad from existencias where articulo_id = v_tapco and almacen_id = v_pb) = 195, 'ajuste aprobado';
