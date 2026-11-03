@@ -13,6 +13,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { fechaYHora, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { useMinutosDeshacer } from "@/lib/deshacer";
 import { CantidadConSigno, InsigniaMovimiento, nombreCorto, unidadEn, useAlmacenes, type TipoMovimiento } from "./comun";
 import { usePersonalPiso } from "@/modulos/produccion/componentes/datos";
 
@@ -32,12 +33,11 @@ interface MovHoy {
   referencia: string | null; motivo: string | null; recibio: string | null; deshace_id: number | null; deshecho_por: number | null;
   op_folio: string | null; pedido_folio: string | null;
 }
-/** Lo que registraste aquí (una salida o un traspaso) lo deshaces tú durante 15 minutos; la base lo vuelve a revisar. */
-const MINUTOS_DESHACER = 15;
+/** Lo que registraste aquí (una salida o un traspaso) lo deshaces tú durante los minutos de Configuración; la base lo vuelve a revisar. */
 const DESHACIBLES: TipoMovimiento[] = ["salida_venta", "salida_consumo", "traspaso_salida", "traspaso_entrada"];
-const minutosParaDeshacer = (m: MovHoy, ahora: number) =>
-  !DESHACIBLES.includes(m.tipo) || m.deshace_id || m.deshecho_por || m.op_folio || m.pedido_folio ? 0
-    : Math.max(0, Math.ceil(MINUTOS_DESHACER - (ahora - new Date(m.en).getTime()) / 60_000));
+const minutosParaDeshacer = (m: MovHoy, ahora: number, limite: number) =>
+  !limite || !DESHACIBLES.includes(m.tipo) || m.deshace_id || m.deshecho_por || m.op_folio || m.pedido_folio ? 0
+    : Math.max(0, Math.ceil(limite - (ahora - new Date(m.en).getTime()) / 60_000));
 const MOTIVOS_DESHACER = ["Artículo equivocado", "Cantidad equivocada", "Almacén equivocado", "No era salida"];
 
 /**
@@ -128,6 +128,7 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
   const [ahora, setAhora] = useState(() => Date.now());
   useEffect(() => { const t = setInterval(() => setAhora(Date.now()), 30_000); return () => clearInterval(t); }, []);
   const [aDeshacer, setADeshacer] = useState<MovHoy | null>(null);
+  const minutos = useMinutosDeshacer().almacen;
 
   const motivos = MOTIVOS[modo === "salida" ? tipoSalida : modo];
   const nombreAlm = (id: number | null) => almacenes.data?.find((a) => a.id === id)?.nombre ?? "";
@@ -138,8 +139,10 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
         <div className="rounded-xl border border-aviso/30 bg-aviso-suave px-4 py-3 text-sm flex gap-3">
           <Lock className="h-4 w-4 text-aviso shrink-0 mt-0.5" />
           <p>
-            <b>Un movimiento registrado no se edita ni se borra.</b> Si te equivocaste en una salida o un traspaso, tienes {MINUTOS_DESHACER} minutos para{" "}
-            <span data-explain={GLOSARIO.deshacerMovimiento} data-explain-title="Deshacer">deshacerlo aquí abajo</span>, con el motivo. Después (o si no lo registraste tú), no lo vuelvas a capturar al revés:{" "}
+            <b>Un movimiento registrado no se edita ni se borra.</b>{" "}
+            {minutos > 0 && <>Si te equivocaste en una salida o un traspaso, tienes {minutos} minutos para{" "}
+              <span data-explain={GLOSARIO.deshacerMovimiento} data-explain-title="Deshacer">deshacerlo aquí abajo</span>, con el motivo. Después (o si no lo registraste tú), </>}
+            {minutos > 0 ? "no" : "Si te equivocaste, no"} lo vuelvas a capturar al revés:{" "}
             <button className="underline font-medium text-marca-texto" onClick={irAAjustes}>pide un ajuste</button> y lo autoriza otra persona.
           </p>
         </div>
@@ -285,10 +288,10 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
                     {(m.deshace_id || m.deshecho_por) && <span data-explain={GLOSARIO.movimientoCorreccion}><Insignia tono="neutro" className="ml-1">{m.deshace_id ? "corrección" : "deshecho"}</Insignia></span>}
                     <span className="ml-1">{nombreCorto(m.almacen)}{m.referencia ? ` · ${m.referencia}` : ""}{m.motivo ? ` · ${m.motivo}` : ""}{m.recibio ? ` · recibió ${m.recibio}` : ""}</span>
                   </p>
-                  {minutosParaDeshacer(m, ahora) > 0 && (
+                  {minutosParaDeshacer(m, ahora, minutos) > 0 && (
                     <button type="button" onClick={() => setADeshacer(m)} data-explain={GLOSARIO.deshacerMovimiento} data-explain-title="Deshacer"
                       className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-marca-texto hover:underline">
-                      <RotateCcw className="h-3 w-3" />Deshacer <span className="text-tenue font-normal">(quedan {minutosParaDeshacer(m, ahora)} min)</span>
+                      <RotateCcw className="h-3 w-3" />Deshacer <span className="text-tenue font-normal">(quedan {minutosParaDeshacer(m, ahora, minutos)} min)</span>
                     </button>
                   )}
                 </div>

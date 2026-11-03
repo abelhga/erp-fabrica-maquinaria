@@ -22,6 +22,7 @@ import { useSesion } from "@/lib/sesion";
 import { fecha, fechaYHora, hace, hoyISO, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { useMinutosDeshacer } from "@/lib/deshacer";
 
 type Estado = "abierto" | "hecho" | "cancelado" | "cubierto";
 interface Pendiente {
@@ -48,10 +49,10 @@ const pctATiempo = (c: Pick<Cumplimiento, "a_tiempo" | "tarde" | "vencidos">) =>
   return base ? c.a_tiempo / base : null;
 };
 const MODO = { uno: "basta con que uno lo haga", todos: "cada quien lo tiene que hacer" } as const;
-/** Quien lo cerró lo puede reabrir durante 15 minutos (la base lo vuelve a revisar: reabrir_pendiente). */
-const MINUTOS_REABRIR = 15;
-const sePuedeReabrir = (p: Pendiente, yo: string | undefined) => p.estado !== "abierto" && p.estado !== "cubierto" && !!yo && p.cerrado_por === yo
-  && p.tabla !== "revision_hallazgos" && !!p.cerrado_en && Date.now() - new Date(p.cerrado_en).getTime() < MINUTOS_REABRIR * 60_000;
+/** Quien lo cerró lo puede reabrir durante los minutos de Configuración (la base lo vuelve a revisar: reabrir_pendiente). */
+const sePuedeReabrir = (p: Pendiente, yo: string | undefined, minutos: number) => minutos > 0 && p.estado !== "abierto" && p.estado !== "cubierto"
+  && !!yo && p.cerrado_por === yo && p.tabla !== "revision_hallazgos" && !!p.cerrado_en
+  && Date.now() - new Date(p.cerrado_en).getTime() < minutos * 60_000;
 const reabrir = (id: string, motivo: string | null) => q<number>(supabase.rpc("reabrir_pendiente", { p_pendiente: id, p_motivo: motivo }));
 
 export default function Pendientes() {
@@ -62,6 +63,7 @@ export default function Pendientes() {
   // Cancelar pide confirmación: dos pendientes se cancelaron por error el mismo día.
   const [aCancelar, setACancelar] = useState<Pendiente | null>(null);
   const [aReabrir, setAReabrir] = useState<Pendiente | null>(null);
+  const minutos = useMinutosDeshacer().pendientes;
   // La ficha abierta va en la dirección: el aviso de una pregunta lleva directo a ella.
   const [params, setParams] = useSearchParams();
   const fichaId = params.get("pendiente");
@@ -86,9 +88,9 @@ export default function Pendientes() {
     const c = supabase.from("pendientes").update({ estado: "cancelado", nota_cierre: motivo.trim() || null }).eq("estado", "abierto").eq("creado_por", perfil!.id);
     return q(p.grupo_id ? c.eq("grupo_id", p.grupo_id).select("id") : c.eq("id", p.id).select("id"));
   }, {
-    exito: `Pendiente cancelado. Si fue error, tienes ${MINUTOS_REABRIR} minutos para reabrirlo`, invalidar: [["pendientes"]],
+    exito: minutos > 0 ? `Pendiente cancelado. Si fue error, tienes ${minutos} minutos para reabrirlo` : "Pendiente cancelado", invalidar: [["pendientes"]],
     alTerminar: () => setACancelar(null),
-    deshacer: (_r, { p }) => reabrir(p.id, "lo cancelé por error"),
+    deshacer: minutos > 0 ? (_r, { p }) => reabrir(p.id, "lo cancelé por error") : undefined,
   });
   const reabrirlo = useAccion(({ p, motivo }: { p: Pendiente; motivo: string }) => reabrir(p.id, motivo.trim() || null),
     { exito: "Pendiente reabierto", invalidar: [["pendientes"], ["pendiente_mensajes"]], alTerminar: () => setAReabrir(null) });
@@ -152,7 +154,7 @@ export default function Pendientes() {
           <div className="tarjeta divide-y divide-borde">
             {(vista === "mios" ? mios : cerrados).map((p, i) => (
               <FilaPendiente key={p.id} p={p} i={i} hoy={hoy} yo={perfil?.id} conQuien={vista === "cerrados" && p.creado_por === perfil?.id ? "para" : "de"}
-                alCerrar={() => setCerrando(p)} alAbrir={() => abrir(p.id)} alReabrir={sePuedeReabrir(p, perfil?.id) ? () => setAReabrir(p) : undefined} />
+                alCerrar={() => setCerrando(p)} alAbrir={() => abrir(p.id)} alReabrir={sePuedeReabrir(p, perfil?.id, minutos) ? () => setAReabrir(p) : undefined} />
             ))}
           </div>
         )
@@ -172,7 +174,7 @@ export default function Pendientes() {
       )}
       <FichaPendiente p={ficha} cargando={!!fichaId && lista.isLoading} yo={perfil?.id} hoy={hoy} alCerrar={() => abrir(null)}
         alHecho={() => { if (ficha) setCerrando(ficha); }} alCancelar={() => { if (ficha) { setACancelar(ficha); abrir(null); } }}
-        alReabrir={ficha && sePuedeReabrir(ficha, perfil?.id) ? () => { setAReabrir(ficha); abrir(null); } : undefined} />
+        alReabrir={ficha && sePuedeReabrir(ficha, perfil?.id, minutos) ? () => { setAReabrir(ficha); abrir(null); } : undefined} />
     </Pagina>
   );
 }
@@ -402,9 +404,10 @@ function Equipo({ todos, alAbrir }: { todos: Pendiente[]; alAbrir: (id: string) 
 
 function Cerrar({ p, alCerrar }: { p: Pendiente; alCerrar: () => void }) {
   const [nota, setNota] = useState("");
+  const minutos = useMinutosDeshacer().pendientes;
   const hecho = useAccion(() => q(supabase.from("pendientes").update({ estado: "hecho", nota_cierre: nota.trim() || null }).eq("id", p.id).select("id").single()),
     { exito: "Listo: a quien lo pidió le llegó el aviso", invalidar: [["pendientes"]], alTerminar: alCerrar,
-      deshacer: () => reabrir(p.id, "lo marqué hecho por error") });
+      deshacer: minutos > 0 ? () => reabrir(p.id, "lo marqué hecho por error") : undefined });
   return (
     <Dialogo abierto alCambiar={(a) => !a && alCerrar()} titulo="¿Ya quedó?" descripcion={p.titulo}
       pie={<><Boton variante="secundario" onClick={alCerrar}>Todavía no</Boton><Boton variante="exito" cargando={hecho.isPending} onClick={() => hecho.mutate(undefined)}><Check className="h-4 w-4" />Hecho</Boton></>}>

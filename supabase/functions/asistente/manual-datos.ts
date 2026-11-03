@@ -71,7 +71,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Aquí se registra todo lo que sale, regresa o cambia de almacén, y se consulta la historia de cada movimiento. La usa almacén desde el celular o la computadora; la gerencia entra a autorizar ajustes.",
    "En Registrar elige Salida (consumo o venta), Devolución o Traspaso, busca el artículo, toca el almacén (cada botón dice cuánto hay ahí), escribe la cantidad y el motivo; en un consumo, también quién se lo lleva (se queda para la siguiente salida). Enter en la cantidad te pasa al motivo; Enter otra vez guarda. Los botones de motivo llenan el texto por ti. No deja sacar más de lo que hay en ese almacén. A la derecha ves lo que registraste hoy para confirmar que quedó bien.",
    "Historial filtra por tipo, almacén, persona y fechas (al abrir, los últimos 30 días) y se baja a Excel. «Recibió» es quién se llevó el material; «Quién» es quién lo registró. En Ajustes pides una corrección cuando lo del estante no cuadra, y la gerencia la aprueba o la rechaza. En Conteos físicos abres un conteo por almacén, capturas lo contado renglón por renglón (Enter guarda y baja al siguiente) y, al cerrarlo, cada diferencia se vuelve un ajuste por autorizar.",
-   "Nada se edita ni se borra. Si te equivocaste en una salida o un traspaso que registraste tú, en «Lo que registraste hoy» tienes 15 minutos para «Deshacer», con el motivo: queda el movimiento contrario ligado al original (sale como «corrección» y el original como «deshecho»), con tu nombre y la hora, y el consumo se compensa. Un traspaso solo regresa si lo que llegó sigue en el destino. Pasados los 15 minutos, o si lo registró otra persona, no lo vuelvas a capturar al revés: pide un ajuste. Lo surtido a una orden, lo recibido de una compra, las entregas de pedidos y los envíos se corrigen desde su propia pantalla. La fecha, la hora y tu nombre los pone el sistema, así que no se puede capturar con fecha atrasada ni a nombre de otro."
+   "Nada se edita ni se borra. Si te equivocaste en una salida o un traspaso que registraste tú, en «Lo que registraste hoy» tienes unos minutos para «Deshacer», con el motivo (15 de inicio; los fija dirección en Configuración y el botón dice cuántos quedan): queda el movimiento contrario ligado al original (sale como «corrección» y el original como «deshecho»), con tu nombre y la hora, y el consumo se compensa. Un traspaso solo regresa si lo que llegó sigue en el destino. Pasado ese tiempo, o si lo registró otra persona, no lo vuelvas a capturar al revés: pide un ajuste. Lo surtido a una orden, lo recibido de una compra, las entregas de pedidos y los envíos se corrigen desde su propia pantalla. La fecha, la hora y tu nombre los pone el sistema, así que no se puede capturar con fecha atrasada ni a nombre de otro."
   ]
  },
  {
@@ -556,7 +556,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Aquí ves lo que te pidieron a ti y lo que tú les pediste a otros, con fecha. Reemplaza el “¿ya quedó?” por chat: cuando alguien termina, a quien lo pidió le llega un aviso en la campana.",
    "“Me tocan” son los tuyos: dale clic al círculo para marcarlo hecho y, si quieres, deja una respuesta corta (un precio, una fecha). “Los que pedí” son los que esperas de otros; si ya no hace falta, cancélalo con la X: te pide confirmarlo y, si quieres, por qué (el motivo lo ve quien lo tenía). La flecha te lleva al pedido, orden o pantalla de donde salió.",
-   "Si lo cancelaste o lo marcaste hecho por error, tienes 15 minutos para regresarlo: con «Deshacer» en el aviso que sale, o con «Reabrir» en «Cerrados» o en su ficha. Lo reabre solo quien lo cerró; en la conversación del pendiente queda quién lo reabrió y por qué, y si estaba hecho a quien lo pidió le avisa. Pasados los 15 minutos, pide uno nuevo.",
+   "Si lo cancelaste o lo marcaste hecho por error, tienes unos minutos para regresarlo (15 de inicio; los fija dirección en Configuración): con «Deshacer» en el aviso que sale, o con «Reabrir» en «Cerrados» o en su ficha. Lo reabre solo quien lo cerró; en la conversación del pendiente queda quién lo reabrió y por qué, y si estaba hecho a quien lo pidió le avisa. Pasado ese tiempo, pide uno nuevo.",
    "Algunos los pone la revisión nocturna (dicen «De Revisión nocturna»): son errores urgentes en algo tuyo. Márcalo hecho cuando lo corrijas; si no es error, contéstalo en «Por revisar» con «Está bien así».",
    "La fecha sale en ámbar si vence hoy y en rojo si ya venció; mientras siga vencido, el sistema les recuerda a los dos. Para pedir algo nuevo usa “Pedir algo a alguien”: qué hay que hacer, quién y para cuándo. Puedes agregar a varias personas y elegir si basta con que uno lo haga o si cada quien lo tiene que hacer.",
    "Arriba ves tu propio cumplimiento de los últimos 30 días: qué tanto cierras a tiempo, a cuántas personas tienes esperando algo tuyo, cuántos días de retraso suman tus vencidos y cuánto tardas en cerrar. Dirección y Recursos Humanos ven además la pestaña “Equipo” con el de todos.",
@@ -968,6 +968,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Aquí están los datos de la empresa y los catálogos que usan todas las pantallas: datos fiscales, IVA, fecha de arranque, tema con el que abre el ERP (oscuro o claro), semana laboral, reglas de venta, almacenes, etapas del taller, tipos de cambio e integraciones (Mercado Libre y Skydropx). La usan sistemas y dirección.",
    "Cada pestaña es una sección. En las tarjetas con formulario cambias los datos y das «Guardar»; en las tablas cada celda se guarda sola al salir de ella o con Enter, como en la hoja (Escape la regresa). Lo que tu rol no puede cambiar sale en solo lectura y dice quién sí puede.",
    "Algunas cosas mueven números en otras pantallas: la semana laboral y los descansos cuentan los días de vacaciones y permisos; la fecha de arranque marca el corte entre la hoja y el ERP; un almacén no disponible para planta no cuenta para producción ni para el cotizador; en Taller, la capacidad de las áreas automáticas sale de su gente (no se escribe a mano) y la de las demás sí; con «Consumibles del taller» encendido (en Almacenes), lo de las categorías marcadas sale a nombre de quien lo recibe y no a la orden, y al encenderlo se suelta lo que estaba apartado de esos artículos para órdenes; el tipo de cambio más reciente convierte todo lo que está en dólares. Cada cambio queda en la bitácora.",
+   "En «Empresa», «Deshacer errores» fija cuántos minutos tiene quien se equivocó para deshacer una salida o un traspaso en almacén, y para reabrir un pendiente que cerró (15 de inicio). En 0 se apaga: almacén pide un ajuste y el pendiente se pide de nuevo.",
    "En «Integraciones», dirección conecta la cuenta de Mercado Libre (los pasos vienen ahí mismo), elige a las personas que la atienden (a todas les llegan los avisos, aunque alguna todavía no acepte su invitación), si las ventas entran como pedidos y a nombre de quién quedan. La tarjeta dice si los avisos de ML están entrando; «Revisar ahora» vuelve a intentar lo que quedó pendiente. ML solo avisa lo nuevo: «Traer lo pendiente» trae las preguntas sin contestar y los reclamos que ya estaban, y las ventas desde la fecha que elijas. En la de Skydropx, quien administra envíos prueba la conexión (muestra el saldo), elige la dirección de la planta de las que ya están en Skydropx, la clave de carta porte, el tipo de empaque y el recargo que se le suma al flete cuando un vendedor lo cotiza en una cotización; sin dirección y carta porte no se puede generar guía.",
    "En «Ventas», la tarjeta «Leads de recepción» dice a quién le llega cada lead nuevo: bandeja (el primero que lo toma), la gerencia lo asigna o quien lo registra escoge. Ahí mismo se ponen las horas para avisar a la gerencia si nadie lo toma o nadie lo atiende, y qué vendedores reciben leads. La cambian la gerencia de ventas o dirección."
   ]
@@ -2592,7 +2593,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "Si registraste mal una salida o un traspaso, tienes 15 minutos para deshacerlo tú, con el motivo. No se borra nada: queda el movimiento contrario ligado al original, con quién, cuándo y por qué, y el consumo se compensa. Pasados los 15 minutos, o si lo registró otra persona, se pide un ajuste y lo autoriza alguien más."
+  "texto": "Si registraste mal una salida o un traspaso, tienes unos minutos para deshacerlo tú, con el motivo (15 de inicio; los fija dirección en Configuración y en 0 se apaga). No se borra nada: queda el movimiento contrario ligado al original, con quién, cuándo y por qué, y el consumo se compensa. Pasado ese tiempo, o si lo registró otra persona, se pide un ajuste y lo autoriza alguien más."
  },
  {
   "clave": "desperdicioLean",
@@ -4356,6 +4357,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo dice la factura. De contado (PUE): ya se pagó o se paga al momento. A crédito (PPD): se paga después; si no se registra, es una cuenta por pagar que no sale en Pagos a proveedores."
  },
  {
+  "clave": "minutosDeshacer",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Cuántos minutos tiene quien se equivocó para deshacerlo él mismo: en almacén, una salida o un traspaso que registró; en pendientes, reabrir uno que cerró. Queda el motivo y quién fue. En 0 se apaga, y entonces lo de almacén se corrige con un ajuste y el pendiente se pide de nuevo. Va de 0 a 240."
+ },
+ {
   "clave": "mlFull",
   "modulos": [
    "inventario",
@@ -5347,7 +5355,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
  {
   "clave": "reabrirPendiente",
   "modulos": [],
-  "texto": "Regresa a abierto un pendiente que cerraste (cancelado o hecho) hace menos de 15 minutos. Solo lo puede hacer quien lo cerró; en su conversación queda quién lo reabrió y por qué."
+  "texto": "Regresa a abierto un pendiente que cerraste (cancelado o hecho) hace poco: 15 minutos de inicio, o los que fije dirección en Configuración (en 0 se apaga). Solo lo puede hacer quien lo cerró; en su conversación queda quién lo reabrió y por qué."
  },
  {
   "clave": "recargosCosto",

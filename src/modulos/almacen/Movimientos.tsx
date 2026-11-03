@@ -47,7 +47,7 @@ export default function Movimientos() {
   return (
     <Pagina
       titulo="Entradas y salidas"
-      descripcion="Cada movimiento queda con quién, cuándo y para qué. Nada se edita: lo que registraste tú lo deshaces en 15 minutos; después, un error se corrige con un ajuste que autoriza otra persona."
+      descripcion="Cada movimiento queda con quién, cuándo y para qué. Nada se edita: lo que registraste tú lo puedes deshacer un rato después; pasado ese tiempo, un error se corrige con un ajuste que autoriza otra persona."
     >
       <Pestanas value={vista} onValueChange={cambiar}>
         <ListaPestanas opciones={opciones} />
