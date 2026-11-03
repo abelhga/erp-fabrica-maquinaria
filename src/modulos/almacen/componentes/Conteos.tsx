@@ -224,7 +224,7 @@ function Captura({ id, volver, irAAjustes }: { id: string; volver: () => void; i
               <thead>
                 <tr>
                   <th className="hidden sm:table-cell">Clave</th><th>Artículo</th>
-                  <th className="text-right">Sistema</th><th className="text-right w-32">Contado</th><th className="text-right">Diferencia</th>
+                  <th className="text-right"><span data-explain={GLOSARIO.sistemaAlContar}>Sistema</span></th><th className="text-right w-32">Contado</th><th className="text-right">Diferencia</th>
                   {verCostos && <th className="text-right hidden md:table-cell">Valor</th>}
                   <th className="hidden lg:table-cell">Contó</th>
                 </tr>
@@ -271,7 +271,7 @@ function Captura({ id, volver, irAAjustes }: { id: string; volver: () => void; i
             )}
           </div>
         )}
-        {editable && <p className="border-t border-borde px-3 py-2 text-xs text-tenue">Escribe la cantidad y Enter: guarda y baja al siguiente. Esc deshace lo escrito. Quién contó y la hora las pone el servidor.</p>}
+        {editable && <p className="border-t border-borde px-3 py-2 text-xs text-tenue">Escribe la cantidad y Enter: guarda y baja al siguiente. Esc deshace lo escrito. Captura cada artículo en cuanto lo cuentes: la diferencia se mide contra lo que decía el sistema en ese momento. Quién contó y la hora las pone el servidor.</p>}
       </Tarjeta>
 
       <Dialogo abierto={cerrando} alCambiar={setCerrando} titulo="¿Cerrar el conteo?"
@@ -282,7 +282,7 @@ function Captura({ id, volver, irAAjustes }: { id: string; volver: () => void; i
           <li><b className="cifra">{numero(resumen.contados)}</b> artículos contados de {numero(resumen.total)} en {c?.almacen}.</li>
           <li><b className="cifra">{numero(resumen.diferencias)}</b> con diferencia: {resumen.sobrantes} sobran, {resumen.faltantes} faltan.</li>
           {verCostos && <li>Valor neto: <b className={cn("cifra", resumen.valor < 0 && "text-peligro")}>{dinero(resumen.valor)}</b></li>}
-          <li className="text-tenue">La existencia no cambia hasta que se autorice cada ajuste (y se ajusta a lo contado, aunque haya habido movimientos entre tanto).</li>
+          <li className="text-tenue">La existencia no cambia hasta que se autorice cada ajuste. Al autorizarlo se aplica la diferencia que encontraste: lo que entre o salga mientras tanto se respeta.</li>
         </ul>
       </Dialogo>
     </div>

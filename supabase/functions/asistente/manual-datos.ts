@@ -70,7 +70,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Aquí se registra todo lo que sale, regresa o cambia de almacén, y se consulta la historia de cada movimiento. La usa almacén desde el celular o la computadora; la gerencia entra a autorizar ajustes.",
    "En Registrar elige Salida (consumo o venta), Devolución o Traspaso, busca el artículo, toca el almacén (cada botón dice cuánto hay ahí), escribe la cantidad y el motivo; en un consumo, también quién se lo lleva (se queda para la siguiente salida). Enter en la cantidad te pasa al motivo; Enter otra vez guarda. Los botones de motivo llenan el texto por ti. No deja sacar más de lo que hay en ese almacén. A la derecha ves lo que registraste hoy para confirmar que quedó bien.",
-   "Historial filtra por tipo, almacén, persona y fechas (al abrir, los últimos 30 días) y se baja a Excel. «Recibió» es quién se llevó el material; «Quién» es quién lo registró. En Ajustes pides una corrección cuando lo del estante no cuadra, y la gerencia la aprueba o la rechaza. En Conteos físicos abres un conteo por almacén, capturas lo contado renglón por renglón (Enter guarda y baja al siguiente) y, al cerrarlo, cada diferencia se vuelve un ajuste por autorizar.",
+   "Historial filtra por tipo, almacén, persona y fechas (al abrir, los últimos 30 días) y se baja a Excel. «Recibió» es quién se llevó el material; «Quién» es quién lo registró. En Ajustes pides una corrección cuando lo del estante no cuadra, y la gerencia la aprueba o la rechaza. En Conteos físicos abres un conteo por almacén, capturas cada artículo en cuanto lo cuentas (Enter guarda y baja al siguiente) y, al cerrarlo, cada diferencia se vuelve un ajuste por autorizar.",
    "Nada se edita ni se borra. Si te equivocaste en una salida o un traspaso que registraste tú, en «Lo que registraste hoy» tienes unos minutos para «Deshacer», con el motivo (15 de inicio; los fija dirección en Configuración y el botón dice cuántos quedan): queda el movimiento contrario ligado al original (sale como «corrección» y el original como «deshecho»), con tu nombre y la hora, y el consumo se compensa. Un traspaso solo regresa si lo que llegó sigue en el destino. Pasado ese tiempo, o si lo registró otra persona, no lo vuelvas a capturar al revés: pide un ajuste. Lo surtido a una orden, lo recibido de una compra, las entregas de pedidos y los envíos se corrigen desde su propia pantalla. La fecha, la hora y tu nombre los pone el sistema, así que no se puede capturar con fecha atrasada ni a nombre de otro."
   ]
  },
@@ -1356,7 +1356,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "La única forma de corregir una existencia. Lo pide quien encontró la diferencia y lo autoriza la gerencia de producción, dirección o el jefe de almacén; quien lo pidió no se lo autoriza (salvo dirección). Hasta entonces la existencia no cambia."
+  "texto": "La única forma de corregir una existencia. Lo pide quien encontró la diferencia y lo autoriza la gerencia de producción, dirección o el jefe de almacén; quien lo pidió no se lo autoriza (salvo dirección). Hasta entonces la existencia no cambia. Al autorizarlo se aplica la diferencia que se encontró, así que lo que entró o salió desde que se pidió se respeta; si con eso la existencia quedaría negativa, no se autoriza y se vuelve a contar."
  },
  {
   "clave": "alcanceRol",
@@ -2153,7 +2153,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "Contar lo que hay en un almacén, artículo por artículo. Al cerrar el conteo, cada diferencia se vuelve un ajuste por autorizar; lo que no se contó no se ajusta."
+  "texto": "Contar lo que hay en un almacén, artículo por artículo. Al cerrar el conteo, cada diferencia se vuelve un ajuste por autorizar; lo que no se contó no se ajusta. La diferencia se mide contra lo que decía el sistema cuando capturaste cada artículo: captúralo en cuanto lo cuentes, y antes de empezar registra las salidas que tengas pendientes."
  },
  {
   "clave": "contestarSolicitud",
@@ -5951,6 +5951,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Algo salió con la entrega pero en el ERP no había suficiente para descontarlo, por ejemplo porque la existencia no estaba al día. La entrega se registró igual, porque el cliente ya se lo llevó; almacén revisa la existencia y la corrige con un ajuste."
+ },
+ {
+  "clave": "sistemaAlContar",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Lo que decía el sistema cuando capturaste ese artículo; si todavía no lo cuentas, lo que dice ahorita. La diferencia se mide contra ese número, así que lo que entre o salga después no la cambia."
  },
  {
   "clave": "situacionPreventivo",

@@ -5,6 +5,14 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
 
 ## Por decidir o esperar a alguien
 
+- **Conteo de lo que no cuadra con la hoja (Noemí, vence 5 y 6 nov):** 3 pendientes con 96
+  renglones; el documento «Conteo de almacén: dudas al cerrar la hoja (29-oct)» tiene la misma
+  lista para imprimir. Cuando se cierren los conteos:
+  - soltar las reservas «Apartado en la hoja (RESERVADO) al importar» de lo que ya no esté en
+    Planta Baja (cangilones 5x4 y 6x5, bandas, celda de carga, cabezal F900);
+  - confirmar las salidas dobles: C-N3914 (venta de mostrador del 28-oct y PED-26-823) y
+    C-00891 y C-00156 (venta de ML capturada a mano el 30-oct y el envío que descontó solo).
+    Si vuelve a pasar lo de ML, avisar en Registrar o con una regla de la revisión nocturna.
 - **OC-26-4399 (motorreductor 2 HP, C-N0998):** José Antonio no ha contestado el precio (su
   pendiente sigue abierto y la partida está en $15,000). Con el precio: recibirla en Contenedor 1
   y dar la salida de consumo a Gustavo para Luis (en la hoja: 28-oct 14:49, filas 32772–32773).

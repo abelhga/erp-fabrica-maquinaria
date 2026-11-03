@@ -124,7 +124,10 @@ function TarjetaPendiente({ a, resuelve, esMio, verCostos }: { a: Ajuste; resuel
     setError(null);
     resolver.mutate(aprobar, { onError: (e) => setError(mensajeError(e)) });
   };
-  const cambio = a.existencia_actual != null && Number(a.existencia_actual) !== Number(a.cantidad_sistema);
+  // Al autorizar se aplica la diferencia sobre lo de hoy (no se deja lo contado): se avisa en qué quedará.
+  const hoy = Number(a.existencia_actual ?? 0);
+  const cambio = hoy !== Number(a.cantidad_sistema);
+  const queda = hoy + Number(a.diferencia);
 
   return (
     <div className="rounded-lg border border-borde p-3 space-y-2.5">
@@ -140,7 +143,9 @@ function TarjetaPendiente({ a, resuelve, esMio, verCostos }: { a: Ajuste; resuel
       </div>
       <p className="text-sm">
         Sistema <b className="cifra">{numero(a.cantidad_sistema)}</b> → contado <b className="cifra">{numero(a.cantidad_fisica)}</b>
-        {cambio && <span className="text-aviso text-xs"> · hoy hay {numero(a.existencia_actual)}: se ajustará a lo contado</span>}
+        {cambio && (queda < 0
+          ? <span className="text-peligro text-xs"> · hoy hay {numero(hoy)}: no alcanza para esta diferencia, que se vuelva a contar</span>
+          : <span className="text-aviso text-xs"> · hoy hay {numero(hoy)}: quedará en {numero(queda)}</span>)}
       </p>
       <p className="text-sm text-tenue bg-fondo rounded-md px-2.5 py-1.5">“{a.motivo}”</p>
       <p className="text-xs text-tenue">Pidió {a.solicitado_por_nombre ?? "—"} · {hace(a.solicitado_en)} ({fechaYHora(a.solicitado_en)}){a.conteo && ` · ${a.conteo}`}</p>
