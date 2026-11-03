@@ -78,7 +78,16 @@ export default function DetallePedido() {
     exito: (n) => (n ? `Se crearon ${n} orden(es) de producción` : "No hay equipos con lista de materiales sin orden en este pedido"),
     invalidar: [...inv, ["ordenes_pedido", id], ["v_tablero_produccion"]],
   });
-  const agregar = useAccion((a: { id: string }) => q(supabase.rpc("agregar_partida_pedido", { p_pedido: id, p_articulo: a.id, p_cantidad: 1 })), { invalidar: inv });
+  const agregar = useAccion((a: { id: string; precio?: number }) =>
+    q(supabase.rpc("agregar_partida_pedido", { p_pedido: id, p_articulo: a.id, p_cantidad: 1, p_precio: a.precio ?? null })),
+    { invalidar: inv, alTerminar: () => setMontoLibre(null) });
+  // Un servicio con monto libre (paquetería) no tiene precio de lista: el monto se pide al agregarlo.
+  const [montoLibre, setMontoLibre] = useState<{ id: string; nombre: string } | null>(null);
+  const elegirArticulo = async (a: { id: string }) => {
+    const { data } = await supabase.from("articulos").select("nombre, precio_libre").eq("id", a.id).maybeSingle();
+    if (data?.precio_libre) setMontoLibre({ id: a.id, nombre: data.nombre as string });
+    else agregar.mutate({ id: a.id });
+  };
   const editarLinea = useAccion((a: { id: string; cambios: Partial<LineaPedido> }) => q(supabase.from("pedido_lineas").update(a.cambios).eq("id", a.id)), { invalidar: inv });
   const quitarLinea = useAccion((lid: string) => q(supabase.from("pedido_lineas").delete().eq("id", lid)), { invalidar: inv });
   const cambiarIva = useAccion(async (quitar: boolean) => { await q(supabase.rpc("pedido_sin_iva", { p_pedido: id, p_sin_iva: quitar })); return quitar; },
@@ -181,7 +190,7 @@ export default function DetallePedido() {
         <div className="space-y-4 min-w-0">
           <Tarjeta className="overflow-visible">
             <EncabezadoTarjeta titulo="Partidas" descripcion={editablePartidas ? "Mientras está confirmado se pueden ajustar." : undefined} />
-            {editablePartidas && <div className="px-4 pb-3"><BuscadorArticulo placeholder="Agregar partida desde el catálogo…" alElegir={(a) => agregar.mutate(a)} /></div>}
+            {editablePartidas && <div className="px-4 pb-3"><BuscadorArticulo placeholder="Agregar partida desde el catálogo…" alElegir={(a) => { void elegirArticulo(a); }} /></div>}
             <div className="overflow-x-auto">
               <table className="tabla">
                 <thead><tr><th>Partida</th><th className="text-right">Cant.</th><th className="text-right">P. unitario</th>{conDescuento && <th className="text-right">Desc.</th>}<th className="text-right">Importe</th>{editablePartidas && <th />}</tr></thead>
@@ -359,6 +368,10 @@ export default function DetallePedido() {
         </div>
       </div>
 
+      {montoLibre && (
+        <MontoLibre nombre={montoLibre.nombre} moneda={p.moneda} tasaIva={Number(p.tasa_iva)} guardando={agregar.isPending}
+          alGuardar={(precio) => agregar.mutate({ id: montoLibre.id, precio })} alCerrar={() => setMontoLibre(null)} />
+      )}
       <DialogoMotivo abierto={dlg === "cancelar"} alCambiar={(v) => setDlg(v ? "cancelar" : null)} titulo={`Cancelar ${p.folio}`}
         descripcion={(ordenes.data ?? []).some((o) => !["terminada", "entregada", "cancelada"].includes(o.estado)) ? "Ojo: tiene órdenes de producción abiertas; avisa a producción para que las cancele." : "El pedido deja de contar para comisiones y cobranza."}
         sugerencias={["El cliente canceló", "Pedido duplicado", "Sin anticipo en el plazo", "Cambió por otro equipo"]} textoBoton="Cancelar pedido"
@@ -457,6 +470,27 @@ function DialogoCredito({ abierto, alCambiar, pedidoId, vendedorId, actual }: {
         ))}
         <Boton variante="secundario" tamano="sm" onClick={() => setFilas([...filas, { vendedor_id: "", porcentaje: Math.max(0, 100 - suma) }])}><Plus className="h-3.5 w-3.5" />Agregar vendedor</Boton>
       </div>
+    </Dialogo>
+  );
+}
+
+/** El monto de un servicio sin precio de lista (paquetería): sin IVA, en la moneda del pedido. */
+function MontoLibre({ nombre, moneda, tasaIva, guardando, alGuardar, alCerrar }: {
+  nombre: string; moneda: string; tasaIva: number; guardando: boolean; alGuardar: (precio: number) => void; alCerrar: () => void;
+}) {
+  const [v, setV] = useState("");
+  const n = Number(v.replace(/[$,\s]/g, ""));
+  const listo = Number.isFinite(n) && n > 0;
+  return (
+    <Dialogo abierto alCambiar={(a) => !a && alCerrar()} titulo={`¿Cuánto es el ${nombre.toLowerCase()}?`}
+      descripcion="Este servicio no tiene precio fijo: escribe el monto de esta venta."
+      pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton>
+        <Boton onClick={() => listo && alGuardar(n)} disabled={!listo} cargando={guardando}><Plus className="h-4 w-4" />Agregar</Boton></>}>
+      <form onSubmit={(e) => { e.preventDefault(); if (listo) alGuardar(n); }}>
+        <Campo etiqueta="Monto sin IVA" ayuda={listo && tasaIva > 0 ? `Con IVA: ${dineroEn(Math.round(n * (1 + tasaIva) * 100) / 100, moneda as never)}` : undefined}>
+          <Entrada autoFocus inputMode="decimal" value={v} onChange={(e) => setV(e.target.value)} placeholder="Ej. 732.76" className="cifra w-40 block" />
+        </Campo>
+      </form>
     </Dialogo>
   );
 }
