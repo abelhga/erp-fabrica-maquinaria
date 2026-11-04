@@ -40,6 +40,16 @@ qué y foto, etiquetas QR/NFC (213); terminal con play y pausa, y criticidad cal
 
 ## Para hacer
 
+- **Nombres de componentes, segunda vuelta (por familia).** La 236 corrigió ortografía en 1,300
+  nombres y dejó a los tornillos para cangilón como modelo: `Tornillo para cangilón de 1/4" X 1"
+  galvanizado [con uña]` (medidas con comillas, «X» mayúscula, acabado en minúsculas al final).
+  Falta, familia por familia y con el visto bueno de quien lo pidió:
+  - el mismo formato en las demás familias (cangilones, poleas, chumaceras, catarinas…);
+  - abreviaturas sueltas: «Galv.», «Inox», «monof.», «sup.», «Rec.», «mts», «cal.»;
+  - los nombres en MAYÚSCULAS (sobre todo bandas) a mayúscula inicial;
+  - ¿son el mismo artículo con dos claves? Pulimento (litro) C-N1040 / C-N3864, Tuerca inserto
+    rosca fina 3/4" C-N1219 / C-N4093, Segueta para sierra sable 6" 24tpi C-N1955 / C-N3946.
+
 - **Correo con Gmail, segunda etapa: leer.** Mandar (217) y los correos de importaciones (225:
   hilos ligados al embarque y la IA que propone en qué va) ya están. Falta:
   - Ventas y compras: ver en la cotización o la OC si el cliente o el proveedor contestó (el hilo
