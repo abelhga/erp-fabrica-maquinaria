@@ -264,9 +264,9 @@ function TarjetaPiso({ o, pedir, ahora, tenue }: { o: OperacionPiso; pedir: (o: 
     <article className={cn("tarjeta p-4 sm:p-5 space-y-3 border-l-[6px]", tenue && "opacity-90")} style={{ borderLeftColor: o.color }}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-lg text-tenue cifra">{folioCorto(o.folio)}{o.numero_serie && ` · ${o.numero_serie}`}</p>
+          <p className="text-lg cifra"><b>{folioCorto(o.folio)}</b><span className="text-tenue">{o.numero_serie && ` · ${o.numero_serie}`}</span></p>
           <p className="text-2xl font-bold leading-tight">{abreviarEquipo(o.equipo)}</p>
-          <p className="text-lg text-tenue">{o.pedido_folio ? <><b className="text-texto cifra">{o.pedido_folio}</b> · {o.cliente ?? "—"}</> : "Para stock"}</p>
+          <p className="text-lg text-tenue">{o.pedido_folio ? <><span className="cifra">{o.pedido_folio}</span> · {o.cliente ?? "—"}</> : "Para stock"}</p>
         </div>
         <div className="text-right">
           <span className={cn("inline-block rounded-xl px-3 py-1 text-lg font-semibold",
@@ -387,7 +387,7 @@ function Confirmar({ p, nombre, cargando, alConfirmar, alCancelar, alCambiarNomb
   return (
     <Modal titulo={`${A.verbo} ${p.op.etapa}`} alCerrar={alCancelar}>
       <div className="rounded-xl bg-fondo p-4 mb-4">
-        <p className="text-tenue cifra">{folioCorto(p.op.folio)}{p.op.numero_serie && ` · ${p.op.numero_serie}`}</p>
+        <p className="cifra"><b>{folioCorto(p.op.folio)}</b><span className="text-tenue">{p.op.numero_serie && ` · ${p.op.numero_serie}`}</span></p>
         <p className="text-xl font-bold">{abreviarEquipo(p.op.equipo)}</p>
         <p className="text-tenue">{p.op.cliente ?? "Para stock"}</p>
       </div>

@@ -707,7 +707,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   ],
   "nivel": 2,
   "texto": [
-   "La tablet de cada estación del taller: muestra lo que se trabaja en su etapa, en el orden de la cola que acomoda la gerencia en Cuadrillas o en el Gantt, y con botones grandes se inicia, pausa, reanuda o termina cada orden, o se reporta un problema. La usan los encargados de piso.",
+   "La tablet de cada estación del taller: muestra lo que se trabaja en su etapa, en el orden de la cola que acomoda la gerencia en Cuadrillas o en el Gantt, y con botones grandes se inicia, pausa, reanuda o termina cada orden, o se reporta un problema. La usan los encargados de piso. Cada tarjeta dice primero la OP (la orden que se fabrica) y el equipo; abajo, más chico, el pedido y el cliente. En la TV, la cinta «Último» dice lo que pasó en el taller en los últimos días: qué OP empezó, pausó o terminó cada área y quién, los problemas, el material que entregó almacén y las órdenes nuevas o terminadas.",
    "Al iniciar o reanudar, toca quiénes trabajan: vienen marcados los que planeó la gerencia en Cuadrillas (en lo que no ha empezado dice «Le toca»); si no hay, la última cuadrilla de esa tablet. Primero sale la gente de esa etapa. Si alguien no está dado de alta o es un ayudante de paso, súmalo en «Sin nombre». En cada orden en proceso, «Se une» agrega a alguien y «Sale» lo quita, sin detener la etapa. Una persona no puede estar en dos etapas a la vez.",
    "Con eso salen las horas hombre de cada etapa: el tiempo de cada persona sumado. Se ven en el detalle de la orden contra las horas estimadas del costeo. Al pausar o terminar la etapa salen todos.",
    "¿Hay que pausar para desayunar? Arriba de la lista lo dice. Si la gerencia eligió «Solo el horario del taller», no: la noche, los días que no se trabaja y los descansos no cuentan; pausa solo cuando dejen la orden. Fuera de horario, lo que quedó iniciado dice «fuera de horario» y sigue solo cuando abre el taller. Si eligió «Lo que marque la terminal», sí: pausa al desayunar, al comer y al irte.",
@@ -1069,7 +1069,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "El editor de la cotización: la plantilla de la hoja, pero cada versión se guarda y no pisa la anterior. Se guarda solo mientras escribes; arriba dice “Guardado” con la hora.",
    "Agrega partidas escribiendo parte del nombre o la clave y Enter: precio de lista, descripción y foto se llenan solos (clic en la foto para pegar otra liga o subir una). Para fletes, instalación o servicios usa “Partida libre”; con “Flete con Skydropx” cotizas el envío con el código postal del cliente y los bultos de las partidas, y se agrega la partida de flete con su precio (no se genera guía ni se cobra); si algo no tiene precio, “Pedir precio a compras” y aquí ves cuando contestan. Clic en una partida muestra su ficha de venta: precio mínimo, existencia y entrega.",
-   "Si un precio queda abajo del mínimo, la partida se marca en rojo y la cotización pasa a “Por autorizar”: pide la autorización a la gerencia antes de enviarla. Ya enviada no se edita; para cambiarla saca una nueva versión.",
+   "Si un precio queda abajo del mínimo, la partida se marca en rojo y la cotización pasa a “Por autorizar”: pide la autorización a la gerencia antes de enviarla. Ya enviada no se edita; para cambiarla saca una nueva versión: te pregunta si la actual ya no vale (queda rechazada, o cancelada si no se envió) o si sigue vigente.",
    "El botón principal cambia según el estado: Enviar (por WhatsApp, por correo o PDF; la deja como enviada y agenda preguntar qué pasó en 3 días hábiles; con más de 10 seguimientos vencidos no deja enviar, ni sacar el PDF o la vista previa de una cotización que todavía no envías, hasta ponerte al día), Convertir a pedido (eliges partidas y fecha compromiso) o Nueva versión. En el menú “···” están imprimir, duplicar y marcar rechazada con su motivo. “Vista previa” te enseña la hoja tal como la recibe el cliente sin salir del editor. Si el equipo tiene más fotos, salen en miniatura bajo la partida y en la hoja de fotos al final del PDF; pasa el mouse por una y con la × la quitas de esta cotización.",
    "«Por correo» (en Enviar o en el menú “···”) manda la cotización desde tu propio Gmail con el PDF adjunto: el mismo que sale en Imprimir. Propone el correo del contacto y los demás contactos del cliente con correo; puedes cambiar el asunto y el mensaje. Las respuestas te llegan a tu Gmail, como siempre. La primera vez te pide conectar tu Gmail. Si la cotización no se puede enviar (precios abajo del mínimo sin autorizar, seguimientos vencidos), te dice por qué y no sale nada. Ya mandada queda como enviada, con su seguimiento, y en la bitácora del cliente queda a qué correo se fue.",
    "Si el cliente no quiere factura, marca «Sin IVA (no lleva factura)»: el precio de cada partida queda igual sin IVA y el total es el subtotal. Si los precios traían IVA incluido, se les quita. En la hoja impresa solo sale el total (sin renglón de IVA) y el pedido sale sin IVA. Se cambia mientras la cotización no se haya enviado; ya enviada, saca una nueva versión.",
@@ -1357,7 +1357,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "La única forma de corregir una existencia. Lo pide quien encontró la diferencia y lo autoriza la gerencia de producción, dirección o el jefe de almacén; quien lo pidió no se lo autoriza (salvo dirección). Hasta entonces la existencia no cambia. Al autorizarlo se aplica la diferencia que se encontró, así que lo que entró o salió desde que se pidió se respeta; si con eso la existencia quedaría negativa, no se autoriza y se vuelve a contar."
+  "texto": "La única forma de corregir una existencia. Lo pide quien encontró la diferencia y lo autoriza la gerencia de producción, dirección o el jefe de almacén; quien lo pidió no se lo autoriza (salvo dirección). Hasta entonces la existencia no cambia. Al autorizarlo se aplica la diferencia que se encontró, así que lo que entró o salió desde que se pidió se respeta; si con eso la existencia quedaría negativa, no se autoriza y se vuelve a contar. Si el artículo se contó en ese almacén después de pedir el ajuste, ya no se autoriza: el conteo ya lo dejó en lo que hay, así que se rechaza y queda como constancia."
  },
  {
   "clave": "alcanceRol",
@@ -4569,6 +4569,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Copia la cotización con el mismo folio y “-v2”, “-v3”… para seguir la misma negociación sin tocar lo que ya se mandó. “Duplicar” en cambio le da un folio nuevo."
+ },
+ {
+  "clave": "nuevaVersionCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Una nueva versión sale como borrador con las mismas partidas y el folio con -v2, -v3… Si la actual sigue viva, te pregunta qué pasa con ella: «Ya no vale» la deja rechazada (si ya se había enviado) o cancelada (si no), con «Se reemplazó por la versión…»; deja de agendar seguimientos, no se puede convertir a pedido por error y no cuenta como venta perdida. «Sigue vigente» la deja como está, para cuando el cliente puede escoger cualquiera de las dos."
  },
  {
   "clave": "numeroSerie",

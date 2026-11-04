@@ -82,7 +82,13 @@ export default function PantallaPiso() {
   });
   const eventos = useQuery({
     queryKey: [...CLAVE, "eventos", "tv"], refetchInterval: REFRESCO_MS,
-    queryFn: () => q<Evento[]>(supabase.from("v_op_eventos").select("*").order("en", { ascending: false }).order("id", { ascending: false }).limit(14)),
+    // Solo lo que le sirve al piso (quién empezó, pausó o terminó qué, un problema, material entregado,
+    // una orden nueva o terminada). Las notas de oficina (material apartado, compras, decisiones de
+    // ingeniería, cambios de lista) llenaban la cinta y casi no se veía lo del taller.
+    queryFn: async () => (await q<Evento[]>(supabase.from("v_op_eventos").select("*").in("tipo", TIPOS_CINTA)
+      .gte("en", new Date(Date.now() - 3 * 86_400_000).toISOString())
+      .order("en", { ascending: false }).order("id", { ascending: false }).limit(30)))
+      .filter((e) => !(e.tipo === "surtido" && /ya se hab[ií]an entregado/i.test(e.nota ?? ""))).slice(0, 14),
   });
 
   const [ahora, setAhora] = useState(Date.now());
@@ -247,8 +253,8 @@ function TarjetaTV({ t }: { t: Tarjeta }) {
       <p className="text-[40px] font-extrabold leading-[1.1] line-clamp-2">{abreviarEquipo(o.equipo)}</p>
       <div className="flex items-center gap-3 min-w-0">
         <p className="text-[28px] text-tenue truncate min-w-0">
-          <span className="cifra">{folioTV(o.folio)}</span>
-          {o.pedido_folio ? <> · <b className="text-texto cifra">{folioTV(o.pedido_folio)}</b> · {o.cliente ?? "—"}</> : " · Para stock"}
+          <b className="text-texto cifra">{folioTV(o.folio)}</b>
+          {o.pedido_folio ? <> · <span className="cifra">{folioTV(o.pedido_folio)}</span> · {o.cliente ?? "—"}</> : " · Para stock"}
         </p>
         <span className={cn("ml-auto rounded-xl px-3 py-0.5 text-[28px] font-bold whitespace-nowrap cifra shrink-0",
           tarde ? "bg-peligro text-white" : cerca ? "bg-aviso text-black" : "text-tenue")}>
@@ -275,8 +281,30 @@ function TarjetaTV({ t }: { t: Tarjeta }) {
   );
 }
 
+const TIPOS_CINTA = ["inicio", "pausa", "reanudar", "fin", "problema", "surtido", "liberada", "terminada", "entregada", "reabierta", "etapa_agregada"];
+
+/** Cómo lo lee el piso: primero la OP y el equipo, luego qué pasó y quién. */
+function textoCinta(e: Evento) {
+  const op = `${folioTV(e.folio)} ${abreviarEquipo(e.equipo)}`;
+  const quien = e.responsable ? ` (${e.responsable})` : "";
+  switch (e.tipo) {
+    case "inicio": return `${op} · ${e.etapa} empezó${quien}`;
+    case "pausa": return `${op} · ${e.etapa} en pausa${e.nota ? `: ${e.nota}` : quien}`;
+    case "reanudar": return `${op} · ${e.etapa} siguió${quien}`;
+    case "fin": return `${op} · ${e.etapa} terminó${quien}`;
+    case "problema": return `${op} · Problema en ${e.etapa ?? "el taller"}${e.nota ? `: ${e.nota}` : ""}`;
+    case "surtido": return `${op} · Almacén entregó material${e.responsable ? ` a ${e.responsable}` : ""}`;
+    case "liberada": return `${op} · Nueva para el taller`;
+    case "terminada": return `${op} · Terminada`;
+    case "entregada": return `${op} · Entregada al cliente`;
+    case "reabierta": return `${op} · ${e.etapa} se reabrió${e.nota ? `: ${e.nota}` : ""}`;
+    case "etapa_agregada": return `${op} · Se agregó ${e.etapa}`;
+    default: return textoEvento(e, true, op);
+  }
+}
+
 function Ticker({ eventos, ahora }: { eventos: Evento[]; ahora: number }) {
-  const textos = eventos.map((e) => `${textoEvento(e, true, abreviarEquipo(e.equipo))} · ${haceRato(e.en, ahora)}`);
+  const textos = eventos.map((e) => `${textoCinta(e)} · ${haceRato(e.en, ahora)}`);
   const linea = textos.join("     ●     ");
   // La duración sale del ancho medido, no de contar letras: los espacios del separador se
   // juntan en uno al dibujarse y el mínimo de 30 s frenaba la cinta cuando había poco texto.
@@ -401,8 +429,8 @@ function PantallaCuadrillas({ ops, etapas, ahora }: { ops: OperacionPiso[]; etap
                   <div className="min-w-0">
                     <p className={cn("font-bold leading-tight", grande ? "text-[36px] line-clamp-2" : chico ? "text-[24px] truncate" : "text-[28px] truncate")}>{abreviarEquipo(o.equipo)}</p>
                     <p className={cn("text-[24px] text-tenue truncate", chico && "hidden")}>
-                      <span className="cifra">{folioTV(o.folio)}</span>
-                      {o.pedido_folio ? <> · <span className="cifra text-texto">{folioTV(o.pedido_folio)}</span>{o.cliente ? ` · ${o.cliente}` : ""}</> : " · Para stock"}
+                      <b className="cifra text-texto">{folioTV(o.folio)}</b>
+                      {o.pedido_folio ? <> · <span className="cifra">{folioTV(o.pedido_folio)}</span>{o.cliente ? ` · ${o.cliente}` : ""}</> : " · Para stock"}
                     </p>
                   </div>
                   <Cuartos avance={o.avance_etapa} color={o.color} grande={grande} />
@@ -501,7 +529,7 @@ function PantallaEntregas({ ordenes, hoy, etapas }: { ordenes: OrdenTablero[]; h
                             <span className="rounded-md px-2 py-0.5 font-bold truncate max-w-[55%]"
                               style={color ? { background: color, color: tintaSobre(color) } : undefined}>{o.etapa_actual}</span>
                           )}
-                          <span className="text-tenue cifra whitespace-nowrap">{o.pedido_folio ? folioTV(o.pedido_folio) : "stock"}</span>
+                          <span className="text-texto font-semibold cifra whitespace-nowrap">{folioTV(o.folio)}</span>
                           <span className={cn("ml-auto text-[30px] font-extrabold cifra leading-none", tono.cifra)}>{e === "lista" ? "✓" : `${Math.round(Number(o.avance))}%`}</span>
                         </div>
                       </div>
