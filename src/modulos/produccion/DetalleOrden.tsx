@@ -404,7 +404,7 @@ export default function DetalleOrden() {
           tiene={(operaciones.data ?? []).map((x) => x.etapa_id)} />
       </>}
       {p.almacen && <DialogoSurtir abierto={dialogo === "surtir"} alCambiar={abrir("surtir")} ordenId={id} folio={o.folio} material={lista} creadaEn={o.creado_en} />}
-      {p.solicitar && <DialogoCambioIngenieria abierto={dialogo === "cambio"} alCambiar={abrir("cambio")} o={basica} material={lista} />}
+      {p.solicitar && <DialogoCambioIngenieria abierto={dialogo === "cambio"} alCambiar={abrir("cambio")} o={basica} material={lista.filter((m) => !m.quitado_en)} />}
     </Pagina>
   );
 }

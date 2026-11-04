@@ -90,6 +90,10 @@ export interface MaterialOP {
   del_taller: boolean;
   /** La categoría del artículo (Eléctricos, Material para aire…), para agrupar y buscar. */
   categoria: string | null;
+  /** Se quitó de esta orden: queda tachado como constancia, con cuánto llevaba, quién, cuándo y por qué. */
+  quitado_en: string | null; motivo_quitado: string | null; quitado_por: string | null; requerido_antes: number | null;
+  /** El renglón que este material reemplazó, y por cuál se reemplazó este. */
+  reemplaza_a: string | null; reemplaza_a_nombre: string | null; reemplazado_por: string | null;
 }
 
 export function useTablero() {
