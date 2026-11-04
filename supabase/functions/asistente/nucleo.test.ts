@@ -175,6 +175,46 @@ describe.skipIf(!hayBase)("asistente contra la base local", () => {
     }
   });
 
+  it("mensaje para un lead: lleva lo que busca, la instrucción y lo último que mandó el vendedor (sin teléfono); quien no ve el lead no lo pide", async () => {
+    const { default: pg } = await import("pg");
+    const db = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres" });
+    await db.connect();
+    const yo = (await db.query("select id from auth.users where email = 'isaac@hegamex.com'")).rows[0].id;
+    const ids: string[] = [];
+    try {
+      for (const [nombre, tel, interes] of [["Rocío prueba-lead", "5550001001", "Silo de 30 toneladas para cemento"], ["Otro prueba-lead", "5550001002", "Cribadora"]]) {
+        ids.push((await db.query("insert into leads (nombre, telefono, interes, ciudad, vendedor_id) values ($1, $2, $3, 'León', $4) returning id",
+          [nombre, tel, interes, yo])).rows[0].id);
+      }
+      // Lo que Isaac ya le mandó a otro lead: la IA lo recibe para no repetirlo.
+      await db.query("insert into lead_intentos (lead_id, usuario_id, canal, resultado, nota) values ($1, $2, 'whatsapp', 'enviado', 'Buen día, aquí Isaac de Hegamex, mensaje-anterior-xyz')", [ids[1], yo]);
+      const propuesta = { asunto: "", mensaje: "Hola Rocío, ¿el silo sería para planta en León? Isaac" };
+      const { falso, recibido } = claudeFalso([{ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(propuesta), citations: null }] as Anthropic.Beta.BetaContentBlock[] }]);
+      const pedir = (token: string, f?: Pick<Anthropic, "beta">) => atender(new Request("http://x/", {
+        method: "POST", headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ modo: "mensaje_lead", lead_id: ids[0], canal: "whatsapp", instruccion: "Dile que hay uno en existencia" }),
+      }), { supabaseUrl: URL_SB, supabaseAnonKey: ANON, ...(f ? { crearAnthropic: () => f } : {}) });
+      const r = await pedir(isaac.token, falso);
+      expect(r.status).toBe(200);
+      expect(await r.json()).toMatchObject(propuesta);
+      const enviado = JSON.stringify(recibido[0].messages);
+      expect(enviado).toContain("Silo de 30 toneladas para cemento");
+      expect(enviado).toContain("Dile que hay uno en existencia");
+      expect(enviado).toContain("mensaje-anterior-xyz");
+      expect(enviado).not.toContain("5550001001");
+      // Sin llave, una plantilla con lo que busca y lo dice.
+      const sin = await (await pedir(isaac.token)).json();
+      expect(sin).toMatchObject({ simulado: true });
+      expect(sin.mensaje).toContain("silo de 30 toneladas");
+      // Almacén no ve los leads: no hay mensaje.
+      const alm = await sesion("almacen@hegamex.com");
+      expect((await pedir(alm.token)).status).not.toBe(200);
+    } finally {
+      await db.query("delete from leads where id = any($1)", [ids]);
+      await db.end();
+    }
+  });
+
   it("almacén no lee el libro de ventas aunque Claude lo pida", async () => {
     const alm = await sesion("almacen@hegamex.com");
     const r = await ejecutarHerramienta(alm.db, "consultar", {

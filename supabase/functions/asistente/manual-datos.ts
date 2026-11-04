@@ -1128,7 +1128,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Aquí se anota a quien llama o escribe interesado y todavía no es cliente ni oportunidad, para que no se pierda en un papel. Lo usan recepción, los vendedores, la gerencia de ventas y marketing, que los ve todos para saber de dónde llegan y qué pasó con ellos.",
    "Con «Registrar lead» anotas quién es, su teléfono o correo y qué busca, con sus palabras. Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es y dices «Es este», le llega directo a su vendedor. Enter lo guarda.",
    "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma o nadie lo atiende a tiempo, se le avisa a la gerencia.",
-   "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no: «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo. Hasta que contesta (o pide cotización) se habilita «Crear oportunidad» (si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta). Si no le interesa, se descarta con el motivo. La columna «Intentos» dice lo último que hiciste y cuándo («Le escribiste por WhatsApp · hace 2 h»), y «Sin contactar» junta a los que todavía no les has escrito ni llamado. Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad."
+   "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no: «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo. Hasta que contesta (o pide cotización) se habilita «Crear oportunidad» (si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta). Si no le interesa, se descarta con el motivo. Para escribirle, «Mensaje con IA» te lo redacta con lo que busca y lo que le pidas en la caja de contexto; cada uno sale distinto, porque WhatsApp bloquea a quien manda el mismo texto a muchos, y al abrirlo en WhatsApp se anota «Le escribí». La columna «Intentos» dice lo último que hiciste y cuándo («Le escribiste por WhatsApp · hace 2 h»), y «Sin contactar» junta a los que todavía no les has escrito ni llamado. Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad."
   ]
  },
  {
@@ -3976,6 +3976,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Si tiene crédito Infonavit, su número y el descuento que dice el aviso de retención. Sirve para no olvidar el descuento al hacer la nómina."
  },
  {
+  "clave": "instruccionIA",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Lo que quieres que diga el mensaje o algo que la IA no sabe: si ya hay existencia, si lo invitas a planta, si ya te había llamado antes, el tono. Es opcional. No escribas precios que no hayas confirmado: la IA los pone tal cual."
+ },
+ {
   "clave": "insumosServicio",
   "modulos": [
    "servicio",
@@ -4283,6 +4293,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Ideas que todavía nadie decide. Ingeniería de procesos o la gerencia de producción las revisan: si van, les ponen quién las lleva y para cuándo y las ponen en marcha; si no, las descartan con su motivo (quien la propuso lo lee)."
+ },
+ {
+  "clave": "mensajeIALead",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "«Mensaje con IA» te escribe el WhatsApp o el correo para este lead. Arriba puedes ponerle contexto o una instrucción («dile que la banda está en existencia», «pregúntale si ya tiene dónde instalarlo», «más formal, es para una constructora»); si lo dejas vacío, lo escribe con lo que busca y los intentos anteriores. No inventa precios, tiempos ni existencias. Lo revisas, lo cambias si quieres y lo abres en WhatsApp o en el correo; al abrirlo se anota «Le escribí» con ese texto. Cada mensaje sale distinto a los últimos que mandaste: WhatsApp bloquea por un día a quien manda casi el mismo texto a muchos números. Aun así, escríbele a uno a la vez y deja unos minutos entre uno y otro."
  },
  {
   "clave": "mensajeSeguimiento",

@@ -790,6 +790,83 @@ export async function redactar(opts: {
 }
 
 // -----------------------------------------------------------------------------
+// Mensaje para un lead (alguien que nos buscó y todavía no es cliente). Se lee con la
+// sesión del vendedor: si la RLS no le deja ver el lead, no hay mensaje. Va lo que se sabe
+// del lead y sus intentos, más la instrucción que escriba el vendedor; sin teléfono ni correo
+// (no hacen falta para redactar) y sin precios: la IA no inventa precios ni tiempos.
+// -----------------------------------------------------------------------------
+export async function datosLead(db: SupabaseClient, leadId: string, usuarioId?: string) {
+  const lead = revisar(await db.from("v_leads")
+    .select("nombre,empresa,ciudad,estado_mx,interes,linea,fuente,notas,cliente_nombre,creado_en,estado")
+    .eq("id", leadId).maybeSingle()) as Record<string, string | null> | null;
+  if (!lead) throw new ErrorHerramienta("No existe ese lead o no lo puedes ver.");
+  const intentos = (revisar(await db.from("lead_intentos").select("canal,resultado,nota,en").eq("lead_id", leadId)
+    .order("en", { ascending: false }).limit(10)) ?? []) as { canal: string; resultado: string; nota: string | null; en: string }[];
+  // Lo último que este vendedor les mandó a otros leads. WhatsApp bloquea por 24 h al que manda casi
+  // el mismo texto a muchos números que no lo tienen guardado (le pasó a Isaac): la IA los lee para
+  // escribir este distinto, no para copiarlos.
+  const anteriores = usuarioId ? ((revisar(await db.from("lead_intentos").select("nota").eq("usuario_id", usuarioId)
+    .eq("resultado", "enviado").neq("lead_id", leadId).not("nota", "is", null).order("en", { ascending: false }).limit(6)) ?? []) as { nota: string }[])
+    .map((x) => x.nota.slice(0, 600)) : [];
+  return {
+    lead: { ...lead, creado_en: (lead.creado_en ?? "").slice(0, 10) },
+    intentos: intentos.map((i) => ({ fecha: i.en.slice(0, 10), por: i.canal, resultado: i.resultado, nota: i.nota })),
+    anteriores,
+  };
+}
+export type DatosLead = Awaited<ReturnType<typeof datosLead>>;
+
+export async function redactarLead(opts: {
+  anthropic: Pick<Anthropic, "beta">; perfil: Perfil; config: Config; datos: DatosLead; canal: "whatsapp" | "correo"; instruccion: string;
+}) {
+  const primero = opts.datos.intentos.length === 0;
+  const flujo = opts.anthropic.beta.messages.stream({
+    model: opts.config.modelo,
+    max_tokens: 4000,
+    betas: BETAS,
+    fallbacks: "default",
+    output_config: { effort: "low", format: { type: "json_schema", schema: ESQUEMA_MENSAJE } },
+    system: sistema(opts.perfil),
+    messages: [{
+      role: "user",
+      content: `Redacta un ${opts.canal === "whatsapp" ? "WhatsApp (máximo 6 renglones, sin asunto)" : "correo breve con asunto"} ` +
+        `de ${opts.perfil.nombre}, vendedor de Hegamex, para este lead: alguien que nos buscó interesado y todavía no es cliente. ` +
+        (primero
+          ? "Es el primer contacto: preséntate, retoma lo que busca y pregunta lo necesario para cotizarle (para cuándo, dónde, capacidad o medidas). "
+          : "Ya se le buscó antes sin respuesta (ve los intentos): sé breve, retoma lo que busca y no repitas un mensaje anterior. ") +
+        "No inventes precios, tiempos de entrega, existencias ni datos técnicos que no estén aquí o en la instrucción. Firma con el nombre de pila.\n" +
+        "Que no parezca plantilla: WhatsApp bloquea al que manda casi el mismo texto a muchos números. Escríbelo para esta persona " +
+        "(lo que busca, su ciudad, cómo nos encontró, lo que dice la instrucción), termina con una sola pregunta concreta que le dé ganas de contestar, " +
+        "sin enlaces, sin mayúsculas ni signos de más, y con un saludo, un arranque y una pregunta distintos a los de los mensajes anteriores del vendedor " +
+        "(van abajo solo para no repetirlos; no los menciones ni copies frases).\n" +
+        `Instrucción del vendedor: ${opts.instruccion || "(ninguna)"}\n` +
+        "Lo que se sabe del lead:\n```json\n" + JSON.stringify({ lead: opts.datos.lead, intentos: opts.datos.intentos }).slice(0, 8000) + "\n```\n" +
+        (opts.datos.anteriores.length
+          ? "Mensajes anteriores del vendedor a otros leads (NO los repitas):\n" + opts.datos.anteriores.map((m, i) => `${i + 1}. ${m}`).join("\n---\n")
+          : ""),
+    }],
+  });
+  const r = await flujo.finalMessage();
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("La IA no quiso redactar este mensaje.");
+  const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
+  if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("No salió el mensaje; intenta de nuevo.");
+  return { ...(JSON.parse(bloque.text) as { asunto: string; mensaje: string }), modelo: r.model,
+    entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+}
+
+/** Sin la llave de la IA: una plantilla con lo que busca el lead. */
+export function leadSinIA(datos: DatosLead, canal: "whatsapp" | "correo", firma: string) {
+  const nombre = (datos.lead.nombre ?? "").split(/\s+/)[0] || "";
+  const busca = (datos.lead.interes ?? "").replace(/[.\s]+$/, "");
+  return {
+    asunto: canal === "correo" ? `Información de ${busca || "su solicitud"} · Hegamex` : "",
+    mensaje: `Hola${nombre ? ` ${nombre}` : ""}, le saluda ${firma || "su asesor"} de Hegamex. ` +
+      `Recibimos su interés${busca ? ` en ${busca.charAt(0).toLowerCase()}${busca.slice(1)}` : ""}. ` +
+      "Para prepararle una cotización, ¿me comparte para cuándo lo necesita y dónde se instalaría?",
+  };
+}
+
+// -----------------------------------------------------------------------------
 // Mensaje de seguimiento de una cotización: lo escribe con lo que el vendedor anotó en
 // «¿Qué pasó?». Es la paga de anotar: con «lo está viendo con su socio, quiere la
 // instalación» sale un mensaje que retoma eso; sin notas, uno genérico sobre el equipo.
@@ -1829,6 +1906,18 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
         });
       }
       const r = await redactar({ anthropic, db, perfil, config, clienteId: cuerpo.cliente_id as string, canal, motivo });
+      await registrar(r);
+      return json({ asunto: r.asunto, mensaje: r.mensaje, modelo: r.modelo });
+    }
+
+    if (modo === "mensaje_lead") {
+      if (!esUuid(cuerpo.lead_id)) return json({ error: "Falta el lead" }, 400);
+      const canal = cuerpo.canal === "correo" ? "correo" : "whatsapp";
+      const instruccion = texto(cuerpo.instruccion).slice(0, 600);
+      const datos = await datosLead(db, cuerpo.lead_id as string, perfil.id);
+      const firma = perfil.nombre.split(/\s+/)[0] ?? "";
+      if (!anthropic) return json({ ...leadSinIA(datos, canal, firma), simulado: true });
+      const r = await redactarLead({ anthropic, perfil, config, datos, canal, instruccion });
       await registrar(r);
       return json({ asunto: r.asunto, mensaje: r.mensaje, modelo: r.modelo });
     }
