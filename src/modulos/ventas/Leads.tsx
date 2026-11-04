@@ -18,9 +18,9 @@ import { LINEA, enlaceWhatsApp } from "./comun";
 import { DialogoMotivo } from "./componentes/dialogos";
 import { DialogoLead } from "./leads/DialogoLead";
 import { ConfigLeads } from "./leads/ConfigLeads";
-import { CANAL_INTENTO, CLAVE_LEADS, MODOS, estadoLead, hace, useConfigLeads, useVendedoresLeads, type CanalIntento, type IntentoLead, type Lead, type ModoLeads } from "./leads/datos";
+import { CANAL_INTENTO, CLAVE_LEADS, MODOS, botonSinRespuesta, estadoLead, hace, textoIntento, useConfigLeads, useVendedoresLeads, type CanalIntento, type IntentoLead, type Lead, type ModoLeads, type ResultadoIntento } from "./leads/datos";
 
-type Vista = "abiertos" | "por_tomar" | "mios" | "registre" | "cerrados" | "todos";
+type Vista = "abiertos" | "por_tomar" | "mios" | "sin_contactar" | "registre" | "cerrados" | "todos";
 const COMO: Record<NonNullable<Lead["como_se_asigno"]>, string> = {
   cliente: "ya era su cliente", bandeja: "lo tomó de la bandeja", gerente: "se lo asignó la gerencia", recepcion: "se lo pasó quien lo registró",
 };
@@ -51,6 +51,8 @@ export default function Leads() {
     v === "abiertos" ? l.estado === "nuevo" || l.estado === "asignado"
     : v === "por_tomar" ? l.estado === "nuevo"
     : v === "mios" ? l.vendedor_id === yo && l.estado === "asignado"
+    // A quién no se le ha escrito ni llamado: los del vendedor, o todos los asignados para la gerencia.
+    : v === "sin_contactar" ? l.estado === "asignado" && l.intentos === 0 && (gerencia || l.vendedor_id === yo)
     : v === "registre" ? l.capturado_por === yo
     : v === "cerrados" ? l.estado === "convertido" || l.estado === "descartado" : true;
   const cuenta = (v: Vista) => todos.filter((l) => pasa(l, v)).length;
@@ -67,6 +69,7 @@ export default function Leads() {
     ...(gerencia ? [{ valor: "abiertos" as Vista, texto: "Abiertos", cuenta: cuenta("abiertos") }] : []),
     ...(vende || gerencia ? [{ valor: "por_tomar" as Vista, texto: modo === "gerente" ? "Por asignar" : "Por tomar", cuenta: cuenta("por_tomar"), explica: GLOSARIO.modoLeads }] : []),
     ...(vende ? [{ valor: "mios" as Vista, texto: "Míos", cuenta: cuenta("mios") }] : []),
+    ...(vende || gerencia ? [{ valor: "sin_contactar" as Vista, texto: "Sin contactar", cuenta: cuenta("sin_contactar"), explica: GLOSARIO.sinContactarLead }] : []),
     { valor: "registre", texto: "Los que registré", cuenta: cuenta("registre") },
     { valor: "cerrados", texto: "Atendidos" },
     { valor: "todos", texto: "Todos" },
@@ -82,7 +85,7 @@ export default function Leads() {
       celda: (l) => { const e = estadoLead(l, modo); return <span title={l.motivo_descarte ?? undefined}><Insignia tono={e.tono}>{e.texto}</Insignia></span>; } },
     { clave: "intentos", titulo: "Intentos", explica: GLOSARIO.intentoLead, oculta: !gerencia && !vende, alinear: "der", valor: (l) => l.intentos,
       celda: (l) => l.estado !== "asignado" ? <span className="text-tenue">—</span> : l.contesto ? <Insignia tono="ok">Contestó</Insignia>
-        : l.intentos ? <span className="whitespace-nowrap text-sm">{l.intentos} sin respuesta<span className="block text-[11px] text-tenue">{hace(l.ultimo_intento)}</span></span>
+        : l.intentos ? <span className="whitespace-nowrap text-sm">{textoIntento(l.ultimo_canal, l.ultimo_resultado).largo}<span className="block text-[11px] text-tenue">{hace(l.ultimo_intento)}{l.intentos > 1 ? ` · ${l.intentos} intentos` : ""}</span></span>
         : <span className="text-sm text-aviso">Ninguno</span> },
     { clave: "capturo", titulo: "Lo registró", clase: "whitespace-nowrap text-tenue", oculta: !gerencia && !vende },
   ];
@@ -103,7 +106,7 @@ export default function Leads() {
           <span className="ml-auto text-xs text-tenue" data-explain={GLOSARIO.modoLeads} data-explain-title="¿A quién le llega?">
             {MODOS.find((m) => m.valor === modo)?.texto}</span>
         </>}
-        vacio={{ icono: Inbox, titulo: vista === "por_tomar" ? "No hay leads por tomar" : vista === "mios" ? "No tienes leads pendientes" : "Nada con este filtro",
+        vacio={{ icono: Inbox, titulo: vista === "por_tomar" ? "No hay leads por tomar" : vista === "mios" ? "No tienes leads pendientes" : vista === "sin_contactar" ? "A todos ya les escribiste o llamaste" : "Nada con este filtro",
           texto: puede("leads", 2) ? "Cuando alguien llame interesado, regístralo con «Registrar lead»: quién, su teléfono y qué busca." : undefined,
           accion: puede("leads", 2) ? <Boton variante="secundario" onClick={() => setNuevo(true)}><Plus className="h-4 w-4" />Registrar lead</Boton> : undefined }} />
 
@@ -151,10 +154,10 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
     await q(supabase.rpc("convertir_lead", { p_lead: a.id, p_cliente: a.cliente }));
     return q<{ cliente_id: string }>(supabase.from("leads").select("cliente_id").eq("id", a.id).single());
   }, { exito: "Listo: ya es oportunidad de su cliente", invalidar: [...invalidar, ["v_oportunidades"], ["v_clientes"]], alTerminar: (r) => alConvertir(r.cliente_id) });
-  const intento = useAccion(async (a: { id: string; resultado: "contesto" | "no_contesto" }) => {
+  const intento = useAccion(async (a: { id: string; resultado: ResultadoIntento }) => {
     await q(supabase.rpc("registrar_intento_lead", { p_lead: a.id, p_canal: canal, p_resultado: a.resultado, p_nota: a.resultado === "contesto" ? dijo : null }));
     return a.resultado;
-  }, { exito: (r) => (r === "contesto" ? "Anotado: ya lo puedes volver oportunidad" : "Anotado: vuelve a intentarlo más tarde"), invalidar, alTerminar: () => setDijo("") });
+  }, { exito: (r) => (r === "contesto" ? "Anotado: ya lo puedes volver oportunidad" : r === "enviado" ? "Anotado: cuando te conteste, anota «Contestó»" : "Anotado: vuelve a intentarlo más tarde"), invalidar, alTerminar: () => setDijo("") });
   const descarte = useAccion((a: { id: string; motivo: string }) => q(supabase.rpc("descartar_lead", { p_lead: a.id, p_motivo: a.motivo })),
     { exito: "Lead descartado", invalidar, alTerminar: () => setDescartar(false) });
 
@@ -219,7 +222,7 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
               <ul className="space-y-1.5">
                 {intentos.data!.map((x) => (
                   <li key={x.id} className="text-sm flex gap-2">
-                    <Insignia tono={x.resultado === "contesto" ? "ok" : "neutro"} className="shrink-0 h-fit">{x.resultado === "contesto" ? "Contestó" : "No contestó"}</Insignia>
+                    <Insignia tono={x.resultado === "contesto" ? "ok" : "neutro"} className="shrink-0 h-fit">{textoIntento(x.canal, x.resultado).corto}</Insignia>
                     <span className="min-w-0"><span className="text-tenue">{CANAL_INTENTO[x.canal]} · {hace(x.en)}{x.usuario ? ` · ${x.usuario.nombre}` : ""}</span>
                       {x.nota && <span className="block">{x.nota}</span>}</span>
                   </li>
@@ -232,8 +235,8 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
                   <Seleccion value={canal} onChange={(ev) => setCanal(ev.target.value as CanalIntento)} aria-label="Por dónde" className="w-auto">
                     {Object.entries(CANAL_INTENTO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </Seleccion>
-                  <Boton variante="secundario" tamano="sm" cargando={intento.isPending && intento.variables?.resultado === "no_contesto"}
-                    onClick={() => intento.mutate({ id: l.id, resultado: "no_contesto" })}>No contestó</Boton>
+                  <Boton variante="secundario" tamano="sm" cargando={intento.isPending && intento.variables?.resultado !== "contesto"}
+                    onClick={() => intento.mutate({ id: l.id, resultado: botonSinRespuesta(canal).resultado })}>{botonSinRespuesta(canal).texto}</Boton>
                 </div>
                 <AreaTexto rows={2} value={dijo} onChange={(ev) => setDijo(ev.target.value)} aria-label="Qué te dijo"
                   placeholder="Si contestó: qué te dijo (qué busca, para cuándo, si pidió cotización)" />
