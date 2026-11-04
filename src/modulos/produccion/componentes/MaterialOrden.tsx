@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Boxes, PackageOpen, Plus, Search, Trash2, X } from "lucide-react";
+import { ArrowLeftRight, Boxes, PackageOpen, Plus, RotateCcw, Search, Trash2, X } from "lucide-react";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/insignia";
@@ -17,6 +17,8 @@ import { unoDe, usePreferencia } from "@/lib/preferencias";
 import { CLAVE, consulta, usePersonalPiso, type MaterialOP } from "./datos";
 import { cifra, grupoRuta } from "./util";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { fecha } from "@/lib/formato";
+import { DialogoMotivo } from "@/modulos/ventas/componentes/dialogos";
 
 type Vista = "todo" | "falta" | "por_surtir";
 type Agrupar = "subensamble" | "categoria";
@@ -56,7 +58,10 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
   const [agrupar, setAgrupar] = useAgrupar();
   const [buscar, setBuscar] = useState("");
   const [agregando, setAgregando] = useState(false);
+  const [reemplazando, setReemplazando] = useState<MaterialOP | null>(null);
+  const [quitando, setQuitando] = useState<MaterialOP | null>(null);
   const lista = material ?? [];
+  const vigentes = lista.filter((m) => !m.quitado_en);
   const filtradas = lista.filter((m) => (vista === "todo" || (vista === "falta" ? m.faltante > 0 : m.por_surtir > 0)) && enBusqueda(m, buscar));
   const grupos = useMemo(() => {
     const g = new Map<string, MaterialOP[]>();
@@ -64,6 +69,7 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
       const k = agrupar === "categoria" ? m.categoria ?? SIN_CATEGORIA : grupoRuta(m.ruta, equipo);
       g.set(k, [...(g.get(k) ?? []), m]);
     }
+    for (const filas of g.values()) filas.sort((a, b) => Number(!!a.quitado_en) - Number(!!b.quitado_en));
     // Por subensamble: "Directo al equipo" primero. Por categoría: "Sin categoría" al final. Lo demás, alfabético.
     const primero = agrupar === "categoria" ? null : "Directo al equipo", ultimo = agrupar === "categoria" ? SIN_CATEGORIA : null;
     return [...g.entries()].sort(([a], [b]) => (a === primero || b === ultimo ? -1 : b === primero || a === ultimo ? 1 : a.localeCompare(b, "es")));
@@ -71,22 +77,30 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
 
   const conFaltante = lista.filter((m) => m.faltante > 0).length;
   const porSurtir = lista.filter((m) => m.por_surtir > 0).length;
-  const fuera = lista.filter((m) => m.agregado).length;
+  const fuera = vigentes.filter((m) => m.agregado).length;
+  const quitadas = lista.length - vigentes.length;
   const delTaller = lista.filter((m) => m.del_taller).length;
 
   const corregir = useAccion((a: { id: string; requerido: number }) =>
     q(supabase.from("op_materiales").update({ requerido: a.requerido }).eq("id", a.id).select("id")), {
     exito: "Cantidad corregida (queda en la línea de tiempo)", invalidar: [CLAVE],
   });
+  const quitar = useAccion((a: { id: string; motivo: string }) => q(supabase.rpc("quitar_material_orden", { p_material: a.id, p_motivo: a.motivo })), {
+    exito: "Quitado: queda tachado en la lista y en la línea de tiempo", invalidar: [CLAVE], alTerminar: () => setQuitando(null),
+  });
+  const reponer = useAccion((id: string) => q(supabase.rpc("reponer_material_orden", { p_material: id })), {
+    exito: "Se volvió a poner en la lista", invalidar: [CLAVE],
+  });
 
   return (
     <Tarjeta>
       <EncabezadoTarjeta titulo="Material"
         descripcion={<span className="flex flex-wrap gap-x-3 gap-y-1">
-          <span>{lista.length} partidas</span>
+          <span>{vigentes.length} partidas</span>
           {conFaltante > 0 ? <span className="text-peligro font-medium">{conFaltante} con faltante</span> : lista.length > 0 && <span className="text-ok">Nada falta</span>}
           <span>{porSurtir} por surtir</span>
           {fuera > 0 && <span>{fuera} agregadas o fuera de lista</span>}
+          {quitadas > 0 && <span data-explain={GLOSARIO.materialQuitado}>{quitadas} {quitadas === 1 ? "quitada o reemplazada" : "quitadas o reemplazadas"}</span>}
           {delTaller > 0 && <span data-explain={GLOSARIO.consumibleTaller}>{delTaller} {delTaller === 1 ? "consumible" : "consumibles"} del taller</span>}
         </span>}
         acciones={<div className="flex flex-wrap justify-end gap-2">
@@ -123,24 +137,27 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
                 <th className="text-right" data-explain={GLOSARIO.faltanteMaterial}>Falta</th>
                 <th className="text-right" title="Lo que se pidió a compras para esta orden" data-explain={GLOSARIO.pedidoACompras}>Pedido</th>
                 <th className="text-right" title="Existencia en planta menos lo apartado para cualquier orden" data-explain={GLOSARIO.disponiblePlanta}>Disponible</th>
+                {editable && <th className="w-20"><span className="sr-only">Cambiar</span></th>}
               </tr>
             </thead>
             <tbody>
               {grupos.map(([grupo, filas]) => (
                 <Fragment key={grupo}>
                   <tr className="hover:bg-transparent">
-                    <td colSpan={7} className="bg-fondo/70 text-xs font-semibold text-tenue uppercase tracking-wide py-1.5">
-                      {grupo} <span className="font-normal normal-case tracking-normal">· {filas.length}</span>
+                    <td colSpan={editable ? 8 : 7} className="bg-fondo/70 text-xs font-semibold text-tenue uppercase tracking-wide py-1.5">
+                      {grupo} <span className="font-normal normal-case tracking-normal">· {filas.filter((f) => !f.quitado_en).length}</span>
                     </td>
                   </tr>
-                  {filas.map((m) => (
+                  {filas.map((m) => m.quitado_en ? <FilaQuitada key={m.id} m={m} equipo={equipo} editable={editable}
+                      alReponer={() => reponer.mutate(m.id)} reponiendo={reponer.isPending && reponer.variables === m.id} /> : (
                     <tr key={m.id} className={cn(m.faltante > 0 && "bg-peligro-suave/50")}>
                       <td className="min-w-[240px]">
                         <p>{m.nombre}</p>
                         <p className="text-xs text-tenue flex flex-wrap items-center gap-1.5">
                           <span>{m.clave}</span>
                           {agrupar === "categoria" ? <span>· {grupoRuta(m.ruta, equipo)}</span> : m.categoria && <span>· {m.categoria}</span>}
-                          {m.agregado && <Insignia tono={m.requerido === 0 ? "aviso" : "info"}>{m.requerido === 0 ? "Fuera de lista" : "Agregado"}</Insignia>}
+                          {m.reemplaza_a_nombre ? <span data-explain={GLOSARIO.materialQuitado}><Insignia tono="info">Reemplaza a {m.reemplaza_a_nombre}</Insignia></span>
+                            : m.agregado && <Insignia tono={m.requerido === 0 ? "aviso" : "info"}>{m.requerido === 0 ? "Fuera de lista" : "Agregado"}</Insignia>}
                           {m.del_taller && <span data-explain={GLOSARIO.consumibleTaller}><Insignia tono="neutro">Del taller</Insignia></span>}
                           {m.notas && <span className="italic truncate">{m.notas}</span>}
                         </p>
@@ -156,6 +173,14 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
                       <td className={cn("text-right cifra", m.disponible_planta <= 0 && "text-tenue")} title={`Existencia en planta: ${cifra(m.existencia_planta)}`}>
                         {cifra(m.disponible_planta)}
                       </td>
+                      {editable && (
+                        <td className="whitespace-nowrap text-right">
+                          <button type="button" className="p-1.5 text-tenue hover:text-marca-texto" title="Reemplazar por otro material" aria-label={`Reemplazar ${m.nombre}`}
+                                  onClick={() => setReemplazando(m)}><ArrowLeftRight className="h-4 w-4" /></button>
+                          <button type="button" className="p-1.5 text-tenue hover:text-peligro" title="Quitar de esta orden (queda tachado)" aria-label={`Quitar ${m.nombre}`}
+                                  onClick={() => setQuitando(m)}><Trash2 className="h-4 w-4" /></button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </Fragment>
@@ -164,7 +189,13 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
           </table>
         </div>
       )}
-      {editable && <DialogoAgregarMaterial abierto={agregando} alCambiar={setAgregando} ordenId={ordenId} existentes={lista} />}
+      {editable && <DialogoAgregarMaterial abierto={agregando} alCambiar={setAgregando} ordenId={ordenId} existentes={vigentes} />}
+      {editable && <DialogoReemplazar m={reemplazando} alCerrar={() => setReemplazando(null)} existentes={vigentes} />}
+      {editable && <DialogoMotivo abierto={!!quitando} alCambiar={(v) => !v && setQuitando(null)} titulo={`Quitar ${quitando?.nombre ?? ""} de esta orden`}
+        descripcion={<>No se borra: queda tachado en la lista con quién, cuándo y por qué, deja de pedirse y suelta lo apartado.
+          {quitando && quitando.surtido > 0 && <span className="block mt-1 text-aviso">Ya se surtieron {cifra(quitando.surtido)} {quitando.unidad}: hay que regresarlos al almacén.</span>}</>}
+        etiqueta="¿Por qué se quita?" sugerencias={["El cliente ya no lo quiere", "No lleva esta pieza", "Se usa una que ya había en el taller", "Estaba repetido en la lista"]}
+        textoBoton="Quitar" cargando={quitar.isPending} alConfirmar={(motivo) => quitando && quitar.mutate({ id: quitando.id, motivo })} />}
     </Tarjeta>
   );
 }
@@ -189,38 +220,127 @@ function CantidadEditable({ m, alGuardar }: { m: MaterialOP; alGuardar: (v: numb
 }
 
 const TIPOS_MATERIAL: ArticuloEncontrado["tipo"][] = ["componente", "materia_prima"];
+const TIPOS_CAMBIO: ArticuloEncontrado["tipo"][] = ["componente", "materia_prima", "subensamble"];
+
+/** Un renglón quitado o reemplazado: tachado, con su motivo, para que quede constancia. */
+function FilaQuitada({ m, equipo, editable, alReponer, reponiendo }: {
+  m: MaterialOP; equipo: string; editable: boolean; alReponer: () => void; reponiendo: boolean;
+}) {
+  return (
+    <tr className="text-tenue">
+      <td className="min-w-[240px]">
+        <p className="line-through">{m.nombre}</p>
+        <p className="text-xs flex flex-wrap items-center gap-1.5">
+          <span>{m.clave}</span><span>· {grupoRuta(m.ruta, equipo)}</span>
+          <span data-explain={GLOSARIO.materialQuitado}><Insignia tono={m.reemplazado_por ? "info" : "neutro"}>{m.reemplazado_por ? `Reemplazado por ${m.reemplazado_por}` : "Quitado"}</Insignia></span>
+        </p>
+        <p className="text-xs">{m.motivo_quitado}{m.quitado_por ? ` · ${m.quitado_por}` : ""} · {fecha(m.quitado_en)}
+          {m.surtido > 0 && <span className="text-aviso"> · se habían surtido {cifra(m.surtido)}: regresarlos al almacén</span>}</p>
+      </td>
+      <td className="text-right cifra whitespace-nowrap"><s>{cifra(m.requerido_antes)}</s> <span className="text-xs">{m.unidad}</span></td>
+      <td colSpan={5} />
+      {editable && (
+        <td className="whitespace-nowrap text-right">
+          {!m.reemplazado_por && <Boton tamano="sm" variante="fantasma" cargando={reponiendo} onClick={alReponer} title="Volver a ponerlo con la cantidad que llevaba">
+            <RotateCcw className="h-3.5 w-3.5" />Volver</Boton>}
+        </td>
+      )}
+    </tr>
+  );
+}
+
+type QueAgrega = "material" | "fabricar" | "pieza";
 
 function DialogoAgregarMaterial({ abierto, alCambiar, ordenId, existentes }: {
   abierto: boolean; alCambiar: (v: boolean) => void; ordenId: string; existentes: MaterialOP[];
 }) {
+  const [que, setQue] = useState<QueAgrega>("material");
   const [art, setArt] = useState<ArticuloEncontrado | null>(null);
   const [cantidad, setCantidad] = useState("");
   const [nota, setNota] = useState("");
-  const yaEsta = art && existentes.some((m) => m.articulo_id === art.id);
-  const agregar = useAccion(() => q(supabase.from("op_materiales").insert({
-    orden_id: ordenId, articulo_id: art!.id, requerido: Number(cantidad), agregado: true, notas: nota.trim() || null,
-  })), { exito: "Material agregado a la orden", invalidar: [CLAVE], alTerminar: () => { alCambiar(false); setArt(null); setCantidad(""); setNota(""); } });
+  const esSub = que !== "material";
+  const yaEsta = que === "material" && art && existentes.some((m) => m.articulo_id === art.id);
+  const limpiar = () => { setArt(null); setCantidad(""); setNota(""); };
+  const agregar = useAccion(async () => {
+    if (que === "material") await q(supabase.rpc("agregar_material_orden", { p_op: ordenId, p_articulo: art!.id, p_cantidad: Number(cantidad), p_motivo: nota.trim() || null }));
+    else return q<number>(supabase.rpc("agregar_subensamble_orden", { p_op: ordenId, p_subensamble: art!.id, p_cantidad: Number(cantidad), p_motivo: nota.trim() || null, p_como: que }));
+    return 1;
+  }, { exito: (n) => que === "fabricar" ? `Subensamble agregado: ${n} partida(s) a la lista` : que === "pieza" ? "Subensamble agregado como pieza" : "Material agregado a la orden",
+    invalidar: [CLAVE], alTerminar: () => { alCambiar(false); limpiar(); setQue("material"); } });
   const valido = !!art && !yaEsta && Number(cantidad) > 0;
   return (
-    <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="Agregar material a esta orden"
-             descripcion="Solo para esta orden (un extra del pedido, una sustitución). Si el error es del costeo, pide además el cambio a ingeniería."
+    <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="Agregar a esta orden"
+             descripcion="Solo para esta orden (un extra del pedido, un subensamble más). Si el error es del costeo, pide además el cambio a ingeniería."
              pie={<><Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
                <Boton form="agregar-material" type="submit" disabled={!valido} cargando={agregar.isPending}>Agregar</Boton></>}>
       <form id="agregar-material" className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (valido) agregar.mutate(undefined); }}>
-        <Campo etiqueta="Material" error={yaEsta ? "Ya está en la lista: corrige su cantidad en la tabla." : undefined}>
+        <div className="space-y-2" data-explain={GLOSARIO.subensambleEnOrden} data-explain-title="Agregar un subensamble">
+          <Filtro<"material" | "sub"> valor={esSub ? "sub" : "material"} alCambiar={(v) => { setQue(v === "sub" ? "fabricar" : "material"); setArt(null); }} opciones={[
+            { valor: "material", texto: "Componente o materia prima" }, { valor: "sub", texto: "Subensamble" },
+          ]} />
+          {esSub && (
+            <div className="flex flex-col gap-1 text-sm">
+              <label className="flex items-center gap-2"><input type="radio" checked={que === "fabricar"} onChange={() => setQue("fabricar")} />
+                Se fabrica aquí <span className="text-tenue">(entran sus componentes a la lista)</span></label>
+              <label className="flex items-center gap-2"><input type="radio" checked={que === "pieza"} onChange={() => setQue("pieza")} />
+                Ya está hecho <span className="text-tenue">(sale del almacén como una pieza)</span></label>
+            </div>
+          )}
+        </div>
+        <Campo etiqueta={esSub ? "Subensamble" : "Material"} error={yaEsta ? "Ya está en la lista: corrige su cantidad en la tabla." : undefined}>
           {art ? (
             <div className="campo h-auto py-2 flex items-start justify-between gap-2">
               <span className="text-sm"><span className="text-tenue">{art.clave}</span> · {art.nombre}</span>
-              <button type="button" onClick={() => setArt(null)} className="text-tenue hover:text-texto" aria-label="Quitar material"><X className="h-4 w-4" /></button>
+              <button type="button" onClick={() => setArt(null)} className="text-tenue hover:text-texto" aria-label="Quitar"><X className="h-4 w-4" /></button>
             </div>
-          ) : <BuscadorArticulo alElegir={setArt} tipos={TIPOS_MATERIAL} mostrarPrecio={false} autoFocus placeholder="Buscar componente o materia prima…" />}
+          ) : <BuscadorArticulo key={que === "material" ? "m" : "s"} alElegir={setArt} tipos={esSub ? ["subensamble"] : TIPOS_MATERIAL} mostrarPrecio={false} autoFocus
+               placeholder={esSub ? "Buscar subensamble…" : "Buscar componente o materia prima…"} />}
         </Campo>
         <div className="grid grid-cols-2 gap-3">
           <Campo etiqueta={`Cantidad${art ? ` (${art.unidad})` : ""}`}>
             <Entrada type="number" min="0" step="any" inputMode="decimal" value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
           </Campo>
           <Campo etiqueta="Motivo">
-            <Entrada value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Lleva juego extra de cribas" />
+            <Entrada value={nota} onChange={(e) => setNota(e.target.value)} placeholder={esSub ? "El cliente pidió tensor doble" : "Lleva juego extra de cribas"} />
+          </Campo>
+        </div>
+      </form>
+    </Dialogo>
+  );
+}
+
+/** Cambia un material por otro: el de antes queda tachado con «Reemplazado por…» y el motivo. */
+function DialogoReemplazar({ m, alCerrar, existentes }: { m: MaterialOP | null; alCerrar: () => void; existentes: MaterialOP[] }) {
+  const [art, setArt] = useState<ArticuloEncontrado | null>(null);
+  const [cantidad, setCantidad] = useState("");
+  const [motivo, setMotivo] = useState("");
+  useEffect(() => { if (m) { setArt(null); setCantidad(String(m.requerido)); setMotivo(""); } }, [m]);
+  const reemplazar = useAccion(() => q(supabase.rpc("reemplazar_material_orden", {
+    p_material: m!.id, p_articulo: art!.id, p_cantidad: Number(cantidad), p_motivo: motivo.trim(),
+  })), { exito: "Reemplazado: el anterior queda tachado en la lista", invalidar: [CLAVE], alTerminar: alCerrar });
+  const yaEsta = art && existentes.find((x) => x.articulo_id === art.id);
+  const valido = !!art && art.id !== m?.articulo_id && Number(cantidad) > 0 && motivo.trim().length >= 3;
+  return (
+    <Dialogo abierto={!!m} alCambiar={(v) => !v && alCerrar()} titulo={`Reemplazar ${m?.nombre ?? ""}`}
+             descripcion="El de ahora queda tachado con «Reemplazado por…», quién y por qué; el nuevo entra con su cantidad y suelta lo apartado del anterior."
+             pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton>
+               <Boton form="reemplazar-material" type="submit" disabled={!valido} cargando={reemplazar.isPending}><ArrowLeftRight className="h-4 w-4" />Reemplazar</Boton></>}>
+      <form id="reemplazar-material" className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (valido) reemplazar.mutate(undefined); }}>
+        {m && m.surtido > 0 && <p className="text-sm text-aviso">Del actual ya se surtieron {cifra(m.surtido)} {m.unidad}: hay que regresarlos al almacén.</p>}
+        <Campo etiqueta="Por cuál" ayuda={yaEsta ? `Ya está en la lista con ${cifra(yaEsta.requerido)}: se le suma esta cantidad.` : undefined}>
+          {art ? (
+            <div className="campo h-auto py-2 flex items-start justify-between gap-2">
+              <span className="text-sm"><span className="text-tenue">{art.clave}</span> · {art.nombre}</span>
+              <button type="button" onClick={() => setArt(null)} className="text-tenue hover:text-texto" aria-label="Quitar"><X className="h-4 w-4" /></button>
+            </div>
+          ) : <BuscadorArticulo alElegir={setArt} tipos={TIPOS_CAMBIO} mostrarPrecio={false} autoFocus placeholder="Buscar el material nuevo…" />}
+        </Campo>
+        <div className="grid grid-cols-2 gap-3">
+          <Campo etiqueta={`Cantidad${art ? ` (${art.unidad})` : ""}`}>
+            <Entrada type="number" min="0" step="any" inputMode="decimal" value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
+          </Campo>
+          <Campo etiqueta="¿Por qué? *">
+            <Entrada value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="La de la lista no trae cuñero" />
           </Campo>
         </div>
       </form>

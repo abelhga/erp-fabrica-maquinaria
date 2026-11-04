@@ -662,6 +662,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "\"Validación de material\" son los cinco pasos antes del taller, en orden: ingeniería revisa la lista, se aparta el material, se piden los faltantes a compras, almacén revisa la existencia física y la gerencia la libera. Cada paso guarda quién y cuándo, y cada quien ve el botón del suyo. Sin la revisión de ingeniería no se puede liberar.",
    "En Material, la lista sale agrupada por categoría (todo lo eléctrico junto, todo el material para aire, la tornillería…); con «Agrupar por» la cambias a subensamble (la parte del equipo donde va) y la próxima vez te sale como la dejaste; el buscador encuentra por nombre, clave o categoría, sin acentos. Al surtir, la lista también sale por categoría y con buscador; si escribiste cantidades en partidas que la búsqueda esconde, te avisa que también salen.",
    "En Material, Falta es lo requerido que todavía no está surtido ni apartado; Pedido es lo que ya se pidió a compras para esta orden; Disponible es lo que hay en planta sin apartar para nadie. Almacén entrega con el botón Surtir: anota quién recibe y lo que sale (si es una parte, lo demás queda por surtir). Las cantidades empiezan vacías: toca el número de «Por surtir» o de «Apartado» para llenarlo. De una partida no sale más de lo que falta: si hace falta más, pide el cambio a ingeniería con «Solicitar cambio a ingeniería», para que la lista del equipo quede como en la realidad; y no puede llevarse lo apartado para otra orden. En las órdenes que venían de la hoja, «Ya se había entregado con la hoja» registra lo que ya se dio antes del ERP sin descontar inventario otra vez. Si «Consumibles del taller» está encendido, lo marcado «Del taller» (discos, lijas, soldadura, EPP) no falta ni se surte a la orden: almacén lo da a nombre de quien lo recibe. En la línea de tiempo, «Ver partidas» en cada surtido dice qué salió, cuánto y de qué almacén.",
+   "Ingeniería y la gerencia de producción cambian la lista solo para esta orden: «Agregar material» mete un componente o un subensamble completo (para fabricarlo aquí, con sus componentes, o ya hecho como pieza); en cada renglón, las flechas lo reemplazan por otro y el bote lo quita. Lo reemplazado o quitado no se borra: queda tachado con quién, cuándo y por qué, y se regresa con «Volver» si fue un error. Si el cambio es porque la lista del equipo está mal, pide además el cambio a ingeniería.",
    "En Etapas, el taller inicia, pausa, reanuda y termina cada una; el avance sale de las horas de las etapas terminadas. Si una se terminó por error, el aviso trae «Deshacer» (15 minutos para quien la terminó) y la gerencia tiene «Reabrir» en la etapa, con el motivo: regresa a pausada. Si algo de la lista está mal, usa \"Solicitar cambio a ingeniería\": queda en la orden y en la línea de tiempo.",
    "Las etapas de la orden salen de las horas por etapa del equipo, y la orden se termina sola al acabar la última. Si al equipo le falta una (por ejemplo Detallado), la gerencia usa «Agregar etapa» con sus horas: queda pendiente para el taller y, si la orden ya estaba terminada, regresa a «en proceso».",
    "Si el equipo se detiene sin cancelarse (el cliente dejó anticipo y no ha regresado), la gerencia usa \"Poner en espera\" con el motivo: deja de contar en la carga del taller y en los tiempos de entrega, no sale atrasada y la terminal no la muestra. \"Reactivar\" la regresa tal como estaba.",
@@ -4245,6 +4246,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Órdenes que todavía están en una etapa anterior (siguen en Corte o en Pailería, por ejemplo). Se juntan aquí, cerradas, para no repetir la misma orden en todas las columnas; ábrelas si quieres planear desde ya quién las va a hacer."
  },
  {
+  "clave": "materialQuitado",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Cuando un material de la orden se quita o se reemplaza no se borra: queda tachado al final de su grupo con la cantidad que llevaba, quién lo hizo, cuándo y por qué, y el reemplazo dice «Reemplaza a …». Deja de pedirse a compras y suelta lo que tenía apartado. Si ya se había surtido, hay que regresarlo al almacén. Un quitado por error se regresa con «Volver». Lo cambian ingeniería y la gerencia de producción, y cada cambio queda en la línea de tiempo."
+ },
+ {
   "clave": "materialVendido",
   "modulos": [
    "rrhh",
@@ -6070,6 +6079,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "margenes"
   ],
   "texto": "Un grupo de piezas que siempre van juntas (cabezal motriz, tambor de cola…) capturado una sola vez y usado en varios equipos. No se copia: si lo cambias, cambia en todos los equipos que lo usan."
+ },
+ {
+  "clave": "subensambleEnOrden",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "A una orden también se le agrega un subensamble completo. «Se fabrica aquí» mete sus componentes y materia prima a la lista (agrupados bajo ese subensamble, y si alguno ya estaba se le suma); «Ya está hecho» lo agrega como una sola pieza que sale del almacén. Queda en la línea de tiempo con su motivo."
  },
  {
   "clave": "subensambleSugerido",
