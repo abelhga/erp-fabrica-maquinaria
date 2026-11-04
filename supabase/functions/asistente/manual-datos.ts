@@ -1126,7 +1126,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "nivel": 1,
   "texto": [
    "Aquí se anota a quien llama o escribe interesado y todavía no es cliente ni oportunidad, para que no se pierda en un papel. Lo usan recepción, los vendedores, la gerencia de ventas y marketing, que los ve todos para saber de dónde llegan y qué pasó con ellos.",
-   "Con «Registrar lead» anotas quién es, su teléfono o correo y qué busca, con sus palabras. Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es y dices «Es este», le llega directo a su vendedor. Enter lo guarda.",
+   "Con «Registrar lead» anotas quién es, su teléfono o correo, dónde está, su empresa (o «Particular») y qué busca con modelo o medida. Si se te pasó algo, al abrirlo te dice qué le falta y lo completas ahí; «Incompletos» junta los que tienen algo pendiente. Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es y dices «Es este», le llega directo a su vendedor. Enter lo guarda.",
    "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma o nadie lo atiende a tiempo, se le avisa a la gerencia.",
    "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no: «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo. Hasta que contesta (o pide cotización) se habilita «Crear oportunidad» (si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta). Si no le interesa, se descarta con el motivo. Para escribirle, «Mensaje con IA» te lo redacta con lo que busca y lo que le pidas en la caja de contexto; cada uno sale distinto, porque WhatsApp bloquea a quien manda el mismo texto a muchos, y al abrirlo en WhatsApp se anota «Le escribí». La columna «Intentos» dice lo último que hiciste y cuándo («Le escribiste por WhatsApp · hace 2 h»), y «Sin contactar» junta a los que todavía no les has escrito ni llamado. Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad."
   ]
@@ -4079,6 +4079,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Alguien que llamó o escribió interesado y todavía no es oportunidad: quién es, cómo contactarlo y qué busca. Lo registra recepción (o cualquier vendedor) y se vuelve oportunidad cuando un vendedor lo atiende."
+ },
+ {
+  "clave": "leadCompleto",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Un lead está completo cuando el vendedor tiene con qué atenderlo: dónde está (ciudad o estado), la empresa (o «Particular» si es una persona) y qué busca con modelo, medida o para qué («Cribadora V3», «Silo fijo para cemento», no solo «Informes»). Si ya es cliente, la empresa y el lugar salen de su ficha. Al abrir uno incompleto te dice qué le falta y lo completas ahí; lo puede completar quien lo registró, el vendedor que lo tiene o la gerencia, mientras siga abierto. «Incompletos» junta los que tienen algo pendiente. Para recepción es un objetivo: cuenta cómo están al revisar el mes, así que si lo completas antes, ya no cuenta."
  },
  {
   "clave": "leadTime",
