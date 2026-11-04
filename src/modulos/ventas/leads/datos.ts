@@ -16,6 +16,8 @@ export interface Lead {
   oportunidad_id: string | null; etapa_oportunidad: EtapaOportunidad | null; motivo_descarte: string | null;
   capturado_por: string | null; capturo: string | null; creado_en: string;
   intentos: number; contesto: boolean; ultimo_intento: string | null; ultimo_resultado: ResultadoIntento | null; ultimo_canal: CanalIntento | null;
+  /** Lo que le falta para que el vendedor lo atienda (la base lo calcula: es lo que mide «Leads capturados completos»). */
+  faltan: string[];
 }
 
 /** Cada vez que el vendedor le llamó o escribió, y si le contestó. */

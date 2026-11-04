@@ -19,9 +19,10 @@ import { DialogoMotivo } from "./componentes/dialogos";
 import { DialogoLead } from "./leads/DialogoLead";
 import { ConfigLeads } from "./leads/ConfigLeads";
 import { RedactarLead } from "./leads/RedactarLead";
+import { CompletarLead } from "./leads/CompletarLead";
 import { CANAL_INTENTO, CLAVE_LEADS, MODOS, botonSinRespuesta, estadoLead, hace, textoIntento, useConfigLeads, useVendedoresLeads, type CanalIntento, type IntentoLead, type Lead, type ModoLeads, type ResultadoIntento } from "./leads/datos";
 
-type Vista = "abiertos" | "por_tomar" | "mios" | "sin_contactar" | "registre" | "cerrados" | "todos";
+type Vista = "abiertos" | "por_tomar" | "mios" | "sin_contactar" | "incompletos" | "registre" | "cerrados" | "todos";
 const COMO: Record<NonNullable<Lead["como_se_asigno"]>, string> = {
   cliente: "ya era su cliente", bandeja: "lo tomó de la bandeja", gerente: "se lo asignó la gerencia", recepcion: "se lo pasó quien lo registró",
 };
@@ -54,6 +55,8 @@ export default function Leads() {
     : v === "mios" ? l.vendedor_id === yo && l.estado === "asignado"
     // A quién no se le ha escrito ni llamado: los del vendedor, o todos los asignados para la gerencia.
     : v === "sin_contactar" ? l.estado === "asignado" && l.intentos === 0 && (gerencia || l.vendedor_id === yo)
+    // Abiertos a los que les falta algo para atenderlos: los que registré o tengo, o todos para la gerencia.
+    : v === "incompletos" ? (l.estado === "nuevo" || l.estado === "asignado") && l.faltan.length > 0 && (gerencia || l.capturado_por === yo || l.vendedor_id === yo)
     : v === "registre" ? l.capturado_por === yo
     : v === "cerrados" ? l.estado === "convertido" || l.estado === "descartado" : true;
   const cuenta = (v: Vista) => todos.filter((l) => pasa(l, v)).length;
@@ -71,6 +74,7 @@ export default function Leads() {
     ...(vende || gerencia ? [{ valor: "por_tomar" as Vista, texto: modo === "gerente" ? "Por asignar" : "Por tomar", cuenta: cuenta("por_tomar"), explica: GLOSARIO.modoLeads }] : []),
     ...(vende ? [{ valor: "mios" as Vista, texto: "Míos", cuenta: cuenta("mios") }] : []),
     ...(vende || gerencia ? [{ valor: "sin_contactar" as Vista, texto: "Sin contactar", cuenta: cuenta("sin_contactar"), explica: GLOSARIO.sinContactarLead }] : []),
+    ...(puede("leads", 2) || gerencia ? [{ valor: "incompletos" as Vista, texto: "Incompletos", cuenta: cuenta("incompletos"), explica: GLOSARIO.leadCompleto }] : []),
     { valor: "registre", texto: "Los que registré", cuenta: cuenta("registre") },
     { valor: "cerrados", texto: "Atendidos" },
     { valor: "todos", texto: "Todos" },
@@ -81,7 +85,8 @@ export default function Leads() {
     { clave: "nombre", titulo: "Quién", clase: "min-w-[200px]", valor: (l) => `${l.nombre} ${l.empresa ?? ""} ${l.cliente_nombre ?? ""} ${l.telefono ?? ""}`,
       celda: (l) => <span><b className="font-medium">{l.nombre}</b>
         <span className="block text-xs text-tenue">{l.cliente_nombre ? <>Cliente: {l.cliente_nombre}</> : l.empresa ?? l.telefono ?? l.correo}</span></span> },
-    { clave: "interes", titulo: "Qué busca", clase: "max-w-[340px]", celda: (l) => <span className="line-clamp-2">{l.interes}</span> },
+    { clave: "interes", titulo: "Qué busca", clase: "max-w-[340px]", celda: (l) => <span><span className="line-clamp-2">{l.interes}</span>
+      {l.faltan.length > 0 && (l.estado === "nuevo" || l.estado === "asignado") && <span className="block text-[11px] text-aviso">Falta {l.faltan.join(", ")}</span>}</span> },
     { clave: "estado", titulo: "En qué va", explica: GLOSARIO.estadoLead, valor: (l) => estadoLead(l, modo).texto,
       celda: (l) => { const e = estadoLead(l, modo); return <span title={l.motivo_descarte ?? undefined}><Insignia tono={e.tono}>{e.texto}</Insignia></span>; } },
     { clave: "intentos", titulo: "Intentos", explica: GLOSARIO.intentoLead, oculta: !gerencia && !vende, alinear: "der", valor: (l) => l.intentos,
@@ -107,7 +112,7 @@ export default function Leads() {
           <span className="ml-auto text-xs text-tenue" data-explain={GLOSARIO.modoLeads} data-explain-title="¿A quién le llega?">
             {MODOS.find((m) => m.valor === modo)?.texto}</span>
         </>}
-        vacio={{ icono: Inbox, titulo: vista === "por_tomar" ? "No hay leads por tomar" : vista === "mios" ? "No tienes leads pendientes" : vista === "sin_contactar" ? "A todos ya les escribiste o llamaste" : "Nada con este filtro",
+        vacio={{ icono: Inbox, titulo: vista === "por_tomar" ? "No hay leads por tomar" : vista === "mios" ? "No tienes leads pendientes" : vista === "sin_contactar" ? "A todos ya les escribiste o llamaste" : vista === "incompletos" ? "Todos tienen lo que el vendedor necesita" : "Nada con este filtro",
           texto: puede("leads", 2) ? "Cuando alguien llame interesado, regístralo con «Registrar lead»: quién, su teléfono y qué busca." : undefined,
           accion: puede("leads", 2) ? <Boton variante="secundario" onClick={() => setNuevo(true)}><Plus className="h-4 w-4" />Registrar lead</Boton> : undefined }} />
 
@@ -169,6 +174,7 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
   const puedeTomar = l.estado === "nuevo" && modo === "bandeja" && puede("ventas", 2);
   const puedeAtender = l.estado === "asignado" && puede("ventas", 2) && (esMio || gerencia);
   const puedeDescartar = abierto && (gerencia || esMio || (l.capturado_por === perfil?.id && l.estado === "nuevo"));
+  const puedeCompletar = abierto && l.faltan.length > 0 && ((l.capturado_por === perfil?.id && puede("leads", 2)) || (esMio && puede("ventas", 2)) || gerencia);
   const e = estadoLead(l, modo);
 
   return (
@@ -200,6 +206,8 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
             <div className="sm:col-span-2"><Link to={`/ventas/clientes/${l.cliente_id}`} className="text-sm text-marca-texto hover:underline">Ver cliente y su oportunidad →</Link></div>
           )}
         </dl>
+
+        {puedeCompletar && <CompletarLead key={l.id} lead={l} invalidar={invalidar} />}
 
         {puedeTomar && (
           <div className="rounded-lg border border-aviso/30 bg-aviso-suave p-3 flex items-center gap-3">
