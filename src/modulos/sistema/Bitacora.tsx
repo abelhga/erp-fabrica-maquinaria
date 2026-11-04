@@ -19,6 +19,8 @@ import { GLOSARIO } from "@/tutorial/glosario";
 interface Registro {
   id: number; tabla: string; registro_id: string; accion: "alta" | "cambio" | "baja"; cambios: Cambios; usuario_id: string | null; en: string;
   usuario: string | null; usuario_correo: string | null; etiqueta: string | null;
+  /** El nombre de cada id que aparece en el cambio (artículo, orden, persona, cliente…). */
+  nombres: Record<string, string> | null;
 }
 
 const ACCIONES: Record<Registro["accion"], { texto: string; tono: Tono }> = {
@@ -157,9 +159,10 @@ function Detalle({ registro: r, nombres, alCerrar }: { registro: Registro | null
   });
   const filas = r ? filasDiff(r.cambios, r.accion) : [];
   // El empleado de una incidencia es el registro mismo: se nombra con su etiqueta en vez del id.
+  const conIds = new Map([...nombres, ...Object.entries(r?.nombres ?? {})]);
   const nombresDetalle = r?.etiqueta && ["incidencias", "empleado_datos"].includes(r.tabla)
-    ? new Map([...nombres, ...filas.filter((f) => f.columna === "empleado_id").flatMap((f) => [f.antes, f.despues]).filter(Boolean).map((v) => [String(v), r.etiqueta!] as [string, string])])
-    : nombres;
+    ? new Map([...conIds, ...filas.filter((f) => f.columna === "empleado_id").flatMap((f) => [f.antes, f.despues]).filter(Boolean).map((v) => [String(v), r.etiqueta!] as [string, string])])
+    : conIds;
   const ruta = r ? rutaDe(r) : null;
   const puedeIr = r && ruta && (!r.tabla.startsWith("emplea") || puede("rrhh"));
   return (

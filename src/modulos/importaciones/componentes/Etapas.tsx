@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Check, History, Pencil, StickyNote } from "lucide-react";
+import { Check, History, Pencil, StickyNote, Trash2 } from "lucide-react";
 import { Boton } from "@/components/ui/boton";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Cargando } from "@/components/ui/estados";
@@ -10,6 +10,8 @@ import { q, useAccion } from "@/lib/consultas";
 import { fecha, fechaYHora, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { CLAVE_EMBARQUES, useEtapas, type Embarque } from "./comun";
+import { DialogoMotivo } from "@/modulos/ventas/componentes/dialogos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Evento {
   id: string; tipo: string; fecha: string; detalle: string | null; datos: { antes?: string; despues?: string } | null;
@@ -34,6 +36,10 @@ export function Etapas({ e }: { e: Embarque }) {
     q(supabase.rpc("registrar_evento_importacion", { p_embarque: e.id, p_tipo: x.tipo, p_fecha: x.fecha, p_detalle: x.detalle ?? null })),
     { exito: "Fecha registrada", invalidar });
   const [editando, setEditando] = useState<string | null>(null);
+  // Una etapa registrada por error (un embarque cerrado que no era) se quita con su motivo; queda la nota.
+  const [quitando, setQuitando] = useState<{ tipo: string; nombre: string } | null>(null);
+  const quitar = useAccion((a: { tipo: string; motivo: string }) => q(supabase.rpc("quitar_evento_importacion", { p_embarque: e.id, p_tipo: a.tipo, p_motivo: a.motivo })),
+    { exito: "Etapa quitada: queda la nota en la historia", invalidar: [...invalidar, ["embarque_saldos", e.id]], alTerminar: () => { setQuitando(null); setEditando(null); } });
   const [nota, setNota] = useState("");
 
   if (etapas.isLoading || eventos.isLoading) return <Tarjeta><Cargando /></Tarjeta>;
@@ -73,7 +79,8 @@ export function Etapas({ e }: { e: Embarque }) {
                   {captura && (editando === t.tipo || (!ev && e.fase !== "cerrado" && e.fase !== "cancelado" && (siguiente || i <= ultima + 2))) && (
                     <CapturaFecha inicial={ev?.fecha} etiqueta={t.nombre} cargando={registrar.isPending}
                       alGuardar={(f) => registrar.mutate({ tipo: t.tipo, fecha: f }, { onSuccess: () => setEditando(null) })}
-                      alCancelar={editando === t.tipo ? () => setEditando(null) : undefined} />
+                      alCancelar={editando === t.tipo ? () => setEditando(null) : undefined}
+                      alQuitar={editando === t.tipo && ev ? () => setQuitando({ tipo: t.tipo, nombre: t.nombre }) : undefined} />
                   )}
                 </div>
               </li>
@@ -82,6 +89,10 @@ export function Etapas({ e }: { e: Embarque }) {
         </ol>
       </Tarjeta>
 
+      <DialogoMotivo abierto={!!quitando} alCambiar={(v) => !v && setQuitando(null)} titulo={`Quitar «${quitando?.nombre ?? ""}» de ${e.folio}`}
+        descripcion="La etapa se borra y en la historia queda una nota con la fecha que tenía, quién la quitó y por qué."
+        etiqueta="¿Por qué se quita?" sugerencias={["Me equivoqué de embarque", "Todavía no pasa", "Se registró dos veces"]}
+        textoBoton="Quitar" cargando={quitar.isPending} alConfirmar={(motivo) => quitando && quitar.mutate({ tipo: quitando.tipo, motivo })} />
       <Tarjeta>
         <EncabezadoTarjeta titulo="Historia" descripcion="Cambios de ETA y notas" />
         {captura && (
@@ -108,8 +119,8 @@ export function Etapas({ e }: { e: Embarque }) {
   );
 }
 
-function CapturaFecha({ inicial, etiqueta, alGuardar, alCancelar, cargando }: {
-  inicial?: string; etiqueta: string; alGuardar: (f: string) => void; alCancelar?: () => void; cargando: boolean;
+function CapturaFecha({ inicial, etiqueta, alGuardar, alCancelar, alQuitar, cargando }: {
+  inicial?: string; etiqueta: string; alGuardar: (f: string) => void; alCancelar?: () => void; alQuitar?: () => void; cargando: boolean;
 }) {
   const [f, setF] = useState(inicial ?? hoyISO());
   return (
@@ -117,6 +128,8 @@ function CapturaFecha({ inicial, etiqueta, alGuardar, alCancelar, cargando }: {
       <input type="date" className="campo h-8 w-40" value={f} max={hoyISO()} onChange={(ev) => setF(ev.target.value)} aria-label={`Fecha de ${etiqueta}`} />
       <Boton type="submit" tamano="sm" variante="secundario" cargando={cargando}>Registrar</Boton>
       {alCancelar && <Boton type="button" tamano="sm" variante="fantasma" onClick={alCancelar}>Cancelar</Boton>}
+      {alQuitar && <span data-explain={GLOSARIO.quitarEtapaEmbarque} data-explain-title="Quitar este paso">
+        <Boton type="button" tamano="sm" variante="fantasma" className="text-peligro" onClick={alQuitar}><Trash2 className="h-3.5 w-3.5" />Quitar este paso</Boton></span>}
     </form>
   );
 }

@@ -3,7 +3,7 @@ import { NOMBRE_ROL, type Rol } from "@/lib/sesion";
 
 /** Nombre legible de cada tabla auditada. Una tabla nueva sin nombre aquí sale con su nombre técnico. */
 export const TABLAS: Record<string, string> = {
-  articulos: "Artículos", bom_lineas: "Listas de materiales", politicas_precio: "Políticas de precio", tarifas_mano_obra: "Tarifas de mano de obra",
+  articulos: "Artículos", bom_lineas: "Listas de materiales", bom_operaciones: "Horas por etapa del equipo", politicas_precio: "Políticas de precio", tarifas_mano_obra: "Tarifas de mano de obra",
   proveedores: "Proveedores", clientes: "Clientes", cotizaciones: "Cotizaciones", pedidos: "Pedidos", cobros: "Cobros", facturas: "Facturas",
   comision_ajustes: "Ajustes de comisión", plan_escalones: "Escalones de comisión", ordenes_compra: "Órdenes de compra",
   pagos_proveedor: "Pagos a proveedores", almacenes: "Almacenes", ajustes_inventario: "Ajustes de inventario",
@@ -35,6 +35,10 @@ const COLUMNAS: Record<string, string> = {
   fecha_entrega: "Fecha de entrega", condiciones_pago: "Condiciones de pago", motivo_cancelacion: "Motivo de cancelación",
   datos_bancarios: "Datos bancarios", regimen_fiscal: "Régimen fiscal", cp_fiscal: "CP fiscal", dias_entrega: "Días de entrega",
   contacto: "Contacto", categoria: "Categoría", es_importacion: "Es importación", imagen_url: "Imagen",
+  padre_id: "Equipo o subensamble", hijo_id: "Artículo", articulo_id: "Artículo", orden_id: "Orden de producción", requerido: "Requerido",
+  surtido: "Surtido", redondear_arriba: "Redondear a piezas enteras", merma: "Merma", ruta: "Va en", agregado: "Agregado a esta orden",
+  reemplaza_a: "Reemplaza a", quitado_en: "Quitado (cuándo)", quitado_por: "Quitado por", motivo_quitado: "Por qué se quitó",
+  requerido_antes: "Llevaba", por_parametro: "Por parámetro", parametro: "Parámetro", grupo: "Sección",
 };
 export function nombreColumna(c: string): string {
   if (COLUMNAS[c]) return COLUMNAS[c];
