@@ -86,6 +86,11 @@ export async function redactarMensaje(cliente_id: string, canal: "whatsapp" | "c
   return (await llamar({ modo: "redactar", cliente_id, canal, motivo })).json() as Promise<{ asunto: string; mensaje: string; simulado?: boolean }>;
 }
 
+/** El primer mensaje (o el siguiente) para un lead, con lo que busca y la instrucción del vendedor. No lo manda. */
+export async function mensajeLead(lead_id: string, canal: "whatsapp" | "correo", instruccion: string) {
+  return (await llamar({ modo: "mensaje_lead", lead_id, canal, instruccion })).json() as Promise<{ asunto: string; mensaje: string; simulado?: boolean }>;
+}
+
 /** El WhatsApp de seguimiento de una venta, escrito con lo que se anotó en «¿Qué pasó?». */
 export async function mensajeSeguimiento(oportunidad_id: string) {
   return (await llamar({ modo: "mensaje_seguimiento", oportunidad_id })).json() as

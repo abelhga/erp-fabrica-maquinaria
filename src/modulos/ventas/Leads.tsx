@@ -18,6 +18,7 @@ import { LINEA, enlaceWhatsApp } from "./comun";
 import { DialogoMotivo } from "./componentes/dialogos";
 import { DialogoLead } from "./leads/DialogoLead";
 import { ConfigLeads } from "./leads/ConfigLeads";
+import { RedactarLead } from "./leads/RedactarLead";
 import { CANAL_INTENTO, CLAVE_LEADS, MODOS, botonSinRespuesta, estadoLead, hace, textoIntento, useConfigLeads, useVendedoresLeads, type CanalIntento, type IntentoLead, type Lead, type ModoLeads, type ResultadoIntento } from "./leads/datos";
 
 type Vista = "abiertos" | "por_tomar" | "mios" | "sin_contactar" | "registre" | "cerrados" | "todos";
@@ -134,6 +135,7 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
   const [cliente, setCliente] = useState<ClienteBreve | null>(null);
   const [canal, setCanal] = useState<CanalIntento>("whatsapp");
   const [dijo, setDijo] = useState("");
+  const [redactar, setRedactar] = useState(false);
   const vendedores = useVendedoresLeads(!!l && gerencia);
   const intentos = useQuery({
     queryKey: [...CLAVE_LEADS, l?.id, "intentos"], enabled: !!l,
@@ -176,8 +178,13 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
       <div className="space-y-5">
         <div className="flex flex-wrap gap-2">
           {l.telefono && <Boton asChild tamano="sm" variante="secundario"><a href={`tel:${l.telefono.replace(/[^\d+]/g, "")}`}><Phone className="h-3.5 w-3.5" />{l.telefono}</a></Boton>}
-          {l.telefono && <Boton asChild tamano="sm" variante="secundario"><a href={enlaceWhatsApp(l.telefono, `Hola ${l.nombre.split(" ")[0]}, le escribo de Hegamex por lo que nos preguntó: ${l.interes}.`)} target="_blank" rel="noreferrer"><MessageCircle className="h-3.5 w-3.5" />WhatsApp</a></Boton>}
+          {/* Sin texto ya escrito: el mismo saludo para todos los leads hizo que WhatsApp le bloqueara la cuenta a un vendedor. */}
+          {l.telefono && <Boton asChild tamano="sm" variante="secundario"><a href={enlaceWhatsApp(l.telefono, "")} target="_blank" rel="noreferrer"><MessageCircle className="h-3.5 w-3.5" />WhatsApp</a></Boton>}
           {l.correo && <Boton asChild tamano="sm" variante="secundario"><a href={`mailto:${l.correo}`}><Mail className="h-3.5 w-3.5" />{l.correo}</a></Boton>}
+          {puedeAtender && (l.telefono || l.correo) && (
+            <span data-explain={GLOSARIO.mensajeIALead} data-explain-title="Mensaje con IA">
+              <Boton tamano="sm" onClick={() => setRedactar(true)}><Sparkles className="h-3.5 w-3.5" />Mensaje con IA</Boton></span>
+          )}
         </div>
 
         <dl className="grid gap-4 sm:grid-cols-2">
@@ -224,7 +231,7 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
                   <li key={x.id} className="text-sm flex gap-2">
                     <Insignia tono={x.resultado === "contesto" ? "ok" : "neutro"} className="shrink-0 h-fit">{textoIntento(x.canal, x.resultado).corto}</Insignia>
                     <span className="min-w-0"><span className="text-tenue">{CANAL_INTENTO[x.canal]} · {hace(x.en)}{x.usuario ? ` · ${x.usuario.nombre}` : ""}</span>
-                      {x.nota && <span className="block">{x.nota}</span>}</span>
+                      {x.nota && <span className={x.resultado === "enviado" ? "line-clamp-2 text-tenue" : "block"} title={x.nota}>{x.nota}</span>}</span>
                   </li>
                 ))}
               </ul>
@@ -281,6 +288,7 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
         descripcion="Sale de los pendientes. Quien lo registró ve el motivo." etiqueta="¿Por qué?"
         sugerencias={["No contestó después de varios intentos", "Busca algo que no fabricamos ni vendemos", "Solo pedía informes, sin proyecto", "Duplicado", "Número equivocado"]}
         textoBoton="Descartar" cargando={descarte.isPending} alConfirmar={(motivo) => descarte.mutate({ id: l.id, motivo })} />
+      {redactar && <RedactarLead lead={l} alCerrar={() => setRedactar(false)} invalidar={invalidar} />}
     </Lateral>
   );
 }
