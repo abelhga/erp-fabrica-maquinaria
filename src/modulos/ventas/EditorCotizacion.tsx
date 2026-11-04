@@ -247,7 +247,7 @@ function Editor({ id }: { id: string }) {
   const vencida = !!c && ["borrador", "por_autorizar", "autorizada", "enviada"].includes(c.estado) && !!vence && vence < hoyMx();
 
   // ---------------------------------------------------------------- acciones
-  const [dlg, setDlg] = useState<null | "enviar" | "correo" | "convertir" | "rechazar" | "autorizacion" | "cliente" | "flete">(null);
+  const [dlg, setDlg] = useState<null | "enviar" | "correo" | "convertir" | "rechazar" | "autorizacion" | "cliente" | "flete" | "version">(null);
   const [nombreCliente, setNombreCliente] = useState("");
 
   const agregar = useAccion(
@@ -377,10 +377,14 @@ function Editor({ id }: { id: string }) {
     async () => { await guardar(); await q(supabase.rpc("autorizar_cotizacion", { p_id: id })); },
     { exito: "Precios autorizados", invalidar: [["cotizacion", id], ["v_cotizaciones"], ["indicadores"]] },
   );
+  // Al sacar versión de una que sigue viva se pregunta si la actual sigue vigente o ya no vale
+  // (Juan Manuel: las anteriores se quedaban «enviadas» y había que rechazarlas a mano).
   const nuevaVersion = useAccion(
-    async () => { await guardar(); return q<string>(supabase.rpc("nueva_version_cotizacion", { p_id: id })); },
-    { exito: "Nueva versión creada", invalidar: [["v_cotizaciones"]], alTerminar: (nid) => ir(`/ventas/cotizaciones/${nid}`) },
+    async (rechazar: boolean) => { await guardar(); return q<string>(supabase.rpc("nueva_version_cotizacion", { p_id: id, p_rechazar_anterior: rechazar })); },
+    { exito: "Nueva versión creada", invalidar: [["v_cotizaciones"], ["v_oportunidades"]], alTerminar: (nid) => { setDlg(null); ir(`/ventas/cotizaciones/${nid}`); } },
   );
+  const sigueViva = ["borrador", "por_autorizar", "autorizada", "enviada"].includes(c?.estado ?? "");
+  const pedirNuevaVersion = () => (sigueViva ? setDlg("version") : nuevaVersion.mutate(false));
   const duplicar = useAccion(
     async () => { await guardar(); return q<string>(supabase.rpc("duplicar_cotizacion", { p_id: id })); },
     { exito: "Cotización duplicada con folio nuevo", invalidar: [["v_cotizaciones"]], alTerminar: (nid) => ir(`/ventas/cotizaciones/${nid}`) },
@@ -478,7 +482,7 @@ function Editor({ id }: { id: string }) {
     if (puedeEnviar) return <Boton tamano={tamano} onClick={() => setDlg("enviar")}><Send className="h-4 w-4" />Enviar</Boton>;
     if (c.estado === "enviada" && puedeConvertir) return <Boton tamano={tamano} variante="exito" onClick={() => setDlg("convertir")}><PackageCheck className="h-4 w-4" />Convertir a pedido</Boton>;
     if (c.estado === "aceptada" && pedido.data?.[0]) return <Boton tamano={tamano} asChild variante="secundario"><Link to={`/ventas/pedidos/${pedido.data[0].id}`}><Truck className="h-4 w-4" />Ver pedido {pedido.data[0].folio}</Link></Boton>;
-    if (["rechazada", "cancelada", "vencida"].includes(c.estado)) return <Boton tamano={tamano} onClick={() => nuevaVersion.mutate(undefined)} cargando={nuevaVersion.isPending}><CopyPlus className="h-4 w-4" />Nueva versión</Boton>;
+    if (["rechazada", "cancelada", "vencida"].includes(c.estado)) return <Boton tamano={tamano} onClick={pedirNuevaVersion} cargando={nuevaVersion.isPending}><CopyPlus className="h-4 w-4" />Nueva versión</Boton>;
     return null;
   };
   const botonPrincipal = principal();
@@ -490,7 +494,7 @@ function Editor({ id }: { id: string }) {
       <OpcionMenu icono={MessageCircle} alElegir={() => setDlg("enviar")} deshabilitado={!["enviada", "aceptada"].includes(c.estado) && !puedeEnviar}>Compartir por WhatsApp</OpcionMenu>
       <OpcionMenu icono={Mail} alElegir={() => setDlg("correo")} deshabilitado={!["enviada", "aceptada"].includes(c.estado) && !puedeEnviar}>Mandar por correo</OpcionMenu>
       <SeparadorMenu />
-      <OpcionMenu icono={CopyPlus} alElegir={() => nuevaVersion.mutate(undefined)}>Nueva versión ({c.folio.replace(/-v\d+$/, "")}-v…)</OpcionMenu>
+      <OpcionMenu icono={CopyPlus} alElegir={pedirNuevaVersion}>Nueva versión ({c.folio.replace(/-v\d+$/, "")}-v…)</OpcionMenu>
       <OpcionMenu icono={Copy} alElegir={() => duplicar.mutate(undefined)}>Duplicar con folio nuevo</OpcionMenu>
       <OpcionMenu icono={PackageCheck} alElegir={() => setDlg("convertir")} deshabilitado={!puedeConvertir}>Convertir a pedido</OpcionMenu>
       <OpcionMenu icono={ThumbsDown} alElegir={() => setDlg("rechazar")} deshabilitado={["aceptada", "rechazada", "cancelada"].includes(c.estado) || !(propia || esGerente)}>Marcar rechazada…</OpcionMenu>
@@ -621,7 +625,7 @@ function Editor({ id }: { id: string }) {
             {c.estado === "rechazada" && <>Rechazada: {c.motivo_rechazo}</>}
             {(c.estado === "cancelada" || c.estado === "vencida") && <>Esta cotización está {est.texto.toLowerCase()}.</>}
           </span>
-          {c.estado === "enviada" && <Boton tamano="sm" variante="secundario" onClick={() => nuevaVersion.mutate(undefined)} cargando={nuevaVersion.isPending}><CopyPlus className="h-4 w-4" />Nueva versión</Boton>}
+          {c.estado === "enviada" && <Boton tamano="sm" variante="secundario" onClick={pedirNuevaVersion} cargando={nuevaVersion.isPending}><CopyPlus className="h-4 w-4" />Nueva versión</Boton>}
         </div>
       )}
       {!editable && EDITABLES.includes(c.estado) && (
@@ -863,6 +867,21 @@ function Editor({ id }: { id: string }) {
         cargando={convertir.isPending} alConfirmar={(f, ids) => convertir.mutate({ fecha: f, ids })} />
       <DialogoPedirAutorizacion abierto={dlg === "autorizacion"} alCambiar={(v) => setDlg(v ? "autorizacion" : null)} partidasBajo={bajoMinimo}
         pedidaEn={c.autorizacion_pedida_en} cargando={pedirAutorizacion.isPending} alConfirmar={(n) => pedirAutorizacion.mutate(n)} />
+      <Dialogo abierto={dlg === "version"} alCambiar={(v) => setDlg(v ? "version" : null)} titulo={`Nueva versión de ${c.folio}`}
+        descripcion="La nueva sale como borrador con las mismas partidas. ¿Qué pasa con esta?">
+        <div className="grid gap-2" data-explain={GLOSARIO.nuevaVersionCotizacion} data-explain-title="Nueva versión">
+          <button type="button" autoFocus disabled={nuevaVersion.isPending} onClick={() => nuevaVersion.mutate(true)}
+            className="text-left rounded-lg border border-marca bg-marca-suave px-4 py-3 hover:bg-marca-suave/70 focus:outline-none focus:ring-2 focus:ring-marca/40 disabled:opacity-60">
+            <p className="font-medium">Ya no vale: la reemplaza la nueva</p>
+            <p className="text-sm text-tenue">{c.estado === "enviada" ? "Queda rechazada" : "Queda cancelada (no se envió)"} con «Se reemplazó por la versión…», deja de agendar seguimientos y no cuenta como venta perdida.</p>
+          </button>
+          <button type="button" disabled={nuevaVersion.isPending} onClick={() => nuevaVersion.mutate(false)}
+            className="text-left rounded-lg border border-borde px-4 py-3 hover:bg-fondo focus:outline-none focus:ring-2 focus:ring-marca/40 disabled:opacity-60">
+            <p className="font-medium">Sigue vigente</p>
+            <p className="text-sm text-tenue">El cliente puede escoger cualquiera de las dos. Esta se queda como está.</p>
+          </button>
+        </div>
+      </Dialogo>
       <DialogoMotivo abierto={dlg === "rechazar"} alCambiar={(v) => setDlg(v ? "rechazar" : null)} titulo={`Rechazar ${c.folio}`}
         descripcion="Saber por qué se pierden las ventas es lo que hoy no existe en ninguna hoja." sugerencias={MOTIVOS_PERDIDA}
         textoBoton="Marcar rechazada" cargando={rechazar.isPending} alConfirmar={(m) => rechazar.mutate({ motivo: m, cerrar: cerrarOp })}
