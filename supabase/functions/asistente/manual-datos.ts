@@ -1128,7 +1128,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Aquí se anota a quien llama o escribe interesado y todavía no es cliente ni oportunidad, para que no se pierda en un papel. Lo usan recepción, los vendedores, la gerencia de ventas y marketing, que los ve todos para saber de dónde llegan y qué pasó con ellos.",
    "Con «Registrar lead» anotas quién es, su teléfono o correo y qué busca, con sus palabras. Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es y dices «Es este», le llega directo a su vendedor. Enter lo guarda.",
    "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma o nadie lo atiende a tiempo, se le avisa a la gerencia.",
-   "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota: «No contestó», o «Contestó» con lo que te dijo. Hasta que contesta (o pide cotización) se habilita «Crear oportunidad» (si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta). Si no le interesa, se descarta con el motivo. La columna «Intentos» dice cuántas veces se le buscó. Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad."
+   "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no: «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo. Hasta que contesta (o pide cotización) se habilita «Crear oportunidad» (si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta). Si no le interesa, se descarta con el motivo. La columna «Intentos» dice lo último que hiciste y cuándo («Le escribiste por WhatsApp · hace 2 h»), y «Sin contactar» junta a los que todavía no les has escrito ni llamado. Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad."
   ]
  },
  {
@@ -3991,7 +3991,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cada vez que le llamas, le escribes o lo visitas, anótalo: «No contestó» o «Contestó» con lo que te dijo. Mientras no conteste, sigue siendo lead (no se da de alta como cliente). Los leads que alguien tiene varios días sin ningún intento, o que se volvieron oportunidad y no se cotizan, le aparecen a dirección en «Por revisar»."
+  "texto": "Cada vez que le llamas, le escribes o lo visitas, anótalo. Si le escribiste por WhatsApp o correo, «Le escribí»; si le llamaste y no contestó, «No contestó»; si fuiste y no estaba, «No estaba»; y cuando conteste, «Contestó» con lo que te dijo. Todo cuenta como intento, conteste o no, y en la lista se ve lo último que hiciste y cuándo. Mientras no conteste, sigue siendo lead (no se da de alta como cliente). Los leads que alguien tiene varios días sin ningún intento, o que se volvieron oportunidad y no se cotizan, le aparecen a dirección en «Por revisar»."
  },
  {
   "clave": "invitacion",
@@ -5905,6 +5905,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "margenes"
   ],
   "texto": "Antes de guardar un cambio de utilidad, recargo o ISR, ves cuántos precios se mueven, cuánto en promedio y los diez que más cambian. Respeta precios fijos y utilidades propias, igual que el cálculo real."
+ },
+ {
+  "clave": "sinContactarLead",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Los leads que ya tienes asignados y a los que todavía no les has escrito, llamado ni visitado (ningún intento anotado). La gerencia ve los de todos los vendedores."
  },
  {
   "clave": "sinCuadrilla",

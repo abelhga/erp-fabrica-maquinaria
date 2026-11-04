@@ -15,13 +15,32 @@ export interface Lead {
   como_se_asigno: "cliente" | "bandeja" | "gerente" | "recepcion" | null; asignado_en: string | null; atendido_en: string | null;
   oportunidad_id: string | null; etapa_oportunidad: EtapaOportunidad | null; motivo_descarte: string | null;
   capturado_por: string | null; capturo: string | null; creado_en: string;
-  intentos: number; contesto: boolean; ultimo_intento: string | null; ultimo_resultado: "contesto" | "no_contesto" | null;
+  intentos: number; contesto: boolean; ultimo_intento: string | null; ultimo_resultado: ResultadoIntento | null; ultimo_canal: CanalIntento | null;
 }
 
 /** Cada vez que el vendedor le llamó o escribió, y si le contestó. */
-export interface IntentoLead { id: string; canal: CanalIntento; resultado: "contesto" | "no_contesto"; nota: string | null; en: string; usuario: { nombre: string } | null }
+export interface IntentoLead { id: string; canal: CanalIntento; resultado: ResultadoIntento; nota: string | null; en: string; usuario: { nombre: string } | null }
 export type CanalIntento = "llamada" | "whatsapp" | "correo" | "visita";
+/** «enviado»: le escribiste (WhatsApp o correo) y todavía no contesta. «no_contesto»: llamada o visita sin respuesta. */
+export type ResultadoIntento = "contesto" | "no_contesto" | "enviado";
 export const CANAL_INTENTO: Record<CanalIntento, string> = { llamada: "Llamada", whatsapp: "WhatsApp", correo: "Correo", visita: "Visita" };
+
+/** Por escrito no se espera respuesta al momento: se anota que le escribiste. */
+export const porEscrito = (c: CanalIntento) => c === "whatsapp" || c === "correo";
+
+/** El botón para el intento sin respuesta, según por dónde fue. */
+export function botonSinRespuesta(c: CanalIntento): { texto: string; resultado: ResultadoIntento } {
+  return porEscrito(c) ? { texto: "Le escribí", resultado: "enviado" } : { texto: c === "visita" ? "No estaba" : "No contestó", resultado: "no_contesto" };
+}
+
+/** Cómo se lee un intento sin respuesta: corto (insignia) y con el medio (lista). */
+export function textoIntento(c: CanalIntento | null, r: ResultadoIntento | null): { corto: string; largo: string } {
+  if (r === "contesto") return { corto: "Contestó", largo: "Contestó" };
+  if (r === "enviado") return { corto: "Le escribiste", largo: c === "correo" ? "Le escribiste por correo" : "Le escribiste por WhatsApp" };
+  if (c === "visita") return { corto: "No estaba", largo: "Lo visitaste, no estaba" };
+  if (c === "whatsapp" || c === "correo") return { corto: "No contestó", largo: `${CANAL_INTENTO[c]}, no contestó` };
+  return { corto: "No contestó", largo: "Llamaste, no contestó" };
+}
 
 export const CLAVE_LEADS = ["v_leads"] as const;
 
