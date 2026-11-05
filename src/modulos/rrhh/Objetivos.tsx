@@ -23,6 +23,7 @@ import {
   AvisoSinBase, BarraPeso, ESTADOS_EVAL, FUENTES, PanelEvaluacion, REGLAS, SelectorMes, mesAnterior, mesDe, nombreMes,
   puntos, reglaCorta, useBonos, useEvaluaciones, type EstadoEval, type Evaluacion, type Fuente, type Indicador, type Regla,
 } from "./componentes/objetivos";
+import { BasesBono } from "./componentes/BasesBono";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Puesto { id: number; nombre: string; departamento_id: number | null; activo: boolean }
@@ -61,6 +62,9 @@ export default function Objetivos() {
     setParams(p, { replace: true });
   };
   const esRrhh = puede("objetivos", 3);
+  // Los montos son de nómina: un jefe con objetivos nivel 1 califica sin ver cuánto vale el bono.
+  const conNomina = puede("nomina", 1);
+  const { puestos } = useCatalogos();
 
   return (
     <Pagina
@@ -74,11 +78,13 @@ export default function Objetivos() {
           { valor: "plantillas", texto: "Plantillas por puesto", explica: GLOSARIO.plantillaPuesto },
           ...(esRrhh ? [{ valor: "personas", texto: "Personas y jefes", explica: GLOSARIO.jefeDirecto }] : []),
           { valor: "indicadores", texto: "Indicadores", explica: GLOSARIO.fuenteIndicador },
+          ...(conNomina ? [{ valor: "bases", texto: "Bases del bono", explica: GLOSARIO.baseBono }] : []),
         ]} />
         <ContenidoPestana value="evaluaciones" className="pt-4"><Evaluaciones mes={mes} ver={params.get("ver")} abrir={(id) => cambiar({ ver: id })} /></ContenidoPestana>
         <ContenidoPestana value="plantillas" className="pt-4"><Plantillas mes={mes} /></ContenidoPestana>
         {esRrhh && <ContenidoPestana value="personas" className="pt-4"><Personas /></ContenidoPestana>}
         <ContenidoPestana value="indicadores" className="pt-4"><Indicadores /></ContenidoPestana>
+        {conNomina && <ContenidoPestana value="bases" className="pt-4"><BasesBono mes={mes} puestos={puestos} /></ContenidoPestana>}
       </Pestanas>
     </Pagina>
   );

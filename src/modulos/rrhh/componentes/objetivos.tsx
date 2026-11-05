@@ -597,7 +597,7 @@ export function AvisoSinBase({ cuantos, className }: { cuantos: number; classNam
   return (
     <div className={cn("rounded-lg border border-aviso/30 bg-aviso-suave p-3 text-sm text-aviso flex gap-2", className)} data-explain={GLOSARIO.bonoObjetivos} data-explain-title="Base del bono">
       <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-      <span><b>Falta definir la base del bono.</b> {cuantos === 1 ? "Hay 1 evaluación aprobada" : `Hay ${cuantos} evaluaciones aprobadas`} con su %, pero dirección no ha dicho cuánto vale el bono por puesto o por persona. Mientras tanto se enseña el % y ningún monto.</span>
+      <span><b>Falta definir la base del bono.</b> {cuantos === 1 ? "Hay 1 evaluación aprobada" : `Hay ${cuantos} evaluaciones aprobadas`} con su %, pero su puesto no tiene base del bono para ese mes. Captúrala en la pestaña «Bases del bono»; mientras tanto se enseña el % y ningún monto.</span>
     </div>
   );
 }

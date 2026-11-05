@@ -1132,7 +1132,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Lo que el sistema puede medir se mide solo y guarda su evidencia: ventas, entregas, inventario, el checklist, qué tan rápido se asignan y se atienden los leads, los seguimientos de cotización y las preguntas de Mercado Libre.",
    "También se miden solos los preventivos y las fallas de las máquinas, las etapas marcadas en la terminal, los pendientes a tiempo y las ideas de mejora. Lo demás lo pone el jefe.",
    "Los plazos («en 4 horas», «al siguiente día hábil») cuentan horas de horario: lo que llega de noche no cuenta en contra hasta que se abre.",
-   "Nadie se califica a sí mismo y un mes aprobado ya no se toca: se corrige con un ajuste que autoriza otra persona. Los montos del bono solo los ve quien tiene nómina."
+   "Nadie se califica a sí mismo y un mes aprobado ya no se toca: se corrige con un ajuste que autoriza otra persona. Los montos del bono solo los ve quien tiene nómina.",
+   "«Bases del bono» (solo quien tiene nómina) dice cuánto vale el bono al 100 % de cada puesto y, si alguien gana distinto, de cada persona. Cada base vale desde un mes y para los siguientes; lo ya pagado no cambia. La captura Recursos Humanos."
   ]
  },
  {
@@ -2557,6 +2558,42 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La partida quedó abajo del precio mínimo (o en $0). La cotización pasa a “Por autorizar” y no se puede enviar ni convertir en pedido hasta que la gerencia de ventas la autorice."
  },
  {
+  "clave": "baseBono",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Cuánto vale el bono al 100 % en un mes. Cada persona cobra su % aprobado por esta base: con base de $2,000 y 85 %, cobra $1,700. Se define por puesto y, si alguien debe ganar distinto, por persona. La captura Recursos Humanos; solo la ve quien tiene nómina."
+ },
+ {
+  "clave": "baseBonoDesde",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "El mes desde el que vale la base, para ese mes y los siguientes hasta que se capture otra. La de cada mes es la más reciente que ya empezó. Cambiarla no toca lo que ya se pagó en nómina."
+ },
+ {
+  "clave": "baseBonoPersona",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Una base propia para alguien que debe ganar distinto a los demás de su puesto. Mientras exista, se usa la suya y no la del puesto."
+ },
+ {
   "clave": "bitacoraSistema",
   "modulos": [
    "admin"
@@ -2590,7 +2627,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Lo que se paga por los objetivos: el % del mes aprobado por la base del bono de su puesto o de la persona. Mientras dirección no defina esa base se muestra solo el % y no se paga nada."
+  "texto": "Lo que se paga por los objetivos: el % del mes aprobado por la base del bono de su puesto o de la persona. Las bases se capturan en Objetivos › Bases del bono; mientras no haya una para ese mes se muestra solo el % y no se paga nada."
  },
  {
   "clave": "bonoRefacciones",
@@ -2757,6 +2794,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Aprueba los precios abajo del mínimo: la cotización queda Autorizada y el vendedor ya la puede enviar o convertir en pedido. Solo la gerencia de ventas autoriza. Si después le cambian partidas, descuento, moneda o IVA, la autorización se pierde."
+ },
+ {
+  "clave": "botonBasePersona",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Le pone a una persona una base distinta a la de su puesto."
  },
  {
   "clave": "botonBorrarCobroPedido",
@@ -3124,6 +3173,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Qué pasa con lo que regresó: reingresa al inventario si está bien para venderse (entra al almacén que elijas), es merma (entra y se pide el ajuste de salida, que autoriza otra persona) o se reclama a la paquetería con su folio (no entra al inventario). Lo decide almacén."
+ },
+ {
+  "clave": "botonDefinirBase",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Captura la base mensual y desde qué mes vale. Si ese mes ya tenía base, la corrige; si eliges un mes nuevo, la de antes sigue valiendo para los meses anteriores."
  },
  {
   "clave": "botonDescartarLead",
@@ -4025,6 +4086,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Quita este ajuste de la comisión del mes. Ya no se puede cuando la comisión está pagada."
+ },
+ {
+  "clave": "botonQuitarBase",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Quita esa base del historial. Si fue un error, el aviso trae «Deshacer». Lo que ya se pagó no cambia."
  },
  {
   "clave": "botonQuitarBultoEmpaque",
@@ -11824,6 +11897,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "clave": "personasDelPendiente",
   "modulos": [],
   "texto": "A quién se lo pediste. En verde, quien ya lo hizo; en ámbar con signo de pregunta, quien te preguntó algo y espera tu respuesta. Clic en un nombre para abrir su ficha."
+ },
+ {
+  "clave": "personasPuestoBono",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Cuántas personas tienen hoy ese puesto con objetivos (en «Personas y jefes»)."
  },
  {
   "clave": "pesoEstadoTresAnios",

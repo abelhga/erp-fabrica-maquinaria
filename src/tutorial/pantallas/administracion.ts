@@ -54,6 +54,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
       "También se miden solos los preventivos y las fallas de las máquinas, las etapas marcadas en la terminal, los pendientes a tiempo y las ideas de mejora. Lo demás lo pone el jefe.",
       "Los plazos («en 4 horas», «al siguiente día hábil») cuentan horas de horario: lo que llega de noche no cuenta en contra hasta que se abre.",
       "Nadie se califica a sí mismo y un mes aprobado ya no se toca: se corrige con un ajuste que autoriza otra persona. Los montos del bono solo los ve quien tiene nómina.",
+      "«Bases del bono» (solo quien tiene nómina) dice cuánto vale el bono al 100 % de cada puesto y, si alguien gana distinto, de cada persona. Cada base vale desde un mes y para los siguientes; lo ya pagado no cambia. La captura Recursos Humanos.",
     ],
   },
   "/rrhh/checklist": {
