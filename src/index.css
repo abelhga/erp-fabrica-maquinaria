@@ -153,8 +153,10 @@
 }
 .uso-destello { animation: uso-destello 1.2s ease-out; position: relative; z-index: 1; }
 .uso-destello-suave { animation: uso-destello-suave 0.9s ease-out; }
+/* «Por renglón»: un pulso corto por cada renglón de bitácora, para que 40 renglones se vean como 40 golpes. */
+.uso-destello-rapido { animation: uso-destello 0.3s ease-out; position: relative; z-index: 1; }
 @media (prefers-reduced-motion: reduce) {
-  .uso-destello, .uso-destello-suave { animation: none; box-shadow: 0 0 0 2px var(--serie-1); }
+  .uso-destello, .uso-destello-suave, .uso-destello-rapido { animation: none; box-shadow: 0 0 0 2px var(--serie-1); }
 }
 @media (hover: none) {
   :root[data-tutorial="true"] [data-explain] { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
