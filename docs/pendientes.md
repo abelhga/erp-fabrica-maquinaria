@@ -40,6 +40,10 @@ qué y foto, etiquetas QR/NFC (213); terminal con play y pausa, y criticidad cal
 
 ## Para hacer
 
+- **Pendientes «Con copia a»** (idea de dirección, 5 nov): alguien que ve el pendiente y recibe sus avisos
+  (creado, preguntas, terminado) sin ser responsable ni contar para su cumplimiento. Hacerlo si se
+  vuelve a pedir; por ahora se avisa por fuera.
+
 - **Lo que encontró la revisión del tutorial (5 nov) y no era del tutorial.** Los agentes solo podían
   agregar explicaciones, así que esto quedó sin tocar. Verificar en el código antes de corregir.
   - Posibles errores de lógica: «Iniciar»/«Reanudar» desde el detalle de la orden no anota a nadie
