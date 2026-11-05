@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ClipboardCheck, Flame, HardHat, PackageOpen, Scale, TriangleAlert } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
@@ -8,7 +8,9 @@ import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { Cargando, ErrorCarga } from "@/components/ui/estados";
 import { Insignia } from "@/components/ui/insignia";
-import { Leyenda, SERIE, TooltipGrafica, ejeProps } from "@/components/graficas/comunes";
+import { Leyenda, SERIE, ejeProps } from "@/components/graficas/comunes";
+import { Pestanas, ListaPestanas, ContenidoPestana } from "@/components/ui/pestanas";
+import { SaludInventario } from "./componentes/SaludInventario";
 import { useRpc } from "@/lib/consultas";
 import { dinero, fecha, fechaYHora, numero, porcentaje, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
@@ -56,19 +58,48 @@ const PERIODOS: { valor: Periodo; texto: string }[] = [
 const restarDias = (iso: string, d: number) => { const x = new Date(iso + "T12:00:00-06:00"); x.setDate(x.getDate() - d); return x.toISOString().slice(0, 10); };
 /** «1 partida», «3 partidas»: los textos de los indicadores leen mejor sin el «(s)». */
 const cuantos = (n: number, uno: string, varios: string) => `${numero(n)} ${n === 1 ? uno : varios}`;
-const SERIES = [{ clave: "lista", nombre: "De la lista" }, { clave: "fuera", nombre: "Fuera de lista" }, { clave: "consumo", nombre: "Consumo del taller" }] as const;
 
 export default function MetricasAlmacen() {
   const [params, setParams] = useSearchParams();
   const periodo = (PERIODOS.some((p) => p.valor === params.get("periodo")) ? params.get("periodo") : "30") as Periodo;
   const hasta = hoyISO();
   const desde = useMemo(() => restarDias(hasta, Number(periodo) - 1), [hasta, periodo]);
-  const m = useRpc<Datos>("metricas_almacen", { p_desde: desde, p_hasta: hasta }, { clave: ["metricas_almacen", desde, hasta] });
+  // La salud del inventario es una foto de hoy; el periodo solo aplica a lo que se movió.
+  const vista = params.get("vista") === "periodo" ? "periodo" : "salud";
+  const cambiar = (cambios: Record<string, string | null>) => {
+    const p = new URLSearchParams(params);
+    for (const [k, v] of Object.entries(cambios)) { if (v == null) p.delete(k); else p.set(k, v); }
+    setParams(p, { replace: true });
+  };
+  const m = useRpc<Datos>("metricas_almacen", { p_desde: desde, p_hasta: hasta }, { clave: ["metricas_almacen", desde, hasta], habilitado: vista === "periodo" });
   return (
-    <Pagina titulo="Métricas de almacén" ancho="max-w-[1500px]" descripcion={`Del ${fecha(desde)} al ${fecha(hasta)} · surtido, consumo, ajustes y conteos`}
-      acciones={<Filtro opciones={PERIODOS} valor={periodo} alCambiar={(v) => setParams(v === "30" ? {} : { periodo: v }, { replace: true })} />}>
-      {m.error ? <ErrorCarga error={m.error} /> : m.isLoading || !m.data ? <Cargando filas={8} /> : <Contenido d={m.data} />}
+    <Pagina titulo="Métricas de almacén" ancho="max-w-[1500px]"
+      descripcion={vista === "salud" ? "Foto de hoy: cuánto alcanza el inventario contra lo que sale, y qué conviene controlar de cerca"
+        : `Del ${fecha(desde)} al ${fecha(hasta)} · surtido, consumo, ajustes y conteos`}
+      acciones={vista === "periodo" ? <Filtro opciones={PERIODOS} valor={periodo} alCambiar={(v) => cambiar({ periodo: v === "30" ? null : v })} /> : undefined}>
+      <Pestanas value={vista} onValueChange={(v) => cambiar({ vista: v === "salud" ? null : v })}>
+        <ListaPestanas opciones={[{ valor: "salud", texto: "Salud del inventario", explica: GLOSARIO.saludInventario }, { valor: "periodo", texto: "Movimiento del periodo" }]} />
+        <ContenidoPestana value="salud" className="pt-4"><SaludInventario /></ContenidoPestana>
+        <ContenidoPestana value="periodo" className="pt-4">
+          {m.error ? <ErrorCarga error={m.error} /> : m.isLoading || !m.data ? <Cargando filas={8} /> : <Contenido d={m.data} />}
+        </ContenidoPestana>
+      </Pestanas>
     </Pagina>
+  );
+}
+
+function TooltipControl({ active, payload, label }: { active?: boolean; label?: string;
+  payload?: { payload: { n: number; fuera: number; consumo: number; p: number | null; lcs: number | null } }[] }) {
+  if (!active || !payload?.length) return null;
+  const x = payload[0].payload;
+  return (
+    <div className="tarjeta px-3 py-2 text-xs shadow-lg min-w-[180px] space-y-0.5">
+      <p className="font-medium">Semana del {label}</p>
+      <p className="flex justify-between gap-3"><span className="text-tenue">Fuera de lista</span><span className="cifra font-medium">{x.p == null ? "—" : porcentaje(x.p, 1)}</span></p>
+      <p className="flex justify-between gap-3"><span className="text-tenue">Partidas a órdenes</span><span className="cifra">{numero(x.fuera)} de {numero(x.n)}</span></p>
+      <p className="flex justify-between gap-3"><span className="text-tenue">Límite superior</span><span className="cifra">{x.lcs == null ? "—" : porcentaje(x.lcs, 1)}</span></p>
+      <p className="flex justify-between gap-3"><span className="text-tenue">Consumo del taller</span><span className="cifra">{numero(x.consumo)}</span></p>
+    </div>
   );
 }
 
@@ -76,7 +107,21 @@ function Contenido({ d }: { d: Datos }) {
   const r = d.resumen;
   const pctFuera = r.partidas_orden ? r.fuera_lista / r.partidas_orden : null;
   const exactitud = r.lineas_contadas ? 1 - r.lineas_con_diferencia / r.lineas_contadas : null;
-  const semanas = d.semanas.map((s) => ({ semana: fecha(s.semana).replace(/ \d{4}$/, ""), "De la lista": s.lista, "Fuera de lista": s.fuera, "Consumo del taller": s.consumo }));
+  // Gráfica de control p: la proporción fuera de lista por semana contra su promedio, con límites a
+  // 3 sigmas que se abren cuando la semana tiene pocas partidas. Un punto afuera no es ruido.
+  const control = useMemo(() => {
+    const n = d.semanas.reduce((a, s) => a + s.lista + s.fuera, 0);
+    const pbar = n ? d.semanas.reduce((a, s) => a + s.fuera, 0) / n : 0;
+    const filas = d.semanas.map((s) => {
+      const ni = s.lista + s.fuera;
+      const sigma = ni ? Math.sqrt((pbar * (1 - pbar)) / ni) : 0;
+      return {
+        semana: fecha(s.semana).replace(/ \d{4}$/, ""), n: ni, fuera: s.fuera, consumo: s.consumo,
+        p: ni ? s.fuera / ni : null, lcs: ni ? Math.min(1, pbar + 3 * sigma) : null, lci: ni ? Math.max(0, pbar - 3 * sigma) : null,
+      };
+    });
+    return { pbar, filas, fuera: filas.filter((f) => f.p != null && f.lcs != null && f.p > f.lcs).length };
+  }, [d.semanas]);
 
   const colFuera: Columna<FueraLista>[] = [
     { clave: "en", titulo: "Fecha", clase: "whitespace-nowrap text-xs text-tenue", valor: (x) => x.en, celda: (x) => fechaYHora(x.en) },
@@ -153,20 +198,27 @@ function Contenido({ d }: { d: Datos }) {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Tarjeta className="lg:col-span-2">
-          <EncabezadoTarjeta titulo="Partidas por semana" descripcion="Lo que salió a órdenes (de su lista y fuera de ella) y a consumo del taller" />
-          <div className="px-5"><Leyenda series={SERIES.map((s, i) => ({ nombre: s.nombre, color: SERIE(i + 1) }))} /></div>
+          <EncabezadoTarjeta titulo="Fuera de lista por semana · gráfica de control" explica={GLOSARIO.graficaControlFueraLista}
+            descripcion={`Promedio ${porcentaje(control.pbar, 1)}. Una semana arriba del límite superior es un cambio real, no casualidad${control.fuera ? `: hay ${control.fuera}` : ": no hay ninguna"}.`} />
+          <div className="px-5"><Leyenda series={[{ nombre: "Fuera de lista", color: SERIE(2) }, { nombre: "Promedio", color: "var(--eje)" }, { nombre: "Límites de control", color: "var(--serie-resto)" }]} /></div>
           <div className="h-56 px-2 pb-3 pt-2">
             <ResponsiveContainer>
-              <BarChart data={semanas} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+              <ComposedChart data={control.filas} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                 <CartesianGrid vertical={false} stroke="var(--rejilla)" />
                 <XAxis dataKey="semana" {...ejeProps} interval="preserveStartEnd" minTickGap={16} />
-                <YAxis {...ejeProps} allowDecimals={false} width={32} />
-                <Tooltip cursor={{ fill: "var(--rejilla)", opacity: 0.4 }} content={<TooltipGrafica formato={(v) => numero(v)} />} />
-                {SERIES.map((s, i) => (
-                  <Bar key={s.clave} dataKey={s.nombre} stackId="p" fill={SERIE(i + 1)} maxBarSize={22} stroke="hsl(var(--superficie))" strokeWidth={2}
-                    radius={i === SERIES.length - 1 ? [4, 4, 0, 0] : undefined} isAnimationActive={false} />
-                ))}
-              </BarChart>
+                <YAxis {...ejeProps} width={44} tickFormatter={(v) => porcentaje(v, 0)} domain={[0, (max: number) => Math.min(1, Math.max(0.1, Math.ceil(max * 10) / 10))]} />
+                <Tooltip content={<TooltipControl />} />
+                <ReferenceLine y={control.pbar} stroke="var(--eje)" strokeDasharray="4 4" />
+                <Line dataKey="lcs" name="Límite superior" stroke="var(--serie-resto)" strokeWidth={1.5} dot={false} type="step" isAnimationActive={false} connectNulls />
+                <Line dataKey="lci" name="Límite inferior" stroke="var(--serie-resto)" strokeWidth={1.5} dot={false} type="step" isAnimationActive={false} connectNulls />
+                <Line dataKey="p" name="Fuera de lista" stroke={SERIE(2)} strokeWidth={2} type="linear" isAnimationActive={false} connectNulls
+                  dot={(pr: { cx?: number; cy?: number; payload: { p: number | null; lcs: number | null }; index: number }) => {
+                    const afuera = pr.payload.p != null && pr.payload.lcs != null && pr.payload.p > pr.payload.lcs;
+                    if (pr.cx == null || pr.cy == null || pr.payload.p == null) return <g key={pr.index} />;
+                    return <circle key={pr.index} cx={pr.cx} cy={pr.cy} r={afuera ? 6 : 4} fill={afuera ? "hsl(var(--peligro))" : SERIE(2)}
+                      stroke="hsl(var(--superficie))" strokeWidth={2} />;
+                  }} />
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         </Tarjeta>

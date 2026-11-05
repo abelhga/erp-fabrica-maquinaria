@@ -53,8 +53,10 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   ],
   "nivel": 2,
   "texto": [
-   "Aquí ves cómo anda el almacén: lo que se surte a las órdenes, lo que sale fuera de su lista, cuánto consumible se lleva cada persona y si cuadra con las recetas, los ajustes y qué tan exactos salen los conteos. La usan almacén, compras, la gerencia de producción y dirección.",
-   "Arriba eliges el periodo (30 días, 90, 6 o 12 meses). Pasa el mouse por cada indicador para ver de dónde sale. La gráfica cuenta partidas por semana: las de la lista de la orden, las que salieron fuera de lista y las de consumo del taller.",
+   "Aquí ves cómo anda el almacén, en dos pestañas. «Salud del inventario» es una foto de hoy: cuánto alcanza lo que hay contra lo que sale, qué sobra y qué falta, y qué artículos conviene controlar de cerca. «Movimiento del periodo» es lo que pasó en el periodo: surtido a órdenes, lo que sale fuera de su lista, consumibles por persona, ajustes y conteos. La usan almacén, compras, la gerencia de producción y dirección.",
+   "En «Salud del inventario» la barra reparte lo que hay en existencia por clase (quiebre, bajo el punto de reorden, sano, exceso, esporádico, sin movimiento); con permiso de costos se ve por valor o por artículos. La frase de arriba dice cuánto no tiene demanda regular. Clic en cualquier pedazo, en la leyenda o en una celda de la matriz trae la lista de esos artículos, para bajarla a Excel y actuar (rematar, devolver, no volver a pedir, pedir ya).",
+   "La matriz ABC-XYZ cruza cuánto pesa cada artículo (por valor consumido si ves costos; si no, por qué tan seguido sale) con qué tan parejo sale mes con mes; al pasar el mouse por una celda dice qué conviene hacer con esos artículos. «Cobertura contra la meta» dice, para nacionales e importados, cuántos artículos alcanzan menos de su meta (en naranja) y cuántos de más (en azul). Abajo, lo que salió cada mes en los últimos 12.",
+   "En «Movimiento del periodo» eliges el periodo (30 días, 90, 6 o 12 meses) y pasas el mouse por cada indicador para ver de dónde sale. La gráfica de control enseña, por semana, qué parte de lo surtido a órdenes salió fuera de su lista contra su promedio y sus límites: un punto rojo arriba del límite es un cambio real que hay que investigar.",
    "«Fuera de lista» trae cada partida que salió a una orden sin estar en su lista, con quién la recibió, quién la registró y el motivo: es la lista para preguntar por qué y, si a la receta le falta algo, avisar a ingeniería. Clic en la orden la abre. Se busca y se baja a Excel como cualquier tabla.",
    "«Consumibles por persona» suma lo que se llevó cada quien de las categorías consumibles (discos, lijas, soldadura, EPP…); «Sin anotar» son salidas a consumo que no dicen quién lo recibió. «Contra receta» compara lo que salió de cada consumible con lo que prevén las recetas de las órdenes terminadas en el periodo: en rojo, más de 20 % arriba. Lo que no viene en ninguna receta, como los guantes, solo se ve por persona.",
    "Abajo están los ajustes del periodo y los que esperan autorización, los conteos cerrados con cuántos renglones no coincidieron, y cuántos movimientos registró cada persona. Los montos solo los ve quien tiene acceso a costos."
@@ -902,7 +904,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Cómo anda el mantenimiento: si las máquinas están disponibles, cada cuánto fallan, cuánto tardan en volver a trabajar y si el preventivo se hace a tiempo. La usan mantenimiento, la gerencia de producción, ingeniería de procesos y dirección.",
    "Arriba eliges el periodo. Los indicadores: disponibilidad (qué parte del tiempo estuvieron listas), MTBF (cada cuánto fallan), MTTR (cuánto tardan en repararse), preventivo a tiempo, cuánto del trabajo de mantenimiento es preventivo y lo que sigue abierto.",
-   "«Las que más paran» dice dónde se va el tiempo de máquina; «Vuelven a fallar», las reparaciones que no duraron 30 días. En «Por máquina» ves todo por máquina (clic abre su ficha) y lo descargas en CSV.",
+   "«Disponibilidad por semana» enseña la disponibilidad contra la meta del 98 % y, debajo y en las mismas semanas, las fallas y los preventivos a tiempo o tarde: así se ve si una semana mala vino de fallas o de preventivo atrasado. El Pareto dice cuántas máquinas juntan el 80 % de las horas paradas (clic en una barra abre su ficha).",
+   "«Carga de preventivo» proyecta de cada plan los preventivos de las próximas 8 semanas, por criticidad y con horas de técnico estimadas, para repartir antes las semanas pesadas. «Fallas contra tiempo de reparación» separa las máquinas que fallan seguido (crónicas: causa raíz, preventivo) de las que tardan en volver (agudas: refacciones, proveedor). «Lo abierto» las reparte por antigüedad; «Vuelven a fallar», las reparaciones que no duraron 30 días. En «Por máquina» ves todo por máquina (clic abre su ficha) y lo descargas en CSV.",
    "Los números salen de las órdenes de mantenimiento: cuándo se reportó, cuándo se paró y volvió la máquina, cuándo se cerró y las horas del técnico. Si una orden se cierra sin esos datos, no cuenta bien. Quien ve costos también ve lo que costó cada máquina.",
    "Todos los tiempos (disponibilidad, horas paradas, MTBF y MTTR) son horas laborales del taller: no cuentan noches, fines de semana, feriados ni descansos, con el horario que pone la gerencia de producción. Lo dado de baja cuenta solo hasta el día de su baja."
   ]
@@ -1810,6 +1813,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Horas de trabajo que esta persona tiene encima: de cada etapa donde está (trabajando o planeada), lo que falta repartido entre su cuadrilla. Sirve para ver quién va a quedar libre primero."
  },
  {
+  "clave": "cargaPreventivo",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Cuántos preventivos tocan cada una de las próximas 8 semanas, proyectados de cada plan activo (no solo las órdenes que ya se generaron, que salen pocos días antes) y la orden abierta de cada plan. «Vencidos» son los que ya pasaron su fecha. Arriba de cada barra, las horas de técnico estimadas con lo que tardó ese plan antes (o el promedio). Sirve para ver semanas pesadas y repartir antes."
+ },
+ {
   "clave": "cargaSemanal",
   "modulos": [
    "servicio",
@@ -1947,6 +1958,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "analisis"
   ],
   "texto": "Nuevo: su primera compra fue ese año. Recurrente: ya había comprado antes."
+ },
+ {
+  "clave": "coberturaContraMeta",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cuántos meses alcanza lo disponible con lo que sale al mes, dividido entre la meta de cobertura del artículo (1 mes nacional y 6 importado, salvo que el artículo tenga la suya). «En la meta» es de 1 a 2 veces; abajo falta, arriba sobra. Solo cuenta artículos con demanda mensual."
  },
  {
   "clave": "coberturaTerminal",
@@ -2154,6 +2173,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "Lo que salió cada mes del último año (salidas a producción, ventas y consumo). Las seis barras de color son los meses que cuenta la regla; las grises, los anteriores."
+ },
+ {
+  "clave": "consumoMensualAlmacen",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Lo que salió del almacén cada mes (a producción, ventas y consumo del taller), de la hoja y del ERP. Con permiso de costos es el valor al costo de hoy; sin costos, cuántos artículos distintos tuvieron salida."
  },
  {
   "clave": "consumoTaller",
@@ -2822,6 +2849,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Qué parte del periodo la máquina estuvo lista para trabajar: 1 menos las horas que estuvo fuera de servicio entre las horas del periodo, todo en horas laborales del taller (sin noches, fines de semana, feriados ni descansos). Verde arriba de 98 %, ámbar arriba de 95 %, rojo abajo. «Críticas» es lo mismo solo de las máquinas de criticidad alta o muy alta. Una máquina dada de baja cuenta solo hasta el día de su baja."
+ },
+ {
+  "clave": "disponibilidadSemanal",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "La disponibilidad de todas las máquinas juntas cada semana, en horas laborales del taller (1 − horas paradas ÷ horas que debieron estar listas). La línea verde punteada es la meta del 98 %; lo sombreado debajo es zona de aviso. Abajo, en las mismas semanas, las fallas reportadas y los preventivos que vencían esa semana: a tiempo o tarde. Las semanas antes de que se empezara a registrar mantenimiento no salen."
  },
  {
   "clave": "disponible",
@@ -3762,6 +3797,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Tu cuenta de Gmail, conectada una vez para mandar cotizaciones y órdenes de compra desde el ERP. El correo sale de tu cuenta, así que lo ves en tus enviados y las respuestas te llegan a ti. Google te pide permiso de enviar y de leer: leer servirá para ligar al ERP las respuestas a lo que mandes desde aquí. Nadie más puede mandar desde tu cuenta."
  },
  {
+  "clave": "graficaControlFueraLista",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Gráfica de control (tipo p): cada punto es la parte de las partidas surtidas a órdenes que salió fuera de su lista esa semana. La línea punteada es el promedio y las grises los límites a 3 desviaciones, más abiertos en semanas con pocas partidas. Un punto rojo arriba del límite es un cambio real que hay que investigar; lo que se mueve entre los límites es variación normal."
+ },
+ {
   "clave": "herramientaAsignada",
   "modulos": [
    "servicio",
@@ -4086,6 +4129,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Marcado, los precios de las partidas ya traen IVA y el total es su suma; sin marcar, el IVA se agrega al final. Cambiarlo convierte los precios y el total no se mueve."
  },
  {
+  "clave": "jackKnife",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Cada máquina con fallas cerradas es un punto: a la derecha las que fallan más veces, arriba las que más tardan en volver (MTTR). Las líneas punteadas son los promedios. Arriba a la izquierda las «agudas» (fallan poco pero tardan: refacciones, proveedor, conocimiento); abajo a la derecha las «crónicas» (fallan seguido: buscar la causa raíz o el preventivo); arriba a la derecha las dos cosas, lo más urgente. El tamaño del punto son sus horas paradas."
+ },
+ {
   "clave": "jefeDirecto",
   "modulos": [
    "rrhh",
@@ -4315,6 +4366,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "El material de lo vendido. Desde el arranque: si la partida es de un artículo con costeo, su costo de material de hoy por la cantidad; si es de texto, se estima con lo que el material suele pesar en el precio de esa línea (de lo vendido con costeo en el último año si hay al menos 10 partidas; si no, del catálogo). Antes del arranque no hay costeo de lo vendido: cuenta lo que se compró de material según el libro de compras de la hoja."
+ },
+ {
+  "clave": "matrizAbcXyz",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cruza dos preguntas para decidir cómo controlar cada artículo. ABC: con permiso de costos, cuánto valor salió en 12 meses (A es el 80 % del valor, B el siguiente 15 %, C el resto); sin costos, qué tan seguido sale (A 6 meses o más de 12, B de 3 a 5, C 1 o 2). XYZ: qué tan parejo sale mes con mes, medido con la variación (desviación ÷ promedio): X hasta 0.5, Y hasta 1, Z más de 1. Un AX se controla fino con punto de reorden; un CZ casi nunca conviene tenerlo en almacén."
  },
  {
   "clave": "medidaEspecial",
@@ -4869,7 +4928,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "Las cinco máquinas que más horas estuvieron paradas en el periodo, con sus fallas. Casi siempre unas pocas máquinas se llevan la mayor parte del tiempo perdido: ahí conviene atender primero (refacciones, cambio o un preventivo más seguido)."
+  "texto": "Cada barra es la parte de todas las horas paradas del periodo que se llevó una máquina (las 8 que más, y el resto junto); la línea va sumando. Las que quedan antes de cruzar la línea punteada del 80 % son las pocas que se llevan casi todo el tiempo perdido: ahí conviene atender primero (refacciones, cambio o un preventivo más seguido)."
  },
  {
   "clave": "parosRetrabajo",
@@ -5948,6 +6007,70 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "Material que se gasta en la planta y no va a un cliente: taller, EPP, plasma, torno, pintura, uniformes, mantenimiento. Se anota quién lo recibe, para ver cuánto se lleva cada persona."
+ },
+ {
+  "clave": "saludBajoReorden",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Tiene demanda y lo disponible ya está debajo del punto de reorden: es lo que Reabasto marca para ordenar."
+ },
+ {
+  "clave": "saludEsporadico",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Hay existencia y algo salió en los últimos 12 meses, pero tan pocas veces que no alcanza a tener demanda mensual. Suele ser refacción o material de un solo equipo."
+ },
+ {
+  "clave": "saludExceso",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Tiene demanda, pero lo disponible pasa del punto de reorden más dos compras completas. Es dinero detenido: conviene no volver a pedir hasta que baje."
+ },
+ {
+  "clave": "saludInventario",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cada artículo con existencia o con demanda, clasificado por cuánto alcanza lo disponible contra lo que sale: quiebre, debajo del punto de reorden, sano, exceso, esporádico o sin movimiento. Es una foto de hoy y sale de los mismos 12 meses de salidas (hoja y ERP) que usa Reabasto. «Por valor» pesa cada artículo por lo que vale lo que hay (solo con permiso de costos)."
+ },
+ {
+  "clave": "saludNegativo",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "El sistema dice que hay menos de cero. Siempre es un error de captura (una salida sin su entrada, un traspaso al revés): hay que contar y ajustar."
+ },
+ {
+  "clave": "saludQuiebre",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Tiene demanda y lo disponible (en planta, menos lo apartado, más lo que viene en camino) es cero o menos. Si se pide hoy, no hay."
+ },
+ {
+  "clave": "saludSano",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Tiene demanda y lo disponible está entre el punto de reorden y dos compras encima: alcanza sin sobrar."
+ },
+ {
+  "clave": "saludSinMovimiento",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Hay existencia y no salió nada en 12 meses. Es el primer lugar para buscar qué rematar, devolver o usar en otro equipo, y para revisar si el conteo es real."
  },
  {
   "clave": "segmentoCliente",

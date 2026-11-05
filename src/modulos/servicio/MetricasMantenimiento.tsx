@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AlarmClock, CalendarCheck, Gauge, RefreshCcw, Timer, TriangleAlert, Wrench } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
@@ -8,7 +7,7 @@ import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { Cargando, ErrorCarga } from "@/components/ui/estados";
 import { Insignia } from "@/components/ui/insignia";
-import { Leyenda, SERIE, TooltipGrafica, ejeProps } from "@/components/graficas/comunes";
+import { AntiguedadAbierto, CargaPreventivos, DisponibilidadSemanal, JackKnife, ParetoParos, type Analitica } from "./componentes/GraficasMantenimiento";
 import { useRpc } from "@/lib/consultas";
 import { dinero, fecha, numero, porcentaje, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
@@ -55,20 +54,20 @@ export default function MetricasMantenimiento() {
   const hasta = hoyISO();
   const desde = useMemo(() => restarDias(hasta, Number(periodo) - 1), [hasta, periodo]);
   const m = useRpc<Datos>("metricas_mantenimiento", { p_desde: desde, p_hasta: hasta }, { clave: ["metricas_mantenimiento", desde, hasta] });
+  // Lo que cruza semanas, proyecta preventivos y cuenta antigüedad va aparte: no detiene los indicadores.
+  const a = useRpc<Analitica>("mantenimiento_analitica", { p_desde: desde, p_hasta: hasta }, { clave: ["mantenimiento_analitica", desde, hasta] });
   return (
     <Pagina titulo="Métricas de mantenimiento" ancho="max-w-[1500px]" descripcion={`Del ${fecha(desde)} al ${fecha(hasta)} · máquinas y herramienta`}
       acciones={<Filtro opciones={PERIODOS} valor={periodo} alCambiar={(v) => setParams(v === "90" ? {} : { periodo: v }, { replace: true })} />}>
-      {m.error ? <ErrorCarga error={m.error} /> : m.isLoading || !m.data ? <Cargando filas={8} /> : <Contenido d={m.data} />}
+      {m.error ? <ErrorCarga error={m.error} /> : m.isLoading || !m.data ? <Cargando filas={8} /> : <Contenido d={m.data} a={a.data} />}
     </Pagina>
   );
 }
 
-function Contenido({ d }: { d: Datos }) {
+function Contenido({ d, a }: { d: Datos; a?: Analitica }) {
   const r = d.resumen;
   const cumplimiento = r.prev_programados ? (r.prev_a_tiempo ?? 0) / r.prev_programados : null;
   const totalHoras = r.horas_preventivo + r.horas_correctivo;
-  const pareto = d.maquinas.filter((x) => x.horas_fuera > 0 || x.fallas > 0).slice(0, 5);
-  const semanas = d.semanas.map((s) => ({ semana: fecha(s.semana).replace(/ \d{4}$/, ""), Fallas: s.correctivas, "Preventivos hechos": s.preventivas }));
 
   const colMaq: Columna<Maquina>[] = [
     { clave: "numero", titulo: "Máquina", valor: (x) => `${x.numero} ${x.nombre} ${x.categoria}`,
@@ -105,38 +104,28 @@ function Contenido({ d }: { d: Datos }) {
           detalle={r.abiertas_dias == null ? "sin fallas abiertas" : `fallas abiertas: ${numero(r.abiertas_dias)} días en promedio`} explica={GLOSARIO.backlogMantenimiento} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-5">
+        <Tarjeta className="lg:col-span-3">
+          <EncabezadoTarjeta titulo="Disponibilidad por semana" explica={GLOSARIO.disponibilidadSemanal}
+            descripcion="Arriba la disponibilidad contra la meta; abajo, en las mismas semanas, las fallas y si el preventivo se hizo a tiempo" />
+          {a ? <DisponibilidadSemanal a={a} /> : <div className="px-5 pb-5"><Cargando filas={4} /></div>}
+        </Tarjeta>
         <Tarjeta className="lg:col-span-2">
-          <EncabezadoTarjeta titulo="Fallas y preventivos por semana" descripcion="Si el preventivo funciona, las fallas bajan" />
-          <div className="px-5"><Leyenda series={[{ nombre: "Fallas", color: SERIE(1) }, { nombre: "Preventivos hechos", color: SERIE(2) }]} /></div>
-          <div className="h-56 px-2 pb-3 pt-2">
-            <ResponsiveContainer>
-              <BarChart data={semanas} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-                <CartesianGrid vertical={false} stroke="var(--rejilla)" />
-                <XAxis dataKey="semana" {...ejeProps} interval="preserveStartEnd" minTickGap={16} />
-                <YAxis {...ejeProps} allowDecimals={false} width={28} />
-                <Tooltip cursor={{ fill: "var(--rejilla)", opacity: 0.4 }} content={<TooltipGrafica formato={(v) => numero(v)} />} />
-                <Bar dataKey="Fallas" fill={SERIE(1)} radius={[4, 4, 0, 0]} maxBarSize={18} />
-                <Bar dataKey="Preventivos hechos" fill={SERIE(2)} radius={[4, 4, 0, 0]} maxBarSize={18} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <EncabezadoTarjeta titulo="Pareto de horas paradas" explica={GLOSARIO.paretoFallas} descripcion="Pocas máquinas suelen juntar casi todo el paro. Clic en una barra para abrir su ficha." />
+          <ParetoParos maquinas={d.maquinas} />
+        </Tarjeta>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Tarjeta>
+          <EncabezadoTarjeta titulo="Carga de preventivo: próximas 8 semanas" explica={GLOSARIO.cargaPreventivo}
+            descripcion="Proyectada de cada plan activo, por criticidad de la máquina; arriba de cada barra, las horas de técnico estimadas" />
+          {a ? <CargaPreventivos a={a} /> : <div className="px-5 pb-5"><Cargando filas={4} /></div>}
         </Tarjeta>
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Las que más paran" descripcion="Pareto: dónde se va el tiempo de máquina" explica={GLOSARIO.paretoFallas} />
-          <ul className="px-5 pb-5 space-y-3 text-sm">
-            {pareto.length === 0 && <li className="text-tenue py-6 text-center">Ninguna máquina paró en el periodo.</li>}
-            {pareto.map((x) => {
-              const max = pareto[0].horas_fuera || 1;
-              return (
-                <li key={x.id}>
-                  <div className="flex justify-between gap-2"><Link to={`/servicio/maquinas/${x.id}`} className="truncate hover:underline"><b className="cifra">{x.numero}</b> · {x.nombre}</Link>
-                    <span className="cifra whitespace-nowrap">{numero(x.horas_fuera)} h · {numero(x.fallas)} falla{x.fallas === 1 ? "" : "s"}</span></div>
-                  <div className="mt-1 h-2 rounded-full bg-borde overflow-hidden"><div className="h-full rounded-full" style={{ width: `${Math.max(4, (x.horas_fuera / max) * 100)}%`, background: SERIE(1) }} /></div>
-                </li>
-              );
-            })}
-          </ul>
+          <EncabezadoTarjeta titulo="Fallas contra tiempo de reparación" explica={GLOSARIO.jackKnife}
+            descripcion="Cada punto es una máquina; el tamaño son sus horas paradas. Separa lo que falla seguido de lo que tarda en volver." />
+          <JackKnife maquinas={d.maquinas} />
         </Tarjeta>
       </div>
 
@@ -165,7 +154,8 @@ function Contenido({ d }: { d: Datos }) {
           </ul>
         </Tarjeta>
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Lo abierto" descripcion="Órdenes pendientes, de la más vieja a la más nueva" explica={GLOSARIO.backlogMantenimiento} />
+          <EncabezadoTarjeta titulo="Lo abierto" descripcion="Por antigüedad, y la lista de la más vieja a la más nueva" explica={GLOSARIO.backlogMantenimiento} />
+          {a && <AntiguedadAbierto a={a} />}
           <ul className="px-5 pb-4 divide-y divide-borde text-sm max-h-[340px] overflow-y-auto">
             {d.pendientes.length === 0 && <li className="py-6 text-center text-tenue">Nada abierto.</li>}
             {d.pendientes.map((x) => (
