@@ -19,7 +19,25 @@ import { SISTEMA } from "./sistema";
  * Un archivo por sección del menú para que cambiar Ventas no toque lo de Almacén.
  * `tutorial.test.ts` falla si una entrada del menú no tiene su texto.
  */
-export type AyudaPantalla = string[];
+/**
+ * Arriba de la pantalla solo va lo que alguien nuevo necesita para arrancar: una frase de para qué
+ * sirve y hasta tres pasos. Lo demás vive en `detalle` (se abre con «Ver más» y es lo que lee el
+ * asistente como manual) y, sobre todo, en los globos de cada botón, columna y sección (glosario):
+ * se explica donde está la cosa, no en un párrafo que hay que leer antes.
+ */
+export interface Ayuda { resumen: string; pasos?: string[]; detalle?: string[] }
+/** Una lista de párrafos todavía se acepta mientras se migran las secciones: el primero hace de resumen. */
+export type AyudaPantalla = Ayuda | string[];
+
+export function normalizarAyuda(a: AyudaPantalla): Ayuda {
+  return Array.isArray(a) ? { resumen: a[0] ?? "", detalle: a.slice(1) } : a;
+}
+
+/** Todo el texto en orden, para el manual del asistente y las pruebas. */
+export function textoAyuda(a: AyudaPantalla): string[] {
+  const n = normalizarAyuda(a);
+  return [n.resumen, ...(n.pasos ?? []).map((p, i) => `Paso ${i + 1}: ${p}`), ...(n.detalle ?? [])];
+}
 
 export const PANTALLAS: Record<string, AyudaPantalla> = {
   ...GENERAL, ...VENTAS, ...COSTEO, ...COMPRAS, ...ANALISIS, ...ALMACEN, ...IMPORTACIONES,
@@ -34,7 +52,13 @@ const RUTAS = Object.keys(PANTALLAS).map((path) => ({ path }));
 
 /** El texto de la pantalla en esa dirección; con `/ventas/pedidos/123` encuentra `/ventas/pedidos/:id`. */
 export function ayudaDe(pathname: string): AyudaPantalla | null {
+  const patron = patronDe(pathname);
+  return patron ? PANTALLAS[patron] ?? null : null;
+}
+
+/** La ruta de `App.tsx` que corresponde a esa dirección (`/ventas/pedidos/123` → `/ventas/pedidos/:id`). */
+export function patronDe(pathname: string): string | null {
   // matchRoutes ordena por especificidad: "/ventas/cotizaciones/nueva" gana a ".../:id".
   const m = matchRoutes(RUTAS, pathname);
-  return m ? PANTALLAS[m[0].route.path] ?? null : null;
+  return m ? m[0].route.path ?? null : null;
 }

@@ -36,7 +36,7 @@ import { DialogoPedirPrecio, type DatosPedido, type InicialPedido } from "./soli
 import { CLAVE as CLAVE_SOLICITUDES, queSePide, useSolicitudes, useSolicitudesEnVivo, type Solicitud } from "@/modulos/compras/solicitudes/datos";
 import { EstadoPartida } from "./solicitudes/EstadoPartida";
 import { DetalleSolicitud, RespuestaVenta } from "@/modulos/compras/solicitudes/Componentes";
-import { Explicacion } from "@/tutorial/Explicacion";
+import { AyudaDePantalla } from "@/tutorial/Explicacion";
 import { PANTALLAS } from "@/tutorial/pantallas";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -607,7 +607,7 @@ function Editor({ id }: { id: string }) {
       </div>
 
       {/* El editor no pasa por Pagina: el texto del tutorial de esta ruta se pone aquí. */}
-      <Explicacion>{PANTALLAS["/ventas/cotizaciones/:id"].map((p) => <p key={p}>{p}</p>)}</Explicacion>
+      <AyudaDePantalla ayuda={PANTALLAS["/ventas/cotizaciones/:id"]} ruta="/ventas/cotizaciones/:id" />
 
       {/* Avisos de estado */}
       {c.estado === "por_autorizar" && (

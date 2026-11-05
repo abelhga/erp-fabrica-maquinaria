@@ -20,7 +20,7 @@ import { ResumenIA } from "./ResumenIA";
 import { ConsejosSemana } from "@/modulos/revision/PorRevisar";
 import { DondeVendemos } from "@/modulos/analisis/DondeVendemos";
 import { SeguimientoEquipo } from "@/modulos/ventas/componentes/Seguimiento";
-import { Explicacion } from "@/tutorial/Explicacion";
+import { AyudaDePantalla } from "@/tutorial/Explicacion";
 import { PANTALLAS } from "@/tutorial/pantallas";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -187,7 +187,7 @@ export function TableroDireccion() {
       </div>
 
       {/* Dirección no pasa por Pagina: el texto del tutorial de "/" se pone aquí. */}
-      <Explicacion>{PANTALLAS["/"].map((p) => <p key={p}>{p}</p>)}</Explicacion>
+      <AyudaDePantalla ayuda={PANTALLAS["/"]} ruta="/" />
 
       <ResumenIA />
       <ConsejosSemana />

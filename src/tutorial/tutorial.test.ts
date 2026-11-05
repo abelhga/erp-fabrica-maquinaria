@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CALENDARIO, INICIO, MENU, PENDIENTES, REVISION, SEMANA } from "@/navegacion";
-import { PANTALLAS, SECCIONES, ayudaDe } from "./pantallas";
+import { PANTALLAS, SECCIONES, ayudaDe, textoAyuda } from "./pantallas";
 import { GLOSARIO, SECCIONES_GLOSARIO } from "./glosario";
 
 /**
@@ -18,7 +18,7 @@ describe("modo tutorial", () => {
   it.each(rutas.filter((r) => !SIN_MARCO.has(r)))("la pantalla %s explica para qué sirve", (ruta) => {
     const ayuda = ayudaDe(ruta);
     expect(ayuda, `falta su texto en src/tutorial/pantallas/`).not.toBeNull();
-    expect(ayuda!.length).toBeGreaterThan(0);
+    expect(textoAyuda(ayuda!)[0].trim().length).toBeGreaterThan(0);
   });
 
   it("los detalles encuentran su texto por el patrón con :id", () => {
@@ -49,8 +49,8 @@ describe("modo tutorial", () => {
   });
 
   it("ningún texto viene vacío", () => {
-    for (const [ruta, parrafos] of Object.entries(PANTALLAS)) {
-      for (const p of parrafos) expect(p.trim(), ruta).not.toBe("");
+    for (const [ruta, ayuda] of Object.entries(PANTALLAS)) {
+      for (const p of textoAyuda(ayuda)) expect(p.trim(), ruta).not.toBe("");
     }
     for (const [llave, texto] of Object.entries(GLOSARIO)) expect((texto as string).trim(), llave).not.toBe("");
   });

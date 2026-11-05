@@ -18,7 +18,7 @@ import { AvanceEtapa } from "./componentes/AvanceEtapa";
 import { DialogoIdea } from "./componentes/mejoras";
 import { useSesion } from "@/lib/sesion";
 import { GLOSARIO } from "@/tutorial/glosario";
-import { Explicacion } from "@/tutorial/Explicacion";
+import { AyudaDePantalla } from "@/tutorial/Explicacion";
 import { PANTALLAS } from "@/tutorial/pantallas";
 
 // La tablet se queda en su estación: etapa y nombres se recuerdan en el aparato.
@@ -152,7 +152,7 @@ export default function Terminal() {
           <ElegirEtapa etapas={etapas.data ?? []} cargando={etapas.isLoading} piso={todas} alElegir={elegirEtapa} />
         ) : (
           <div className="max-w-5xl mx-auto p-3 sm:p-5 space-y-6">
-            <Explicacion className="text-base">{PANTALLAS["/produccion/terminal"].map((t) => <p key={t}>{t}</p>)}</Explicacion>
+            <AyudaDePantalla className="text-base" ayuda={PANTALLAS["/produccion/terminal"]} ruta="/produccion/terminal" />
             <div className="flex items-center gap-3">
               <span className="h-10 w-2.5 rounded-full" style={{ background: etapa.color }} />
               <h1 className="text-3xl font-bold">{etapa.nombre}</h1>

@@ -96,7 +96,10 @@ export function CapaExplicacion() {
   return (
     <div id="burbuja-explicacion" role="tooltip" style={estilo} data-testid="burbuja-explicacion"
          className="no-imprimir burbuja-explicacion">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-info">¿Qué es?</span>
+      {/* Un botón o un enlace hace algo; lo demás (un dato, una columna) es algo. */}
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-info">
+        {burbuja.el.matches("button, a, [role=button], [role=tab]") ? "¿Qué hace?" : "¿Qué es?"}
+      </span>
       {burbuja.titulo && <strong className="font-medium text-texto">{burbuja.titulo}</strong>}
       <span>{burbuja.texto}</span>
     </div>
