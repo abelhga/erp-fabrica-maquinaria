@@ -113,7 +113,10 @@ export function DialogoIdea({ abierto, alCambiar, semilla, quien: quienInicial =
       descripcion="Una mejora es cualquier cambio que quite trabajo de más, esperas, vueltas o retrabajos. Con una línea basta."
       pie={<>
         <Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
-        <Boton type="submit" form="form-idea" disabled={titulo.trim().length < 3 || proponer.isPending}>{proponer.isPending ? "Enviando…" : "Proponer"}</Boton>
+        {/* Deshabilitado hasta que hay título, y Chrome no le da el mouse: la explicación va en su envoltorio. */}
+        <span className="inline-flex" data-explain={GLOSARIO.botonProponerIdea} data-explain-title="Proponer">
+          <Boton type="submit" form="form-idea" disabled={titulo.trim().length < 3 || proponer.isPending}>{proponer.isPending ? "Enviando…" : "Proponer"}</Boton>
+        </span>
       </>}>
       <form id="form-idea" className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (titulo.trim().length >= 3) proponer.mutate(undefined); }}>
         <Campo etiqueta="¿Qué se puede mejorar?">

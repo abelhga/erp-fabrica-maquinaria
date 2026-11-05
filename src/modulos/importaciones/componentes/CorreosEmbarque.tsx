@@ -96,9 +96,9 @@ export function CorreosEmbarque({ e }: { e: Embarque }) {
           <EncabezadoTarjeta titulo="Correos" explica={GLOSARIO.correosEmbarque}
             descripcion={lista.length ? `${lista.length} correo${lista.length === 1 ? "" : "s"}, del más nuevo al más viejo. Sin lo citado de correos anteriores.` : undefined}
             acciones={captura && lista.length > 0 && (
-              <Boton onClick={() => leer.mutate()} disabled={leer.isPending}>
+              <span data-explain={GLOSARIO.botonLeerCorreosIA} data-explain-title="Leer correos con IA"><Boton onClick={() => leer.mutate()} disabled={leer.isPending}>
                 {leer.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} {leer.isPending ? "Leyendo…" : "Leer correos con IA"}
-              </Boton>
+              </Boton></span>
             )} />
           {!lista.length ? (
             <Vacio icono={Mail} titulo="Este embarque todavía no tiene correos"
@@ -143,8 +143,8 @@ export function CorreosEmbarque({ e }: { e: Embarque }) {
         <EncabezadoTarjeta titulo="Hilos de Gmail" explica={GLOSARIO.hiloCorreo}
           descripcion="Cada hilo lo pone al día quien lo ligó."
           acciones={captura && (sinPermisoLeer
-            ? <Boton variante="secundario" onClick={() => conectarGmail().catch((x) => toast.error(mensajeError(x)))}><Mail className="h-4 w-4" /> Conectar mi Gmail</Boton>
-            : <Boton variante="secundario" onClick={() => setBuscando(true)} disabled={!mi.data}><Link2 className="h-4 w-4" /> Ligar hilo</Boton>)} />
+            ? <Boton variante="secundario" onClick={() => conectarGmail().catch((x) => toast.error(mensajeError(x)))} data-explain={GLOSARIO.botonConectarGmailLectura}><Mail className="h-4 w-4" /> Conectar mi Gmail</Boton>
+            : <span data-explain={GLOSARIO.ligarHiloGmail} data-explain-title="Ligar hilo"><Boton variante="secundario" onClick={() => setBuscando(true)} disabled={!mi.data}><Link2 className="h-4 w-4" /> Ligar hilo</Boton></span>)} />
         {sinPermisoLeer && (
           <p className="mx-5 mb-3 text-xs text-aviso">
             {mi.data?.conectado ? "Tu Gmail está conectado sin el permiso de leer. Vuelve a conectarlo y deja marcadas las dos casillas." : "Para ligar hilos, conecta tu Gmail (una sola vez)."}
@@ -162,11 +162,11 @@ export function CorreosEmbarque({ e }: { e: Embarque }) {
                 {captura && (
                   <div className="flex gap-1 pt-1">
                     {h.usuario_id === perfil?.id && (
-                      <Boton tamano="sm" variante="fantasma" onClick={() => actualizar.mutate(h.id)} disabled={actualizar.isPending}>
+                      <span data-explain={GLOSARIO.botonTraerLoNuevoHilo} data-explain-title="Traer lo nuevo"><Boton tamano="sm" variante="fantasma" onClick={() => actualizar.mutate(h.id)} disabled={actualizar.isPending}>
                         <RefreshCw className={cn("h-3.5 w-3.5", actualizar.isPending && "animate-spin")} /> Traer lo nuevo
-                      </Boton>
+                      </Boton></span>
                     )}
-                    <Boton tamano="sm" variante="fantasma" onClick={() => quitar.mutate(h.id)} disabled={quitar.isPending}><Unlink className="h-3.5 w-3.5" /> Quitar</Boton>
+                    <span data-explain={GLOSARIO.botonQuitarHilo} data-explain-title="Quitar el hilo"><Boton tamano="sm" variante="fantasma" onClick={() => quitar.mutate(h.id)} disabled={quitar.isPending}><Unlink className="h-3.5 w-3.5" /> Quitar</Boton></span>
                   </div>
                 )}
               </li>
@@ -194,7 +194,8 @@ function BuscarHilos({ e, abierto, alCambiar, alLigar }: { e: Embarque; abierto:
     <Dialogo abierto={abierto} alCambiar={alCambiar} ancho="max-w-2xl" titulo="Ligar un hilo de Gmail"
       descripcion="Busca en tu Gmail como lo harías allá: el BL, la referencia del agente, el número de la PI o el nombre del proveedor.">
       <form onSubmit={enviar} className="flex gap-2 items-end">
-        <Campo etiqueta="Buscar en mi Gmail" className="flex-1"><Entrada id="buscar-hilo" value={texto} onChange={(x) => setTexto(x.target.value)} autoFocus /></Campo>
+        <Campo etiqueta="Buscar en mi Gmail" className="flex-1"><Entrada id="buscar-hilo" value={texto} onChange={(x) => setTexto(x.target.value)} autoFocus
+          data-explain={GLOSARIO.ligarHiloGmail} data-explain-title="Buscar en mi Gmail" /></Campo>
         <Boton type="submit" disabled={buscar.isPending}>{buscar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} Buscar</Boton>
       </form>
       {buscar.data && (
@@ -208,7 +209,7 @@ function BuscarHilos({ e, abierto, alCambiar, alLigar }: { e: Embarque; abierto:
                   {h.fragmento && <p className="text-xs text-tenue line-clamp-2 mt-0.5">{h.fragmento}</p>}
                 </div>
                 {h.ligado ? <Insignia tono="ok">Ligado</Insignia>
-                  : <Boton tamano="sm" onClick={() => ligar.mutate(h.id)} disabled={ligar.isPending}><Link2 className="h-3.5 w-3.5" /> Ligar</Boton>}
+                  : <span data-explain={GLOSARIO.ligarHiloGmail} data-explain-title="Ligar"><Boton tamano="sm" onClick={() => ligar.mutate(h.id)} disabled={ligar.isPending}><Link2 className="h-3.5 w-3.5" /> Ligar</Boton></span>}
               </li>
             ))}
           </ul>
@@ -296,7 +297,7 @@ function PanelPropuesta({ e, p, propuestaId, creada, etapas, documentos, captura
         )}
         {p.montos.length > 0 && (
           <div>
-            <p className="text-xs font-medium text-tenue uppercase tracking-wide mb-1">Montos que mencionan (no se aplican)</p>
+            <p className="text-xs font-medium text-tenue uppercase tracking-wide mb-1" data-explain={GLOSARIO.montosCorreos} data-explain-title="Montos que mencionan">Montos que mencionan (no se aplican)</p>
             <ul className="space-y-1">
               {p.montos.map((x, i) => (
                 <li key={i} className="text-sm flex flex-wrap gap-x-2">
@@ -309,11 +310,11 @@ function PanelPropuesta({ e, p, propuestaId, creada, etapas, documentos, captura
         )}
         {captura && propuestaId && (
           <div className="flex flex-wrap justify-end gap-2 pt-1">
-            <Boton variante="fantasma" onClick={() => descartar.mutate(undefined)} disabled={descartar.isPending}>Descartar</Boton>
+            <span data-explain={GLOSARIO.botonDescartarPropuestaCorreos} data-explain-title="Descartar"><Boton variante="fantasma" onClick={() => descartar.mutate(undefined)} disabled={descartar.isPending}>Descartar</Boton></span>
             {aplicables > 0 && (
-              <Boton onClick={() => aplicar.mutate(undefined)} disabled={aplicar.isPending || marcadas.size === 0}>
+              <span data-explain={GLOSARIO.botonAplicarPropuestaCorreos} data-explain-title="Aplicar"><Boton onClick={() => aplicar.mutate(undefined)} disabled={aplicar.isPending || marcadas.size === 0}>
                 Aplicar {marcadas.size} de {aplicables}
-              </Boton>
+              </Boton></span>
             )}
           </div>
         )}

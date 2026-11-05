@@ -73,11 +73,11 @@ export function DialogoRecibir({ abierto, alCambiar, ocId, folio, lineas }: {
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="space-y-1">
-            <span className="text-sm font-medium">Factura o remisión</span>
+            <span className="text-sm font-medium" data-explain={GLOSARIO.facturaAlRecibir}>Factura o remisión</span>
             <input className="campo" value={factura} onChange={(e) => setFactura(e.target.value)} placeholder="F-12345" />
           </label>
           <label className="space-y-1">
-            <span className="text-sm font-medium">Todo entra a</span>
+            <span className="text-sm font-medium" data-explain={GLOSARIO.almacenParaTodas}>Todo entra a</span>
             <Seleccion value="" onChange={(e) => { const v = Number(e.target.value); if (v) setAlm(Object.fromEntries(pendientes.map((l) => [l.id, v]))); }}>
               <option value="">Elegir para todas…</option>
               {(almacenes.data ?? []).map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
@@ -126,7 +126,7 @@ export function DialogoRecibir({ abierto, alCambiar, ocId, folio, lineas }: {
           {pendientes.length === 0 && <p className="p-4 text-sm text-tenue">No queda nada pendiente de recibir.</p>}
         </div>
 
-        <label className="flex items-start gap-2 text-sm">
+        <label className="flex items-start gap-2 text-sm" data-explain={GLOSARIO.actualizarCostoAlRecibir} data-explain-title="Actualizar el costo">
           <input type="checkbox" className="mt-1 accent-[hsl(var(--marca))]" checked={actualizar} onChange={(e) => setActualizar(e.target.checked)} />
           <span>
             Actualizar el costo de estos artículos con el precio de esta orden

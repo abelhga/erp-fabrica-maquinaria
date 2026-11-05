@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, FileText, Images } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface FichaDoc {
   articulo_id: string; documento_id: string; folio: string; revision: string; tipo: "ficha" | "foto"; titulo: string; drive_url: string;
@@ -34,6 +35,7 @@ export function ChipsFichas({ docs }: { docs: FichaDoc[] | undefined }) {
     <>
       {docs.map((d) => (
         <a key={d.documento_id} href={d.drive_url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} title={`${d.titulo} (${d.folio} rev. ${d.revision})`}
+          data-explain={GLOSARIO.fichaTecnica} data-explain-title={d.titulo}
           className="inline-flex items-center gap-1 rounded-full border border-marca/25 bg-marca-suave px-2 py-0.5 text-xs font-medium text-marca-texto hover:border-marca/50">
           <Icono tipo={d.tipo} />{d.tipo === "foto" ? "Fotos" : "Ficha"}
         </a>
@@ -49,7 +51,7 @@ export function FichasTecnicas({ articuloId, tipo }: { articuloId: string; tipo?
   if (f.isLoading) return null;
   return (
     <div className="text-sm">
-      <p className="text-xs font-medium text-tenue uppercase tracking-wide mb-1.5">Fichas técnicas y fotos</p>
+      <p className="text-xs font-medium text-tenue uppercase tracking-wide mb-1.5" data-explain={GLOSARIO.fichaTecnica} data-explain-title="Fichas técnicas y fotos">Fichas técnicas y fotos</p>
       {docs.length === 0 ? (
         <p className="text-xs text-tenue">{tipo === "equipo" ? "Este equipo no tiene ficha vigente en el ERP; ingeniería ya lo ve en sus pendientes." : "Sin ficha ni fotos en el ERP."}</p>
       ) : (

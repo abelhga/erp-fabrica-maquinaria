@@ -40,7 +40,7 @@ export function AyudaRespuesta({ preguntaId, alPoner }: { preguntaId: number; al
           <Sparkles className="h-3.5 w-3.5" /> Sugerir respuesta
         </Boton>
         {(rapidas.data?.length ?? 0) > 0 && (
-          <select className="campo h-8 w-auto text-xs" value="" aria-label="Respuestas rápidas" onChange={(e) => {
+          <select className="campo h-8 w-auto text-xs" value="" aria-label="Respuestas rápidas" data-explain={GLOSARIO.respuestaRapidaML} data-explain-title="Respuesta rápida" onChange={(e) => {
             const r = rapidas.data!.find((x) => x.id === e.target.value); if (r) alPoner(r.texto);
           }}>
             <option value="">Respuesta rápida…</option>
@@ -76,6 +76,7 @@ export function DialogoDatosContestar({ abierto, alCambiar }: { abierto: boolean
       <div className="space-y-5">
         <Campo etiqueta="Lo que siempre aplica" ayuda="Factura, tiempos de envío, garantía, horario, si se hacen medidas especiales… Un dato por renglón.">
           <textarea className="campo min-h-[140px]" value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={4000}
+            data-explain={GLOSARIO.datosContestarML} data-explain-title="Lo que siempre aplica"
             placeholder={"Sí facturamos: después de comprar, manda tus datos fiscales por la mensajería de la compra.\nEnviamos el mismo día si compras antes de la 1 pm (lunes a viernes).\nGarantía de 6 meses por defecto de fabricación."} />
         </Campo>
         <div className="flex justify-end"><Boton onClick={() => guardar.mutate(undefined)} cargando={guardar.isPending}>Guardar</Boton></div>
@@ -86,7 +87,8 @@ export function DialogoDatosContestar({ abierto, alCambiar }: { abierto: boolean
             {(rapidas.data ?? []).map((r) => (
               <li key={r.id} className="px-3 py-2 text-sm flex gap-2">
                 <div className="flex-1 min-w-0"><p className="font-medium">{r.titulo}</p><p className="text-tenue whitespace-pre-line">{r.texto}</p></div>
-                <button type="button" className="p-1 text-tenue hover:text-peligro" aria-label={`Quitar ${r.titulo}`} onClick={() => quitar.mutate(r.id)}><Trash2 className="h-4 w-4" /></button>
+                <button type="button" className="p-1 text-tenue hover:text-peligro" aria-label={`Quitar ${r.titulo}`} onClick={() => quitar.mutate(r.id)}
+                  data-explain={GLOSARIO.botonQuitarRespuestaRapida} data-explain-title={`Quitar «${r.titulo}»`}><Trash2 className="h-4 w-4" /></button>
               </li>
             ))}
             {!rapidas.data?.length && <li className="px-3 py-2 text-sm text-tenue">Todavía no hay. Agrega las que más escribes.</li>}

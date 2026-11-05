@@ -49,9 +49,9 @@ export function ConfigSkydropx() {
             : <Insignia tono={listo ? "info" : "neutro"}>{listo ? "Configurado" : "Falta configurar"}</Insignia>} />
         <div className="px-5 pb-5 space-y-4 text-sm">
           <dl className="grid gap-2">
-            <Fila titulo="Sale de">{c?.origen ? textoDireccion(c.origen) : <span className="text-tenue">Sin elegir: prueba la conexión y elige la plantilla de la planta.</span>}</Fila>
+            <Fila titulo="Sale de" explica={GLOSARIO.origenSkydropx}>{c?.origen ? textoDireccion(c.origen) : <span className="text-tenue">Sin elegir: prueba la conexión y elige la plantilla de la planta.</span>}</Fila>
             <Fila titulo="Carta porte" explica={GLOSARIO.cartaPorte}>{c?.carta_porte ? <span className="cifra">{c.carta_porte}</span> : <span className="text-tenue">Sin clave: no se puede generar guía.</span>}</Fila>
-            <Fila titulo="Empaque"><span className="cifra">{c?.tipo_empaque ?? "4G"}</span></Fila>
+            <Fila titulo="Empaque" explica={GLOSARIO.empaqueSkydropx}><span className="cifra">{c?.tipo_empaque ?? "4G"}</span></Fila>
             <Fila titulo="Recargo al flete" explica={GLOSARIO.fleteCotizacion}><span className="cifra">{Math.round((c?.recargo_flete ?? 0) * 100)} %</span>
               <span className="text-tenue"> sobre lo que cobra Skydropx, al cotizar el flete en una cotización</span></Fila>
           </dl>
@@ -59,7 +59,7 @@ export function ConfigSkydropx() {
           {admin && (
             <>
               <div className="flex flex-wrap items-center gap-3">
-                <Boton variante="secundario" onClick={probar} cargando={probando}><Wifi className="h-4 w-4" /> Probar conexión</Boton>
+                <Boton variante="secundario" onClick={probar} cargando={probando} data-explain={GLOSARIO.botonProbarSkydropx}><Wifi className="h-4 w-4" /> Probar conexión</Boton>
                 {prueba?.conectado && <span>Saldo en Skydropx: <b className="cifra">{dinero(prueba.saldo ?? 0)}</b></span>}
               </div>
 

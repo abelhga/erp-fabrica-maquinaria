@@ -259,7 +259,7 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas 
       descripcion="Material, servicios, fletes, luz: todo lo que se le debe (o ya se le pagó) a un proveedor."
       pie={<>
         {cola.length > 1 && <span className="mr-auto text-sm text-tenue">Factura {idx + 1} de {cola.length}</span>}
-        {cola.length > 1 && <Boton variante="secundario" type="button" onClick={siguiente}>Saltar</Boton>}
+        {cola.length > 1 && <Boton variante="secundario" type="button" data-explain={GLOSARIO.botonSaltarFactura} onClick={siguiente}>Saltar</Boton>}
         <Boton variante="secundario" type="button" onClick={alCerrar}>Cerrar</Boton>
         <Boton type="submit" form="registrar-compra" cargando={guardar.isPending} disabled={!prov || monto <= 0 || bloqueado || (f.pagada && !f.cuenta) || (hayParecidas && !esOtra) || faltaCategoria}>
           {notaCredito ? "Registrar nota de crédito" : f.pagada ? "Registrar compra y pago" : "Registrar compra"}
@@ -313,7 +313,7 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas 
                   {porRfc.data.map((p) => <Boton key={p.id} type="button" variante="secundario" onClick={() => { setProv(p); setF((x) => ({ ...x, categoria: x.categoria || p.categoria || "" })); }}>{p.nombre}</Boton>)}
                 </div>
               ) : (
-                <div className="flex flex-wrap items-center gap-2 text-sm">
+                <div className="flex flex-wrap items-center gap-2 text-sm" data-explain={GLOSARIO.proveedorSinAltaXml} data-explain-title="Proveedor sin dar de alta">
                   <span className="text-tenue">Ningún proveedor tiene el RFC {rfc}.</span>
                   <Boton type="button" onClick={() => alta.mutate(undefined)} cargando={alta.isPending}>Dar de alta a «{cfdi.emisor.nombre ?? rfc}»</Boton>
                   <span className="text-tenue">o elige uno:</span>
@@ -380,7 +380,7 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas 
               <Entrada type="date" value={vence} disabled={f.pagada} onChange={(e) => { setTocoVence(true); setF({ ...f, vence: e.target.value }); }} />
             </Campo>
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm pt-6">
+              <label className="flex items-center gap-2 text-sm pt-6" data-explain={GLOSARIO.yaSePagoContado} data-explain-title="Ya se pagó (de contado)">
                 <input type="checkbox" checked={f.pagada} onChange={(e) => setF({ ...f, pagada: e.target.checked })} className="h-4 w-4 accent-[hsl(var(--marca))]" />
                 Ya se pagó (de contado)
               </label>

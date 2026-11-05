@@ -90,7 +90,7 @@ export default function Planeacion() {
             <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); if (metaValida && metaValida > 0) guardar.mutate(metaValida); }}>
               <div className="flex gap-2">
                 <Entrada className="text-lg font-semibold cifra" inputMode="decimal" placeholder="p. ej. 32,000,000 o 32 M" value={meta}
-                  onChange={(e) => setMeta(e.target.value)} aria-label="Meta anual" />
+                  onChange={(e) => setMeta(e.target.value)} aria-label="Meta anual" data-explain={GLOSARIO.campoMetaAnual} data-explain-title="Meta del año" />
                 <Boton type="submit" cargando={guardar.isPending} disabled={!metaValida}><Save className="h-4 w-4" /> Guardar</Boton>
               </div>
               <Entrada placeholder="Notas (de dónde sale la meta)" value={notas} onChange={(e) => setNotas(e.target.value)} aria-label="Notas" />
@@ -105,23 +105,24 @@ export default function Planeacion() {
             </div>
           )}
           <div className="border-t border-borde pt-3 space-y-2">
-            <p className="text-sm font-medium">Escenario</p>
+            <p className="text-sm font-medium" data-explain={GLOSARIO.escenarioMeta}>Escenario</p>
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span>Crecer</span>
-              <Entrada className="w-20 cifra" type="number" step="1" value={crec} onChange={(e) => setCrec(e.target.value)} aria-label="Crecimiento en porcentaje" />
+              <Entrada className="w-20 cifra" type="number" step="1" value={crec} onChange={(e) => setCrec(e.target.value)} aria-label="Crecimiento en porcentaje"
+                data-explain={GLOSARIO.escenarioMeta} data-explain-title="Crecer" />
               <span>% sobre {anio - 1} =</span>
               <b className="cifra">{dinero(d.meta_propuesta)}</b>
               {esDireccion && d.meta_propuesta != null && d.meta_propuesta > 0 && (
-                <Boton tamano="sm" variante="secundario" onClick={() => setMeta(numero(d.meta_propuesta))}>Usar como meta</Boton>
+                <Boton tamano="sm" variante="secundario" onClick={() => setMeta(numero(d.meta_propuesta))} data-explain={GLOSARIO.botonUsarEscenario}>Usar como meta</Boton>
               )}
             </div>
           </div>
         </section>
 
         <div className="grid gap-3 grid-cols-2 content-start">
-          <Cifra titulo={`Vendido en ${anio}`} valor={dineroCompacto(a.real)}
+          <Cifra titulo={`Vendido en ${anio}`} explica={GLOSARIO.ventaAnalisis} valor={dineroCompacto(a.real)}
             detalle={a.pct != null ? <>{porcentaje(a.pct, 0)} de la meta · a la fecha tocaba {dineroCompacto(a.meta_a_la_fecha)}</> : "Sin meta para comparar"} />
-          <Cifra titulo="Falta para la meta" valor={a.faltante == null ? "—" : dineroCompacto(a.faltante)}
+          <Cifra titulo="Falta para la meta" explica={GLOSARIO.faltanteMeta} valor={a.faltante == null ? "—" : dineroCompacto(a.faltante)}
             detalle={a.meses_restantes > 0 ? <>en {a.meses_restantes} {a.meses_restantes === 1 ? "mes" : "meses"} ({mesActual ? MESES_LARGOS.slice(mesActual - 1).join(", ") : "todo el año"})</> : "El año ya cerró"} />
           <Cifra titulo="Hay que vender al mes" explica={GLOSARIO.ritmoNecesario} valor={a.ritmo_necesario == null ? "—" : dineroCompacto(a.ritmo_necesario)}
             extra={tono != null && tono > 1.15 ? <span className={cn("mb-1 rounded-full px-1.5 py-0.5 text-[11px] font-semibold", tono > 1.4 ? "bg-peligro-suave text-peligro" : "bg-aviso-suave text-aviso")}>×{numero(Math.round(tono * 10) / 10)} el ritmo</span> : null}
@@ -152,7 +153,7 @@ export default function Planeacion() {
             </div>
           </TarjetaGrafica>
 
-          <TarjetaGrafica titulo="Acumulado del año" descripcion="Dónde va lo vendido contra dónde debería ir."
+          <TarjetaGrafica titulo="Acumulado del año" explica={GLOSARIO.acumuladoMetaAnio} descripcion="Dónde va lo vendido contra dónde debería ir."
             tabla={<TablaMeses meses={d.meses} acumulado />}>
             <div className="px-5"><Leyenda series={[{ nombre: "Vendido acumulado", color: SERIE(1) }, { nombre: "Meta acumulada", color: SERIE(2) }]} /></div>
             <div className="h-72 px-2 pb-3 pt-2">
@@ -182,7 +183,10 @@ export default function Planeacion() {
         </div>
         <div className="overflow-x-auto max-h-[520px]">
           <table className="tabla">
-            <thead><tr><th>Estado</th><th className="text-right">Peso (3 años)</th><th className="text-right">Sugerida</th><th className="text-right">Meta</th><th className="text-right">Vendido {anio}</th><th className="text-right">Avance</th></tr></thead>
+            <thead><tr><th>Estado</th><th className="text-right" data-explain={GLOSARIO.pesoEstadoTresAnios} data-explain-title="Peso (3 años)">Peso (3 años)</th>
+              <th className="text-right" data-explain={GLOSARIO.metaPorEstado} data-explain-title="Meta sugerida">Sugerida</th>
+              <th className="text-right" data-explain={GLOSARIO.metaPorEstado} data-explain-title="Meta del estado">Meta</th><th className="text-right">Vendido {anio}</th>
+              <th className="text-right" data-explain={GLOSARIO.avanceMetaEstado} data-explain-title="Avance">Avance</th></tr></thead>
             <tbody>
               {d.estados.map((e) => {
                 const metaE = e.meta ?? e.meta_sugerida;
@@ -227,7 +231,7 @@ function TablaMeses({ meses, acumulado }: { meses: MesPlan[]; acumulado?: boolea
   return (
     <div className="overflow-x-auto px-1 pb-2">
       <table className="tabla text-xs">
-        <thead><tr><th>Mes</th><th className="text-right">Peso</th><th className="text-right">{acumulado ? "Meta acumulada" : "Meta"}</th><th className="text-right">{acumulado ? "Vendido acumulado" : "Vendido"}</th><th className="text-right">Diferencia</th></tr></thead>
+        <thead><tr><th>Mes</th><th className="text-right" data-explain={GLOSARIO.estacionalidadVenta} data-explain-title="Peso del mes">Peso</th><th className="text-right">{acumulado ? "Meta acumulada" : "Meta"}</th><th className="text-right">{acumulado ? "Vendido acumulado" : "Vendido"}</th><th className="text-right">Diferencia</th></tr></thead>
         <tbody>
           {meses.map((m) => {
             const meta = acumulado ? m.meta_acumulada : m.meta;

@@ -76,16 +76,17 @@ export default function Envios() {
       celda: (e) => e.fecha_recoleccion ? <span className={cn(e.abierto && e.fecha_recoleccion <= hoy && "font-semibold text-aviso")}>{e.fecha_recoleccion === hoy ? "Hoy" : fecha(e.fecha_recoleccion)}</span> : "—" },
     { clave: "estado", titulo: "Estado", valor: (e) => estadoEnvio(e).texto, explica: GLOSARIO.estadoEnvio,
       celda: (e) => <span className="flex flex-wrap gap-1"><Insignia tono={estadoEnvio(e).tono} punto>{estadoEnvio(e).texto}</Insignia>
-        {e.fotos > 0 && <Insignia><Camera className="h-3 w-3" />{e.fotos}</Insignia>}</span> },
+        {e.fotos > 0 && <span data-explain={GLOSARIO.fotosEmpaqueEnvio} data-explain-title="Fotos del empaque"><Insignia><Camera className="h-3 w-3" />{e.fotos}</Insignia></span>}</span> },
   ];
 
   return (
     <Pagina titulo="Envíos"
       descripcion="Del pedido a la puerta del cliente: guía, fotos, check list y número de serie en un solo lugar. Nadie vuelve a teclear peso, medidas ni domicilio."
       acciones={<>
-        {almacen && <Boton variante="secundario" onClick={() => setDlg("full")}><Plus className="h-4 w-4" />Envío a Full</Boton>}
-        {recarga && <Boton variante="secundario" onClick={() => { setPaqRecarga(undefined); setDlg("recarga"); }}><Wallet className="h-4 w-4" />Recarga</Boton>}
-        {(puede("envios", 3) || puede("inventario", 3)) && <Boton variante="fantasma" tamano="icono" aria-label="Paqueterías y check list" onClick={() => setDlg("config")}><Settings className="h-4 w-4" /></Boton>}
+        {almacen && <Boton variante="secundario" onClick={() => setDlg("full")} data-explain={GLOSARIO.botonEnvioAFull}><Plus className="h-4 w-4" />Envío a Full</Boton>}
+        {recarga && <Boton variante="secundario" onClick={() => { setPaqRecarga(undefined); setDlg("recarga"); }} data-explain={GLOSARIO.botonRecargaPaqueteria} data-explain-title="Recarga de saldo"><Wallet className="h-4 w-4" />Recarga</Boton>}
+        {(puede("envios", 3) || puede("inventario", 3)) && <Boton variante="fantasma" tamano="icono" aria-label="Paqueterías y check list" onClick={() => setDlg("config")}
+          data-explain={GLOSARIO.botonConfigurarEnvios} data-explain-title="Paqueterías y check list"><Settings className="h-4 w-4" /></Boton>}
       </>}>
       {verSaldo && <Saldos alRecargar={recarga ? (id) => { setPaqRecarga(id); setDlg("recarga"); } : undefined} />}
 
@@ -112,7 +113,7 @@ export default function Envios() {
 
       <Lateral abierto={!!abierto} alCambiar={(v) => { if (!v) cambiar({ envio: null }); }}
         titulo={detalle.data ? <span className="inline-flex items-center gap-2"><span className="cifra">{detalle.data.folio}</span>
-          <Insignia tono={estadoEnvio(detalle.data).tono} punto>{estadoEnvio(detalle.data).texto}</Insignia></span> : "Envío"}
+          <span data-explain={GLOSARIO.estadoEnvio} data-explain-title="Estado del envío"><Insignia tono={estadoEnvio(detalle.data).tono} punto>{estadoEnvio(detalle.data).texto}</Insignia></span></span> : "Envío"}
         subtitulo={detalle.data && <>{detalle.data.cliente ?? detalle.data.destinatario}{detalle.data.pedido_folio && ` · ${detalle.data.pedido_folio}`}{detalle.data.id_externo && ` · venta #${detalle.data.id_externo}`} · {detalle.data.tipo_nombre}</>}>
         {detalle.isLoading ? <Cargando filas={6} /> : detalle.data ? <DetalleEnvio envio={detalle.data} />
           : <Vacio icono={PackageOpen} titulo="No encontramos este envío" texto="Puede ser del pedido de otro vendedor, o ya no existe." />}
@@ -131,15 +132,15 @@ function TarjetaEnvioLista({ envio: e, hoy, alAbrir }: { envio: Envio; hoy: stri
     <button type="button" onClick={alAbrir} className="tarjeta w-full p-3 text-left active:bg-fondo">
       <div className="flex items-center justify-between gap-2">
         <span className="font-semibold cifra">{e.folio}</span>
-        <Insignia tono={estadoEnvio(e).tono} punto>{estadoEnvio(e).texto}</Insignia>
+        <span data-explain={GLOSARIO.estadoEnvio} data-explain-title="Estado del envío"><Insignia tono={estadoEnvio(e).tono} punto>{estadoEnvio(e).texto}</Insignia></span>
       </div>
       <p className="mt-1 truncate text-sm">{e.cliente ?? (e.tipo === "a_full" ? "Full de Mercado Libre" : "—")}<span className="text-tenue"> · {e.tipo_nombre}</span></p>
       <p className="truncate text-xs text-tenue">{e.resumen}</p>
       <div className="mt-2 flex flex-wrap gap-1.5">
-        {e.fecha_recoleccion && <Insignia tono={e.fecha_recoleccion <= hoy ? "aviso" : "neutro"}><CalendarClock className="h-3 w-3" />{e.fecha_recoleccion === hoy ? "Hoy" : fecha(e.fecha_recoleccion)}</Insignia>}
-        {e.numero_guia ? <Insignia tono="marca"><FileText className="h-3 w-3" />Guía</Insignia> : e.falta_guia && <Insignia tono="aviso">Sin guía</Insignia>}
-        {e.bultos > 0 && <Insignia>{e.bultos} · {numero(e.peso_total)} kg</Insignia>}
-        {e.fotos > 0 && <Insignia tono="ok"><Camera className="h-3 w-3" />{e.fotos}</Insignia>}
+        {e.fecha_recoleccion && <span data-explain={GLOSARIO.recoleccion} data-explain-title="Recolección"><Insignia tono={e.fecha_recoleccion <= hoy ? "aviso" : "neutro"}><CalendarClock className="h-3 w-3" />{e.fecha_recoleccion === hoy ? "Hoy" : fecha(e.fecha_recoleccion)}</Insignia></span>}
+        {e.numero_guia ? <Insignia tono="marca"><FileText className="h-3 w-3" />Guía</Insignia> : e.falta_guia && <span data-explain={GLOSARIO.envioPorCotizar} data-explain-title="Sin guía"><Insignia tono="aviso">Sin guía</Insignia></span>}
+        {e.bultos > 0 && <span data-explain={GLOSARIO.bultosEnvio} data-explain-title="Bultos"><Insignia>{e.bultos} · {numero(e.peso_total)} kg</Insignia></span>}
+        {e.fotos > 0 && <span data-explain={GLOSARIO.fotosEmpaqueEnvio} data-explain-title="Fotos del empaque"><Insignia tono="ok"><Camera className="h-3 w-3" />{e.fotos}</Insignia></span>}
       </div>
     </button>
   );

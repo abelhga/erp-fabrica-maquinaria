@@ -79,14 +79,17 @@ export function ResumenIA({ area = "direccion", conClaude = true }: { area?: Are
           </div>
           <div className="flex items-center gap-2 text-xs text-tenue">
             {analizando
-              ? <Insignia tono="marca"><Sparkles className="h-3 w-3 animate-pulse" />La IA está analizando…</Insignia>
+              ? <span data-explain={GLOSARIO.iaAnalizando} data-explain-title="La IA está analizando"><Insignia tono="marca"><Sparkles className="h-3 w-3 animate-pulse" />La IA está analizando…</Insignia></span>
               : datos && (datos.simulado
                 ? <span data-explain={GLOSARIO.avisosDeReglas} data-explain-title="Sin IA"><Insignia tono="neutro">Reglas de la base · sin IA</Insignia></span>
-                : <Insignia tono="marca"><Sparkles className="h-3 w-3" />IA · {hace(datos.generado_en)}</Insignia>)}
-            <button onClick={actualizar} disabled={r.isFetching} title="Volver a analizar"
-              className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo disabled:opacity-50">
-              <RefreshCw className={cn("h-4 w-4", r.isFetching && "animate-spin")} />
-            </button>
+                : <span data-explain={GLOSARIO.iaRedacto} data-explain-title="Hecho por la IA"><Insignia tono="marca"><Sparkles className="h-3 w-3" />IA · {hace(datos.generado_en)}</Insignia></span>)}
+            {/* El botón se deshabilita mientras carga: la explicación va en el envoltorio para que no se pierda. */}
+            <span data-explain={GLOSARIO.botonVolverAnalizar} data-explain-title="Volver a analizar">
+              <button onClick={actualizar} disabled={r.isFetching} title="Volver a analizar"
+                className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo disabled:opacity-50">
+                <RefreshCw className={cn("h-4 w-4", r.isFetching && "animate-spin")} />
+              </button>
+            </span>
           </div>
         </div>
 
@@ -95,7 +98,7 @@ export function ResumenIA({ area = "direccion", conClaude = true }: { area?: Are
           {datos?.puntos.map((p, i) => {
             const t = TONOS[p.tono] ?? TONOS.info;
             return (
-              <Link key={i} to={p.ruta || "/"}
+              <Link key={i} to={p.ruta || "/"} data-explain={GLOSARIO.tarjetasDelResumen} data-explain-title={t.texto}
                 className="group rounded-xl border border-borde bg-superficie/60 p-3.5 hover:border-marca/40 hover:shadow-sm transition flex gap-3 animate-entrar"
                 style={{ animationDelay: `${i * 60}ms` }}>
                 <div className={cn("h-8 w-8 shrink-0 rounded-lg grid place-items-center", t.clase)} title={t.texto}><t.icono className="h-4 w-4" /></div>

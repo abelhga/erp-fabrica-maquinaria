@@ -64,7 +64,7 @@ export function SaldosArranque() {
     { clave: "vendedor", titulo: "Vendedor", valor: (f) => (f.vendedor_id ? nombres.get(f.vendedor_id) ?? "" : ""), celda: (f) => (f.vendedor_id ? nombres.get(f.vendedor_id) : null) ?? <span className="text-tenue">—</span> },
     { clave: "vendido", titulo: "Vendido", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.vendido ?? 0), celda: (f) => dinero(f.vendido ?? 0) },
     { clave: "pagado", titulo: "Pagado", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.pagado ?? 0), celda: (f) => dinero(f.pagado ?? 0) },
-    { clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.saldo),
+    { clave: "saldo", titulo: "Saldo", explica: GLOSARIO.saldoArranque, alinear: "der", sinBusqueda: true, valor: (f) => Number(f.saldo),
       celda: (f) => <div><b className={Number(f.saldo) < -0.5 ? "text-info" : ""}>{dinero(f.saldo)}</b>
         {Number(f.cobrado_erp) > 0 && <p className="text-xs text-ok whitespace-nowrap">−{dinero(f.cobrado_erp)} cobrado en el ERP</p>}</div> },
     { clave: "ultima_venta", titulo: "Última venta", sinBusqueda: true, celda: (f) => <span className="whitespace-nowrap">{fecha(f.ultima_venta)}</span> },
@@ -74,7 +74,7 @@ export function SaldosArranque() {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-lg border border-borde bg-fondo px-3 py-2 text-sm flex flex-wrap items-center gap-x-4 gap-y-1">
+      <div className="rounded-lg border border-borde bg-fondo px-3 py-2 text-sm flex flex-wrap items-center gap-x-4 gap-y-1" data-explain={GLOSARIO.saldoArranque} data-explain-title="Saldos de arranque">
         <FileSpreadsheet className="h-4 w-4 text-tenue" />
         <span>Saldos del libro de ventas de la hoja (ventas menos pagos, con IVA){arranque.data?.valor ? ` hasta el arranque del ERP, ${fecha(String(arranque.data.valor))}` : ""}.</span>
         <span className="text-tenue">Los pedidos que vienen de la hoja se cobran contra este saldo, no aparte, para no contarlos dos veces.</span>
@@ -128,7 +128,8 @@ function CobrosCliente({ fila, alCerrar }: { fila: SaldoArranque | null; alCerra
                 <span className="cifra shrink-0 font-medium">−{dinero(c.monto)}</span>
                 {editable && (
                   <button type="button" onClick={() => { if (confirm(`¿Borrar el cobro de ${dinero(c.monto)} del ${fecha(c.fecha)}?`)) borrar.mutate(c.id); }}
-                    className="shrink-0 p-1 rounded text-tenue hover:text-peligro hover:bg-fondo" aria-label="Borrar cobro" title="Borrar (mal capturado)">
+                    className="shrink-0 p-1 rounded text-tenue hover:text-peligro hover:bg-fondo" aria-label="Borrar cobro" title="Borrar (mal capturado)"
+                    data-explain={GLOSARIO.botonBorrarCobroSaldoHoja} data-explain-title="Borrar cobro">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 )}
@@ -137,7 +138,7 @@ function CobrosCliente({ fila, alCerrar }: { fila: SaldoArranque | null; alCerra
           </div>
         </div>
       )}
-      <p className="etiqueta mb-1">Últimos movimientos en la hoja</p>
+      <p className="etiqueta mb-1" data-explain={GLOSARIO.movimientosHojaCliente}>Últimos movimientos en la hoja</p>
       {hoja.isLoading ? <Cargando filas={5} /> : (
         <div className="divide-y divide-borde">
           {(hoja.data ?? []).map((m) => (

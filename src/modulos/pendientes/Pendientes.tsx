@@ -115,10 +115,13 @@ export default function Pendientes() {
 
   const pestanas: [Vista, string, number | null][] = [["mios", "Me tocan", mios.length], ["pedidos", "Los que pedí", pedidos.length], ["cerrados", "Cerrados", cerrados.length]];
   if (supervisa) pestanas.push(["equipo", "Equipo", null]);
+  const explicaPestana: Record<Vista, string> = {
+    mios: GLOSARIO.pestanaMeTocan, pedidos: GLOSARIO.pestanaLosQuePedi, cerrados: GLOSARIO.pestanaPendientesCerrados, equipo: GLOSARIO.cumplimientoEquipo,
+  };
 
   return (
     <Pagina titulo="Pendientes" descripcion="Lo que te toca y lo que pediste a otros. Cuando alguien termina, a quien lo pidió le llega un aviso."
-      acciones={<NuevoPendiente />}>
+      acciones={<span data-explain={GLOSARIO.botonPedirAlgo} data-explain-title="Pedir algo a alguien"><NuevoPendiente /></span>}>
       <MiCumplimiento c={mio.data ?? null} cargando={mio.isLoading} />
       {porResponder.length > 0 && (
         <button type="button" onClick={() => porResponder.length === 1 ? abrir(porResponder[0].id) : setVista("pedidos")}
@@ -132,7 +135,7 @@ export default function Pendientes() {
 
       <div className="flex flex-wrap gap-2">
         {pestanas.map(([v, t, n]) => (
-          <button key={v} onClick={() => setVista(v)} data-explain={v === "equipo" ? GLOSARIO.cumplimientoEquipo : undefined} data-explain-title={v === "equipo" ? "Equipo" : undefined}
+          <button key={v} onClick={() => setVista(v)} data-explain={explicaPestana[v]} data-explain-title={t}
             className={cn("h-9 px-3.5 rounded-full border text-sm inline-flex items-center gap-2 transition",
               vista === v ? "bg-marca text-white border-marca" : "border-borde hover:border-marca/40")}>
             {v === "equipo" && <Users className="h-4 w-4" />}{t}
@@ -213,7 +216,7 @@ function FilaPendiente({ p, i, hoy, yo, conQuien, alCerrar, alAbrir, alReabrir }
   return (
     <div className="flex items-start gap-3 p-4 animate-entrar" style={{ animationDelay: `${Math.min(i, 10) * 25}ms` }}>
       {p.estado === "abierto" && p.responsable_id === yo ? (
-        <button onClick={alCerrar} title="Marcar como hecho"
+        <button onClick={alCerrar} title="Marcar como hecho" data-explain={GLOSARIO.botonPendienteHecho} data-explain-title="Marcar como hecho"
           className="mt-0.5 h-5 w-5 shrink-0 rounded-full border-2 border-borde hover:border-ok hover:bg-ok-suave grid place-items-center transition">
           <Check className="h-3 w-3 text-ok opacity-0 hover:opacity-100" />
         </button>
@@ -222,7 +225,9 @@ function FilaPendiente({ p, i, hoy, yo, conQuien, alCerrar, alAbrir, alReabrir }
         <p className={cn("text-sm font-medium", p.estado !== "abierto" && "line-through text-tenue")}>{p.titulo}</p>
         {p.detalle && <p className="text-xs text-tenue mt-0.5 whitespace-pre-wrap">{p.detalle}</p>}
         <p className="text-xs text-tenue mt-1">
-          {conQuien === "para" ? <>Para <b className="text-texto font-medium">{p.responsable?.nombre}</b></> : <>De {quienPidio(p)}</>}
+          {conQuien === "para" ? <>Para <b className="text-texto font-medium">{p.responsable?.nombre}</b></>
+            : p.creado_por ? <>De {quienPidio(p)}</>
+            : <span data-explain={GLOSARIO.pendienteDeRevision} data-explain-title="De Revisión nocturna">De {quienPidio(p)}</span>}
           {" · "}{hace(p.creado_en)}
           {p.modo && <> · <span data-explain={GLOSARIO.pendienteVarios} data-explain-title="A varias personas">a varias personas: {MODO[p.modo]}</span></>}
           {p.nota_cierre && <> · <span className="text-texto">“{p.nota_cierre}”</span></>}
@@ -236,9 +241,12 @@ function FilaPendiente({ p, i, hoy, yo, conQuien, alCerrar, alAbrir, alReabrir }
         )}
         {p.estado === "abierto" && p.esperando_respuesta && <EsperaRespuesta p={p} yo={yo} />}
         {p.vence && p.estado === "abierto" && (
-          <Insignia tono={vencido ? "peligro" : esHoy ? "aviso" : "neutro"}>{vencido ? "Venció " : esHoy ? "Hoy" : "Para "}{!esHoy && fecha(p.vence)}</Insignia>
+          <span data-explain={GLOSARIO.vencido} data-explain-title="Fecha">
+            <Insignia tono={vencido ? "peligro" : esHoy ? "aviso" : "neutro"}>{vencido ? "Venció " : esHoy ? "Hoy" : "Para "}{!esHoy && fecha(p.vence)}</Insignia>
+          </span>
         )}
-        {p.ruta && <Link to={p.ruta} className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo text-tenue" title="Ir"><ArrowRight className="h-4 w-4" /></Link>}
+        {p.ruta && <Link to={p.ruta} className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo text-tenue" title="Ir"
+          data-explain={GLOSARIO.irAlOrigenPendiente} data-explain-title="Ir a donde salió"><ArrowRight className="h-4 w-4" /></Link>}
       </div>
     </div>
   );
@@ -258,7 +266,8 @@ function Marca({ estado }: { estado: Estado }) {
   return (
     <span className={cn("mt-0.5 h-5 w-5 shrink-0 rounded-full grid place-items-center",
       estado === "hecho" ? "bg-ok text-white" : estado === "cubierto" ? "bg-ok-suave text-ok" : estado === "cancelado" ? "bg-fondo text-tenue" : "border-2 border-dashed border-borde")}
-      title={estado === "cubierto" ? "Lo hizo otra persona del grupo" : undefined}>
+      title={estado === "cubierto" ? "Lo hizo otra persona del grupo" : undefined}
+      data-explain={estado !== "abierto" ? GLOSARIO.estadoPendienteCerrado : undefined} data-explain-title={estado !== "abierto" ? "Cómo se cerró" : undefined}>
       {(estado === "hecho" || estado === "cubierto") && <Check className="h-3 w-3" />}{estado === "cancelado" && <X className="h-3 w-3" />}
     </span>
   );
@@ -281,6 +290,7 @@ function FilaPedido({ grupo, hoy, alCancelar, alAbrir }: { grupo: Pendiente[]; h
           <span className="text-tenue">Para</span>
           {vivos.map((x) => (
             <button type="button" key={x.id} onClick={() => alAbrir(x.id)} title="Abrir su ficha"
+              data-explain={GLOSARIO.personasDelPendiente} data-explain-title={x.responsable?.nombre}
               className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 hover:ring-1 hover:ring-marca/40",
                 x.estado === "hecho" ? "border-ok/30 bg-ok-suave text-ok"
                   : x.esperando_respuesta && x.estado === "abierto" ? "border-aviso/40 bg-aviso-suave text-aviso" : "border-borde text-texto")}>
@@ -294,9 +304,12 @@ function FilaPedido({ grupo, hoy, alCancelar, alAbrir }: { grupo: Pendiente[]; h
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        {p.vence && <Insignia tono={vencido ? "peligro" : p.vence === hoy ? "aviso" : "neutro"}>{vencido ? "Venció " : p.vence === hoy ? "Hoy" : "Para "}{p.vence !== hoy && fecha(p.vence)}</Insignia>}
-        {p.ruta && <Link to={p.ruta} className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo text-tenue" title="Ir"><ArrowRight className="h-4 w-4" /></Link>}
-        <button onClick={alCancelar} title={grupo.length > 1 ? "Cancelar para todos" : "Cancelar"} className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo text-tenue"><X className="h-4 w-4" /></button>
+        {p.vence && <span data-explain={GLOSARIO.vencido} data-explain-title="Fecha">
+          <Insignia tono={vencido ? "peligro" : p.vence === hoy ? "aviso" : "neutro"}>{vencido ? "Venció " : p.vence === hoy ? "Hoy" : "Para "}{p.vence !== hoy && fecha(p.vence)}</Insignia></span>}
+        {p.ruta && <Link to={p.ruta} className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo text-tenue" title="Ir"
+          data-explain={GLOSARIO.irAlOrigenPendiente} data-explain-title="Ir a donde salió"><ArrowRight className="h-4 w-4" /></Link>}
+        <button onClick={alCancelar} title={grupo.length > 1 ? "Cancelar para todos" : "Cancelar"} className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo text-tenue"
+          data-explain={GLOSARIO.botonCancelarPendiente} data-explain-title={grupo.length > 1 ? "Cancelar para todos" : "Cancelar"}><X className="h-4 w-4" /></button>
       </div>
     </div>
   );
@@ -324,7 +337,7 @@ function Equipo({ todos, alAbrir }: { todos: Pendiente[]; alAbrir: (id: string) 
       valor: (c) => pctATiempo(c) ?? -1,
       celda: (c) => { const p = pctATiempo(c); return p == null ? <span className="text-tenue">—</span>
         : <span className={cn("cifra font-medium", p >= 0.9 ? "text-ok" : p >= 0.7 ? "text-aviso" : "text-peligro")}>{porcentaje(p, 0)}</span>; } },
-    { clave: "cerrados", titulo: "Cerrados", alinear: "der", sinBusqueda: true, celda: (c) => <span className="cifra">{c.cerrados}</span> },
+    { clave: "cerrados", titulo: "Cerrados", alinear: "der", sinBusqueda: true, explica: GLOSARIO.pendientesCerradosPeriodo, celda: (c) => <span className="cifra">{c.cerrados}</span> },
     { clave: "dias_promedio", titulo: "Días para cerrar", alinear: "der", sinBusqueda: true, explica: GLOSARIO.pendientesDiasCerrar,
       valor: (c) => c.dias_promedio ?? null, celda: (c) => c.dias_promedio != null ? <span className="cifra">{numero(Number(c.dias_promedio))}</span> : <span className="text-tenue">—</span> },
     { clave: "por_responder", titulo: "Por responder", alinear: "der", sinBusqueda: true, explica: GLOSARIO.pendienteEsperandoRespuesta,
@@ -343,7 +356,7 @@ function Equipo({ todos, alAbrir }: { todos: Pendiente[]; alAbrir: (id: string) 
         exportarComo={`cumplimiento-pendientes-${dias}d`} placeholder="Buscar persona…" alClicFila={setPersona}
         claseFila={(c) => (c.persona_id === persona?.persona_id ? "bg-marca-suave" : undefined)}
         filtros={
-          <div className="inline-flex rounded-lg border border-borde p-0.5 text-sm">
+          <div className="inline-flex rounded-lg border border-borde p-0.5 text-sm" data-explain={GLOSARIO.periodoPendientesEquipo} data-explain-title="Periodo">
             {[30, 90, 180].map((d) => (
               <button key={d} onClick={() => setDias(d)} className={cn("px-3 h-8 rounded-md", dias === d ? "bg-marca text-white" : "text-tenue hover:text-texto")}>{d} días</button>
             ))}
@@ -373,7 +386,7 @@ function Equipo({ todos, alAbrir }: { todos: Pendiente[]; alAbrir: (id: string) 
               })}
             </div>
           )}
-          <h3 className="text-sm font-semibold pt-2" data-explain={GLOSARIO.pendientesATiempo} data-explain-title="Cerrados">
+          <h3 className="text-sm font-semibold pt-2" data-explain={GLOSARIO.pendientesCerradosPeriodo} data-explain-title="Lo que cerró">
             Lo que cerró en {dias} días ({cerrados.length})</h3>
           {cerrados.length === 0 ? <p className="text-sm text-tenue">No cerró nada en el periodo.</p> : (
             <div className="tarjeta divide-y divide-borde">
@@ -389,7 +402,8 @@ function Equipo({ todos, alAbrir }: { todos: Pendiente[]; alAbrir: (id: string) 
                         ? <span className="block text-xs mt-0.5">Respuesta: <span className="text-texto">“{p.nota_cierre}”</span></span>
                         : <span className="block text-xs text-tenue mt-0.5">Lo cerró sin dejar respuesta.</span>}
                     </span>
-                    {p.vence ? <Insignia tono={tarde ? "peligro" : "ok"}>{tarde ? `Tarde (era para ${fecha(p.vence)})` : "A tiempo"}</Insignia>
+                    {p.vence ? <span data-explain={GLOSARIO.pendientesATiempo} data-explain-title={tarde ? "Tarde" : "A tiempo"}>
+                      <Insignia tono={tarde ? "peligro" : "ok"}>{tarde ? `Tarde (era para ${fecha(p.vence)})` : "A tiempo"}</Insignia></span>
                       : <Insignia tono="neutro">Sin fecha</Insignia>}
                   </button>
                 );
@@ -457,9 +471,11 @@ function FichaPendiente({ p, cargando, yo, hoy, alCerrar, alHecho, alCancelar, a
       subtitulo={p && <>De <b>{quienPidio(p)}</b> para <b>{p.responsable?.nombre}</b> · {hace(p.creado_en)}</>}
       acciones={p && (abierto || alReabrir) && (
         <div className="flex gap-2">
-          {abierto && soyCreador && <Boton variante="secundario" tamano="sm" onClick={alCancelar}><X className="h-4 w-4" />{p.grupo_id ? "Cancelar para todos" : "Cancelar"}</Boton>}
+          {abierto && soyCreador && <Boton variante="secundario" tamano="sm" onClick={alCancelar}
+            data-explain={GLOSARIO.botonCancelarPendiente} data-explain-title={p.grupo_id ? "Cancelar para todos" : "Cancelar"}><X className="h-4 w-4" />{p.grupo_id ? "Cancelar para todos" : "Cancelar"}</Boton>}
           {alReabrir && <Boton variante="secundario" tamano="sm" onClick={alReabrir} data-explain={GLOSARIO.reabrirPendiente} data-explain-title="Reabrir"><RotateCcw className="h-4 w-4" />Reabrir</Boton>}
-          {abierto && soyResp && <Boton variante="exito" tamano="sm" onClick={alHecho}><Check className="h-4 w-4" />Ya quedó</Boton>}
+          {abierto && soyResp && <Boton variante="exito" tamano="sm" onClick={alHecho} data-explain={GLOSARIO.botonPendienteHecho} data-explain-title="Ya quedó">
+            <Check className="h-4 w-4" />Ya quedó</Boton>}
         </div>
       )}>
       {!p ? <Cargando filas={3} /> : (
@@ -467,15 +483,18 @@ function FichaPendiente({ p, cargando, yo, hoy, alCerrar, alHecho, alCancelar, a
           <div className="space-y-2 text-sm">
             <div className="flex flex-wrap items-center gap-2">
               {p.estado === "abierto" ? (p.vence
-                ? <Insignia tono={vencido ? "peligro" : p.vence === hoy ? "aviso" : "neutro"}>{vencido ? "Venció " : p.vence === hoy ? "Hoy" : "Para "}{p.vence !== hoy && fecha(p.vence)}</Insignia>
+                ? <span data-explain={GLOSARIO.vencido} data-explain-title="Fecha">
+                    <Insignia tono={vencido ? "peligro" : p.vence === hoy ? "aviso" : "neutro"}>{vencido ? "Venció " : p.vence === hoy ? "Hoy" : "Para "}{p.vence !== hoy && fecha(p.vence)}</Insignia></span>
                 : <Insignia tono="neutro">Sin fecha</Insignia>)
-                : <Insignia tono={p.estado === "cancelado" ? "neutro" : "ok"}>{p.estado === "hecho" ? "Hecho" : p.estado === "cubierto" ? "Lo hizo otra persona" : "Cancelado"}</Insignia>}
+                : <span data-explain={GLOSARIO.estadoPendienteCerrado} data-explain-title="Cómo se cerró">
+                    <Insignia tono={p.estado === "cancelado" ? "neutro" : "ok"}>{p.estado === "hecho" ? "Hecho" : p.estado === "cubierto" ? "Lo hizo otra persona" : "Cancelado"}</Insignia></span>}
               {abierto && p.esperando_respuesta && <EsperaRespuesta p={p} yo={yo} />}
               {p.modo && <span className="text-xs text-tenue" data-explain={GLOSARIO.pendienteVarios} data-explain-title="A varias personas">A varias personas: {MODO[p.modo]}</span>}
             </div>
             {p.detalle && <p className="whitespace-pre-wrap text-tenue">{p.detalle}</p>}
             {p.nota_cierre && <p>{p.estado === "cancelado" ? "Por qué se canceló" : "Respuesta al cerrar"}: <span className="text-texto">“{p.nota_cierre}”</span></p>}
-            {p.ruta && <Link to={p.ruta} className="inline-flex items-center gap-1 text-marca-texto hover:underline">Ir a donde salió <ArrowRight className="h-3.5 w-3.5" /></Link>}
+            {p.ruta && <Link to={p.ruta} className="inline-flex items-center gap-1 text-marca-texto hover:underline"
+              data-explain={GLOSARIO.irAlOrigenPendiente} data-explain-title="Ir a donde salió">Ir a donde salió <ArrowRight className="h-3.5 w-3.5" /></Link>}
           </div>
 
           <section className="flex-1 min-h-0 flex flex-col gap-2 border-t border-borde pt-3">

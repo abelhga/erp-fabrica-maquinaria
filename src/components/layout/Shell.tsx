@@ -17,9 +17,11 @@ import { Asistente } from "@/components/asistente/Asistente";
 import { Campana } from "@/components/avisos/Campana";
 import { AvisoVerComo, BotonVerComo } from "./VerComo";
 import { FranjaVistaPrevia } from "@/paginas/VistaPrevia";
-import { BotonTutorial, Explicacion } from "@/tutorial/Explicacion";
+import { AyudaDePantalla } from "@/tutorial/Explicacion";
+import { MenuAprende } from "@/tutorial/recorridos/MenuAprende";
+import { MotorRecorridos } from "@/tutorial/recorridos/Motor";
 import { CapaExplicacion } from "@/tutorial/CapaExplicacion";
-import { ayudaDe } from "@/tutorial/pantallas";
+import { ayudaDe, patronDe } from "@/tutorial/pantallas";
 
 function useTema() {
   const [oscuro, setOscuro] = useState(() => temaInicial() === "oscuro");
@@ -155,7 +157,7 @@ export function Shell() {
           </button>
           <div className="ml-auto flex items-center gap-1">
             <BotonVerComo />
-            <BotonTutorial />
+            <MenuAprende />
             <Campana />
             <button onClick={() => setOscuro(!oscuro)} className="p-2 rounded-lg hover:bg-fondo text-tenue" aria-label="Cambiar tema">
               {oscuro ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
@@ -180,6 +182,7 @@ export function Shell() {
       </div>
       <BuscadorGlobal abierto={buscando} alCambiar={setBuscando} />
       <CapaExplicacion />
+      <MotorRecorridos />
       {/* En una vista previa el asistente no se usa (gastaría a nombre de la otra persona). */}
       {!vistaPrevia && <Asistente />}
     </div>
@@ -238,7 +241,7 @@ export function Pagina({ titulo, descripcion, acciones, children, ancho = "max-w
         </div>
         {acciones && <div className="no-imprimir flex flex-wrap items-center gap-2">{acciones}</div>}
       </div>
-      {ayuda && <Explicacion>{ayuda.map((p) => <p key={p}>{p}</p>)}</Explicacion>}
+      {ayuda && <AyudaDePantalla key={pathname} ayuda={ayuda} ruta={patronDe(pathname) ?? pathname} />}
       {children}
     </div>
   );

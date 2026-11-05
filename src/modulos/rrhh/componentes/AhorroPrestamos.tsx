@@ -76,15 +76,15 @@ export function Ahorro({ semanas, puedeCapturar }: { semanas: { inicio: string; 
       clave: "ahorro_semanal", titulo: "Ahorra por semana", explica: GLOSARIO.ahorroSemanal, alinear: "der", sinBusqueda: true, valor: (f) => n(f.ahorro_semanal),
       celda: (f) => n(f.ahorro_semanal) > 0 ? <span>{dinero(f.ahorro_semanal)}{f.desde && <span className="block text-[11px] text-tenue">desde {fecha(f.desde)}</span>}</span> : <span className="text-tenue">—</span>,
     },
-    { clave: "aportado", titulo: "Ahorrado", alinear: "der", sinBusqueda: true, valor: (f) => n(f.aportado) + n(f.empresa) + n(f.saldo_inicial), celda: (f) => dinero(n(f.aportado) + n(f.empresa) + n(f.saldo_inicial)) },
+    { clave: "aportado", titulo: "Ahorrado", explica: GLOSARIO.ahorradoTotal, alinear: "der", sinBusqueda: true, valor: (f) => n(f.aportado) + n(f.empresa) + n(f.saldo_inicial), celda: (f) => dinero(n(f.aportado) + n(f.empresa) + n(f.saldo_inicial)) },
     { clave: "retirado", titulo: "Retirado", alinear: "der", sinBusqueda: true, valor: (f) => n(f.retirado), celda: (f) => n(f.retirado) ? dinero(f.retirado) : <span className="text-tenue">—</span> },
     { clave: "saldo", titulo: "Saldo", explica: GLOSARIO.saldoAhorro, alinear: "der", sinBusqueda: true, valor: (f) => n(f.saldo), celda: (f) => <b>{dinero(f.saldo)}</b> },
     {
       clave: "acciones", titulo: "", sinBusqueda: true,
       celda: (f) => (
         <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-          {puedeCapturar && f.activo && <Boton variante="fantasma" tamano="sm" onClick={() => setDialogo({ tipo: "aportacion", f })}>Ahorro</Boton>}
-          {puedeCapturar && n(f.saldo) > 0 && <Boton variante="secundario" tamano="sm" onClick={() => setDialogo({ tipo: "retiro", f })}>Retiro</Boton>}
+          {puedeCapturar && f.activo && <Boton variante="fantasma" tamano="sm" onClick={() => setDialogo({ tipo: "aportacion", f })} data-explain={GLOSARIO.ahorroSemanal}>Ahorro</Boton>}
+          {puedeCapturar && n(f.saldo) > 0 && <Boton variante="secundario" tamano="sm" onClick={() => setDialogo({ tipo: "retiro", f })} data-explain={GLOSARIO.retiroAhorro}>Retiro</Boton>}
         </div>
       ),
     },
@@ -93,8 +93,8 @@ export function Ahorro({ semanas, puedeCapturar }: { semanas: { inicio: string; 
     <div className="space-y-3">
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
         <Kpi titulo="Saldo de la caja" valor={dinero(datos.reduce((s, f) => s + n(f.saldo), 0))} icono={PiggyBank} explica={GLOSARIO.saldoAhorro} detalle="Lo que se le debe devolver al personal" />
-        <Kpi titulo="Ahorran" valor={numero(ahorran.length)} icono={Wallet} tono="info" detalle={`${dinero(ahorran.reduce((s, f) => s + n(f.ahorro_semanal), 0))} por semana`} />
-        <div className="tarjeta p-4 text-sm col-span-2 flex items-start gap-3" data-explain={GLOSARIO.retiroAhorro} data-explain-title="Reglas">
+        <Kpi titulo="Ahorran" valor={numero(ahorran.length)} icono={Wallet} tono="info" explica={GLOSARIO.ahorroSemanal} detalle={`${dinero(ahorran.reduce((s, f) => s + n(f.ahorro_semanal), 0))} por semana`} />
+        <div className="tarjeta p-4 text-sm col-span-2 flex items-start gap-3" data-explain={GLOSARIO.reglasAhorroPrestamos} data-explain-title="Reglas">
           <div className="flex-1">
             <p className="font-medium">Reglas</p>
             {reglas.data && <p className="text-tenue text-xs mt-0.5">
@@ -165,7 +165,7 @@ function DialogoRetiro({ f, dias, alCerrar }: { f: FilaAhorro; dias: number; alC
           <Campo etiqueta="Se le entrega el"><Entrada type="date" min={minimo} max={hoyISO()} value={v.entrega} onChange={(e) => setV({ ...v, entrega: e.target.value })} /></Campo>
         </div>
         <Campo etiqueta="Sale de la cuenta" ayuda="Queda en Pagos hechos de finanzas; si es caja chica, también en su libro.">
-          <span data-explain={GLOSARIO.cuentaNomina} className="block"><SelectorCuenta soloDinero valor={v.cuenta} alCambiar={(c) => setV({ ...v, cuenta: c })} /></span>
+          <span data-explain={GLOSARIO.cuentaNomina} className="block"><SelectorCuenta soloDinero explica={GLOSARIO.cuentaNomina} valor={v.cuenta} alCambiar={(c) => setV({ ...v, cuenta: c })} /></span>
         </Campo>
         <Campo etiqueta="Nota (opcional)"><Entrada value={v.nota} onChange={(e) => setV({ ...v, nota: e.target.value })} placeholder="Para inscripción escolar…" /></Campo>
       </form>
@@ -193,7 +193,7 @@ function HistorialAhorro({ f, puedeCapturar, alCerrar, alSaldoInicial }: { f: Fi
   const movs = useQuery({ queryKey: ["nomina", "ahorro", f.empleado_id], queryFn: () => q<MovAhorro[]>(supabase.rpc("movimientos_ahorro", { p_empleado: f.empleado_id })) });
   return (
     <Lateral abierto alCambiar={(x) => !x && alCerrar()} titulo={`Ahorro de ${f.nombre}`} subtitulo={`Saldo ${dinero(f.saldo)}`}
-      acciones={puedeCapturar && n(f.saldo_inicial) === 0 && <Boton variante="secundario" tamano="sm" onClick={alSaldoInicial}><Plus className="h-4 w-4" /> Saldo inicial</Boton>}>
+      acciones={puedeCapturar && n(f.saldo_inicial) === 0 && <Boton variante="secundario" tamano="sm" onClick={alSaldoInicial} data-explain={GLOSARIO.botonSaldoInicialAhorro}><Plus className="h-4 w-4" /> Saldo inicial</Boton>}>
       {movs.isLoading ? <Cargando filas={4} /> : !movs.data?.length ? <p className="text-sm text-tenue">Sin movimientos todavía: lo de cada semana entra al cerrarla.</p> : (
         <ul className="divide-y divide-borde text-sm">
           {movs.data.map((m) => (
@@ -203,7 +203,7 @@ function HistorialAhorro({ f, puedeCapturar, alCerrar, alSaldoInicial }: { f: Fi
                 <p className="text-xs text-tenue">{fecha(m.fecha)}{m.solicitado_el && ` · lo pidió el ${fecha(m.solicitado_el)}`}{m.nota && ` · ${m.nota}`}</p>
               </div>
               <span className={m.tipo === "retiro" ? "cifra text-peligro" : "cifra"}>{m.tipo === "retiro" ? "−" : ""}{dinero(m.importe)}</span>
-              {m.tipo === "retiro" && <Boton variante="fantasma" tamano="sm" onClick={() => abrirDocumento("retiro", m.id)} aria-label="Recibo"><FileText className="h-4 w-4" /></Boton>}
+              {m.tipo === "retiro" && <Boton variante="fantasma" tamano="sm" onClick={() => abrirDocumento("retiro", m.id)} aria-label="Recibo" data-explain={GLOSARIO.botonReciboRetiro} data-explain-title="Recibo"><FileText className="h-4 w-4" /></Boton>}
             </li>
           ))}
         </ul>
@@ -252,7 +252,7 @@ export function DialogoAbonar({ p, semanas, alCerrar }: { p: PrestamoAbono; sema
               </Campo>}
         </div>
         {modo === "efectivo" && <Campo etiqueta="Entra a la cuenta" ayuda="Si lo recibes en efectivo y se queda en la caja chica, elige caja chica: entra a su libro.">
-          <span data-explain={GLOSARIO.cuentaNomina} className="block"><SelectorCuenta soloDinero valor={v.cuenta} alCambiar={(c) => setV({ ...v, cuenta: c })} /></span>
+          <span data-explain={GLOSARIO.cuentaNomina} className="block"><SelectorCuenta soloDinero explica={GLOSARIO.cuentaNomina} valor={v.cuenta} alCambiar={(c) => setV({ ...v, cuenta: c })} /></span>
         </Campo>}
         {modo === "efectivo" && <Campo etiqueta="Nota (opcional)"><Entrada value={v.nota} onChange={(e) => setV({ ...v, nota: e.target.value })} placeholder="Abonó de su aguinaldo…" /></Campo>}
         <p className="text-xs text-tenue">{modo === "efectivo"
@@ -270,7 +270,7 @@ export function DialogoPagare({ p, alCerrar }: { p: PrestamoAbono; alCerrar: () 
     { exito: "Firma del pagaré anotada", invalidar: [["nomina"]], alTerminar: alCerrar });
   return (
     <Dialogo abierto alCambiar={(x) => !x && alCerrar()} titulo={`Pagaré del préstamo ${p.folio}`} descripcion={`${p.nombre}. Imprímelo, que lo firme, y anota la fecha de firma. Guarda el original firmado.`}
-      pie={<><Boton variante="secundario" onClick={() => abrirDocumento("pagare", p.id)}><Printer className="h-4 w-4" /> Imprimir pagaré</Boton>
+      pie={<><Boton variante="secundario" onClick={() => abrirDocumento("pagare", p.id)} data-explain={GLOSARIO.pagarePrestamo}><Printer className="h-4 w-4" /> Imprimir pagaré</Boton>
         <Boton cargando={guardar.isPending} disabled={!firmado} onClick={() => guardar.mutate(undefined)}>Anotar firma</Boton></>}>
       <Campo etiqueta="Lo firmó el"><Entrada type="date" max={hoyISO()} value={firmado} onChange={(e) => setFirmado(e.target.value)} /></Campo>
     </Dialogo>

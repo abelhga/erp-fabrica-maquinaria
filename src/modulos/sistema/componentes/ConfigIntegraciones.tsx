@@ -108,7 +108,7 @@ export function ConfigIntegraciones() {
             <Dato titulo="Publicaciones por ligar" valor={numero(e.sin_ligar)} tono={e.sin_ligar ? "aviso" : undefined} explica={GLOSARIO.publicacionPorLigar} />
           </div>
           {e.conectada && (
-            <div className="rounded-lg border border-borde px-3 py-2 space-y-1">
+            <div className="rounded-lg border border-borde px-3 py-2 space-y-1" data-explain={GLOSARIO.ultimoAvisoML} data-explain-title="Avisos de Mercado Libre">
               <p>Último aviso de ML: <b>{e.ultimo_aviso ? hace(e.ultimo_aviso) : "ninguno todavía"}</b>{e.ultimo_aviso ? <span className="text-tenue"> ({fechaYHora(e.ultimo_aviso)})</span> : null}</p>
               <p>{e.avisos_pendientes ? <>Pendientes: <b>{numero(e.avisos_pendientes)}</b>{e.avisos_con_error ? <span className="text-peligro"> · {numero(e.avisos_con_error)} con error</span> : null}</> : "Todo procesado."}</p>
               {e.ultimo_error && <p className="text-peligro text-xs break-words">{e.ultimo_error}</p>}
@@ -174,17 +174,19 @@ export function ConfigIntegraciones() {
                 </Seleccion>
               </div>
             </Campo>
-            <Campo etiqueta="Las ventas de Mercado Libre quedan a nombre de" ayuda="Una sola persona: es a quien se le cuentan para la comisión. «Nadie» = quedan sin vendedor.">
-              <Seleccion value={e.responsable_elegido_id ?? ""} onChange={(x) => responsable.mutate(x.target.value)} disabled={responsable.isPending}>
-                <option value="">Nadie (sin vendedor)</option>
-                {(personas.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-              </Seleccion>
-            </Campo>
+            <div data-explain={GLOSARIO.responsableVentasML} data-explain-title="A nombre de quién quedan las ventas">
+              <Campo etiqueta="Las ventas de Mercado Libre quedan a nombre de" ayuda="Una sola persona: es a quien se le cuentan para la comisión. «Nadie» = quedan sin vendedor.">
+                <Seleccion value={e.responsable_elegido_id ?? ""} onChange={(x) => responsable.mutate(x.target.value)} disabled={responsable.isPending}>
+                  <option value="">Nadie (sin vendedor)</option>
+                  {(personas.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                </Seleccion>
+              </Campo>
+            </div>
           </>}
           <div className="flex flex-wrap gap-2">
-            {direccion && !e.conectada && <Boton onClick={() => hacer("iniciar")} cargando={ocupado === "iniciar"}><Link2 className="h-4 w-4" /> Conectar Mercado Libre</Boton>}
-            {e.conectada && <Boton variante="secundario" onClick={() => hacer("procesar")} cargando={ocupado === "procesar"}><RefreshCw className="h-4 w-4" /> Revisar ahora</Boton>}
-            {direccion && e.conectada && <Boton variante="fantasma" onClick={() => hacer("desconectar")} cargando={ocupado === "desconectar"}><Unlink className="h-4 w-4" /> Desconectar</Boton>}
+            {direccion && !e.conectada && <Boton onClick={() => hacer("iniciar")} cargando={ocupado === "iniciar"} data-explain={GLOSARIO.botonConectarML}><Link2 className="h-4 w-4" /> Conectar Mercado Libre</Boton>}
+            {e.conectada && <Boton variante="secundario" onClick={() => hacer("procesar")} cargando={ocupado === "procesar"} data-explain={GLOSARIO.botonRevisarAhoraML}><RefreshCw className="h-4 w-4" /> Revisar ahora</Boton>}
+            {direccion && e.conectada && <Boton variante="fantasma" onClick={() => hacer("desconectar")} cargando={ocupado === "desconectar"} data-explain={GLOSARIO.botonDesconectarML}><Unlink className="h-4 w-4" /> Desconectar</Boton>}
           </div>
         </div>
       </Tarjeta>

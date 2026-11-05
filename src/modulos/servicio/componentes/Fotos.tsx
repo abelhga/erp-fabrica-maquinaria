@@ -8,6 +8,7 @@ import { fechaYHora } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { Seleccion } from "@/components/ui/campo";
 import { CLAVE, MOMENTOS, comprimirImagen, subirArchivo, useUrlsFirmadas, type Evidencia, type Momento } from "../datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /** Miniatura de una foto del bucket privado (con enlace firmado). */
 export function Miniatura({ ruta, url, alt, className }: { ruta: string; url?: string; alt: string; className?: string }) {
@@ -123,7 +124,7 @@ export function GaleriaEvidencias({ servicioId, mantenimientoId, carpeta, puedeS
         ))
       )}
       {puedeSubir && (
-        <div className="flex flex-wrap items-center gap-2 pt-1">
+        <div className="flex flex-wrap items-center gap-2 pt-1" data-explain={GLOSARIO.subirFotosEvidencia} data-explain-title="Agregar fotos">
           {momentos.length > 1 && (
             <Seleccion className="w-auto" value={momento} onChange={(e) => setMomento(e.target.value as Momento)} aria-label="¿De qué momento es la foto?">
               {momentos.map((m) => <option key={m} value={m}>{MOMENTOS[m]}</option>)}

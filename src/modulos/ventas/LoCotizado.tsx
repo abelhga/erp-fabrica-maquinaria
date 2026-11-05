@@ -43,12 +43,16 @@ const NOMBRE: Record<Grupo, string> = {
   ganada: "Ganado", perdida: "Perdido", abierta: "Abierto", sin_enviar: "Sin enviar", otra: "Se cerró con otra cotización",
 };
 const TONO: Record<Grupo, Tono> = { ganada: "ok", perdida: "peligro", abierta: "aviso", sin_enviar: "neutro", otra: "neutro" };
+const EXPLICA_GRUPO: Record<Grupo, string | undefined> = {
+  ganada: GLOSARIO.ganadoCotizado, perdida: GLOSARIO.perdidoCotizado, abierta: GLOSARIO.abiertoCotizado, sin_enviar: GLOSARIO.sinEnviarCotizado, otra: undefined,
+};
 // Lo abierto, de lo que va mejor a lo que más urge: así se lee de arriba abajo en el diagrama.
 const ORDEN_ABIERTA = ["Negociando", "Esperando respuesta", "No contesta", "Vigencia vencida", "Seguimiento atrasado"];
 
 type ClavePeriodo = "mes" | "anterior" | "90" | "anio";
-const PERIODOS: { valor: ClavePeriodo; texto: string }[] = [
-  { valor: "90", texto: "90 días" }, { valor: "mes", texto: "Este mes" }, { valor: "anterior", texto: "Mes pasado" }, { valor: "anio", texto: "Este año" },
+const PERIODOS: { valor: ClavePeriodo; texto: string; explica: string }[] = [
+  { valor: "90", texto: "90 días", explica: GLOSARIO.periodoLoCotizado }, { valor: "mes", texto: "Este mes", explica: GLOSARIO.periodoLoCotizado },
+  { valor: "anterior", texto: "Mes pasado", explica: GLOSARIO.periodoLoCotizado }, { valor: "anio", texto: "Este año", explica: GLOSARIO.periodoLoCotizado },
 ];
 const iso = (d: Date) => d.toLocaleDateString("en-CA");
 function calcular(clave: ClavePeriodo) {
@@ -62,7 +66,9 @@ function calcular(clave: ClavePeriodo) {
   }
 }
 type Medida = "monto" | "cotizaciones";
-const MEDIDAS: { valor: Medida; texto: string }[] = [{ valor: "monto", texto: "En dinero" }, { valor: "cotizaciones", texto: "En cotizaciones" }];
+const MEDIDAS: { valor: Medida; texto: string; explica: string }[] = [
+  { valor: "monto", texto: "En dinero", explica: GLOSARIO.medidaLoCotizado }, { valor: "cotizaciones", texto: "En cotizaciones", explica: GLOSARIO.medidaLoCotizado },
+];
 
 export default function LoCotizado() {
   const [params, setParams] = useSearchParams();
@@ -126,10 +132,10 @@ function Contenido({ d, medida, bloque, elegir }: { d: Datos; medida: Medida; bl
     { clave: "cliente", titulo: "Cliente", clase: "max-w-[260px] truncate" },
     { clave: "vendedor", titulo: "Vendedor", oculta: !variosVendedores },
     { clave: "fecha", titulo: "Fecha", valor: (c) => c.fecha, celda: (c) => <span className="whitespace-nowrap">{fecha(c.fecha)}</span>, sinBusqueda: true },
-    { clave: "monto", titulo: "Monto sin IVA", alinear: "der", valor: (c) => c.monto, celda: (c) => <span className="cifra">{dinero(c.monto)}</span>, sinBusqueda: true },
-    { clave: "subgrupo", titulo: "Cómo va", explica: GLOSARIO.abiertoCotizado,
+    { clave: "monto", titulo: "Monto sin IVA", alinear: "der", explica: GLOSARIO.loCotizado, valor: (c) => c.monto, celda: (c) => <span className="cifra">{dinero(c.monto)}</span>, sinBusqueda: true },
+    { clave: "subgrupo", titulo: "Cómo va", explica: GLOSARIO.comoVaCotizacion,
       celda: (c) => <Insignia tono={TONO[c.grupo]}>{c.grupo === "perdida" ? `Perdida: ${c.subgrupo}` : c.subgrupo}</Insignia> },
-    { clave: "que_paso", titulo: "Qué pasó", valor: (c) => c.que_paso ?? c.motivo ?? "",
+    { clave: "que_paso", titulo: "Qué pasó", explica: GLOSARIO.quePasoCotizacion, valor: (c) => c.que_paso ?? c.motivo ?? "",
       celda: (c) => <span className="text-xs text-tenue line-clamp-2 max-w-[320px]">{c.que_paso ?? c.motivo ?? "—"}</span> },
     { clave: "seguimiento", titulo: "Seguimiento", valor: (c) => c.seguimiento ?? "", sinBusqueda: true, explica: GLOSARIO.seguimientoCotizacion,
       celda: (c) => c.seguimiento
@@ -146,10 +152,10 @@ function Contenido({ d, medida, bloque, elegir }: { d: Datos; medida: Medida; bl
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi titulo="Cotizado" valor={dineroCompacto(t.cotizado.monto)} icono={Send} explica={GLOSARIO.loCotizado} alClic={() => elegir(null)}
-          detalle={`${numero(t.cotizado.cotizaciones)} cotizaciones · ${numero(t.sin_enviar.cotizaciones)} sin enviar`} />
-        <Kpi titulo="Ganado" valor={dineroCompacto(t.ganada.monto)} icono={CircleCheck} tono="ok" explica={GLOSARIO.tasaCierreCotizado}
+          detalle={<span data-explain={GLOSARIO.sinEnviarCotizado} data-explain-title="Sin enviar">{numero(t.cotizado.cotizaciones)} cotizaciones · {numero(t.sin_enviar.cotizaciones)} sin enviar</span>} />
+        <Kpi titulo="Ganado" valor={dineroCompacto(t.ganada.monto)} icono={CircleCheck} tono="ok" explica={GLOSARIO.ganadoCotizado}
           alClic={() => elegir("ganada")}
-          detalle={d.tasa_cierre.monto != null ? `${porcentaje(d.tasa_cierre.monto, 0)} de lo ya decidido · ${numero(t.ganada.cotizaciones)} cotizaciones` : "Todavía no se decide ninguna"} />
+          detalle={<span data-explain={GLOSARIO.tasaCierreCotizado} data-explain-title="Tasa de cierre">{d.tasa_cierre.monto != null ? `${porcentaje(d.tasa_cierre.monto, 0)} de lo ya decidido · ${numero(t.ganada.cotizaciones)} cotizaciones` : "Todavía no se decide ninguna"}</span>} />
         <Kpi titulo="Perdido" valor={dineroCompacto(t.perdida.monto)} icono={CircleX} tono="peligro" explica={GLOSARIO.perdidoCotizado}
           alClic={() => elegir("perdida")}
           detalle={motivo ? `Más por «${motivo.subgrupo}»: ${dineroCompacto(motivo.monto)}` : "Ninguna perdida"} />
@@ -177,7 +183,7 @@ function Contenido({ d, medida, bloque, elegir }: { d: Datos; medida: Medida; bl
         <TablaDatos filas={filas} columnas={columnas} claveFila={(c) => c.id} exportarComo="lo-cotizado" compacta
           placeholder="Buscar folio, cliente o lo que pasó…" alClicFila={(c) => navegar(`/ventas/cotizaciones/${c.id}`)}
           filtros={<Filtro opciones={[{ valor: "", texto: "Todas" }, ...(["ganada", "perdida", "abierta", "sin_enviar"] as Grupo[])
-              .filter((g) => t[g].cotizaciones > 0).map((g) => ({ valor: g, texto: NOMBRE[g], cuenta: t[g].cotizaciones }))]}
+              .filter((g) => t[g].cotizaciones > 0).map((g) => ({ valor: g, texto: NOMBRE[g], cuenta: t[g].cotizaciones, explica: EXPLICA_GRUPO[g] }))]}
             valor={bloque?.split(":")[0] === "enviada" ? "" : bloque?.split(":")[0] ?? ""} alCambiar={(v) => elegir(v || null)} />}
           vacio={{ icono: Waypoints, titulo: "Ninguna cotización en este bloque", texto: "Toca otro bloque del diagrama o «Ver todas»." }} />
       </Tarjeta>

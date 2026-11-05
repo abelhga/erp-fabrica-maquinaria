@@ -59,7 +59,7 @@ export function MatrizPermisos() {
             <tr>
               <th className="w-[120px] sticky left-0 z-20" data-explain={GLOSARIO.permisosRolModulo} data-explain-title="Rol × módulo">Rol</th>
               {MODULOS.map((m) => (
-                <th key={m.modulo} title={m.descripcion} className={cn("!text-center whitespace-nowrap !px-1.5", m.modulo === "costos" && "!bg-aviso-suave !text-aviso")}>
+                <th key={m.modulo} title={m.descripcion} data-explain={m.alerta ? `${m.descripcion} ${m.alerta}` : m.descripcion} data-explain-title={m.nombre} className={cn("!text-center whitespace-nowrap !px-1.5", m.modulo === "costos" && "!bg-aviso-suave !text-aviso")}>
                   {m.modulo === "rrhh" ? "RR. HH." : m.nombre}
                 </th>
               ))}
@@ -68,12 +68,13 @@ export function MatrizPermisos() {
           <tbody>
             {ROLES.map((r) => (
               <tr key={r.rol}>
-                <td className="sticky left-0 bg-superficie z-10 font-medium leading-tight w-[120px]" title={r.descripcion}>{NOMBRE_ROL[r.rol]}</td>
+                <td className="sticky left-0 bg-superficie z-10 font-medium leading-tight w-[120px]" title={r.descripcion} data-explain={r.descripcion} data-explain-title={NOMBRE_ROL[r.rol]}>{NOMBRE_ROL[r.rol]}</td>
                 {MODULOS.map((m) => {
                   const n = nivel(r.rol, m.modulo);
                   const fija = r.rol === "direccion";
                   return (
-                    <td key={m.modulo} className={cn("text-center !px-1 !py-1.5", m.modulo === "costos" && "bg-aviso-suave/40")}>
+                    <td key={m.modulo} className={cn("text-center !px-1 !py-1.5", m.modulo === "costos" && "bg-aviso-suave/40")}
+                      data-explain={GLOSARIO.nivelPermiso} data-explain-title={`${NOMBRE_ROL[r.rol]} en ${m.nombre}`}>
                       {editable && !fija ? (
                         <select value={n} aria-label={`${NOMBRE_ROL[r.rol]} en ${m.nombre}`}
                           onChange={(e) => cambiar({ rol: r.rol, modulo: m.modulo, nivel: Number(e.target.value) })}

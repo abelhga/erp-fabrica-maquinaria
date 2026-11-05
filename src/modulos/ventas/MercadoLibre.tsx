@@ -58,13 +58,13 @@ export default function MercadoLibre() {
 
   return (
     <Pagina titulo="Mercado Libre" descripcion={`Preguntas de compradores por contestar, publicaciones que falta ligar a su artículo${veDinero ? " y el dinero de cada venta" : ""}. Las ventas entran solas a Pedidos.`}
-      acciones={(tieneRol("direccion") || puede("admin", 3)) && <Boton asChild variante="secundario"><Link to="/sistema/configuracion?seccion=integraciones"><Settings className="h-4 w-4" /> Conexión</Link></Boton>}>
+      acciones={(tieneRol("direccion") || puede("admin", 3)) && <Boton asChild variante="secundario"><Link to="/sistema/configuracion?seccion=integraciones" data-explain={GLOSARIO.conexionML} data-explain-title="Conexión con Mercado Libre"><Settings className="h-4 w-4" /> Conexión</Link></Boton>}>
       {estado.data && !estado.data.conectada && (
         <p className="rounded-lg bg-aviso-suave px-3 py-2 text-sm">Mercado Libre todavía no está conectado: aquí aparecerán las preguntas y las publicaciones por ligar en cuanto dirección lo conecte en Configuración → Integraciones.</p>
       )}
       <div className="grid gap-3 sm:grid-cols-3">
         <Kpi titulo="Preguntas sin contestar" valor={numero(pendientes.length)} icono={MessageCircleQuestion} tono={pendientes.length ? "aviso" : "ok"}
-          detalle={pendientes[0] ? `La más vieja ${hace(pendientes[0].recibida_en)}` : "Todo contestado"} alClic={() => setParams({ seccion: "preguntas" })} />
+          detalle={pendientes[0] ? `La más vieja ${hace(pendientes[0].recibida_en)}` : "Todo contestado"} alClic={() => setParams({ seccion: "preguntas" })} explica={GLOSARIO.preguntasSinContestarML} />
         <Kpi titulo="Tiempo de respuesta" valor={mediana == null ? "—" : duracion(mediana)} icono={Clock} tono={mediana != null && mediana > 60 ? "aviso" : "marca"}
           detalle={enUnaHora == null ? "Sin respuestas en 30 días" : `${Math.round(enUnaHora * 100)} % en menos de 1 h (30 días)`} explica={GLOSARIO.tiempoRespuestaML} />
         <Kpi titulo="Publicaciones por ligar" valor={numero(sinLigar.data?.length ?? 0)} icono={Link2} tono={sinLigar.data?.length ? "aviso" : "ok"}
@@ -73,7 +73,7 @@ export default function MercadoLibre() {
 
       <Pestanas value={seccion} onValueChange={(v) => setParams(v === "preguntas" ? {} : { seccion: v }, { replace: true })}>
         <ListaPestanas opciones={[
-          { valor: "preguntas", texto: "Preguntas", cuenta: pendientes.length },
+          { valor: "preguntas", texto: "Preguntas", cuenta: pendientes.length, explica: GLOSARIO.pestanaPreguntasML },
           { valor: "ligar", texto: "Por ligar", cuenta: sinLigar.data?.length, explica: GLOSARIO.publicacionPorLigar },
           { valor: "ligadas", texto: "Ligadas", explica: GLOSARIO.publicacionLigada },
           { valor: "publicaciones", texto: "Publicaciones", explica: GLOSARIO.tableroML },
@@ -105,7 +105,7 @@ export default function MercadoLibre() {
                 {todas.filter((p) => p.estado === "sin_publicacion").length} preguntas de publicaciones pausadas o cerradas no se muestran: Mercado Libre ya no deja contestarlas.
               </p>
             )}
-            <h3 className="font-semibold pt-2">Contestadas</h3>
+            <h3 className="font-semibold pt-2" data-explain={GLOSARIO.tiempoRespuestaML} data-explain-title="Contestadas">Contestadas</h3>
             {!todas.some((p) => p.estado === "contestada") ? <p className="text-sm text-tenue">Todavía ninguna: las que contestes aquí o en Mercado Libre quedan con su tiempo de respuesta.</p> : <Tarjeta>
               <ul className="divide-y divide-borde">
                 {todas.filter((p) => p.estado === "contestada").slice(0, 50).map((p) => (
@@ -173,7 +173,7 @@ function PreguntaPendiente({ p, editable }: { p: Pregunta; editable: boolean }) 
       <div className="flex flex-wrap items-center gap-2 text-xs text-tenue">
         {p.articulo_id ? <Link to={puede("costeo", 1) ? `/costeo/componentes/${p.articulo_id}` : `/catalogo?articulo=${p.articulo_id}`} className="text-marca-texto hover:underline">{p.titulo_publicacion ?? p.item_id}</Link> : <span>{p.titulo_publicacion ?? p.item_id}</span>}
         <span>· {fechaYHora(p.recibida_en)}</span>
-        <Insignia tono={espera > 60 ? "peligro" : espera > 30 ? "aviso" : "info"}>esperando {duracion(espera)}</Insignia>
+        <span data-explain={GLOSARIO.esperaPreguntaML} data-explain-title="Esperando"><Insignia tono={espera > 60 ? "peligro" : espera > 30 ? "aviso" : "info"}>esperando {duracion(espera)}</Insignia></span>
       </div>
       {(antes.data?.length ?? 0) > 0 && (
         <div className="rounded-lg border border-borde bg-fondo/60 px-3 py-2 space-y-2 text-sm" data-explain={GLOSARIO.preguntasAnterioresML} data-explain-title="Lo que ya preguntó">
@@ -190,7 +190,7 @@ function PreguntaPendiente({ p, editable }: { p: Pregunta; editable: boolean }) 
       <p className="font-medium">{p.texto}</p>
       {editable && <AyudaRespuesta preguntaId={p.id} alPoner={setTexto} />}
       {editable && (
-        <form className="flex gap-2 items-end" onSubmit={(e) => { e.preventDefault(); enviar(); }}>
+        <form className="flex gap-2 items-end" onSubmit={(e) => { e.preventDefault(); enviar(); }} data-explain={GLOSARIO.respuestaPreguntaML} data-explain-title="Contestar">
           <textarea className="campo min-h-[60px] flex-1" value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={2000}
             placeholder="Escribe la respuesta: se publica en Mercado Libre tal cual." onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) enviar(); }} />
           <Boton type="submit" cargando={enviando} disabled={!texto.trim()}><Send className="h-4 w-4" /> Contestar</Boton>

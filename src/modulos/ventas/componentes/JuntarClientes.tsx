@@ -12,6 +12,7 @@ import { SelectorCliente } from "@/components/datos/SelectorCliente";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface ClienteParaJuntar { id: string; nombre: string; rfc: string | null }
 
@@ -102,7 +103,7 @@ export function JuntarClientes({ actual, otroInicial, abierto, alCambiar }: {
         {otroValido && datosOtro.data && (
           <>
             <div>
-              <p className="text-sm font-medium mb-1.5">¿Cuál se queda?</p>
+              <p className="text-sm font-medium mb-1.5" data-explain={GLOSARIO.juntarClientes} data-explain-title="¿Cuál se queda?">¿Cuál se queda?</p>
               <div className="grid gap-2 sm:grid-cols-2">{opcion(actual, true)}{opcion(datosOtro.data, false)}</div>
             </div>
             <div className="rounded-xl border border-borde bg-fondo px-4 py-3 text-sm space-y-1.5">

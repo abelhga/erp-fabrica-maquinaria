@@ -40,7 +40,7 @@ export function FichaEmpleado({ id, empleados, usuarios, alCerrar, alCrear }: {
       subtitulo={e ? (
         <span className="flex flex-wrap items-center gap-2">
           {[e.numero && `Núm. ${e.numero}`, e.puesto, e.departamento?.nombre].filter(Boolean).join(" · ")}
-          {!e.activo && <Insignia tono="neutro">Baja desde {fecha(e.baja_en)}</Insignia>}
+          {!e.activo && <span data-explain={GLOSARIO.estadoPersonal} data-explain-title="Baja"><Insignia tono="neutro">Baja desde {fecha(e.baja_en)}</Insignia></span>}
         </span>
       ) : "Con la fecha de ingreso se calculan solas la antigüedad y las vacaciones."}
     >
@@ -50,8 +50,8 @@ export function FichaEmpleado({ id, empleados, usuarios, alCerrar, alCrear }: {
         <div className="mt-8 pt-4 border-t border-borde flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-tenue">{e.activo ? "¿Dejó la empresa? La baja conserva su historial." : "¿Regresó a trabajar?"}</p>
           {e.activo
-            ? <Boton variante="secundario" tamano="sm" onClick={() => setBaja(true)}><UserX className="h-4 w-4" /> Dar de baja</Boton>
-            : <Boton variante="secundario" tamano="sm" onClick={() => setReingreso(true)}><RotateCcw className="h-4 w-4" /> Reingreso</Boton>}
+            ? <Boton variante="secundario" tamano="sm" onClick={() => setBaja(true)} data-explain={GLOSARIO.botonDarDeBaja}><UserX className="h-4 w-4" /> Dar de baja</Boton>
+            : <Boton variante="secundario" tamano="sm" onClick={() => setReingreso(true)} data-explain={GLOSARIO.botonReingreso}><RotateCcw className="h-4 w-4" /> Reingreso</Boton>}
         </div>
       )}
       {e && <DialogoBaja empleado={e} abierto={baja} alCambiar={setBaja} />}
@@ -67,7 +67,7 @@ function Contenido({ empleado: e, empleados, usuarios, alCrear }: {
   const sensibles = puede("rrhh", 3);
   const opciones = [
     { valor: "general", texto: "Datos generales" },
-    ...(e ? [{ valor: "vacaciones", texto: "Vacaciones e incidencias" }] : []),
+    ...(e ? [{ valor: "vacaciones", texto: "Vacaciones e incidencias", explica: GLOSARIO.pestanaVacacionesFicha }] : []),
     ...(e && sensibles ? [{ valor: "sensibles", explica: GLOSARIO.datosSensibles, texto: <span className="inline-flex items-center gap-1"><LockKeyhole className="h-3.5 w-3.5" /> Datos sensibles</span> }] : []),
   ];
   return (
@@ -128,7 +128,7 @@ function FotoEmpleado({ empleado: e }: { empleado: Empleado }) {
     }
   }
   return (
-    <div className="flex flex-col items-center text-xs">
+    <div className="flex flex-col items-center text-xs" data-explain={GLOSARIO.fotoEmpleado} data-explain-title="Foto">
       <BotonSubirFoto carpeta={`empleados/${e.id}`} texto={e.foto_url ? "Cambiar" : "Subir foto"} className="text-xs"
         subir={(carpeta, archivo) => subirImagen("personal", carpeta, archivo)} alSubir={(ruta) => fijar(ruta)} />
       {e.foto_url && <button type="button" className="text-tenue hover:text-peligro" onClick={() => fijar(null)}>Quitar</button>}
@@ -414,7 +414,7 @@ function HistorialEmpleado({ empleado: e }: { empleado: Empleado }) {
       {v && (
         <div className="rounded-xl border border-borde bg-fondo/60 p-4 space-y-3">
           <div className="grid grid-cols-3 gap-3 text-center">
-            <div data-explain={GLOSARIO.saldoVacaciones} data-explain-title="Puede tomar hoy">
+            <div data-explain={GLOSARIO.diasVigentesVacaciones} data-explain-title="Puede tomar hoy">
               <p className="text-xs text-tenue">Puede tomar hoy</p><p className="text-xl font-semibold cifra">{numero(v.disponible)}</p>
             </div>
             <div data-explain={GLOSARIO.adelantoVacaciones} data-explain-title="Adelantados">
@@ -461,14 +461,14 @@ function HistorialEmpleado({ empleado: e }: { empleado: Empleado }) {
               ? <span data-explain={GLOSARIO.saldoArranqueVacaciones} data-explain-title="Saldo de arranque">
                   Arrancó en el ERP el {fecha(v.fecha_arranque)} con {numero(v.saldo_arranque)} días del periodo {v.periodo_arranque && desde.get(v.periodo_arranque) ? nombrePeriodo(desde.get(v.periodo_arranque)!) : v.periodo_arranque} (control de vacaciones en Excel).</span>
               : <span data-explain={GLOSARIO.saldoArranqueVacaciones} data-explain-title="Saldo de arranque">Calculado por ley desde su aniversario.</span>}
-            {puede("rrhh", 3) && <button type="button" className="text-marca-texto hover:underline" onClick={() => setCorregir(true)}>Corregir saldo</button>}
+            {puede("rrhh", 3) && <button type="button" className="text-marca-texto hover:underline" onClick={() => setCorregir(true)} data-explain={GLOSARIO.botonCorregirSaldoVacaciones}>Corregir saldo</button>}
           </p>
         </div>
       )}
       <div className="flex items-center justify-between">
         <h4 className="font-medium">Historial</h4>
         {e.activo && (puede("rrhh", 2) || puede("produccion", 3)) && (
-          <Boton tamano="sm" variante="secundario" onClick={() => setNueva(true)}><CalendarPlus className="h-4 w-4" /> Registrar</Boton>
+          <Boton tamano="sm" variante="secundario" onClick={() => setNueva(true)} data-explain={GLOSARIO.botonRegistrarIncidencia}><CalendarPlus className="h-4 w-4" /> Registrar</Boton>
         )}
       </div>
       {inc.isLoading ? <Cargando filas={3} /> : (inc.data ?? []).length === 0 ? (
@@ -479,12 +479,12 @@ function HistorialEmpleado({ empleado: e }: { empleado: Empleado }) {
             const suyos = (cargos.data ?? []).filter((c) => c.incidencia_id === i.id);
             return (
               <li key={i.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5 text-sm">
-                <Insignia tono={TIPOS[i.tipo].tono}>{TIPOS[i.tipo].texto}</Insignia>
+                <span data-explain={GLOSARIO.tipoIncidencia} data-explain-title={TIPOS[i.tipo].texto}><Insignia tono={TIPOS[i.tipo].tono}>{TIPOS[i.tipo].texto}</Insignia></span>
                 <span className="cifra">{i.inicio === i.fin ? fecha(i.inicio) : `${fecha(i.inicio)} – ${fecha(i.fin)}`}</span>
                 <span className="text-tenue cifra">
                   {i.tipo === "horas_extra" ? `${numero(i.horas)} h` : i.tipo === "retardo" ? (i.horas ? `${numero(i.horas)} h` : "") : `${numero(i.dias)} ${Number(i.dias) === 1 ? "día" : "días"}`}
                 </span>
-                <span className="ml-auto"><Insignia tono={ESTADOS[i.estado].tono}>{ESTADOS[i.estado].texto}</Insignia></span>
+                <span className="ml-auto" data-explain={GLOSARIO.estadoIncidencia} data-explain-title={ESTADOS[i.estado].texto}><Insignia tono={ESTADOS[i.estado].tono}>{ESTADOS[i.estado].texto}</Insignia></span>
                 {suyos.length > 0 && (
                   <p className="w-full text-xs text-tenue">
                     {suyos.map((c, k) => (

@@ -72,12 +72,12 @@ export default function PorRevisar() {
     { valor: "mios", texto: "Para ti", cuenta: mios.length, explica: GLOSARIO.revisionParaTi },
     ...(dir ? [
       { valor: "patrones", texto: "Patrones", cuenta: patrones.length, explica: GLOSARIO.revisionPatron },
-      { valor: "todo", texto: "Todo lo abierto", cuenta: todos.length },
-      { valor: "contestado", texto: "Contestado" },
+      { valor: "todo", texto: "Todo lo abierto", cuenta: todos.length, explica: GLOSARIO.revisionTodoAbierto },
+      { valor: "contestado", texto: "Contestado", explica: GLOSARIO.revisionContestado },
       { valor: "anoche", texto: "Anoche", explica: GLOSARIO.revisionLectura },
       { valor: "consejos", texto: "Consejos", explica: GLOSARIO.consejoSemana },
-      { valor: "reglas", texto: "Reglas" },
-    ] : [{ valor: "contestado", texto: "Contestado" }]),
+      { valor: "reglas", texto: "Reglas", explica: GLOSARIO.revisionListaReglas },
+    ] : [{ valor: "contestado", texto: "Contestado", explica: GLOSARIO.revisionContestado }]),
   ];
 
   return (
@@ -171,14 +171,14 @@ export function TarjetaHallazgo({ h, para }: { h: Hallazgo; yo?: string; para?: 
         </span>
         {escalado && <span data-explain={GLOSARIO.revisionEscalado} data-explain-title="Lo ve dirección"><Insignia tono="info">Lo ve dirección</Insignia></span>}
         <span className="text-tenue">{MODULOS[h.modulo] ?? h.modulo} · {hace(h.creado_en)}</span>
-        {para && <span className="text-tenue">· Para: {para}</span>}
+        {para && <span className="text-tenue" data-explain={GLOSARIO.revisionParaQuien} data-explain-title="Para quién">· Para: {para}</span>}
       </div>
       <div>
         <p className="font-medium">{h.titulo}</p>
         <p className="text-sm text-tenue mt-1">{h.detalle}</p>
       </div>
       {h.evidencia.length > 0 && (
-        <ul className="text-sm space-y-1 rounded-lg bg-fondo px-3 py-2">
+        <ul className="text-sm space-y-1 rounded-lg bg-fondo px-3 py-2" data-explain={GLOSARIO.revisionEvidencia} data-explain-title="Evidencia">
           {h.evidencia.slice(0, 12).map((e, i) => (
             <li key={i} className="flex flex-wrap gap-x-2">
               {e.folio && <b>{e.folio}</b>}
@@ -206,9 +206,12 @@ export function TarjetaHallazgo({ h, para }: { h: Hallazgo; yo?: string; para?: 
               <Sparkles className="h-4 w-4" />Ayúdame a corregirlo
             </Boton>
           )}
-          <Boton tamano="sm" variante="secundario" onClick={() => responder.mutate({ respuesta: "corregido" })} cargando={responder.isPending && !confirmar}>
-            <CheckCircle2 className="h-4 w-4" />{h.para === "direccion" ? "Ya lo revisé" : "Ya lo corregí"}
-          </Boton>
+          {/* Se deshabilita mientras guarda: la explicación va en el envoltorio para que no se pierda. */}
+          <span data-explain={GLOSARIO.revisionYaLoCorregi} data-explain-title={h.para === "direccion" ? "Ya lo revisé" : "Ya lo corregí"}>
+            <Boton tamano="sm" variante="secundario" onClick={() => responder.mutate({ respuesta: "corregido" })} cargando={responder.isPending && !confirmar}>
+              <CheckCircle2 className="h-4 w-4" />{h.para === "direccion" ? "Ya lo revisé" : "Ya lo corregí"}
+            </Boton>
+          </span>
           {(!escalado || dir) && (
             <Boton tamano="sm" variante="secundario" onClick={() => setPorque(true)} data-explain={GLOSARIO.revisionBienAsi} data-explain-title="Está bien así">
               Está bien así
@@ -338,8 +341,10 @@ function AyudaCorregir({ h, alCerrar }: { h: Hallazgo; alCerrar: () => void }) {
       pie={<>
         <Boton variante="secundario" onClick={alCerrar}>{p?.propuesta_id ? "No, gracias" : "Cerrar"}</Boton>
         {p?.propuesta_id
-          ? <Boton onClick={() => aplicar.mutate(p.propuesta_id!)} cargando={aplicar.isPending}><Check className="h-4 w-4" />Aplicar a mi nombre</Boton>
-          : <Boton onClick={() => pedir.mutate(instruccion)} cargando={pedir.isPending}><Sparkles className="h-4 w-4" />{p ? "Volver a pedir" : "Pedir propuesta"}</Boton>}
+          ? <span data-explain={GLOSARIO.revisionAplicarPropuesta} data-explain-title="Aplicar a mi nombre">
+              <Boton onClick={() => aplicar.mutate(p.propuesta_id!)} cargando={aplicar.isPending}><Check className="h-4 w-4" />Aplicar a mi nombre</Boton></span>
+          : <span data-explain={GLOSARIO.revisionAyudaCorregir} data-explain-title={p ? "Volver a pedir" : "Pedir propuesta"}>
+              <Boton onClick={() => pedir.mutate(instruccion)} cargando={pedir.isPending}><Sparkles className="h-4 w-4" />{p ? "Volver a pedir" : "Pedir propuesta"}</Boton></span>}
       </>}>
       <div className="space-y-3 text-sm">
         <p className="font-medium">{h.titulo}</p>
@@ -388,7 +393,7 @@ function Contestado({ activo }: { activo: boolean }) {
     <div className="tarjeta divide-y divide-borde">
       {r.data.map((h) => (
         <div key={h.id} className="px-4 py-3 text-sm flex flex-wrap items-start gap-x-3 gap-y-1">
-          <Insignia tono={ESTADO[h.estado].tono}>{ESTADO[h.estado].texto}</Insignia>
+          <span data-explain={GLOSARIO.revisionEstadoContestado} data-explain-title={ESTADO[h.estado].texto}><Insignia tono={ESTADO[h.estado].tono}>{ESTADO[h.estado].texto}</Insignia></span>
           <div className="flex-1 min-w-60">
             <p className="font-medium">{h.titulo}</p>
             {h.respuesta && <p className="text-tenue">«{h.respuesta}»</p>}
@@ -431,7 +436,7 @@ function Anoche() {
               <span className="cifra">{c.hallazgos_reglas} reglas</span>
               <span className="cifra">{c.hallazgos_claude} IA</span>
               <span className="cifra">{c.consejos} consejos</span>
-              <span className="text-tenue">{CLAUDE[c.claude_estado] ?? c.claude_estado}</span>
+              <span className="text-tenue" data-explain={GLOSARIO.revisionEstadoIA} data-explain-title="La IA esa noche">{CLAUDE[c.claude_estado] ?? c.claude_estado}</span>
               {c.nota && <span className="text-tenue truncate max-w-md">{c.nota}</span>}
             </div>
           ))}
@@ -486,8 +491,8 @@ function Reglas() {
   const v = cfg.data?.valor;
   if (cfg.error || reglas.error) return <ErrorCarga error={cfg.error ?? reglas.error} />;
   if (!v || reglas.isLoading) return <Cargando filas={4} />;
-  const fila = (texto: string, detalle: string, activo: boolean, clave: string) => (
-    <label className="flex items-start gap-3 px-4 py-3">
+  const fila = (texto: string, detalle: string, activo: boolean, clave: string, explica?: string) => (
+    <label className="flex items-start gap-3 px-4 py-3" data-explain={explica} data-explain-title={explica ? texto : undefined}>
       <Interruptor activo={activo} alCambiar={(x) => cambiar.mutate({ [clave]: x })} cargando={cambiar.isPending} aria-label={texto} />
       <span className="text-sm"><b>{texto}</b><span className="block text-tenue">{detalle}</span></span>
     </label>
@@ -496,12 +501,13 @@ function Reglas() {
     <div className="space-y-4">
       <Tarjeta>
         <EncabezadoTarjeta titulo="La revisión" descripcion="Corre cada madrugada a las 2:07; los avisos salen a las 6 de la mañana."
-          acciones={<Boton tamano="sm" variante="secundario" onClick={() => correr.mutate(undefined)} cargando={correr.isPending}><Play className="h-4 w-4" />Correr las reglas ahora</Boton>} />
+          acciones={<span data-explain={GLOSARIO.revisionCorrerAhora} data-explain-title="Correr las reglas ahora">
+            <Boton tamano="sm" variante="secundario" onClick={() => correr.mutate(undefined)} cargando={correr.isPending}><Play className="h-4 w-4" />Correr las reglas ahora</Boton></span>} />
         <div className="divide-y divide-borde border-t border-borde">
-          {fila("Revisión nocturna", "Si la apagas, no corre nada: ni reglas ni IA.", v.activa, "activa")}
-          {fila("Que la IA lea lo de ayer", "Además de las reglas, la IA lee lo capturado por módulo y señala lo que una regla no ve. Sin costos de artículos, sueldos ni datos personales.", v.claude, "claude")}
-          {fila("Que la IA cuestione el «Está bien así»", "Cada «Está bien así» lleva su porqué. Prendido, la IA lo lee y, si no le convence, pregunta hasta 3 veces; si sigue sin convencer, se queda abierto y te llega con la conversación. Lo que contesta dirección no pasa por la IA.", v.cuestionar_bien_asi ?? false, "cuestionar_bien_asi")}
-          {fila("Consejos de los lunes", "Hasta tres consejos para cada persona con sus propios números (cómo vende, cómo usa el ERP).", v.consejos, "consejos")}
+          {fila("Revisión nocturna", "Si la apagas, no corre nada: ni reglas ni IA.", v.activa, "activa", GLOSARIO.revisionNocturnaActiva)}
+          {fila("Que la IA lea lo de ayer", "Además de las reglas, la IA lee lo capturado por módulo y señala lo que una regla no ve. Sin costos de artículos, sueldos ni datos personales.", v.claude, "claude", GLOSARIO.revisionClaude)}
+          {fila("Que la IA cuestione el «Está bien así»", "Cada «Está bien así» lleva su porqué. Prendido, la IA lo lee y, si no le convence, pregunta hasta 3 veces; si sigue sin convencer, se queda abierto y te llega con la conversación. Lo que contesta dirección no pasa por la IA.", v.cuestionar_bien_asi ?? false, "cuestionar_bien_asi", GLOSARIO.revisionCuestionarBienAsi)}
+          {fila("Consejos de los lunes", "Hasta tres consejos para cada persona con sus propios números (cómo vende, cómo usa el ERP).", v.consejos, "consejos", GLOSARIO.consejoSemana)}
         </div>
       </Tarjeta>
       <Tarjeta>
@@ -509,10 +515,11 @@ function Reglas() {
         <div className="divide-y divide-borde border-t border-borde">
           {(reglas.data ?? []).map((r) => (
             <div key={r.clave} className="flex items-start gap-3 px-4 py-3">
-              <Interruptor activo={r.activa} alCambiar={(x) => cambiar.mutate({ reglas: { [r.clave]: x } })} cargando={cambiar.isPending} aria-label={r.nombre} />
+              <Interruptor activo={r.activa} alCambiar={(x) => cambiar.mutate({ reglas: { [r.clave]: x } })} cargando={cambiar.isPending} aria-label={r.nombre}
+                data-explain={GLOSARIO.revisionReglaActiva} data-explain-title={r.nombre} />
               <div className="text-sm flex-1">
                 <p className="flex flex-wrap items-center gap-2"><b>{r.nombre}</b><span className="text-tenue">· {MODULOS[r.modulo] ?? r.modulo}</span>
-                  {r.para === "direccion" && <Insignia tono="info">Solo dirección</Insignia>}</p>
+                  {r.para === "direccion" && <span data-explain={GLOSARIO.revisionPatron} data-explain-title="Solo dirección"><Insignia tono="info">Solo dirección</Insignia></span>}</p>
                 <p className="text-tenue">{r.descripcion}</p>
               </div>
             </div>
@@ -569,10 +576,10 @@ export function ConsejosSemana() {
             )}
             <div className="flex gap-2 pt-1">
               {c.opinion ? <span className="text-xs text-tenue">{c.opinion === "util" ? "Te sirvió" : "No te sirvió"}</span> : (
-                <>
+                <span className="flex gap-2" data-explain={GLOSARIO.opinarConsejo} data-explain-title="¿Te sirvió?">
                   <Boton tamano="sm" variante="secundario" onClick={() => opinar.mutate({ id: c.id, util: true })} disabled={opinar.isPending}><ThumbsUp className="h-4 w-4" />Me sirve</Boton>
                   <Boton tamano="sm" variante="fantasma" onClick={() => opinar.mutate({ id: c.id, util: false })} disabled={opinar.isPending}><ThumbsDown className="h-4 w-4" />No me sirve</Boton>
-                </>
+                </span>
               )}
             </div>
           </div>

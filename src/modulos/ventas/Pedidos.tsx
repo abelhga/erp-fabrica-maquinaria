@@ -18,6 +18,7 @@ import { GLOSARIO } from "@/tutorial/glosario";
 import { useSaldoHoja } from "@/modulos/finanzas/componentes/SaldosArranque";
 import { Barra } from "./componentes/campos";
 import { DialogoCliente, ElegirCliente } from "./componentes/dialogos";
+import { EXPLICA_ESTADO_PEDIDO } from "./componentes/EntregaPedido";
 import { CANAL, ESTADO_PEDIDO, dineroEn, todas, useAncho, type Canal, type VPedido } from "./comun";
 
 type Vista = "abiertos" | "entregados" | "cancelados" | "todos";
@@ -61,7 +62,7 @@ export default function Pedidos() {
           {angosta && (
             <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-tenue">
               {fecha(p.fecha)}
-              <Insignia tono={ESTADO_PEDIDO[p.estado].tono}>{ESTADO_PEDIDO[p.estado].texto}</Insignia>
+              <span data-explain={EXPLICA_ESTADO_PEDIDO[p.estado]} data-explain-title={ESTADO_PEDIDO[p.estado].texto}><Insignia tono={ESTADO_PEDIDO[p.estado].tono}>{ESTADO_PEDIDO[p.estado].texto}</Insignia></span>
               {p.atrasado && <span data-explain={GLOSARIO.pedidoAtrasado}><Insignia tono="peligro">atrasado</Insignia></span>}
             </div>
           )}
@@ -94,7 +95,7 @@ export default function Pedidos() {
       clave: "estado", titulo: "Estado", oculta: angosta, explica: GLOSARIO.estadoPedido, valor: (p) => ESTADO_PEDIDO[p.estado].texto,
       celda: (p) => (
         <div className="flex flex-wrap gap-1">
-          <Insignia tono={ESTADO_PEDIDO[p.estado].tono} punto>{ESTADO_PEDIDO[p.estado].texto}</Insignia>
+          <span data-explain={EXPLICA_ESTADO_PEDIDO[p.estado]} data-explain-title={ESTADO_PEDIDO[p.estado].texto}><Insignia tono={ESTADO_PEDIDO[p.estado].tono} punto>{ESTADO_PEDIDO[p.estado].texto}</Insignia></span>
           {p.atrasado && <span data-explain={GLOSARIO.pedidoAtrasado}><Insignia tono="peligro">atrasado</Insignia></span>}
         </div>
       ),
@@ -110,7 +111,7 @@ export default function Pedidos() {
     },
     { clave: "total", titulo: "Total", oculta: angosta, alinear: "der", sinBusqueda: true, valor: (p) => Number(p.total), celda: (p) => <span className="font-medium whitespace-nowrap">{dineroEn(Number(p.total), p.moneda)}</span> },
     {
-      clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, explica: GLOSARIO.saldoPorCobrar, valor: (p) => Number(p.saldo),
+      clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, explica: GLOSARIO.saldoPedido, valor: (p) => Number(p.saldo),
       celda: (p) => p.historico ? <span className="text-tenue text-xs">en saldo de arranque</span> : (
         <div className="whitespace-nowrap">
           {Number(p.saldo) > 0.5 ? <p className="font-medium text-aviso">{dineroEn(Number(p.saldo), p.moneda)}</p> : <p className="text-ok text-xs font-medium">pagado</p>}
@@ -125,24 +126,25 @@ export default function Pedidos() {
 
   return (
     <Pagina titulo="Pedidos" ancho="max-w-[1500px]" descripcion="Cotizaciones aceptadas y ventas de Mercado Libre, sitio web y mostrador."
-      acciones={puede("ventas", 2) && <Boton onClick={() => setAlta(true)}><Plus className="h-4 w-4" />Pedido sin cotización</Boton>}>
+      acciones={puede("ventas", 2) && <Boton onClick={() => setAlta(true)} data-explain={GLOSARIO.pedidoSinCotizacion}><Plus className="h-4 w-4" />Pedido sin cotización</Boton>}>
       <TablaDatos filas={filas} columnas={columnas} cargando={lista.isLoading} error={lista.error} claveFila={(p) => p.id}
         alClicFila={(p) => ir(`/ventas/pedidos/${p.id}`)} exportarComo="pedidos" placeholder="Folio, número de ML, cliente…"
         claseFila={(p) => (p.atrasado ? "bg-peligro-suave/30" : undefined)}
         filtros={
           <div className="flex flex-wrap items-center gap-2">
             <Filtro valor={vista} alCambiar={setVista} opciones={[
-              { valor: "abiertos", texto: "Abiertos", cuenta: cuenta((p) => ABIERTOS.includes(p.estado)) },
+              { valor: "abiertos", texto: "Abiertos", cuenta: cuenta((p) => ABIERTOS.includes(p.estado)), explica: GLOSARIO.pedidosAbiertos },
               { valor: "entregados", texto: "Entregados", cuenta: cuenta((p) => p.estado === "entregado") },
               { valor: "cancelados", texto: "Cancelados", cuenta: cuenta((p) => p.estado === "cancelado") },
               { valor: "todos", texto: "Todos", cuenta: base.length },
             ]} />
-            <select className="campo h-8 w-auto pr-8 text-xs" value={canal} onChange={(e) => setCanal(e.target.value as Canal | "todos")} aria-label="Canal">
+            <select className="campo h-8 w-auto pr-8 text-xs" value={canal} onChange={(e) => setCanal(e.target.value as Canal | "todos")} aria-label="Canal"
+              data-explain={GLOSARIO.canalVenta} data-explain-title="Canal">
               <option value="todos">Todos los canales</option>
               {Object.entries(CANAL).map(([v, t]) => <option key={v} value={v}>{t}</option>)}
             </select>
             {hayHistoricos && (
-              <label className="inline-flex items-center gap-1.5 text-xs text-tenue" data-explain={GLOSARIO.pedidoHistorico}>
+              <label className="inline-flex items-center gap-1.5 text-xs text-tenue" data-explain={GLOSARIO.incluirHistoricosPedidos} data-explain-title="Históricos de los paneles">
                 <input type="checkbox" checked={historicos} onChange={(e) => setHistoricos(e.target.checked)} /> Incluir históricos de los paneles
               </label>
             )}
@@ -191,14 +193,15 @@ function DialogoPedido({ abierto, alCambiar, alCrear }: { abierto: boolean; alCa
             <ElegirCliente valor={cliente} alCambiar={(c) => setCliente(c ? { id: c.id, nombre: c.nombre } : null)} alNuevo={() => setNuevo("")} />
           </div>
           <Campo etiqueta="Canal">
-            <Seleccion value={canal} onChange={(e) => setCanal(e.target.value as Canal)}>
+            <Seleccion value={canal} onChange={(e) => setCanal(e.target.value as Canal)} data-explain={GLOSARIO.canalVenta} data-explain-title="Canal">
               {Object.entries(CANAL).map(([v, t]) => <option key={v} value={v}>{t}</option>)}
             </Seleccion>
           </Campo>
           <Campo etiqueta={canal === "mercadolibre" ? "Número de venta ML" : "Número externo"} ayuda="No se puede repetir dentro del mismo canal.">
-            <Entrada value={externo} onChange={(e) => setExterno(e.target.value)} placeholder={canal === "mercadolibre" ? "2000009812345671" : "WEB-10472"} />
+            <Entrada value={externo} onChange={(e) => setExterno(e.target.value)} data-explain={GLOSARIO.numeroVentaExterno} data-explain-title="Número de venta" placeholder={canal === "mercadolibre" ? "2000009812345671" : "WEB-10472"} />
           </Campo>
-          <Campo etiqueta="Fecha compromiso"><Entrada type="date" value={compromiso} onChange={(e) => setCompromiso(e.target.value)} /></Campo>
+          <Campo etiqueta="Fecha compromiso"><Entrada type="date" value={compromiso} onChange={(e) => setCompromiso(e.target.value)}
+            data-explain={GLOSARIO.fechaCompromisoPedido} data-explain-title="Fecha compromiso" /></Campo>
         </div>
       </Dialogo>
       <DialogoCliente abierto={nuevo != null} alCambiar={(v) => !v && setNuevo(null)} nombreInicial={nuevo ?? ""}

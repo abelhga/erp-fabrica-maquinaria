@@ -86,12 +86,12 @@ function Lista({ abrir }: { abrir: (id: string) => void }) {
                   </div>
                   {c.estado === "abierto" ? (
                     <div className="text-right">
-                      <Insignia tono="marca" punto>Abierto</Insignia>
+                      <span data-explain={GLOSARIO.estadoConteoFisico} data-explain-title="Abierto"><Insignia tono="marca" punto>Abierto</Insignia></span>
                       <p className="text-xs text-tenue mt-1 cifra">{numero(c.capturados)} de {numero(c.en_sistema)} contados</p>
                     </div>
                   ) : (
                     <div className="text-right">
-                      <Insignia tono="neutro">Cerrado {fecha(c.cerrado_en)}</Insignia>
+                      <span data-explain={GLOSARIO.estadoConteoFisico} data-explain-title="Cerrado"><Insignia tono="neutro">Cerrado {fecha(c.cerrado_en)}</Insignia></span>
                       <p className="text-xs text-tenue mt-1">{c.ajustes} ajuste(s){c.ajustes_pendientes ? `, ${c.ajustes_pendientes} por autorizar` : ""}</p>
                     </div>
                   )}
@@ -192,11 +192,11 @@ function Captura({ id, volver, irAAjustes }: { id: string; volver: () => void; i
 
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <Resumen titulo="Contados" valor={`${numero(resumen.contados)} / ${numero(resumen.total)}`}
-          barra={resumen.total ? resumen.contados / resumen.total : 0} />
-        <Resumen titulo="Con diferencia" valor={numero(resumen.diferencias)} tono={resumen.diferencias ? "aviso" : undefined} />
-        <Resumen titulo="Sobran · faltan" valor={`${numero(resumen.sobrantes)} · ${numero(resumen.faltantes)}`} />
-        {verCostos ? <Resumen titulo="Valor neto de diferencias" valor={dinero(resumen.valor)} tono={resumen.valor < 0 ? "peligro" : undefined} />
-          : <Resumen titulo="Estado" valor={c?.estado === "abierto" ? "Abierto" : "Cerrado"} />}
+          barra={resumen.total ? resumen.contados / resumen.total : 0} explica={GLOSARIO.contadosConteo} />
+        <Resumen titulo="Con diferencia" valor={numero(resumen.diferencias)} tono={resumen.diferencias ? "aviso" : undefined} explica={GLOSARIO.conDiferenciaConteo} />
+        <Resumen titulo="Sobran · faltan" valor={`${numero(resumen.sobrantes)} · ${numero(resumen.faltantes)}`} explica={GLOSARIO.sobranFaltanConteo} />
+        {verCostos ? <Resumen titulo="Valor neto de diferencias" valor={dinero(resumen.valor)} tono={resumen.valor < 0 ? "peligro" : undefined} explica={GLOSARIO.valorNetoDiferenciasInventario} />
+          : <Resumen titulo="Estado" valor={c?.estado === "abierto" ? "Abierto" : "Cerrado"} explica={GLOSARIO.estadoConteoFisico} />}
       </div>
 
       <Tarjeta className="overflow-hidden">
@@ -207,10 +207,10 @@ function Captura({ id, volver, irAAjustes }: { id: string; volver: () => void; i
           </div>
           <Filtro<FiltroCaptura> valor={filtro} alCambiar={setFiltro} opciones={[
             { valor: "todos", texto: "Todos" }, { valor: "pendientes", texto: "Sin contar", cuenta: resumen.total - resumen.contados },
-            { valor: "contados", texto: "Contados", cuenta: resumen.contados }, { valor: "diferencias", texto: "Con diferencia", cuenta: resumen.diferencias },
+            { valor: "contados", texto: "Contados", cuenta: resumen.contados }, { valor: "diferencias", texto: "Con diferencia", cuenta: resumen.diferencias, explica: GLOSARIO.conDiferenciaConteo },
           ]} />
           {editable && (
-            <div className="w-full sm:w-72 sm:ml-auto">
+            <div className="w-full sm:w-72 sm:ml-auto" data-explain={GLOSARIO.agregarAlConteo} data-explain-title="Agregar al conteo">
               <BuscadorArticulo alElegir={(a) => agregar(a.id)} tipos={["componente", "materia_prima"]} mostrarPrecio={false}
                 placeholder="¿Encontraste algo que no está? Agrégalo…" />
             </div>
@@ -224,8 +224,9 @@ function Captura({ id, volver, irAAjustes }: { id: string; volver: () => void; i
               <thead>
                 <tr>
                   <th className="hidden sm:table-cell">Clave</th><th>Artículo</th>
-                  <th className="text-right"><span data-explain={GLOSARIO.sistemaAlContar}>Sistema</span></th><th className="text-right w-32">Contado</th><th className="text-right">Diferencia</th>
-                  {verCostos && <th className="text-right hidden md:table-cell">Valor</th>}
+                  <th className="text-right"><span data-explain={GLOSARIO.sistemaAlContar}>Sistema</span></th><th className="text-right w-32"><span data-explain={editable ? GLOSARIO.capturaConteo : undefined}>Contado</span></th>
+                  <th className="text-right"><span data-explain={GLOSARIO.conDiferenciaConteo}>Diferencia</span></th>
+                  {verCostos && <th className="text-right hidden md:table-cell"><span data-explain={GLOSARIO.valorNetoDiferenciasInventario}>Valor</span></th>}
                   <th className="hidden lg:table-cell">Contó</th>
                 </tr>
               </thead>
@@ -289,9 +290,9 @@ function Captura({ id, volver, irAAjustes }: { id: string; volver: () => void; i
   );
 }
 
-function Resumen({ titulo, valor, tono, barra }: { titulo: string; valor: string; tono?: "aviso" | "peligro"; barra?: number }) {
+function Resumen({ titulo, valor, tono, barra, explica }: { titulo: string; valor: string; tono?: "aviso" | "peligro"; barra?: number; explica?: string }) {
   return (
-    <div className="tarjeta px-4 py-3">
+    <div className="tarjeta px-4 py-3" data-explain={explica} data-explain-title={explica ? titulo : undefined}>
       <p className="text-xs text-tenue">{titulo}</p>
       <p className={cn("text-lg font-semibold cifra", tono === "aviso" && "text-aviso", tono === "peligro" && "text-peligro")}>{valor}</p>
       {barra != null && <div className="mt-1.5 h-1.5 rounded-full bg-fondo overflow-hidden"><div className="h-full bg-marca rounded-full" style={{ width: `${Math.round(barra * 100)}%` }} /></div>}

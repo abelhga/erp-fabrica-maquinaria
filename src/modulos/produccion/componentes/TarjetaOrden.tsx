@@ -36,23 +36,26 @@ export function TarjetaOrden({ o, puedeGestionar }: { o: OrdenTablero; puedeGest
           {o.numero_serie && <p className="text-xs text-tenue truncate cifra">{o.numero_serie}</p>}
         </div>
         {o.prioridad === 1 && <span data-explain={GLOSARIO.prioridadOrden}><Insignia tono="peligro"><Flame className="h-3 w-3" />Urgente</Insignia></span>}
-        {o.prioridad === 3 && <Insignia>Baja</Insignia>}
+        {o.prioridad === 3 && <span data-explain={GLOSARIO.prioridadOrden}><Insignia>Baja</Insignia></span>}
       </div>
 
       <div>
         <p className="font-medium leading-snug line-clamp-2" title={o.equipo}>{abreviarEquipo(o.equipo)}{o.cantidad > 1 && ` × ${o.cantidad}`}</p>
-        <p className="text-xs text-tenue truncate">{o.para_stock ? "Para stock" : o.cliente ?? "—"}{o.pedido_folio && ` · ${o.pedido_folio}`}</p>
+        <p className="text-xs text-tenue truncate" data-explain={o.para_stock ? GLOSARIO.paraStock : undefined} data-explain-title={o.para_stock ? "Para stock" : undefined}>
+          {o.para_stock ? "Para stock" : o.cliente ?? "—"}{o.pedido_folio && ` · ${o.pedido_folio}`}</p>
       </div>
 
       {o.etapas_activas.length > 0 ? (
-        <div className="flex flex-wrap gap-x-3 gap-y-1">
+        <div className="flex flex-wrap gap-x-3 gap-y-1" data-explain={GLOSARIO.chipEtapaOrden} data-explain-title="Etapa">
           {o.etapas_activas.map((e) => (
             <ChipEtapa key={e.id} nombre={`${e.nombre}${e.avance != null ? ` ${Math.round(e.avance * 100)} %` : ""}${e.estado === "pausada" ? " (pausada)" : ""}${(e.cuadrilla ?? e.responsable?.split(" ")[0]) ? ` · ${e.cuadrilla ?? e.responsable!.split(" ")[0]}` : ""}`}
                        color={e.color} estado={e.estado} />
           ))}
         </div>
       ) : o.siguiente_etapa && !cerrada ? (
-        <ChipEtapa nombre={`Sigue: ${o.siguiente_etapa}`} color={o.siguiente_etapa_color} className="text-tenue" />
+        <span className="inline-flex" data-explain={GLOSARIO.chipEtapaOrden} data-explain-title="Etapa">
+          <ChipEtapa nombre={`Sigue: ${o.siguiente_etapa}`} color={o.siguiente_etapa_color} className="text-tenue" />
+        </span>
       ) : null}
 
       <div className="space-y-1" data-explain={GLOSARIO.avanceOrden} data-explain-title="Avance">
@@ -80,29 +83,38 @@ export function TarjetaOrden({ o, puedeGestionar }: { o: OrdenTablero; puedeGest
 
       {puedeGestionar && (
         <div className="flex items-center gap-1 pt-2 border-t border-borde/70">
+          {/* El globo va en el envoltorio: sin la revisión de ingeniería el botón está deshabilitado y no recibe el mouse. */}
           {o.estado === "planeada" && (
-            <Boton tamano="sm" variante="primario" disabled={!o.revisada_ingenieria} cargando={liberar.isPending}
-                   title={o.revisada_ingenieria ? "Pasa al taller" : "Falta que ingeniería revise la lista de materiales"}
-                   onClick={() => liberar.mutate(o.id)}>
-              <Unlock className="h-3.5 w-3.5" />Liberar
-            </Boton>
+            <span className="inline-flex" data-explain={GLOSARIO.pasoLiberarOrden} data-explain-title="Liberar al taller">
+              <Boton tamano="sm" variante="primario" disabled={!o.revisada_ingenieria} cargando={liberar.isPending}
+                     title={o.revisada_ingenieria ? "Pasa al taller" : "Falta que ingeniería revise la lista de materiales"}
+                     onClick={() => liberar.mutate(o.id)}>
+                <Unlock className="h-3.5 w-3.5" />Liberar
+              </Boton>
+            </span>
           )}
           {o.estado === "terminada" && (
-            <Boton tamano="sm" variante="secundario" cargando={entregar.isPending} onClick={() => entregar.mutate()}>
+            <Boton tamano="sm" variante="secundario" cargando={entregar.isPending} onClick={() => entregar.mutate()}
+                   data-explain={GLOSARIO.botonEntregarOrden} data-explain-title="Entregada">
               <Truck className="h-3.5 w-3.5" />Entregada
             </Boton>
           )}
           {!cerrada && (
             <>
               <div className="ml-auto flex items-center">
-                <Boton tamano="icono" variante="fantasma" className="h-8 w-8" aria-label="Subir prioridad" title="Subir prioridad"
-                       disabled={o.prioridad <= 1 || editar.isPending} onClick={() => editar.mutate({ p_prioridad: o.prioridad - 1 })}>
-                  <ChevronUp className="h-4 w-4" />
-                </Boton>
-                <Boton tamano="icono" variante="fantasma" className="h-8 w-8" aria-label="Bajar prioridad" title="Bajar prioridad"
-                       disabled={o.prioridad >= 3 || editar.isPending} onClick={() => editar.mutate({ p_prioridad: o.prioridad + 1 })}>
-                  <ChevronDown className="h-4 w-4" />
-                </Boton>
+                {/* En envoltorio por lo mismo: en urgente no se puede subir ni en baja bajar. */}
+                <span className="inline-flex" data-explain={GLOSARIO.botonCambiarPrioridad} data-explain-title="Subir prioridad">
+                  <Boton tamano="icono" variante="fantasma" className="h-8 w-8" aria-label="Subir prioridad" title="Subir prioridad"
+                         disabled={o.prioridad <= 1 || editar.isPending} onClick={() => editar.mutate({ p_prioridad: o.prioridad - 1 })}>
+                    <ChevronUp className="h-4 w-4" />
+                  </Boton>
+                </span>
+                <span className="inline-flex" data-explain={GLOSARIO.botonCambiarPrioridad} data-explain-title="Bajar prioridad">
+                  <Boton tamano="icono" variante="fantasma" className="h-8 w-8" aria-label="Bajar prioridad" title="Bajar prioridad"
+                         disabled={o.prioridad >= 3 || editar.isPending} onClick={() => editar.mutate({ p_prioridad: o.prioridad + 1 })}>
+                    <ChevronDown className="h-4 w-4" />
+                  </Boton>
+                </span>
                 <CambiarFecha actual={o.fecha_compromiso} alGuardar={(f) => editar.mutate({ p_fecha_compromiso: f })} />
               </div>
             </>
@@ -119,7 +131,8 @@ function CambiarFecha({ actual, alGuardar }: { actual: string | null; alGuardar:
   return (
     <P.Root open={abierto} onOpenChange={(v) => { setAbierto(v); if (v) setValor(actual ?? ""); }}>
       <P.Trigger asChild>
-        <Boton tamano="icono" variante="fantasma" className="h-8 w-8" aria-label="Cambiar compromiso" title="Cambiar fecha compromiso">
+        <Boton tamano="icono" variante="fantasma" className="h-8 w-8" aria-label="Cambiar compromiso" title="Cambiar fecha compromiso"
+               data-explain={GLOSARIO.cambiarCompromisoOrden} data-explain-title="Cambiar fecha compromiso">
           <CalendarDays className="h-4 w-4" />
         </Boton>
       </P.Trigger>

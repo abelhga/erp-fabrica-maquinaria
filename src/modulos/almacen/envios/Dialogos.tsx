@@ -11,6 +11,7 @@ import { hoyISO, numero } from "@/lib/formato";
 import { CampoNumero } from "@/modulos/ventas/componentes/campos";
 import { SubirArchivo } from "./Archivos";
 import { CLAVE, useAlmacenes, useChecklist, usePaqueterias, type Envio, type ItemChecklist } from "./datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const pie = (cancelar: () => void, boton: React.ReactNode) => <><Boton variante="secundario" onClick={cancelar}>Cancelar</Boton>{boton}</>;
 
@@ -155,7 +156,7 @@ export function DialogoEnvioFull({ abierto, alCambiar, alCrear }: { abierto: boo
                   <p className="text-xs text-tenue cifra">{l.clave}{l.existencia != null && ` · ${numero(l.existencia)} en planta`}</p></div>
                 <CampoNumero valor={l.cantidad} decimales={3} min={0} etiqueta={`Cantidad de ${l.nombre}`}
                   alCambiar={(n) => setLineas((ls) => ls.map((x, j) => (j === i ? { ...x, cantidad: n } : x)))} />
-                <Seleccion value={l.almacen_id ?? ""} aria-label="Sale de" onChange={(e) => setLineas((ls) => ls.map((x, j) => (j === i ? { ...x, almacen_id: e.target.value ? Number(e.target.value) : null } : x)))}>
+                <Seleccion value={l.almacen_id ?? ""} aria-label="Sale de" data-explain={GLOSARIO.almacenSalidaEnvio} data-explain-title="Sale de" onChange={(e) => setLineas((ls) => ls.map((x, j) => (j === i ? { ...x, almacen_id: e.target.value ? Number(e.target.value) : null } : x)))}>
                   <option value="">Donde haya</option>
                   {(almacenes.data ?? []).filter((a) => a.disponible_para_planta).map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
                 </Seleccion>
@@ -171,7 +172,8 @@ export function DialogoEnvioFull({ abierto, alCambiar, alCrear }: { abierto: boo
               {(paq.data ?? []).filter((p) => p.activa).map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
             </Seleccion>
           </Campo>
-          <Campo etiqueta="Cita / recolección"><Entrada type="date" value={fecha} min={hoyISO()} onChange={(e) => setFecha(e.target.value)} /></Campo>
+          <Campo etiqueta="Cita / recolección"><Entrada type="date" value={fecha} min={hoyISO()} onChange={(e) => setFecha(e.target.value)}
+            data-explain={GLOSARIO.recoleccion} data-explain-title="Cita / recolección" /></Campo>
           <Campo etiqueta="Notas"><Entrada value={notas} placeholder="Folio de la cita de ML…" onChange={(e) => setNotas(e.target.value)} /></Campo>
         </div>
       </div>
@@ -198,7 +200,7 @@ export function DialogoConfigurar({ abierto, alCambiar }: { abierto: boolean; al
     <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="Paqueterías y check list" ancho="max-w-3xl">
       <div className="grid gap-6 md:grid-cols-2">
         <section className="space-y-2">
-          <h4 className="font-semibold">Paqueterías</h4>
+          <h4 className="font-semibold" data-explain={GLOSARIO.catalogoPaqueteriasEnvio} data-explain-title="Paqueterías">Paqueterías</h4>
           {(paq.data ?? []).map((p) => (
             <div key={p.id} className="flex items-center gap-2 text-sm">
               <input type="checkbox" className="h-4 w-4 accent-marca" checked={p.activa} aria-label={`${p.nombre} activa`} disabled={!editaPaq}
@@ -219,7 +221,7 @@ export function DialogoConfigurar({ abierto, alCambiar }: { abierto: boolean; al
           </form> : <p className="text-xs text-tenue">Las paqueterías y su saldo mínimo las cambia la gerencia de ventas.</p>}
         </section>
         <section className="space-y-2">
-          <h4 className="font-semibold">Check list de salida</h4>
+          <h4 className="font-semibold" data-explain={GLOSARIO.configurarChecklistSalida} data-explain-title="Check list de salida">Check list de salida</h4>
           {(["equipo", "componente", "todos"] as const).map((a) => (
             <div key={a}>
               <p className="etiqueta mb-1">{a === "equipo" ? "Equipos" : a === "componente" ? "Componentes" : "Todos los envíos"}</p>

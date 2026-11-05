@@ -67,7 +67,8 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
       )}
 
       {/* Pasos: quién y cuándo */}
-      <ol className="grid gap-2" style={{ gridTemplateColumns: `repeat(${pasos.length}, minmax(0, 1fr))` }}>
+      <ol className="grid gap-2" style={{ gridTemplateColumns: `repeat(${pasos.length}, minmax(0, 1fr))` }}
+        data-explain={GLOSARIO.pasosEnvio} data-explain-title="Pasos del envío">
         {pasos.map((p, i) => (
           <li key={p.texto} className="relative text-center">
             {i > 0 && <span className={cn("absolute top-3 right-1/2 w-full h-0.5", p.hecho ? "bg-ok" : "bg-borde")} />}
@@ -84,43 +85,44 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
         <div className="flex flex-wrap gap-2">
           {/* Paquetería: Skydropx cotiza y genera; lo manual queda de respaldo (fletes, o si Skydropx falla). */}
           {skydropx && (
-            <Boton onClick={() => setDlg("skydropx")} data-explain={GLOSARIO.cotizarSkydropx} data-explain-title="Cotizar con Skydropx">
+            <Boton onClick={() => setDlg("skydropx")} data-explain={e.skydropx_envio_id ? GLOSARIO.botonRevisarGuiaSkydropx : GLOSARIO.cotizarSkydropx}
+              data-explain-title={e.skydropx_envio_id ? "Revisar guía de Skydropx" : "Cotizar con Skydropx"}>
               <Send className="h-4 w-4" />{e.skydropx_envio_id ? "Revisar guía de Skydropx" : "Cotizar con Skydropx"}</Boton>
           )}
           {captura && (e.tipo === "paqueteria" || e.tipo === "flete") && !e.numero_guia && (
-            <Boton variante={e.estado === "solicitado" && !skydropx ? "primario" : "secundario"} onClick={() => setDlg("cotizar")}>
+            <Boton variante={e.estado === "solicitado" && !skydropx ? "primario" : "secundario"} onClick={() => setDlg("cotizar")} data-explain={GLOSARIO.botonCotizarEnvioMano}>
               {e.costo_cotizado != null ? "Cambiar cotización" : skydropx ? "Cotizar a mano" : "Cotizar"}</Boton>
           )}
           {captura && (e.tipo === "paqueteria" || e.tipo === "flete" || e.tipo === "a_full" || e.tipo === "proveedor") && (
-            <Boton variante={e.estado === "cotizado" && !skydropx ? "primario" : "secundario"} onClick={() => setDlg("guia")}><FileText className="h-4 w-4" />
+            <Boton variante={e.estado === "cotizado" && !skydropx ? "primario" : "secundario"} onClick={() => setDlg("guia")} data-explain={GLOSARIO.botonRegistrarGuiaMano}><FileText className="h-4 w-4" />
               {e.numero_guia ? "Cambiar guía" : skydropx ? "Registrar guía a mano" : "Registrar guía"}</Boton>
           )}
           {almacen && e.empacado_en && e.tipo !== "recoge" && e.listo_para_salir && (
-            <Boton variante="exito" onClick={() => enviar.mutate(undefined)} cargando={enviar.isPending}><Truck className="h-4 w-4" />Ya salió</Boton>
+            <Boton variante="exito" onClick={() => enviar.mutate(undefined)} cargando={enviar.isPending} data-explain={GLOSARIO.botonYaSalio}><Truck className="h-4 w-4" />Ya salió</Boton>
           )}
           {captura && (e.tipo === "full" || e.tipo === "proveedor") && (
-            <Boton variante="exito" onClick={() => enviar.mutate(undefined)} cargando={enviar.isPending}><Truck className="h-4 w-4" />{e.tipo === "full" ? "Lo surtió Full" : "Ya lo mandó el proveedor"}</Boton>
+            <Boton variante="exito" onClick={() => enviar.mutate(undefined)} cargando={enviar.isPending} data-explain={GLOSARIO.botonSalioFullProveedor}><Truck className="h-4 w-4" />{e.tipo === "full" ? "Lo surtió Full" : "Ya lo mandó el proveedor"}</Boton>
           )}
           {almacen && e.tipo === "recoge" && e.empacado_en && (
-            <Boton variante="exito" onClick={() => setDlg("entregado")}><PackageCheck className="h-4 w-4" />Se lo llevaron</Boton>
+            <Boton variante="exito" onClick={() => setDlg("entregado")} data-explain={GLOSARIO.botonSeLoLlevaron}><PackageCheck className="h-4 w-4" />Se lo llevaron</Boton>
           )}
-          {captura && <Boton variante="fantasma" className="text-peligro" onClick={() => setDlg("cancelar")}><Ban className="h-4 w-4" />Cancelar</Boton>}
+          {captura && <Boton variante="fantasma" className="text-peligro" onClick={() => setDlg("cancelar")} data-explain={GLOSARIO.botonCancelarEnvio} data-explain-title="Cancelar envío"><Ban className="h-4 w-4" />Cancelar</Boton>}
         </div>
       )}
       {e.estado === "enviado" && captura && (
-        <Boton variante="exito" onClick={() => setDlg("entregado")}><Check className="h-4 w-4" />Marcar entregado</Boton>
+        <Boton variante="exito" onClick={() => setDlg("entregado")} data-explain={GLOSARIO.botonMarcarEntregado}><Check className="h-4 w-4" />Marcar entregado</Boton>
       )}
 
       {/* Datos */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Dato etiqueta="Tipo">{e.tipo_nombre}</Dato>
+        <Dato etiqueta="Tipo" explica={GLOSARIO.tipoDeEnvio}>{e.tipo_nombre}</Dato>
         <Dato etiqueta={e.tipo === "flete" ? "Transportista" : "Paquetería"}>{e.paqueteria ?? "—"}{e.servicio && <span className="text-tenue font-normal"> · {e.servicio}</span>}</Dato>
-        <Dato etiqueta="Guía">{e.numero_guia ? (e.rastreo_url
+        <Dato etiqueta="Guía" explica={GLOSARIO.numeroGuiaEnvio}>{e.numero_guia ? (e.rastreo_url
           ? <a href={e.rastreo_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-marca-texto hover:underline cifra">{e.numero_guia}<ExternalLink className="h-3 w-3" /></a>
           : <span className="cifra">{e.numero_guia}</span>) : "—"}</Dato>
-        <Dato etiqueta="Cotizado">{e.costo_cotizado != null ? <span className="cifra">{dinero(e.costo_cotizado)}</span> : "—"}</Dato>
-        <Dato etiqueta="Costo de la guía">{e.costo_real != null ? <span className="cifra">{dinero(e.costo_real)}</span> : "—"}</Dato>
-        <Dato etiqueta={e.tipo === "recoge" ? "Pasan por él" : "Recolección"}>
+        <Dato etiqueta="Cotizado" explica={GLOSARIO.costoEnvioPaqueteria}>{e.costo_cotizado != null ? <span className="cifra">{dinero(e.costo_cotizado)}</span> : "—"}</Dato>
+        <Dato etiqueta="Costo de la guía" explica={GLOSARIO.costoEnvioPaqueteria}>{e.costo_real != null ? <span className="cifra">{dinero(e.costo_real)}</span> : "—"}</Dato>
+        <Dato etiqueta={e.tipo === "recoge" ? "Pasan por él" : "Recolección"} explica={GLOSARIO.recoleccion}>
           {e.abierto && captura ? (
             <input type="date" className="campo h-8" defaultValue={e.fecha_recoleccion ?? ""} min={hoyISO()} aria-label="Fecha de recolección"
               onBlur={(ev) => { if (ev.target.value !== (e.fecha_recoleccion ?? "")) actualizar.mutate({ fecha_recoleccion: ev.target.value || null }); }} />
@@ -137,7 +139,7 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
               <p><b>{e.destinatario}</b>{e.telefono && <span className="text-tenue"> · {e.telefono}</span>}</p>
               <p className="whitespace-pre-line">{e.destino}</p>
             </div>
-            <Boton variante="fantasma" tamano="sm" onClick={copiarDestino}><ClipboardCopy className="h-3.5 w-3.5" />Copiar</Boton>
+            <Boton variante="fantasma" tamano="sm" onClick={copiarDestino} data-explain={GLOSARIO.botonCopiarDestino} data-explain-title="Copiar destino"><ClipboardCopy className="h-3.5 w-3.5" />Copiar</Boton>
           </div>
         </section>
       )}
@@ -161,10 +163,12 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
                   )}</span>
                 {almacen && e.abierto && !e.empacado_en && e.tipo !== "full" && e.tipo !== "proveedor" && l.articulo_tipo !== "equipo" && l.articulo_id ? (
                   <Seleccion className="h-8 w-40 text-xs" value={l.almacen_id ?? ""} aria-label={`Almacén de salida de ${l.nombre}`}
+                    data-explain={GLOSARIO.almacenSalidaEnvio} data-explain-title="Almacén de salida"
                     onChange={(ev) => actualizar.mutate({ almacenes: [{ linea_id: l.id, almacen_id: Number(ev.target.value) }] })}>
                     {(almacenes.data ?? []).filter((a) => a.disponible_para_planta).map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
                   </Seleccion>
-                ) : l.almacen && !l.ordenes?.length && <span className="inline-flex items-center gap-1 text-xs text-tenue"><Warehouse className="h-3.5 w-3.5" />{l.almacen}</span>}
+                ) : l.almacen && !l.ordenes?.length && <span className="inline-flex items-center gap-1 text-xs text-tenue"
+                    data-explain={GLOSARIO.almacenSalidaEnvio} data-explain-title="Almacén de salida"><Warehouse className="h-3.5 w-3.5" />{l.almacen}</span>}
               </li>
             ))}
           </ul>
@@ -172,7 +176,7 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
         {(bultos.data?.length ?? 0) > 0 && !(almacen && e.abierto && e.falta_empaque) && (
           <p className="text-xs text-tenue">
             {bultos.data!.length} {bultos.data!.length === 1 ? "bulto" : "bultos"}: {bultos.data!.map((b) => medidas(b)).join(" · ")}
-            {e.peso_volumetrico != null && <> · volumétrico <span className="cifra">{numero(e.peso_volumetrico)} kg</span></>}
+            {e.peso_volumetrico != null && <> · <span data-explain={GLOSARIO.pesoVolumetricoEnvio} data-explain-title="Peso volumétrico">volumétrico <span className="cifra">{numero(e.peso_volumetrico)} kg</span></span></>}
           </p>
         )}
       </section>
@@ -180,7 +184,7 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
       {/* Lo que va a pasar con el inventario */}
       {almacen && !e.inventario_descontado_en && e.estado !== "cancelado" && (plan.data?.length ?? 0) > 0 && (
         <section className={cn("rounded-xl border p-3 text-sm space-y-1", problemas.length ? "border-peligro/30 bg-peligro-suave" : "border-borde bg-fondo/60")}>
-          <p className="font-medium flex items-center gap-1.5">{problemas.length > 0 && <AlertTriangle className="h-4 w-4 text-peligro" />}Al salir, en el inventario</p>
+          <p className="font-medium flex items-center gap-1.5" data-explain={GLOSARIO.planSalidaInventarioEnvio} data-explain-title="Al salir, en el inventario">{problemas.length > 0 && <AlertTriangle className="h-4 w-4 text-peligro" />}Al salir, en el inventario</p>
           {plan.data!.map((p) => (
             <p key={p.linea_id} className={cn(p.problema && "text-peligro")}>
               {p.accion === "nada" ? <span className="text-tenue">{p.articulo}: {sinLigar.has(p.linea_id) ? "se descuenta cuando se ligue el artículo" : p.nota ?? "no se descuenta"}</span>
@@ -194,12 +198,12 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
       {/* Empacar (almacén) o la evidencia */}
       {almacen && e.abierto && e.falta_empaque ? (
         <section className="space-y-3 border-t border-borde pt-5">
-          <h3 className="text-lg font-semibold">Empacar</h3>
+          <h3 className="text-lg font-semibold" data-explain={GLOSARIO.empacarEnvio} data-explain-title="Empacar">Empacar</h3>
           {lineas.data && bultos.data && <Empacar envio={e} lineas={lineas.data} bultosIniciales={bultos.data} />}
         </section>
       ) : e.lleva_empaque && (
         <section className="space-y-2 border-t border-borde pt-5">
-          <h3 className="text-lg font-semibold" data-explain={GLOSARIO.evidenciaEmpaque}>Evidencia de salida</h3>
+          <h3 className="text-lg font-semibold" data-explain={GLOSARIO.evidenciaEmpaque} data-explain-title="Evidencia de salida">Evidencia de salida</h3>
           <EvidenciaSalida envio={e} titulo={false} />
         </section>
       )}
@@ -207,7 +211,7 @@ export function DetalleEnvio({ envio: e }: { envio: Envio }) {
       {/* Línea de tiempo */}
       {(eventos.data?.length ?? 0) > 0 && (
         <section className="space-y-2 border-t border-borde pt-5">
-          <h4 className="font-semibold">Historia</h4>
+          <h4 className="font-semibold" data-explain={GLOSARIO.historiaEnvio} data-explain-title="Historia">Historia</h4>
           <ol className="space-y-1.5 text-sm">
             {eventos.data!.map((v) => (
               <li key={v.id} className="flex gap-3">

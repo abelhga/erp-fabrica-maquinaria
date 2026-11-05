@@ -30,8 +30,8 @@ export default function Movimientos() {
   });
   useTiempoReal("ajustes_inventario", [["ajustes_pendientes_cuenta"], ["v_ajustes"]]);
 
-  if (capturar) opciones.push({ valor: "registrar", texto: "Registrar" });
-  if (verMovimientos) opciones.push({ valor: "historial", texto: "Historial" });
+  if (capturar) opciones.push({ valor: "registrar", texto: "Registrar", explica: GLOSARIO.pestanaRegistrarMovimiento });
+  if (verMovimientos) opciones.push({ valor: "historial", texto: "Historial", explica: GLOSARIO.pestanaHistorialMovimientos });
   opciones.push({ valor: "ajustes", texto: "Ajustes", cuenta: pendientes.data || undefined, explica: GLOSARIO.ajusteInventario });
   opciones.push({ valor: "conteos", texto: "Conteos físicos", explica: GLOSARIO.conteoFisico });
 

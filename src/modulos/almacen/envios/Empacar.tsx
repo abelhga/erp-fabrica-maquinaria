@@ -8,6 +8,7 @@ import { cn } from "@/lib/utilidades";
 import { CampoNumero } from "@/modulos/ventas/componentes/campos";
 import { Galeria, SubirArchivo } from "./Archivos";
 import { CLAVE, useArchivos, useChecklist, vigentes, type Bulto, type Envio, type LineaEnvio } from "./datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const esEquipo = (l: LineaEnvio) => l.articulo_tipo === "equipo" || l.articulo_tipo === "subensamble";
 
@@ -72,8 +73,9 @@ export function Empacar({ envio, lineas, bultosIniciales, maxFotos = 6 }: {
   }, { exito: `${envio.folio} empacado: la evidencia quedó guardada`, invalidar: [CLAVE] });
 
   const cambiarBulto = (i: number, cambios: Partial<Bulto>) => setBultos((bs) => bs.map((b, j) => (j === i ? { ...b, ...cambios } : b)));
-  const paso = (n: number, titulo: string, hecho: boolean) => (
-    <h4 className="flex items-center gap-2 font-semibold">
+  // `explica`: qué pide ese paso, para el modo tutorial (al pasar por el título).
+  const paso = (n: number, titulo: string, hecho: boolean, explica?: string) => (
+    <h4 className="flex items-center gap-2 font-semibold" data-explain={explica} data-explain-title={explica ? titulo : undefined}>
       <span className={cn("flex h-6 w-6 items-center justify-center rounded-full text-xs", hecho ? "bg-ok text-white" : "bg-marca-suave text-marca-texto")}>
         {hecho ? <Check className="h-3.5 w-3.5" /> : n}
       </span>{titulo}
@@ -83,7 +85,7 @@ export function Empacar({ envio, lineas, bultosIniciales, maxFotos = 6 }: {
   return (
     <div className="space-y-6">
       <section className="space-y-3">
-        {paso(1, `Fotos del paquete (${fotos.length} de ${maxFotos})`, fotos.length > 0)}
+        {paso(1, `Fotos del paquete (${fotos.length} de ${maxFotos})`, fotos.length > 0, GLOSARIO.fotosEmpaqueEnvio)}
         <p className="text-sm text-tenue">Abierto con lo que lleva y cerrado con la etiqueta. Son la prueba si llega un reclamo de "llegó incompleto".</p>
         <Galeria archivos={todas} retirar />
         {fotos.length < maxFotos && (
@@ -92,7 +94,7 @@ export function Empacar({ envio, lineas, bultosIniciales, maxFotos = 6 }: {
       </section>
 
       <section className="space-y-3">
-        {paso(2, "Check list de salida", items.length > 0 && items.every((i) => marcados.has(i.id)))}
+        {paso(2, "Check list de salida", items.length > 0 && items.every((i) => marcados.has(i.id)), GLOSARIO.checklistSalidaEnvio)}
         <div className="space-y-2">
           {items.map((i) => {
             const si = marcados.has(i.id);
@@ -106,7 +108,8 @@ export function Empacar({ envio, lineas, bultosIniciales, maxFotos = 6 }: {
             );
           })}
           {items.length > 1 && marcados.size < items.length && (
-            <button type="button" className="text-sm text-marca-texto hover:underline" onClick={() => setMarcados(new Set(items.map((i) => i.id)))}>
+            <button type="button" className="text-sm text-marca-texto hover:underline" onClick={() => setMarcados(new Set(items.map((i) => i.id)))}
+              data-explain={GLOSARIO.botonPalomearTodas} data-explain-title="Palomear todas">
               Ya revisé todo: palomear todas
             </button>
           )}
@@ -115,7 +118,7 @@ export function Empacar({ envio, lineas, bultosIniciales, maxFotos = 6 }: {
 
       {lineas.some(esEquipo) && (
         <section className="space-y-3">
-          {paso(3, "Número de serie", !faltaSerie)}
+          {paso(3, "Número de serie", !faltaSerie, GLOSARIO.serieEquipoEmpaque)}
           <p className="text-sm text-tenue">El de la placa del equipo. Tiene que ser el de su orden de producción.</p>
           {lineas.filter(esEquipo).map((l) => (
             <div key={l.id} className="space-y-2">
@@ -131,7 +134,7 @@ export function Empacar({ envio, lineas, bultosIniciales, maxFotos = 6 }: {
 
       {pideMedidas && (
         <section className="space-y-3">
-          {paso(lineas.some(esEquipo) ? 4 : 3, envio.tipo === "flete" ? "Pesar y medir (si se puede)" : "Pesar y medir cada bulto", !sinMedir)}
+          {paso(lineas.some(esEquipo) ? 4 : 3, envio.tipo === "flete" ? "Pesar y medir (si se puede)" : "Pesar y medir cada bulto", !sinMedir, GLOSARIO.medidasBultosEnvio)}
           <p className="text-sm text-tenue">
             Vienen del artículo; si al pesar sale distinto, corrígelo y guárdalo en el artículo para la próxima.
             {bultos.length > 0 && <> Total: <b className="cifra">{numero(pesoTotal)} kg</b> en {bultos.length} {bultos.length === 1 ? "bulto" : "bultos"}.</>}
@@ -141,7 +144,8 @@ export function Empacar({ envio, lineas, bultosIniciales, maxFotos = 6 }: {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-tenue cifra">#{i + 1}</span>
                 <input className="campo h-9 flex-1" value={b.contenido ?? ""} placeholder="Qué lleva" onChange={(e) => cambiarBulto(i, { contenido: e.target.value })} />
-                <Boton variante="fantasma" tamano="icono" aria-label="Quitar bulto" onClick={() => setBultos((bs) => bs.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Boton>
+                <Boton variante="fantasma" tamano="icono" aria-label="Quitar bulto" onClick={() => setBultos((bs) => bs.filter((_, j) => j !== i))}
+                  data-explain={GLOSARIO.botonQuitarBultoEmpaque} data-explain-title="Quitar bulto"><Trash2 className="h-4 w-4" /></Boton>
               </div>
               <div className="grid grid-cols-5 gap-2">
                 {([["peso_kg", "kg"], ["largo_cm", "largo"], ["ancho_cm", "ancho"], ["alto_cm", "alto"], ["piezas", "piezas"]] as const).map(([k, et]) => (
@@ -153,20 +157,23 @@ export function Empacar({ envio, lineas, bultosIniciales, maxFotos = 6 }: {
                 ))}
               </div>
               {b.articulo_id && difiere(b) && (
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2 text-sm" data-explain={GLOSARIO.guardarEmpaqueArticulo} data-explain-title="Guardar en el artículo">
                   <input type="checkbox" className="h-5 w-5 accent-marca" checked={!!guardar[i]} onChange={(e) => setGuardar((g) => ({ ...g, [i]: e.target.checked }))} />
                   Guardar como empaque de <b className="truncate">{empaqueDe(b.articulo_id)?.nombre}</b>
                 </label>
               )}
             </div>
           ))}
-          <Boton variante="secundario" tamano="sm" onClick={() => setBultos((bs) => [...bs, { articulo_id: null, contenido: "", piezas: null, peso_kg: null, largo_cm: null, ancho_cm: null, alto_cm: null }])}>
+          <Boton variante="secundario" tamano="sm" onClick={() => setBultos((bs) => [...bs, { articulo_id: null, contenido: "", piezas: null, peso_kg: null, largo_cm: null, ancho_cm: null, alto_cm: null }])}
+            data-explain={GLOSARIO.botonOtroBultoEmpaque}>
             <Plus className="h-3.5 w-3.5" />Otro bulto
           </Boton>
         </section>
       )}
 
-      <div className="sticky bottom-0 -mx-6 border-t border-borde bg-superficie/95 px-6 py-3 backdrop-blur">
+      {/* El botón se apaga mientras falta algo y Chrome no le da el mouse a un botón apagado: la explicación va en la franja. */}
+      <div className="sticky bottom-0 -mx-6 border-t border-borde bg-superficie/95 px-6 py-3 backdrop-blur"
+        data-explain={GLOSARIO.botonMarcarEmpacado} data-explain-title="Marcar empacado">
         <Boton tamano="lg" className="w-full" variante="exito" disabled={!listo} cargando={empacar.isPending} onClick={() => empacar.mutate(undefined)}>
           <PackageCheck className="h-5 w-5" />Marcar empacado
         </Boton>

@@ -59,8 +59,8 @@ type TipoCategoria = "material" | "fabricacion" | "operacion" | "nomina" | "impu
 
 // --- Periodo -----------------------------------------------------------------
 type ClavePeriodo = "mes" | "anterior" | "anio" | "pasado" | "12m" | "rango";
-const PERIODOS: { valor: ClavePeriodo; texto: string }[] = [
-  { valor: "anterior", texto: "Mes pasado" }, { valor: "mes", texto: "Este mes" }, { valor: "anio", texto: "Este año" },
+const PERIODOS: { valor: ClavePeriodo; texto: string; explica?: string }[] = [
+  { valor: "anterior", texto: "Mes pasado", explica: GLOSARIO.periodoMesPasadoResultados }, { valor: "mes", texto: "Este mes" }, { valor: "anio", texto: "Este año" },
   { valor: "pasado", texto: "Año pasado" }, { valor: "12m", texto: "12 meses" }, { valor: "rango", texto: "Rango" },
 ];
 const iso = (d: Date) => d.toLocaleDateString("en-CA");
@@ -163,7 +163,7 @@ export default function Resultados() {
               <input type="date" className="campo h-8 w-[150px]" value={hasta} aria-label="Hasta" onChange={(e) => e.target.value && cambiar("rango", desde, e.target.value)} />
             </span>
           )}
-          <Boton variante="secundario" tamano="sm" onClick={() => setCategorias(true)}><Tags className="h-4 w-4" />Categorías de compra</Boton>
+          <Boton variante="secundario" tamano="sm" data-explain={GLOSARIO.tipoCategoriaCompra} data-explain-title="Categorías de compra" onClick={() => setCategorias(true)}><Tags className="h-4 w-4" />Categorías de compra</Boton>
         </div>
       }>
       {r.error ? <ErrorCarga error={r.error} /> : !r.data ? <Cargando filas={8} />
@@ -201,7 +201,7 @@ function Contenido({ d, desde, abrirCategorias }: { d: Datos; desde: string; abr
   if (d.sin_sueldo > 0) avisos.push({ texto: `${numero(d.sin_sueldo)} ${d.sin_sueldo === 1 ? "persona activa no tiene" : "personas activas no tienen"} sueldo registrado en Personal y no ${d.sin_sueldo === 1 ? "cuenta" : "cuentan"}.` });
   if (d.sin_clasificar.length)
     avisos.push({ texto: `${numero(d.sin_clasificar.length)} ${d.sin_clasificar.length === 1 ? "categoría de compra nueva cuenta" : "categorías de compra nuevas cuentan"} como gasto de operación hasta que alguien las clasifique.`,
-      accion: <button type="button" className="underline font-medium" onClick={abrirCategorias}>Clasificar</button> });
+      accion: <button type="button" className="underline font-medium" data-explain={GLOSARIO.categoriaCompraNueva} data-explain-title="Clasificar" onClick={abrirCategorias}>Clasificar</button> });
   if (!d.comisiones_completas) avisos.push({ texto: "Tu rol no ve las comisiones de todos los vendedores: aquí solo están las tuyas." });
 
   if (!d.ventas_total) {
@@ -244,7 +244,7 @@ function Contenido({ d, desde, abrirCategorias }: { d: Datos; desde: string; abr
       <AnioPorAnio />
 
       <Tarjeta>
-        <EncabezadoTarjeta titulo="De dónde sale cada número" descripcion="Exacto: sale tal cual de lo capturado. Estimado: se calcula con una regla, aquí dice cuál." />
+        <EncabezadoTarjeta titulo="De dónde sale cada número" explica={GLOSARIO.origenNumerosResultados} descripcion="Exacto: sale tal cual de lo capturado. Estimado: se calcula con una regla, aquí dice cuál." />
         <OrigenNumeros d={d} />
       </Tarjeta>
     </div>
@@ -261,7 +261,9 @@ function AnioPorAnio() {
     <div className="overflow-x-auto px-5 pb-4">
       <table className="tabla">
         <thead><tr><th>Año</th><th className="!text-right">Ventas</th><th className="!text-right">Costo de fabricación</th><th className="!text-right">Gastos de operación</th>
-          <th className="!text-right">Impuestos e intereses</th><th className="!text-right">Utilidad</th><th className="!text-right">Margen</th><th className="!text-right">No es gasto</th></tr></thead>
+          <th className="!text-right">Impuestos e intereses</th><th className="!text-right">Utilidad</th>
+          <th className="!text-right"><span data-explain={GLOSARIO.margenResultados} data-explain-title="Margen">Margen</span></th>
+          <th className="!text-right"><span data-explain={GLOSARIO.fueraDeResultados} data-explain-title="No es gasto">No es gasto</span></th></tr></thead>
         <tbody>
           {filas.map((x) => (
             <tr key={x.anio}>
@@ -354,7 +356,7 @@ function OrigenNumeros({ d }: { d: Datos }) {
     { concepto: "Mano de obra del taller", importe: t.mano_obra, precision: mo.precision, explica: GLOSARIO.manoObraTaller, texto: mo.texto },
     { concepto: "Gastos de fabricación", importe: t.gastos_fabricacion, precision: compras, explica: GLOSARIO.gastosFabricacion,
       texto: (d.fabricacion.length ? `Compras de taller: ${top(d.fabricacion)}.` : "Ninguna compra de categoría de taller en el periodo.") + porPartida },
-    { concepto: "Costo de fabricación", importe: t.costo_fabricacion, precision: fab,
+    { concepto: "Costo de fabricación", importe: t.costo_fabricacion, precision: fab, explica: GLOSARIO.costoFabricacion,
       texto: "Material + mano de obra del taller + gastos de fabricación.", total: true },
     { concepto: "Sueldos de oficina", importe: t.sueldos_oficina, precision: so.precision, texto: so.texto },
     { concepto: "Comisiones", importe: d.comisiones, precision: com,
@@ -370,7 +372,7 @@ function OrigenNumeros({ d }: { d: Datos }) {
     { concepto: "Envíos", importe: d.envios, precision: "exacto", texto: "Lo que costaron las guías de Envíos, por la fecha en que salió el paquete." },
     { concepto: "Gastos de operación", importe: t.gastos_operacion, precision: op,
       explica: GLOSARIO.gastosOperacion, texto: "Sueldos de oficina + comisiones + compras de operación + caja chica + Mercado Libre + envíos.", total: true },
-    { concepto: "Utilidad de operación", importe: t.utilidad_operacion, precision: peor(fab, op),
+    { concepto: "Utilidad de operación", importe: t.utilidad_operacion, precision: peor(fab, op), explica: GLOSARIO.utilidadOperacionResultados,
       texto: "Ventas − costo de fabricación − gastos de operación.", total: true },
     { concepto: "Impuestos e intereses", importe: t.impuestos_financieros, precision: compras, explica: GLOSARIO.impuestosFinancieros,
       texto: d.impuestos.length ? `Del libro de compras: ${top(d.impuestos)}.` : "Ninguno registrado en el periodo." },
@@ -394,7 +396,8 @@ function OrigenNumeros({ d }: { d: Datos }) {
               <td className={cn("text-right cifra whitespace-nowrap", f.total && "font-semibold", f.importe < 0 && "text-peligro")}>{dinero(f.importe)}</td>
               <td className="text-right cifra">{f.aparte ? "—" : pct(f.importe)}</td>
               <td className="text-xs text-tenue min-w-[320px]">{f.texto}</td>
-              <td><span data-explain={f.precision === "estimado" ? GLOSARIO.estimadoResultados : f.precision === "parcial" ? GLOSARIO.parcialResultados : undefined}><Insignia tono={PRECISION[f.precision].tono}>{PRECISION[f.precision].texto}</Insignia></span></td>
+              <td><span data-explain={f.precision === "estimado" ? GLOSARIO.estimadoResultados : f.precision === "parcial" ? GLOSARIO.parcialResultados : GLOSARIO.exactoResultados}
+                data-explain-title={PRECISION[f.precision].texto}><Insignia tono={PRECISION[f.precision].tono}>{PRECISION[f.precision].texto}</Insignia></span></td>
             </tr>
           ))}
         </tbody>
@@ -432,11 +435,12 @@ function EditorCategorias({ desde, hasta }: { desde: string; hasta: string }) {
         {!editable && " Solo finanzas lo cambia."}
       </p>
       <table className="tabla">
-        <thead><tr><th>Categoría</th><th className="!text-right">Compras</th><th className="!text-right">Importe</th><th>Cuenta como</th></tr></thead>
+        <thead><tr><th>Categoría</th><th className="!text-right">Compras</th><th className="!text-right">Importe</th>
+          <th><span data-explain={GLOSARIO.tipoCategoriaCompra} data-explain-title="Cuenta como">Cuenta como</span></th></tr></thead>
         <tbody>
           {c.data.map((x) => (
             <tr key={x.categoria}>
-              <td>{capital(x.categoria)}{!x.clasificada && <> <Insignia tono="aviso">Nueva</Insignia></>}</td>
+              <td>{capital(x.categoria)}{!x.clasificada && <> <span data-explain={GLOSARIO.categoriaCompraNueva} data-explain-title="Nueva"><Insignia tono="aviso">Nueva</Insignia></span></>}</td>
               <td className="text-right cifra">{numero(x.compras)}</td>
               <td className="text-right cifra whitespace-nowrap">{dinero(x.importe)}</td>
               <td>

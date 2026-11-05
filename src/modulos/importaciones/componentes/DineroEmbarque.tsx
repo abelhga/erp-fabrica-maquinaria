@@ -61,22 +61,22 @@ export function DineroEmbarque({ e }: { e: Embarque }) {
     <div className="space-y-5">
       {r && (
         <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-          <Cifra titulo="Mercancía" valor={dinero(r.comprometido_usd, "USD")} detalle={`Pagado ${dinero(r.pagado_usd, "USD")}${r.tc_promedio ? ` · TC real ${numero(r.tc_promedio)}` : ""}`} />
-          <Cifra titulo="Por pagar al proveedor" valor={dinero(r.por_pagar_usd, "USD")} detalle={`≈ ${dinero(r.por_pagar_mxn)} hoy`} tono={Number(r.por_pagar_usd) > 0 ? "aviso" : undefined} />
-          <Cifra titulo="Gastos e impuestos" valor={dinero(Number(r.gastos_mxn) + Number(r.impuestos_mxn))} detalle={`IVA acreditable aparte: ${dinero(r.iva_acreditable_mxn)}`} />
-          <Cifra titulo="Por recuperar" valor={dinero(r.por_recuperar_mxn)} detalle={`Recuperado ${dinero(r.recuperado_mxn)}`} tono={Number(r.por_recuperar_mxn) > 0 ? "aviso" : undefined} />
+          <Cifra titulo="Mercancía" explica={GLOSARIO.mercanciaEmbarque} valor={dinero(r.comprometido_usd, "USD")} detalle={`Pagado ${dinero(r.pagado_usd, "USD")}${r.tc_promedio ? ` · TC real ${numero(r.tc_promedio)}` : ""}`} />
+          <Cifra titulo="Por pagar al proveedor" explica={GLOSARIO.porPagarProveedores} valor={dinero(r.por_pagar_usd, "USD")} detalle={`≈ ${dinero(r.por_pagar_mxn)} hoy`} tono={Number(r.por_pagar_usd) > 0 ? "aviso" : undefined} />
+          <Cifra titulo="Gastos e impuestos" explica={GLOSARIO.gastosEImpuestosEmbarque} valor={dinero(Number(r.gastos_mxn) + Number(r.impuestos_mxn))} detalle={`IVA acreditable aparte: ${dinero(r.iva_acreditable_mxn)}`} />
+          <Cifra titulo="Por recuperar" explica={GLOSARIO.porRecuperar} valor={dinero(r.por_recuperar_mxn)} detalle={`Recuperado ${dinero(r.recuperado_mxn)}`} tono={Number(r.por_recuperar_mxn) > 0 ? "aviso" : undefined} />
         </div>
       )}
 
       <Tarjeta className="overflow-hidden">
-        <EncabezadoTarjeta titulo="Pagos al proveedor" explica={GLOSARIO.tcReal} descripcion="Con el tipo de cambio real de cada pago: los pesos que salieron entre los dólares. Nunca más de lo que se debe."
-          acciones={capturaPagos && e.ordenes.length > 0 && <Boton tamano="sm" onClick={() => setDialogo("pago")}><Plus className="h-4 w-4" /> Pago</Boton>} />
+        <EncabezadoTarjeta titulo="Pagos al proveedor" explica={GLOSARIO.pagosProveedorEmbarque} descripcion="Con el tipo de cambio real de cada pago: los pesos que salieron entre los dólares. Nunca más de lo que se debe."
+          acciones={capturaPagos && e.ordenes.length > 0 && <Boton tamano="sm" onClick={() => setDialogo("pago")} data-explain={GLOSARIO.botonRegistrarPagoImportacion}><Plus className="h-4 w-4" /> Pago</Boton>} />
         {pagos.isLoading ? <Cargando filas={2} /> : !pagos.data?.length ? (
           <Vacio icono={Landmark} titulo="Sin pagos" texto={e.ordenes.length ? "Registra el anticipo cuando salga; el saldo puede quedar programado con su fecha." : "Primero liga la orden de compra del proveedor."} className="py-8" />
         ) : (
           <div className="overflow-x-auto">
             <table className="tabla">
-              <thead><tr><th>Fecha</th><th>Orden</th><th>Concepto</th><th className="text-right">Monto</th><th className="text-right">TC real</th><th className="text-right">Pesos</th><th>Estado</th><th>Comprobante</th></tr></thead>
+              <thead><tr><th>Fecha</th><th>Orden</th><th>Concepto</th><th className="text-right">Monto</th><th className="text-right" data-explain={GLOSARIO.tcReal} data-explain-title="TC real">TC real</th><th className="text-right">Pesos</th><th data-explain={GLOSARIO.estadoPagoImportacion} data-explain-title="Estado del pago">Estado</th><th data-explain={GLOSARIO.comprobantePagoImportacion} data-explain-title="Comprobante">Comprobante</th></tr></thead>
               <tbody>
                 {pagos.data.map((p) => (
                   <tr key={p.id}>
@@ -88,17 +88,17 @@ export function DineroEmbarque({ e }: { e: Embarque }) {
                     <td className="text-right cifra">{p.monto_mxn != null ? dinero(p.monto_mxn) : "—"}</td>
                     <td>
                       {capturaPagos ? (
-                        <select className="campo h-8 w-32 text-xs" value={p.estado} aria-label="Estado del pago"
+                        <select className="campo h-8 w-32 text-xs" value={p.estado} aria-label="Estado del pago" data-explain={GLOSARIO.estadoPagoImportacion} data-explain-title="Estado del pago"
                           onChange={(ev) => cambiarPago.mutate({ id: p.id, cambios: { estado: ev.target.value } })}>
                           {Object.entries(ESTADOS_PAGO).map(([k, v]) => <option key={k} value={k}>{v.texto}</option>)}
                         </select>
-                      ) : <Insignia tono={ESTADOS_PAGO[p.estado]?.tono}>{ESTADOS_PAGO[p.estado]?.texto}</Insignia>}
+                      ) : <span data-explain={GLOSARIO.estadoPagoImportacion} data-explain-title="Estado del pago"><Insignia tono={ESTADOS_PAGO[p.estado]?.tono}>{ESTADOS_PAGO[p.estado]?.texto}</Insignia></span>}
                     </td>
                     <td>
                       {p.comprobante
                         ? <button className="text-xs text-marca-texto hover:underline inline-flex items-center gap-1" onClick={() => abrirArchivo(p.comprobante!).catch((x) => toast.error(mensajeError(x)))}><ExternalLink className="h-3.5 w-3.5" /> Ver</button>
                         : p.estado === "programado" ? <span className="text-xs text-tenue">—</span>
-                        : capturaPagos ? <label className="text-xs text-aviso inline-flex items-center gap-1 cursor-pointer hover:underline"><Upload className="h-3.5 w-3.5" /> Falta: subir
+                        : capturaPagos ? <label className="text-xs text-aviso inline-flex items-center gap-1 cursor-pointer hover:underline" data-explain={GLOSARIO.comprobantePagoImportacion} data-explain-title="Falta el comprobante"><Upload className="h-3.5 w-3.5" /> Falta: subir
                             <input type="file" className="hidden" accept="application/pdf,image/*" onChange={(ev) => comprobante(p, ev.target.files?.[0])} /></label>
                         : <span className="text-xs text-aviso">Falta</span>}
                     </td>
@@ -112,8 +112,8 @@ export function DineroEmbarque({ e }: { e: Embarque }) {
 
       <div className="grid gap-5 xl:grid-cols-2 items-start">
         <Tarjeta className="overflow-hidden">
-          <EncabezadoTarjeta titulo="Gastos" descripcion="Sin IVA y con su criterio de prorrateo. Los estimados entran al costeo preliminar, no al final."
-            acciones={captura && <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("gasto")}><Plus className="h-4 w-4" /> Gasto</Boton>} />
+          <EncabezadoTarjeta titulo="Gastos" explica={GLOSARIO.gastosEmbarque} descripcion="Sin IVA y con su criterio de prorrateo. Los estimados entran al costeo preliminar, no al final."
+            acciones={captura && <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("gasto")} data-explain={GLOSARIO.botonAgregarGastoEmbarque}><Plus className="h-4 w-4" /> Gasto</Boton>} />
           {!gastos.data?.length ? <Vacio icono={Receipt} titulo="Sin gastos" texto="Flete, cargos locales, honorarios, flete a Atotonilco… o lee la cuenta de gastos con IA." className="py-8" /> : (
             <ul className="divide-y divide-borde border-t border-borde">
               {gastos.data.map((g) => (
@@ -124,12 +124,12 @@ export function DineroEmbarque({ e }: { e: Embarque }) {
                       g.criterio === "valor" ? "por valor" : g.criterio === "volumen" ? "por volumen" : "directo",
                       g.orden_compra_id ? `solo ${folioOC(g.orden_compra_id)}` : null].filter(Boolean).join(" · ")}</p>
                   </div>
-                  {g.estimado && <Insignia tono="info">estimado</Insignia>}
+                  {g.estimado && <span data-explain={GLOSARIO.gastoEstimadoImportacion} data-explain-title="Estimado"><Insignia tono="info">estimado</Insignia></span>}
                   <div className="text-right">
                     <p className="cifra">{dinero(g.monto_mxn)}</p>
                     {Number(g.iva) > 0 && <p className="text-[11px] text-tenue cifra">IVA {dinero(Number(g.iva) * Number(g.tipo_cambio))}</p>}
                   </div>
-                  {captura && <button className="p-1 rounded text-tenue hover:text-peligro hover:bg-fondo" aria-label="Quitar gasto" onClick={() => borrarGasto.mutate(g.id)}><Trash2 className="h-4 w-4" /></button>}
+                  {captura && <button className="p-1 rounded text-tenue hover:text-peligro hover:bg-fondo" aria-label="Quitar gasto" data-explain={GLOSARIO.botonQuitarGastoEmbarque} data-explain-title="Quitar gasto" onClick={() => borrarGasto.mutate(g.id)}><Trash2 className="h-4 w-4" /></button>}
                 </li>
               ))}
             </ul>
@@ -139,7 +139,7 @@ export function DineroEmbarque({ e }: { e: Embarque }) {
         <div className="space-y-5">
           <Tarjeta className="overflow-hidden">
             <EncabezadoTarjeta titulo="Pedimento" explica={GLOSARIO.pedimento} descripcion="IGI, DTA y PRV son costo; el IVA de importación es acreditable."
-              acciones={captura && <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("pedimento")}><Plus className="h-4 w-4" /> Pedimento</Boton>} />
+              acciones={captura && <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("pedimento")} data-explain={GLOSARIO.botonCapturarPedimento}><Plus className="h-4 w-4" /> Pedimento</Boton>} />
             {!pedimentos.data?.length ? <Vacio icono={FileText} titulo="Sin pedimento" texto="Al pagarlo se puede calcular el costeo preliminar." className="py-8" /> : (
               <ul className="divide-y divide-borde border-t border-borde">
                 {pedimentos.data.map((p) => (
@@ -153,7 +153,7 @@ export function DineroEmbarque({ e }: { e: Embarque }) {
           </Tarjeta>
           <Tarjeta className="overflow-hidden">
             <EncabezadoTarjeta titulo="Por recuperar" explica={GLOSARIO.porRecuperar} descripcion="Saldo a favor con el agente y garantía de contenedor. No es costo: es dinero nuestro."
-              acciones={capturaPagos && <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("saldo")}><Plus className="h-4 w-4" /> Saldo</Boton>} />
+              acciones={capturaPagos && <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("saldo")} data-explain={GLOSARIO.botonAnotarPorRecuperar}><Plus className="h-4 w-4" /> Saldo</Boton>} />
             {!saldos.data?.length ? <Vacio icono={Undo2} titulo="Nada por recuperar" className="py-8" /> : (
               <ul className="divide-y divide-borde border-t border-borde">
                 {saldos.data.map((s) => (
@@ -163,7 +163,7 @@ export function DineroEmbarque({ e }: { e: Embarque }) {
                       <p className="text-xs text-tenue">{s.deudor ?? "—"} · {s.recuperado_en ? `recuperado el ${fecha(s.recuperado_en)}` : `se espera el ${fecha(s.fecha_esperada)}`}</p>
                     </div>
                     <span className={cn("cifra", !s.recuperado_en && s.fecha_esperada && s.fecha_esperada < hoyISO() && "text-peligro font-medium")}>{dinero(s.monto, mon(s.moneda))}</span>
-                    {capturaPagos && !s.recuperado_en && <Boton tamano="sm" variante="fantasma" onClick={() => recuperar.mutate(s)}><CheckCircle2 className="h-3.5 w-3.5" /> Recuperado</Boton>}
+                    {capturaPagos && !s.recuperado_en && <Boton tamano="sm" variante="fantasma" onClick={() => recuperar.mutate(s)} data-explain={GLOSARIO.botonMarcarRecuperado}><CheckCircle2 className="h-3.5 w-3.5" /> Recuperado</Boton>}
                   </li>
                 ))}
               </ul>
@@ -180,9 +180,9 @@ export function DineroEmbarque({ e }: { e: Embarque }) {
   );
 }
 
-function Cifra({ titulo, valor, detalle, tono }: { titulo: string; valor: ReactNode; detalle?: ReactNode; tono?: "aviso" }) {
+function Cifra({ titulo, valor, detalle, tono, explica }: { titulo: string; valor: ReactNode; detalle?: ReactNode; tono?: "aviso"; explica?: string }) {
   return (
-    <div className="tarjeta p-4">
+    <div className="tarjeta p-4" data-explain={explica} data-explain-title={explica ? titulo : undefined}>
       <p className="text-xs text-tenue">{titulo}</p>
       <p className={cn("text-xl font-semibold cifra mt-0.5", tono === "aviso" && "text-aviso")}>{valor}</p>
       {detalle && <p className="text-xs text-tenue mt-0.5">{detalle}</p>}
@@ -223,23 +223,24 @@ function DialogoPago({ abierto, alCambiar, e, invalidar }: { abierto: boolean; a
           <Seleccion value={d.concepto} onChange={poner("concepto")}><option value="anticipo">Anticipo</option><option value="saldo">Saldo</option><option value="total">Pago total</option><option value="otro">Otro</option></Seleccion>
         </Campo>
         <Campo etiqueta="Estado">
-          <Seleccion value={d.estado} onChange={poner("estado")}>{Object.entries(ESTADOS_PAGO).filter(([k]) => k !== "devuelto").map(([k, v]) => <option key={k} value={k}>{v.texto}</option>)}</Seleccion>
+          <Seleccion value={d.estado} onChange={poner("estado")} data-explain={GLOSARIO.estadoPagoImportacion} data-explain-title="Estado del pago">{Object.entries(ESTADOS_PAGO).filter(([k]) => k !== "devuelto").map(([k, v]) => <option key={k} value={k}>{v.texto}</option>)}</Seleccion>
         </Campo>
         <Campo etiqueta={hecho ? "Fecha del pago" : "Fecha programada"}><Entrada type="date" value={d.fecha} max={hecho ? hoyISO() : undefined} onChange={poner("fecha")} /></Campo>
         <Campo etiqueta="Monto (moneda de la orden)"><Entrada inputMode="decimal" autoFocus value={d.monto} onChange={poner("monto")} placeholder="3,200.00" /></Campo>
         {hecho && (
           <Campo etiqueta="Pesos que salieron" ayuda={tc ? `Tipo de cambio real: ${tc.toFixed(4)}` : "Del estado de cuenta o del comprobante de EBANX"}>
-            <Entrada inputMode="decimal" value={d.pesos} onChange={poner("pesos")} placeholder="62,400.00" />
+            <Entrada inputMode="decimal" value={d.pesos} onChange={poner("pesos")} placeholder="62,400.00" data-explain={GLOSARIO.tcReal} data-explain-title="Pesos que salieron" />
           </Campo>
         )}
         <Campo etiqueta="Método">
-          <Seleccion value={d.metodo} onChange={poner("metodo")}><option value="transferencia">Transferencia internacional</option><option value="ebanx">EBANX (Alibaba)</option><option value="otro">Otro</option></Seleccion>
+          <Seleccion value={d.metodo} onChange={poner("metodo")} data-explain={GLOSARIO.metodoPagoImportacion} data-explain-title="Método"><option value="transferencia">Transferencia internacional</option><option value="ebanx">EBANX (Alibaba)</option><option value="otro">Otro</option></Seleccion>
         </Campo>
         <Campo etiqueta="Cuenta de origen"><Entrada value={d.cuenta} onChange={poner("cuenta")} placeholder="Banorte pesos" /></Campo>
         <Campo etiqueta="Referencia"><Entrada value={d.referencia} onChange={poner("referencia")} /></Campo>
         {hecho && (
           <Campo etiqueta="Comprobante" className="sm:col-span-2" ayuda="Si no lo tienes ahora, queda como alerta hasta que lo subas.">
-            <input type="file" accept="application/pdf,image/*" className="text-sm" onChange={(ev) => setArchivo(ev.target.files?.[0] ?? null)} />
+            <input type="file" accept="application/pdf,image/*" className="text-sm" onChange={(ev) => setArchivo(ev.target.files?.[0] ?? null)}
+              data-explain={GLOSARIO.comprobantePagoImportacion} data-explain-title="Comprobante" />
           </Campo>
         )}
       </form>
@@ -268,17 +269,17 @@ function DialogoGasto({ abierto, alCambiar, e, invalidar }: { abierto: boolean; 
         <Campo etiqueta="Moneda"><Seleccion value={d.moneda} onChange={poner("moneda")}><option value="MXN">MXN</option><option value="USD">USD</option></Seleccion></Campo>
         {d.moneda === "USD" && <Campo etiqueta="Tipo de cambio"><Entrada inputMode="decimal" value={d.tc} onChange={poner("tc")} placeholder="19.85" /></Campo>}
         <Campo etiqueta="Monto sin IVA"><Entrada inputMode="decimal" autoFocus value={d.monto} onChange={poner("monto")} /></Campo>
-        <Campo etiqueta="IVA (acreditable)"><Entrada inputMode="decimal" value={d.iva} onChange={poner("iva")} placeholder="0" /></Campo>
+        <Campo etiqueta="IVA (acreditable)"><Entrada inputMode="decimal" value={d.iva} onChange={poner("iva")} placeholder="0" data-explain={GLOSARIO.ivaAcreditable} data-explain-title="IVA acreditable" /></Campo>
         <Campo etiqueta="Fecha"><Entrada type="date" value={d.fecha} onChange={poner("fecha")} /></Campo>
         <Campo etiqueta="Se reparte" ayuda={d.criterio === "volumen" ? "Pide el volumen de cada orden (pestaña Órdenes)." : undefined}>
-          <Seleccion value={d.criterio} onChange={poner("criterio")}><option value="valor">Por valor de la mercancía</option><option value="volumen">Por volumen (consolidado)</option></Seleccion>
+          <Seleccion value={d.criterio} onChange={poner("criterio")} data-explain={GLOSARIO.criterioRepartoGasto} data-explain-title="Se reparte"><option value="valor">Por valor de la mercancía</option><option value="volumen">Por volumen (consolidado)</option></Seleccion>
         </Campo>
         {e.ordenes.length > 1 && (
           <Campo etiqueta="¿Solo de una orden?" className="sm:col-span-2">
-            <Seleccion value={d.oc} onChange={poner("oc")}><option value="">Todo el embarque</option>{e.ordenes.map((o) => <option key={o.id} value={o.id}>{o.folio} · {o.proveedor}</option>)}</Seleccion>
+            <Seleccion value={d.oc} onChange={poner("oc")} data-explain={GLOSARIO.gastoSoloUnaOrden} data-explain-title="¿Solo de una orden?"><option value="">Todo el embarque</option>{e.ordenes.map((o) => <option key={o.id} value={o.id}>{o.folio} · {o.proveedor}</option>)}</Seleccion>
           </Campo>
         )}
-        <label className="sm:col-span-2 flex items-center gap-2 text-sm">
+        <label className="sm:col-span-2 flex items-center gap-2 text-sm" data-explain={GLOSARIO.gastoEstimadoImportacion} data-explain-title="Estimado">
           <input type="checkbox" checked={d.estimado} onChange={(ev) => setD((x) => ({ ...x, estimado: ev.target.checked }))} />
           Es un estimado (antes de la cuenta de gastos): entra al preliminar, no al final
         </label>
@@ -304,10 +305,10 @@ function DialogoPedimento({ abierto, alCambiar, e, invalidar }: { abierto: boole
         <Campo etiqueta="Fecha de pago"><Entrada type="date" value={d.fecha_pago} max={hoyISO()} onChange={poner("fecha_pago")} /></Campo>
         <Campo etiqueta="Tipo de cambio"><Entrada inputMode="decimal" value={d.tipo_cambio} onChange={poner("tipo_cambio")} /></Campo>
         <Campo etiqueta="Valor en aduana"><Entrada inputMode="decimal" value={d.valor_aduana} onChange={poner("valor_aduana")} /></Campo>
-        <Campo etiqueta="IGI"><Entrada inputMode="decimal" value={d.igi} onChange={poner("igi")} /></Campo>
-        <Campo etiqueta="DTA"><Entrada inputMode="decimal" value={d.dta} onChange={poner("dta")} /></Campo>
-        <Campo etiqueta="PRV"><Entrada inputMode="decimal" value={d.prv} onChange={poner("prv")} /></Campo>
-        <Campo etiqueta="IVA (acreditable)"><Entrada inputMode="decimal" value={d.iva} onChange={poner("iva")} /></Campo>
+        <Campo etiqueta="IGI"><Entrada inputMode="decimal" value={d.igi} onChange={poner("igi")} data-explain={GLOSARIO.contribucionesPedimento} data-explain-title="IGI" /></Campo>
+        <Campo etiqueta="DTA"><Entrada inputMode="decimal" value={d.dta} onChange={poner("dta")} data-explain={GLOSARIO.contribucionesPedimento} data-explain-title="DTA" /></Campo>
+        <Campo etiqueta="PRV"><Entrada inputMode="decimal" value={d.prv} onChange={poner("prv")} data-explain={GLOSARIO.contribucionesPedimento} data-explain-title="PRV" /></Campo>
+        <Campo etiqueta="IVA (acreditable)"><Entrada inputMode="decimal" value={d.iva} onChange={poner("iva")} data-explain={GLOSARIO.ivaAcreditable} data-explain-title="IVA acreditable" /></Campo>
         <Campo etiqueta="Otras contribuciones"><Entrada inputMode="decimal" value={d.otros} onChange={poner("otros")} /></Campo>
       </form>
     </Dialogo>
@@ -334,7 +335,7 @@ function DialogoSaldo({ abierto, alCambiar, e, invalidar }: { abierto: boolean; 
         <Campo etiqueta="Monto"><Entrada inputMode="decimal" autoFocus value={d.monto} onChange={poner("monto")} placeholder="1,000" /></Campo>
         {d.moneda === "USD" && <Campo etiqueta="Tipo de cambio"><Entrada inputMode="decimal" value={d.tc} onChange={poner("tc")} /></Campo>}
         <Campo etiqueta="Desde"><Entrada type="date" value={d.fecha_origen} onChange={poner("fecha_origen")} /></Campo>
-        <Campo etiqueta="Se espera"><Entrada type="date" value={d.fecha_esperada} onChange={poner("fecha_esperada")} /></Campo>
+        <Campo etiqueta="Se espera"><Entrada type="date" value={d.fecha_esperada} onChange={poner("fecha_esperada")} data-explain={GLOSARIO.seEsperaRecuperarImportacion} data-explain-title="Se espera" /></Campo>
       </form>
     </Dialogo>
   );

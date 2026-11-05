@@ -9,6 +9,7 @@ import { dinero, fecha, fechaYHora } from "@/lib/formato";
 import { DialogoPedirEnvio } from "./DialogoPedirEnvio";
 import { EvidenciaSalida } from "./EvidenciaSalida";
 import { estadoEnvio, useEnvios, useEnviosEnVivo } from "./datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
  * La tarjeta "Envío" del detalle del pedido: en qué va cada envío, su evidencia de
@@ -28,9 +29,10 @@ export function TarjetaEnvio({ pedido }: {
 
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Envío"
+      <EncabezadoTarjeta titulo="Envío" explica={GLOSARIO.tarjetaEnvioPedido}
         descripcion={lista.length === 0 ? "Peso, medidas y destino salen del pedido." : `${lista.length} ${lista.length === 1 ? "envío" : "envíos"}`}
-        acciones={puedePedir && <Boton variante={lista.length ? "secundario" : "primario"} tamano="sm" onClick={() => setPidiendo(true)}><Truck className="h-3.5 w-3.5" />Pedir envío</Boton>} />
+        acciones={puedePedir && <Boton variante={lista.length ? "secundario" : "primario"} tamano="sm" onClick={() => setPidiendo(true)}
+          data-explain={GLOSARIO.botonPedirEnvioAlmacen}><Truck className="h-3.5 w-3.5" />Pedir envío</Boton>} />
       <div className="px-5 pb-4 space-y-3 text-sm">
         {envios.isLoading ? <p className="text-tenue">Cargando…</p> : lista.length === 0 ? (
           <p className="text-tenue">{puedePedir ? "Cuando esté listo, pide el envío: almacén lo ve, lo empaca con fotos y la guía queda aquí." : "Sin envíos."}</p>
@@ -41,8 +43,8 @@ export function TarjetaEnvio({ pedido }: {
               <span className="min-w-0">
                 <span className="flex flex-wrap items-center gap-1.5">
                   <b className="cifra">{e.folio}</b>
-                  <Insignia tono={estadoEnvio(e).tono} punto>{estadoEnvio(e).texto}</Insignia>
-                  {e.fotos > 0 && <Insignia tono="ok"><Camera className="h-3 w-3" />{e.fotos}</Insignia>}
+                  <span data-explain={GLOSARIO.estadoEnvio} data-explain-title="Estado del envío"><Insignia tono={estadoEnvio(e).tono} punto>{estadoEnvio(e).texto}</Insignia></span>
+                  {e.fotos > 0 && <span data-explain={GLOSARIO.fotosEmpaqueEnvio} data-explain-title="Fotos del empaque"><Insignia tono="ok"><Camera className="h-3 w-3" />{e.fotos}</Insignia></span>}
                 </span>
                 <span className="block text-xs text-tenue mt-0.5">
                   {e.tipo_nombre}{e.paqueteria && ` · ${e.paqueteria}`}{e.numero_guia && ` · guía ${e.numero_guia}`}

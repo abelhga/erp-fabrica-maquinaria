@@ -1,5 +1,5 @@
 import { CALENDARIO, INICIO, MENU, PENDIENTES, REVISION, SEMANA } from "@/navegacion";
-import { SECCIONES } from "./pantallas";
+import { SECCIONES, textoAyuda } from "./pantallas";
 import { SECCIONES_GLOSARIO } from "./glosario";
 
 /**
@@ -51,7 +51,8 @@ export function armarManual(): { pantallas: PantallaManual[]; conceptos: Concept
       nombre: m ? (m.resto ? `${m.e.texto} › ${legible(m.resto)}` : m.e.texto) : legible(ruta.slice(1)),
       modulos: publica ? [] : [m!.e.modulo],
       nivel: publica ? 1 : m!.e.nivel ?? 1,
-      texto,
+      // Resumen, pasos y detalle: el asistente lee todo, aunque arriba de la pantalla se vea poco.
+      texto: textoAyuda(texto),
     };
   }).sort((a, b) => a.ruta.localeCompare(b.ruta));
   const conceptos = (Object.entries(SECCIONES_GLOSARIO) as [keyof typeof SECCIONES_GLOSARIO, Record<string, string>][])

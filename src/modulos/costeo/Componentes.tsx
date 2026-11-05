@@ -16,7 +16,7 @@ type FiltroComp = "todos" | "sin_costo" | "viejo" | "importados" | "con_existenc
 
 /** Costo en su moneda; si no es pesos, con la equivalencia que usa el costeo debajo. */
 function CeldaCosto({ a }: { a: ArticuloCatalogo }) {
-  if (!a.costo_capturado) return <Insignia tono="peligro">sin costo</Insignia>;
+  if (!a.costo_capturado) return <span data-explain={GLOSARIO.componenteSinCosto} data-explain-title="Sin costo"><Insignia tono="peligro">sin costo</Insignia></span>;
   if (a.moneda_costo && a.moneda_costo !== "MXN") {
     return (
       <span className="inline-flex flex-col items-end leading-tight">
@@ -58,14 +58,14 @@ export default function Componentes() {
     }
   }, [cat.data, filtro, costos]);
 
-  const opciones: { valor: FiltroComp; texto: string; cuenta?: number }[] = [
+  const opciones: { valor: FiltroComp; texto: string; cuenta?: number; explica?: string }[] = [
     { valor: "todos", texto: "Todos", cuenta: cat.data?.length },
     ...(costos ? [
-      { valor: "sin_costo" as const, texto: "Sin costo", cuenta: cuentas.sin_costo },
-      { valor: "viejo" as const, texto: "Costo de +6 meses", cuenta: cuentas.viejo },
+      { valor: "sin_costo" as const, texto: "Sin costo", cuenta: cuentas.sin_costo, explica: GLOSARIO.componenteSinCosto },
+      { valor: "viejo" as const, texto: "Costo de +6 meses", cuenta: cuentas.viejo, explica: GLOSARIO.costoViejo },
     ] : []),
-    { valor: "importados", texto: "Importados", cuenta: cuentas.importados },
-    { valor: "con_existencia", texto: "Con existencia", cuenta: cuentas.con_existencia },
+    { valor: "importados", texto: "Importados", cuenta: cuentas.importados, explica: GLOSARIO.articuloImportado },
+    { valor: "con_existencia", texto: "Con existencia", cuenta: cuentas.con_existencia, explica: GLOSARIO.filtroComponentesConExistencia },
   ];
 
   const columnas: Columna<ArticuloCatalogo>[] = [
@@ -77,8 +77,8 @@ export default function Componentes() {
         // etiquetas fluyen detrás del texto en vez de quitarle ancho a su columna.
         <div className="min-w-[260px]">
           {a.nombre}
-          {a.tipo !== "componente" && <Insignia className="ml-2 align-middle">{NOMBRE_TIPO[a.tipo]}</Insignia>}
-          {a.es_importado && <Insignia tono="info" className="ml-2 align-middle">importado</Insignia>}
+          {a.tipo !== "componente" && <span data-explain={GLOSARIO.tipoArticulo} data-explain-title={NOMBRE_TIPO[a.tipo]}><Insignia className="ml-2 align-middle">{NOMBRE_TIPO[a.tipo]}</Insignia></span>}
+          {a.es_importado && <span data-explain={GLOSARIO.articuloImportado} data-explain-title="Importado"><Insignia tono="info" className="ml-2 align-middle">importado</Insignia></span>}
         </div>
       ),
     },
@@ -87,13 +87,13 @@ export default function Componentes() {
       clave: "existencia", titulo: "Existencia", alinear: "der", sinBusqueda: true, valor: (a) => a.existencia ?? 0, clase: "whitespace-nowrap", explica: GLOSARIO.enPlanta,
       celda: (a) => <span className={cn(!a.existencia && "text-tenue")}>{numero(a.existencia ?? 0)} <span className="text-xs text-tenue">{a.unidad}</span></span>,
     },
-    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, oculta: !vePrecios, valor: (a) => a.precio, celda: (a) => dinero(a.precio), explica: GLOSARIO.precioLista },
+    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, oculta: !vePrecios, valor: (a) => a.precio, celda: (a) => dinero(a.precio), explica: GLOSARIO.precioListaCatalogo },
     {
       clave: "costo", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, clase: "whitespace-nowrap", explica: GLOSARIO.costoArticulo,
       valor: (a) => a.costo_total ?? null, celda: (a) => <CeldaCosto a={a} />,
     },
     {
-      clave: "costo_actualizado_en", titulo: "Fecha costo", sinBusqueda: true, oculta: !costos, clase: "whitespace-nowrap", explica: GLOSARIO.costoViejo,
+      clave: "costo_actualizado_en", titulo: "Fecha costo", sinBusqueda: true, oculta: !costos, clase: "whitespace-nowrap", explica: GLOSARIO.fechaUltimoCosto,
       valor: (a) => a.costo_actualizado_en ?? null,
       celda: (a) => !a.costo_actualizado_en ? <span className="text-tenue">—</span>
         : esCostoViejo(a.costo_actualizado_en)
@@ -101,14 +101,14 @@ export default function Componentes() {
               <span className="h-1.5 w-1.5 rounded-full bg-current" />{fecha(a.costo_actualizado_en)}</span>
           : fecha(a.costo_actualizado_en),
     },
-    { clave: "proveedor", titulo: "Proveedor", oculta: !costos, clase: "text-tenue", celda: (a) => <span className="block max-w-[110px] truncate" title={a.proveedor ?? undefined}>{a.proveedor ?? "—"}</span> },
+    { clave: "proveedor", titulo: "Proveedor", oculta: !costos, clase: "text-tenue", explica: GLOSARIO.proveedorPrincipal, celda: (a) => <span className="block max-w-[110px] truncate" title={a.proveedor ?? undefined}>{a.proveedor ?? "—"}</span> },
   ];
 
   return (
     <Pagina
       titulo="Componentes"
       descripcion={`Lo que se compra: componentes, materia prima y servicios, con ${vePrecios ? "su precio de lista y " : ""}lo que hay en planta.`}
-      acciones={puede("costeo", 2) && <Boton onClick={() => setNuevo(true)}><Plus className="h-4 w-4" /> Nuevo componente</Boton>}
+      acciones={puede("costeo", 2) && <Boton onClick={() => setNuevo(true)} data-explain={GLOSARIO.botonNuevoComponente} data-explain-title="Nuevo componente"><Plus className="h-4 w-4" /> Nuevo componente</Boton>}
     >
       <TablaDatos
         filas={filas} columnas={columnas} cargando={cat.isLoading} error={cat.error} claveFila={(a) => a.id}

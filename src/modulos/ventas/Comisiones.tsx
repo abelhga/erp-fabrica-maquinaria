@@ -103,7 +103,7 @@ export default function Comisiones() {
                 <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-3 border-b border-borde">
                   <div>
                     <p className="font-semibold">{f.vendedor}</p>
-                    <p className="text-xs text-tenue">Plan {f.plan}</p>
+                    <p className="text-xs text-tenue" data-explain={GLOSARIO.planComision} data-explain-title="Plan de comisión">Plan {f.plan}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-semibold cifra leading-tight">{dinero(f.total)}</p>
@@ -113,7 +113,7 @@ export default function Comisiones() {
                 <div className="px-5 py-4 space-y-4 flex-1">
                   <section>
                     <div className="flex justify-between text-sm">
-                      <span className="text-tenue">Venta de maquinaria{plan?.otros_como_maquinaria ? " y otros" : ""}</span>
+                      <span className="text-tenue" data-explain={GLOSARIO.lineaVenta} data-explain-title="Maquinaria, refacciones u otros">Venta de maquinaria{plan?.otros_como_maquinaria ? " y otros" : ""}</span>
                       <span className="font-medium cifra">{dinero(baseMeta)}</span>
                     </div>
                     <div className="flex justify-between text-sm"><span className="text-tenue" data-explain={GLOSARIO.comision}>Comisión {porcentaje(Number(plan?.pct_maquinaria ?? 0.02), 0)}</span><span className="cifra">{dinero(f.comision)}</span></div>
@@ -129,7 +129,7 @@ export default function Comisiones() {
                     </div>
                   </section>
                   <section className="border-t border-borde pt-3">
-                    <div className="flex justify-between text-sm"><span className="text-tenue">Venta de refacciones</span><span className="font-medium cifra">{dinero(f.venta_refacciones)}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-tenue" data-explain={GLOSARIO.lineaVenta} data-explain-title="Maquinaria, refacciones u otros">Venta de refacciones</span><span className="font-medium cifra">{dinero(f.venta_refacciones)}</span></div>
                     <div className="flex justify-between text-sm"><span className="text-tenue" data-explain={GLOSARIO.bonoRefacciones}>Bono de refacciones</span><span className="cifra">{dinero(f.bono_refacciones)}</span></div>
                     {refSig && (
                       <>
@@ -143,14 +143,14 @@ export default function Comisiones() {
                       <span className="text-tenue" data-explain={GLOSARIO.ajusteComision}>Ajustes y bonos extra</span>
                       <span className="flex items-center gap-2">
                         <span className="cifra">{dinero(f.ajustes)}</span>
-                        {puedeAjustar && <Boton variante="fantasma" tamano="sm" className="h-7 px-2" onClick={() => setAjustar(f)}><Plus className="h-3.5 w-3.5" />Ajuste</Boton>}
+                        {puedeAjustar && <Boton variante="fantasma" tamano="sm" className="h-7 px-2" onClick={() => setAjustar(f)} data-explain={GLOSARIO.botonAjusteComision}><Plus className="h-3.5 w-3.5" />Ajuste</Boton>}
                       </span>
                     </div>
                     {misAjustes.map((a) => (
                       <p key={a.id} className="flex items-center justify-between text-xs text-tenue pl-3">
                         <span>{a.concepto}</span>
                         <span className="flex items-center gap-1 cifra">{dinero(a.monto)}
-                          {puedeAjustar && !f.pagado_en && <button aria-label="Quitar ajuste" className="hover:text-peligro" onClick={() => quitar.mutate(a.id)}><Trash2 className="h-3 w-3" /></button>}
+                          {puedeAjustar && !f.pagado_en && <button aria-label="Quitar ajuste" className="hover:text-peligro" data-explain={GLOSARIO.botonQuitarAjusteComision} data-explain-title="Quitar ajuste" onClick={() => quitar.mutate(a.id)}><Trash2 className="h-3 w-3" /></button>}
                         </span>
                       </p>
                     ))}
@@ -158,7 +158,7 @@ export default function Comisiones() {
                   <DetallePedidos vendedorId={f.vendedor_id} mes={mes} />
                 </div>
                 {difiere && (
-                  <p className="mx-5 mb-3 rounded-lg bg-aviso-suave px-3 py-2 text-xs">
+                  <p className="mx-5 mb-3 rounded-lg bg-aviso-suave px-3 py-2 text-xs" data-explain={GLOSARIO.comisionPagada} data-explain-title="Comisión pagada">
                     Se pagaron <b className="cifra">{dinero(pago!.total)}</b>{pago!.referencia ? ` (${pago!.referencia})` : ""}; con los pedidos de hoy el cálculo
                     da <b className="cifra">{dinero(f.total)}</b>. La diferencia va como ajuste del mes siguiente.
                   </p>
@@ -167,7 +167,7 @@ export default function Comisiones() {
                   <span className="text-sm font-medium">{f.pagado_en ? "Total pagado" : "Total a pagar"}</span>
                   <span className="flex items-center gap-3">
                     <span className="text-lg font-semibold cifra">{dinero(pago ? pago.total : f.total)}</span>
-                    {puedePagar && !f.pagado_en && <Boton tamano="sm" variante="exito" onClick={() => setPagar(f)}>Marcar pagada</Boton>}
+                    {puedePagar && !f.pagado_en && <Boton tamano="sm" variante="exito" onClick={() => setPagar(f)} data-explain={GLOSARIO.botonPagarComision}>Marcar pagada</Boton>}
                   </span>
                 </div>
               </Tarjeta>
@@ -193,7 +193,7 @@ function DetallePedidos({ vendedorId, mes }: { vendedorId: string; mes: string }
   });
   return (
     <details className="border-t border-borde pt-3" onToggle={(e) => setAbierto((e.target as HTMLDetailsElement).open)}>
-      <summary className="text-sm text-marca-texto cursor-pointer">Pedidos que cuentan este mes</summary>
+      <summary className="text-sm text-marca-texto cursor-pointer" data-explain={GLOSARIO.pedidosComisionMes}>Pedidos que cuentan este mes</summary>
       {pedidos.isLoading ? <Cargando filas={2} /> : (
         <div className="mt-2 max-h-64 overflow-y-auto">
           {(pedidos.data?.length ?? 0) === 0 ? <p className="text-xs text-tenue">Sin pedidos en el mes (o no los puedes ver).</p> : (
@@ -234,7 +234,7 @@ function ReglaPlan({ planes, escalones }: { planes: Plan[]; escalones: Escalon[]
         {planes.map((p) => (
           <div key={p.id} className="text-sm">
             <p className="font-medium mb-1">{p.nombre}</p>
-            <table className="text-xs">
+            <table className="text-xs" data-explain={GLOSARIO.escalonesComision} data-explain-title={`Escalones del plan ${p.nombre}`}>
               <thead><tr className="text-tenue"><th className="text-left pr-4 font-medium">Maquinaria desde</th><th className="text-right font-medium pr-6">Bono</th><th className="text-left pr-4 font-medium">Refacciones desde</th><th className="text-right font-medium">Bono</th></tr></thead>
               <tbody>
                 {Array.from({ length: Math.max(...["meta_maquinaria", "bono_refacciones"].map((t) => escalones.filter((e) => e.plan_id === p.id && e.tipo === t).length)) }).map((_, i) => {

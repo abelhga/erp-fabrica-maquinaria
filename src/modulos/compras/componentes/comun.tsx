@@ -26,9 +26,14 @@ export const ESTADO_OC: Record<EstadoOC, { texto: string; tono: Tono }> = {
 
 export function InsigniaOC({ estado, atrasada, dias }: { estado: EstadoOC; atrasada?: boolean; dias?: number | null }) {
   return (
-    <span className="inline-flex flex-wrap gap-1" data-explain={atrasada ? GLOSARIO.ocAtrasada : GLOSARIO.estadoOrdenCompra}>
-      <Insignia tono={ESTADO_OC[estado].tono} punto>{ESTADO_OC[estado].texto}</Insignia>
-      {atrasada && <Insignia tono="peligro">{dias ? `${dias} días tarde` : "atrasada"}</Insignia>}
+    // Cada insignia con lo suyo: el estado dice qué sigue y «días tarde» qué hacer con el atraso.
+    <span className="inline-flex flex-wrap gap-1">
+      <span className="inline-flex" data-explain={GLOSARIO.estadoOrdenCompra} data-explain-title={ESTADO_OC[estado].texto}>
+        <Insignia tono={ESTADO_OC[estado].tono} punto>{ESTADO_OC[estado].texto}</Insignia>
+      </span>
+      {atrasada && <span className="inline-flex" data-explain={GLOSARIO.ocAtrasada} data-explain-title="Atrasada">
+        <Insignia tono="peligro">{dias ? `${dias} días tarde` : "atrasada"}</Insignia>
+      </span>}
     </span>
   );
 }

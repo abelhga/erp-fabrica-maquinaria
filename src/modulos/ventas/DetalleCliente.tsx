@@ -26,6 +26,7 @@ import {
 } from "./comun";
 import { Barra } from "./componentes/campos";
 import { JuntarClientes } from "./componentes/JuntarClientes";
+import { EXPLICA_ESTADO_PEDIDO } from "./componentes/EntregaPedido";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Cliente {
@@ -105,9 +106,9 @@ export default function DetalleCliente() {
         </span>
       }
       acciones={<>
-        {!c.vendedor_id && puede("ventas", 2) && <Boton variante="secundario" onClick={() => tomar.mutate(undefined)} cargando={tomar.isPending}><Star className="h-4 w-4" />Hacerlo mío</Boton>}
+        {!c.vendedor_id && puede("ventas", 2) && <Boton variante="secundario" onClick={() => tomar.mutate(undefined)} cargando={tomar.isPending} data-explain={GLOSARIO.botonHacerloMio}><Star className="h-4 w-4" />Hacerlo mío</Boton>}
         {puedeJuntar && <Boton variante="secundario" onClick={() => abrirJuntar(null)} data-explain={GLOSARIO.juntarClientes} data-explain-title="Juntar con otro cliente"><Merge className="h-4 w-4" />Juntar con otro</Boton>}
-        {puede("ventas", 2) && <Boton onClick={() => ir(`/ventas/cotizaciones/nueva?cliente=${c.id}`)}><FilePlus className="h-4 w-4" />Nueva cotización</Boton>}
+        {puede("ventas", 2) && <Boton onClick={() => ir(`/ventas/cotizaciones/nueva?cliente=${c.id}`)} data-explain={GLOSARIO.botonNuevaCotizacion}><FilePlus className="h-4 w-4" />Nueva cotización</Boton>}
       </>}>
       {otrosRfc.length > 0 && (
         <div className="rounded-xl border border-aviso/40 bg-aviso-suave px-4 py-3 text-sm flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -118,7 +119,7 @@ export default function DetalleCliente() {
             {" "}Si es la misma empresa, júntalos para que pedidos, saldo y facturas queden en uno; si es una sucursal, déjalos así.
             {!puedeJuntar && " Pídeselo a la gerencia de ventas."}
           </p>
-          {puedeJuntar && otrosRfc.length === 1 && <Boton tamano="sm" variante="secundario" onClick={() => abrirJuntar(otrosRfc[0])}><Merge className="h-3.5 w-3.5" />Juntar</Boton>}
+          {puedeJuntar && otrosRfc.length === 1 && <Boton tamano="sm" variante="secundario" onClick={() => abrirJuntar(otrosRfc[0])} data-explain={GLOSARIO.juntarClientes}><Merge className="h-3.5 w-3.5" />Juntar</Boton>}
         </div>
       )}
       <JuntarClientes actual={{ id: c.id, nombre: c.nombre, rfc: c.rfc }} otroInicial={juntarCon} abierto={juntarAbierto} alCambiar={setJuntarAbierto} />
@@ -179,14 +180,14 @@ function DatosFiscales({ c, editable, esGerente }: { c: Cliente; editable: boole
   }));
 
   if (!editando) {
-    const fila = (et: string, v: React.ReactNode) => (
+    const fila = (et: string, v: React.ReactNode, explica?: string) => (
       <div className="flex justify-between gap-4 py-1.5 border-b border-borde/60 last:border-0 text-sm">
-        <span className="text-tenue">{et}</span><span className="text-right font-medium min-w-0 break-words">{v || <span className="text-tenue font-normal">—</span>}</span>
+        <span className="text-tenue" data-explain={explica} data-explain-title={explica ? et : undefined}>{et}</span><span className="text-right font-medium min-w-0 break-words">{v || <span className="text-tenue font-normal">—</span>}</span>
       </div>
     );
     return (
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Datos fiscales y comerciales"
+        <EncabezadoTarjeta titulo="Datos fiscales y comerciales" explica={GLOSARIO.datosFiscalesCliente}
           acciones={editable && <Boton variante="secundario" tamano="sm" onClick={() => setEditando(true)}><Pencil className="h-3.5 w-3.5" />Editar</Boton>} />
         <div className="px-5 pb-4 grid sm:grid-cols-2 gap-x-6">
           <div>
@@ -198,8 +199,8 @@ function DatosFiscales({ c, editable, esGerente }: { c: Cliente; editable: boole
           <div>
             {fila("Giro", c.giro)}
             {fila("Ubicación", [c.ciudad, c.estado, c.pais !== "México" ? c.pais : null].filter(Boolean).join(", "))}
-            {fila("Crédito", c.dias_credito ? `${c.dias_credito} días` : "Contado")}
-            {fila("¿Cómo llegó?", fuentes.data?.find((x) => x.id === c.fuente_id)?.nombre)}
+            {fila("Crédito", c.dias_credito ? `${c.dias_credito} días` : "Contado", GLOSARIO.diasCreditoCliente)}
+            {fila("¿Cómo llegó?", fuentes.data?.find((x) => x.id === c.fuente_id)?.nombre, GLOSARIO.fuenteCliente)}
           </div>
           {c.notas && <p className="sm:col-span-2 mt-2 text-sm text-tenue whitespace-pre-line">{c.notas}</p>}
         </div>
@@ -224,22 +225,24 @@ function DatosFiscales({ c, editable, esGerente }: { c: Cliente; editable: boole
         <Campo etiqueta="Ciudad"><Entrada value={f.ciudad ?? ""} onChange={t("ciudad")} /></Campo>
         <Campo etiqueta="Estado"><Entrada value={f.estado ?? ""} onChange={t("estado")} /></Campo>
         <Campo etiqueta="País"><Entrada value={f.pais ?? ""} onChange={t("pais")} /></Campo>
-        <Campo etiqueta="Días de crédito"><Entrada type="number" min={0} value={f.dias_credito} onChange={(e) => setF({ ...f, dias_credito: Number(e.target.value) || 0 })} /></Campo>
+        <Campo etiqueta="Días de crédito"><Entrada type="number" min={0} data-explain={GLOSARIO.diasCreditoCliente} data-explain-title="Días de crédito" value={f.dias_credito} onChange={(e) => setF({ ...f, dias_credito: Number(e.target.value) || 0 })} /></Campo>
         <Campo etiqueta="¿Cómo llegó?">
-          <Seleccion value={f.fuente_id ?? ""} onChange={(e) => setF({ ...f, fuente_id: e.target.value ? Number(e.target.value) : null })}>
+          <Seleccion value={f.fuente_id ?? ""} onChange={(e) => setF({ ...f, fuente_id: e.target.value ? Number(e.target.value) : null })}
+            data-explain={GLOSARIO.fuenteCliente} data-explain-title="¿Cómo llegó?">
             <option value="">—</option>
             {fuentes.data?.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
           </Seleccion>
         </Campo>
         {esGerente && (
           <Campo etiqueta="Vendedor dueño" ayuda="Solo la gerencia reasigna cuentas.">
-            <Seleccion value={f.vendedor_id ?? ""} onChange={(e) => setF({ ...f, vendedor_id: e.target.value || null })}>
+            <Seleccion value={f.vendedor_id ?? ""} onChange={(e) => setF({ ...f, vendedor_id: e.target.value || null })}
+              data-explain={GLOSARIO.cartera} data-explain-title="Vendedor dueño">
               <option value="">Libre (sin dueño)</option>
               {vendedores.data?.map((v) => <option key={v.id} value={v.id}>{v.nombre}</option>)}
             </Seleccion>
           </Campo>
         )}
-        <label className="flex items-center gap-2 text-sm self-end pb-2">
+        <label className="flex items-center gap-2 text-sm self-end pb-2" data-explain={GLOSARIO.esDistribuidor} data-explain-title="Distribuidor">
           <input type="checkbox" checked={f.es_distribuidor} onChange={(e) => setF({ ...f, es_distribuidor: e.target.checked })} /> Es distribuidor
         </label>
         <Campo etiqueta="Notas" className="sm:col-span-2"><AreaTexto value={f.notas ?? ""} onChange={t("notas")} /></Campo>
@@ -272,7 +275,7 @@ function Contactos({ clienteId, visibles, editable, duenio }: { clienteId: strin
 
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Contactos"
+      <EncabezadoTarjeta titulo="Contactos" explica={GLOSARIO.contactosCliente}
         acciones={visibles && editable && <Boton variante="secundario" tamano="sm" onClick={() => setEditar({ principal: !(lista.data?.length) })}><UserPlus className="h-3.5 w-3.5" />Agregar</Boton>} />
       {!visibles ? (
         <div className="mx-5 mb-5 rounded-lg bg-fondo px-4 py-5 text-sm text-tenue flex items-center gap-3">
@@ -289,7 +292,7 @@ function Contactos({ clienteId, visibles, editable, duenio }: { clienteId: strin
                 {x.nombre.split(" ").filter((p) => !/^(ing|lic|arq|sr|sra|don|dr)\.?$/i.test(p)).slice(0, 2).map((p) => p[0]).join("").toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">{x.nombre}{x.principal && <Insignia tono="marca" className="ml-2">principal</Insignia>}</p>
+                <p className="text-sm font-medium">{x.nombre}{x.principal && <span data-explain={GLOSARIO.contactoPrincipal} data-explain-title="Contacto principal"><Insignia tono="marca" className="ml-2">principal</Insignia></span>}</p>
                 {x.puesto && <p className="text-xs text-tenue">{x.puesto}</p>}
                 <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm">
                   {x.telefono && <a href={`tel:${x.telefono.replace(/\s/g, "")}`} className="inline-flex items-center gap-1 text-marca-texto"><Phone className="h-3.5 w-3.5" />{x.telefono}</a>}
@@ -301,7 +304,7 @@ function Contactos({ clienteId, visibles, editable, duenio }: { clienteId: strin
               {editable && (
                 <div className="flex gap-1">
                   <Boton variante="fantasma" tamano="icono" aria-label="Editar contacto" onClick={() => setEditar(x)}><Pencil className="h-4 w-4" /></Boton>
-                  <Boton variante="fantasma" tamano="icono" aria-label="Borrar contacto" onClick={() => { if (confirm(`¿Borrar a ${x.nombre}?`)) borrar.mutate(x.id); }}><Trash2 className="h-4 w-4" /></Boton>
+                  <Boton variante="fantasma" tamano="icono" aria-label="Borrar contacto" data-explain={GLOSARIO.botonBorrarContacto} data-explain-title="Borrar contacto" onClick={() => { if (confirm(`¿Borrar a ${x.nombre}?`)) borrar.mutate(x.id); }}><Trash2 className="h-4 w-4" /></Boton>
                 </div>
               )}
             </div>
@@ -318,7 +321,7 @@ function Contactos({ clienteId, visibles, editable, duenio }: { clienteId: strin
             <Campo etiqueta="WhatsApp"><Entrada value={editar.whatsapp ?? ""} inputMode="tel" onChange={(e) => setEditar({ ...editar, whatsapp: e.target.value })} /></Campo>
             <Campo etiqueta="Correo" className="sm:col-span-2"><Entrada type="email" value={editar.correo ?? ""} onChange={(e) => setEditar({ ...editar, correo: e.target.value })} /></Campo>
             <Campo etiqueta="Domicilio" className="sm:col-span-2"><Entrada value={editar.domicilio ?? ""} onChange={(e) => setEditar({ ...editar, domicilio: e.target.value })} /></Campo>
-            <label className="sm:col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={!!editar.principal} onChange={(e) => setEditar({ ...editar, principal: e.target.checked })} /> Contacto principal (sale en las cotizaciones)</label>
+            <label className="sm:col-span-2 flex items-center gap-2 text-sm" data-explain={GLOSARIO.contactoPrincipal} data-explain-title="Contacto principal"><input type="checkbox" checked={!!editar.principal} onChange={(e) => setEditar({ ...editar, principal: e.target.checked })} /> Contacto principal (sale en las cotizaciones)</label>
             <button type="submit" className="hidden" />
           </form>
         )}
@@ -341,17 +344,18 @@ function Historia({ clienteId }: { clienteId: string }) {
     { clave: "fecha", titulo: "Fecha", valor: (c) => c.fecha, celda: (c) => fecha(c.fecha) },
     { clave: "partida", titulo: "Partidas", valor: (c) => c.primera_partida, celda: (c) => <span className="truncate block max-w-[320px]">{c.primera_partida}{c.partidas > 1 ? ` +${c.partidas - 1}` : ""}</span> },
     { clave: "vendedor", titulo: "Vendedor", valor: (c) => c.vendedor },
-    { clave: "estado", titulo: "Estado", valor: (c) => c.estado, celda: (c) => <><Insignia tono={ESTADO_COT[c.estado].tono}>{ESTADO_COT[c.estado].texto}</Insignia>{c.vencida && <Insignia tono="peligro" className="ml-1">Vencida</Insignia>}</> },
+    { clave: "estado", titulo: "Estado", explica: GLOSARIO.estadoCotizacion, valor: (c) => c.estado, celda: (c) => <><Insignia tono={ESTADO_COT[c.estado].tono}>{ESTADO_COT[c.estado].texto}</Insignia>{c.vencida && <span data-explain={GLOSARIO.vigenciaCotizacion} data-explain-title="Vencida"><Insignia tono="peligro" className="ml-1">Vencida</Insignia></span>}</> },
     { clave: "total", titulo: "Total", alinear: "der", valor: (c) => Number(c.total), celda: (c) => dineroEn(Number(c.total), c.moneda) },
   ];
   const colPed: Columna<VPedido>[] = [
-    { clave: "folio", titulo: "Pedido", celda: (p) => <span className="font-medium cifra">{p.folio}</span> },
+    { clave: "folio", titulo: "Pedido", explica: GLOSARIO.folioPedido, celda: (p) => <span className="font-medium cifra">{p.folio}</span> },
     { clave: "fecha", titulo: "Fecha", valor: (p) => p.fecha, celda: (p) => fecha(p.fecha) },
-    { clave: "canal", titulo: "Canal", valor: (p) => CANAL[p.canal] },
-    { clave: "estado", titulo: "Estado", valor: (p) => p.estado, celda: (p) => <Insignia tono={ESTADO_PEDIDO[p.estado].tono}>{ESTADO_PEDIDO[p.estado].texto}</Insignia> },
-    { clave: "avance", titulo: "Producción", valor: (p) => p.avance ?? -1, celda: (p) => p.ordenes ? <div className="w-24"><Barra valor={p.avance} /><span className="text-[11px] text-tenue">{p.avance}%</span></div> : <span className="text-tenue">—</span> },
+    { clave: "canal", titulo: "Canal", explica: GLOSARIO.canalVenta, valor: (p) => CANAL[p.canal] },
+    { clave: "estado", titulo: "Estado", explica: GLOSARIO.estadoPedido, valor: (p) => p.estado,
+      celda: (p) => <span data-explain={EXPLICA_ESTADO_PEDIDO[p.estado]} data-explain-title={ESTADO_PEDIDO[p.estado].texto}><Insignia tono={ESTADO_PEDIDO[p.estado].tono}>{ESTADO_PEDIDO[p.estado].texto}</Insignia></span> },
+    { clave: "avance", titulo: "Producción", explica: GLOSARIO.avancePedido, valor: (p) => p.avance ?? -1, celda: (p) => p.ordenes ? <div className="w-24"><Barra valor={p.avance} /><span className="text-[11px] text-tenue">{p.avance}%</span></div> : <span className="text-tenue">—</span> },
     { clave: "total", titulo: "Total", alinear: "der", valor: (p) => Number(p.total), celda: (p) => dineroEn(Number(p.total), p.moneda) },
-    { clave: "saldo", titulo: "Saldo", alinear: "der", valor: (p) => Number(p.saldo), celda: (p) => Number(p.saldo) > 0.5 ? <span className="text-aviso font-medium">{dineroEn(Number(p.saldo), p.moneda)}</span> : "—" },
+    { clave: "saldo", titulo: "Saldo", alinear: "der", explica: GLOSARIO.saldoPedido, valor: (p) => Number(p.saldo), celda: (p) => Number(p.saldo) > 0.5 ? <span className="text-aviso font-medium">{dineroEn(Number(p.saldo), p.moneda)}</span> : "—" },
   ];
   const colHoja: Columna<MovHoja>[] = [
     { clave: "fecha", titulo: "Fecha", valor: (h) => h.fecha, celda: (h) => fecha(h.fecha) },
@@ -362,9 +366,9 @@ function Historia({ clienteId }: { clienteId: string }) {
   ];
   const colOp: Columna<VOportunidad>[] = [
     { clave: "titulo", titulo: "Oportunidad", celda: (o) => <span className="font-medium">{o.titulo}</span> },
-    { clave: "etapa", titulo: "Etapa", valor: (o) => o.etapa, celda: (o) => <Insignia tono={ETAPA[o.etapa].tono}>{ETAPA[o.etapa].texto}</Insignia> },
+    { clave: "etapa", titulo: "Etapa", explica: GLOSARIO.etapaOportunidad, valor: (o) => o.etapa, celda: (o) => <Insignia tono={ETAPA[o.etapa].tono}>{ETAPA[o.etapa].texto}</Insignia> },
     { clave: "vendedor", titulo: "Vendedor", valor: (o) => o.vendedor },
-    { clave: "monto", titulo: "Monto", alinear: "der", valor: (o) => Number(o.monto_estimado ?? 0), celda: (o) => dinero(o.monto_estimado) },
+    { clave: "monto", titulo: "Monto", alinear: "der", explica: GLOSARIO.montoEstimado, valor: (o) => Number(o.monto_estimado ?? 0), celda: (o) => dinero(o.monto_estimado) },
   ];
 
   return (

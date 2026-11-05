@@ -50,7 +50,8 @@ export function EntregaRealista({ e, prometido, editable, alUsar }: {
         <CalendarClock className="h-4 w-4 text-tenue shrink-0" />
         <span>Con el taller como está hoy sale el <b>{fecha(e.fecha_propuesta)}</b> <span className="text-tenue">({e.dias_propuestos} días hábiles)</span>.</span>
         {editable && !(dias === e.dias_propuestos) && (
-          <Boton tamano="sm" variante="secundario" className="h-7 ml-auto" onClick={() => alUsar(`${e.dias_propuestos} días hábiles`)}>
+          <Boton tamano="sm" variante="secundario" className="h-7 ml-auto" onClick={() => alUsar(`${e.dias_propuestos} días hábiles`)}
+            data-explain={GLOSARIO.usarEntregaRealista}>
             Usar {e.dias_propuestos} días hábiles
           </Boton>
         )}

@@ -95,16 +95,16 @@ export default function FichaMaquina() {
 
   return (
     <Pagina
-      titulo={<span className="flex flex-wrap items-center gap-3"><span className="cifra">{m.numero}</span><span className="font-normal">{m.nombre}</span><InsigniaMaquina estado={m.estado} /></span>}
+      titulo={<span className="flex flex-wrap items-center gap-3"><span className="cifra">{m.numero}</span><span className="font-normal">{m.nombre}</span><InsigniaMaquina estado={m.estado} explica={GLOSARIO.estadoMaquina} /></span>}
       descripcion={`${TIPO_MAQUINA[m.tipo]} · ${m.categoria}${m.etapa ? ` · ${m.etapa}` : ""}${m.ubicacion ? ` · ${m.ubicacion}` : ""}`}
       acciones={<>
         <Link to="/servicio/maquinas" className="inline-flex items-center gap-1 text-sm text-tenue hover:text-texto mr-2"><ArrowLeft className="h-4 w-4" />Máquinas</Link>
-        {p.pedir && m.estado !== "baja" && <EnlaceBoton a={`/servicio/reportar?maquina=${m.id}&volver=/servicio/maquinas/${m.id}`} variante="peligro"><AlertTriangle className="h-4 w-4" />Reportar falla</EnlaceBoton>}
-        {m.usa_horometro && p.personal && !deBaja && <Boton variante="secundario" onClick={() => setDialogo("horas")}><Gauge className="h-4 w-4" />Registrar horas</Boton>}
-        {(m.prestable || m.tipo === "herramienta") && !abierto && p.personal && !deBaja && <EnlaceBoton a={`/servicio/resguardos?prestar=${m.id}`}><Hand className="h-4 w-4" />Prestar</EnlaceBoton>}
-        {p.gerencia && <Boton variante="secundario" onClick={() => setDialogo("editar")}><Pencil className="h-4 w-4" />Editar</Boton>}
-        {p.gerencia && !deBaja && <Boton variante="secundario" onClick={() => setDialogo("etiqueta")}><QrCode className="h-4 w-4" />Etiqueta QR</Boton>}
-        {p.gerencia && !deBaja && <Boton variante="secundario" onClick={() => setDialogo("baja")}><Archive className="h-4 w-4" />Dar de baja</Boton>}
+        {p.pedir && m.estado !== "baja" && <EnlaceBoton a={`/servicio/reportar?maquina=${m.id}&volver=/servicio/maquinas/${m.id}`} variante="peligro" explica={GLOSARIO.botonReportarFallaMaquina}><AlertTriangle className="h-4 w-4" />Reportar falla</EnlaceBoton>}
+        {m.usa_horometro && p.personal && !deBaja && <Boton variante="secundario" onClick={() => setDialogo("horas")} data-explain={GLOSARIO.botonRegistrarHoras}><Gauge className="h-4 w-4" />Registrar horas</Boton>}
+        {(m.prestable || m.tipo === "herramienta") && !abierto && p.personal && !deBaja && <EnlaceBoton a={`/servicio/resguardos?prestar=${m.id}`} explica={GLOSARIO.botonPrestarHerramienta}><Hand className="h-4 w-4" />Prestar</EnlaceBoton>}
+        {p.gerencia && <Boton variante="secundario" onClick={() => setDialogo("editar")} data-explain={GLOSARIO.botonEditarMaquina}><Pencil className="h-4 w-4" />Editar</Boton>}
+        {p.gerencia && !deBaja && <Boton variante="secundario" onClick={() => setDialogo("etiqueta")} data-explain={GLOSARIO.etiquetaQR}><QrCode className="h-4 w-4" />Etiqueta QR</Boton>}
+        {p.gerencia && !deBaja && <Boton variante="secundario" onClick={() => setDialogo("baja")} data-explain={GLOSARIO.maquinaDeBaja}><Archive className="h-4 w-4" />Dar de baja</Boton>}
       </>}
     >
       {deBaja && (
@@ -114,7 +114,7 @@ export default function FichaMaquina() {
             <strong>Dada de baja{m.baja_en ? ` el ${fecha(m.baja_en)}` : ""}</strong>{m.baja_por_nombre && <span className="text-tenue"> por {m.baja_por_nombre}</span>}
             {m.motivo_baja && <span className="block text-tenue">{m.motivo_baja}</span>}
           </p>
-          {p.gerencia && <Boton variante="secundario" tamano="sm" cargando={reactivar.isPending} onClick={() => reactivar.mutate()}><ArchiveRestore className="h-3.5 w-3.5" />Reactivar</Boton>}
+          {p.gerencia && <Boton variante="secundario" tamano="sm" cargando={reactivar.isPending} onClick={() => reactivar.mutate()} data-explain={GLOSARIO.botonReactivarMaquina}><ArchiveRestore className="h-3.5 w-3.5" />Reactivar</Boton>}
         </div>
       )}
       <div className="grid gap-4 lg:grid-cols-3 items-start">
@@ -125,7 +125,7 @@ export default function FichaMaquina() {
             {p.gerencia && (
               <>
                 <input ref={entradaFoto} type="file" accept="image/*" capture="environment" className="sr-only" tabIndex={-1} onChange={(e) => cambiarFoto(e.target.files?.[0])} aria-label="Foto de la máquina" />
-                <Boton variante="secundario" tamano="sm" className="absolute bottom-2 right-2" cargando={subiendo} onClick={() => entradaFoto.current?.click()}>
+                <Boton variante="secundario" tamano="sm" className="absolute bottom-2 right-2" cargando={subiendo} onClick={() => entradaFoto.current?.click()} data-explain={GLOSARIO.botonFotoMaquina}>
                   <Camera className="h-3.5 w-3.5" />{m.foto_ruta ? "Cambiar foto" : "Agregar foto"}
                 </Boton>
               </>
@@ -150,26 +150,29 @@ export default function FichaMaquina() {
           <div className="grid gap-3 sm:grid-cols-3">
             <Kpi titulo="Fallas en 12 meses" explica={GLOSARIO.fallasUltimoAnio} valor={numero(m.fallas_12m)} icono={AlertTriangle} tono={m.fallas_12m >= 3 ? "peligro" : m.fallas_12m ? "aviso" : "ok"}
                  detalle={m.ultima_falla ? `La última ${hace(m.ultima_falla)}` : "Sin fallas registradas"} />
-            <Kpi titulo="Tiempo parada en 12 meses" valor={m.horas_paro_12m >= 48 ? `${Math.round(m.horas_paro_12m / 24)} días` : horas(m.horas_paro_12m)} icono={History} tono={m.horas_paro_12m > 0 ? "aviso" : "ok"}
+            <Kpi titulo="Tiempo parada en 12 meses" explica={GLOSARIO.kpiTiempoParadaMaquina} valor={m.horas_paro_12m >= 48 ? `${Math.round(m.horas_paro_12m / 24)} días` : horas(m.horas_paro_12m)} icono={History} tono={m.horas_paro_12m > 0 ? "aviso" : "ok"}
                  detalle="Desde que se reporta parada hasta que se cierra" />
             {p.costos ? (
-              <Kpi titulo="Costo acumulado" valor={dinero(total)} icono={Wrench} tono="marca"
+              <Kpi titulo="Costo acumulado" explica={GLOSARIO.kpiCostoAcumuladoMaquina} valor={dinero(total)} icono={Wrench} tono="marca"
                    detalle={`${dinero(total12)} en los últimos 12 meses${p.costosArticulo ? "" : " · sin refacciones de almacén (las ve quien tiene costos)"}`} />
             ) : (
-              <Kpi titulo="Órdenes abiertas" valor={numero(m.ordenes_abiertas)} icono={Wrench} tono={m.ordenes_abiertas ? "aviso" : "ok"} detalle={m.orden_folio ?? "Ninguna"} />
+              <Kpi titulo="Órdenes abiertas" explica={GLOSARIO.kpiOrdenesAbiertasMaquina} valor={numero(m.ordenes_abiertas)} icono={Wrench} tono={m.ordenes_abiertas ? "aviso" : "ok"} detalle={m.orden_folio ?? "Ninguna"} />
             )}
           </div>
 
           {!deBaja && <TarjetaCriticidad m={m} alEditar={p.gerencia ? () => setDialogo("editar") : undefined} />}
 
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Historial de mantenimiento" descripcion={`${(historial.data ?? []).length} ${(historial.data ?? []).length === 1 ? "orden" : "órdenes"}${p.costos ? " · costo por orden" : ""}`} />
+            <EncabezadoTarjeta titulo="Historial de mantenimiento" explica={GLOSARIO.historialMantenimientoMaquina} descripcion={`${(historial.data ?? []).length} ${(historial.data ?? []).length === 1 ? "orden" : "órdenes"}${p.costos ? " · costo por orden" : ""}`} />
             {historial.isLoading ? <Cargando filas={3} /> : (historial.data ?? []).length === 0 ? (
               <Vacio icono={History} titulo="Sin historial todavía" texto="Cada falla reportada y cada preventivo quedan aquí, con su costo y el tiempo que estuvo parada." />
             ) : (
               <div className="overflow-x-auto">
                 <table className="tabla">
-                  <thead><tr><th>Folio</th><th>Qué pasó</th><th className="text-right">Parada</th>{p.costos && <th className="text-right">Costo</th>}<th>Estado</th></tr></thead>
+                  <thead><tr><th>Folio</th><th>Qué pasó</th>
+                    <th className="text-right"><span data-explain={GLOSARIO.tiempoParadaOrden} data-explain-title="Parada">Parada</span></th>
+                    {p.costos && <th className="text-right">Costo</th>}
+                    <th><span data-explain={GLOSARIO.estadoOrdenMto} data-explain-title="Estado de la orden">Estado</span></th></tr></thead>
                   <tbody>
                     {historial.data!.map((o) => (
                       <tr key={o.id} className="cursor-pointer" onClick={() => setOrden(o.id)}>
@@ -190,7 +193,7 @@ export default function FichaMaquina() {
           <div className="grid gap-4 md:grid-cols-2 items-start">
             <Tarjeta>
               <EncabezadoTarjeta titulo="Plan preventivo" explica={GLOSARIO.planPreventivo} descripcion="La orden sale sola cuando vence (por fecha o por horas)."
-                acciones={p.gerencia && !deBaja && <Boton variante="secundario" tamano="sm" onClick={() => { setPlan(null); setDialogo("plan"); }}><CalendarPlus className="h-3.5 w-3.5" />Agregar</Boton>} />
+                acciones={p.gerencia && !deBaja && <Boton variante="secundario" tamano="sm" onClick={() => { setPlan(null); setDialogo("plan"); }} data-explain={GLOSARIO.botonAgregarPlanPreventivo}><CalendarPlus className="h-3.5 w-3.5" />Agregar</Boton>} />
               <div className="px-5 pb-4 space-y-2">
                 {(planes.data ?? []).length === 0 ? <p className="text-sm text-tenue">Sin plan. Un preventivo a tiempo cuesta menos que la falla.</p>
                   : planes.data!.map((x) => (
@@ -198,9 +201,11 @@ export default function FichaMaquina() {
                             className="w-full text-left rounded-lg border border-borde p-3 hover:bg-fondo disabled:hover:bg-transparent">
                       <div className="flex items-start justify-between gap-2">
                         <p className="font-medium text-sm">{x.nombre}{!x.activo && <span className="text-tenue font-normal"> · pausado</span>}</p>
-                        <Insignia tono={x.situacion === "vencido" ? "peligro" : x.situacion === "por_vencer" ? "aviso" : "ok"}>
-                          {x.situacion === "vencido" ? "Vencido" : x.situacion === "por_vencer" ? "Por vencer" : "Al día"}
-                        </Insignia>
+                        <span className="inline-flex" data-explain={GLOSARIO.situacionPreventivo}>
+                          <Insignia tono={x.situacion === "vencido" ? "peligro" : x.situacion === "por_vencer" ? "aviso" : "ok"}>
+                            {x.situacion === "vencido" ? "Vencido" : x.situacion === "por_vencer" ? "Por vencer" : "Al día"}
+                          </Insignia>
+                        </span>
                       </div>
                       <p className="text-xs text-tenue mt-1">
                         {cadaPlan(x)} ·
@@ -241,7 +246,7 @@ export default function FichaMaquina() {
             descripcion={`${refacciones.data!.length} piezas · se piden desde una orden de mantenimiento`} />
           <div className="overflow-x-auto">
             <table className="tabla">
-              <thead><tr><th>Clave</th><th>Pieza</th><th className="text-right">En planta</th></tr></thead>
+              <thead><tr><th>Clave</th><th>Pieza</th><th className="text-right"><span data-explain={GLOSARIO.enPlanta} data-explain-title="En planta">En planta</span></th></tr></thead>
               <tbody>
                 {refacciones.data!.map((x) => (
                   <tr key={x.id}><td className="cifra">{x.clave}</td><td>{x.nombre}</td>
@@ -273,7 +278,11 @@ function DialogoHoras({ m, alCerrar }: { m: Maquina; alCerrar: () => void }) {
     <Dialogo abierto alCambiar={(v) => !v && alCerrar()} titulo={`Horómetro de ${m.numero}`} descripcion={`Última lectura: ${horas(m.horas_uso)}`}
       pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton type="submit" form="form-horas" cargando={registrar.isPending} disabled={!(Number(h) >= m.horas_uso)}>Guardar</Boton></>}>
       <form id="form-horas" onSubmit={(e) => { e.preventDefault(); registrar.mutate(); }}>
-        <Campo etiqueta="Lectura de hoy (horas)"><Entrada type="number" min={m.horas_uso} step="0.1" value={h} onChange={(e) => setH(e.target.value)} autoFocus /></Campo>
+        <Campo etiqueta="Lectura de hoy (horas)">
+          <span data-explain={GLOSARIO.horometro} data-explain-title="Horómetro" className="block">
+            <Entrada type="number" min={m.horas_uso} step="0.1" value={h} onChange={(e) => setH(e.target.value)} autoFocus />
+          </span>
+        </Campo>
       </form>
     </Dialogo>
   );
@@ -297,7 +306,7 @@ function Documentos({ m, gerencia, alAgregar }: { m: Maquina; gerencia: boolean;
     <Tarjeta className="mt-4">
       <EncabezadoTarjeta titulo="Manuales y fichas técnicas" explica={GLOSARIO.documentosMaquina}
         descripcion={lista.length ? `${lista.length} ${lista.length === 1 ? "documento" : "documentos"}` : "Sube el manual o pon la liga de Drive: así está a la mano cuando se repara."}
-        acciones={gerencia && <Boton variante="secundario" tamano="sm" onClick={alAgregar}><Plus className="h-3.5 w-3.5" />Agregar</Boton>} />
+        acciones={gerencia && <Boton variante="secundario" tamano="sm" onClick={alAgregar} data-explain={GLOSARIO.botonAgregarDocumentoMaquina}><Plus className="h-3.5 w-3.5" />Agregar</Boton>} />
       {lista.length > 0 && (
         <ul className="px-5 pb-4 divide-y divide-borde/60">
           {lista.map((d) => {
@@ -311,6 +320,7 @@ function Documentos({ m, gerencia, alAgregar }: { m: Maquina; gerencia: boolean;
                   <p className="text-xs text-tenue">{TIPO_DOCUMENTO[d.tipo]} · {d.alcance}{d.creado_por_nombre ? ` · subió ${d.creado_por_nombre}` : ""}</p>
                 </div>
                 {gerencia && <Boton variante="fantasma" tamano="sm" aria-label={`Quitar ${d.titulo}`} cargando={quitar.isPending && quitar.variables === d.id}
+                  data-explain={GLOSARIO.botonQuitarDocumentoMaquina} data-explain-title="Quitar documento"
                   onClick={() => { if (window.confirm(`¿Quitar «${d.titulo}»${d.compartido ? " de todas las máquinas donde aparece" : ""}?`)) quitar.mutate(d.id); }}>
                   <Trash2 className="h-3.5 w-3.5" /></Boton>}
               </li>
@@ -376,11 +386,13 @@ function DialogoDocumento({ m, alCerrar }: { m: Maquina; alCerrar: () => void })
           </Campo>
         )}
         <Campo etiqueta="¿De qué máquinas es?">
-          <Seleccion value={alcance} onChange={(e) => setAlcance(e.target.value as typeof alcance)}>
-            <option value="maquina">Solo de {m.numero}</option>
-            {m.modelo && <option value="modelo">De todas las «{m.categoria}» modelo {m.modelo}</option>}
-            <option value="categoria">De todas las «{m.categoria}», de cualquier modelo</option>
-          </Seleccion>
+          <span data-explain={GLOSARIO.alcanceDocumentoMaquina} data-explain-title="¿De qué máquinas es?" className="block">
+            <Seleccion value={alcance} onChange={(e) => setAlcance(e.target.value as typeof alcance)}>
+              <option value="maquina">Solo de {m.numero}</option>
+              {m.modelo && <option value="modelo">De todas las «{m.categoria}» modelo {m.modelo}</option>}
+              <option value="categoria">De todas las «{m.categoria}», de cualquier modelo</option>
+            </Seleccion>
+          </span>
         </Campo>
       </form>
     </Dialogo>
@@ -497,10 +509,14 @@ function DialogoPlan({ maquinaId, plan, horasActuales, alCerrar }: { maquinaId: 
           </>}
           {f.modo === "mes_dia" && <Campo etiqueta="Día del mes" ayuda="El 31 en un mes de 30 es el 30."><Entrada type="number" min="1" max="31" value={f.dia_mes} onChange={(e) => set("dia_mes", e.target.value)} /></Campo>}
           {f.modo !== "dias" && <Campo etiqueta="Cada (meses)"><Entrada type="number" min="1" max="24" value={f.cada_meses} onChange={(e) => set("cada_meses", e.target.value)} /></Campo>}
-          <Campo etiqueta="Cada (horas de uso)"><Entrada type="number" min="1" value={f.cada_horas} onChange={(e) => set("cada_horas", e.target.value)} placeholder="Opcional" /></Campo>
-          <Campo etiqueta="Avisar días antes"><Entrada type="number" min="0" value={f.anticipacion_dias} onChange={(e) => set("anticipacion_dias", e.target.value)} /></Campo>
-          <Campo etiqueta="Último hecho"><Entrada type="date" value={f.ultima_fecha} onChange={(e) => set("ultima_fecha", e.target.value)} /></Campo>
-          <Campo etiqueta="A las (horas)"><Entrada type="number" min="0" step="0.1" value={f.ultima_horas} onChange={(e) => set("ultima_horas", e.target.value)} /></Campo>
+          <Campo etiqueta="Cada (horas de uso)"><Entrada type="number" min="1" value={f.cada_horas} onChange={(e) => set("cada_horas", e.target.value)} placeholder="Opcional"
+            data-explain={GLOSARIO.cadaHorasPreventivo} data-explain-title="Cada (horas de uso)" /></Campo>
+          <Campo etiqueta="Avisar días antes"><Entrada type="number" min="0" value={f.anticipacion_dias} onChange={(e) => set("anticipacion_dias", e.target.value)}
+            data-explain={GLOSARIO.avisarDiasAntesPreventivo} data-explain-title="Avisar días antes" /></Campo>
+          <Campo etiqueta="Último hecho"><Entrada type="date" value={f.ultima_fecha} onChange={(e) => set("ultima_fecha", e.target.value)}
+            data-explain={GLOSARIO.ultimoPreventivoHecho} data-explain-title="Último hecho" /></Campo>
+          <Campo etiqueta="A las (horas)"><Entrada type="number" min="0" step="0.1" value={f.ultima_horas} onChange={(e) => set("ultima_horas", e.target.value)}
+            data-explain={GLOSARIO.ultimoPreventivoHecho} data-explain-title="Último hecho, a las (horas)" /></Campo>
         </div>
         <label className="flex items-start gap-2 text-sm cursor-pointer" data-explain={GLOSARIO.diaHabilPreventivo}>
           <input type="checkbox" checked={f.solo_laborables} onChange={(e) => set("solo_laborables", e.target.checked)} className="accent-[hsl(var(--marca))] mt-0.5" />
@@ -512,7 +528,7 @@ function DialogoPlan({ maquinaId, plan, horasActuales, alCerrar }: { maquinaId: 
             {Number(f.anticipacion_dias) > 0 && <span className="text-tenue"> · la orden sale {f.anticipacion_dias} {Number(f.anticipacion_dias) === 1 ? "día" : "días"} antes</span>}
           </p>
         )}
-        <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
+        <label className="inline-flex items-center gap-2 text-sm cursor-pointer" data-explain={GLOSARIO.planActivoPreventivo} data-explain-title="Plan activo">
           <input type="checkbox" checked={f.activo} onChange={(e) => set("activo", e.target.checked)} className="accent-[hsl(var(--marca))]" />Plan activo
         </label>
       </form>

@@ -163,7 +163,7 @@ export default function FacturasAnteriores() {
           <span className="block text-[11px] text-tenue">factura {f.factura_hoja ?? "—"}</span></span>
       : f.cancelada ? <span data-explain={GLOSARIO.cfdiCancelada}><Insignia tono="neutro">Cancelada</Insignia></span>
       : <span className="text-tenue text-sm">Sin renglón</span> },
-    { clave: "orden_hoja", titulo: "OC", oculta: vista === "emitidas", celda: (f) => {
+    { clave: "orden_hoja", titulo: "OC", explica: GLOSARIO.ocHojaXml, oculta: vista === "emitidas", celda: (f) => {
       const liga = ligaOc(f.orden_hoja);
       return f.orden_hoja ? (liga ? <a href={liga} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-marca-texto cifra">{f.orden_hoja}<ExternalLink className="h-3 w-3" /></a>
         : <span className="cifra">{f.orden_hoja}</span>) : <span className="text-tenue">—</span>;
@@ -173,6 +173,7 @@ export default function FacturasAnteriores() {
       : <span className="text-tenue">—</span> },
     ...(carga ? [{ clave: "acciones", titulo: "", celda: (f: Fila) => (
       <Boton tamano="sm" variante="fantasma" onClick={(e) => { e.stopPropagation(); cancelar(f); }} title={f.cancelada ? "No está cancelada" : "Cancelada en el SAT"}
+             data-explain={GLOSARIO.cfdiCancelada} data-explain-title={f.cancelada ? "Quitar «cancelada»" : "Marcar cancelada"}
              aria-label={f.cancelada ? "Quitar cancelada" : "Marcar cancelada"}>
         {f.cancelada ? <Undo2 className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
       </Boton>
@@ -184,9 +185,14 @@ export default function FacturasAnteriores() {
     <Pagina titulo="Facturas anteriores (XML)"
       descripcion="Los XML de años pasados se amarran a los libros de compras y ventas de las hojas, para que la historia diga qué se compró y no solo a quién."
       acciones={carga && <>
-        <Boton variante="secundario" cargando={trabajando} onClick={reamarrar}><RefreshCw className="h-4 w-4" />Volver a amarrar</Boton>
-        <Boton variante="secundario" disabled={trabajando} onClick={() => archivos.current?.click()}><FileArchive className="h-4 w-4" />XML o ZIP</Boton>
-        <Boton disabled={trabajando} onClick={() => carpeta.current?.click()}><FolderOpen className="h-4 w-4" />Elegir carpeta</Boton>
+        {/* Se deshabilitan mientras se carga, y un botón deshabilitado no recibe el mouse ni el foco:
+            el globo va en el span que lo envuelve (del mismo tamaño), así se explica en los dos estados. */}
+        <span className="inline-flex" data-explain={GLOSARIO.botonVolverAmarrarXml} data-explain-title="Volver a amarrar">
+          <Boton variante="secundario" cargando={trabajando} onClick={reamarrar}><RefreshCw className="h-4 w-4" />Volver a amarrar</Boton></span>
+        <span className="inline-flex" data-explain={GLOSARIO.botonCargarZipXml} data-explain-title="XML o ZIP">
+          <Boton variante="secundario" disabled={trabajando} onClick={() => archivos.current?.click()}><FileArchive className="h-4 w-4" />XML o ZIP</Boton></span>
+        <span className="inline-flex" data-explain={GLOSARIO.botonElegirCarpetaXml} data-explain-title="Elegir carpeta">
+          <Boton disabled={trabajando} onClick={() => carpeta.current?.click()}><FolderOpen className="h-4 w-4" />Elegir carpeta</Boton></span>
       </>}>
       <input ref={carpeta} type="file" className="sr-only" tabIndex={-1} aria-label="Carpeta de facturas" onChange={(e) => cargar(e.target.files)}
         {...({ webkitdirectory: "", directory: "" } as Record<string, string>)} multiple />
@@ -194,7 +200,7 @@ export default function FacturasAnteriores() {
 
       {avance && (
         <Tarjeta className="p-4">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm" data-explain={GLOSARIO.avanceCargaXml} data-explain-title="Cómo va la carga">
             <span className="font-medium">{trabajando ? "Cargando…" : "Última carga"}</span>
             <span className="cifra">{numero(avance.leidos)} de {numero(avance.total)} XML leídos</span>
             <span className="cifra text-ok">{numero(avance.nuevas)} nuevas</span>
@@ -218,9 +224,13 @@ export default function FacturasAnteriores() {
         ) : (
           <div className="overflow-x-auto">
             <table className="tabla">
-              <thead><tr><th>Año</th><th className="text-right">Compras en la hoja</th><th className="text-right">XML recibidos</th><th className="text-right">Amarrados</th>
-                <th className="text-right">Con OC</th><th className="text-right">Por lo comprado</th><th className="text-right">Ventas en la hoja</th><th className="text-right">XML emitidos</th>
-                <th className="text-right">Amarrados</th><th className="text-right">Nómina</th></tr></thead>
+              <thead><tr><th>Año</th><th className="text-right">Compras en la hoja</th><th className="text-right">XML recibidos</th>
+                <th className="text-right"><span data-explain={GLOSARIO.amarreXml} data-explain-title="Amarrados">Amarrados</span></th>
+                <th className="text-right"><span data-explain={GLOSARIO.coberturaXml} data-explain-title="Con OC">Con OC</span></th>
+                <th className="text-right"><span data-explain={GLOSARIO.coberturaXml} data-explain-title="Por lo comprado">Por lo comprado</span></th>
+                <th className="text-right">Ventas en la hoja</th><th className="text-right">XML emitidos</th>
+                <th className="text-right"><span data-explain={GLOSARIO.filtroEmitidasXml} data-explain-title="Amarrados">Amarrados</span></th>
+                <th className="text-right"><span data-explain={GLOSARIO.nominaXml} data-explain-title="Nómina">Nómina</span></th></tr></thead>
               <tbody>
                 {filasAnio.map((a) => (
                   <tr key={a.anio} className={a.anio === anioVista ? "bg-marca-suave/40" : "cursor-pointer"} onClick={() => setAnio(a.anio)}>
@@ -262,7 +272,7 @@ export default function FacturasAnteriores() {
           <Filtro<Vista> valor={vista} alCambiar={setVista} opciones={[
             { valor: "sin_amarrar", texto: "Recibidas sin renglón", explica: GLOSARIO.amarreXml },
             { valor: "recibidas", texto: "Recibidas" },
-            { valor: "emitidas", texto: "Emitidas" },
+            { valor: "emitidas", texto: "Emitidas", explica: GLOSARIO.filtroEmitidasXml },
           ]} />
           <span className="text-sm text-tenue">{anioVista}{anios.length > 1 && " · elige otro año en la tabla de arriba"}</span>
         </div>}

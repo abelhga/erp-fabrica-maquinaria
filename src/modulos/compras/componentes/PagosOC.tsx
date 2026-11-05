@@ -57,7 +57,7 @@ export function PagosOC({ oc }: { oc: OrdenCompra }) {
 
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo={<span className="flex items-center gap-2"><Wallet className="h-4 w-4 text-tenue" /> Pagos</span>}
+      <EncabezadoTarjeta titulo={<span className="flex items-center gap-2"><Wallet className="h-4 w-4 text-tenue" /> Pagos</span>} explica={GLOSARIO.pagosOrdenCompra}
         descripcion={oc.vence_pago ? `Vence el ${fecha(oc.vence_pago)}` : "El vencimiento se fija al recibir (días de crédito del proveedor)."}
         acciones={facturada ? undefined : <span className={saldo <= 0 ? "text-ok text-sm font-medium" : "text-sm"}>{saldo <= 0 ? "Pagada" : <>Saldo <b className="cifra">{dinero(saldo, m)}</b></>}</span>} />
       <div className="px-5 pb-4 space-y-3">

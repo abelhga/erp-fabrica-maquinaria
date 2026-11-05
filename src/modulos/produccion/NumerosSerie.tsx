@@ -71,7 +71,7 @@ export default function NumerosSerie() {
     { clave: "pedido", titulo: "Pedido", valor: (e) => `${e.pedido ?? ""} ${e.factura ?? ""}`,
       celda: (e) => <div className="whitespace-nowrap">{e.pedido ?? "—"}{e.factura && <p className="text-xs text-tenue">Fact. {e.factura}</p>}</div> },
     { clave: "fecha", titulo: "Fecha", sinBusqueda: true, celda: (e) => <span className="whitespace-nowrap text-tenue">{fecha(e.fecha)}</span> },
-    { clave: "estado", titulo: "Estado", sinBusqueda: true, valor: (e) => e.estado ?? "",
+    { clave: "estado", titulo: "Estado", sinBusqueda: true, explica: GLOSARIO.estadoEquipoSerie, valor: (e) => e.estado ?? "",
       celda: (e) => e.estado ? <Insignia tono={ESTADO[e.estado].tono}>{ESTADO[e.estado].texto}</Insignia> : <span className="text-tenue">—</span> },
     { clave: "origen", titulo: "Origen", sinBusqueda: true, explica: GLOSARIO.equipoHistorico,
       celda: (e) => e.origen === "erp" ? <Insignia tono="marca">ERP</Insignia> : <span className="text-xs text-tenue">Hoja</span> },
@@ -80,8 +80,10 @@ export default function NumerosSerie() {
   return (
     <Pagina titulo="Números de serie" descripcion="Cada equipo que hemos hecho: de quién es, de qué pedido, y qué número sigue en cada familia.">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi titulo="Equipos con serie" valor={numero(todos.length)} icono={Hash} tono="marca" detalle={`${todos.filter((e) => e.origen === "erp").length} hechos en el ERP`} alClic={() => { setVista("todos"); setFamilia(""); }} />
-        <Kpi titulo="En taller o por entregar" valor={numero(todos.filter((e) => e.estado === "espera" || e.estado === "proceso" || e.estado === "terminado").length)} icono={Wrench} tono="aviso" alClic={() => setVista("abiertos")} />
+        <Kpi titulo="Equipos con serie" valor={numero(todos.length)} icono={Hash} tono="marca" detalle={`${todos.filter((e) => e.origen === "erp").length} hechos en el ERP`} alClic={() => { setVista("todos"); setFamilia(""); }}
+          explica={GLOSARIO.numeroSerie} />
+        <Kpi titulo="En taller o por entregar" valor={numero(todos.filter((e) => e.estado === "espera" || e.estado === "proceso" || e.estado === "terminado").length)} icono={Wrench} tono="aviso" alClic={() => setVista("abiertos")}
+          explica={GLOSARIO.equiposEnTallerSerie} />
       </div>
       <Pestanas value={pestana} onValueChange={(v) => setPestana(v as "equipos" | "codigos")}>
         <ListaPestanas opciones={[
@@ -94,10 +96,11 @@ export default function NumerosSerie() {
             filtros={<div className="flex flex-wrap items-center gap-2">
               <Filtro valor={vista} alCambiar={setVista} opciones={[
                 { valor: "todos", texto: "Todos", cuenta: deFamilia.length },
-                { valor: "abiertos", texto: "En taller o por entregar", cuenta: abiertos.length },
+                { valor: "abiertos", texto: "En taller o por entregar", cuenta: abiertos.length, explica: GLOSARIO.equiposEnTallerSerie },
                 { valor: "entregado", texto: "Entregados" },
               ]} />
-              <Seleccion value={familia} onChange={(e) => setFamilia(e.target.value)} className="h-8 w-auto text-xs" aria-label="Familia">
+              <Seleccion value={familia} onChange={(e) => setFamilia(e.target.value)} className="h-8 w-auto text-xs" aria-label="Familia"
+                data-explain={GLOSARIO.familiaSerie} data-explain-title="Familia">
                 <option value="">Todas las familias</option>
                 {(familias.data ?? []).map((f) => <option key={f.clave} value={f.clave}>{f.nombre}</option>)}
               </Seleccion>
@@ -127,8 +130,10 @@ function FichaEquipo({ equipo: e, familia, alCerrar }: { equipo: Equipo | null; 
       {e && (
         <div className="space-y-5">
           <div className="flex flex-wrap items-center gap-2">
-            {e.estado && <Insignia tono={ESTADO[e.estado].tono}>{ESTADO[e.estado].texto}</Insignia>}
-            {e.origen === "erp" ? <Insignia tono="marca">Numerado por el ERP</Insignia> : <span className="text-xs text-tenue">Del libro de seriales (hoja)</span>}
+            {e.estado && <span data-explain={GLOSARIO.estadoEquipoSerie} data-explain-title={ESTADO[e.estado].texto}><Insignia tono={ESTADO[e.estado].tono}>{ESTADO[e.estado].texto}</Insignia></span>}
+            {e.origen === "erp"
+              ? <span data-explain={GLOSARIO.numeroSerie} data-explain-title="Numerado por el ERP"><Insignia tono="marca">Numerado por el ERP</Insignia></span>
+              : <span className="text-xs text-tenue" data-explain={GLOSARIO.equipoHistorico} data-explain-title="Del libro de seriales">Del libro de seriales (hoja)</span>}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {dato("Cliente", e.cliente_id && puede("ventas") ? <Link className="text-marca-texto hover:underline" to={`/ventas/clientes/${e.cliente_id}`}>{e.cliente}</Link> : e.cliente)}
@@ -185,7 +190,7 @@ function CodigosPorEquipo({ familias, editable }: { familias: Familia[]; editabl
   return (
     <TablaDatos filas={filas} columnas={columnas} cargando={datos.isLoading} error={datos.error} claveFila={(a) => a.id}
       exportarComo="codigos-de-serie" placeholder="Buscar equipo o clave…"
-      filtros={<Filtro valor={vista} alCambiar={setVista} opciones={[{ valor: "sin", texto: "Sin código", cuenta: sin.length }, { valor: "todos", texto: "Todos", cuenta: todos.length }]} />}
+      filtros={<Filtro valor={vista} alCambiar={setVista} opciones={[{ valor: "sin", texto: "Sin código", cuenta: sin.length, explica: GLOSARIO.codigoSerie }, { valor: "todos", texto: "Todos", cuenta: todos.length }]} />}
       vacio={{ icono: Hash, titulo: vista === "sin" ? "Todos los equipos tienen código" : "Sin equipos", texto: "Cada equipo del catálogo necesita su código (por ejemplo TB20090275E para una banda de 20\" × 9 m, 2 HP, caja 75) para que su orden de producción saque número de serie sola." }} />
   );
 }
@@ -216,18 +221,19 @@ function EditorCodigo({ articulo: a, familias, editable }: { articulo: EquipoCat
   });
   const f = familias.find((x) => x.clave === fam);
   if (!editable) return a.codigo_serie
-    ? <span className="cifra">{a.codigo_serie}<span className="text-tenue">###</span> <span className="text-xs text-tenue">· {f?.nombre}</span></span>
+    ? <span className="cifra" data-explain={GLOSARIO.codigoSerie} data-explain-title="Código de serie">{a.codigo_serie}<span className="text-tenue">###</span> <span className="text-xs text-tenue">· {f?.nombre}</span></span>
     : <span className="text-xs text-aviso">Sin código</span>;
   const cambio = fam !== (a.familia_serie ?? "") || cod.toUpperCase() !== (a.codigo_serie ?? "");
   return (
     <form className="flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); if (cambio) guardar.mutate(undefined); }}>
-      <Seleccion value={fam} onChange={(e) => setFam(e.target.value)} className="h-8 w-44 text-xs" aria-label="Familia de serie">
+      <Seleccion value={fam} onChange={(e) => setFam(e.target.value)} className="h-8 w-44 text-xs" aria-label="Familia de serie"
+        data-explain={GLOSARIO.familiaSerie} data-explain-title="Familia">
         <option value="">Familia…</option>
         {familias.map((x) => <option key={x.clave} value={x.clave}>{x.nombre}</option>)}
       </Seleccion>
       <Entrada value={cod} onChange={(e) => setCod(e.target.value.toUpperCase())} className="h-8 w-40 cifra" aria-label="Código de serie"
         placeholder={f?.prefijo ? `${f.prefijo}…` : "Código"} />
-      {f && cod && <span className="text-xs text-tenue cifra">→ {cod.replace(/\s/g, "")}{String(f.ultimo + 1).padStart(3, "0")}</span>}
+      {f && cod && <span className="text-xs text-tenue cifra" data-explain={GLOSARIO.serialSiguiente} data-explain-title="El que sigue">→ {cod.replace(/\s/g, "")}{String(f.ultimo + 1).padStart(3, "0")}</span>}
       {cambio && <Boton type="submit" className="h-8" cargando={guardar.isPending}>Guardar</Boton>}
     </form>
   );

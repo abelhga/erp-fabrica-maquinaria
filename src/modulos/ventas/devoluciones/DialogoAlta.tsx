@@ -9,6 +9,7 @@ import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { fecha, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { CLAVE, TIPO_DEVOLUCION, type TipoDevolucion } from "@/modulos/almacen/envios/datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Venta { id: string; folio: string; canal: string; id_externo: string | null; cliente: string | null; fecha: string; estado: string; vendedor: string | null; partidas: string | null }
 
@@ -94,7 +95,7 @@ export function DialogoAlta({ abierto, alCambiar, alCrear }: { abierto: boolean;
                 <span className="text-tenue"> · {CANAL[venta.canal] ?? venta.canal} · {fecha(venta.fecha)}{venta.vendedor && ` · ${venta.vendedor}`}</span></p>
               {venta.partidas && <p className="text-xs text-tenue mt-0.5">{venta.partidas}</p>}
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2" data-explain={GLOSARIO.tipoDevolucion} data-explain-title="¿Qué es?">
               {(Object.keys(TIPO_DEVOLUCION) as TipoDevolucion[]).map((t) => (
                 <button key={t} type="button" onClick={() => setTipo(t)} title={TIPO_DEVOLUCION[t].ayuda}
                   className={cn("rounded-lg border px-3 py-2 text-sm transition", tipo === t ? "border-marca bg-marca-suave text-marca-texto font-medium" : "border-borde hover:bg-fondo")}>
@@ -112,13 +113,16 @@ export function DialogoAlta({ abierto, alCambiar, alCrear }: { abierto: boolean;
                 ))}
               </div>
               {tipo !== "cancelacion" && (
-                <Campo etiqueta="Código de autorización"><Entrada className="cifra" value={f.codigo} onChange={(e) => setF({ ...f, codigo: e.target.value })} placeholder="El de Mercado Libre" /></Campo>
+                <Campo etiqueta="Código de autorización"><Entrada className="cifra" value={f.codigo} onChange={(e) => setF({ ...f, codigo: e.target.value })} placeholder="El de Mercado Libre"
+                  data-explain={GLOSARIO.codigoAutorizacion} data-explain-title="Código de autorización" /></Campo>
               )}
               {tipo === "devolucion" && (
-                <Campo etiqueta="¿Cuándo llega?" ayuda="Si no se sabe, 3 días hábiles."><Entrada type="date" min={hoyISO()} value={f.esperada} onChange={(e) => setF({ ...f, esperada: e.target.value })} /></Campo>
+                <Campo etiqueta="¿Cuándo llega?" ayuda="Si no se sabe, 3 días hábiles."><Entrada type="date" min={hoyISO()} value={f.esperada} onChange={(e) => setF({ ...f, esperada: e.target.value })}
+                  data-explain={GLOSARIO.venceDevolucion} data-explain-title="¿Cuándo llega?" /></Campo>
               )}
               {tipo === "reclamo" && (
-                <Campo etiqueta="Responder antes de" ayuda="La hora límite que da Mercado Libre."><Entrada type="datetime-local" value={f.limite} onChange={(e) => setF({ ...f, limite: e.target.value })} /></Campo>
+                <Campo etiqueta="Responder antes de" ayuda="La hora límite que da Mercado Libre."><Entrada type="datetime-local" value={f.limite} onChange={(e) => setF({ ...f, limite: e.target.value })}
+                  data-explain={GLOSARIO.venceDevolucion} data-explain-title="Responder antes de" /></Campo>
               )}
               <button type="submit" className="hidden" />
             </form>

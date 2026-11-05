@@ -20,7 +20,7 @@ import { ResumenIA } from "./ResumenIA";
 import { ConsejosSemana } from "@/modulos/revision/PorRevisar";
 import { DondeVendemos } from "@/modulos/analisis/DondeVendemos";
 import { SeguimientoEquipo } from "@/modulos/ventas/componentes/Seguimiento";
-import { Explicacion } from "@/tutorial/Explicacion";
+import { AyudaDePantalla } from "@/tutorial/Explicacion";
 import { PANTALLAS } from "@/tutorial/pantallas";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -187,7 +187,7 @@ export function TableroDireccion() {
       </div>
 
       {/* Dirección no pasa por Pagina: el texto del tutorial de "/" se pone aquí. */}
-      <Explicacion>{PANTALLAS["/"].map((p) => <p key={p}>{p}</p>)}</Explicacion>
+      <AyudaDePantalla ayuda={PANTALLAS["/"]} ruta="/" />
 
       <ResumenIA />
       <ConsejosSemana />
@@ -219,14 +219,14 @@ export function TableroDireccion() {
         {d.inventario && (
           <Indicador titulo="Inventario" valor={dineroCompacto(d.inventario.valor)} icono={Boxes} tono="marca"
             detalle={<><b className="text-aviso">{dineroCompacto(d.inventario.excedentes_valor)}</b> en excedentes ({numero(d.inventario.excedentes_n)} artículos)</>}
-            alClic={() => ir("/almacen/existencias")} />
+            alClic={() => ir("/almacen/existencias")} explica={GLOSARIO.valorDelInventario} />
         )}
         {d.produccion && (
           <Indicador titulo="Taller" valor={`${numero(d.produccion.abiertas)} órdenes`} icono={Factory}
             tono={d.produccion.atrasadas ? "peligro" : "ok"}
             detalle={<>{d.produccion.atrasadas > 0 ? <b className="text-peligro">{d.produccion.atrasadas} atrasadas</b> : "Ninguna atrasada"} · a tiempo {d.produccion.a_tiempo_90d == null ? "—" : porcentaje(d.produccion.a_tiempo_90d, 0)}
               {enRiesgo > 0 && <> · <b className="text-peligro">{enRiesgo} {enRiesgo === 1 ? "promesa" : "promesas"} en riesgo</b></>}</>}
-            alClic={() => ir(enRiesgo > 0 ? "/analisis/entregas" : "/produccion/gerencia")} />
+            alClic={() => ir(enRiesgo > 0 ? "/analisis/entregas" : "/produccion/gerencia")} explica={GLOSARIO.tallerCentroMando} />
         )}
       </div>
 
@@ -235,7 +235,7 @@ export function TableroDireccion() {
         <div className="grid gap-4 xl:grid-cols-3">
           <Tarjeta className="xl:col-span-2">
             <EncabezadoTarjeta titulo={`Ventas por mes · ${anio} contra ${anio - 1} y ${anio - 2}`}
-              descripcion="Importe con IVA. Hasta el arranque, del libro de ventas de la hoja (2018 →); después, de los pedidos del ERP." />
+              descripcion="Importe con IVA. Hasta el arranque, del libro de ventas de la hoja (2018 →); después, de los pedidos del ERP." explica={GLOSARIO.ventasContraAniosAnteriores} />
             <div className="px-5"><Leyenda series={[{ nombre: String(anio), color: SERIE(1) }, { nombre: String(anio - 1), color: SERIE(2) }, { nombre: String(anio - 2), color: "var(--eje)" }]} /></div>
             <div className="h-72 px-2 pb-3 pt-2">
               <ResponsiveContainer>
@@ -252,7 +252,7 @@ export function TableroDireccion() {
             </div>
           </Tarjeta>
           <Tarjeta>
-            <EncabezadoTarjeta titulo={`Mejores clientes ${anio}`} descripcion="Por importe vendido" />
+            <EncabezadoTarjeta titulo={`Mejores clientes ${anio}`} descripcion="Por importe vendido" explica={GLOSARIO.mejoresClientesAnio} />
             <div className="px-5 pb-5 space-y-3">
               {(d.top_clientes ?? []).length === 0 ? <p className="text-sm text-tenue">Sin ventas este año.</p> :
                 d.top_clientes!.map((c, i) => (
@@ -322,7 +322,7 @@ export function TableroDireccion() {
       <div className="grid gap-4 lg:grid-cols-3">
         {d.produccion && (
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Carga del taller" descripcion="Semanas de trabajo pendientes por área" acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/produccion/gerencia")}>Gerencia</button>} />
+            <EncabezadoTarjeta titulo="Carga del taller" descripcion="Semanas de trabajo pendientes por área" explica={GLOSARIO.cargaTallerTablero} acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/produccion/gerencia")}>Gerencia</button>} />
             <div className="px-5 pb-5 space-y-3">
               {d.produccion.carga.filter((c) => c.horas > 0).length === 0 ? <p className="text-sm text-tenue">Sin órdenes liberadas en el taller.</p> :
                 d.produccion.carga.filter((c) => c.horas > 0).map((c) => (
@@ -330,7 +330,8 @@ export function TableroDireccion() {
                     color={c.color} sub={`${numero(c.semanas)} sem · ${numero(c.horas)} h`} />
                 ))}
               {d.produccion.con_faltantes > 0 && (
-                <button onClick={() => ir("/produccion/ordenes?filtro=faltantes")} className="flex items-center gap-2 text-sm text-aviso pt-1">
+                <button onClick={() => ir("/produccion/ordenes?filtro=faltantes")} className="flex items-center gap-2 text-sm text-aviso pt-1"
+                  data-explain={GLOSARIO.faltanteMaterial} data-explain-title="Material faltante">
                   <PackageX className="h-4 w-4" /> {d.produccion.con_faltantes} órdenes con material faltante
                 </button>
               )}
@@ -340,14 +341,15 @@ export function TableroDireccion() {
         {d.inventario && (
           <Tarjeta>
             <EncabezadoTarjeta titulo="Inventario" descripcion={`${dineroCompacto(d.inventario.inversion_sugerida)} sugerido en ${d.inventario.a_ordenar_n} compras`}
-              acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/almacen/reabasto")}>Reabasto</button>} />
+              explica={GLOSARIO.inventarioTablero} acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/almacen/reabasto")}>Reabasto</button>} />
             <div className="px-5 pb-5 space-y-3">
               {d.inventario.por_almacen.map((a, i) => (
                 <Fila key={a.almacen} etiqueta={a.almacen} valor={a.valor} max={d.inventario!.por_almacen[0]?.valor ?? 1} color={SERIE(i + 1)} sub={dineroCompacto(a.valor)} />
               ))}
               {d.inventario.importados_en_riesgo.length > 0 && (
                 <div className="pt-2 border-t border-borde">
-                  <p className="etiqueta mb-2 flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5 text-peligro" /> Importados bajo su punto de reorden</p>
+                  <p className="etiqueta mb-2 flex items-center gap-1.5" data-explain={GLOSARIO.importadosBajoReordenTablero} data-explain-title="Importados bajo su punto de reorden">
+                    <AlertTriangle className="h-3.5 w-3.5 text-peligro" /> Importados bajo su punto de reorden</p>
                   {d.inventario.importados_en_riesgo.slice(0, 4).map((x) => (
                     <button key={x.id} onClick={() => ir(`/costeo/componentes/${x.id}`)} className="w-full flex justify-between gap-2 text-sm py-0.5 hover:text-marca-texto">
                       <span className="truncate">{x.nombre}</span><span className="cifra text-tenue shrink-0">{numero(x.disponible)} / {numero(x.reorden)} · {x.dias} d</span>
@@ -361,7 +363,7 @@ export function TableroDireccion() {
         {d.cobranza && aging && (
           <Tarjeta>
             <EncabezadoTarjeta titulo="Cobranza por antigüedad" descripcion={`Pedidos del ERP · más ${dineroCompacto(d.cobranza.arranque)} de saldo de arranque (hoja)`}
-              acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/finanzas/cobranza")}>Cobranza</button>} />
+              explica={GLOSARIO.cobranzaAntiguedadTablero} acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/finanzas/cobranza")}>Cobranza</button>} />
             <div className="h-40 px-2">
               <ResponsiveContainer>
                 <BarChart data={[{ r: "0-30", v: aging.d0_30 }, { r: "31-60", v: aging.d31_60 }, { r: "61-90", v: aging.d61_90 }, { r: "+90", v: aging.d90 }]} margin={{ top: 8, right: 12, left: 4, bottom: 0 }}>
@@ -375,7 +377,7 @@ export function TableroDireccion() {
             </div>
             {d.por_pagar && (
               <div className="px-5 pb-4 pt-2 text-sm flex justify-between border-t border-borde mt-2">
-                <span className="text-tenue">Por pagar a proveedores</span>
+                <span className="text-tenue" data-explain={GLOSARIO.porPagar} data-explain-title="Por pagar a proveedores">Por pagar a proveedores</span>
                 {/* Órdenes de compra más la cuenta de cada proveedor (hoja y compras sin orden), como en Pagos. */}
                 <span className="cifra text-right">{dineroCompacto(d.por_pagar.total + (d.por_pagar.arranque ?? 0))}
                   {d.por_pagar.vencido + (d.por_pagar.arranque_vencido ?? 0) > 0 && <span className="text-peligro"> · {dineroCompacto(d.por_pagar.vencido + (d.por_pagar.arranque_vencido ?? 0))} vencido</span>}</span>
@@ -383,7 +385,7 @@ export function TableroDireccion() {
             )}
             {!!(d.por_pagar?.socios || d.por_pagar?.financiamiento) && (
               <div className="px-5 pb-4 text-sm flex justify-between">
-                <span className="text-tenue">Préstamos de socios y créditos</span>
+                <span className="text-tenue" data-explain={GLOSARIO.sociosBancos} data-explain-title="Préstamos de socios y créditos">Préstamos de socios y créditos</span>
                 <span className="cifra">{dineroCompacto((d.por_pagar.socios ?? 0) + (d.por_pagar.financiamiento ?? 0))}</span>
               </div>
             )}
@@ -397,7 +399,7 @@ export function TableroDireccion() {
           {!!d.costos_al_alza?.length && (
             <Tarjeta>
               <EncabezadoTarjeta titulo={<span className="inline-flex items-center gap-2"><Gauge className="h-4 w-4 text-aviso" /> Costos que más subieron (30 días)</span>}
-                descripcion="Y en cuántos equipos pegan" />
+                descripcion="Y en cuántos equipos pegan" explica={GLOSARIO.costosQueSubieronTablero} />
               <table className="tabla">
                 <tbody>
                   {d.costos_al_alza.map((c) => (
@@ -415,7 +417,7 @@ export function TableroDireccion() {
           {!!d.equipos_que_subieron?.length && (
             <Tarjeta>
               <EncabezadoTarjeta titulo={<span className="inline-flex items-center gap-2"><Sparkles className="h-4 w-4 text-marca" /> Precios de lista que se movieron (30 días)</span>}
-                descripcion="Por costos o por cambios de utilidad" />
+                descripcion="Por costos o por cambios de utilidad" explica={GLOSARIO.preciosQueSeMovieronTablero} />
               <table className="tabla">
                 <tbody>
                   {d.equipos_que_subieron.map((e) => (

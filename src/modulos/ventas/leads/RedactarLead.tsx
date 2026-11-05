@@ -46,18 +46,18 @@ export function RedactarLead({ lead: l, alCerrar, invalidar }: { lead: Lead; alC
           <Boton variante="secundario" onClick={() => { navigator.clipboard.writeText(mensaje); toast.success("Mensaje copiado"); }}>
             <Copy className="h-4 w-4" />Copiar</Boton>
           {canal === "whatsapp" && l.telefono && (
-            <Boton asChild><a href={enlaceWhatsApp(l.telefono, mensaje)} target="_blank" rel="noreferrer" onClick={() => anotar.mutate("whatsapp")}>
+            <Boton asChild><a href={enlaceWhatsApp(l.telefono, mensaje)} target="_blank" rel="noreferrer" onClick={() => anotar.mutate("whatsapp")} data-explain={GLOSARIO.abrirMensajeLead}>
               <MessageCircle className="h-4 w-4" />Abrir en WhatsApp</a></Boton>
           )}
           {canal === "correo" && l.correo && (
-            <Boton asChild><a href={`mailto:${l.correo}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(mensaje)}`} onClick={() => anotar.mutate("correo")}>
+            <Boton asChild><a href={`mailto:${l.correo}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(mensaje)}`} onClick={() => anotar.mutate("correo")} data-explain={GLOSARIO.abrirMensajeLead}>
               <Mail className="h-4 w-4" />Abrir correo</a></Boton>
           )}
         </div>
       )}>
       <div className="space-y-3">
         {l.telefono && l.correo && (
-          <div className="inline-flex rounded-lg border border-borde p-0.5 text-sm">
+          <div className="inline-flex rounded-lg border border-borde p-0.5 text-sm" data-explain={GLOSARIO.canalMensajeLead} data-explain-title="WhatsApp o correo">
             {(["whatsapp", "correo"] as const).map((c) => (
               <button key={c} type="button" onClick={() => cambiarCanal(c)}
                 className={cn("px-3 h-8 rounded-md", canal === c ? "bg-marca text-white" : "text-tenue hover:text-texto")}>
@@ -73,7 +73,7 @@ export function RedactarLead({ lead: l, alCerrar, invalidar }: { lead: Lead; alC
             onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !generar.isPending) generar.mutate(); }} />
         </label>
         <div className="flex justify-end">
-          <Boton variante={hayMensaje ? "secundario" : "primario"} cargando={generar.isPending} onClick={() => generar.mutate()}>
+          <Boton variante={hayMensaje ? "secundario" : "primario"} cargando={generar.isPending} onClick={() => generar.mutate()} data-explain={GLOSARIO.botonGenerarMensajeLead}>
             <Sparkles className="h-4 w-4" />{hayMensaje ? "Volver a generar" : "Generar mensaje"}</Boton>
         </div>
         {generar.isPending && !hayMensaje ? (

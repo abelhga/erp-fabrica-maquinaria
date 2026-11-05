@@ -132,7 +132,7 @@ export default function Pagos() {
     <Pagina titulo="Pagos a proveedores" descripcion="Lo que debemos: lo vencido primero y lo que viene en las próximas 4 semanas."
       acciones={<>
         <TipoCambioDia />
-        {verCuentas && <Boton onClick={() => setCompra({ abierto: true, proveedor: null })}><FilePlus2 className="h-4 w-4" /> Registrar compra o gasto</Boton>}
+        {verCuentas && <Boton data-explain={GLOSARIO.botonRegistrarCompraGasto} onClick={() => setCompra({ abierto: true, proveedor: null })}><FilePlus2 className="h-4 w-4" /> Registrar compra o gasto</Boton>}
       </>}>
       <div className={cn("grid gap-3 sm:grid-cols-2", verCuentas ? "xl:grid-cols-5" : "xl:grid-cols-4")}>
         <Kpi titulo="Por pagar" valor={dineroCompacto(suma(todo))} icono={Wallet} tono="marca" explica={GLOSARIO.porPagar}
@@ -181,7 +181,7 @@ export default function Pagos() {
         {verCuentas && <ListaPestanas opciones={[
           { valor: "facturas", texto: "Facturas por pagar", cuenta: facturas.length, explica: GLOSARIO.facturasPendientes },
           { valor: "proveedores", texto: "Por proveedor", cuenta: new Set(facturas.map((f) => f.proveedor_llave)).size, explica: GLOSARIO.saldoProveedor },
-          { valor: "ordenes", texto: "Órdenes de compra", cuenta: ordenes.length },
+          { valor: "ordenes", texto: "Órdenes de compra", cuenta: ordenes.length, explica: GLOSARIO.pestanaOrdenesPorPagar },
           { valor: "pagados", texto: "Pagos hechos", explica: GLOSARIO.pagosHechos },
         ]} />}
         {verCuentas && <ContenidoPestana value="facturas" className="pt-4">
@@ -242,7 +242,7 @@ function RegistrarPago({ orden: o, alCerrar }: { orden: PorPagar | null; alCerra
   return (
     <Dialogo abierto={!!o} alCambiar={(v) => !v && alCerrar()} ancho="max-w-xl"
       titulo={`${o.folio} · ${o.proveedor}`}
-      descripcion={<>Total {enMoneda(o.total, o.moneda)} · pagado {enMoneda(o.pagado, o.moneda)} · <b>saldo {enMoneda(o.saldo, o.moneda)}</b>{o.factura_proveedor && ` · factura ${o.factura_proveedor}`}</>}
+      descripcion={<span data-explain={GLOSARIO.pagosOrdenCompra} data-explain-title="Pagos de la orden">Total {enMoneda(o.total, o.moneda)} · pagado {enMoneda(o.pagado, o.moneda)} · <b>saldo {enMoneda(o.saldo, o.moneda)}</b>{o.factura_proveedor && ` · factura ${o.factura_proveedor}`}</span>}
       pie={editable ? <>
         <Boton variante="secundario" onClick={alCerrar}>Cerrar</Boton>
         <Boton type="submit" form="registrar-pago" cargando={guardar.isPending} disabled={monto <= 0}>Registrar pago</Boton>

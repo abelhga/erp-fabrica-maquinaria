@@ -62,16 +62,16 @@ export default function Entregas() {
   });
 
   const columnas: Columna<Promesa>[] = [
-    { clave: "pedido", titulo: "Pedido", valor: (x) => x.pedido ?? "stock", celda: (x) => <span className="cifra">{x.pedido ?? <span className="text-tenue">stock</span>}</span> },
+    { clave: "pedido", titulo: "Pedido", valor: (x) => x.pedido ?? "stock", celda: (x) => <span className="cifra">{x.pedido ?? <span className="text-tenue" data-explain={GLOSARIO.paraStock} data-explain-title="Orden para stock">stock</span>}</span> },
     { clave: "equipo", titulo: "Equipo", clase: "min-w-[220px] max-w-[360px]", celda: (x) => <span className="line-clamp-2">{x.equipo}<span className="block text-xs text-tenue cifra">{x.orden}</span></span> },
     { clave: "cliente", titulo: "Cliente", valor: (x) => x.cliente ?? "", celda: (x) => x.cliente ?? <span className="text-tenue">—</span> },
     { clave: "vendedor", titulo: "Vendedor", valor: (x) => x.vendedor ?? "" },
     { clave: "compromiso", titulo: "Prometida", alinear: "der", sinBusqueda: true, valor: (x) => x.compromiso, celda: (x) => <span className="cifra">{fecha(x.compromiso)}</span> },
-    { clave: "estimada", titulo: "Sale hacia", alinear: "der", sinBusqueda: true, explica: GLOSARIO.promesaEnRiesgo, valor: (x) => x.estimada,
+    { clave: "estimada", titulo: "Sale hacia", alinear: "der", sinBusqueda: true, explica: GLOSARIO.saleHaciaOrden, valor: (x) => x.estimada,
       celda: (x) => <span className="cifra">{fecha(x.estimada)}</span> },
-    { clave: "dias", titulo: "Diferencia", alinear: "der", sinBusqueda: true, valor: (x) => x.dias,
+    { clave: "dias", titulo: "Diferencia", alinear: "der", sinBusqueda: true, explica: GLOSARIO.diferenciaPromesa, valor: (x) => x.dias,
       celda: (x) => x.dias > 0
-        ? <Insignia tono="peligro">{x.dias} días tarde</Insignia>
+        ? <span data-explain={GLOSARIO.promesaEnRiesgo} data-explain-title="Promesa en riesgo"><Insignia tono="peligro">{x.dias} días tarde</Insignia></span>
         : <span className="text-xs text-ok">{-x.dias} días de holgura</span> },
   ];
 
@@ -83,7 +83,7 @@ export default function Entregas() {
           detalle={p.juzgados ? `${numero(p.a_tiempo)} de ${numero(p.juzgados)} con compromiso en el periodo` : "Todavía no hay entregas que juzgar en el periodo"} />
         <Cifra titulo="Atraso promedio" explica={GLOSARIO.diasAtraso}
           valor={p.dias_atraso != null ? `${numero(p.dias_atraso)} días` : "—"} detalle={`${numero(p.tarde)} pedidos tarde`} />
-        <Cifra titulo="Vencidos sin entregar" valor={numero(p.vencidos_abiertos)} detalle="Ya pasó su fecha y siguen abiertos" />
+        <Cifra titulo="Vencidos sin entregar" explica={GLOSARIO.vencidosSinEntregar} valor={numero(p.vencidos_abiertos)} detalle="Ya pasó su fecha y siguen abiertos" />
         <Cifra titulo="Promesas en riesgo" explica={GLOSARIO.promesaEnRiesgo}
           valor={promesas.data ? <span className={enRiesgo.length ? "text-peligro" : ""}>{numero(enRiesgo.length)}</span> : "…"}
           detalle={promesas.data ? `de ${numero(promesas.data.length)} órdenes abiertas con fecha` : undefined} />
@@ -96,7 +96,8 @@ export default function Entregas() {
             alClicFila={(x) => navegar(x.pedido_id ? `/ventas/pedidos/${x.pedido_id}` : `/produccion/ordenes/${x.orden_id}`)}
             exportarComo="promesas-de-entrega" placeholder="Buscar pedido, equipo, cliente…" compacta
             filtros={<Filtro valor={vista} alCambiar={setVista} opciones={[
-              { valor: "riesgo", texto: "En riesgo", cuenta: enRiesgo.length }, { valor: "todas", texto: "Todas", cuenta: promesas.data?.length }]} />}
+              { valor: "riesgo", texto: "En riesgo", cuenta: enRiesgo.length, explica: GLOSARIO.promesaEnRiesgo },
+              { valor: "todas", texto: "Todas", cuenta: promesas.data?.length, explica: GLOSARIO.promesasTodas }]} />}
             vacio={{ icono: CalendarCheck, titulo: vista === "riesgo" ? "Ninguna promesa en riesgo" : "Sin órdenes abiertas con fecha",
               texto: vista === "riesgo" ? "Con la fila de hoy, todo lo prometido sale a tiempo." : "Las órdenes de producción con fecha compromiso aparecen aquí." }} />
         </div>
@@ -128,8 +129,8 @@ export default function Entregas() {
         </TarjetaGrafica>
 
         <div className="grid gap-4">
-          <Ranking titulo="Por vendedor" descripcion="Pedidos con compromiso en el periodo." filas={d.por_vendedor.map((v) => ({ nombre: v.vendedor, g: v }))} />
-          <Ranking titulo="Por familia (órdenes del taller)" descripcion={`Las órdenes de producción con compromiso en el periodo: ${d.taller.juzgadas ? porcentaje(d.taller.a_tiempo / d.taller.juzgadas, 0) : "—"} a tiempo.`}
+          <Ranking titulo="Por vendedor" explica={GLOSARIO.entregasPorVendedor} descripcion="Pedidos con compromiso en el periodo." filas={d.por_vendedor.map((v) => ({ nombre: v.vendedor, g: v }))} />
+          <Ranking titulo="Por familia (órdenes del taller)" explica={GLOSARIO.entregasPorFamilia} descripcion={`Las órdenes de producción con compromiso en el periodo: ${d.taller.juzgadas ? porcentaje(d.taller.a_tiempo / d.taller.juzgadas, 0) : "—"} a tiempo.`}
             filas={d.por_familia.map((f) => ({ nombre: f.familia, g: f }))} />
         </div>
       </div>
@@ -137,10 +138,10 @@ export default function Entregas() {
   );
 }
 
-function Ranking({ titulo, descripcion, filas }: { titulo: string; descripcion: string; filas: { nombre: string; g: Grupo }[] }) {
+function Ranking({ titulo, descripcion, filas, explica }: { titulo: string; descripcion: string; filas: { nombre: string; g: Grupo }[]; explica?: string }) {
   return (
     <section className="tarjeta px-5 py-4">
-      <h3 className="font-semibold">{titulo}</h3>
+      <h3 className="font-semibold" data-explain={explica} data-explain-title={explica ? titulo : undefined}>{titulo}</h3>
       <p className="text-sm text-tenue mb-3">{descripcion}</p>
       {filas.length === 0 ? <p className="text-sm text-tenue">Sin datos en el periodo.</p> : (
         <ul className="space-y-2.5">
@@ -165,7 +166,7 @@ function TablaMeses({ filas }: { filas: ({ mes: string } & Grupo)[] }) {
   return (
     <div className="overflow-x-auto px-5 pb-4">
       <table className="w-full text-sm">
-        <thead><tr className="text-left text-tenue"><th className="py-1">Mes</th><th className="text-right">Juzgados</th><th className="text-right">A tiempo</th><th className="text-right">Atraso prom.</th></tr></thead>
+        <thead><tr className="text-left text-tenue"><th className="py-1">Mes</th><th className="text-right" data-explain={GLOSARIO.aTiempo} data-explain-title="Juzgados">Juzgados</th><th className="text-right">A tiempo</th><th className="text-right">Atraso prom.</th></tr></thead>
         <tbody>
           {filas.map((m) => (
             <tr key={m.mes} className="border-t border-borde">

@@ -149,10 +149,13 @@ export default function Precios() {
       ancho="max-w-[1500px]"
       acciones={edita && (
         <>
-          {pendientes.length > 0 && <Boton variante="fantasma" onClick={() => setCambios({})}><Undo2 className="h-4 w-4" /> Descartar</Boton>}
-          <Boton onClick={() => guardar(pendientes)} disabled={!pendientes.length} cargando={guardando}>
-            <Save className="h-4 w-4" /> Guardar {pendientes.length || ""} {pendientes.length === 1 ? "cambio" : "cambios"}
-          </Boton>
+          {pendientes.length > 0 && <Boton variante="fantasma" onClick={() => setCambios({})} data-explain={GLOSARIO.sinGuardarPrecios} data-explain-title="Descartar"><Undo2 className="h-4 w-4" /> Descartar</Boton>}
+          {/* Se deshabilita sin cambios: la explicación va en el envoltorio para que no se pierda. */}
+          <span className="inline-flex" data-explain={GLOSARIO.sinGuardarPrecios} data-explain-title="Guardar cambios">
+            <Boton onClick={() => guardar(pendientes)} disabled={!pendientes.length} cargando={guardando}>
+              <Save className="h-4 w-4" /> Guardar {pendientes.length || ""} {pendientes.length === 1 ? "cambio" : "cambios"}
+            </Boton>
+          </span>
         </>
       )}
     >
@@ -165,11 +168,12 @@ export default function Precios() {
             </div>
             <Filtro<Vista> valor={vista} alCambiar={(v) => cambiarParam("filtro", v === "todos" ? "" : v)} opciones={[
               { valor: "todos", texto: "Todos" },
-              { valor: "viejos", texto: "Más de 6 meses", cuenta: filas.filter(viejo).length },
-              { valor: "sin_costo", texto: "Sin costo", cuenta: filas.filter(sinCosto).length },
-              ...(pendientes.length ? [{ valor: "cambios" as Vista, texto: "Sin guardar", cuenta: pendientes.length }] : []),
+              { valor: "viejos", texto: "Más de 6 meses", cuenta: filas.filter(viejo).length, explica: GLOSARIO.costoViejo },
+              { valor: "sin_costo", texto: "Sin costo", cuenta: filas.filter(sinCosto).length, explica: GLOSARIO.sinCostoPrecios },
+              ...(pendientes.length ? [{ valor: "cambios" as Vista, texto: "Sin guardar", cuenta: pendientes.length, explica: GLOSARIO.sinGuardarPrecios }] : []),
             ]} />
-            <Seleccion className="w-auto max-w-[240px] h-8 text-xs" value={proveedor} onChange={(e) => cambiarParam("proveedor", e.target.value)} aria-label="Proveedor">
+            <Seleccion className="w-auto max-w-[240px] h-8 text-xs" value={proveedor} onChange={(e) => cambiarParam("proveedor", e.target.value)} aria-label="Proveedor"
+              data-explain={GLOSARIO.proveedorFiltroPrecios} data-explain-title="Proveedor">
               <option value="">Todos los proveedores</option>
               {proveedores.map(([id, p]) => <option key={id} value={id}>{p.nombre} ({p.n})</option>)}
             </Seleccion>
@@ -186,7 +190,7 @@ export default function Precios() {
                   <tr>
                     <th className="px-2">Clave</th><th>Artículo</th><th className="hidden xl:table-cell px-2">Proveedor</th>
                     <th className="text-right px-2" data-explain={GLOSARIO.costoVigente}>Costo actual</th><th className="px-2" data-explain={GLOSARIO.costoViejo}>Actualizado</th>
-                    <th className="text-right w-32 px-2">Nuevo costo</th><th className="px-1">Moneda</th><th className="text-right px-2" data-explain={GLOSARIO.cambioCosto}>Cambio</th>
+                    <th className="text-right w-32 px-2" data-explain={GLOSARIO.nuevoCostoPrecios}>Nuevo costo</th><th className="px-1">Moneda</th><th className="text-right px-2" data-explain={GLOSARIO.cambioCosto}>Cambio</th>
                     <th className="text-right hidden 2xl:table-cell" title="Equipos y subensambles que lo usan directamente" data-explain={GLOSARIO.usadoEnEquipos}>Usado en</th>
                   </tr>
                 </thead>
@@ -205,7 +209,7 @@ export default function Precios() {
                         </td>
                         <td className="hidden xl:table-cell px-2 text-xs text-tenue max-w-[160px] truncate" title={f.proveedor ?? ""}>{f.proveedor ?? "—"}</td>
                         <td className="text-right whitespace-nowrap cifra px-2">
-                          {f.costo == null ? <span className="text-peligro text-xs">sin costo</span> : dinero(f.costo, f.moneda === "USD" ? "USD" : "MXN")}
+                          {f.costo == null ? <span className="text-peligro text-xs" data-explain={GLOSARIO.sinCostoPrecios} data-explain-title="Sin costo">sin costo</span> : dinero(f.costo, f.moneda === "USD" ? "USD" : "MXN")}
                         </td>
                         <td className="whitespace-nowrap text-xs px-2">
                           {f.actualizado_en ? (
@@ -299,7 +303,7 @@ export default function Precios() {
             </ul>
           )}
           {pendientes.length > 0 && (
-            <div className="border-t border-borde px-5 py-3 text-sm flex items-center gap-2 text-aviso">
+            <div className="border-t border-borde px-5 py-3 text-sm flex items-center gap-2 text-aviso" data-explain={GLOSARIO.sinGuardarPrecios} data-explain-title="Sin guardar">
               <AlertTriangle className="h-4 w-4" /> {pendientes.length} cambio(s) sin guardar
             </div>
           )}

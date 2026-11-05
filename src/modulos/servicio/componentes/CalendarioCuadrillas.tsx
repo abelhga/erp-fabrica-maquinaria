@@ -55,18 +55,22 @@ export function CalendarioCuadrillas({ className }: { className?: string }) {
   return (
     <Tarjeta className={className}>
       <EncabezadoTarjeta
-        titulo="Calendario de cuadrillas" explica={GLOSARIO.cuadrilla}
+        titulo="Calendario de cuadrillas" explica={GLOSARIO.calendarioCuadrillas}
         descripcion={`${fmtMes.format(comoFecha(dias[0]))} al ${fmtMes.format(comoFecha(dias[DIAS - 1]))} · ${enUso.size} ${enUso.size === 1 ? "persona sale" : "personas salen"} a servicio, ${libres} del taller sin servicio`}
         acciones={<>
-          <Boton variante="fantasma" tamano="icono" onClick={() => mover(-1)} aria-label="Semana anterior"><ChevronLeft className="h-4 w-4" /></Boton>
-          <Boton variante="secundario" tamano="sm" onClick={() => setDesde(lunesDe(new Date()))}>Hoy</Boton>
-          <Boton variante="fantasma" tamano="icono" onClick={() => mover(1)} aria-label="Semana siguiente"><ChevronRight className="h-4 w-4" /></Boton>
+          <Boton variante="fantasma" tamano="icono" onClick={() => mover(-1)} aria-label="Semana anterior"
+                data-explain={GLOSARIO.moverCalendarioCuadrillas} data-explain-title="Semana anterior"><ChevronLeft className="h-4 w-4" /></Boton>
+          <Boton variante="secundario" tamano="sm" onClick={() => setDesde(lunesDe(new Date()))} data-explain={GLOSARIO.moverCalendarioCuadrillas}>Hoy</Boton>
+          <Boton variante="fantasma" tamano="icono" onClick={() => mover(1)} aria-label="Semana siguiente"
+                data-explain={GLOSARIO.moverCalendarioCuadrillas} data-explain-title="Semana siguiente"><ChevronRight className="h-4 w-4" /></Boton>
         </>}
       />
       <div className="px-5 pb-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <Leyenda series={(tiposVistos.length ? tiposVistos : ORDEN_TIPOS).map((t) => ({ nombre: TIPOS[t].texto, color: TIPOS[t].color }))} />
-          <label className="inline-flex items-center gap-2 text-xs text-tenue cursor-pointer select-none">
+          <div data-explain={GLOSARIO.tipoServicio} data-explain-title="Tipos de servicio">
+            <Leyenda series={(tiposVistos.length ? tiposVistos : ORDEN_TIPOS).map((t) => ({ nombre: TIPOS[t].texto, color: TIPOS[t].color }))} />
+          </div>
+          <label className="inline-flex items-center gap-2 text-xs text-tenue cursor-pointer select-none" data-explain={GLOSARIO.verTodoElTaller} data-explain-title="Ver a todo el taller">
             <input type="checkbox" checked={todos} onChange={(e) => setTodos(e.target.checked)} className="accent-[hsl(var(--marca))]" />
             Ver a todo el taller
           </label>

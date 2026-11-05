@@ -96,7 +96,9 @@ export function Parametros({ articulo, parametros }: { articulo: ArticuloCatalog
       ) : (
         <div className="tarjeta overflow-x-auto">
           <table className="tabla [&_td]:py-1.5 [&_td]:align-top">
-            <thead><tr><th className="w-40">Nombre</th><th className="text-right w-28">Valor</th><th className="w-24">Unidad</th><th className="w-56">Descripción</th><th>Qué depende de él</th>{editar && <th className="w-10" />}</tr></thead>
+            <thead><tr><th className="w-40" data-explain={GLOSARIO.nombreParametro} data-explain-title="Nombre del parámetro">Nombre</th>
+              <th className="text-right w-28" data-explain={GLOSARIO.valorParametro} data-explain-title="Valor del parámetro">Valor</th><th className="w-24">Unidad</th><th className="w-56">Descripción</th>
+              <th data-explain={GLOSARIO.dependeDelParametro}>Qué depende de él</th>{editar && <th className="w-10" />}</tr></thead>
             <tbody>
               {parametros.map((p) => {
                 const u = usos.get(p.nombre) ?? [];
@@ -129,7 +131,7 @@ export function Parametros({ articulo, parametros }: { articulo: ArticuloCatalog
               <Entrada className="w-48" placeholder="largo_m" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} aria-label="Nombre del parámetro nuevo" />
               <Entrada className="w-28 text-right cifra" placeholder="20" inputMode="decimal" value={nuevo.valor} onChange={(e) => setNuevo({ ...nuevo, valor: e.target.value })} aria-label="Valor" />
               <Entrada className="w-24" placeholder="m" value={nuevo.unidad} onChange={(e) => setNuevo({ ...nuevo, unidad: e.target.value })} aria-label="Unidad" />
-              <Boton type="submit" variante="secundario"><Plus className="h-4 w-4" /> Agregar parámetro</Boton>
+              <Boton type="submit" variante="secundario" data-explain={GLOSARIO.parametroEquipo} data-explain-title="Agregar parámetro"><Plus className="h-4 w-4" /> Agregar parámetro</Boton>
               {nuevo.nombre && nombreParametro(nuevo.nombre) !== nuevo.nombre && <span className="text-xs text-tenue">Se guardará como <code>{nombreParametro(nuevo.nombre)}</code></span>}
             </form>
           )}
@@ -191,9 +193,10 @@ export function HorasEtapa({ articulo, parametros }: { articulo: ArticuloCatalog
         <table className="tabla [&_td]:py-1">
           <thead>
             <tr>
-              <th className="w-44">Etapa</th><th className="text-right w-28">Horas fijas</th><th className="w-32">Parámetro</th>
-              <th className="text-right w-28 whitespace-nowrap" title="Horas que se suman por cada unidad del parámetro">h por parám.</th><th className="text-right w-24">Total</th>
-              {costos && <th className="text-right w-28" data-explain={GLOSARIO.tarifaManoObra}>Tarifa</th>}{costos && <th className="text-right w-32">Mano de obra</th>}
+              <th className="w-44">Etapa</th><th className="text-right w-28" data-explain={GLOSARIO.horasEtapa}>Horas fijas</th><th className="w-32" data-explain={GLOSARIO.parametroEquipo}>Parámetro</th>
+              <th className="text-right w-28 whitespace-nowrap" title="Horas que se suman por cada unidad del parámetro" data-explain={GLOSARIO.horasPorParametro} data-explain-title="Horas por parámetro">h por parám.</th>
+              <th className="text-right w-24" data-explain={GLOSARIO.horasPorParametro} data-explain-title="Total de la etapa">Total</th>
+              {costos && <th className="text-right w-28" data-explain={GLOSARIO.tarifaManoObra}>Tarifa</th>}{costos && <th className="text-right w-32" data-explain={GLOSARIO.manoObraPropia}>Mano de obra</th>}
               <th>Notas</th>
             </tr>
           </thead>
@@ -230,10 +233,10 @@ export function HorasEtapa({ articulo, parametros }: { articulo: ArticuloCatalog
           </tbody>
           <tfoot>
             <tr className="bg-fondo/60">
-              <td className="font-medium">Total propias</td><td colSpan={3} />
+              <td className="font-medium" data-explain={GLOSARIO.horasEtapa} data-explain-title="Total propias">Total propias</td><td colSpan={3} />
               <td className="text-right cifra font-semibold">{numero(propias)} h</td>
               {costos && <td />}{costos && <td className="text-right cifra font-semibold">{dinero(moPropia)}</td>}
-              <td className="text-sm text-tenue">
+              <td className="text-sm text-tenue" data-explain={deSubensambles != null && deSubensambles > 0.001 ? GLOSARIO.horasTotalesFabricado : undefined}>
                 {deSubensambles != null && deSubensambles > 0.001 && <>+ {numero(deSubensambles)} h de sus subensambles = <b className="text-texto">{numero(articulo.horas)} h</b> en total</>}
               </td>
             </tr>

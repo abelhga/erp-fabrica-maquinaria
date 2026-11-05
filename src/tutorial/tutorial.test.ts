@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CALENDARIO, INICIO, MENU, PENDIENTES, REVISION, SEMANA } from "@/navegacion";
-import { PANTALLAS, SECCIONES, ayudaDe } from "./pantallas";
+import { PANTALLAS, SECCIONES, ayudaDe, textoAyuda } from "./pantallas";
 import { GLOSARIO, SECCIONES_GLOSARIO } from "./glosario";
 
 /**
@@ -18,7 +18,7 @@ describe("modo tutorial", () => {
   it.each(rutas.filter((r) => !SIN_MARCO.has(r)))("la pantalla %s explica para qué sirve", (ruta) => {
     const ayuda = ayudaDe(ruta);
     expect(ayuda, `falta su texto en src/tutorial/pantallas/`).not.toBeNull();
-    expect(ayuda!.length).toBeGreaterThan(0);
+    expect(textoAyuda(ayuda!)[0].trim().length).toBeGreaterThan(0);
   });
 
   it("los detalles encuentran su texto por el patrón con :id", () => {
@@ -48,9 +48,21 @@ describe("modo tutorial", () => {
     }
   });
 
+  // Arriba de la pantalla va poco a propósito: lo que no cabe aquí va en «Ver más» o en el globo de
+  // la cosa. Si un recuadro vuelve a crecer, nadie lo lee (así estaban: hasta 800 palabras).
+  const palabras = (t: string) => t.trim().split(/\s+/).length;
+  it("cada recuadro es corto: una frase de 30 palabras y hasta 3 pasos de 18", () => {
+    for (const [ruta, a] of Object.entries(PANTALLAS)) {
+      expect(Array.isArray(a), `${ruta} sigue siendo una lista de párrafos`).toBe(false);
+      expect(palabras(a.resumen), `${ruta}: resumen`).toBeLessThanOrEqual(30);
+      expect((a.pasos ?? []).length, `${ruta}: pasos`).toBeLessThanOrEqual(3);
+      for (const p of a.pasos ?? []) expect(palabras(p), `${ruta}: paso «${p}»`).toBeLessThanOrEqual(18);
+    }
+  });
+
   it("ningún texto viene vacío", () => {
-    for (const [ruta, parrafos] of Object.entries(PANTALLAS)) {
-      for (const p of parrafos) expect(p.trim(), ruta).not.toBe("");
+    for (const [ruta, ayuda] of Object.entries(PANTALLAS)) {
+      for (const p of textoAyuda(ayuda)) expect(p.trim(), ruta).not.toBe("");
     }
     for (const [llave, texto] of Object.entries(GLOSARIO)) expect((texto as string).trim(), llave).not.toBe("");
   });

@@ -88,8 +88,8 @@ export function FichaVenta({ articuloId, moneda = "MXN", tipoCambio = 1, conIva 
       )}
       {alAplicarPrecio && f.precio != null && (
         <div className="flex gap-2">
-          <Boton tamano="sm" variante="secundario" className="flex-1" onClick={() => alAplicarPrecio(enCot(f.precio)!)}>Precio de lista</Boton>
-          <Boton tamano="sm" variante="secundario" className="flex-1" onClick={() => alAplicarPrecio(enCot(f.precio_minimo)!)}>Precio mínimo</Boton>
+          <Boton tamano="sm" variante="secundario" className="flex-1" onClick={() => alAplicarPrecio(enCot(f.precio)!)} data-explain={GLOSARIO.aplicarPrecioFicha}>Precio de lista</Boton>
+          <Boton tamano="sm" variante="secundario" className="flex-1" onClick={() => alAplicarPrecio(enCot(f.precio_minimo)!)} data-explain={GLOSARIO.aplicarPrecioFicha}>Precio mínimo</Boton>
         </div>
       )}
 
@@ -106,7 +106,7 @@ export function FichaVenta({ articuloId, moneda = "MXN", tipoCambio = 1, conIva 
           <dd className="font-medium cifra">{numero(f.en_mercadolibre ?? 0)}</dd>
         </div>
         <div>
-          <dt className="text-xs text-tenue flex items-center gap-1"><Timer className="h-3.5 w-3.5" /> Entrega</dt>
+          <dt className="text-xs text-tenue flex items-center gap-1" data-explain={GLOSARIO.entregaArticuloFicha} data-explain-title="Entrega"><Timer className="h-3.5 w-3.5" /> Entrega</dt>
           <dd className="font-medium">{f.tiempo_entrega_dias != null ? `${f.tiempo_entrega_dias} días hábiles` : (f.tipo === "equipo" ? "Según taller" : "—")}</dd>
         </div>
         <div>
@@ -120,7 +120,7 @@ export function FichaVenta({ articuloId, moneda = "MXN", tipoCambio = 1, conIva 
       </dl>
 
       {!compacta && ((f.precio_ml != null && !fabricado) || f.publicacion_ml) && (
-        <div className="rounded-lg bg-fondo p-2.5 text-sm space-y-1">
+        <div className="rounded-lg bg-fondo p-2.5 text-sm space-y-1" data-explain={GLOSARIO.sugeridoMLFicha} data-explain-title="Mercado Libre">
           <p className="text-xs font-medium text-tenue uppercase tracking-wide">Mercado Libre</p>
           {f.publicacion_ml?.precio != null && (
             <p className="flex justify-between gap-2"><span>Publicado</span>

@@ -18,14 +18,14 @@ const Capacidad = lazy(() => import("./Capacidad"));
 // Una sola ruta /analisis/* con sus pestañas: el periodo elegido (en la URL) se queda al
 // cambiar de vista, y cada vista tiene su liga para mandarla o regresar a ella.
 const PESTANAS = [
-  { ruta: "/analisis", texto: "Mapa de ventas", periodo: true, fin: true },
-  { ruta: "/analisis/tendencias", texto: "Tendencias", periodo: false },
-  { ruta: "/analisis/clientes", texto: "Clientes", periodo: true },
-  { ruta: "/analisis/producto", texto: "Producto × región", periodo: true },
-  { ruta: "/analisis/planeacion", texto: "Planeación", periodo: false },
-  { ruta: "/analisis/entregas", texto: "Entregas", periodo: true },
-  { ruta: "/analisis/capacidad", texto: "Capacidad del taller", periodo: false },
-  { ruta: "/analisis/ubicaciones", texto: "Ubicaciones por revisar", periodo: false },
+  { ruta: "/analisis", texto: "Mapa de ventas", periodo: true, fin: true, explica: GLOSARIO.pestanaMapaVentas },
+  { ruta: "/analisis/tendencias", texto: "Tendencias", periodo: false, explica: GLOSARIO.pestanaTendencias },
+  { ruta: "/analisis/clientes", texto: "Clientes", periodo: true, explica: GLOSARIO.pestanaClientesAnalisis },
+  { ruta: "/analisis/producto", texto: "Producto × región", periodo: true, explica: GLOSARIO.pestanaProductoRegion },
+  { ruta: "/analisis/planeacion", texto: "Planeación", periodo: false, explica: GLOSARIO.pestanaPlaneacion },
+  { ruta: "/analisis/entregas", texto: "Entregas", periodo: true, explica: GLOSARIO.pestanaEntregas },
+  { ruta: "/analisis/capacidad", texto: "Capacidad del taller", periodo: false, explica: GLOSARIO.pestanaCapacidadTaller },
+  { ruta: "/analisis/ubicaciones", texto: "Ubicaciones por revisar", periodo: false, explica: GLOSARIO.pestanaUbicacionesRevisar },
 ];
 
 const DESCRIPCION: Record<string, string> = {
@@ -49,7 +49,7 @@ export default function Analisis() {
     <Pagina titulo="Análisis" descripcion={DESCRIPCION[actual.ruta]} ancho="max-w-[1500px]">
       <nav className="flex gap-1 border-b border-borde overflow-x-auto -mt-1" aria-label="Vistas del análisis">
         {PESTANAS.map((p) => (
-          <NavLink key={p.ruta} to={p.ruta + busqueda} end={p.fin}
+          <NavLink key={p.ruta} to={p.ruta + busqueda} end={p.fin} data-explain={p.explica} data-explain-title={p.texto}
             className={({ isActive }) => cn("px-3 py-2 text-sm font-medium border-b-2 -mb-px whitespace-nowrap",
               isActive ? "text-marca-texto border-marca" : "text-tenue border-transparent hover:text-texto")}>
             {p.texto}
@@ -88,6 +88,7 @@ function FiltroPeriodo({ clave, desde, hasta, cambiar }: {
       <span className="text-sm text-tenue mr-1" data-explain={GLOSARIO.periodoAnalisis}>Periodo</span>
       {PERIODOS.map((p) => (
         <button key={p.valor} type="button" onClick={() => cambiar(p.valor)} aria-pressed={clave === p.valor}
+          data-explain={p.explica} data-explain-title={p.texto}
           className={cn("h-8 rounded-full px-3 text-xs font-medium border transition",
             clave === p.valor ? "bg-marca text-white border-marca" : "border-borde text-tenue hover:text-texto hover:bg-superficie")}>
           {p.texto}

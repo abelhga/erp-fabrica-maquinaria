@@ -10,14 +10,17 @@ export function InsigniaEstado({ estado }: { estado: EstadoServicio }) {
   return <Insignia tono={e.tono} punto>{e.texto}</Insignia>;
 }
 
-export function InsigniaMaquina({ estado }: { estado: EstadoMaquina }) {
+// `explica`: Insignia no reenvía atributos, así que el texto del modo tutorial va en un span alrededor.
+export function InsigniaMaquina({ estado, explica }: { estado: EstadoMaquina; explica?: string }) {
   const e = ESTADO_MAQUINA[estado];
-  return <Insignia tono={e.tono} punto>{e.texto}</Insignia>;
+  const i = <Insignia tono={e.tono} punto>{e.texto}</Insignia>;
+  return explica ? <span className="inline-flex" data-explain={explica} data-explain-title={e.texto}>{i}</span> : i;
 }
 
-export function InsigniaMto({ estado }: { estado: EstadoMto }) {
+export function InsigniaMto({ estado, explica }: { estado: EstadoMto; explica?: string }) {
   const e = ESTADO_MTO[estado];
-  return <Insignia tono={e.tono} punto>{e.texto}</Insignia>;
+  const i = <Insignia tono={e.tono} punto>{e.texto}</Insignia>;
+  return explica ? <span className="inline-flex" data-explain={explica} data-explain-title={e.texto}>{i}</span> : i;
 }
 
 /** El tipo con su color fijo: la muestra lleva la identidad, el texto va en tinta. */
@@ -46,11 +49,12 @@ export function Dato({ etiqueta, children, className, explica }: { etiqueta: str
   );
 }
 
-export function EnlaceBoton({ a, children, variante = "secundario", className }: {
-  a: string; children: ReactNode; variante?: "primario" | "secundario" | "peligro"; className?: string;
+/** `explica`: lo que dice el modo tutorial al pasar el mouse (casi siempre una entrada de GLOSARIO). */
+export function EnlaceBoton({ a, children, variante = "secundario", className, explica }: {
+  a: string; children: ReactNode; variante?: "primario" | "secundario" | "peligro"; className?: string; explica?: string;
 }) {
   return (
-    <Link to={a} className={cn(
+    <Link to={a} data-explain={explica} className={cn(
       "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors h-9 px-4 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca/50",
       variante === "primario" && "bg-marca text-white hover:bg-marca/90 shadow-sm",
       variante === "secundario" && "bg-superficie border border-borde hover:bg-fondo text-texto",

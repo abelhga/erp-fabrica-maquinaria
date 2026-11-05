@@ -6,6 +6,7 @@ import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { CLAVE, useEtapas, type MaterialOP } from "./datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface OrdenBasica {
   id: string; folio: string; numero_serie: string | null; prioridad: number; fecha_compromiso: string | null; notas: string | null;
@@ -30,15 +31,15 @@ export function DialogoEditarOrden({ abierto, alCambiar, o }: { abierto: boolean
                <Boton form="editar-orden" type="submit" cargando={guardar.isPending}>Guardar</Boton></>}>
       <form id="editar-orden" className="grid grid-cols-2 gap-3" onSubmit={(e) => { e.preventDefault(); guardar.mutate(undefined); }}>
         <Campo etiqueta="Prioridad">
-          <Seleccion value={prioridad} onChange={(e) => setPrioridad(e.target.value)}>
+          <Seleccion value={prioridad} onChange={(e) => setPrioridad(e.target.value)} data-explain={GLOSARIO.prioridadOrden} data-explain-title="Prioridad">
             <option value="1">Urgente</option><option value="2">Normal</option><option value="3">Baja</option>
           </Seleccion>
         </Campo>
         <Campo etiqueta="Fecha compromiso">
-          <Entrada type="date" value={fechaC} onChange={(e) => setFechaC(e.target.value)} />
+          <Entrada type="date" value={fechaC} onChange={(e) => setFechaC(e.target.value)} data-explain={GLOSARIO.cambiarCompromisoOrden} data-explain-title="Fecha compromiso" />
         </Campo>
         <Campo etiqueta="Número de serie" className="col-span-2">
-          <Entrada value={serie} onChange={(e) => setSerie(e.target.value)} placeholder="BH1012000N345" />
+          <Entrada value={serie} onChange={(e) => setSerie(e.target.value)} placeholder="BH1012000N345" data-explain={GLOSARIO.serieAlEditarOrden} data-explain-title="Número de serie" />
         </Campo>
         <Campo etiqueta="Notas de la orden" className="col-span-2" ayuda="Lo que el taller debe saber: extras del pedido, sustituciones.">
           <AreaTexto value={notas} onChange={(e) => setNotas(e.target.value)} />
@@ -158,7 +159,8 @@ export function DialogoAgregarEtapa({ abierto, alCambiar, o, tiene }: {
             </Seleccion>
           </Campo>
           <Campo etiqueta="Horas estimadas">
-            <Entrada type="number" min="0.5" step="0.5" inputMode="decimal" value={horas} onChange={(e) => setHoras(e.target.value)} placeholder="15" />
+            <Entrada type="number" min="0.5" step="0.5" inputMode="decimal" value={horas} onChange={(e) => setHoras(e.target.value)} placeholder="15"
+                     data-explain={GLOSARIO.horasEtapaAgregada} data-explain-title="Horas estimadas" />
           </Campo>
         </div>
         <Campo etiqueta="¿Por qué?">

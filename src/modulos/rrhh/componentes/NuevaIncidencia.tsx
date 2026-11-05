@@ -79,7 +79,7 @@ export function NuevaIncidencia({ abierto, alCambiar, empleadoId, inicioSugerido
             ))}
           </Seleccion>
         </Campo>
-        <div>
+        <div data-explain={GLOSARIO.tipoIncidencia} data-explain-title="Tipo">
           <p className="text-sm font-medium mb-1.5">Tipo</p>
           <div className="flex flex-wrap gap-1.5">
             {(Object.keys(TIPOS) as TipoIncidencia[]).map((t) => (
@@ -132,7 +132,7 @@ export function NuevaIncidencia({ abierto, alCambiar, empleadoId, inicioSugerido
           <Entrada value={f.motivo} onChange={(e) => setF({ ...f, motivo: e.target.value })} />
         </Campo>
         {esRrhh && (
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm" data-explain={GLOSARIO.incidenciaYaAutorizada} data-explain-title="Ya está autorizada">
             <input type="checkbox" checked={f.autorizada} onChange={(e) => setF({ ...f, autorizada: e.target.checked })} />
             Ya está autorizada (si no, queda en "por aprobar")
           </label>

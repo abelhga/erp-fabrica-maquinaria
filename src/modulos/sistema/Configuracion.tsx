@@ -7,14 +7,15 @@ import { ConfigVentas } from "./componentes/ConfigVentas";
 import { ConfigAlmacenes, ConfigConsumibles, ConfigTaller } from "./componentes/ConfigCatalogos";
 import { ConfigTipoCambio } from "./componentes/ConfigTipoCambio";
 import { ConfigIntegraciones } from "./componentes/ConfigIntegraciones";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const PESTANAS = [
-  { valor: "empresa", texto: "Empresa" },
-  { valor: "ventas", texto: "Ventas" },
-  { valor: "almacenes", texto: "Almacenes" },
-  { valor: "taller", texto: "Taller" },
-  { valor: "tipo-cambio", texto: "Tipos de cambio" },
-  { valor: "integraciones", texto: "Integraciones" },
+  { valor: "empresa", texto: "Empresa", explica: GLOSARIO.pestanaConfigEmpresa },
+  { valor: "ventas", texto: "Ventas", explica: GLOSARIO.pestanaConfigVentas },
+  { valor: "almacenes", texto: "Almacenes", explica: GLOSARIO.pestanaConfigAlmacenes },
+  { valor: "taller", texto: "Taller", explica: GLOSARIO.pestanaConfigTaller },
+  { valor: "tipo-cambio", texto: "Tipos de cambio", explica: GLOSARIO.pestanaConfigTipoCambio },
+  { valor: "integraciones", texto: "Integraciones", explica: GLOSARIO.pestanaConfigIntegraciones },
 ];
 
 export default function Configuracion() {

@@ -66,22 +66,22 @@ export default function Usuarios() {
         <div className="flex flex-wrap gap-1 max-w-[320px]">
           {u.roles.map((r) => <Insignia key={r} tono={r === "direccion" ? "peligro" : r === "admin" ? "info" : r === "pantalla" || r === "terminal" ? "neutro" : "marca"}>{NOMBRE_ROL[r]}</Insignia>)}
         </div>
-      ) : <Insignia tono="aviso" punto>Espera rol</Insignia>,
+      ) : <span data-explain={GLOSARIO.esperaRol} data-explain-title="Espera rol"><Insignia tono="aviso" punto>Espera rol</Insignia></span>,
     },
     {
       clave: "activo", titulo: "Estado", explica: GLOSARIO.cuentaActiva, valor: (u) => (u.activo ? "Activo" : "Desactivado"),
       celda: (u) => (
         <div className="flex flex-col items-start gap-1">
           {u.activo ? <Insignia tono="ok" punto>Activo</Insignia> : <Insignia>Desactivado</Insignia>}
-          {u.activo && u.empleado_activo === false && <Insignia tono="peligro">Empleado dado de baja</Insignia>}
+          {u.activo && u.empleado_activo === false && <span data-explain={GLOSARIO.bajaConAcceso} data-explain-title="Empleado dado de baja"><Insignia tono="peligro">Empleado dado de baja</Insignia></span>}
         </div>
       ),
     },
     {
-      clave: "ultimo_acceso", titulo: "Último acceso", sinBusqueda: true, valor: (u) => u.ultimo_acceso,
+      clave: "ultimo_acceso", titulo: "Último acceso", explica: GLOSARIO.ultimoAccesoCuenta, sinBusqueda: true, valor: (u) => u.ultimo_acceso,
       celda: (u) => u.ultimo_acceso ? <span title={fechaYHora(u.ultimo_acceso)} className="whitespace-nowrap">{hace(u.ultimo_acceso)}</span> : <span className="text-tenue">Nunca</span>,
     },
-    { clave: "metodo", titulo: "Entra con", valor: (u) => (u.metodo === "google" ? "Google" : "Contraseña"), celda: (u) => <span className="text-tenue">{u.metodo === "google" ? "Google" : "Contraseña"}</span> },
+    { clave: "metodo", titulo: "Entra con", explica: GLOSARIO.metodoAcceso, valor: (u) => (u.metodo === "google" ? "Google" : "Contraseña"), celda: (u) => <span className="text-tenue">{u.metodo === "google" ? "Google" : "Contraseña"}</span> },
     { clave: "empleado", titulo: "Empleado", explica: GLOSARIO.ligaEmpleado, valor: (u) => u.empleado ?? "", celda: (u) => u.empleado ?? <span className="text-tenue">—</span> },
   ];
 
@@ -89,7 +89,7 @@ export default function Usuarios() {
     <Pagina titulo="Usuarios y permisos" descripcion="Quién entra al ERP, con qué roles, y qué puede hacer cada rol.">
       <Pestanas value={pestana} onValueChange={(v) => setParams(v === "usuarios" ? {} : { vista: v }, { replace: true })}>
         <ListaPestanas opciones={[
-          { valor: "usuarios", texto: "Usuarios", cuenta: todos.length },
+          { valor: "usuarios", texto: "Usuarios", cuenta: todos.length, explica: GLOSARIO.pestanaUsuariosLista },
           { valor: "invitaciones", texto: "Invitaciones y pantallas", cuenta: invitaciones.data ?? undefined, explica: GLOSARIO.invitacion },
           { valor: "permisos", texto: "Permisos por rol", explica: GLOSARIO.permisosRolModulo },
         ]} />
@@ -106,9 +106,9 @@ export default function Usuarios() {
             claseFila={(u) => (u.activo ? undefined : "opacity-70")}
             filtros={<Filtro<Vista> valor={vista} alCambiar={setVista} opciones={[
               { valor: "todos", texto: "Todos", cuenta: todos.length },
-              { valor: "sin_rol", texto: "Esperan rol", cuenta: sinRol.length },
-              { valor: "inactivos", texto: "Desactivados", cuenta: inactivos.length },
-              ...(alerta.length ? [{ valor: "alerta" as Vista, texto: "Bajas con acceso", cuenta: alerta.length }] : []),
+              { valor: "sin_rol", texto: "Esperan rol", cuenta: sinRol.length, explica: GLOSARIO.esperaRol },
+              { valor: "inactivos", texto: "Desactivados", cuenta: inactivos.length, explica: GLOSARIO.cuentaActiva },
+              ...(alerta.length ? [{ valor: "alerta" as Vista, texto: "Bajas con acceso", cuenta: alerta.length, explica: GLOSARIO.bajaConAcceso }] : []),
             ]} />}
             vacio={{ icono: UserRound, titulo: vista === "sin_rol" ? "Nadie espera rol" : "Sin usuarios", texto: vista === "sin_rol" ? "Cuando alguien de la empresa entre por primera vez con Google, aparecerá aquí para que le asignes su rol." : undefined }}
           />
@@ -144,7 +144,7 @@ function FichaUsuario({ usuario: u, alCerrar }: { usuario: UsuarioSistema | null
       {u && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="rounded-xl border border-borde p-3"><p className="text-xs text-tenue">Último acceso</p><p className="font-medium">{u.ultimo_acceso ? fechaYHora(u.ultimo_acceso) : "Nunca ha entrado"}</p></div>
+            <div className="rounded-xl border border-borde p-3" data-explain={GLOSARIO.ultimoAccesoCuenta} data-explain-title="Último acceso"><p className="text-xs text-tenue">Último acceso</p><p className="font-medium">{u.ultimo_acceso ? fechaYHora(u.ultimo_acceso) : "Nunca ha entrado"}</p></div>
             <div className="rounded-xl border border-borde p-3"><p className="text-xs text-tenue">Cuenta creada</p><p className="font-medium">{fecha(u.creado_en)} · {u.metodo === "google" ? "Google" : "contraseña"}</p></div>
           </div>
           {u.empleado && (
@@ -156,7 +156,7 @@ function FichaUsuario({ usuario: u, alCerrar }: { usuario: UsuarioSistema | null
 
           <section className="space-y-2">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-tenue" /> Roles</h4>
+              <h4 className="font-medium flex items-center gap-2" data-explain={GLOSARIO.rolUsuario} data-explain-title="Roles"><ShieldCheck className="h-4 w-4 text-tenue" /> Roles</h4>
               {cambiarRol.isPending && <span className="text-xs text-tenue">Guardando…</span>}
             </div>
             {yo && <p className="text-sm rounded-lg bg-fondo border border-borde px-3 py-2 text-tenue">Es tu cuenta: tus roles los cambia otra persona de sistemas o dirección.</p>}
@@ -184,7 +184,7 @@ function FichaUsuario({ usuario: u, alCerrar }: { usuario: UsuarioSistema | null
 
           <section className="rounded-xl border border-borde p-4 flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm">
-              <p className="font-medium flex items-center gap-2">{u.activo ? <UserCheck className="h-4 w-4 text-ok" /> : <KeyRound className="h-4 w-4 text-tenue" />} {u.activo ? "Cuenta activa" : "Cuenta desactivada"}</p>
+              <p className="font-medium flex items-center gap-2" data-explain={GLOSARIO.cuentaActiva} data-explain-title="Cuenta activa o desactivada">{u.activo ? <UserCheck className="h-4 w-4 text-ok" /> : <KeyRound className="h-4 w-4 text-tenue" />} {u.activo ? "Cuenta activa" : "Cuenta desactivada"}</p>
               <p className="text-tenue text-xs mt-0.5">{u.activo ? "Al desactivarla pierde todos sus permisos al instante, aunque tenga la sesión abierta." : "No puede ver ni hacer nada. Sus roles se conservan para cuando regrese."}</p>
             </div>
             <Boton variante={u.activo ? "peligro" : "exito"} tamano="sm" disabled={yo || tocaDireccion} cargando={activar.isPending}

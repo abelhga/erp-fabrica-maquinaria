@@ -9,6 +9,7 @@ import { Campo, Entrada } from "@/components/ui/campo";
 import { supabase } from "@/lib/supabase";
 import { mensajeError, q } from "@/lib/consultas";
 import { cant, leerNumero, type ArticuloCatalogo, type Parametro } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /** Si el nombre trae el valor del parámetro ("x 20 m"), la copia propone el nuevo ("x 22 m"). */
 function nombreSugerido(nombre: string, parametros: Parametro[], valores: Record<string, string>) {
@@ -80,12 +81,12 @@ export function DialogoDuplicar({ abierto, alCambiar, articulo, parametros }: {
       descripcion={<>Copia <b className="text-texto">{articulo.clave}</b> con su lista de materiales, horas y parámetros. Los subensambles no se copian: se siguen compartiendo.</>}
       pie={<>
         <Boton variante="secundario" type="button" onClick={() => alCambiar(false)}>Cancelar</Boton>
-        <Boton type="submit" form="duplicar" cargando={guardando}><Copy className="h-4 w-4" /> Duplicar y abrir</Boton>
+        <Boton type="submit" form="duplicar" cargando={guardando} data-explain={GLOSARIO.duplicarConParametros} data-explain-title="Duplicar y abrir"><Copy className="h-4 w-4" /> Duplicar y abrir</Boton>
       </>}>
       <form id="duplicar" onSubmit={duplicar} className="space-y-4">
         {parametros.length > 0 ? (
           <div className="rounded-lg border border-borde p-3 space-y-2">
-            <p className="etiqueta">Parámetros de la copia</p>
+            <p className="etiqueta" data-explain={GLOSARIO.parametrosCopia}>Parámetros de la copia</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {parametros.map((p, k) => (
                 <Campo key={p.nombre} etiqueta={p.descripcion ?? p.nombre} ayuda={<>Hoy: {cant(Number(p.valor))} {p.unidad} · <code>{p.nombre}</code></>}>
@@ -104,7 +105,7 @@ export function DialogoDuplicar({ abierto, alCambiar, articulo, parametros }: {
           </p>
         )}
         <div className="grid gap-4 sm:grid-cols-[150px_1fr]">
-          <Campo etiqueta="Clave"><Entrada value={clave} onChange={(e) => setClave(e.target.value)} className="cifra" /></Campo>
+          <Campo etiqueta="Clave"><Entrada value={clave} onChange={(e) => setClave(e.target.value)} className="cifra" data-explain={GLOSARIO.claveSugerida} data-explain-title="Clave" /></Campo>
           <Campo etiqueta="Nombre"><Entrada value={nombre} onChange={(e) => { setNombre(e.target.value); setNombreTocado(true); }} autoFocus={!parametros.length} /></Campo>
         </div>
       </form>

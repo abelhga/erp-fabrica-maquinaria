@@ -62,7 +62,7 @@ export default function Clientes() {
       clave: "nombre", titulo: "Cliente", valor: (c) => `${c.nombre} ${c.razon_social ?? ""} ${c.rfc ?? ""}`,
       celda: (c) => (
         <div className="min-w-[220px] max-w-[360px]">
-          <p className="font-medium truncate">{c.nombre}{c.es_distribuidor && <Insignia tono="info" className="ml-2">distribuidor</Insignia>}</p>
+          <p className="font-medium truncate">{c.nombre}{c.es_distribuidor && <span data-explain={GLOSARIO.esDistribuidor} data-explain-title="Distribuidor"><Insignia tono="info" className="ml-2">distribuidor</Insignia></span>}</p>
           <p className="text-xs text-tenue truncate">{[c.razon_social !== c.nombre ? c.razon_social : null, c.rfc, c.giro].filter(Boolean).join(" · ")}</p>
         </div>
       ),
@@ -78,7 +78,7 @@ export default function Clientes() {
     },
     { clave: "compras", titulo: "Compras 12 meses", explica: GLOSARIO.compras12m, alinear: "der", sinBusqueda: true, valor: (c) => Number(c.compras_12m), celda: (c) => Number(c.compras_12m) ? dinero(c.compras_12m) : <span className="text-tenue">—</span> },
     {
-      clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, explica: GLOSARIO.saldoPorCobrar, valor: (c) => Number(c.saldo),
+      clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, explica: GLOSARIO.saldoPedidosCliente, valor: (c) => Number(c.saldo),
       celda: (c) => Number(c.saldo) > 0.5 ? <span className="font-medium text-aviso">{dinero(c.saldo)}</span> : <span className="text-tenue">—</span>,
     },
   ];
@@ -86,14 +86,14 @@ export default function Clientes() {
   const cuenta = (f: (c: VCliente) => boolean) => (lista.data ?? []).filter(f).length;
   return (
     <Pagina titulo="Clientes" descripcion="Un solo directorio para todos los vendedores, con dueño y vigencia de cada cuenta."
-      acciones={<Boton onClick={() => setAlta(true)}><Plus className="h-4 w-4" />Nuevo cliente</Boton>}>
+      acciones={<Boton onClick={() => setAlta(true)} data-explain={GLOSARIO.botonNuevoCliente}><Plus className="h-4 w-4" />Nuevo cliente</Boton>}>
       <TablaDatos filas={filas} columnas={columnas} cargando={lista.isLoading} error={lista.error} claveFila={(c) => c.id}
         alClicFila={(c) => ir(`/ventas/clientes/${c.id}`)} exportarComo="clientes" placeholder="Nombre, razón social, RFC, ciudad…"
         filtros={
           <div className="flex flex-wrap items-center gap-2">
             <Filtro valor={filtro} alCambiar={setFiltro} opciones={[
-              { valor: "mios", texto: "Mis clientes", cuenta: cuenta((c) => c.vendedor_id === perfil?.id) },
-              { valor: "libres", texto: "Libres", cuenta: cuenta((c) => !c.vendedor_id) },
+              { valor: "mios", texto: "Mis clientes", cuenta: cuenta((c) => c.vendedor_id === perfil?.id), explica: GLOSARIO.filtroMisClientes },
+              { valor: "libres", texto: "Libres", cuenta: cuenta((c) => !c.vendedor_id), explica: GLOSARIO.clienteLibre },
               { valor: "todos", texto: "Todos", cuenta: cuenta(() => true) },
             ]} />
             {esGerente && (
@@ -106,7 +106,7 @@ export default function Clientes() {
         }
         vacio={{ icono: Users, titulo: filtro === "mios" ? "Todavía no tienes clientes a tu nombre" : "Sin clientes",
           texto: "Da de alta uno con su nombre y un teléfono; lo demás se llena después.",
-          accion: <Boton onClick={() => setAlta(true)}><Plus className="h-4 w-4" />Nuevo cliente</Boton> }} />
+          accion: <Boton onClick={() => setAlta(true)} data-explain={GLOSARIO.botonNuevoCliente}><Plus className="h-4 w-4" />Nuevo cliente</Boton> }} />
       <DialogoCliente abierto={alta} alCambiar={setAlta} alCrear={(c) => ir(`/ventas/clientes/${c.id}`)} />
     </Pagina>
   );

@@ -81,12 +81,14 @@ export default function Planos() {
       ) : (
         <div className="tarjeta overflow-x-auto">
           <table className="tabla">
-            <thead><tr><th>Folio</th><th>Rev.</th><th>Título</th><th>Equipo o componente</th><th>Tipo</th><th>Aprobó</th><th></th></tr></thead>
+            <thead><tr><th data-explain={GLOSARIO.folioPlano} data-explain-title="Folio"><span>Folio</span></th><th data-explain={GLOSARIO.revisionPlano} data-explain-title="Revisión"><span>Rev.</span></th><th>Título</th><th>Equipo o componente</th>
+              <th data-explain={GLOSARIO.planosArticulo} data-explain-title="Tipo"><span>Tipo</span></th><th data-explain={GLOSARIO.aprobacionPlano} data-explain-title="Aprobó"><span>Aprobó</span></th><th></th></tr></thead>
             <tbody>
               {lista.map((d) => (
                 <tr key={d.id}>
                   <td className="cifra font-medium">{d.folio}</td>
-                  <td><Insignia tono={d.estado === "vigente" ? "ok" : d.estado === "borrador" ? "aviso" : "neutro"}>{d.revision}</Insignia></td>
+                  <td><span data-explain={GLOSARIO.revisionPlano} data-explain-title={`Revisión ${d.revision}`}>
+                    <Insignia tono={d.estado === "vigente" ? "ok" : d.estado === "borrador" ? "aviso" : "neutro"}>{d.revision}</Insignia></span></td>
                   <td>{d.titulo}{d.cambio && <p className="text-xs text-tenue">{d.cambio}</p>}</td>
                   <td>{d.articulo_id ? <Link to={`/costeo/equipos/${d.articulo_id}?pestana=planos`} className="hover:text-marca-texto">{d.clave} · {d.articulo}</Link> : "—"}</td>
                   <td className="text-tenue">{TIPOS_DOC[d.tipo] ?? d.tipo}</td>

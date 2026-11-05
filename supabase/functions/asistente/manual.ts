@@ -46,7 +46,9 @@ export function buscarEnManual(pregunta: string, permisos: Permisos,
     .map(({ p }) => ({ pantalla: p.nombre, ruta: p.ruta, como_se_usa: p.texto.join("\n").slice(0, 3500) }));
   const conceptos = datos.conceptos.filter((c) => visible(c.modulos, 1, permisos))
     .map((c) => ({ c, n: puntos(claves, c.clave, c.texto) })).filter((x) => x.n > 0)
-    .sort((a, b) => b.n - a.n).slice(0, 6)
+    // 10 y no 6: con los globos en cada botón el glosario pasó de ~650 a más de mil conceptos, y con 6
+    // los botones nuevos que repiten las palabras de la pregunta dejaban fuera el concepto que la contesta.
+    .sort((a, b) => b.n - a.n).slice(0, 10)
     .map(({ c }) => ({ concepto: c.clave, que_es: c.texto }));
   return {
     pantallas, conceptos,

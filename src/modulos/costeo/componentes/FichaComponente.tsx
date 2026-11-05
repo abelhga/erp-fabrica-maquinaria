@@ -40,10 +40,13 @@ function useGuardarCampo(id: string) {
   return { guardar, estado };
 }
 
-function TextoAuto({ valor, alGuardar, numerico, multilinea, ...p }: {
+function TextoAuto({ valor, alGuardar, numerico, multilinea, explica, tituloExplica, ...p }: {
   valor: string | number | null | undefined; alGuardar: (v: string | number | null) => void; numerico?: boolean; multilinea?: boolean;
   placeholder?: string; className?: string; "aria-label"?: string;
+  /** Explicación del modo tutorial: va en el campo mismo porque `Campo` es un <label> que no la reenvía. */
+  explica?: string; tituloExplica?: string;
 }) {
+  const explicacion = { "data-explain": explica, "data-explain-title": explica ? tituloExplica : undefined };
   const [t, setT] = useState(valor == null ? "" : String(valor));
   useEffect(() => setT(valor == null ? "" : String(valor)), [valor]);
   const salir = () => {
@@ -52,9 +55,9 @@ function TextoAuto({ valor, alGuardar, numerico, multilinea, ...p }: {
     if (nuevo !== antes) alGuardar(nuevo);
   };
   return multilinea
-    ? <AreaTexto value={t} onChange={(e) => setT(e.target.value)} onBlur={salir} rows={6} {...p} />
+    ? <AreaTexto value={t} onChange={(e) => setT(e.target.value)} onBlur={salir} rows={6} {...p} {...explicacion} />
     : <Entrada value={t} onChange={(e) => setT(e.target.value)} onBlur={salir} inputMode={numerico ? "decimal" : undefined}
-        onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} className={cn(numerico && "text-right cifra", p.className)} placeholder={p.placeholder} aria-label={p["aria-label"]} />;
+        onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} className={cn(numerico && "text-right cifra", p.className)} placeholder={p.placeholder} aria-label={p["aria-label"]} {...explicacion} />;
 }
 
 /** La descripción se guarda al salir del campo, como los demás; «Pulir redacción» lee lo que está escrito aunque no se haya guardado. */
@@ -64,14 +67,15 @@ function DescripcionAuto({ a, editable, alGuardar }: { a: ArticuloCatalogo; edit
   const salir = () => { const nuevo = t.trim() || null; if (nuevo !== (a.descripcion || null)) alGuardar(nuevo); };
   return (
     <div className="space-y-1">
-      <AreaTexto value={t} onChange={(e) => setT(e.target.value)} onBlur={salir} rows={6} placeholder={"• Medida…\n• Material…"} />
+      <AreaTexto value={t} onChange={(e) => setT(e.target.value)} onBlur={salir} rows={6} placeholder={"• Medida…\n• Material…"}
+        data-explain={GLOSARIO.descripcionComponente} data-explain-title="Descripción y ficha técnica" />
       {editable && <PulirDescripcion leer={() => t} nombre={a.nombre} tipo={a.tipo} alUsar={(v) => { setT(v); alGuardar(v || null); }} />}
     </div>
   );
 }
 
-function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
-  return <div><dt className="text-xs text-tenue">{etiqueta}</dt><dd className="text-sm mt-0.5">{children}</dd></div>;
+function Dato({ etiqueta, children, explica }: { etiqueta: string; children: ReactNode; explica?: string }) {
+  return <div data-explain={explica} data-explain-title={explica ? etiqueta : undefined}><dt className={cn("text-xs text-tenue", explica && "titulo-explicable")}>{etiqueta}</dt><dd className="text-sm mt-0.5">{children}</dd></div>;
 }
 
 function DatosGenerales({ a }: { a: ArticuloCatalogo }) {
@@ -94,11 +98,11 @@ function DatosGenerales({ a }: { a: ArticuloCatalogo }) {
         <dl className="px-5 pb-5 grid gap-4 sm:grid-cols-3">
           <Dato etiqueta="Unidad">{a.unidad}</Dato>
           <Dato etiqueta="Categoría">{a.categoria ?? "—"}</Dato>
-          <Dato etiqueta="Tiempo de entrega">{a.tiempo_entrega_dias != null ? `${a.tiempo_entrega_dias} días` : "—"}</Dato>
-          <Dato etiqueta="Origen">{a.es_importado ? "Importado" : "Nacional"}</Dato>
-          <Dato etiqueta="Se compra en múltiplos de">{numero(a.empaque)}</Dato>
-          <Dato etiqueta="Peso">{a.kg_por_unidad ? `${numero(a.kg_por_unidad)} kg por ${a.unidad}` : "—"}</Dato>
-          {a.descripcion && <div className="sm:col-span-3"><Dato etiqueta="Ficha técnica"><p className="whitespace-pre-line">{a.descripcion}</p></Dato></div>}
+          <Dato etiqueta="Tiempo de entrega" explica={GLOSARIO.tiempoEntregaArticulo}>{a.tiempo_entrega_dias != null ? `${a.tiempo_entrega_dias} días` : "—"}</Dato>
+          <Dato etiqueta="Origen" explica={GLOSARIO.articuloImportado}>{a.es_importado ? "Importado" : "Nacional"}</Dato>
+          <Dato etiqueta="Se compra en múltiplos de" explica={GLOSARIO.empaqueCompra}>{numero(a.empaque)}</Dato>
+          <Dato etiqueta="Peso" explica={GLOSARIO.kilosPorUnidad}>{a.kg_por_unidad ? `${numero(a.kg_por_unidad)} kg por ${a.unidad}` : "—"}</Dato>
+          {a.descripcion && <div className="sm:col-span-3"><Dato etiqueta="Ficha técnica" explica={GLOSARIO.descripcionComponente}><p className="whitespace-pre-line">{a.descripcion}</p></Dato></div>}
         </dl>
       </Tarjeta>
     );
@@ -111,37 +115,39 @@ function DatosGenerales({ a }: { a: ArticuloCatalogo }) {
         <Campo etiqueta="Nombre" className="sm:col-span-2"><TextoAuto valor={a.nombre} alGuardar={(v) => v && guardar({ nombre: String(v) })} /></Campo>
         <Campo etiqueta="Unidad"><TextoAuto valor={a.unidad} alGuardar={(v) => v && guardar({ unidad: String(v) })} /></Campo>
         <Campo etiqueta="Categoría" ayuda={cats.data?.find((c) => c.id === a.categoria_id)?.politica_id ? "Esta categoría trae su propia política de precio." : undefined}>
-          <Seleccion value={a.categoria_id ?? ""} onChange={(e) => guardar({ categoria_id: e.target.value ? Number(e.target.value) : null })}>
+          <Seleccion value={a.categoria_id ?? ""} onChange={(e) => guardar({ categoria_id: e.target.value ? Number(e.target.value) : null })}
+            data-explain={GLOSARIO.categoriaArticulo} data-explain-title="Categoría">
             <option value="">Sin categoría</option>
             {cats.data?.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
           </Seleccion>
         </Campo>
         {verProveedor && (
           <Campo etiqueta="Proveedor principal">
-            <Seleccion value={a.proveedor_id ?? ""} onChange={(e) => guardar({ proveedor_id: e.target.value || null })}>
+            <Seleccion value={a.proveedor_id ?? ""} onChange={(e) => guardar({ proveedor_id: e.target.value || null })}
+              data-explain={GLOSARIO.proveedorPrincipal} data-explain-title="Proveedor principal">
               <option value="">Sin proveedor</option>
               {provs.data?.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
             </Seleccion>
           </Campo>
         )}
         <Campo etiqueta="Tiempo de entrega (días)" ayuda="Si está vacío se usa el del proveedor.">
-          <TextoAuto numerico valor={a.tiempo_entrega_dias} placeholder="—" alGuardar={(v) => guardar({ tiempo_entrega_dias: v == null ? null : Math.round(Number(v)) })} />
+          <TextoAuto numerico valor={a.tiempo_entrega_dias} placeholder="—" explica={GLOSARIO.tiempoEntregaArticulo} tituloExplica="Tiempo de entrega" alGuardar={(v) => guardar({ tiempo_entrega_dias: v == null ? null : Math.round(Number(v)) })} />
         </Campo>
-        <label className="flex items-center gap-2 text-sm sm:pt-7">
+        <label className="flex items-center gap-2 text-sm sm:pt-7" data-explain={GLOSARIO.articuloImportado} data-explain-title="Importado">
           <input type="checkbox" checked={a.es_importado} onChange={(e) => guardar({ es_importado: e.target.checked })} className="h-4 w-4 accent-[hsl(var(--marca))]" />
           <span>Importado <span className="block text-xs text-tenue">Pide 6 meses de cobertura en lugar de 1.</span></span>
         </label>
         <Campo etiqueta="Meses de cobertura" ayuda={`Vacío = ${a.es_importado ? 6 : 1} (${a.es_importado ? "importado" : "nacional"}).`}>
-          <TextoAuto numerico valor={a.meses_cobertura} placeholder={a.es_importado ? "6" : "1"} alGuardar={(v) => guardar({ meses_cobertura: v == null || Number(v) <= 0 ? null : Number(v) })} />
+          <TextoAuto numerico valor={a.meses_cobertura} placeholder={a.es_importado ? "6" : "1"} explica={GLOSARIO.mesesCobertura} tituloExplica="Meses de cobertura" alGuardar={(v) => guardar({ meses_cobertura: v == null || Number(v) <= 0 ? null : Number(v) })} />
         </Campo>
         <Campo etiqueta="Stock de seguridad" ayuda="Se suma al punto de reorden.">
-          <TextoAuto numerico valor={a.stock_minimo_fijo} placeholder="—" alGuardar={(v) => guardar({ stock_minimo_fijo: v == null ? null : Number(v) })} />
+          <TextoAuto numerico valor={a.stock_minimo_fijo} placeholder="—" explica={GLOSARIO.stockSeguridad} tituloExplica="Stock de seguridad" alGuardar={(v) => guardar({ stock_minimo_fijo: v == null ? null : Number(v) })} />
         </Campo>
         <Campo etiqueta="Se compra en múltiplos de">
-          <TextoAuto numerico valor={a.empaque} alGuardar={(v) => v != null && Number(v) > 0 && guardar({ empaque: Number(v) })} />
+          <TextoAuto numerico valor={a.empaque} explica={GLOSARIO.empaqueCompra} tituloExplica="Se compra en múltiplos de" alGuardar={(v) => v != null && Number(v) > 0 && guardar({ empaque: Number(v) })} />
         </Campo>
         <Campo etiqueta={`Kilos por ${a.unidad}`} ayuda="Para reportar consumo de acero en kg.">
-          <TextoAuto numerico valor={a.kg_por_unidad} placeholder="—" alGuardar={(v) => guardar({ kg_por_unidad: v == null ? null : Number(v) })} />
+          <TextoAuto numerico valor={a.kg_por_unidad} placeholder="—" explica={GLOSARIO.kilosPorUnidad} tituloExplica={`Kilos por ${a.unidad}`} alGuardar={(v) => guardar({ kg_por_unidad: v == null ? null : Number(v) })} />
         </Campo>
         <Campo etiqueta="Imagen" className="sm:col-span-2"
           ayuda={fotoRota ? <span className="text-aviso">No se pudo ver la imagen. Si es de Drive, compártela con «Cualquier persona con el enlace», o súbela aquí.</span>
@@ -201,10 +207,10 @@ function CostoComponente({ a }: { a: ArticuloCatalogo }) {
           {a.costo_capturado ? (
             <div>
               <p className="text-3xl font-semibold cifra">{enMoneda(a.costo_capturado, a.moneda_costo)}</p>
-              {a.moneda_costo && a.moneda_costo !== "MXN" && <p className="text-sm text-tenue cifra">≈ {dinero(a.costo_total)} al tipo de cambio de hoy</p>}
+              {a.moneda_costo && a.moneda_costo !== "MXN" && <p className="text-sm text-tenue cifra" data-explain={GLOSARIO.tipoCambioCosteo} data-explain-title="En pesos">≈ {dinero(a.costo_total)} al tipo de cambio de hoy</p>}
               <p className="text-sm mt-1 flex items-center gap-2 flex-wrap">
                 <span className="text-tenue">Actualizado el {fecha(a.costo_actualizado_en)}</span>
-                {viejo && <Insignia tono="aviso" punto>{hace(a.costo_actualizado_en)}: conviene confirmarlo</Insignia>}
+                {viejo && <span data-explain={GLOSARIO.costoViejo} data-explain-title="Costo viejo"><Insignia tono="aviso" punto>{hace(a.costo_actualizado_en)}: conviene confirmarlo</Insignia></span>}
               </p>
             </div>
           ) : <p className="text-sm rounded-lg bg-peligro-suave text-peligro px-3 py-2">Sin costo capturado: cuenta como $0 en todos los equipos que lo usan y no tiene precio de lista.</p>}
@@ -214,7 +220,7 @@ function CostoComponente({ a }: { a: ArticuloCatalogo }) {
                 <option>MXN</option><option>USD</option><option>EUR</option>
               </Seleccion>
               <Entrada value={nuevo} onChange={(e) => setNuevo(e.target.value)} inputMode="decimal" placeholder="Costo nuevo sin IVA" className="text-right cifra" aria-label="Costo nuevo" />
-              <Boton type="submit" variante="secundario" cargando={guardando}>Actualizar</Boton>
+              <Boton type="submit" variante="secundario" cargando={guardando} data-explain={GLOSARIO.botonActualizarCosto} data-explain-title="Actualizar costo">Actualizar</Boton>
             </form>
           )}
           {d.data && <div className="border-t border-borde pt-4"><FormulaEnPalabras d={d.data} /></div>}
@@ -232,7 +238,7 @@ function HistorialCosto({ a }: { a: ArticuloCatalogo }) {
   const monedaHist = historial.data?.[0]?.moneda ?? "MXN";
   return (
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Historial del costo" explica={GLOSARIO.origenCosto} descripcion="Cada cambio queda registrado solo, con su origen (reemplaza la hoja ACTUALIZACIONES)." />
+        <EncabezadoTarjeta titulo="Historial del costo" explica={GLOSARIO.historialCostoComponente} descripcion="Cada cambio queda registrado solo, con su origen (reemplaza la hoja ACTUALIZACIONES)." />
         <div className="px-5 pb-5 grid gap-5 lg:grid-cols-5">
           <div className="lg:col-span-3">
             {(historial.data?.length ?? 0) >= 1
@@ -241,7 +247,8 @@ function HistorialCosto({ a }: { a: ArticuloCatalogo }) {
           </div>
           <div className="lg:col-span-2 overflow-y-auto max-h-56 border border-borde rounded-lg">
             <table className="tabla">
-              <thead><tr><th>Fecha</th><th className="text-right">Costo</th><th className="text-right">Cambio</th><th>Origen</th></tr></thead>
+              <thead><tr><th>Fecha</th><th className="text-right">Costo</th>
+                <th className="text-right" data-explain={GLOSARIO.cambioContraAnterior} data-explain-title="Cambio"><span>Cambio</span></th><th data-explain={GLOSARIO.origenCosto} data-explain-title="Origen"><span>Origen</span></th></tr></thead>
               <tbody>
                 {(historial.data ?? []).map((h) => {
                   const cambio = h.costo_anterior ? Number(h.costo_nuevo) / Number(h.costo_anterior) - 1 : null;
@@ -275,7 +282,7 @@ function Existencias({ a }: { a: ArticuloCatalogo }) {
   const ml = filas.filter((e) => !e.almacen.disponible_para_planta).reduce((s, e) => s + Number(e.cantidad), 0);
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Existencias por almacén" descripcion={<>En planta <b className="text-texto cifra">{numero(planta)} {a.unidad}</b>{ml ? <> · en Full de Mercado Libre <b className="text-texto cifra">{numero(ml)}</b> (no cuenta para planta)</> : null}</>} />
+      <EncabezadoTarjeta titulo="Existencias por almacén" explica={GLOSARIO.enPlanta} descripcion={<>En planta <b className="text-texto cifra">{numero(planta)} {a.unidad}</b>{ml ? <> · en Full de Mercado Libre <b className="text-texto cifra">{numero(ml)}</b> (no cuenta para planta)</> : null}</>} />
       {filas.length === 0
         ? <Vacio icono={Warehouse} titulo="Sin existencia" texto="No hay piezas en ningún almacén." className="py-8" />
         : (
@@ -283,7 +290,7 @@ function Existencias({ a }: { a: ArticuloCatalogo }) {
             <tbody>
               {filas.map((e) => (
                 <tr key={e.almacen.nombre}>
-                  <td>{e.almacen.nombre}{!e.almacen.disponible_para_planta && <Insignia className="ml-2">no cuenta para planta</Insignia>}</td>
+                  <td>{e.almacen.nombre}{!e.almacen.disponible_para_planta && <span data-explain={GLOSARIO.almacenParaPlanta} data-explain-title="No cuenta para planta"><Insignia className="ml-2">no cuenta para planta</Insignia></span>}</td>
                   <td className="text-right cifra font-medium">{numero(e.cantidad)}</td>
                   <td className="text-right text-xs text-tenue whitespace-nowrap">{hace(e.actualizado_en)}</td>
                 </tr>
@@ -313,7 +320,9 @@ function Publicaciones({ a }: { a: ArticuloCatalogo }) {
       <EncabezadoTarjeta titulo="Canales en línea" explica={GLOSARIO.canalesEnLinea} descripcion="Precio sugerido con IVA a partir del de lista: comisión del canal, cuota fija y envío." />
       <div className="overflow-x-auto">
         <table className="tabla">
-          <thead><tr><th>Canal</th><th className="text-right">Comisión</th><th className="text-right">Sugerido</th><th className="text-right">Con envío</th><th>Publicado</th></tr></thead>
+          <thead><tr><th>Canal</th><th className="text-right" data-explain={GLOSARIO.comisionCanal} data-explain-title="Comisión"><span>Comisión</span></th>
+            <th className="text-right" data-explain={GLOSARIO.precioSugeridoCanal} data-explain-title="Sugerido"><span>Sugerido</span></th>
+            <th className="text-right" data-explain={GLOSARIO.precioConEnvioCanal} data-explain-title="Con envío"><span>Con envío</span></th><th>Publicado</th></tr></thead>
           <tbody>
             {(precios.data ?? []).map((p) => {
               const suyas = (pubs.data ?? []).filter((x) => x.canal === p.canal);
@@ -332,10 +341,10 @@ function Publicaciones({ a }: { a: ArticuloCatalogo }) {
                           {x.url ? <a href={x.url} target="_blank" rel="noreferrer" className="truncate max-w-[260px] hover:underline inline-flex items-center gap-1">{x.titulo ?? x.id_externo}<ExternalLink className="h-3 w-3 shrink-0" /></a>
                             : <span className="truncate max-w-[260px]">{x.titulo ?? x.id_externo}</span>}
                           <span className="cifra font-medium">{dinero(x.precio)}</span>
-                          {Number(x.piezas_por_paquete) > 1 ? <Insignia>paquete de {numero(Number(x.piezas_por_paquete))}</Insignia>
-                            : Number(x.piezas_por_paquete) < 1 && <Insignia>{numero(Number(x.piezas_por_paquete))} por venta</Insignia>}
-                          {x.estado !== "activa" && <Insignia tono="neutro">{x.estado}</Insignia>}
-                          {abajo && <Insignia tono="aviso" punto>abajo del sugerido</Insignia>}
+                          {Number(x.piezas_por_paquete) > 1 ? <span data-explain={GLOSARIO.piezasPorVentaML} data-explain-title="Piezas por venta"><Insignia>paquete de {numero(Number(x.piezas_por_paquete))}</Insignia></span>
+                            : Number(x.piezas_por_paquete) < 1 && <span data-explain={GLOSARIO.piezasPorVentaML} data-explain-title="Piezas por venta"><Insignia>{numero(Number(x.piezas_por_paquete))} por venta</Insignia></span>}
+                          {x.estado !== "activa" && <span data-explain={GLOSARIO.publicacionNoActiva} data-explain-title={x.estado}><Insignia tono="neutro">{x.estado}</Insignia></span>}
+                          {abajo && <span data-explain={GLOSARIO.abajoDelSugerido} data-explain-title="Abajo del sugerido"><Insignia tono="aviso" punto>abajo del sugerido</Insignia></span>}
                         </div>
                       );
                     })}
@@ -372,7 +381,7 @@ export function FichaComponente({ articulo }: { articulo: ArticuloCatalogo }) {
       {verCanales && <div className="lg:col-span-5"><Publicaciones a={articulo} /></div>}
       <div className="lg:col-span-5 space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="font-semibold">Dónde se usa</h3>
+          <h3 className="font-semibold" data-explain={GLOSARIO.dondeSeUsaPieza} data-explain-title="Dónde se usa">Dónde se usa</h3>
           <BotonReemplazarComponente viejo={articulo} variante="fantasma" />
         </div>
         <DondeSeUsa id={articulo.id} unidad={articulo.unidad} />

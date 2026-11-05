@@ -69,7 +69,7 @@ export function DetalleExistencia({ articuloId, fila, alCerrar }: {
       subtitulo={fila && <span>{fila.clave} · {fila.unidad}{fila.es_importado && " · importado"}</span>}
       ancho="max-w-3xl"
       acciones={puede("inventario", 2) && articuloId && (
-        <Boton variante="secundario" tamano="sm" onClick={() => ir(`/almacen/movimientos?articulo=${articuloId}`)}>
+        <Boton variante="secundario" tamano="sm" onClick={() => ir(`/almacen/movimientos?articulo=${articuloId}`)} data-explain={GLOSARIO.botonRegistrarMovimiento}>
           <ArrowLeftRight className="h-4 w-4" /> Registrar movimiento
         </Boton>
       )}
@@ -95,7 +95,7 @@ export function DetalleExistencia({ articuloId, fila, alCerrar }: {
           )}
 
           <section>
-            <h3 className="etiqueta mb-2">Por almacén</h3>
+            <h3 className="etiqueta mb-2" data-explain={GLOSARIO.porAlmacenDetalle} data-explain-title="Por almacén">Por almacén</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {porAlmacen.map((a) => (
                 <div key={a.id} className={cn("rounded-lg border px-3 py-2", a.cantidad === 0 ? "border-borde/60 text-tenue" : "border-borde")}>
@@ -107,7 +107,7 @@ export function DetalleExistencia({ articuloId, fila, alCerrar }: {
           </section>
 
           <section>
-            <h3 className="etiqueta mb-2 flex items-center gap-1.5"><PackageOpen className="h-3.5 w-3.5" /> Apartado</h3>
+            <h3 className="etiqueta mb-2 flex items-center gap-1.5" data-explain={GLOSARIO.apartadosDetalle} data-explain-title="Apartado"><PackageOpen className="h-3.5 w-3.5" /> Apartado</h3>
             {reservas.isLoading ? <Cargando filas={2} /> : (reservas.data?.length ?? 0) === 0 ? (
               <p className="text-sm text-tenue">Nada apartado: todo lo que hay en planta está libre.</p>
             ) : (
@@ -131,7 +131,7 @@ export function DetalleExistencia({ articuloId, fila, alCerrar }: {
           </section>
 
           <section>
-            <h3 className="etiqueta mb-2 flex items-center gap-1.5" data-explain={GLOSARIO.kardex}><History className="h-3.5 w-3.5" /> Kardex</h3>
+            <h3 className="etiqueta mb-2 flex items-center gap-1.5" data-explain={GLOSARIO.kardex} data-explain-title="Kardex"><History className="h-3.5 w-3.5" /> Kardex</h3>
             {!verMovimientos ? (
               <p className="text-sm text-tenue rounded-lg bg-fondo px-3 py-3">
                 Tu rol ve existencias y apartados. Los movimientos (quién sacó qué y para qué) los consulta almacén.

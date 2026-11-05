@@ -76,16 +76,16 @@ export default function MisSolicitudes() {
       titulo={gerente ? "Solicitudes de precio" : "Mis solicitudes de precio"}
       descripcion={gerente ? "Lo que tu equipo le pidió a compras, en vivo: quién lo tiene, para cuándo y el precio de lista cuando ya hay."
         : "Lo que le pediste a compras, en vivo: quién lo tiene, para cuándo y el precio de lista cuando ya hay. Te avisamos en la campana."}
-      acciones={<Boton onClick={() => setPedir(true)}><Plus className="h-4 w-4" />Pedir precio</Boton>}
+      acciones={<Boton onClick={() => setPedir(true)} data-explain={GLOSARIO.solicitudPrecio}><Plus className="h-4 w-4" />Pedir precio</Boton>}
     >
       <div className="flex flex-wrap items-center gap-2">
         <input className="campo max-w-xs" placeholder="Buscar folio, artículo, cliente…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
         <Filtro<Vista> valor={vista} alCambiar={cambiar} opciones={[
-          { valor: "abiertas", texto: "Pendientes y por usar", cuenta: todas.filter((s) => pasa(s, "abiertas")).length },
-          { valor: "con_precio", texto: "Con precio", cuenta: todas.filter((s) => s.estado === "contestada").length },
+          { valor: "abiertas", texto: "Pendientes y por usar", explica: GLOSARIO.solicitudesPorUsar, cuenta: todas.filter((s) => pasa(s, "abiertas")).length },
+          { valor: "con_precio", texto: "Con precio", explica: GLOSARIO.solicitudesConPrecio, cuenta: todas.filter((s) => s.estado === "contestada").length },
           { valor: "todas", texto: "Todas" },
         ]} />
-        {sinUsar > 0 && <span className="text-xs text-aviso ml-auto">{sinUsar} con precio que todavía no usas</span>}
+        {sinUsar > 0 && <span className="text-xs text-aviso ml-auto" data-explain={GLOSARIO.solicitudesPorUsar} data-explain-title="Con precio sin usar">{sinUsar} con precio que todavía no usas</span>}
       </div>
 
       {lista.error ? <ErrorCarga error={lista.error} /> : lista.isLoading ? <Cargando filas={5} /> : visibles.length === 0 ? (
@@ -122,10 +122,11 @@ export default function MisSolicitudes() {
               {(abierta(s) || (s.estado === "contestada" && s.cotizacion_id && !s.aplicada_en)) && (
                 <div className="flex flex-wrap justify-end gap-2">
                   {abierta(s) && (s.solicitante_id === perfil?.id || gerente) && (
-                    <Boton tamano="sm" variante="fantasma" onClick={() => setCancelar(s)}><X className="h-3.5 w-3.5" />Ya no la necesito</Boton>
+                    <Boton tamano="sm" variante="fantasma" onClick={() => setCancelar(s)} data-explain={GLOSARIO.cancelarSolicitudPrecio}><X className="h-3.5 w-3.5" />Ya no la necesito</Boton>
                   )}
                   {s.estado === "contestada" && s.cotizacion_id && !s.aplicada_en && (
-                    <Boton tamano="sm" variante="exito" cargando={aplicar.isPending && aplicar.variables?.id === s.id} onClick={() => aplicar.mutate(s)}>
+                    <Boton tamano="sm" variante="exito" cargando={aplicar.isPending && aplicar.variables?.id === s.id} onClick={() => aplicar.mutate(s)}
+                      data-explain={GLOSARIO.aplicarPrecioCompras}>
                       Aplicar a {s.cotizacion_folio}
                     </Boton>
                   )}

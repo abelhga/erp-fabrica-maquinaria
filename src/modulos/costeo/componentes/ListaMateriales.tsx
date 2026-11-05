@@ -197,13 +197,13 @@ export function ListaMateriales({ articulo, parametros }: { articulo: ArticuloCa
           <div className="flex items-center gap-1.5 text-sm text-tenue">
             en
             <input list="grupos-bom" value={grupoDestino} onChange={(e) => setGrupoDestino(e.target.value)} placeholder="sin grupo"
-              className="campo h-9 w-40" aria-label="Grupo para las líneas nuevas" />
+              className="campo h-9 w-40" aria-label="Grupo para las líneas nuevas" data-explain={GLOSARIO.grupoLista} data-explain-title="Grupo de las líneas nuevas" />
             <datalist id="grupos-bom">{nombresGrupo.map((g) => <option key={g} value={g} />)}</datalist>
           </div>
-          <Boton variante="secundario" onClick={() => { setElegidas(new Set()); setDialogo("usar"); }}>
+          <Boton variante="secundario" onClick={() => { setElegidas(new Set()); setDialogo("usar"); }} data-explain={GLOSARIO.usarSubensambleExistente}>
             <Layers className="h-4 w-4" /> Agregar subensamble existente
           </Boton>
-          <span className="ml-auto text-xs text-tenue inline-flex items-center gap-1.5 min-w-[90px] justify-end">
+          <span className="ml-auto text-xs text-tenue inline-flex items-center gap-1.5 min-w-[90px] justify-end" data-explain={GLOSARIO.guardadoSoloLista} data-explain-title="Se guarda solo">
             {guardando > 0 ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Guardando…</> : "Se guarda solo"}
           </span>
         </div>
@@ -212,10 +212,10 @@ export function ListaMateriales({ articulo, parametros }: { articulo: ArticuloCa
       {lineasElegidas.length > 0 && (
         <div className="sticky top-16 z-20 flex flex-wrap items-center gap-2 rounded-lg border border-marca/30 bg-marca-suave px-3 py-2 text-sm">
           <b>{lineasElegidas.length} {lineasElegidas.length === 1 ? "línea elegida" : "líneas elegidas"}</b>
-          <Boton tamano="sm" onClick={() => setDialogo("convertir")}><PackageOpen className="h-3.5 w-3.5" /> Convertir en subensamble</Boton>
-          <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("usar")}><Layers className="h-3.5 w-3.5" /> Usar subensamble existente</Boton>
-          <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("grupo")}><FolderInput className="h-3.5 w-3.5" /> Mover a grupo</Boton>
-          <Boton tamano="sm" variante="fantasma" className="text-peligro" onClick={() => quitar(lineasElegidas)}><Trash2 className="h-3.5 w-3.5" /> Quitar</Boton>
+          <Boton tamano="sm" onClick={() => setDialogo("convertir")} data-explain={GLOSARIO.convertirEnSubensamble}><PackageOpen className="h-3.5 w-3.5" /> Convertir en subensamble</Boton>
+          <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("usar")} data-explain={GLOSARIO.usarSubensambleExistente}><Layers className="h-3.5 w-3.5" /> Usar subensamble existente</Boton>
+          <Boton tamano="sm" variante="secundario" onClick={() => setDialogo("grupo")} data-explain={GLOSARIO.grupoLista} data-explain-title="Mover a grupo"><FolderInput className="h-3.5 w-3.5" /> Mover a grupo</Boton>
+          <Boton tamano="sm" variante="fantasma" className="text-peligro" onClick={() => quitar(lineasElegidas)} data-explain={GLOSARIO.quitarLineasLista} data-explain-title="Quitar líneas"><Trash2 className="h-3.5 w-3.5" /> Quitar</Boton>
           <button className="ml-auto text-tenue hover:text-texto" onClick={() => setElegidas(new Set())}>Cancelar</button>
         </div>
       )}
@@ -240,13 +240,13 @@ export function ListaMateriales({ articulo, parametros }: { articulo: ArticuloCa
                       Artículo
                       {expandibles.length > 0 && (
                         <button className="normal-case tracking-normal font-normal text-marca-texto inline-flex items-center gap-1"
-                          onClick={() => setAbiertos(todoAbierto ? new Set() : new Set(expandibles.map((l) => l.linea_id)))}>
+                          data-explain={GLOSARIO.verContenidoSubensambles} data-explain-title="Contenido de los subensambles" onClick={() => setAbiertos(todoAbierto ? new Set() : new Set(expandibles.map((l) => l.linea_id)))}>
                           {todoAbierto ? <><ChevronsDownUp className="h-3.5 w-3.5" /> cerrar subensambles</> : <><ChevronsUpDown className="h-3.5 w-3.5" /> ver contenido</>}
                         </button>
                       )}
                     </span>
                   </th>
-                  <th className="text-right w-20">Cantidad</th>
+                  <th className="text-right w-20" data-explain={GLOSARIO.cantidadFijaLinea}>Cantidad</th>
                   {usaParametros && <th className="w-[200px]" title="Cantidad que se suma por cada unidad del parámetro (largo_m…)" data-explain={GLOSARIO.parametroEquipo}>Por parámetro</th>}
                   <th className="w-10 text-center" title="Redondear hacia arriba a piezas enteras" data-explain={GLOSARIO.redondearArriba}><ArrowUpToLine className="h-3.5 w-3.5 inline" /></th>
                   <th className="text-right w-16" data-explain={GLOSARIO.mermaLinea}>Merma</th>
@@ -267,8 +267,8 @@ export function ListaMateriales({ articulo, parametros }: { articulo: ArticuloCa
                               {editar ? (
                                 <CeldaTexto valor={g.nombre} placeholder="Sin grupo" etiqueta="Nombre del grupo" className="font-semibold max-w-[260px]"
                                   alGuardar={(v) => renombrarGrupo(g.nombre, v)} />
-                              ) : <span className="font-semibold px-1.5">{g.nombre ?? "Sin grupo"}</span>}
-                              <span className="text-xs text-tenue whitespace-nowrap">{g.lineas.length} {g.lineas.length === 1 ? "línea" : "líneas"}</span>
+                              ) : <span className="font-semibold px-1.5" data-explain={GLOSARIO.grupoLista} data-explain-title="Grupo">{g.nombre ?? "Sin grupo"}</span>}
+                              <span className="text-xs text-tenue whitespace-nowrap" data-explain={GLOSARIO.grupoLista} data-explain-title="Grupo">{g.lineas.length} {g.lineas.length === 1 ? "línea" : "líneas"}</span>
                               {subtotal != null && <span className="ml-auto text-sm cifra font-medium pr-2">{dinero(subtotal)}</span>}
                             </div>
                           </td>
@@ -291,9 +291,9 @@ export function ListaMateriales({ articulo, parametros }: { articulo: ArticuloCa
                   <tr className="bg-fondo/60">
                     <td colSpan={columnas} className="py-2.5">
                       <div className="flex flex-wrap justify-end gap-x-8 gap-y-1 text-sm pr-2">
-                        <span className="text-tenue">Suma de la lista <b className="text-texto cifra ml-2">{dinero(sumaLista)}</b></span>
-                        <span className="text-tenue">Mano de obra propia <b className="text-texto cifra ml-2">{dinero(Math.max((articulo.costo_total ?? 0) - sumaLista, 0))}</b></span>
-                        <span className="text-tenue">Costo del {articulo.tipo} <b className="text-texto cifra ml-2">{dinero(articulo.costo_total)}</b></span>
+                        <span className="text-tenue" data-explain={GLOSARIO.importeLinea} data-explain-title="Suma de la lista">Suma de la lista <b className="text-texto cifra ml-2">{dinero(sumaLista)}</b></span>
+                        <span className="text-tenue" data-explain={GLOSARIO.manoObraPropia} data-explain-title="Mano de obra propia">Mano de obra propia <b className="text-texto cifra ml-2">{dinero(Math.max((articulo.costo_total ?? 0) - sumaLista, 0))}</b></span>
+                        <span className="text-tenue" data-explain={GLOSARIO.costoArticulo} data-explain-title={`Costo del ${articulo.tipo}`}>Costo del {articulo.tipo} <b className="text-texto cifra ml-2">{dinero(articulo.costo_total)}</b></span>
                       </div>
                     </td>
                   </tr>
@@ -348,7 +348,8 @@ function FilaLinea({ l, parametros, usaParametros, editar, costos, mapa, elegida
         <td>
           <div className="flex items-center gap-1.5 min-w-0">
             {l.lineas_hijo > 0 ? (
-              <button onClick={alAbrir} className="p-0.5 rounded hover:bg-fondo text-tenue" aria-label={abierta ? "Ocultar contenido" : "Ver contenido"}>
+              <button onClick={alAbrir} className="p-0.5 rounded hover:bg-fondo text-tenue" aria-label={abierta ? "Ocultar contenido" : "Ver contenido"}
+                data-explain={GLOSARIO.verContenidoSubensambles} data-explain-title={abierta ? "Ocultar contenido" : "Ver contenido"}>
                 {abierta ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </button>
             ) : <span className="w-5 shrink-0" />}
@@ -356,7 +357,7 @@ function FilaLinea({ l, parametros, usaParametros, editar, costos, mapa, elegida
               <Link to={rutaArticulo({ id: l.articulo_id, tipo: l.tipo })} className="flex items-center gap-1.5 group" title="Abrir su ficha">
                 {fab && <Layers className="h-3.5 w-3.5 text-marca shrink-0" aria-label={l.tipo} />}
                 <span className="truncate max-w-[320px] group-hover:underline">{l.nombre}</span>
-                {costos && fab && (c?.sin_costo ?? 0) > 0 && <Insignia tono="peligro" className="shrink-0">{c!.sin_costo} sin costo</Insignia>}
+                {costos && fab && (c?.sin_costo ?? 0) > 0 && <span className="shrink-0" data-explain={GLOSARIO.piezasSinCosto}><Insignia tono="peligro">{c!.sin_costo} sin costo</Insignia></span>}
               </Link>
               <div className="flex items-center gap-1 text-xs text-tenue">
                 <span className="cifra whitespace-nowrap">{l.clave} · {l.unidad}{fab ? ` · ${l.tipo}` : ""}</span>
@@ -406,7 +407,7 @@ function FilaLinea({ l, parametros, usaParametros, editar, costos, mapa, elegida
         </td>
         {costos && (
           <td className="text-right cifra whitespace-nowrap">
-            {sinCosto ? <Insignia tono="peligro">sin costo</Insignia> : <span className="font-medium">{c ? dinero(l.cantidad_efectiva * c.costo_total) : "—"}</span>}
+            {sinCosto ? <span data-explain={GLOSARIO.piezasSinCosto}><Insignia tono="peligro">sin costo</Insignia></span> : <span className="font-medium">{c ? dinero(l.cantidad_efectiva * c.costo_total) : "—"}</span>}
             {c && !sinCosto && <span className="block text-xs text-tenue">{dinero(c.costo_total)} c/u</span>}
           </td>
         )}
@@ -416,7 +417,8 @@ function FilaLinea({ l, parametros, usaParametros, editar, costos, mapa, elegida
             <button className="p-0.5 rounded text-tenue hover:text-texto hover:bg-fondo disabled:opacity-30" disabled={ultima} onClick={() => alMover(1)} aria-label="Bajar" title="Bajar (Alt+↓)"><ArrowDown className="h-3.5 w-3.5" /></button>
             <button className="p-0.5 ml-0.5 rounded text-tenue hover:text-texto hover:bg-fondo" onClick={alReemplazar} aria-label={`Reemplazar ${l.nombre}`} title="Reemplazar por otra pieza (misma cantidad)"
               data-explain={GLOSARIO.reemplazarPieza} data-explain-title="Reemplazar pieza"><ArrowLeftRight className="h-3.5 w-3.5" /></button>
-            <button className="p-0.5 ml-0.5 rounded text-tenue hover:text-peligro hover:bg-peligro-suave" onClick={alQuitar} aria-label="Quitar línea" title="Quitar"><Trash2 className="h-3.5 w-3.5" /></button>
+            <button className="p-0.5 ml-0.5 rounded text-tenue hover:text-peligro hover:bg-peligro-suave" onClick={alQuitar} aria-label="Quitar línea" title="Quitar"
+              data-explain={GLOSARIO.quitarLineasLista} data-explain-title="Quitar línea"><Trash2 className="h-3.5 w-3.5" /></button>
           </td>
         )}
       </tr>

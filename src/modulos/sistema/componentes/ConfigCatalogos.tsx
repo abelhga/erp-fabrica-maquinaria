@@ -36,7 +36,7 @@ export function ConfigAlmacenes() {
         {almacenes.isLoading ? <Cargando /> : (
           <div className="overflow-x-auto">
             <table className="tabla">
-              <thead><tr><th>Nombre</th><th>Tipo</th><th className="!text-center" data-explain={GLOSARIO.almacenParaPlanta}>Disponible para planta</th><th>Descripción</th><th className="!text-center">Activo</th></tr></thead>
+              <thead><tr><th>Nombre</th><th data-explain={GLOSARIO.tipoAlmacen} data-explain-title="Tipo de almacén">Tipo</th><th className="!text-center" data-explain={GLOSARIO.almacenParaPlanta} data-explain-title="Disponible para planta">Disponible para planta</th><th>Descripción</th><th className="!text-center">Activo</th></tr></thead>
               <tbody>
                 {(almacenes.data ?? []).map((a) => (
                   <tr key={a.id} className={a.activo ? "" : "opacity-60"}>
@@ -120,11 +120,12 @@ export function ConfigConsumibles() {
                 <p className="text-xs text-tenue">Apagado, todo lo que sale para una orden se carga a la orden, como en la hoja. Al prenderlo se suelta lo que estaba apartado de consumibles para órdenes.</p>
               </div>
               {editable
-                ? <Interruptor activo={activo} cargando={fijar.isPending} aria-label="Consumibles del taller" alCambiar={(v) => fijar.mutate({ activo: v, categorias: null })} />
-                : <Insignia tono={activo ? "ok" : "neutro"}>{activo ? "Prendido" : "Apagado"}</Insignia>}
+                ? <Interruptor activo={activo} cargando={fijar.isPending} aria-label="Consumibles del taller" alCambiar={(v) => fijar.mutate({ activo: v, categorias: null })}
+                    data-explain={GLOSARIO.interruptorConsumiblesTaller} data-explain-title="Consumibles del taller" />
+                : <span data-explain={GLOSARIO.interruptorConsumiblesTaller} data-explain-title="Consumibles del taller"><Insignia tono={activo ? "ok" : "neutro"}>{activo ? "Prendido" : "Apagado"}</Insignia></span>}
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-medium">Categorías que cuentan como consumibles <span className="text-tenue font-normal cifra">({numero(actuales.size)})</span></p>
+              <p className="text-sm font-medium" data-explain={GLOSARIO.categoriasConsumibles} data-explain-title="Categorías de consumibles">Categorías que cuentan como consumibles <span className="text-tenue font-normal cifra">({numero(actuales.size)})</span></p>
               <div className="flex flex-wrap gap-1.5">
                 {(datos.data?.cats ?? []).map((c) => (
                   <button key={c.id} type="button" disabled={!editable} aria-pressed={actuales.has(c.id)} onClick={() => alternar(c.id)}
@@ -162,13 +163,13 @@ export function ConfigTaller() {
   return (
     <Tarjeta>
       <EncabezadoTarjeta titulo="Etapas del taller" descripcion="El recorrido de un equipo por el taller, en el orden de la columna «Orden». El color es el de la pantalla de piso; la capacidad, las horas hombre por semana contra las que se mide la carga. «En paralelo»: esa etapa no espera a las anteriores."
-        acciones={<span className="text-sm text-tenue whitespace-nowrap">Capacidad total: <b className="text-texto cifra">{numero(capacidad)} h/sem</b></span>} />
+        acciones={<span className="text-sm text-tenue whitespace-nowrap" data-explain={GLOSARIO.capacidadTotalTaller} data-explain-title="Capacidad total">Capacidad total: <b className="text-texto cifra">{numero(capacidad)} h/sem</b></span>} />
       <div className="px-5 pb-5 space-y-3">
         {!editable && <SoloLectura quien="gerencia de producción, sistemas o dirección" />}
         {etapas.isLoading ? <Cargando /> : (
           <div className="overflow-x-auto">
             <table className="tabla">
-              <thead><tr><th className="w-16">Color</th><th>Etapa</th><th className="w-24 !text-right">Orden</th><th className="w-36 !text-right" data-explain={GLOSARIO.capacidadEtapa}>Capacidad h/semana</th><th className="w-24 !text-center" data-explain={GLOSARIO.etapaEnParalelo}>En paralelo</th><th className="w-20 !text-center">Activa</th></tr></thead>
+              <thead><tr><th className="w-16" data-explain={GLOSARIO.colorEtapaTaller} data-explain-title="Color">Color</th><th>Etapa</th><th className="w-24 !text-right" data-explain={GLOSARIO.ordenEtapaTaller} data-explain-title="Orden">Orden</th><th className="w-36 !text-right" data-explain={GLOSARIO.capacidadEtapa} data-explain-title="Capacidad h/semana">Capacidad h/semana</th><th className="w-24 !text-center" data-explain={GLOSARIO.etapaEnParalelo} data-explain-title="En paralelo">En paralelo</th><th className="w-20 !text-center" data-explain={GLOSARIO.etapaActivaTaller} data-explain-title="Activa">Activa</th></tr></thead>
               <tbody>
                 {(etapas.data ?? []).map((e) => (
                   <tr key={e.id} className={e.activa ? "" : "opacity-60"}>

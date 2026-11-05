@@ -89,11 +89,12 @@ export default function FacturasSinRegistrar() {
       <span className="text-sm">{f.no_registrar}<span className="block text-[11px] text-tenue">{f.no_registrar_por} · {fechaYHora(f.no_registrar_en)}</span></span>
     ) } as Columna<Fila>] : []),
     ...(captura ? [{ clave: "acciones", titulo: "", celda: (f: Fila) => vista === "descartadas" ? (
-      <Boton tamano="sm" variante="fantasma" onClick={(e) => { e.stopPropagation(); accion.mutate({ uuid: f.uuid, motivo: null }); }}><Undo2 className="h-3.5 w-3.5" />Regresar</Boton>
+      <Boton tamano="sm" variante="fantasma" data-explain={GLOSARIO.facturaNoSeRegistra} data-explain-title="Regresar a la lista" onClick={(e) => { e.stopPropagation(); accion.mutate({ uuid: f.uuid, motivo: null }); }}><Undo2 className="h-3.5 w-3.5" />Regresar</Boton>
     ) : (
       <div className="flex gap-1 justify-end">
-        <Boton tamano="sm" onClick={(e) => { e.stopPropagation(); setRegistrar([f]); }}><Receipt className="h-3.5 w-3.5" />Registrar</Boton>
-        <Boton tamano="sm" variante="fantasma" aria-label="No se registra aquí" title="No se registra aquí" onClick={(e) => { e.stopPropagation(); setDescartar(f); setMotivo(""); }}>
+        <Boton tamano="sm" data-explain={GLOSARIO.botonRegistrarFacturaSat} onClick={(e) => { e.stopPropagation(); setRegistrar([f]); }}><Receipt className="h-3.5 w-3.5" />Registrar</Boton>
+        <Boton tamano="sm" variante="fantasma" aria-label="No se registra aquí" title="No se registra aquí"
+          data-explain={GLOSARIO.facturaNoSeRegistra} data-explain-title="No se registra aquí" onClick={(e) => { e.stopPropagation(); setDescartar(f); setMotivo(""); }}>
           <CircleSlash className="h-3.5 w-3.5" />
         </Boton>
       </div>
@@ -104,9 +105,9 @@ export default function FacturasSinRegistrar() {
     <Pagina titulo="Facturas sin registrar"
       descripcion="Lo que el SAT dice que nos facturaron y no está en la hoja, en las compras del ERP ni en caja chica."
       acciones={<>
-        <Boton asChild variante="secundario"><Link to="/finanzas/facturas-anteriores"><History className="h-4 w-4" />Cargar XML</Link></Boton>
+        <Boton asChild variante="secundario" data-explain={GLOSARIO.botonCargarXmlFacturas}><Link to="/finanzas/facturas-anteriores"><History className="h-4 w-4" />Cargar XML</Link></Boton>
         {captura && vista !== "descartadas" && (mostradas ?? []).length > 1 && (
-          <Boton onClick={() => setRegistrar(mostradas ?? [])}><Receipt className="h-4 w-4" />Registrar las {numero((mostradas ?? []).length)}</Boton>
+          <Boton data-explain={GLOSARIO.botonRegistrarTodasSinRegistrar} onClick={() => setRegistrar(mostradas ?? [])}><Receipt className="h-4 w-4" />Registrar las {numero((mostradas ?? []).length)}</Boton>
         )}
       </>}>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -114,7 +115,7 @@ export default function FacturasSinRegistrar() {
              detalle={filas.length ? `${dinero(suma(filas))}${desde ? ` desde el ${fecha(desde)}` : ""}` : "Todo lo facturado está registrado"} alClic={() => setVista("todas")} />
         <Kpi titulo="A crédito: por pagar sin saberlo" valor={dinero(suma(credito))} icono={Receipt} tono={credito.length ? "peligro" : "ok"} explica={GLOSARIO.metodoPagoCfdi}
              detalle={credito.length === 1 ? "1 factura que no sale en Pagos a proveedores" : `${numero(credito.length)} facturas que no salen en Pagos a proveedores`} alClic={() => setVista("credito")} />
-        <Kpi titulo="Proveedor sin dar de alta" valor={numero(sinProv.length)} icono={UserPlus} tono={sinProv.length ? "aviso" : "ok"}
+        <Kpi titulo="Proveedor sin dar de alta" valor={numero(sinProv.length)} icono={UserPlus} tono={sinProv.length ? "aviso" : "ok"} explica={GLOSARIO.proveedorSinAltaXml}
              detalle="Al registrarla se da de alta con su RFC" alClic={() => setVista("sin_proveedor")} />
       </div>
 
@@ -122,8 +123,8 @@ export default function FacturasSinRegistrar() {
         claveFila={(f) => f.uuid} exportarComo="facturas-sin-registrar" placeholder="Proveedor, RFC, folio, concepto…"
         filtros={<Filtro<Vista> valor={vista} alCambiar={setVista} opciones={[
           { valor: "todas", texto: "Todas", cuenta: filas.length },
-          { valor: "credito", texto: "A crédito", cuenta: credito.length },
-          { valor: "sin_proveedor", texto: "Proveedor nuevo", cuenta: sinProv.length },
+          { valor: "credito", texto: "A crédito", cuenta: credito.length, explica: GLOSARIO.metodoPagoCfdi },
+          { valor: "sin_proveedor", texto: "Proveedor nuevo", cuenta: sinProv.length, explica: GLOSARIO.proveedorSinAltaXml },
           { valor: "descartadas", texto: "No se registran", explica: GLOSARIO.facturaNoSeRegistra },
         ]} />}
         vacio={{ icono: vista === "descartadas" ? FileText : CheckCircle2,

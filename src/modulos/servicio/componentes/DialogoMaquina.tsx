@@ -72,10 +72,11 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
       </>}>
       <form id="form-maquina" className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (listo) guardar.mutate(); }}>
         <div className="grid gap-3 sm:grid-cols-3">
-          <Campo etiqueta="Número"><Entrada value={f.numero} onChange={(e) => set("numero", e.target.value)} placeholder="SOL-03" autoFocus /></Campo>
+          <Campo etiqueta="Número"><Entrada value={f.numero} onChange={(e) => set("numero", e.target.value)} placeholder="SOL-03" autoFocus
+            data-explain={GLOSARIO.numeroMaquina} data-explain-title="Número" /></Campo>
           <Campo etiqueta="Nombre" className="sm:col-span-2"><Entrada value={f.nombre} onChange={(e) => set("nombre", e.target.value)} placeholder="Soldadora 03" /></Campo>
           <Campo etiqueta="Tipo">
-            <Seleccion value={f.tipo} onChange={(e) => set("tipo", e.target.value as Maquina["tipo"])}>
+            <Seleccion value={f.tipo} onChange={(e) => set("tipo", e.target.value as Maquina["tipo"])} data-explain={GLOSARIO.tipoMaquinaCatalogo} data-explain-title="Tipo">
               {Object.entries(TIPO_MAQUINA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </Seleccion>
           </Campo>
@@ -86,7 +87,7 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
             </span>
           </Campo>
           <Campo etiqueta="Área del taller">
-            <Seleccion value={f.etapa_id} onChange={(e) => set("etapa_id", e.target.value)}>
+            <Seleccion value={f.etapa_id} onChange={(e) => set("etapa_id", e.target.value)} data-explain={GLOSARIO.areaMaquina} data-explain-title="Área del taller">
               <option value="">Sin área (oficinas, patio…)</option>
               {(etapas.data ?? []).map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
             </Seleccion>
@@ -163,7 +164,7 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
             <p className="text-xs text-tenue">La criticidad se calcula sola con esto, las fallas y el costo de reparación del último año.</p>
           ) : (
             <Campo etiqueta="Mientras, la de la hoja" ayuda="Al calificar «si se para» y el riesgo, se calcula sola.">
-              <Seleccion value={f.criticidad} onChange={(e) => set("criticidad", e.target.value)}>
+              <Seleccion value={f.criticidad} onChange={(e) => set("criticidad", e.target.value)} data-explain={GLOSARIO.criticidadDeLaHoja} data-explain-title="La de la hoja">
                 <option value="">Sin calificar</option>
                 {Object.entries(CRITICIDAD).map(([k, v]) => <option key={k} value={k}>{v.texto}</option>)}
               </Seleccion>
@@ -172,7 +173,8 @@ export function DialogoMaquina({ m, alCerrar, alGuardar }: { m?: Maquina; alCerr
         </fieldset>
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
           {([...(f.criticidad || calculada ? [] : [["critica", "Crítica (si se para, se para el área)"]] as const), ["prestable", "Se presta con resguardo"], ["usa_horometro", "Tiene horómetro"]] as const).map(([k, t]) => (
-            <label key={k} className="inline-flex items-center gap-2 cursor-pointer">
+            <label key={k} className="inline-flex items-center gap-2 cursor-pointer"
+                   data-explain={k === "critica" ? GLOSARIO.maquinaCritica : k === "prestable" ? GLOSARIO.maquinaPrestable : GLOSARIO.horometro}>
               <input type="checkbox" checked={f[k] || (k === "prestable" && f.tipo === "herramienta")} disabled={k === "prestable" && f.tipo === "herramienta"}
                      onChange={(e) => set(k, e.target.checked)} className="accent-[hsl(var(--marca))]" />{t}
             </label>

@@ -20,7 +20,7 @@ import { DialogoMotivo } from "./componentes/dialogos";
 import { CANAL, ESTADO_PEDIDO, LINEA, dineroEn, hoyMx, useVendedores, type EstadoPedido, type Linea, type VPedido } from "./comun";
 import { TarjetaEnvio } from "@/modulos/almacen/envios/TarjetaEnvio";
 import { TarjetaMercadoLibre } from "./componentes/DineroML";
-import { BotonEntregar, RecuadroEntrega, abrirHojaSalida, useHojaSalida } from "./componentes/EntregaPedido";
+import { BotonEntregar, EXPLICA_ESTADO_PEDIDO, RecuadroEntrega, abrirHojaSalida, useHojaSalida } from "./componentes/EntregaPedido";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { GanttCompacto } from "@/modulos/produccion/Gantt";
 import { EditarFactura, type FacturaEditable } from "@/modulos/finanzas/componentes/EditarFactura";
@@ -41,6 +41,8 @@ interface Orden { id: string; folio: string; estado: string; fecha_compromiso: s
 interface Tablero { id: string; avance: number; etapa_actual: string | null; siguiente_etapa: string | null; atrasada: boolean; materiales_faltantes: number; pausada: boolean | null }
 
 const ESTADO_OP: Record<string, string> = { planeada: "Planeada", liberada: "Liberada", en_proceso: "En proceso", terminada: "Terminada", entregada: "Entregada", cancelada: "Cancelada" };
+/** El globo de cada estado de orden (modo tutorial); entregada y cancelada se entienden solas. */
+const EXPLICA_OP: Record<string, string | undefined> = { planeada: GLOSARIO.opPlaneada, liberada: GLOSARIO.opLiberada, en_proceso: GLOSARIO.opEnProceso, terminada: GLOSARIO.opTerminada };
 const METODOS = ["transferencia", "efectivo", "tarjeta", "cheque", "mercadopago", "otro"] as const;
 
 export default function DetallePedido() {
@@ -126,7 +128,7 @@ export default function DetallePedido() {
 
   return (
     <Pagina ancho="max-w-[1400px]"
-      titulo={<span className="inline-flex flex-wrap items-center gap-2"><span className="cifra">{p.folio}</span>{p.folio_anterior && <span className="text-sm font-normal text-tenue cifra" data-explain={GLOSARIO.folioPedido} data-explain-title="Folio">antes {p.folio_anterior}</span>}<Insignia tono={ESTADO_PEDIDO[p.estado].tono} punto>{ESTADO_PEDIDO[p.estado].texto}</Insignia>
+      titulo={<span className="inline-flex flex-wrap items-center gap-2"><span className="cifra">{p.folio}</span>{p.folio_anterior && <span className="text-sm font-normal text-tenue cifra" data-explain={GLOSARIO.folioPedido} data-explain-title="Folio">antes {p.folio_anterior}</span>}<span data-explain={EXPLICA_ESTADO_PEDIDO[p.estado]} data-explain-title={ESTADO_PEDIDO[p.estado].texto}><Insignia tono={ESTADO_PEDIDO[p.estado].tono} punto>{ESTADO_PEDIDO[p.estado].texto}</Insignia></span>
         {r?.atrasado && <span data-explain={GLOSARIO.pedidoAtrasado}><Insignia tono="peligro">atrasado</Insignia></span>}{p.historico && <span data-explain={GLOSARIO.pedidoHistorico}><Insignia>de la hoja</Insignia></span>}</span>}
       descripcion={<span>
         <Link to={`/ventas/clientes/${p.cliente_id}`} className="text-marca-texto hover:underline">{cliente.data?.nombre ?? "…"}</Link>
@@ -139,10 +141,10 @@ export default function DetallePedido() {
       </span>}
       acciones={(!p.historico || abierto) && <>
         {!p.historico && puede("produccion", 2) && ["confirmado", "en_produccion"].includes(p.estado) && (
-          <Boton variante="secundario" onClick={() => producir.mutate(undefined)} cargando={producir.isPending}><Factory className="h-4 w-4" />Mandar a producción</Boton>
+          <Boton variante="secundario" onClick={() => producir.mutate(undefined)} cargando={producir.isPending} data-explain={GLOSARIO.botonMandarProduccion}><Factory className="h-4 w-4" />Mandar a producción</Boton>
         )}
         {puedeCambiar && ["confirmado", "en_produccion"].includes(p.estado) && (
-          <Boton variante="secundario" onClick={() => actualizar.mutate({ estado: "listo" })}><PackageCheck className="h-4 w-4" />Marcar listo</Boton>
+          <Boton variante="secundario" onClick={() => actualizar.mutate({ estado: "listo" })} data-explain={GLOSARIO.botonMarcarListoPedido}><PackageCheck className="h-4 w-4" />Marcar listo</Boton>
         )}
         {/* Ya entregado, la hoja sale en el recuadro de la entrega; con una entrega parcial, esta imprime lo que falta. */}
         {p.estado !== "cancelado" && (abierto || !hoja.data?.salidas.some((s) => !s.anulada_en)) && (
@@ -156,7 +158,7 @@ export default function DetallePedido() {
             return !pendientes || confirm(`Hay ${pendientes} orden(es) de producción sin terminar. ¿Entregar de todos modos?`);
           }} />
         )}
-        {abierto && puedeCambiar && <Boton variante="fantasma" className="text-peligro" onClick={() => setDlg("cancelar")}><Ban className="h-4 w-4" />Cancelar</Boton>}
+        {abierto && puedeCambiar && <Boton variante="fantasma" className="text-peligro" onClick={() => setDlg("cancelar")} data-explain={GLOSARIO.botonCancelarPedido} data-explain-title="Cancelar el pedido"><Ban className="h-4 w-4" />Cancelar</Boton>}
       </>}>
 
       {p.estado === "cancelado" && <p className="rounded-xl border border-peligro/30 bg-peligro-suave px-4 py-3 text-sm text-peligro">Cancelado: {p.motivo_cancelacion}</p>}
@@ -189,7 +191,7 @@ export default function DetallePedido() {
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px] items-start">
         <div className="space-y-4 min-w-0">
           <Tarjeta className="overflow-visible">
-            <EncabezadoTarjeta titulo="Partidas" descripcion={editablePartidas ? "Mientras está confirmado se pueden ajustar." : undefined} />
+            <EncabezadoTarjeta titulo="Partidas" explica={GLOSARIO.partidasPedido} descripcion={editablePartidas ? "Mientras está confirmado se pueden ajustar." : undefined} />
             {editablePartidas && <div className="px-4 pb-3"><BuscadorArticulo placeholder="Agregar partida desde el catálogo…" alElegir={(a) => { void elegirArticulo(a); }} /></div>}
             <div className="overflow-x-auto">
               <table className="tabla">
@@ -212,7 +214,8 @@ export default function DetallePedido() {
                       </td>
                       {conDescuento && <td className="text-right cifra">{Number(l.descuento_pct) ? porcentaje(Number(l.descuento_pct), 1) : "—"}</td>}
                       <td className="text-right cifra font-medium">{dineroEn(Number(l.importe), p.moneda)}</td>
-                      {editablePartidas && <td><Boton variante="fantasma" tamano="icono" aria-label="Quitar" onClick={() => quitarLinea.mutate(l.id)}><Trash2 className="h-4 w-4" /></Boton></td>}
+                      {editablePartidas && <td><Boton variante="fantasma" tamano="icono" aria-label="Quitar" onClick={() => quitarLinea.mutate(l.id)}
+                        data-explain={GLOSARIO.quitarPartidaPedido} data-explain-title="Quitar partida"><Trash2 className="h-4 w-4" /></Boton></td>}
                     </tr>
                   ))}
                   {(lineas.data?.length ?? 0) === 0 && <tr><td colSpan={6} className="text-center text-tenue py-6">Sin partidas: agrégalas con el buscador.</td></tr>}
@@ -233,6 +236,7 @@ export default function DetallePedido() {
                     {sinIva ? <span data-explain={GLOSARIO.sinIva} data-explain-title="Sin IVA">IVA</span> : <>IVA {porcentaje(Number(p.tasa_iva), 0)}</>}
                     {puedeIva && (
                       <button type="button" className="ml-2 text-xs text-marca-texto hover:underline disabled:opacity-50" disabled={cambiarIva.isPending}
+                        data-explain={GLOSARIO.botonIvaPedido}
                         onClick={() => {
                           if (confirm(sinIva ? "¿El pedido sí lleva factura? Se le agrega el IVA y sube el total." : "¿El cliente no quiere factura? Se le quita el IVA: el total queda igual al subtotal."))
                             cambiarIva.mutate(!sinIva);
@@ -246,7 +250,7 @@ export default function DetallePedido() {
                 <div className="flex justify-between font-semibold text-base border-t border-borde pt-1"><dt>Total</dt><dd className="cifra">{dineroEn(Number(p.total), p.moneda)}</dd></div>
                 {!p.historico && <>
                   <div className="flex justify-between text-ok"><dt>Cobrado</dt><dd className="cifra">{dineroEn(Number(r?.cobrado ?? 0), p.moneda)}</dd></div>
-                  <div className="flex justify-between font-medium text-aviso"><dt>Saldo</dt><dd className="cifra">{dineroEn(Number(r?.saldo ?? 0), p.moneda)}</dd></div>
+                  <div className="flex justify-between font-medium text-aviso"><dt data-explain={GLOSARIO.saldoPedido} data-explain-title="Saldo">Saldo</dt><dd className="cifra">{dineroEn(Number(r?.saldo ?? 0), p.moneda)}</dd></div>
                 </>}
               </dl>
             </div>
@@ -262,7 +266,8 @@ export default function DetallePedido() {
                 </p>
               ) : (
                 <table className="tabla">
-                  <thead><tr><th>Orden</th><th>Equipo</th><th>Estado</th><th>Etapa</th><th>Compromiso</th><th className="w-40">Avance</th></tr></thead>
+                  <thead><tr><th data-explain={GLOSARIO.ordenProduccion} data-explain-title="Orden">Orden</th><th>Equipo</th><th>Estado</th><th>Etapa</th><th>Compromiso</th>
+                    <th className="w-40" data-explain={GLOSARIO.avanceOrden} data-explain-title="Avance">Avance</th></tr></thead>
                   <tbody>
                     {ordenes.data!.map((o) => {
                       const t = tablero.data?.find((x) => x.id === o.id);
@@ -271,9 +276,9 @@ export default function DetallePedido() {
                         <tr key={o.id}>
                           <td className="font-medium cifra">{puede("produccion") ? <Link to={`/produccion/ordenes/${o.id}`} className="text-marca-texto">{o.folio}</Link> : o.folio}{o.numero_serie && <span className="block text-[11px] text-tenue">{o.numero_serie}</span>}</td>
                           <td className="max-w-[240px] truncate">{o.articulo?.nombre}</td>
-                          <td><Insignia tono={o.estado === "terminada" || o.estado === "entregada" ? "ok" : o.estado === "en_proceso" ? "info" : "neutro"}>{ESTADO_OP[o.estado] ?? o.estado}</Insignia>
-                            {t?.atrasada && <Insignia tono="peligro" className="ml-1">atrasada</Insignia>}
-                            {Number(t?.materiales_faltantes ?? 0) > 0 && <Insignia tono="aviso" className="ml-1">faltan materiales</Insignia>}</td>
+                          <td><span data-explain={EXPLICA_OP[o.estado]}><Insignia tono={o.estado === "terminada" || o.estado === "entregada" ? "ok" : o.estado === "en_proceso" ? "info" : "neutro"}>{ESTADO_OP[o.estado] ?? o.estado}</Insignia></span>
+                            {t?.atrasada && <span data-explain={GLOSARIO.ordenAtrasada}><Insignia tono="peligro" className="ml-1">atrasada</Insignia></span>}
+                            {Number(t?.materiales_faltantes ?? 0) > 0 && <span data-explain={GLOSARIO.faltanteMaterial}><Insignia tono="aviso" className="ml-1">faltan materiales</Insignia></span>}</td>
                           <td className="text-sm">{t?.etapa_actual ?? (t?.siguiente_etapa ? <span className="text-tenue">sigue {t.siguiente_etapa}</span> : "—")}</td>
                           <td>{fecha(o.fecha_compromiso)}</td>
                           <td><div className="flex items-center gap-2"><Barra valor={av} tono={av === 100 ? "ok" : "marca"} /><span className="text-xs cifra w-9 text-right">{av}%</span></div></td>
@@ -323,7 +328,7 @@ export default function DetallePedido() {
 
           <Tarjeta>
             <EncabezadoTarjeta titulo="Crédito de la venta" explica={GLOSARIO.creditoCompartido} descripcion={(credito.data?.length ?? 0) > 1 ? "Compartido entre vendedores" : "Para comisiones"}
-              acciones={esGerente && !p.historico && <Boton variante="secundario" tamano="sm" onClick={() => setDlg("credito")}><Users className="h-3.5 w-3.5" />Compartir</Boton>} />
+              acciones={esGerente && !p.historico && <Boton variante="secundario" tamano="sm" onClick={() => setDlg("credito")} data-explain={GLOSARIO.botonCompartirCredito}><Users className="h-3.5 w-3.5" />Compartir</Boton>} />
             <div className="px-5 pb-4 space-y-1.5 text-sm">
               {(credito.data?.length ?? 0) === 0 ? <p className="flex justify-between"><span>{vendedor.data?.nombre ?? "Sin vendedor"}</span><span className="cifra">100%</span></p>
                 : credito.data!.map((x) => <p key={x.vendedor_id} className="flex justify-between"><span>{x.vendedor?.nombre}</span><span className="cifra font-medium">{numero(Number(x.porcentaje))}%</span></p>)}
@@ -332,7 +337,7 @@ export default function DetallePedido() {
           </Tarjeta>
 
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Facturas" acciones={puede("finanzas", 2) && <Boton variante="secundario" tamano="sm" onClick={() => setDlg("factura")}><FileText className="h-3.5 w-3.5" />Registrar</Boton>} />
+            <EncabezadoTarjeta titulo="Facturas" explica={GLOSARIO.facturasPedido} acciones={puede("finanzas", 2) && <Boton variante="secundario" tamano="sm" onClick={() => setDlg("factura")}><FileText className="h-3.5 w-3.5" />Registrar</Boton>} />
             <div className="px-5 pb-4 text-sm space-y-1.5">
               {(facturas.data?.length ?? 0) === 0 ? <p className="text-tenue">Sin facturar.{!puede("finanzas", 2) && " La registra finanzas."}</p>
                 : facturas.data!.map((f) => (
@@ -349,7 +354,7 @@ export default function DetallePedido() {
           </Tarjeta>
 
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Cobros" explica={GLOSARIO.saldoPorCobrar} descripcion={!p.historico && r ? `${dineroEn(Number(r.cobrado), p.moneda)} de ${dineroEn(Number(p.total), p.moneda)}` : undefined}
+            <EncabezadoTarjeta titulo="Cobros" explica={GLOSARIO.cobrosPedido} descripcion={!p.historico && r ? `${dineroEn(Number(r.cobrado), p.moneda)} de ${dineroEn(Number(p.total), p.moneda)}` : undefined}
               acciones={puede("finanzas", 2) && !p.historico && <Boton variante="secundario" tamano="sm" onClick={() => setDlg("cobro")}><Wallet className="h-3.5 w-3.5" />Registrar</Boton>} />
             <div className="px-5 pb-4 text-sm space-y-2">
               {!p.historico && Number(p.total) > 0 && <Barra valor={(Number(r?.cobrado ?? 0) / Number(p.total)) * 100} tono="ok" />}
@@ -359,7 +364,7 @@ export default function DetallePedido() {
                     <span><Receipt className="inline h-3.5 w-3.5 text-tenue mr-1" />{fecha(c.fecha)} · {c.metodo === "mercadopago" ? "Mercado Pago" : c.metodo}{c.referencia ? ` · ${c.referencia.replace(/^Mercado Pago /, "pago ")}` : ""}</span>
                     <span className="flex items-center gap-1">
                       <span className="cifra font-medium">{dineroEn(Number(c.monto), p.moneda)}</span>
-                      {puede("finanzas", 2) && <button className="text-tenue hover:text-peligro" aria-label="Borrar cobro" onClick={() => { if (confirm("¿Borrar este cobro?")) borrarCobro.mutate(c.id); }}><Trash2 className="h-3.5 w-3.5" /></button>}
+                      {puede("finanzas", 2) && <button className="text-tenue hover:text-peligro" aria-label="Borrar cobro" data-explain={GLOSARIO.botonBorrarCobroPedido} data-explain-title="Borrar cobro" onClick={() => { if (confirm("¿Borrar este cobro?")) borrarCobro.mutate(c.id); }}><Trash2 className="h-3.5 w-3.5" /></button>}
                     </span>
                   </div>
                 ))}

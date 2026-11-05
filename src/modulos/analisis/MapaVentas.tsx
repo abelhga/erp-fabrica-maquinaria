@@ -34,11 +34,11 @@ interface Zona {
 }
 
 type Metrica = "monto" | "clientes" | "ticket" | "cambio";
-const METRICAS: { valor: Metrica; texto: string }[] = [
-  { valor: "monto", texto: "Venta" },
-  { valor: "clientes", texto: "Clientes que compraron" },
-  { valor: "ticket", texto: "Ticket promedio" },
-  { valor: "cambio", texto: "Crecimiento" },
+const METRICAS: { valor: Metrica; texto: string; explica: string }[] = [
+  { valor: "monto", texto: "Venta", explica: GLOSARIO.ventaAnalisis },
+  { valor: "clientes", texto: "Clientes que compraron", explica: GLOSARIO.clientesQueCompraron },
+  { valor: "ticket", texto: "Ticket promedio", explica: GLOSARIO.ticketPromedio },
+  { valor: "cambio", texto: "Crecimiento", explica: GLOSARIO.crecimientoVenta },
 ];
 
 const valorDe = (r: RegionMapa, m: Metrica): number | null =>
@@ -111,10 +111,10 @@ export default function MapaVentas() {
     { clave: "participacion", titulo: "Participación", alinear: "der", explica: GLOSARIO.participacionVenta, valor: (r) => r.participacion, celda: (r) => porcentaje(r.participacion), sinBusqueda: true },
     { clave: "monto_anterior", titulo: "Periodo anterior", alinear: "der", explica: GLOSARIO.periodoAnalisis, celda: (r) => dinero(r.monto_anterior), sinBusqueda: true },
     { clave: "cambio", titulo: "Cambio", alinear: "der", explica: GLOSARIO.crecimientoVenta, valor: (r) => r.cambio, celda: (r) => <Cambio v={r.cambio} nuevo={r.nuevo} />, sinBusqueda: true },
-    { clave: "clientes", titulo: "Clientes", alinear: "der", sinBusqueda: true },
-    { clave: "operaciones", titulo: "Operaciones", alinear: "der", sinBusqueda: true },
+    { clave: "clientes", titulo: "Clientes", alinear: "der", explica: GLOSARIO.clientesQueCompraron, sinBusqueda: true },
+    { clave: "operaciones", titulo: "Operaciones", alinear: "der", explica: GLOSARIO.operacionesVenta, sinBusqueda: true },
     { clave: "ticket", titulo: "Ticket promedio", alinear: "der", explica: GLOSARIO.ticketPromedio, valor: (r) => r.ticket, celda: (r) => dinero(r.ticket), sinBusqueda: true },
-    { clave: "cve", titulo: "Clave INEGI", clase: "text-tenue" },
+    { clave: "cve", titulo: "Clave INEGI", clase: "text-tenue", explica: GLOSARIO.claveInegi },
   ];
 
   return (
@@ -139,7 +139,8 @@ export default function MapaVentas() {
             <nav className="flex items-center gap-1 text-sm font-semibold" aria-label="Dónde estás">
               {enEstado ? (
                 <>
-                  <button type="button" className="text-marca-texto hover:underline" onClick={() => poner("estado", null)}>México</button>
+                  <button type="button" className="text-marca-texto hover:underline" onClick={() => poner("estado", null)}
+                    data-explain={GLOSARIO.botonVolverPaisMapa} data-explain-title="Volver a todo el país">México</button>
                   <ChevronRight className="h-4 w-4 text-tenue" />
                   <span>{d.nombre}</span>
                 </>
@@ -147,7 +148,7 @@ export default function MapaVentas() {
             </nav>
             <Filtro opciones={METRICAS} valor={metrica} alCambiar={(v) => poner("m", v)} />
           </div>
-          <p className="px-5 pt-1 text-xs text-tenue">
+          <p className="px-5 pt-1 text-xs text-tenue" data-explain={GLOSARIO.mapaVentasComoLeer} data-explain-title="Cómo se lee el mapa">
             {METRICAS.find((m) => m.valor === metrica)!.texto} en {periodo.etiqueta}
             {metrica === "cambio" && <> contra {tramo(d.periodo.ant_desde, d.periodo.ant_hasta)}</>}
             {!enEstado && " · Clic en un estado para ver sus municipios"}
@@ -165,12 +166,12 @@ export default function MapaVentas() {
             <LeyendaEscala escala={escala} formato={(v) => fmt(v)} vacio={metrica === "cambio" ? "Sin venta en ninguno de los dos" : "Sin venta"} />
             <p className="text-xs text-tenue">{escala.explicacion}</p>
             {enEstado && d.sin_municipio && d.sin_municipio.monto > 0 && (
-              <p className="text-xs flex items-center gap-1.5"><MapPinOff className="h-3.5 w-3.5 text-aviso" />
+              <p className="text-xs flex items-center gap-1.5" data-explain={GLOSARIO.ventaSinUbicar}><MapPinOff className="h-3.5 w-3.5 text-aviso" />
                 <span><b className="cifra">{dinero(d.sin_municipio.monto)}</b> de {numero(d.sin_municipio.clientes)} clientes de {d.nombre} sin municipio (la ciudad no se reconoció).{" "}
                   <Link to="/analisis/ubicaciones" className="text-marca-texto hover:underline">Revisar ubicaciones</Link></span></p>
             )}
             {!enEstado && d.sin_ubicar && d.sin_ubicar.monto > 0 && (
-              <p className="text-xs flex items-center gap-1.5"><MapPinOff className="h-3.5 w-3.5 text-aviso" />
+              <p className="text-xs flex items-center gap-1.5" data-explain={GLOSARIO.ventaSinUbicar}><MapPinOff className="h-3.5 w-3.5 text-aviso" />
                 <span><b className="cifra">{dinero(d.sin_ubicar.monto)}</b> de {numero(d.sin_ubicar.clientes)} clientes sin estado: no salen en el mapa.{" "}
                   <Link to="/analisis/ubicaciones" className="text-marca-texto hover:underline">Revisar ubicaciones</Link></span></p>
             )}
@@ -220,7 +221,7 @@ export default function MapaVentas() {
                 {perdidoTotal > 0 && <> Juntas son <b className="text-texto cifra">{dineroCompacto(perdidoTotal)}</b> menos.</>}
               </p>
             </div>
-            <Boton variante="secundario" tamano="sm" onClick={() => ir("/ventas/para-llamar")}><PhoneCall className="h-4 w-4" /> A quién llamar hoy</Boton>
+            <Boton variante="secundario" tamano="sm" onClick={() => ir("/ventas/para-llamar")} data-explain={GLOSARIO.botonAQuienLlamar}><PhoneCall className="h-4 w-4" /> A quién llamar hoy</Boton>
           </div>
           {!frias.data ? <Cargando filas={3} /> : frias.data.zonas.length === 0 ? (
             <Vacio icono={Snowflake} titulo="Ninguna zona se enfrió" texto="Ningún lugar que compraba cayó 30 % o más contra el periodo anterior." />
@@ -234,10 +235,10 @@ export default function MapaVentas() {
                     )}
                     <span className="text-sm cifra">{dineroCompacto(z.monto_anterior)} → {dineroCompacto(z.monto)}</span>
                     <Cambio v={z.cambio} />
-                    <span className="ml-auto text-sm text-peligro cifra font-medium">−{dineroCompacto(z.perdido)}</span>
+                    <span className="ml-auto text-sm text-peligro cifra font-medium" data-explain={GLOSARIO.ventaPerdidaZona} data-explain-title="Lo que se dejó de vender">−{dineroCompacto(z.perdido)}</span>
                   </div>
                   {z.clientes.length > 0 && (
-                    <p className="text-xs text-tenue mt-1">
+                    <p className="text-xs text-tenue mt-1" data-explain={GLOSARIO.clientesDejaronComprar} data-explain-title="Dejaron de comprar">
                       {z.clientes_perdidos === 1 ? "Dejó de comprar: " : `Dejaron de comprar ${z.clientes_perdidos}: `}
                       {z.clientes.map((c, i) => (
                         <span key={c.id}>

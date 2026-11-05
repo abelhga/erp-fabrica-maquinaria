@@ -69,7 +69,7 @@ function DialogoReemplazar({ viejoInicial, alCerrar }: { viejoInicial: Pieza | n
       pie={<><Boton variante="secundario" onClick={alCerrar} disabled={aplicar.isPending}>Cancelar</Boton>
         {!confirmar
           ? <Boton onClick={() => setConfirmar(true)} disabled={!viejo || !nuevo || padres.length === 0}>Revisar cambio</Boton>
-          : <Boton variante="peligro" onClick={() => aplicar.mutate(undefined)} cargando={aplicar.isPending}>Sí, reemplazar en {padres.length} {padres.length === 1 ? "lista" : "listas"}</Boton>}</>}>
+          : <Boton variante="peligro" onClick={() => aplicar.mutate(undefined)} cargando={aplicar.isPending} data-explain={GLOSARIO.reemplazarComponente} data-explain-title="Reemplazar componente">Sí, reemplazar en {padres.length} {padres.length === 1 ? "lista" : "listas"}</Boton>}</>}>
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] items-start">
           <Elegir etiqueta="Pieza actual" valor={viejo} alQuitar={viejoInicial ? undefined : () => { setViejo(null); setNuevo(null); }}
@@ -84,7 +84,7 @@ function DialogoReemplazar({ viejoInicial, alCerrar }: { viejoInicial: Pieza | n
         ) : (
           <section className="space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-medium">Listas donde va directo <span className="font-normal text-tenue">· marca en cuáles cambiarla</span></p>
+              <p className="text-sm font-medium" data-explain={GLOSARIO.listasDondeVaDirecto}>Listas donde va directo <span className="font-normal text-tenue">· marca en cuáles cambiarla</span></p>
               <span className="flex gap-1">
                 <Boton tamano="sm" variante="fantasma" onClick={() => { setElegidos(new Set(usos.data!.filter((u) => u.activo).map((u) => u.padre_id))); setConfirmar(false); }}>
                   Marcar todas las activas</Boton>
@@ -99,8 +99,8 @@ function DialogoReemplazar({ viejoInicial, alCerrar }: { viejoInicial: Pieza | n
                       onChange={() => { alternar(u.padre_id); setConfirmar(false); }} />
                     <span className="cifra font-medium w-24 shrink-0">{u.clave}</span>
                     <span className="min-w-0 flex-1 truncate">{u.nombre}</span>
-                    {u.tipo === "subensamble" && <Insignia tono="marca">{NOMBRE_TIPO[u.tipo]}</Insignia>}
-                    {!u.activo && <Insignia>Inhabilitado</Insignia>}
+                    {u.tipo === "subensamble" && <span data-explain={GLOSARIO.subensamble}><Insignia tono="marca">{NOMBRE_TIPO[u.tipo]}</Insignia></span>}
+                    {!u.activo && <span data-explain={GLOSARIO.articuloInhabilitado} data-explain-title="Inhabilitado"><Insignia>Inhabilitado</Insignia></span>}
                     <span className="cifra text-tenue whitespace-nowrap">{cant(u.cantidad)}{u.parametro ? ` + × ${u.parametro}` : ""} {viejo.unidad ?? ""}</span>
                   </label>
                 </li>

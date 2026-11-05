@@ -10,6 +10,7 @@ import { Seleccion } from "@/components/ui/campo";
 import { leerDocumento, type TipoDocumento } from "@/lib/asistente";
 import { mensajeError } from "@/lib/consultas";
 import { INCOTERMS, type Embarque, type Modalidad } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /** Los que sirven para arrancar un embarque (el pedimento y la cuenta de gastos llegan después). */
 export const TIPOS_ALTA = {
@@ -134,7 +135,8 @@ export function LlenarConDocumento({ leido, alLeer, alQuitar, llenados }: {
               Ver archivo <ExternalLink className="h-3 w-3" />
             </a>
           )}
-          <button type="button" onClick={alQuitar} className="shrink-0 p-1 rounded text-tenue hover:bg-fondo" aria-label="Quitar el documento" title="Quitar el documento (lo llenado se queda)">
+          <button type="button" onClick={alQuitar} className="shrink-0 p-1 rounded text-tenue hover:bg-fondo" aria-label="Quitar el documento" title="Quitar el documento (lo llenado se queda)"
+            data-explain={GLOSARIO.quitarDocumentoAlta} data-explain-title="Quitar el documento">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -158,9 +160,9 @@ export function LlenarConDocumento({ leido, alLeer, alQuitar, llenados }: {
         <Seleccion className="w-auto h-9" value={tipo} onChange={(e) => setTipo(e.target.value as TipoAlta)} disabled={leyendo} aria-label="Qué documento es">
           {Object.entries(TIPOS_ALTA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </Seleccion>
-        <Boton type="button" variante="secundario" onClick={() => entrada.current?.click()} cargando={leyendo}>
+        <span data-explain={GLOSARIO.botonLlenarEmbarqueConDocumento} data-explain-title="Subir y leer"><Boton type="button" variante="secundario" onClick={() => entrada.current?.click()} cargando={leyendo}>
           {!leyendo && <FileUp className="h-4 w-4" />}{leyendo ? "Leyendo…" : "Subir y leer"}
-        </Boton>
+        </Boton></span>
         <input ref={entrada} type="file" accept="application/pdf,image/jpeg,image/png" className="hidden" aria-label="Documento para llenar el embarque"
           onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) leer(f); }} />
       </div>

@@ -17,6 +17,17 @@ import { ESTADO_DEVOLUCION, TIPO_DEVOLUCION, faltan, useDevolucion, useDevolucio
 
 type Vista = "abiertas" | "vencen" | "resueltas" | "todas";
 const CANAL: Record<string, string> = { mercadolibre: "ML", sitio_web: "Web", amazon: "Amazon", directo: "Directo", mostrador: "Mostrador", distribuidor: "Distribuidor" };
+/** Qué significa cada estado y qué sigue, para el globo de su insignia (modo tutorial). */
+const EXPLICA_ESTADO: Record<Devolucion["estado"], string> = {
+  abierta: GLOSARIO.devolucionAbierta, respondida: GLOSARIO.devolucionRespondida, recibida: GLOSARIO.devolucionRecibida,
+  resuelta: GLOSARIO.devolucionResuelta, cancelada: GLOSARIO.devolucionCancelada,
+};
+/** La insignia del estado con su globo: Insignia no reenvía atributos. */
+const InsigniaEstado = ({ d }: { d: Devolucion }) => (
+  <span data-explain={EXPLICA_ESTADO[d.estado]} data-explain-title={ESTADO_DEVOLUCION[d.estado].texto}>
+    <Insignia tono={ESTADO_DEVOLUCION[d.estado].tono}>{ESTADO_DEVOLUCION[d.estado].texto}</Insignia>
+  </span>
+);
 
 /** Qué tan urgente es: vencido en rojo, menos de un día en ámbar. */
 function tonoVence(d: Devolucion): Tono {
@@ -28,7 +39,7 @@ function tonoVence(d: Devolucion): Tono {
 function Vence({ d }: { d: Devolucion }) {
   if (!d.abierta || !d.vence) return <span className="text-tenue">—</span>;
   const t = d.tipo === "devolucion" ? (d.vencida ? `debía llegar ${fecha(d.fecha_esperada)}` : `llega ${fecha(d.fecha_esperada)}`) : faltan(d.vence);
-  return <Insignia tono={tonoVence(d)} punto>{t}</Insignia>;
+  return <span data-explain={GLOSARIO.venceDevolucion} data-explain-title="Vence"><Insignia tono={tonoVence(d)} punto>{t}</Insignia></span>;
 }
 
 export default function Devoluciones() {
@@ -67,22 +78,22 @@ export default function Devoluciones() {
     { clave: "motivo", titulo: "Motivo", celda: (d) => <span className="block max-w-[210px] truncate" title={d.motivo}>{d.motivo}
       {d.codigo_autorizacion && <span className="block text-xs text-tenue cifra">código {d.codigo_autorizacion}</span>}</span> },
     { clave: "vence", titulo: "Vence", explica: GLOSARIO.venceDevolucion, valor: (d) => (d.abierta ? d.vence : null) ?? "", celda: (d) => <Vence d={d} /> },
-    { clave: "responsable", titulo: "Lo lleva", celda: (d) => <span className="text-sm whitespace-nowrap">{d.responsable ?? "—"}</span> },
+    { clave: "responsable", titulo: "Lo lleva", explica: GLOSARIO.responsableDevolucion, celda: (d) => <span className="text-sm whitespace-nowrap">{d.responsable ?? "—"}</span> },
     { clave: "estado", titulo: "Estado", explica: GLOSARIO.estadoDevolucion, valor: (d) => ESTADO_DEVOLUCION[d.estado].texto,
-      celda: (d) => <Insignia tono={ESTADO_DEVOLUCION[d.estado].tono}>{ESTADO_DEVOLUCION[d.estado].texto}</Insignia> },
+      celda: (d) => <InsigniaEstado d={d} /> },
   ];
   const vacio = vista === "abiertas"
     ? { icono: Undo2, titulo: "Nada abierto", texto: "Cuando Mercado Libre avise de una devolución o un reclamo, dalo de alta con el número de venta: almacén sabe que viene y el código queda aquí.",
-        accion: puede("envios", 2) ? <Boton onClick={() => setAlta(true)}><Plus className="h-4 w-4" />Nueva</Boton> : undefined }
+        accion: puede("envios", 2) ? <Boton onClick={() => setAlta(true)} data-explain={GLOSARIO.botonNuevaDevolucion}><Plus className="h-4 w-4" />Nueva</Boton> : undefined }
     : { icono: Undo2, titulo: "Sin registros aquí", texto: "Cambia el filtro para ver los demás." };
 
   return (
     <Pagina titulo="Devoluciones y reclamos"
       descripcion="De Mercado Libre, Amazon, el sitio y directos. Con su código, su hora límite y, junto a cada uno, la evidencia de salida para defenderse."
-      acciones={puede("envios", 2) && <Boton onClick={() => setAlta(true)}><Plus className="h-4 w-4" />Nueva</Boton>}>
+      acciones={puede("envios", 2) && <Boton onClick={() => setAlta(true)} data-explain={GLOSARIO.botonNuevaDevolucion}><Plus className="h-4 w-4" />Nueva</Boton>}>
       <Filtro<Vista> valor={vista} alCambiar={(v) => cambiar({ vista: v })} opciones={[
         { valor: "abiertas", texto: "Abiertas", cuenta: cuenta("abiertas") },
-        { valor: "vencen", texto: "Vencidas o por vencer", cuenta: cuenta("vencen") },
+        { valor: "vencen", texto: "Vencidas o por vencer", cuenta: cuenta("vencen"), explica: GLOSARIO.filtroDevolucionesPorVencer },
         { valor: "resueltas", texto: "Cerradas", cuenta: cuenta("resueltas") },
         { valor: "todas", texto: "Todas" },
       ]} />
@@ -98,7 +109,7 @@ export default function Devoluciones() {
             <button key={d.id} type="button" onClick={() => cambiar({ id: d.id })} className={cn("tarjeta w-full p-3 text-left", d.vencida && "border-peligro/40")}>
               <div className="flex items-center justify-between gap-2">
                 <span className="font-semibold cifra">{d.folio}</span>
-                {d.abierta && d.vence && d.estado === "abierta" ? <Vence d={d} /> : <Insignia tono={ESTADO_DEVOLUCION[d.estado].tono}>{ESTADO_DEVOLUCION[d.estado].texto}</Insignia>}
+                {d.abierta && d.vence && d.estado === "abierta" ? <Vence d={d} /> : <InsigniaEstado d={d} />}
               </div>
               <p className="mt-1 text-sm truncate">{d.cliente} <span className="text-tenue cifra">· {d.id_externo ? `#${d.id_externo}` : d.pedido_folio}</span></p>
               <p className="text-xs text-tenue truncate">{TIPO_DEVOLUCION[d.tipo].texto} · {d.motivo}</p>
@@ -108,7 +119,7 @@ export default function Devoluciones() {
 
       <Lateral abierto={!!abierto} alCambiar={(v) => { if (!v) cambiar({ id: null }); }}
         titulo={detalle.data ? <span className="inline-flex items-center gap-2"><span className="cifra">{detalle.data.folio}</span>
-          <Insignia tono={ESTADO_DEVOLUCION[detalle.data.estado].tono}>{ESTADO_DEVOLUCION[detalle.data.estado].texto}</Insignia></span> : "Devolución"}
+          <InsigniaEstado d={detalle.data} /></span> : "Devolución"}
         subtitulo={detalle.data && <>{TIPO_DEVOLUCION[detalle.data.tipo].texto} · {detalle.data.cliente}{detalle.data.id_externo && ` · venta #${detalle.data.id_externo}`}</>}>
         {detalle.isLoading ? <Cargando filas={6} /> : detalle.data ? <DetalleDevolucion dev={detalle.data} />
           : <Vacio icono={Undo2} titulo="No encontramos este registro" texto="Puede ser de la venta de otro vendedor." />}

@@ -79,11 +79,11 @@ export function Historial() {
     { clave: "almacen", titulo: "Almacén", clase: "whitespace-nowrap px-2", celda: (m) => nombreCorto(m.almacen) },
     { clave: "cantidad", titulo: "Cantidad", alinear: "der", sinBusqueda: true, clase: "px-2", valor: (m) => Number(m.cantidad),
       celda: (m) => <CantidadConSigno n={Number(m.cantidad)} unidad={m.unidad} /> },
-    { clave: "referencia", titulo: "Referencia", clase: "whitespace-nowrap px-2 text-xs", celda: (m) => m.referencia ?? <span className="text-tenue">—</span> },
+    { clave: "referencia", titulo: "Referencia", clase: "whitespace-nowrap px-2 text-xs", explica: GLOSARIO.referenciaMovimiento, celda: (m) => m.referencia ?? <span className="text-tenue">—</span> },
     { clave: "motivo", titulo: "Motivo", clase: "max-w-[200px] truncate text-tenue text-xs px-2", celda: (m) => <span title={m.motivo ?? ""}>{m.motivo ?? "—"}</span> },
-    { clave: "recibio", titulo: "Recibió", clase: "whitespace-nowrap text-xs px-2", explica: GLOSARIO.quienRecibe, celda: (m) => m.recibio ?? <span className="text-tenue">—</span> },
-    { clave: "usuario", titulo: "Quién", clase: "whitespace-nowrap text-xs px-2" },
-    { clave: "valor", titulo: "Valor", alinear: "der", sinBusqueda: true, oculta: !verCostos,
+    { clave: "recibio", titulo: "Recibió", clase: "whitespace-nowrap text-xs px-2", explica: GLOSARIO.quienRecibioMaterialAlmacen, celda: (m) => m.recibio ?? <span className="text-tenue">—</span> },
+    { clave: "usuario", titulo: "Quién", clase: "whitespace-nowrap text-xs px-2", explica: GLOSARIO.quienCapturoMovimiento },
+    { clave: "valor", titulo: "Valor", alinear: "der", sinBusqueda: true, oculta: !verCostos, explica: GLOSARIO.valorMovimientoInventario,
       valor: (m) => (m.costo_unitario == null ? null : Math.round(Number(m.cantidad) * Number(m.costo_unitario) * 100) / 100),
       celda: (m) => (m.costo_unitario == null ? "—" : dinero(Number(m.cantidad) * Number(m.costo_unitario))) },
   ];
@@ -100,21 +100,23 @@ export function Historial() {
       compacta
       filtros={
         <div className="flex flex-wrap items-center gap-2">
-          <Seleccion className="w-auto h-8 text-xs" value={grupo} onChange={(e) => setGrupo(e.target.value)} aria-label="Tipo">
+          <Seleccion className="w-auto h-8 text-xs" value={grupo} onChange={(e) => setGrupo(e.target.value)} aria-label="Tipo"
+            data-explain={GLOSARIO.tipoMovimiento} data-explain-title="Tipo de movimiento">
             {GRUPOS.map((g) => <option key={g.valor} value={g.valor}>{g.texto}</option>)}
           </Seleccion>
           <Seleccion className="w-auto h-8 text-xs" value={almacen} onChange={(e) => setAlmacen(e.target.value)} aria-label="Almacén">
             <option value="">Todos los almacenes</option>
             {(almacenes.data ?? []).map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
           </Seleccion>
-          <Seleccion className="w-auto h-8 text-xs max-w-[180px]" value={usuario} onChange={(e) => setUsuario(e.target.value)} aria-label="Usuario">
+          <Seleccion className="w-auto h-8 text-xs max-w-[180px]" value={usuario} onChange={(e) => setUsuario(e.target.value)} aria-label="Usuario"
+            data-explain={GLOSARIO.quienCapturoMovimiento} data-explain-title="Usuario">
             <option value="">Cualquier usuario</option>
             {(usuarios.data ?? []).map((u) => <option key={u.id} value={u.id}>{u.nombre}</option>)}
           </Seleccion>
-          <label className="flex items-center gap-1 text-xs text-tenue">
+          <label className="flex items-center gap-1 text-xs text-tenue" data-explain={GLOSARIO.fechasHistorialMovimientos} data-explain-title="Fechas">
             Del <input type="date" className="campo h-8 w-[136px] text-xs" value={desde} max={hasta} onChange={(e) => setDesde(e.target.value)} />
           </label>
-          <label className="flex items-center gap-1 text-xs text-tenue">
+          <label className="flex items-center gap-1 text-xs text-tenue" data-explain={GLOSARIO.fechasHistorialMovimientos} data-explain-title="Fechas">
             al <input type="date" className="campo h-8 w-[136px] text-xs" value={hasta} min={desde} onChange={(e) => setHasta(e.target.value)} />
           </label>
         </div>

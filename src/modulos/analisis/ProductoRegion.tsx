@@ -85,7 +85,7 @@ export default function ProductoRegion() {
   return (
     <div className={cn("space-y-4 transition-opacity", p.isFetching && p.isPlaceholderData && "opacity-60")}>
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
-        <Cifra titulo="Venta del periodo" valor={dineroCompacto(d.total)} detalle={<>{numero(d.clasificado.ventas)} renglones de venta</>} />
+        <Cifra titulo="Venta del periodo" explica={GLOSARIO.ventaAnalisis} valor={dineroCompacto(d.total)} detalle={<>{numero(d.clasificado.ventas)} renglones de venta</>} />
         <Cifra titulo="Familia que más vende" explica={GLOSARIO.familiaProducto} valor={mejor ? porcentaje(mejor.participacion, 0) : "—"} detalle={mejor?.nombre ?? "—"} />
         <Cifra titulo="Clasificado por familia" explica={GLOSARIO.ventaSinClasificar} valor={porcentaje(d.clasificado.pct, 1)}
           detalle={<>{dineroCompacto(d.clasificado.sin_clasificar_monto)} en {numero(d.clasificado.sin_clasificar_ventas)} ventas sin clasificar</>} />
@@ -93,10 +93,11 @@ export default function ProductoRegion() {
           detalle={estado && d.estado ? <button type="button" className="text-marca-texto hover:underline" onClick={() => poner("estado", null)}>Quitar el estado</button> : "Elige uno en la matriz para ver qué se vende ahí"} />
       </div>
 
-      <TarjetaGrafica titulo="Qué se vende dónde: familia × estado" explica={GLOSARIO.participacionVenta}
+      <TarjetaGrafica titulo="Qué se vende dónde: familia × estado" explica={GLOSARIO.matrizFamiliaEstado}
         descripcion={modo === "mezcla" ? "Cada columna suma 100 %: la mezcla de cada estado. Clic en un estado para verlo de cerca; en una familia, para su mapa."
           : "Monto de cada familia en cada estado. Clic en un estado para verlo de cerca; en una familia, para su mapa."}
-        acciones={<Filtro opciones={[{ valor: "mezcla", texto: "Mezcla del estado" }, { valor: "monto", texto: "Monto" }]} valor={modo} alCambiar={setModo} />}
+        acciones={<Filtro opciones={[{ valor: "mezcla", texto: "Mezcla del estado", explica: GLOSARIO.mezclaEstadoMatriz },
+          { valor: "monto", texto: "Monto", explica: GLOSARIO.montoMatriz }]} valor={modo} alCambiar={setModo} />}
         tabla={<div className="overflow-x-auto px-1 pb-2"><table className="tabla text-xs">
           <thead><tr><th>Familia</th>{cols.map((c) => <th key={c.cve} className="text-right">{c.nombre}</th>)}</tr></thead>
           <tbody>{filas.map((f) => <tr key={f.clave}><td className="whitespace-nowrap">{f.nombre}</td>
@@ -112,7 +113,7 @@ export default function ProductoRegion() {
                 {cols.map((c) => (
                   <th key={c.cve} className="font-medium align-bottom">
                     {c.cve === "resto" ? <span className="text-tenue">Resto</span> : (
-                      <button type="button" onClick={() => poner("estado", c.cve)}
+                      <button type="button" onClick={() => poner("estado", c.cve)} data-explain={GLOSARIO.botonEstadoMatriz} data-explain-title={c.nombre}
                         className={cn("px-1 rounded hover:text-marca-texto leading-tight", estado === c.cve ? "text-marca-texto underline" : "text-tenue")}>
                         {c.nombre}
                       </button>
@@ -125,7 +126,7 @@ export default function ProductoRegion() {
               {filas.map((f) => (
                 <tr key={f.clave}>
                   <th className="text-left font-medium pr-2">
-                    <button type="button" onClick={() => poner("familia", f.clave)}
+                    <button type="button" onClick={() => poner("familia", f.clave)} data-explain={GLOSARIO.botonFamiliaMatriz} data-explain-title={f.nombre}
                       className={cn("text-left hover:text-marca-texto", familia === f.clave && "text-marca-texto underline", f.clave === "sin_clasificar" && "text-tenue italic")}>
                       {f.nombre}
                     </button>
@@ -187,7 +188,7 @@ export default function ProductoRegion() {
                         ×{numero(f.indice)}
                       </span>
                     </div>
-                    <div className="relative mt-1">
+                    <div className="relative mt-1" data-explain={GLOSARIO.pesoFamiliaEstado} data-explain-title={f.nombre}>
                       <BarraRanking valor={f.participacion} max={1} />
                       {f.participacion_nacional != null && (
                         <span className="absolute -top-0.5 h-3 w-0.5 rounded bg-texto" style={{ left: `${Math.min(100, f.participacion_nacional * 100)}%` }} title={`País: ${porcentaje(f.participacion_nacional, 0)}`} />
@@ -198,13 +199,13 @@ export default function ProductoRegion() {
               </ul>
               {d.estado.municipios.length > 0 && (
                 <div>
-                  <p className="etiqueta mb-1">Dónde, dentro del estado</p>
+                  <p className="etiqueta mb-1" data-explain={GLOSARIO.municipiosEstado}>Dónde, dentro del estado</p>
                   <p className="text-sm">{d.estado.municipios.map((m) => `${m.nombre} ${dineroCompacto(m.monto)}`).join(" · ")}</p>
                 </div>
               )}
               {d.estado.productos.length > 0 && (
                 <div>
-                  <p className="etiqueta mb-1">Lo que más se vendió (texto de la venta)</p>
+                  <p className="etiqueta mb-1" data-explain={GLOSARIO.productosEstado}>Lo que más se vendió (texto de la venta)</p>
                   <table className="tabla text-xs">
                     <tbody>{d.estado.productos.map((x) => (
                       <tr key={x.descripcion}><td className="max-w-[280px] truncate" title={x.descripcion}>{x.descripcion}</td>
@@ -221,10 +222,11 @@ export default function ProductoRegion() {
         <section className="tarjeta min-w-0">
           <div className="flex flex-wrap items-start justify-between gap-2 px-5 pt-4 pb-2">
             <div>
-              <h3 className="font-semibold">{familiaElegida ? `Dónde se vende: ${familiaElegida.nombre}` : "Dónde se vende cada familia"}</h3>
+              <h3 className="font-semibold" data-explain={GLOSARIO.mapaFamilia}>{familiaElegida ? `Dónde se vende: ${familiaElegida.nombre}` : "Dónde se vende cada familia"}</h3>
               <p className="text-sm text-tenue mt-0.5">{familiaElegida ? `Venta de esa familia por estado en ${periodo.etiqueta}.` : "Elige una familia en la matriz o aquí."}</p>
             </div>
-            <Seleccion className="w-auto h-8 text-xs" value={familia ?? ""} onChange={(e) => poner("familia", e.target.value || null)} aria-label="Familia">
+            <Seleccion className="w-auto h-8 text-xs" value={familia ?? ""} onChange={(e) => poner("familia", e.target.value || null)} aria-label="Familia"
+              data-explain={GLOSARIO.mapaFamilia} data-explain-title="Elegir familia">
               <option value="">Elegir familia…</option>
               {filas.filter((f) => f.clave !== "sin_clasificar").map((f) => <option key={f.clave} value={f.clave}>{f.nombre}</option>)}
             </Seleccion>
@@ -280,13 +282,14 @@ function ReglasFamilia({ esDireccion, familias }: { esDireccion: boolean; famili
     .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
   const columnas: Columna<Regla>[] = [
-    { clave: "prioridad", titulo: "Orden", alinear: "der", clase: "w-16" },
-    { clave: "patron", titulo: "Patrón (expresión regular)", celda: (r) => <code className="text-xs break-all line-clamp-3 max-w-[340px]" title={r.patron}>{r.patron}</code> },
+    { clave: "prioridad", titulo: "Orden", alinear: "der", clase: "w-16", explica: GLOSARIO.ordenReglaFamilia },
+    { clave: "patron", titulo: "Patrón (expresión regular)", explica: GLOSARIO.patronReglaFamilia, celda: (r) => <code className="text-xs break-all line-clamp-3 max-w-[340px]" title={r.patron}>{r.patron}</code> },
     { clave: "familia", titulo: "Familia", valor: (r) => nombres.get(r.familia) ?? r.familia },
     { clave: "nota", titulo: "Por qué", valor: (r) => r.nota ?? "", celda: (r) => <span className="text-xs text-tenue line-clamp-3 max-w-[220px]" title={r.nota ?? ""}>{r.nota ?? (r.creado_por ? "Agregada por dirección" : "")}</span> },
     ...(esDireccion ? [{ clave: "acciones", titulo: "", sinBusqueda: true, celda: (r: Regla) => r.creado_por ? (
-      <button type="button" className="p-1 text-tenue hover:text-peligro" aria-label="Quitar regla" onClick={(e) => { e.stopPropagation(); borrar.mutate(r.id); }}><Trash2 className="h-4 w-4" /></button>
-    ) : <span className="text-[11px] text-tenue">de fábrica</span> } as Columna<Regla>] : []),
+      <button type="button" className="p-1 text-tenue hover:text-peligro" aria-label="Quitar regla" onClick={(e) => { e.stopPropagation(); borrar.mutate(r.id); }}
+        data-explain={GLOSARIO.botonQuitarReglaFamilia} data-explain-title="Quitar regla"><Trash2 className="h-4 w-4" /></button>
+    ) : <span className="text-[11px] text-tenue" data-explain={GLOSARIO.reglaDeFabrica} data-explain-title="Regla de fábrica">de fábrica</span> } as Columna<Regla>] : []),
   ];
 
   return (
@@ -299,17 +302,19 @@ function ReglasFamilia({ esDireccion, familias }: { esDireccion: boolean; famili
         {esDireccion && (
           <form className="tarjeta p-3 space-y-2" onSubmit={(e) => { e.preventDefault(); if (patron.trim() && fam && !prueba?.error) guardar.mutate(undefined); }}>
             <div className="flex flex-wrap gap-2">
-              <Entrada className="flex-1 min-w-[200px] font-mono text-xs" placeholder="Patrón, p. ej. molino|martillo" value={patron} onChange={(e) => setPatron(e.target.value)} aria-label="Patrón" />
+              <Entrada className="flex-1 min-w-[200px] font-mono text-xs" placeholder="Patrón, p. ej. molino|martillo" value={patron} onChange={(e) => setPatron(e.target.value)} aria-label="Patrón"
+                data-explain={GLOSARIO.patronReglaFamilia} data-explain-title="Patrón" />
               <Seleccion className="w-auto" value={fam} onChange={(e) => setFam(e.target.value)} aria-label="Familia">
                 <option value="">Familia…</option>
                 {familias.map((f) => <option key={f.clave} value={f.clave}>{f.nombre}</option>)}
               </Seleccion>
-              <Entrada className="w-20" type="number" min={1} max={999} value={prioridad} onChange={(e) => setPrioridad(e.target.value)} aria-label="Orden" title="Orden: gana la regla con el número más bajo" />
+              <Entrada className="w-20" type="number" min={1} max={999} value={prioridad} onChange={(e) => setPrioridad(e.target.value)} aria-label="Orden" title="Orden: gana la regla con el número más bajo"
+                data-explain={GLOSARIO.ordenReglaFamilia} data-explain-title="Orden" />
               <Boton type="submit" cargando={guardar.isPending} disabled={!patron.trim() || !fam || !!prueba?.error}><Plus className="h-4 w-4" /> Guardar</Boton>
             </div>
             {prueba && (
               prueba.error ? <p className="text-xs text-peligro">{prueba.error}</p> : (
-                <div className="text-xs text-tenue">
+                <div className="text-xs text-tenue" data-explain={GLOSARIO.pruebaReglaFamilia} data-explain-title="Prueba de la regla">
                   <p className="flex items-center gap-1.5"><FlaskConical className="h-3.5 w-3.5" />
                     Le pega a <b className="text-texto">{numero(prueba.coinciden)}</b> ventas ({dineroCompacto(prueba.monto)}); {numero(prueba.sin_clasificar)} estaban sin clasificar{fam && <>, {numero(prueba.cambian)} cambiarían de familia</>}.</p>
                   {prueba.ejemplos.length > 0 && <p className="mt-1 truncate">Ej.: {prueba.ejemplos.slice(0, 4).map((x) => `«${x.descripcion}»`).join(", ")}</p>}
@@ -334,7 +339,8 @@ function ReglasFamilia({ esDireccion, familias }: { esDireccion: boolean; famili
             { clave: "monto", titulo: "Monto", alinear: "der", celda: (x) => dineroCompacto(x.monto), sinBusqueda: true },
             { clave: "ultima", titulo: "Última", celda: (x) => <span className="text-xs text-tenue">{fecha(x.ultima)}</span> },
             ...(esDireccion ? [{ clave: "usar", titulo: "", sinBusqueda: true, celda: (x: SinClasificar) => (
-              <button type="button" className="text-xs text-marca-texto hover:underline" onClick={() => setPatron(patronDe(x.texto))}>Usar</button>
+              <button type="button" className="text-xs text-marca-texto hover:underline" onClick={() => setPatron(patronDe(x.texto))}
+                data-explain={GLOSARIO.botonUsarTextoRegla} data-explain-title="Usar como patrón">Usar</button>
             ) } as Columna<SinClasificar>] : []),
           ]} />
         {!esDireccion && <p className="text-xs text-tenue"><Insignia>Solo lectura</Insignia> Las reglas las cambia dirección.</p>}

@@ -9,6 +9,7 @@ import { q } from "@/lib/consultas";
 import { dineroCompacto, porcentaje } from "@/lib/formato";
 import { VACIO, escalaCuantiles, LeyendaEscala } from "./comun";
 import type { DatosMapa } from "./MapaVentas";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /** Tarjeta chica del inicio de dirección: dónde se vendió este año, y la puerta al análisis. */
 export function DondeVendemos() {
@@ -31,8 +32,8 @@ export function DondeVendemos() {
     <section className="tarjeta p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h3 className="font-semibold flex items-center gap-2"><MapPinned className="h-4 w-4 text-marca" /> Dónde vendemos {anio}</h3>
-          <p className="text-xs text-tenue mt-0.5">
+          <h3 className="font-semibold flex items-center gap-2" data-explain={GLOSARIO.dondeVendemosInicio}><MapPinned className="h-4 w-4 text-marca" /> Dónde vendemos {anio}</h3>
+          <p className="text-xs text-tenue mt-0.5" data-explain={GLOSARIO.concentracionTop3} data-explain-title="Los 3 primeros">
             {m.data ? <>{m.data.regiones_con_venta} estados con venta · los 3 primeros pesan {porcentaje(m.data.concentracion_top3, 0)}</> : "Cargando…"}
           </p>
         </div>

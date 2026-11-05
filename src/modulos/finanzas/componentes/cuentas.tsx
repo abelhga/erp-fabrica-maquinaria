@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { todasLasFilas } from "@/modulos/almacen/componentes/comun";
 import { fecha, hoyISO } from "@/lib/formato";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 // Lo que comparten Pagos, Cobranza y Caja chica desde que Finanzas captura aquí y no en la hoja.
 
@@ -62,10 +63,11 @@ export function useCuentasDinero() {
   });
 }
 /** `soloDinero` quita la nota de crédito: para lo que de verdad sale o entra de una cuenta. */
-export function SelectorCuenta({ valor, alCambiar, sinCaja, soloDinero, requerido = true }: { valor: string; alCambiar: (v: string) => void; sinCaja?: boolean; soloDinero?: boolean; requerido?: boolean }) {
+/** `explica`: el globo del modo tutorial; quien la usa para algo más específico (el retiro de ahorro) pasa el suyo. */
+export function SelectorCuenta({ valor, alCambiar, sinCaja, soloDinero, requerido = true, explica = GLOSARIO.cuentaDinero }: { valor: string; alCambiar: (v: string) => void; sinCaja?: boolean; soloDinero?: boolean; requerido?: boolean; explica?: string }) {
   const cuentas = useCuentasDinero();
   return (
-    <Seleccion value={valor} onChange={(e) => alCambiar(e.target.value)} required={requerido}>
+    <Seleccion value={valor} onChange={(e) => alCambiar(e.target.value)} required={requerido} data-explain={explica} data-explain-title="Cuenta">
       <option value="">Elegir cuenta…</option>
       {(cuentas.data ?? []).filter((c) => (!sinCaja || c.clave !== "caja_chica") && (!soloDinero || c.clave !== "nota_credito")).map((c) => <option key={c.clave} value={c.clave}>{c.nombre}</option>)}
     </Seleccion>
@@ -86,9 +88,11 @@ export function sumarDias(f: string, n: number) {
 /** Cuándo vence, con el mismo código de colores en toda la pantalla de pagos. */
 export function Vencimiento({ vence }: { vence: string | null }) {
   const d = diasPara(vence);
-  if (d == null) return <Insignia tono="neutro">Sin fecha</Insignia>;
-  if (d < 0) return <Insignia tono="peligro" punto>Vencida hace {-d} {d === -1 ? "día" : "días"}</Insignia>;
-  if (d === 0) return <Insignia tono="aviso" punto>Vence hoy</Insignia>;
-  if (d <= 7) return <Insignia tono="aviso">En {d} {d === 1 ? "día" : "días"}</Insignia>;
-  return <span className="text-tenue text-sm whitespace-nowrap">{fecha(vence)}</span>;
+  // El globo del modo tutorial va en un <span>: Insignia no reenvía atributos.
+  const explica = { "data-explain": GLOSARIO.vencePago, "data-explain-title": "Vencimiento" };
+  if (d == null) return <span {...explica}><Insignia tono="neutro">Sin fecha</Insignia></span>;
+  if (d < 0) return <span {...explica}><Insignia tono="peligro" punto>Vencida hace {-d} {d === -1 ? "día" : "días"}</Insignia></span>;
+  if (d === 0) return <span {...explica}><Insignia tono="aviso" punto>Vence hoy</Insignia></span>;
+  if (d <= 7) return <span {...explica}><Insignia tono="aviso">En {d} {d === 1 ? "día" : "días"}</Insignia></span>;
+  return <span className="text-tenue text-sm whitespace-nowrap" {...explica}>{fecha(vence)}</span>;
 }

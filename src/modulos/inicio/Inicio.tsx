@@ -167,7 +167,7 @@ function InicioPorArea() {
             {i.leads && ver.has("leads") && (
               <Kpi titulo="Leads de hoy" valor={numero(i.leads.capturados_hoy)} icono={Inbox} tono={i.leads.por_tomar ? "aviso" : "marca"}
                 detalle={`${i.leads.por_tomar} esperando vendedor · ${i.leads.sin_atender} con vendedor, sin atender`}
-                alClic={() => ir("/ventas/leads")} explica={GLOSARIO.estadoLead} />
+                alClic={() => ir("/ventas/leads")} explica={GLOSARIO.leadsDeHoyInicio} />
             )}
             {i.ventas && ver.has("ventas") && (
               <Kpi titulo="Ventas del mes" valor={dineroCompacto(i.ventas.mes)} icono={TrendingUp} tono="marca"
@@ -189,7 +189,7 @@ function InicioPorArea() {
               <Kpi titulo="Órdenes en taller" valor={numero(i.produccion.abiertas)} icono={Factory}
                 tono={i.produccion.atrasadas ? "peligro" : "ok"}
                 detalle={`${i.produccion.atrasadas} atrasadas · ${i.produccion.terminadas_mes} terminadas este mes`}
-                alClic={() => ir("/produccion/gerencia")} />
+                alClic={() => ir("/produccion/gerencia")} explica={GLOSARIO.ordenesEnTallerInicio} />
             )}
             {i.importaciones && ver.has("embarques") && (
               <Kpi titulo="Embarques en camino" valor={numero(i.importaciones.en_camino)} icono={Ship} tono={i.importaciones.llegan_semana ? "aviso" : "info"}
@@ -198,11 +198,12 @@ function InicioPorArea() {
             )}
             {i.compras && ver.has("compras") && (
               <Kpi titulo="Compras en camino" valor={numero(i.compras.oc_abiertas)} icono={Truck} tono="info"
-                detalle={`${i.compras.oc_atrasadas} atrasadas`} alClic={() => ir("/compras/ordenes")} />
+                detalle={`${i.compras.oc_atrasadas} atrasadas`} alClic={() => ir("/compras/ordenes")} explica={GLOSARIO.comprasEnCaminoInicio} />
             )}
             {i.valor_inventario != null && ver.has("valor_inventario") && (
               <Kpi titulo="Valor del inventario" valor={dineroCompacto(i.valor_inventario)} icono={PackageCheck} tono="neutro"
-                detalle={`${numero(i.inventario?.articulos_con_existencia)} artículos con existencia`} alClic={() => ir("/almacen/existencias")} />
+                detalle={`${numero(i.inventario?.articulos_con_existencia)} artículos con existencia`} alClic={() => ir("/almacen/existencias")}
+                explica={GLOSARIO.valorDelInventario} />
             )}
             {i.por_pagar && ver.has("por_pagar") && (
               <Kpi titulo="Por pagar a proveedores" valor={dineroCompacto(i.por_pagar.total)} icono={ShoppingCart}
@@ -211,7 +212,7 @@ function InicioPorArea() {
             )}
             {i.rrhh && ver.has("personal") && (
               <Kpi titulo="Personal" valor={numero(i.rrhh.empleados)} icono={UserRound} tono="neutro"
-                detalle={`${i.rrhh.ausentes_hoy} ausentes hoy`} alClic={() => ir("/rrhh/empleados")} />
+                detalle={`${i.rrhh.ausentes_hoy} ausentes hoy`} alClic={() => ir("/rrhh/empleados")} explica={GLOSARIO.personalInicio} />
             )}
           </div>
 
@@ -239,7 +240,7 @@ function InicioPorArea() {
             )}
 
             <Tarjeta className={conGrafica ? "" : "lg:col-span-3"}>
-              <EncabezadoTarjeta titulo="Pendientes" descripcion="Lo que espera algo de ti" />
+              <EncabezadoTarjeta titulo="Pendientes" descripcion="Lo que espera algo de ti" explica={GLOSARIO.pendientesInicio} />
               <div className="px-3 pb-3 space-y-1">
                 {pendientes.length === 0 ? (
                   <div className="flex items-center gap-2 px-2 py-6 text-sm text-tenue justify-center">
@@ -257,10 +258,10 @@ function InicioPorArea() {
 
           {ver.has("ordenes_por_vencer") && (atrasadas.data?.length ?? 0) > 0 && (
             <Tarjeta>
-              <EncabezadoTarjeta titulo="Órdenes por vencer o atrasadas" descripcion="Compromiso en 5 días o menos"
+              <EncabezadoTarjeta titulo="Órdenes por vencer o atrasadas" descripcion="Compromiso en 5 días o menos" explica={GLOSARIO.ordenesPorVencer}
                 acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/produccion/gerencia")}>Ver tablero</button>} />
               <table className="tabla">
-                <thead><tr><th>Orden</th><th>Equipo</th><th>Cliente</th><th>Compromiso</th><th className="text-right">Avance</th></tr></thead>
+                <thead><tr><th>Orden</th><th>Equipo</th><th>Cliente</th><th>Compromiso</th><th className="text-right" data-explain={GLOSARIO.avanceOrden} data-explain-title="Avance">Avance</th></tr></thead>
                 <tbody>
                   {atrasadas.data!.map((o) => (
                     <tr key={o.id} className="cursor-pointer" onClick={() => ir(`/produccion/ordenes/${o.id}`)}>

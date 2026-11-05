@@ -75,8 +75,8 @@ export function Documentos({ e }: { e: Embarque }) {
   return (
     <>
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Documentos" explica={GLOSARIO.documentosAntesArribo} descripcion={`${listos} de ${lista.length} listos. Los marcados “antes del arribo” los pide el agente aduanal antes de que llegue.`}
-          acciones={captura && <Boton tamano="sm" onClick={() => setLeer({})}><Sparkles className="h-4 w-4" /> Leer con IA</Boton>} />
+        <EncabezadoTarjeta titulo="Documentos" explica={GLOSARIO.listaDocumentosEmbarque} descripcion={`${listos} de ${lista.length} listos. Los marcados “antes del arribo” los pide el agente aduanal antes de que llegue.`}
+          acciones={captura && <Boton tamano="sm" onClick={() => setLeer({})} data-explain={GLOSARIO.botonLeerDocumentoEmbarqueIA}><Sparkles className="h-4 w-4" /> Leer con IA</Boton>} />
         {lista.length === 0 ? <Vacio icono={FileCheck2} titulo="Sin documentos" texto="Al dar de alta el embarque se arma su lista según la modalidad." /> : (
           <ul className="divide-y divide-borde border-t border-borde">
             {lista.map((d) => {
@@ -88,7 +88,7 @@ export function Documentos({ e }: { e: Embarque }) {
                   <div className="min-w-[200px] flex-1">
                     <p className="text-sm font-medium flex items-center gap-2">
                       {c?.nombre ?? d.tipo}
-                      {c?.antes_de_arribo && d.estado === "pendiente" && <Insignia tono="marca">antes del arribo</Insignia>}
+                      {c?.antes_de_arribo && d.estado === "pendiente" && <span data-explain={GLOSARIO.documentosAntesArribo} data-explain-title="Antes del arribo"><Insignia tono="marca">antes del arribo</Insignia></span>}
                     </p>
                     <p className="text-xs text-tenue">
                       {d.archivo_nombre ? <>{d.archivo_nombre}{d.recibido_en ? ` · ${fecha(d.recibido_en)}` : ""}</>
@@ -97,35 +97,37 @@ export function Documentos({ e }: { e: Embarque }) {
                   </div>
                   {captura ? (
                     <select className="campo h-8 w-40 text-xs" value={d.debe} aria-label={`Quién debe ${c?.nombre}`}
+                      data-explain={GLOSARIO.quienDebe} data-explain-title="Quién lo debe"
                       onChange={(ev) => cambiar.mutate({ id: d.id, cambios: { debe: ev.target.value } })}>
                       {Object.entries(NOMBRE_DEBE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                     </select>
                   ) : <span className="text-xs text-tenue w-40">{NOMBRE_DEBE[d.debe]}</span>}
                   {captura ? (
                     <select className={cn("campo h-8 w-40 text-xs", d.estado === "pendiente" && "text-aviso", d.estado === "observado" && "text-peligro")} value={d.estado}
-                      aria-label={`Estado de ${c?.nombre}`} onChange={(ev) => cambiar.mutate({ id: d.id, cambios: { estado: ev.target.value } })}>
+                      aria-label={`Estado de ${c?.nombre}`} data-explain={GLOSARIO.estadoDocumentoImportacion} data-explain-title="Estado del documento" onChange={(ev) => cambiar.mutate({ id: d.id, cambios: { estado: ev.target.value } })}>
                       {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v.texto}</option>)}
                     </select>
-                  ) : <Insignia tono={ESTADOS[d.estado]?.tono ?? "neutro"}>{ESTADOS[d.estado]?.texto ?? d.estado}</Insignia>}
+                  ) : <span data-explain={GLOSARIO.estadoDocumentoImportacion} data-explain-title="Estado del documento"><Insignia tono={ESTADOS[d.estado]?.tono ?? "neutro"}>{ESTADOS[d.estado]?.texto ?? d.estado}</Insignia></span>}
                   <div className="flex items-center justify-end gap-1 ml-auto md:w-80">
                     {d.archivo && (bloqueado
-                      ? <span className="text-xs text-tenue inline-flex items-center gap-1" title="Trae precios: lo abren importaciones, compras y finanzas"><Lock className="h-3.5 w-3.5" /> con precios</span>
+                      ? <span className="text-xs text-tenue inline-flex items-center gap-1" title="Trae precios: lo abren importaciones, compras y finanzas" data-explain={GLOSARIO.documentoConPrecios} data-explain-title="Con precios"><Lock className="h-3.5 w-3.5" /> con precios</span>
                       : <Boton variante="fantasma" tamano="sm" onClick={() => abrirArchivo(d.archivo!).catch((err) => toast.error(mensajeError(err)))}>
                           <ExternalLink className="h-3.5 w-3.5" /> Abrir
                         </Boton>)}
                     {captura && !d.archivo && tipoClaude && (
-                      <Boton variante="fantasma" tamano="sm" onClick={() => setLeer({ tipo: tipoClaude })} title="Leer con IA y revisar antes de guardar">
+                      <Boton variante="fantasma" tamano="sm" onClick={() => setLeer({ tipo: tipoClaude })} title="Leer con IA y revisar antes de guardar" data-explain={GLOSARIO.botonLeerDocumentoEmbarqueIA}>
                         <Sparkles className="h-3.5 w-3.5" /> Leer
                       </Boton>
                     )}
                     {captura && (
-                      <label className={cn("inline-flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-medium hover:bg-fondo cursor-pointer", subiendo === d.id && "opacity-50 pointer-events-none")}>
+                      <label className={cn("inline-flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-medium hover:bg-fondo cursor-pointer", subiendo === d.id && "opacity-50 pointer-events-none")}
+                        data-explain={GLOSARIO.botonSubirDocumentoEmbarque} data-explain-title={d.archivo ? "Reemplazar" : "Subir"}>
                         <Upload className="h-3.5 w-3.5" /> {d.archivo ? "Reemplazar" : "Subir"}
                         <input type="file" className="hidden" accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx" onChange={(ev) => subir({ tipo: d.tipo }, ev.target.files?.[0])} />
                       </label>
                     )}
                     {captura && d.estado === "pendiente" && d.ultimo_seguimiento !== hoyISO() && (
-                      <Boton variante="secundario" tamano="sm" title="Anotar que hoy lo pediste" onClick={() => pedi.mutate({ id: d.id, antes: d.ultimo_seguimiento })}>
+                      <Boton variante="secundario" tamano="sm" title="Anotar que hoy lo pediste" data-explain={GLOSARIO.botonYaLoPediDocumento} onClick={() => pedi.mutate({ id: d.id, antes: d.ultimo_seguimiento })}>
                         <Clock className="h-3.5 w-3.5" /> Ya lo pedí
                       </Boton>
                     )}
@@ -138,7 +140,8 @@ export function Documentos({ e }: { e: Embarque }) {
         {captura && (
           <div className="border-t border-borde px-5 py-3 flex flex-wrap items-center gap-2">
             <FilePlus2 className="h-4 w-4 text-tenue" />
-            <select className="campo h-8 w-60 text-sm" value={otro} onChange={(ev) => setOtro(ev.target.value)} aria-label="Tipo de documento a agregar">
+            <select className="campo h-8 w-60 text-sm" value={otro} onChange={(ev) => setOtro(ev.target.value)} aria-label="Tipo de documento a agregar"
+              data-explain={GLOSARIO.agregarOtroDocumentoEmbarque} data-explain-title="Agregar otro documento">
               <option value="">Agregar otro documento…</option>
               {(tipos.data ?? []).map((t) => <option key={t.tipo} value={t.tipo}>{t.nombre}</option>)}
             </select>

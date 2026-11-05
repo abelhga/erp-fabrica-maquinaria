@@ -13,6 +13,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { fecha, hoyISO } from "@/lib/formato";
 import { CLAVE } from "./datos";
 import { tonoCompromiso, textoDias } from "./util";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface PedidoPorProducir {
   id: string; folio: string; fecha: string; fecha_compromiso: string | null; estado: string; cliente: string;
@@ -52,13 +53,18 @@ export function DialogoDesdePedido({ abierto, alCambiar }: { abierto: boolean; a
                     <p className="font-semibold">{p.folio} <span className="font-normal text-tenue">· {p.cliente}</span></p>
                     <p className="text-xs text-tenue mt-0.5">
                       Pedido del {fecha(p.fecha)} · compromiso{" "}
-                      <Insignia tono={tonoCompromiso(dias)} className="ml-0.5">{p.fecha_compromiso ? `${fecha(p.fecha_compromiso)} · ${textoDias(dias).toLowerCase()}` : "sin fecha"}</Insignia>
+                      <span className="inline-flex ml-0.5" data-explain={GLOSARIO.fechaCompromiso} data-explain-title="Fecha compromiso">
+                        <Insignia tono={tonoCompromiso(dias)}>{p.fecha_compromiso ? `${fecha(p.fecha_compromiso)} · ${textoDias(dias).toLowerCase()}` : "sin fecha"}</Insignia>
+                      </span>
                     </p>
                   </div>
-                  <Boton tamano="sm" disabled={p.unidades === 0} cargando={crear.isPending && crear.variables === p.id}
-                         onClick={() => crear.mutate(p.id)}>
-                    {p.unidades === 0 ? "Nada que crear" : p.unidades === 1 ? "Crear 1 orden" : `Crear ${p.unidades} órdenes`}
-                  </Boton>
+                  {/* En envoltorio: sin equipos con lista de materiales el botón está deshabilitado y no recibe el mouse. */}
+                  <span className="inline-flex" data-explain={GLOSARIO.botonCrearOrdenesFaltantes} data-explain-title="Crear órdenes">
+                    <Boton tamano="sm" disabled={p.unidades === 0} cargando={crear.isPending && crear.variables === p.id}
+                           onClick={() => crear.mutate(p.id)}>
+                      {p.unidades === 0 ? "Nada que crear" : p.unidades === 1 ? "Crear 1 orden" : `Crear ${p.unidades} órdenes`}
+                    </Boton>
+                  </span>
                 </div>
                 <ul className="mt-2 space-y-1">
                   {p.partidas.map((l) => (
@@ -122,7 +128,7 @@ export function DialogoOrdenStock({ abierto, alCambiar }: { abierto: boolean; al
             <Entrada type="number" min="1" step="1" inputMode="numeric" value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
           </Campo>
           <Campo etiqueta="Prioridad">
-            <Seleccion value={prioridad} onChange={(e) => setPrioridad(e.target.value)}>
+            <Seleccion value={prioridad} onChange={(e) => setPrioridad(e.target.value)} data-explain={GLOSARIO.prioridadOrden} data-explain-title="Prioridad">
               <option value="1">Urgente</option><option value="2">Normal</option><option value="3">Baja</option>
             </Seleccion>
           </Campo>
@@ -130,7 +136,8 @@ export function DialogoOrdenStock({ abierto, alCambiar }: { abierto: boolean; al
             <Entrada type="date" min={hoyISO()} value={compromiso} onChange={(e) => setCompromiso(e.target.value)} />
           </Campo>
           <Campo etiqueta="Número de serie" ayuda="Opcional; se puede poner después.">
-            <Entrada value={serie} onChange={(e) => setSerie(e.target.value)} placeholder="CV0200N157" />
+            <Entrada value={serie} onChange={(e) => setSerie(e.target.value)} placeholder="CV0200N157"
+                     data-explain={GLOSARIO.serieAlCrearOrden} data-explain-title="Número de serie" />
           </Campo>
         </div>
       </form>

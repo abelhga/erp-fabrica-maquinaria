@@ -8,7 +8,7 @@ import { pulirDescripcion } from "@/lib/asistente";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
- * «Pulir redacción»: Claude corrige ortografía, acentos y estilo de la descripción que sale
+ * «Pulir redacción»: la IA corrige ortografía, acentos y estilo de la descripción que sale
  * en las cotizaciones. No guarda solo: enseña el antes y la propuesta (que se puede retocar)
  * y lo que le pareció un error de dato sin cambiarlo. Quien edita decide si la usa.
  */

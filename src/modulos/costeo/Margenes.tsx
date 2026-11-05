@@ -62,8 +62,8 @@ function ResumenSimulacion({ filas, cargando, alcance }: { filas: Simulado[] | u
         </p>
       ) : (
         <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-lg bg-fondo px-3 py-2"><p className="text-xs text-tenue">Precios que cambian</p><p className="text-xl font-semibold cifra">{r.cambian} <span className="text-sm font-normal text-tenue">de {r.total}</span></p></div>
-          <div className="rounded-lg bg-fondo px-3 py-2"><p className="text-xs text-tenue">Cambio promedio</p><p className={cn("text-xl font-semibold cifra", r.promedio > 0 && "text-peligro", r.promedio < 0 && "text-ok")}>{r.cambian ? `${r.promedio > 0 ? "+" : ""}${porcentaje(r.promedio)}` : "—"}</p></div>
+          <div className="rounded-lg bg-fondo px-3 py-2" data-explain={GLOSARIO.preciosQueCambianSimulacion} data-explain-title="Precios que cambian"><p className="text-xs text-tenue titulo-explicable">Precios que cambian</p><p className="text-xl font-semibold cifra">{r.cambian} <span className="text-sm font-normal text-tenue">de {r.total}</span></p></div>
+          <div className="rounded-lg bg-fondo px-3 py-2" data-explain={GLOSARIO.cambioPromedioSimulacion} data-explain-title="Cambio promedio"><p className="text-xs text-tenue titulo-explicable">Cambio promedio</p><p className={cn("text-xl font-semibold cifra", r.promedio > 0 && "text-peligro", r.promedio < 0 && "text-ok")}>{r.cambian ? `${r.promedio > 0 ? "+" : ""}${porcentaje(r.promedio)}` : "—"}</p></div>
           <div className="rounded-lg bg-fondo px-3 py-2"><p className="text-xs text-tenue">Alcance</p><p className="text-sm font-medium mt-1 leading-tight">{alcance}</p></div>
         </div>
       )}
@@ -105,7 +105,8 @@ function ListaRecargos({ titulo, ayuda, valor, alCambiar, explica }: { titulo: s
     <div className="space-y-1.5">
       <div className="flex items-baseline justify-between">
         <p className="text-sm font-medium" data-explain={explica}>{titulo} <span className="text-tenue font-normal">· suman {pct(suma(valor))}</span></p>
-        <button type="button" className="text-xs text-marca-texto inline-flex items-center gap-1" onClick={() => alCambiar([...valor, { nombre: "", pct: 0 }])}><Plus className="h-3 w-3" /> Agregar</button>
+        <button type="button" className="text-xs text-marca-texto inline-flex items-center gap-1" onClick={() => alCambiar([...valor, { nombre: "", pct: 0 }])}
+          data-explain={GLOSARIO.editarConceptosRecargo} data-explain-title="Agregar concepto"><Plus className="h-3 w-3" /> Agregar</button>
       </div>
       <p className="text-xs text-tenue">{ayuda}</p>
       {valor.map((r, i) => (
@@ -117,7 +118,8 @@ function ListaRecargos({ titulo, ayuda, valor, alCambiar, explica }: { titulo: s
               onChange={(e) => { const n = leerNumero(e.target.value); alCambiar(valor.map((x, k) => (k === i ? { ...x, pct: n == null ? 0 : n / 100 } : x))); }} />
             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-tenue">%</span>
           </div>
-          <button type="button" className="p-1.5 rounded text-tenue hover:text-peligro" aria-label="Quitar concepto" onClick={() => alCambiar(valor.filter((_, k) => k !== i))}><Trash2 className="h-4 w-4" /></button>
+          <button type="button" className="p-1.5 rounded text-tenue hover:text-peligro" aria-label="Quitar concepto" onClick={() => alCambiar(valor.filter((_, k) => k !== i))}
+            data-explain={GLOSARIO.editarConceptosRecargo} data-explain-title="Quitar concepto"><Trash2 className="h-4 w-4" /></button>
         </div>
       ))}
     </div>
@@ -175,6 +177,7 @@ function EditarPolitica({ politica, alCerrar, categorias }: { politica: Politica
             <Campo etiqueta="Utilidad" ayuda={b.compensar_isr ? "Neta después de ISR" : "Sobre el precio"}>
               <div className="relative">
                 <Entrada autoFocus inputMode="decimal" className="text-right cifra pr-7 text-base font-semibold" defaultValue={num(politica.utilidad)}
+                  data-explain={GLOSARIO.utilidadPolitica} data-explain-title="Utilidad"
                   onChange={(e) => { const n = leerNumero(e.target.value); setB({ ...b, utilidad: n == null ? 0 : n / 100 }); }} />
                 <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-tenue">%</span>
               </div>
@@ -182,12 +185,13 @@ function EditarPolitica({ politica, alCerrar, categorias }: { politica: Politica
             <Campo etiqueta="Descuento máximo" ayuda="Sin pedir autorización">
               <div className="relative">
                 <Entrada inputMode="decimal" className="text-right cifra pr-7" defaultValue={num(politica.descuento_maximo)}
+                  data-explain={GLOSARIO.descuentoMaximoPolitica} data-explain-title="Descuento máximo"
                   onChange={(e) => { const n = leerNumero(e.target.value); setB({ ...b, descuento_maximo: n == null ? 0 : n / 100 }); }} />
                 <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-tenue">%</span>
               </div>
             </Campo>
           </div>
-          <label className="flex items-start gap-2 text-sm">
+          <label className="flex items-start gap-2 text-sm" data-explain={GLOSARIO.isrCompensacion} data-explain-title="Compensar ISR">
             <input type="checkbox" checked={b.compensar_isr} onChange={(e) => setB({ ...b, compensar_isr: e.target.checked })} className="h-4 w-4 mt-0.5 accent-[hsl(var(--marca))]" />
             <span>Compensar ISR <span className="block text-xs text-tenue">La utilidad se divide entre (1 − ISR) para que quede libre después de impuestos. Así trabaja la hoja con los equipos; los componentes no.</span></span>
           </label>
@@ -196,6 +200,7 @@ function EditarPolitica({ politica, alCerrar, categorias }: { politica: Politica
           <Campo etiqueta="Medida especial" ayuda="Se suma sobre el costo solo a los equipos marcados como medida especial.">
             <div className="relative w-32">
               <Entrada inputMode="decimal" className="text-right cifra pr-7" defaultValue={num(politica.pct_medida_especial)}
+                data-explain={GLOSARIO.recargoMedidaEspecial} data-explain-title="Medida especial"
                 onChange={(e) => { const n = leerNumero(e.target.value); setB({ ...b, pct_medida_especial: n == null ? 0 : n / 100 }); }} />
               <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-tenue">%</span>
             </div>
@@ -236,7 +241,7 @@ function TarjetaPolitica({ p, categorias, editar, alEditar }: { p: Politica; cat
   return (
     <Tarjeta className="flex flex-col">
       <EncabezadoTarjeta titulo={p.nombre} descripcion={descripcion} explica={GLOSARIO.politicaPrecio}
-        acciones={editar && <Boton tamano="sm" variante="secundario" onClick={alEditar}><Pencil className="h-3.5 w-3.5" /> Editar</Boton>} />
+        acciones={editar && <Boton tamano="sm" variante="secundario" onClick={alEditar} data-explain={GLOSARIO.botonEditarPolitica} data-explain-title="Editar política"><Pencil className="h-3.5 w-3.5" /> Editar</Boton>} />
       <div className="px-5 pb-4 flex-1 space-y-2.5 text-sm">
         <div className="flex items-baseline gap-2">
           <span className="text-3xl font-semibold cifra whitespace-nowrap">{pct(p.utilidad)}</span>
@@ -251,7 +256,7 @@ function TarjetaPolitica({ p, categorias, editar, alEditar }: { p: Politica; cat
           {p.recargos_precio.length > 0 && <p className="text-xs text-tenue">{sinPct(p.recargos_precio)}</p>}
         </div>
         <div className="flex flex-wrap gap-1.5 pt-1">
-          {Number(p.pct_medida_especial) > 0 && <Insignia>medida especial +{pct(p.pct_medida_especial)}</Insignia>}
+          {Number(p.pct_medida_especial) > 0 && <span data-explain={GLOSARIO.recargoMedidaEspecial} data-explain-title="Medida especial"><Insignia>medida especial +{pct(p.pct_medida_especial)}</Insignia></span>}
           <span data-explain={GLOSARIO.redondeoPrecio}><Insignia>redondeo {textoRedondeo(p.redondeo)}</Insignia></span>
           <span data-explain={GLOSARIO.descuentoMaximoPolitica}><Insignia>descuento máx. {pct(p.descuento_maximo)}</Insignia></span>
         </div>
@@ -286,7 +291,8 @@ function TarjetaIsr({ isr, editar }: { isr: number | undefined; editar: boolean 
   return (
     <Tarjeta>
       <EncabezadoTarjeta titulo="ISR de compensación" explica={GLOSARIO.isrCompensacion} descripcion="La utilidad de los equipos es neta de este ISR (EQUIPOS!AC1 de la hoja)"
-        acciones={editar && <Boton tamano="sm" variante="secundario" onClick={() => { setValor(isr != null ? String(Math.round(isr * 1e4) / 100) : ""); setAbierto(true); }}><Pencil className="h-3.5 w-3.5" /> Cambiar</Boton>} />
+        acciones={editar && <Boton tamano="sm" variante="secundario" onClick={() => { setValor(isr != null ? String(Math.round(isr * 1e4) / 100) : ""); setAbierto(true); }}
+          data-explain={GLOSARIO.botonCambiarIsr} data-explain-title="Cambiar ISR"><Pencil className="h-3.5 w-3.5" /> Cambiar</Boton>} />
       <div className="px-5 pb-4 -mt-1"><span className="text-3xl font-semibold cifra">{pct(isr)}</span></div>
       <Dialogo abierto={abierto} alCambiar={setAbierto} ancho="max-w-2xl" titulo="Cambiar ISR de compensación"
         descripcion="Mueve el precio de todos los artículos cuya política compensa ISR."
@@ -340,11 +346,11 @@ export function TarjetaTipoCambio() {
             <div key={m}>
               <p className="text-xs text-tenue">{m === "USD" ? "Dólar" : "Euro"}</p>
               {editar ? (
-                <div className="-ml-1.5 text-2xl font-semibold w-32">
+                <div className="-ml-1.5 text-2xl font-semibold w-32" data-explain={GLOSARIO.capturarTipoCambioCosteo} data-explain-title={`Tipo de cambio de costeo ${m}`}>
                   <CeldaNumero valor={usado != null ? Number(usado) : null} etiqueta={`Tipo de cambio de costeo ${m}`} className="h-9 text-2xl font-semibold text-left" alGuardar={(v) => capturar(m, v)} />
                 </div>
               ) : <p className="text-2xl font-semibold cifra">{usado != null ? Number(usado).toFixed(4) : "—"}</p>}
-              <p className="text-xs text-tenue">{ult ? <>del día {Number(ult.valor).toFixed(4)} ({ult.fuente === "DOF" ? "DOF" : ult.fuente === "BCE" ? "BCE" : ult.fuente === "manual" ? "a mano" : "inicial"}, {fecha(ult.fecha)})</> : "sin tipo de cambio del día"}</p>
+              <p className="text-xs text-tenue" data-explain={GLOSARIO.tipoCambio} data-explain-title="Tipo de cambio del día">{ult ? <>del día {Number(ult.valor).toFixed(4)} ({ult.fuente === "DOF" ? "DOF" : ult.fuente === "BCE" ? "BCE" : ult.fuente === "manual" ? "a mano" : "inicial"}, {fecha(ult.fecha)})</> : "sin tipo de cambio del día"}</p>
             </div>
           );
         })}
@@ -412,7 +418,7 @@ function UltimosCambios({ politicas }: { politicas: Politica[] }) {
   if (b.error) return null;
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Últimos cambios" descripcion="Cada cambio queda solo en la bitácora, con quién y cuándo (ya no hace falta la nota en la columna N)"
+      <EncabezadoTarjeta titulo="Últimos cambios" explica={GLOSARIO.ultimosCambiosMargenes} descripcion="Cada cambio queda solo en la bitácora, con quién y cuándo (ya no hace falta la nota en la columna N)"
         acciones={<Link to="/sistema/bitacora" className="text-sm text-marca-texto">Ver bitácora</Link>} />
       {(b.data?.length ?? 0) === 0 ? <p className="px-5 pb-5 text-sm text-tenue">Sin cambios registrados todavía.</p> : (
         <ul className="px-5 pb-4 divide-y divide-borde text-sm">
@@ -475,7 +481,7 @@ export default function Margenes() {
           </div>
           {otras.length > 0 && (
             <div>
-              <h2 className="font-semibold flex items-center gap-2 mb-3"><DollarSign className="h-4 w-4 text-tenue" /> Lo que se revende <span className="text-sm font-normal text-tenue">· margen sobre precio (costo ÷ 0.70)</span></h2>
+              <h2 className="font-semibold flex items-center gap-2 mb-3" data-explain={GLOSARIO.politicaReventa} data-explain-title="Lo que se revende"><DollarSign className="h-4 w-4 text-tenue" /> Lo que se revende <span className="text-sm font-normal text-tenue">· margen sobre precio (costo ÷ 0.70)</span></h2>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {otras.map((p) => <TarjetaPolitica key={p.id} p={p} categorias={catsDe(p.id)} editar={editar} alEditar={() => setEditando(p)} />)}
               </div>

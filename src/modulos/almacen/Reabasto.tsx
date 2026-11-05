@@ -116,7 +116,7 @@ export default function Reabasto() {
 
   const columnas: Columna<(typeof filas)[number]>[] = [
     {
-      clave: "sel", sinBusqueda: true, clase: "w-8 pr-1",
+      clave: "sel", sinBusqueda: true, clase: "w-8 pr-1", explica: (compra || pide) ? GLOSARIO.casillaElegirReabasto : undefined,
       titulo: (compra || pide) ? (
         <input type="checkbox" aria-label="Elegir todos los que hay que pedir" className="accent-[hsl(var(--marca))]"
           checked={seleccionables.length > 0 && seleccionables.every((r) => sel.has(r.articulo_id))}
@@ -198,7 +198,7 @@ export default function Reabasto() {
           tono={desabasto < 0.08 ? "ok" : desabasto <= 0.17 ? "aviso" : "peligro"}
           detalle={`${aOrdenar.length} de ${conMinimo} con mínimo · ${desabasto < 0.08 ? "óptimo (<8 %)" : desabasto <= 0.17 ? "aceptable (8–17 %)" : "deficiente (>17 %)"}`} />
         {verCostos ? (
-          <Kpi titulo="Inversión sugerida" valor={dineroCompacto(inversion)} icono={Wallet} tono="info" detalle="lo sugerido a costo vigente, sin IVA" />
+          <Kpi titulo="Inversión sugerida" valor={dineroCompacto(inversion)} icono={Wallet} tono="info" detalle="lo sugerido a costo vigente, sin IVA" explica={GLOSARIO.inversionSugeridaReabasto} />
         ) : (
           <Kpi titulo="Importados" valor={numero(cuenta("importados"))} icono={TrendingDown} tono="info" detalle="con 6 meses de cobertura" alClic={() => setVista("importados")} explica={GLOSARIO.mesesCobertura} />
         )}
@@ -216,8 +216,8 @@ export default function Reabasto() {
           </p>
           <div className="ml-auto flex gap-2">
             <Boton variante="fantasma" tamano="sm" onClick={() => setSel(new Set())}>Quitar selección</Boton>
-            {compra && <Boton tamano="sm" onClick={() => generar.mutate(undefined)} cargando={generar.isPending}><ShoppingCart className="h-4 w-4" /> Generar órdenes de compra</Boton>}
-            {pide && <Boton tamano="sm" onClick={() => pedir.mutate(undefined)} cargando={pedir.isPending}><ClipboardList className="h-4 w-4" /> Pedir a compras</Boton>}
+            {compra && <Boton tamano="sm" onClick={() => generar.mutate(undefined)} cargando={generar.isPending} data-explain={GLOSARIO.botonGenerarOrdenesReabasto}><ShoppingCart className="h-4 w-4" /> Generar órdenes de compra</Boton>}
+            {pide && <Boton tamano="sm" onClick={() => pedir.mutate(undefined)} cargando={pedir.isPending} data-explain={GLOSARIO.botonPedirACompras}><ClipboardList className="h-4 w-4" /> Pedir a compras</Boton>}
           </div>
         </div>
       )}
@@ -234,10 +234,10 @@ export default function Reabasto() {
         claseFila={(r) => (sel.has(r.articulo_id) ? "bg-marca-suave/60" : undefined)}
         filtros={
           <Filtro<Vista> valor={v} alCambiar={(x) => { setVista(x); }} opciones={[
-            { valor: "ordenar", texto: "A ordenar", cuenta: cuenta("ordenar") },
-            { valor: "importados", texto: "Importados", cuenta: cuenta("importados") },
-            { valor: "excedente", texto: "Excedentes", cuenta: cuenta("excedente") },
-            { valor: "negativo", texto: "Negativos", cuenta: cuenta("negativo") },
+            { valor: "ordenar", texto: "A ordenar", cuenta: cuenta("ordenar"), explica: GLOSARIO.estadoReabasto },
+            { valor: "importados", texto: "Importados", cuenta: cuenta("importados"), explica: GLOSARIO.mesesCobertura },
+            { valor: "excedente", texto: "Excedentes", cuenta: cuenta("excedente"), explica: GLOSARIO.estadoReabasto },
+            { valor: "negativo", texto: "Negativos", cuenta: cuenta("negativo"), explica: GLOSARIO.estadoReabasto },
             { valor: "todos", texto: "Todos", cuenta: filas.length },
           ]} />
         }

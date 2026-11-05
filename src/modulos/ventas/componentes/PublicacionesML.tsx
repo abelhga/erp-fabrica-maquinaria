@@ -51,7 +51,8 @@ export function FormaLigar({ item, titulo, alTerminar }: { item: string; titulo:
   const valido = art && piezasValidas(piezas);
   if (!art) return <BuscadorArticulo placeholder="¿Qué artículo es? Busca por clave o nombre…" mostrarPrecio={false} alElegir={setArt} />;
   return (
-    <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); if (valido) ligar.mutate(undefined); }}>
+    <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); if (valido) ligar.mutate(undefined); }}
+      data-explain={GLOSARIO.botonLigarPublicacionML} data-explain-title="Ligar publicación">
       <div className="min-w-0 flex-1 text-sm">
         <p className="font-medium truncate">{art.clave} · {art.nombre}</p>
         <button type="button" className="text-xs text-marca-texto hover:underline" onClick={() => setArt(null)}>Elegir otro</button>
@@ -70,7 +71,7 @@ export function Ligar({ s, editable }: { s: SinLigar; editable: boolean }) {
     invalidar: INVALIDAR,
   });
   return (
-    <li className="px-5 py-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start">
+    <li className="px-5 py-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start" data-explain={GLOSARIO.publicacionPorLigar} data-explain-title="Por ligar">
       <div className="min-w-0">
         <p className="font-medium truncate">{s.titulo ?? s.item_id}</p>
         <p className="text-xs text-tenue">{s.item_id}{s.sku ? ` · SKU ${s.sku}` : " · sin SKU"}{s.precio != null ? ` · ${dinero(s.precio)}` : ""} · se vendió {s.veces} {s.veces === 1 ? "vez" : "veces"}, la última {hace(s.visto_en)}</p>
@@ -110,7 +111,7 @@ export function PublicacionesAjenas({ editable }: { editable: boolean }) {
                 <p className="text-xs text-tenue">{a.item_id}{a.sku ? ` · SKU ${a.sku}` : ""} · marcada {hace(a.marcada_en)}</p>
               </div>
               {editable && <Boton variante="fantasma" tamano="sm" cargando={regresar.isPending && regresar.variables === a.item_id}
-                onClick={() => regresar.mutate(a.item_id)}><Undo2 className="h-3.5 w-3.5" /> Sí es nuestra</Boton>}
+                onClick={() => regresar.mutate(a.item_id)} data-explain={GLOSARIO.botonSiEsNuestraML}><Undo2 className="h-3.5 w-3.5" /> Sí es nuestra</Boton>}
             </li>
           ))}
         </ul>
@@ -145,7 +146,7 @@ export function PublicacionesLigadas({ editable }: { editable: boolean }) {
               {p.articulo ? <Link to={`/costeo/componentes/${p.articulo.id}`} className="text-marca-texto hover:underline truncate">{p.articulo.clave} · {p.articulo.nombre}</Link> : "—"}
               {Number(p.piezas_por_paquete) !== 1 && <span data-explain={GLOSARIO.piezasPorVentaML} data-explain-title="Piezas por venta"><Insignia tono="info"><Package className="h-3 w-3" /> {numero(Number(p.piezas_por_paquete))} por venta</Insignia></span>}
             </div>
-            {editable && <Boton variante="secundario" tamano="sm" onClick={() => setAbierta(p)}><Pencil className="h-3.5 w-3.5" /> Corregir</Boton>}
+            {editable && <Boton variante="secundario" tamano="sm" onClick={() => setAbierta(p)} data-explain={GLOSARIO.publicacionLigada} data-explain-title="Corregir"><Pencil className="h-3.5 w-3.5" /> Corregir</Boton>}
           </li>
         ))}
       </ul>
@@ -168,7 +169,8 @@ function Corregir({ p, alCerrar }: { p: Ligada; alCerrar: () => void }) {
     <Dialogo abierto alCambiar={(v) => !v && alCerrar()} titulo="Corregir publicación" descripcion={p.titulo ?? p.id_externo}
       pie={<>
         <Boton variante="fantasma" className="mr-auto" cargando={desligar.isPending}
-          onClick={() => confirm("¿Desligar esta publicación? Vuelve a «Por ligar» y sus ventas abiertas se quedan sin artículo hasta que la ligues otra vez.") && desligar.mutate(undefined)}>
+          onClick={() => confirm("¿Desligar esta publicación? Vuelve a «Por ligar» y sus ventas abiertas se quedan sin artículo hasta que la ligues otra vez.") && desligar.mutate(undefined)}
+          data-explain={GLOSARIO.botonDesligarPublicacionML}>
           <Unlink className="h-4 w-4" /> Desligar</Boton>
         <Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton>
         <Boton form="corregir-pub" type="submit" disabled={!valido} cargando={guardar.isPending}>Guardar</Boton>

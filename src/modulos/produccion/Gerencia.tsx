@@ -90,10 +90,11 @@ export default function Gerencia() {
       descripcion={`${new Date().toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" })} · ${abiertas.length} órdenes abiertas`}
       ancho="max-w-[1600px]"
       acciones={<>
-        {puede("produccion", 2) && <BotonLink a="/produccion/cuadrillas"><HardHat className="h-4 w-4" />Cuadrillas</BotonLink>}
-        <BotonLink a="/piso" externo><Monitor className="h-4 w-4" />Pantalla de piso</BotonLink>
-        <BotonLink a="/produccion/ordenes"><ClipboardList className="h-4 w-4" />Órdenes y material</BotonLink>
-        {puede("produccion", 2) && <BotonLink a="/produccion/ordenes?nueva=pedido" variante="primario"><Plus className="h-4 w-4" />Nueva orden</BotonLink>}
+        {/* BotonLink no reenvía atributos: la explicación va en un envoltorio del mismo tamaño. */}
+        {puede("produccion", 2) && <span className="inline-flex" data-explain={GLOSARIO.botonIrCuadrillas} data-explain-title="Cuadrillas"><BotonLink a="/produccion/cuadrillas"><HardHat className="h-4 w-4" />Cuadrillas</BotonLink></span>}
+        <span className="inline-flex" data-explain={GLOSARIO.botonPantallaPiso} data-explain-title="Pantalla de piso"><BotonLink a="/piso" externo><Monitor className="h-4 w-4" />Pantalla de piso</BotonLink></span>
+        <span className="inline-flex" data-explain={GLOSARIO.botonOrdenesMaterial} data-explain-title="Órdenes y material"><BotonLink a="/produccion/ordenes"><ClipboardList className="h-4 w-4" />Órdenes y material</BotonLink></span>
+        {puede("produccion", 2) && <span className="inline-flex" data-explain={GLOSARIO.botonNuevaOrdenTablero} data-explain-title="Nueva orden"><BotonLink a="/produccion/ordenes?nueva=pedido" variante="primario"><Plus className="h-4 w-4" />Nueva orden</BotonLink></span>}
       </>}
     >
       {tablero.error ? <ErrorCarga error={tablero.error} /> : tablero.isLoading ? <Cargando filas={6} /> : (
@@ -113,7 +114,7 @@ export default function Gerencia() {
                  detalle={`${abiertas.filter((o) => o.faltantes_sin_pedir > 0).length} con faltantes sin pedir a compras`}
                  alClic={() => setVista("faltantes")} explica={GLOSARIO.faltanteMaterial} />
             <Kpi titulo="Terminadas este mes" valor={numero(terminadasMes.data)} icono={CheckCircle2} tono="ok"
-                 detalle={`${ordenes.filter((o) => o.estado === "terminada").length} esperan entrega`} />
+                 detalle={`${ordenes.filter((o) => o.estado === "terminada").length} esperan entrega`} explica={GLOSARIO.terminadasEsteMes} />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -125,12 +126,14 @@ export default function Gerencia() {
               <option value="">Todos los clientes</option>
               {clientes.map((c) => <option key={c} value={c}>{c}</option>)}
             </Seleccion>
-            <Seleccion className="w-auto min-w-[160px]" value={etapa} onChange={(e) => setEtapa(e.target.value)} aria-label="Filtrar por etapa">
+            <Seleccion className="w-auto min-w-[160px]" value={etapa} onChange={(e) => setEtapa(e.target.value)} aria-label="Filtrar por etapa"
+                       data-explain={GLOSARIO.filtroEtapaTablero} data-explain-title="Filtrar por etapa">
               <option value="">Todas las etapas</option>
               {(etapas.data ?? []).map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
             </Seleccion>
             {vista !== "todas" && (
-              <span className="inline-flex items-center gap-1 h-8 rounded-full bg-marca-suave text-marca-texto px-3 text-xs font-medium">
+              <span className="inline-flex items-center gap-1 h-8 rounded-full bg-marca-suave text-marca-texto px-3 text-xs font-medium"
+                    data-explain={vista === "atrasadas" ? GLOSARIO.ordenAtrasada : vista === "faltantes" ? GLOSARIO.faltanteMaterial : GLOSARIO.opEnProceso}>
                 {vista === "atrasadas" ? "Solo atrasadas" : vista === "faltantes" ? "Solo con faltantes" : "Solo en proceso"}
               </span>
             )}
@@ -160,7 +163,8 @@ export default function Gerencia() {
                         <p className="text-xs text-tenue">{c.ayuda}</p>
                       </div>
                       {veFabricacion && c.estado !== "terminada" && lista.length > 0 && (
-                        <span className="text-xs text-tenue cifra" title="Horas pendientes de estas órdenes">
+                        <span className="text-xs text-tenue cifra" title="Horas pendientes de estas órdenes"
+                              data-explain={GLOSARIO.horasPendientesColumna} data-explain-title="Horas pendientes">
                           {horas(lista.reduce((s, o) => s + Number(o.horas_pendientes), 0))}
                         </span>
                       )}
@@ -179,7 +183,7 @@ export default function Gerencia() {
           <div className="grid gap-4 lg:grid-cols-5">
             <CargaTaller className="lg:col-span-3" />
             <Tarjeta className="lg:col-span-2">
-              <EncabezadoTarjeta titulo="Actividad reciente" descripcion="Lo que marcan el taller, almacén e ingeniería, en vivo" />
+              <EncabezadoTarjeta titulo="Actividad reciente" descripcion="Lo que marcan el taller, almacén e ingeniería, en vivo" explica={GLOSARIO.actividadReciente} />
               <div className="px-3 pb-3 max-h-[380px] overflow-y-auto">
                 {eventos.isLoading ? <Cargando filas={5} /> : (eventos.data ?? []).length === 0 ? (
                   <p className="text-sm text-tenue text-center py-8">Todavía no hay movimientos.</p>

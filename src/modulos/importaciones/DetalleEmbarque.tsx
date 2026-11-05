@@ -46,13 +46,13 @@ export default function DetalleEmbarque() {
 
   return (
     <Pagina
-      titulo={<span className="flex flex-wrap items-center gap-3">{e.folio} <InsigniaFase fase={e.fase} /></span>}
+      titulo={<span className="flex flex-wrap items-center gap-3">{e.folio} <span data-explain={GLOSARIO.faseEmbarque} data-explain-title="Fase"><InsigniaFase fase={e.fase} /></span></span>}
       descripcion={<>{e.descripcion}{e.proveedores ? ` · ${e.proveedores}` : ""}</>}
       acciones={<>
         <Boton asChild variante="fantasma"><Link to="/importaciones"><ArrowLeft className="h-4 w-4" /> Embarques</Link></Boton>
-        {e.carpeta_url && <Boton asChild variante="secundario"><a href={e.carpeta_url} target="_blank" rel="noreferrer"><FolderOpen className="h-4 w-4" /> Expediente</a></Boton>}
-        {puede("importaciones", 2) && <Boton variante="secundario" onClick={() => setEditando(true)}><Pencil className="h-4 w-4" /> Datos</Boton>}
-        {puede("importaciones", 2) && <Boton onClick={() => setLeyendo(true)}><Sparkles className="h-4 w-4" /> Leer con IA</Boton>}
+        {e.carpeta_url && <Boton asChild variante="secundario" data-explain={GLOSARIO.botonExpedienteEmbarque}><a href={e.carpeta_url} target="_blank" rel="noreferrer"><FolderOpen className="h-4 w-4" /> Expediente</a></Boton>}
+        {puede("importaciones", 2) && <Boton variante="secundario" onClick={() => setEditando(true)} data-explain={GLOSARIO.botonDatosEmbarque}><Pencil className="h-4 w-4" /> Datos</Boton>}
+        {puede("importaciones", 2) && <Boton onClick={() => setLeyendo(true)} data-explain={GLOSARIO.botonLeerDocumentoEmbarqueIA}><Sparkles className="h-4 w-4" /> Leer con IA</Boton>}
       </>}
     >
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
@@ -79,7 +79,7 @@ export default function DetalleEmbarque() {
             {e.eta_original && e.eta && e.eta_original !== e.eta ? ` · ETA original ${fecha(e.eta_original)}` : ""}
           </p>
         </div>
-        <div className="tarjeta p-4 space-y-2">
+        <div className="tarjeta p-4 space-y-2" data-explain={e.arribo ? undefined : GLOSARIO.documentosAntesArribo} data-explain-title={e.arribo ? undefined : "Documentos"}>
           {e.arribo ? (
             <>
               <DiasLibres usados={e.dias_en_puerto} libres={e.dias_libres_almacenaje} etiqueta={e.despacho || e.en_planta ? "Estuvo en puerto" : "Días en puerto"} explica={GLOSARIO.diasLibres} />
@@ -99,24 +99,24 @@ export default function DetalleEmbarque() {
         <Dato t="Modalidad" v={MODALIDADES[e.modalidad]} explica={GLOSARIO.modalidad} />
         <Dato t="Incoterm" v={e.incoterm} explica={GLOSARIO.incoterm} />
         <Dato t="Ruta" v={`${e.puerto_origen ?? "¿?"} → ${e.puerto_destino}`} />
-        <Dato t="Importador" v={e.importador === "empresa" ? "La empresa" : "Persona física"} />
+        <Dato t="Importador" v={e.importador === "empresa" ? "La empresa" : "Persona física"} explica={GLOSARIO.importadorEmbarque} />
         <Dato t="Naviera" v={e.naviera} />
-        <Dato t="Forwarder" v={e.forwarder} />
-        <Dato t="Agente aduanal" v={[e.agente_aduanal, e.referencia_agente].filter(Boolean).join(" · ") || null} />
+        <Dato t="Forwarder" v={e.forwarder} explica={GLOSARIO.forwarderEmbarque} />
+        <Dato t="Agente aduanal" v={[e.agente_aduanal, e.referencia_agente].filter(Boolean).join(" · ") || null} explica={GLOSARIO.agenteAduanalEmbarque} />
         <Dato t="BL" v={e.bl} explica={GLOSARIO.bl} />
         <Dato t="Contenedores" v={e.contenedores} />
         <Dato t="Buque" v={[e.buque, e.viaje].filter(Boolean).join(" / ") || null} />
         <Dato t="Bultos y peso" v={e.bultos || e.peso_kg ? `${e.bultos ?? "—"} bultos · ${e.peso_kg ? numero(e.peso_kg) + " kg" : "—"}${e.volumen_m3 ? ` · ${numero(e.volumen_m3)} m³` : ""}` : null} />
-        <Dato t="ETD" v={e.etd ? fecha(e.etd) : null} />
+        <Dato t="ETD" v={e.etd ? fecha(e.etd) : null} explica={GLOSARIO.etdEmbarque} />
       </dl>
 
       <Pestanas value={vista} onValueChange={(v) => setParams(v === "etapas" ? {} : { vista: v }, { replace: true })}>
         <ListaPestanas opciones={[
-          { valor: "etapas", texto: "Etapas" },
-          { valor: "documentos", texto: "Documentos", cuenta: e.docs_pendientes || undefined },
-          { valor: "ordenes", texto: "Órdenes", cuenta: e.ordenes.length },
-          ...(veDinero ? [{ valor: "correos", texto: "Correos", explica: GLOSARIO.correosEmbarque }, { valor: "dinero", texto: "Dinero" }] : []),
-          ...(puede("costos") ? [{ valor: "costeo", texto: "Costeo" }] : []),
+          { valor: "etapas", texto: "Etapas", explica: GLOSARIO.etapasEmbarque },
+          { valor: "documentos", texto: "Documentos", cuenta: e.docs_pendientes || undefined, explica: GLOSARIO.listaDocumentosEmbarque },
+          { valor: "ordenes", texto: "Órdenes", cuenta: e.ordenes.length, explica: GLOSARIO.ordenesEmbarque },
+          ...(veDinero ? [{ valor: "correos", texto: "Correos", explica: GLOSARIO.correosEmbarque }, { valor: "dinero", texto: "Dinero", explica: GLOSARIO.pestanaDineroEmbarque }] : []),
+          ...(puede("costos") ? [{ valor: "costeo", texto: "Costeo", explica: GLOSARIO.costoPuestoEnPlanta }] : []),
         ]} />
         <ContenidoPestana value="etapas" className="pt-5"><Etapas e={e} /></ContenidoPestana>
         <ContenidoPestana value="documentos" className="pt-5"><Documentos e={e} /></ContenidoPestana>

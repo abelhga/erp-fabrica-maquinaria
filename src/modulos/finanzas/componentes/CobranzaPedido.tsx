@@ -51,7 +51,7 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
       titulo={p ? `${p.folio} · ${p.cliente}` : ""}
       subtitulo={p && (
         <span className="flex flex-wrap items-center gap-2">
-          {ESTADO_PEDIDO[p.estado] && <Insignia tono={ESTADO_PEDIDO[p.estado].tono}>{ESTADO_PEDIDO[p.estado].texto}</Insignia>}
+          {ESTADO_PEDIDO[p.estado] && <span data-explain={GLOSARIO.estadoPedido} data-explain-title="Estado del pedido"><Insignia tono={ESTADO_PEDIDO[p.estado].tono}>{ESTADO_PEDIDO[p.estado].texto}</Insignia></span>}
           <span>Pedido del {fecha(p.fecha)}{p.vendedor ? ` · ${p.vendedor}` : ""}</span>
         </span>
       )}>
@@ -60,7 +60,7 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl border border-borde p-3"><p className="text-xs text-tenue">Total</p><p className="font-semibold cifra">{enMoneda(p.total, m)}</p></div>
             <div className="rounded-xl border border-borde p-3"><p className="text-xs text-tenue">Cobrado</p><p className="font-semibold cifra text-ok">{enMoneda(p.cobrado, m)}</p></div>
-            <div className="rounded-xl border border-borde p-3"><p className="text-xs text-tenue">Saldo</p><p className="font-semibold cifra">{enMoneda(p.saldo, m)}</p></div>
+            <div className="rounded-xl border border-borde p-3" data-explain={GLOSARIO.saldoPedido} data-explain-title="Saldo"><p className="text-xs text-tenue">Saldo</p><p className="font-semibold cifra">{enMoneda(p.saldo, m)}</p></div>
           </div>
           <div className="text-sm space-y-1">
             {p.saldo > 0 && <p data-explain={GLOSARIO.antiguedadCobranza} data-explain-title="Antigüedad">Antigüedad: <Insignia tono={tonoRango(p.rango)}>{p.dias} días</Insignia> <span className="text-tenue">desde {p.primera_factura ? `la factura del ${fecha(p.primera_factura)}` : `el pedido (aún sin factura)`}</span></p>}
@@ -72,8 +72,8 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
             <div className="flex items-center justify-between">
               <h4 className="font-medium">Cobros</h4>
               {puede("finanzas", 2) && p.estado !== "cancelado" && <span className="flex gap-2">
-                <Boton tamano="sm" variante="secundario" onClick={() => setComplementos(true)}><Upload className="h-4 w-4" /> Complemento</Boton>
-                <Boton tamano="sm" onClick={() => setCobro(true)}><HandCoins className="h-4 w-4" /> Registrar cobro</Boton>
+                <Boton tamano="sm" variante="secundario" data-explain={GLOSARIO.complementoPago} data-explain-title="Complemento de pago" onClick={() => setComplementos(true)}><Upload className="h-4 w-4" /> Complemento</Boton>
+                <Boton tamano="sm" data-explain={GLOSARIO.botonRegistrarCobroPedido} onClick={() => setCobro(true)}><HandCoins className="h-4 w-4" /> Registrar cobro</Boton>
               </span>}
             </div>
             {cobros.isLoading ? <Cargando filas={2} /> : (cobros.data ?? []).length === 0 ? <p className="text-sm text-tenue">Sin cobros todavía.</p> : (
@@ -96,7 +96,7 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
           <section className="space-y-2">
             <div className="flex items-center justify-between">
               <h4 className="font-medium">Facturas</h4>
-              {puede("finanzas", 2) && p.estado !== "cancelado" && <Boton tamano="sm" variante="secundario" onClick={() => setFactura(true)}><Receipt className="h-4 w-4" /> Registrar factura</Boton>}
+              {puede("finanzas", 2) && p.estado !== "cancelado" && <Boton tamano="sm" variante="secundario" data-explain={GLOSARIO.botonRegistrarFacturaPedido} onClick={() => setFactura(true)}><Receipt className="h-4 w-4" /> Registrar factura</Boton>}
             </div>
             {facturas.isLoading ? <Cargando filas={2} /> : (facturas.data ?? []).length === 0 ? <p className="text-sm text-tenue">Sin facturar.</p> : (
               <ul className="divide-y divide-borde rounded-xl border border-borde">

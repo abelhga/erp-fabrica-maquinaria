@@ -79,11 +79,12 @@ export function FotosArticulo({ articuloId }: { articuloId: string }) {
         <div className="flex flex-wrap items-center gap-2">
           <input ref={entrada} type="file" accept="image/*" multiple hidden
             onChange={(e) => { const fs = [...(e.target.files ?? [])]; e.target.value = ""; if (fs.length) subir(fs); }} />
-          <Boton onClick={() => entrada.current?.click()} cargando={subiendo > 0}>
+          <Boton onClick={() => entrada.current?.click()} cargando={subiendo > 0} data-explain={GLOSARIO.botonSubirFotosEquipo} data-explain-title="Subir fotos">
             {subiendo > 0 ? `Subiendo ${subiendo}…` : <><Camera className="h-4 w-4" /> Subir fotos</>}</Boton>
           <div className="flex min-w-[260px] flex-1 items-center gap-2">
             <Entrada value={liga} onChange={(e) => setLiga(e.target.value)} placeholder="o pega la liga de Drive o de una imagen y Enter"
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); pegar(); } }} aria-label="Liga de la foto" />
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); pegar(); } }} aria-label="Liga de la foto"
+              data-explain={GLOSARIO.ligaFotoEquipo} data-explain-title="Pegar liga" />
             <Boton variante="secundario" onClick={pegar} disabled={!liga.trim()}><Link2 className="h-4 w-4" /> Agregar</Boton>
           </div>
         </div>
@@ -111,9 +112,10 @@ export function FotosArticulo({ articuloId }: { articuloId: string }) {
                     onClick={() => mover(i, -1)} aria-label="Mover antes"><ArrowLeft className="h-4 w-4" /></button>
                   <button type="button" className="rounded p-1 text-tenue hover:bg-fondo hover:text-texto disabled:opacity-30" disabled={i === lista.length - 1}
                     onClick={() => mover(i, 1)} aria-label="Mover después"><ArrowRight className="h-4 w-4" /></button>
-                  {i > 0 && <button type="button" className="ml-1 text-xs text-marca-texto hover:underline" onClick={() => principal(f)}>Hacerla principal</button>}
+                  {i > 0 && <button type="button" className="ml-1 text-xs text-marca-texto hover:underline" onClick={() => principal(f)}
+                    data-explain={GLOSARIO.botonHacerPrincipalFoto} data-explain-title="Hacerla principal">Hacerla principal</button>}
                   <button type="button" className="ml-auto rounded p-1 text-tenue hover:bg-peligro-suave hover:text-peligro" onClick={() => quitar(f)}
-                    aria-label={`Quitar foto ${i + 1}`}><Trash2 className="h-4 w-4" /></button>
+                    aria-label={`Quitar foto ${i + 1}`} data-explain={GLOSARIO.botonQuitarFotoEquipo} data-explain-title="Quitar foto"><Trash2 className="h-4 w-4" /></button>
                 </div>
               )}
             </li>

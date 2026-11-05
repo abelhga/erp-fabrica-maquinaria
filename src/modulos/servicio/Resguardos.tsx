@@ -68,17 +68,18 @@ export default function Resguardos() {
         {!r.servicio_folio && !r.para && <span className="text-tenue">{r.notas ?? "—"}</span>}
         {(r.servicio_folio || r.para) && r.notas && <span className="block text-xs text-tenue">{r.notas}</span>}</span>
     ) },
-    { clave: "devolver_en", titulo: vista === "historial" ? "Regresó" : "Regresa", valor: (r) => r.devuelto_en ?? r.devolver_en, celda: (r) => r.devuelto_en ? (
+    { clave: "devolver_en", titulo: vista === "historial" ? "Regresó" : "Regresa", explica: GLOSARIO.fechaRegresoResguardo, valor: (r) => r.devuelto_en ?? r.devolver_en, celda: (r) => r.devuelto_en ? (
       <span className="whitespace-nowrap">{fecha(r.devuelto_en)}
-        {r.estado_devolucion !== "bien" && <Insignia tono="peligro" className="ml-1">{r.estado_devolucion === "con_dano" ? "Dañada" : "Incompleta"}</Insignia>}
+        {r.estado_devolucion !== "bien" && <span className="inline-flex ml-1" data-explain={GLOSARIO.devolucionDanada}>
+          <Insignia tono="peligro">{r.estado_devolucion === "con_dano" ? "Dañada" : "Incompleta"}</Insignia></span>}
         <span className="block text-xs text-tenue">recibió {r.recibido_por_nombre ?? "—"}</span>
         {r.foto_devolucion && fotos.data?.[r.foto_devolucion] && (
-          <a href={fotos.data[r.foto_devolucion]} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}
+          <a href={fotos.data[r.foto_devolucion]} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} data-explain={GLOSARIO.fotoDevolucion}
              className="inline-flex items-center gap-1 text-xs text-marca-texto"><Camera className="h-3 w-3" />Foto al regresar</a>
         )}</span>
     ) : r.devolver_en ? <span className={cn(r.devolver_en < hoy && "text-peligro")}>{fecha(r.devolver_en)}</span> : <span className="text-tenue">Sin fecha</span> },
     { clave: "accion", titulo: "", sinBusqueda: true, oculta: vista === "historial" || !p.personal, celda: (r) => r.abierto && (
-      <Boton tamano="sm" variante="secundario" onClick={(e) => { e.stopPropagation(); setDevolver(r); }}><Undo2 className="h-3.5 w-3.5" />Recibir</Boton>
+      <Boton tamano="sm" variante="secundario" onClick={(e) => { e.stopPropagation(); setDevolver(r); }} data-explain={GLOSARIO.botonRecibirHerramienta}><Undo2 className="h-3.5 w-3.5" />Recibir</Boton>
     ) },
   ];
 
@@ -86,7 +87,7 @@ export default function Resguardos() {
     <Pagina
       titulo="Resguardo de herramienta"
       descripcion="Quién se llevó qué, desde cuándo, y cómo la regresó. Lo que pasa de los días marcados sale como pendiente."
-      acciones={p.personal && <Boton onClick={() => setPrestar("")}><Plus className="h-4 w-4" />Prestar herramienta</Boton>}
+      acciones={p.personal && <Boton onClick={() => setPrestar("")} data-explain={GLOSARIO.botonPrestarHerramienta}><Plus className="h-4 w-4" />Prestar herramienta</Boton>}
     >
       <div className="grid gap-3 sm:grid-cols-3">
         <Kpi titulo="Prestadas ahora" valor={numero(abiertos.length)} icono={Hand} tono="marca" alClic={() => setVista("prestadas")} explica={GLOSARIO.resguardo}
@@ -101,11 +102,11 @@ export default function Resguardos() {
         claseFila={(r) => (tarde(r) ? "bg-peligro-suave/40" : undefined)}
         filtros={<div className="flex flex-wrap items-center gap-3">
           <Filtro<Vista> valor={vista} alCambiar={setVista} opciones={[
-            { valor: "prestadas", texto: "Prestadas", cuenta: abiertos.length },
-            { valor: "vencidas", texto: "Sin regresar", cuenta: vencidos.length },
-            { valor: "historial", texto: "Regresadas" },
+            { valor: "prestadas", texto: "Prestadas", cuenta: abiertos.length, explica: GLOSARIO.resguardo },
+            { valor: "vencidas", texto: "Sin regresar", cuenta: vencidos.length, explica: GLOSARIO.herramientaSinRegresar },
+            { valor: "historial", texto: "Regresadas", explica: GLOSARIO.filtroResguardosRegresados },
           ]} />
-          <label className="inline-flex items-center gap-1.5 text-xs text-tenue">
+          <label className="inline-flex items-center gap-1.5 text-xs text-tenue" data-explain={GLOSARIO.diasMarcarSinRegresar} data-explain-title="Marcar después de">
             Marcar después de
             <Entrada type="number" min="1" className="h-8 w-16 text-xs" value={dias || String(n)} onChange={(e) => setDias(e.target.value)} aria-label="Días para marcar como sin regresar" />
             días
@@ -143,7 +144,7 @@ function DialogoPrestar({ maquinaInicial, alCerrar }: { maquinaInicial: string |
       pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton type="submit" form="form-prestar" disabled={!listo} cargando={prestar.isPending}>Registrar préstamo</Boton></>}>
       <form id="form-prestar" className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (listo) prestar.mutate(); }}>
         <Campo etiqueta="Herramienta" ayuda={disponibles.length === 0 && !maquinas.isLoading ? "No hay herramienta disponible: toda está prestada o en reparación." : undefined}>
-          <Seleccion value={maquina} onChange={(e) => setMaquina(e.target.value)} autoFocus>
+          <Seleccion value={maquina} onChange={(e) => setMaquina(e.target.value)} autoFocus data-explain={GLOSARIO.herramientaParaPrestar} data-explain-title="Herramienta">
             <option value="">Elige…</option>
             {disponibles.map((m) => <option key={m.id} value={m.id}>{m.numero} · {m.nombre}</option>)}
           </Seleccion>
@@ -158,12 +159,13 @@ function DialogoPrestar({ maquinaInicial, alCerrar }: { maquinaInicial: string |
           </Campo>
           {quien === "otro" && <Campo etiqueta="¿Quién?"><Entrada value={persona} onChange={(e) => setPersona(e.target.value)} placeholder="Ingeniería (Miguel), un externo…" /></Campo>}
           <Campo etiqueta="Para un servicio">
-            <Seleccion value={servicio} onChange={(e) => setServicio(e.target.value)}>
+            <Seleccion value={servicio} onChange={(e) => setServicio(e.target.value)} data-explain={GLOSARIO.prestamoParaServicio} data-explain-title="Para un servicio">
               <option value="">No (uso en planta)</option>
               {enCampo.map((s) => <option key={s.id} value={s.id}>{s.folio} · {s.cliente}</option>)}
             </Seleccion>
           </Campo>
-          <Campo etiqueta="La regresa el"><Entrada type="date" value={devolverEn} onChange={(e) => setDevolverEn(e.target.value)} /></Campo>
+          <Campo etiqueta="La regresa el"><Entrada type="date" value={devolverEn} onChange={(e) => setDevolverEn(e.target.value)}
+            data-explain={GLOSARIO.fechaDevolverPrestamo} data-explain-title="La regresa el" /></Campo>
         </div>
         <Campo etiqueta={servicio ? "¿Para qué? (opcional, ya va al servicio)" : "¿Para qué?"} ayuda="Qué va a hacer con ella o en qué orden la va a usar.">
           <span data-explain={GLOSARIO.paraQuePrestamo} className="block">
@@ -199,7 +201,7 @@ function DialogoDevolver({ r, alCerrar }: { r: Resguardo; alCerrar: () => void }
       descripcion={`La tiene ${r.quien} desde el ${fechaYHora(r.entregado_en)} (${hace(r.entregado_en)})${r.para ? ` · ${r.para}` : ""}.`}
       pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton type="submit" form="form-devolver" disabled={!listo} cargando={devolver.isPending}>Recibir</Boton></>}>
       <form id="form-devolver" className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (listo) devolver.mutate(); }}>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2" data-explain={GLOSARIO.estadoDevolucionHerramienta} data-explain-title="Cómo regresó">
           {([["bien", "Bien"], ["con_dano", "Dañada"], ["incompleta", "Incompleta"]] as const).map(([v, t]) => (
             <button key={v} type="button" onClick={() => setEstado(v)} aria-pressed={estado === v}
                     className={cn("h-11 rounded-lg border text-sm font-medium", estado === v ? (v === "bien" ? "border-ok bg-ok-suave text-ok" : "border-peligro bg-peligro-suave text-peligro") : "border-borde")}>

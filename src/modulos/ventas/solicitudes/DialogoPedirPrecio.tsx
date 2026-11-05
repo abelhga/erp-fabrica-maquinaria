@@ -11,6 +11,7 @@ import { cn } from "@/lib/utilidades";
 import { SelectorCliente } from "@/components/datos/SelectorCliente";
 import { CampoNumero } from "../componentes/campos";
 import { CLAVE, cuando, subirFotoSolicitud } from "@/modulos/compras/solicitudes/datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface DatosPedido {
   descripcion: string; marca: string; modelo: string; cantidad: number; urgente: boolean; notas: string;
@@ -75,7 +76,7 @@ export function DialogoPedirPrecio({ abierto, alCambiar, inicial, crear, alCread
 
   return (
     <Dialogo abierto={abierto} alCambiar={alCambiar} ancho="max-w-lg"
-      titulo={<span className="inline-flex items-center gap-2"><MessageSquareQuote className="h-5 w-5 text-marca" />Pedir precio a compras</span>}
+      titulo={<span className="inline-flex items-center gap-2" data-explain={GLOSARIO.solicitudPrecio} data-explain-title="Pedir precio a compras"><MessageSquareQuote className="h-5 w-5 text-marca" />Pedir precio a compras</span>}
       descripcion={inicial.para ? `Para ${inicial.para}. Te avisamos cuando lo tomen y cuando haya precio.` : "Te avisamos cuando lo tomen y cuando haya precio."}
       pie={<>
         <Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
@@ -102,7 +103,7 @@ export function DialogoPedirPrecio({ abierto, alCambiar, inicial, crear, alCread
         </div>
 
         <label className={cn("flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition",
-          d.urgente ? "border-peligro/40 bg-peligro-suave" : "border-borde hover:bg-fondo")}>
+          d.urgente ? "border-peligro/40 bg-peligro-suave" : "border-borde hover:bg-fondo")} data-explain={GLOSARIO.plazoSolicitud} data-explain-title="Plazo de compras">
           <input type="checkbox" className="mt-1" checked={d.urgente} onChange={(e) => setD({ ...d, urgente: e.target.checked })} />
           <span className="text-sm">
             <span className="font-medium inline-flex items-center gap-1.5"><Siren className={cn("h-4 w-4", d.urgente ? "text-peligro" : "text-tenue")} />El cliente está esperando</span>
@@ -123,7 +124,7 @@ export function DialogoPedirPrecio({ abierto, alCambiar, inicial, crear, alCread
         <div className="flex items-center gap-2">
           <input ref={archivo} type="file" accept="image/*,application/pdf" className="hidden"
             onChange={(e) => setFoto(e.target.files?.[0] ?? null)} />
-          <Boton type="button" variante="secundario" tamano="sm" onClick={() => archivo.current?.click()}><Camera className="h-4 w-4" />{foto ? "Cambiar foto" : "Foto o ficha (opcional)"}</Boton>
+          <Boton type="button" variante="secundario" tamano="sm" onClick={() => archivo.current?.click()} data-explain={GLOSARIO.fotoSolicitudPrecio}><Camera className="h-4 w-4" />{foto ? "Cambiar foto" : "Foto o ficha (opcional)"}</Boton>
           {foto && (
             <span className="inline-flex items-center gap-1 text-xs text-tenue min-w-0">
               <span className="truncate max-w-[200px]">{foto.name}</span>

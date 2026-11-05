@@ -36,7 +36,7 @@ import { DialogoPedirPrecio, type DatosPedido, type InicialPedido } from "./soli
 import { CLAVE as CLAVE_SOLICITUDES, queSePide, useSolicitudes, useSolicitudesEnVivo, type Solicitud } from "@/modulos/compras/solicitudes/datos";
 import { EstadoPartida } from "./solicitudes/EstadoPartida";
 import { DetalleSolicitud, RespuestaVenta } from "@/modulos/compras/solicitudes/Componentes";
-import { Explicacion } from "@/tutorial/Explicacion";
+import { AyudaDePantalla } from "@/tutorial/Explicacion";
 import { PANTALLAS } from "@/tutorial/pantallas";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -479,7 +479,8 @@ function Editor({ id }: { id: string }) {
   const puedeConvertir = ["borrador", "autorizada", "enviada"].includes(c.estado) && preciosEnRegla && (propia || esGerente) && lineas.length > 0;
 
   const indicador = (
-    <span className={cn("inline-flex items-center gap-1.5 text-xs", guardado === "error" ? "text-peligro" : "text-tenue")}>
+    <span className={cn("inline-flex items-center gap-1.5 text-xs", guardado === "error" ? "text-peligro" : "text-tenue")}
+      data-explain={GLOSARIO.guardadoAutomaticoCotizacion} data-explain-title="Se guarda sola">
       {guardado === "guardando" ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Guardando…</>
         : guardado === "pendiente" ? <><Cloud className="h-3.5 w-3.5" />Sin guardar</>
         : guardado === "error" ? <button className="inline-flex items-center gap-1.5" onClick={() => guardar()}><CloudOff className="h-3.5 w-3.5" />No se guardó · reintentar</button>
@@ -489,25 +490,25 @@ function Editor({ id }: { id: string }) {
 
   // En la barra de abajo del celular va en tamaño chico: si no, el total no cabe.
   const principal = (tamano?: "sm") => {
-    if (c.estado === "por_autorizar" && esGerente) return <Boton tamano={tamano} onClick={() => autorizar.mutate(undefined)} cargando={autorizar.isPending}><ShieldCheck className="h-4 w-4" />Autorizar precios</Boton>;
-    if (c.estado === "por_autorizar") return <Boton tamano={tamano} variante={c.autorizacion_pedida_en ? "secundario" : "primario"} onClick={() => setDlg("autorizacion")}><ShieldCheck className="h-4 w-4" />{c.autorizacion_pedida_en ? "Autorización pedida" : "Pedir autorización"}</Boton>;
-    if (puedeEnviar) return <Boton tamano={tamano} onClick={() => antesDeEnviar("enviar")}><Send className="h-4 w-4" />Enviar</Boton>;
-    if (c.estado === "enviada" && puedeConvertir) return <Boton tamano={tamano} variante="exito" onClick={() => setDlg("convertir")}><PackageCheck className="h-4 w-4" />Convertir a pedido</Boton>;
+    if (c.estado === "por_autorizar" && esGerente) return <Boton tamano={tamano} onClick={() => autorizar.mutate(undefined)} cargando={autorizar.isPending} data-explain={GLOSARIO.botonAutorizarPrecios}><ShieldCheck className="h-4 w-4" />Autorizar precios</Boton>;
+    if (c.estado === "por_autorizar") return <Boton tamano={tamano} variante={c.autorizacion_pedida_en ? "secundario" : "primario"} onClick={() => setDlg("autorizacion")} data-explain={GLOSARIO.autorizacionPrecios}><ShieldCheck className="h-4 w-4" />{c.autorizacion_pedida_en ? "Autorización pedida" : "Pedir autorización"}</Boton>;
+    if (puedeEnviar) return <Boton tamano={tamano} onClick={() => antesDeEnviar("enviar")} data-explain={GLOSARIO.botonEnviarCotizacion}><Send className="h-4 w-4" />Enviar</Boton>;
+    if (c.estado === "enviada" && puedeConvertir) return <Boton tamano={tamano} variante="exito" onClick={() => setDlg("convertir")} data-explain={GLOSARIO.convertirCotizacionPedido}><PackageCheck className="h-4 w-4" />Convertir a pedido</Boton>;
     if (c.estado === "aceptada" && pedido.data?.[0]) return <Boton tamano={tamano} asChild variante="secundario"><Link to={`/ventas/pedidos/${pedido.data[0].id}`}><Truck className="h-4 w-4" />Ver pedido {pedido.data[0].folio}</Link></Boton>;
-    if (["rechazada", "cancelada", "vencida"].includes(c.estado)) return <Boton tamano={tamano} onClick={pedirNuevaVersion} cargando={nuevaVersion.isPending}><CopyPlus className="h-4 w-4" />Nueva versión</Boton>;
+    if (["rechazada", "cancelada", "vencida"].includes(c.estado)) return <Boton tamano={tamano} onClick={pedirNuevaVersion} cargando={nuevaVersion.isPending} data-explain={GLOSARIO.nuevaVersionCotizacion}><CopyPlus className="h-4 w-4" />Nueva versión</Boton>;
     return null;
   };
   const botonPrincipal = principal();
 
   const menuMas = (
-    <MenuAcciones disparador={<Boton variante="secundario" tamano="icono" aria-label="Más acciones"><MoreHorizontal className="h-4 w-4" /></Boton>}>
+    <MenuAcciones disparador={<Boton variante="secundario" tamano="icono" aria-label="Más acciones" data-explain={GLOSARIO.menuMasCotizacion} data-explain-title="Más acciones"><MoreHorizontal className="h-4 w-4" /></Boton>}>
       <OpcionMenu icono={Eye} alElegir={abrirVista}>Vista previa</OpcionMenu>
       <OpcionMenu icono={Printer} alElegir={abrirPdf}>Imprimir / PDF</OpcionMenu>
       <OpcionMenu icono={MessageCircle} alElegir={() => antesDeEnviar("enviar")} deshabilitado={!["enviada", "aceptada"].includes(c.estado) && !puedeEnviar}>Compartir por WhatsApp</OpcionMenu>
       <OpcionMenu icono={Mail} alElegir={() => antesDeEnviar("correo")} deshabilitado={!["enviada", "aceptada"].includes(c.estado) && !puedeEnviar}>Mandar por correo</OpcionMenu>
       <SeparadorMenu />
-      <OpcionMenu icono={CopyPlus} alElegir={pedirNuevaVersion}>Nueva versión ({c.folio.replace(/-v\d+$/, "")}-v…)</OpcionMenu>
-      <OpcionMenu icono={Copy} alElegir={() => duplicar.mutate(undefined)}>Duplicar con folio nuevo</OpcionMenu>
+      <OpcionMenu icono={CopyPlus} alElegir={pedirNuevaVersion}><span data-explain={GLOSARIO.nuevaVersion}>Nueva versión ({c.folio.replace(/-v\d+$/, "")}-v…)</span></OpcionMenu>
+      <OpcionMenu icono={Copy} alElegir={() => duplicar.mutate(undefined)}><span data-explain={GLOSARIO.duplicarCotizacion}>Duplicar con folio nuevo</span></OpcionMenu>
       <OpcionMenu icono={PackageCheck} alElegir={() => setDlg("convertir")} deshabilitado={!puedeConvertir}>Convertir a pedido</OpcionMenu>
       <OpcionMenu icono={ThumbsDown} alElegir={() => setDlg("rechazar")} deshabilitado={["aceptada", "rechazada", "cancelada"].includes(c.estado) || !(propia || esGerente)}>Marcar rechazada…</OpcionMenu>
       {c.estado === "borrador" && (propia || esGerente) && (
@@ -545,7 +546,8 @@ function Editor({ id }: { id: string }) {
             onChange={(e) => editarEnc({ leyenda_promocion: e.target.value || null })} />
         )}
         {Number(c.descuento_pct) === 0 && !c.leyenda_promocion && editable && (
-          <button className="text-xs text-marca-texto" onClick={() => editarEnc({ leyenda_promocion: "de descuento ya aplicado por la promoción. Válido hasta el " })}>+ leyenda de promoción</button>
+          <button className="text-xs text-marca-texto" onClick={() => editarEnc({ leyenda_promocion: "de descuento ya aplicado por la promoción. Válido hasta el " })}
+            data-explain={GLOSARIO.leyendaPromocion}>+ leyenda de promoción</button>
         )}
         <div className="flex items-center justify-between gap-2 pt-1">
           <span className="text-tenue" data-explain={GLOSARIO.mesesConTarjeta}>Meses con tarjeta</span>
@@ -586,9 +588,10 @@ function Editor({ id }: { id: string }) {
         <Link to="/ventas/cotizaciones" className="p-1.5 -ml-1.5 rounded-lg hover:bg-fondo text-tenue" aria-label="Volver a cotizaciones"><ArrowLeft className="h-5 w-5" /></Link>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold tracking-tight cifra"
+            <h1 className="text-xl font-semibold tracking-tight cifra" data-explain={GLOSARIO.folioCotizacion} data-explain-title="Folio"
               title={c.folio.startsWith("BORRADOR-") ? "El folio se asigna al agregar la primera partida: abrir y salir no gasta folios." : undefined}>{folioCot(c.folio)}</h1>
-            {vendedor.data?.iniciales && <span className="rounded bg-texto/80 text-superficie text-[11px] font-bold px-1.5 py-0.5 tracking-wider">{vendedor.data.iniciales}</span>}
+            {vendedor.data?.iniciales && <span className="rounded bg-texto/80 text-superficie text-[11px] font-bold px-1.5 py-0.5 tracking-wider"
+              data-explain={GLOSARIO.inicialesVendedorCotizacion} data-explain-title="Iniciales del vendedor">{vendedor.data.iniciales}</span>}
             <span data-explain={GLOSARIO.estadoCotizacion} data-explain-title={est.texto}><Insignia tono={est.tono} punto>{est.texto}</Insignia></span>
             {vencida && <span data-explain={GLOSARIO.vigenciaCotizacion}><Insignia tono="peligro">Vencida</Insignia></span>}
             {c.version > 1 && <span data-explain={GLOSARIO.nuevaVersion}><Insignia>versión {c.version}</Insignia></span>}
@@ -599,15 +602,15 @@ function Editor({ id }: { id: string }) {
         </div>
         <div className="ml-auto flex items-center gap-2">
           {indicador}
-          <Boton variante="secundario" className="hidden sm:inline-flex" onClick={abrirVista}><Eye className="h-4 w-4" />Vista previa</Boton>
-          <Boton variante="secundario" className="hidden sm:inline-flex" onClick={abrirPdf}><Printer className="h-4 w-4" />PDF</Boton>
+          <Boton variante="secundario" className="hidden sm:inline-flex" onClick={abrirVista} data-explain={GLOSARIO.vistaPreviaCotizacion}><Eye className="h-4 w-4" />Vista previa</Boton>
+          <Boton variante="secundario" className="hidden sm:inline-flex" onClick={abrirPdf} data-explain={GLOSARIO.pdfCotizacion}><Printer className="h-4 w-4" />PDF</Boton>
           {dosColumnas && botonPrincipal}
           {menuMas}
         </div>
       </div>
 
       {/* El editor no pasa por Pagina: el texto del tutorial de esta ruta se pone aquí. */}
-      <Explicacion>{PANTALLAS["/ventas/cotizaciones/:id"].map((p) => <p key={p}>{p}</p>)}</Explicacion>
+      <AyudaDePantalla ayuda={PANTALLAS["/ventas/cotizaciones/:id"]} ruta="/ventas/cotizaciones/:id" />
 
       {/* Avisos de estado */}
       {c.estado === "por_autorizar" && (
@@ -624,7 +627,7 @@ function Editor({ id }: { id: string }) {
       {c.estado === "autorizada" && (
         <div className="rounded-xl border border-info/30 bg-info-suave px-4 py-3 text-sm flex items-center gap-3">
           <ShieldCheck className="h-5 w-5 text-info" />
-          <span>Precios autorizados {c.autorizada_en ? haceCuanto(c.autorizada_en) : ""}. Si cambias un precio o el descuento, la autorización se pierde.</span>
+          <span data-explain={GLOSARIO.autorizacionPrecios} data-explain-title="Autorización de precios">Precios autorizados {c.autorizada_en ? haceCuanto(c.autorizada_en) : ""}. Si cambias un precio o el descuento, la autorización se pierde.</span>
         </div>
       )}
       {!editable && ["enviada", "aceptada", "rechazada", "cancelada", "vencida"].includes(c.estado) && (
@@ -637,7 +640,7 @@ function Editor({ id }: { id: string }) {
             {c.estado === "rechazada" && <>Rechazada: {c.motivo_rechazo}</>}
             {(c.estado === "cancelada" || c.estado === "vencida") && <>Esta cotización está {est.texto.toLowerCase()}.</>}
           </span>
-          {c.estado === "enviada" && <Boton tamano="sm" variante="secundario" onClick={pedirNuevaVersion} cargando={nuevaVersion.isPending}><CopyPlus className="h-4 w-4" />Nueva versión</Boton>}
+          {c.estado === "enviada" && <Boton tamano="sm" variante="secundario" onClick={pedirNuevaVersion} cargando={nuevaVersion.isPending} data-explain={GLOSARIO.nuevaVersionCotizacion}><CopyPlus className="h-4 w-4" />Nueva versión</Boton>}
         </div>
       )}
       {!editable && EDITABLES.includes(c.estado) && (
@@ -654,13 +657,13 @@ function Editor({ id }: { id: string }) {
                 <ElegirCliente valor={c.cliente_id ? { id: c.cliente_id, nombre: cliente.data?.nombre ?? "…" } : null} deshabilitado={!editable}
                   alCambiar={(cl) => cambiarCliente(cl)} alNuevo={() => { setNombreCliente(""); setDlg("cliente"); }} />
                 {cliente.data?.vendedor && cliente.data.vendedor_id !== perfil?.id && (
-                  <span className="block text-xs text-aviso">Cliente de {cliente.data.vendedor.nombre}{contactosPrivados ? " — contactos privados" : ""}</span>
+                  <span className="block text-xs text-aviso" data-explain={GLOSARIO.contactosPrivadosCotizacion} data-explain-title="Cliente de otro vendedor">Cliente de {cliente.data.vendedor.nombre}{contactosPrivados ? " — contactos privados" : ""}</span>
                 )}
               </div>
               <label className="space-y-1.5 sm:col-span-2">
                 <span className="text-sm font-medium">Contacto</span>
                 {contactosPrivados ? (
-                  <p className="campo flex items-center text-tenue">Contactos privados de {cliente.data?.vendedor?.nombre}</p>
+                  <p className="campo flex items-center text-tenue" data-explain={GLOSARIO.contactosPrivadosCotizacion} data-explain-title="Contactos privados">Contactos privados de {cliente.data?.vendedor?.nombre}</p>
                 ) : (
                   <select className="campo pr-8" value={c.contacto_id ?? ""} disabled={!editable || !c.cliente_id}
                     onChange={(e) => {
@@ -681,7 +684,7 @@ function Editor({ id }: { id: string }) {
                 <input className="campo" value={c.empresa ?? ""} disabled={!editable} onChange={(e) => editarEnc({ empresa: e.target.value || null })} placeholder="Razón social o nombre comercial" />
               </label>
               <div className="space-y-1.5">
-                <span className="text-sm font-medium">Moneda</span>
+                <span className="text-sm font-medium" data-explain={GLOSARIO.convertirMonedaCotizacion}>Moneda</span>
                 <div className="flex rounded-lg border border-borde p-0.5 bg-fondo">
                   {(["MXN", "USD"] as Moneda[]).map((m) => (
                     <button key={m} type="button" disabled={!editable || moneda.isPending}
@@ -700,7 +703,8 @@ function Editor({ id }: { id: string }) {
                     alEnter={() => { if (tcLocal && tcLocal !== Number(c.tipo_cambio)) moneda.mutate({ moneda: c.moneda, tc: tcLocal, conIva: c.precios_con_iva }); }} />
                 )}
                 {c.moneda !== "MXN" && tcLocal != null && tcLocal !== Number(c.tipo_cambio) && (
-                  <button className="text-xs text-marca-texto font-medium" onClick={() => moneda.mutate({ moneda: c.moneda, tc: tcLocal, conIva: c.precios_con_iva })}>
+                  <button className="text-xs text-marca-texto font-medium" onClick={() => moneda.mutate({ moneda: c.moneda, tc: tcLocal, conIva: c.precios_con_iva })}
+                    data-explain={GLOSARIO.convertirMonedaCotizacion}>
                     Aplicar TC y convertir precios
                   </button>
                 )}
@@ -730,7 +734,7 @@ function Editor({ id }: { id: string }) {
               </label>
               {c.cliente_id && (oportunidades.data?.length ?? 0) > 0 && (
                 <label className="space-y-1.5 sm:col-span-2">
-                  <span className="text-sm font-medium">Oportunidad</span>
+                  <span className="text-sm font-medium" data-explain={GLOSARIO.embudo} data-explain-title="Oportunidad">Oportunidad</span>
                   <select className="campo pr-8" value={c.oportunidad_id ?? ""} disabled={!editable} onChange={(e) => editarEnc({ oportunidad_id: e.target.value || null })}>
                     <option value="">— se abre sola al enviar —</option>
                     {oportunidades.data!.map((o) => <option key={o.id} value={o.id}>{o.titulo} ({o.etapa})</option>)}
@@ -749,8 +753,8 @@ function Editor({ id }: { id: string }) {
                     alElegir={(a) => agregar.mutate(a)}
                     alNoEncontrar={(texto) => setPedirPara({ descripcion: texto, cantidad: 1, cotizacionId: id, nuevaPartida: true,
                       para: `${c.folio}${cliente.data ? " · " + cliente.data.nombre : ""} (se agrega como partida)` })} />
-                  <MenuAcciones alinear="end" disparador={<Boton variante="secundario"><Plus className="h-4 w-4" />Partida libre<ChevronDown className="h-3.5 w-3.5" /></Boton>}>
-                    <OpcionMenu alElegir={() => { guardar().then(() => setDlg("flete"), () => setDlg("flete")); }}>Flete con Skydropx (cotizar)</OpcionMenu>
+                  <MenuAcciones alinear="end" disparador={<Boton variante="secundario" data-explain={GLOSARIO.partidaLibre}><Plus className="h-4 w-4" />Partida libre<ChevronDown className="h-3.5 w-3.5" /></Boton>}>
+                    <OpcionMenu alElegir={() => { guardar().then(() => setDlg("flete"), () => setDlg("flete")); }}><span data-explain={GLOSARIO.fleteCotizacion}>Flete con Skydropx (cotizar)</span></OpcionMenu>
                     <OpcionMenu alElegir={() => agregarLibre.mutate("Flete a ")}>Flete a mano</OpcionMenu>
                     <OpcionMenu alElegir={() => agregarLibre.mutate("Instalación y puesta en marcha")}>Instalación</OpcionMenu>
                     <OpcionMenu alElegir={() => agregarLibre.mutate("Servicio de ")}>Servicio</OpcionMenu>
@@ -774,7 +778,7 @@ function Editor({ id }: { id: string }) {
             )}
             {sueltas.length > 0 && (
               <div className="border-t border-borde px-3 sm:px-4 py-3 space-y-2">
-                <p className="text-xs font-medium uppercase tracking-wide text-tenue">Precios pedidos a compras para esta cotización</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-tenue" data-explain={GLOSARIO.solicitudPrecio}>Precios pedidos a compras para esta cotización</p>
                 {sueltas.map((s) => (
                   <div key={s.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                     <span className="text-sm font-medium">{queSePide(s)}</span>
@@ -789,7 +793,7 @@ function Editor({ id }: { id: string }) {
 
           {/* Condiciones */}
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Condiciones" descripcion="Salen al pie de la cotización. Elige del catálogo o escribe otra." />
+            <EncabezadoTarjeta titulo="Condiciones" descripcion="Salen al pie de la cotización. Elige del catálogo o escribe otra." explica={GLOSARIO.condicionesCotizacion} />
             <div className="px-5 pb-5 grid gap-4 md:grid-cols-2">
               <label className="space-y-1.5">
                 <span className="text-sm font-medium">Pago</span>
@@ -815,11 +819,11 @@ function Editor({ id }: { id: string }) {
                 <EntregaRealista e={estimacion.data} prometido={c.tiempo_entrega} editable={editable} alUsar={(v) => editarEnc({ tiempo_entrega: v })} />
               </div>
               <div className="md:col-span-2 space-y-2">
-                <span className="text-sm font-medium">Notas</span>
+                <span className="text-sm font-medium" data-explain={GLOSARIO.notasCotizacion}>Notas</span>
                 <Notas notas={c.notas ?? []} catalogo={notasCatalogo} editable={editable} alCambiar={(n) => editarEnc({ notas: n })} />
               </div>
               <details className="md:col-span-2">
-                <summary className="text-sm text-marca-texto cursor-pointer">Formato co-marca (“Powered by Hegamex”)</summary>
+                <summary className="text-sm text-marca-texto cursor-pointer" data-explain={GLOSARIO.formatoComarca} data-explain-title="Formato co-marca">Formato co-marca (“Powered by Hegamex”)</summary>
                 <label className="mt-2 block space-y-1.5">
                   <span className="text-sm text-tenue">Liga del logo del cliente o distribuidor (si se llena, la cotización sale con su logo y “Powered by HEGAMEX”)</span>
                   <input className="campo" value={c.logo_comarca_url ?? ""} disabled={!editable} placeholder="https://…/logo.png"

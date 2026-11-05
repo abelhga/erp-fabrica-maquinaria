@@ -76,7 +76,7 @@ export default function Existencias() {
   const columnas: Columna<(typeof filas)[number]>[] = [
     { clave: "clave", titulo: "Clave", clase: "whitespace-nowrap text-tenue text-xs" },
     {
-      clave: "nombre", titulo: "Artículo", clase: "min-w-[280px]",
+      clave: "nombre", titulo: "Artículo", clase: "min-w-[280px]", explica: GLOSARIO.abrirDetalleExistencia,
       celda: (f) => (
         <div className="min-w-0">
           <p>{f.nombre}</p>
@@ -107,7 +107,7 @@ export default function Existencias() {
         return v === 0 ? <span className="text-tenue/50">·</span> : <span className={cn(v < 0 && "text-peligro font-medium")}>{numero(v)}</span>;
       },
     })),
-    { clave: "valor", titulo: "Valor", alinear: "der", sinBusqueda: true, oculta: !verCostos, celda: (f) => f.valor ? dinero(f.valor) : "—" },
+    { clave: "valor", titulo: "Valor", alinear: "der", sinBusqueda: true, oculta: !verCostos, explica: GLOSARIO.valorExistenciasCosto, celda: (f) => f.valor ? dinero(f.valor) : "—" },
   ];
 
   const abrir = (id: string | null) => {
@@ -122,17 +122,17 @@ export default function Existencias() {
       descripcion="Lo que hay en cada almacén, lo apartado para órdenes y ventas, y lo que viene en camino."
       ancho="max-w-[1500px]"
       acciones={puede("inventario", 2) && (
-        <button onClick={() => ir("/almacen/movimientos")} className="inline-flex items-center gap-2 h-9 rounded-lg border border-borde bg-superficie px-4 text-sm font-medium hover:bg-fondo">
+        <button onClick={() => ir("/almacen/movimientos")} data-explain={GLOSARIO.botonRegistrarMovimiento} className="inline-flex items-center gap-2 h-9 rounded-lg border border-borde bg-superficie px-4 text-sm font-medium hover:bg-fondo">
           <ArrowLeftRight className="h-4 w-4" /> Registrar entrada o salida
         </button>
       )}
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi titulo="Artículos con existencia" valor={numero(conExistencia)} icono={Boxes} tono="marca"
-          detalle={`de ${numero(filas.length)} que controla el almacén`} />
+          detalle={`de ${numero(filas.length)} que controla el almacén`} explica={GLOSARIO.articulosConExistencia} />
         {verCostos ? (
           <Kpi titulo="Valor en planta y ML" valor={dineroCompacto(total((f) => f.valor ?? 0))} icono={Warehouse} tono="neutro"
-            detalle="A costo vigente (sin IVA)" />
+            detalle="A costo vigente (sin IVA)" explica={GLOSARIO.valorExistenciasCosto} />
         ) : (
           <Kpi titulo="Piezas en planta" valor={numero(total((f) => Math.max(f.en_planta, 0)))} icono={Warehouse} tono="neutro"
             detalle="Suma de todas las unidades" explica={GLOSARIO.enPlanta} />
@@ -159,14 +159,15 @@ export default function Existencias() {
             <Filtro<Vista>
               valor={vista} alCambiar={setVista}
               opciones={[
-                { valor: "con", texto: "Con existencia" },
-                { valor: "apartados", texto: "Apartados" },
-                ...(verTransito ? [{ valor: "transito" as Vista, texto: "En tránsito" }] : []),
-                { valor: "negativos", texto: "Negativos" },
+                { valor: "con", texto: "Con existencia", explica: GLOSARIO.filtroConExistencia },
+                { valor: "apartados", texto: "Apartados", explica: GLOSARIO.apartado },
+                ...(verTransito ? [{ valor: "transito" as Vista, texto: "En tránsito", explica: GLOSARIO.enTransito }] : []),
+                { valor: "negativos", texto: "Negativos", explica: GLOSARIO.existenciaNegativa },
                 { valor: "todos", texto: "Todos" },
               ]}
             />
             <Seleccion className="w-auto h-8 text-xs" value={almacenFiltro} aria-label="Almacén"
+              data-explain={GLOSARIO.filtroAlmacenExistencias} data-explain-title="Almacén"
               onChange={(e) => { const p = new URLSearchParams(params); if (e.target.value) p.set("almacen", e.target.value); else p.delete("almacen"); setParams(p, { replace: true }); }}>
               <option value="">Todos los almacenes</option>
               {(almacenes.data ?? []).map((a) => <option key={a.id} value={a.nombre}>{a.nombre}</option>)}

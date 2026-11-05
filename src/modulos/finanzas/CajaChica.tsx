@@ -69,7 +69,7 @@ export default function CajaChica() {
         <p className="break-words flex flex-wrap items-center gap-2">{m.tipo === "arqueo" && <span data-explain={GLOSARIO.arqueo}><Insignia tono={Number(m.importe) < 0 ? "peligro" : "info"}>Arqueo</Insignia></span>}{m.concepto}</p>
         {m.notas && <p className="text-xs text-tenue break-words">{m.notas}</p>}
       </div> },
-    { clave: "en_turno", titulo: "Quién", valor: (m) => m.en_turno ?? "", celda: (m) => <span className="text-tenue">{m.en_turno ?? "—"}{m.origen === "hoja" && <span className="block text-xs">Hoja</span>}</span> },
+    { clave: "en_turno", titulo: "Quién", explica: GLOSARIO.quienAnotoCaja, valor: (m) => m.en_turno ?? "", celda: (m) => <span className="text-tenue">{m.en_turno ?? "—"}{m.origen === "hoja" && <span className="block text-xs">Hoja</span>}</span> },
     { clave: "entrada", titulo: "Entra", alinear: "der", sinBusqueda: true, valor: (m) => (Number(m.importe) > 0 ? Number(m.importe) : 0),
       celda: (m) => (Number(m.importe) > 0 ? <span className="text-ok">{dinero(m.importe)}</span> : null) },
     { clave: "salida", titulo: "Sale", alinear: "der", sinBusqueda: true, valor: (m) => (Number(m.importe) < 0 ? -Number(m.importe) : 0),
@@ -77,13 +77,14 @@ export default function CajaChica() {
     { clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, explica: GLOSARIO.saldoCaja, valor: (m) => Number(m.saldo), celda: (m) => <b>{dinero(m.saldo)}</b> },
     { clave: "acciones", titulo: "", sinBusqueda: true, oculta: !administra, celda: (m) => m.origen === "erp" ? (
       <button type="button" onClick={(e) => { e.stopPropagation(); if (confirm(`¿Borrar «${m.concepto}» de ${dinero(Math.abs(Number(m.importe)))}?`)) borrar.mutate(m.id); }}
-        className="p-1 rounded text-tenue hover:text-peligro hover:bg-fondo" aria-label="Borrar movimiento" title="Borrar (mal capturado)"><Trash2 className="h-4 w-4" /></button>
+        className="p-1 rounded text-tenue hover:text-peligro hover:bg-fondo" aria-label="Borrar movimiento" title="Borrar (mal capturado)"
+        data-explain={GLOSARIO.botonBorrarMovimientoCaja} data-explain-title="Borrar movimiento"><Trash2 className="h-4 w-4" /></button>
     ) : null },
   ];
 
   return (
     <Pagina titulo="Caja chica" descripcion="El efectivo de la oficina: cada entrada y salida con su saldo, y el arqueo cuando se cuenta."
-      acciones={administra && <Boton variante="secundario" onClick={() => setArqueo(true)}><Calculator className="h-4 w-4" /> Arqueo</Boton>}>
+      acciones={administra && <Boton variante="secundario" data-explain={GLOSARIO.arqueo} data-explain-title="Arqueo" onClick={() => setArqueo(true)}><Calculator className="h-4 w-4" /> Arqueo</Boton>}>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi titulo="Saldo" valor={dinero(saldo)} icono={Coins} tono={estado.tono} explica={GLOSARIO.saldoCaja} detalle={<span data-explain={GLOSARIO.topesCaja} data-explain-title="Mínimo y máximo">{estado.texto}</span>} />
         <Kpi titulo="Salidas del mes" valor={dineroCompacto(salidasMes)} icono={ArrowUpRight} tono="neutro" detalle={`${delMes.filter((m) => m.tipo === "salida").length} gastos`} />
@@ -117,7 +118,8 @@ function Captura() {
   return (
     <Tarjeta className="p-4">
       <form onSubmit={enviar} className="grid gap-3 sm:grid-cols-[auto_1fr_9rem_10rem_auto] items-end">
-        <div className="flex rounded-lg border border-borde p-0.5 h-10 self-end" role="radiogroup" aria-label="Tipo de movimiento">
+        <div className="flex rounded-lg border border-borde p-0.5 h-10 self-end" role="radiogroup" aria-label="Tipo de movimiento"
+          data-explain={GLOSARIO.saleEntraCaja} data-explain-title="Sale o entra">
           {(["salida", "entrada"] as const).map((t) => (
             <button key={t} type="button" role="radio" aria-checked={f.tipo === t} onClick={() => setF({ ...f, tipo: t })}
               className={cn("px-3 rounded-md text-sm font-medium", f.tipo === t ? (t === "salida" ? "bg-peligro-suave text-peligro" : "bg-ok-suave text-ok") : "text-tenue hover:text-texto")}>

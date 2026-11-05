@@ -77,7 +77,8 @@ export default function SemanaPagina() {
                       <Sparkles className="h-[18px] w-[18px]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-medium text-tenue uppercase tracking-wide">La semana en una frase</p>
+                      <p className="text-xs font-medium text-tenue uppercase tracking-wide" data-explain={GLOSARIO.semanaEnUnaFrase}
+                        data-explain-title="La semana en una frase">La semana en una frase</p>
                       {r.isLoading
                         ? <div className="mt-1.5 h-5 w-80 max-w-full rounded bg-fondo animate-pulse" />
                         : <h2 className="text-lg font-semibold leading-snug text-balance">{r.data!.titular}</h2>}
@@ -86,12 +87,15 @@ export default function SemanaPagina() {
                   </div>
                   <div className="flex items-center gap-2 text-xs text-tenue">
                     {r.data && (r.data.simulado
-                      ? <Insignia tono="neutro">Reglas de la base · sin IA</Insignia>
-                      : <Insignia tono="marca"><Sparkles className="h-3 w-3" />IA · {hace(r.data.generado_en)}</Insignia>)}
-                    <button onClick={regenerar} disabled={r.isFetching} title="Volver a escribirla"
-                      className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo disabled:opacity-50">
-                      <RefreshCw className={cn("h-4 w-4", r.isFetching && "animate-spin")} />
-                    </button>
+                      ? <span data-explain={GLOSARIO.resumenSinIA} data-explain-title="Sin IA"><Insignia tono="neutro">Reglas de la base · sin IA</Insignia></span>
+                      : <span data-explain={GLOSARIO.iaRedacto} data-explain-title="Hecho por la IA"><Insignia tono="marca"><Sparkles className="h-3 w-3" />IA · {hace(r.data.generado_en)}</Insignia></span>)}
+                    {/* Se deshabilita mientras carga: la explicación va en el envoltorio para que no se pierda. */}
+                    <span data-explain={GLOSARIO.botonReescribirSemana} data-explain-title="Volver a escribirla">
+                      <button onClick={regenerar} disabled={r.isFetching} title="Volver a escribirla"
+                        className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo disabled:opacity-50">
+                        <RefreshCw className={cn("h-4 w-4", r.isFetching && "animate-spin")} />
+                      </button>
+                    </span>
                   </div>
                 </div>
                 <div className="mt-4 grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
@@ -99,7 +103,8 @@ export default function SemanaPagina() {
                   {r.data?.puntos.map((p, i) => {
                     const t = TONOS[p.tono] ?? TONOS.info;
                     return (
-                      <Link key={i} to={p.ruta || "/"} style={{ animationDelay: `${i * 60}ms` }}
+                      <Link key={i} to={p.ruta || "/"} style={{ animationDelay: `${i * 60}ms` }} data-explain={GLOSARIO.tarjetasDelResumen}
+                        data-explain-title={{ riesgo: "Riesgo", atencion: "Atención", bueno: "Va bien", info: "Para saber" }[p.tono]}
                         className="group rounded-xl border border-borde bg-superficie/60 p-3.5 hover:border-marca/40 hover:shadow-sm transition flex gap-3 animate-entrar">
                         <div className={cn("h-8 w-8 shrink-0 rounded-lg grid place-items-center", t.clase)}><t.icono className="h-4 w-4" /></div>
                         <div className="min-w-0 flex-1">
@@ -133,20 +138,22 @@ export default function SemanaPagina() {
                     {n.ventas.cotizaciones_sin_respuesta.n > 0 && <> · <span className="text-aviso font-medium">{n.ventas.cotizaciones_sin_respuesta.n} sin respuesta</span></>}</>} />
               )}
               {n.cobranza && (
-                <Kpi titulo="Cobrado" icono={HandCoins} tono="ok" valor={dineroCompacto(n.cobranza.cobrado)}
+                <Kpi titulo="Cobrado" icono={HandCoins} tono="ok" valor={dineroCompacto(n.cobranza.cobrado)} explica={GLOSARIO.cobradoSemana}
                   detalle={<><Cambio a={n.cobranza.cobrado} b={n.cobranza.cobrado_anterior} /> vs {dineroCompacto(n.cobranza.cobrado_anterior)}</>} />
               )}
               {n.produccion && (
                 <Kpi titulo="Equipos terminados" icono={Factory} tono={n.produccion.atrasadas ? "aviso" : "ok"} valor={numero(n.produccion.terminadas)}
+                  explica={GLOSARIO.equiposTerminadosSemana}
                   detalle={<>{n.produccion.terminadas_anterior} la anterior · {n.produccion.en_proceso} en proceso
                     {n.produccion.atrasadas > 0 && <> · <span className="text-peligro font-medium">{n.produccion.atrasadas} atrasadas</span></>}</>} />
               )}
               {n.compras && (
                 <Kpi titulo="Compras que llegan" icono={PackageCheck} tono={n.compras.atrasadas ? "aviso" : "info"} valor={numero(n.compras.por_llegar.length)}
+                  explica={GLOSARIO.comprasQueLleganSemana}
                   detalle={<>{n.compras.atrasadas > 0 ? <span className="text-aviso font-medium">{n.compras.atrasadas} atrasadas</span> : "ninguna atrasada"}
                     {n.compras.ajustes_pendientes > 0 && <> · {n.compras.ajustes_pendientes} ajustes por autorizar</>}</>} />
               )}
-              <Kpi titulo="Tus pendientes" icono={ListTodo} tono={n.pendientes.vencidos ? "peligro" : "neutro"} valor={numero(n.pendientes.vencidos)} explica={GLOSARIO.pendiente}
+              <Kpi titulo="Tus pendientes" icono={ListTodo} tono={n.pendientes.vencidos ? "peligro" : "neutro"} valor={numero(n.pendientes.vencidos)} explica={GLOSARIO.pendientesSemana}
                 detalle={<>vencidos · {n.pendientes.esta_semana} vencen esta semana · {n.pendientes.cerrados} cerrados la pasada</>} />
             </div>
           )}
@@ -172,7 +179,7 @@ export default function SemanaPagina() {
               {n.ventas && (
                 <section className="tarjeta min-w-0">
                   <div className="px-4 py-3 border-b border-borde">
-                    <h2 className="font-semibold">Quién compró más</h2>
+                    <h2 className="font-semibold" data-explain={GLOSARIO.quienComproMas} data-explain-title="Quién compró más">Quién compró más</h2>
                     <p className="text-xs text-tenue">La semana pasada{n.ventas.alcance === "tuyas" ? ", de tus clientes" : ""}</p>
                   </div>
                   {n.ventas.mejores_clientes.length === 0 ? (

@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { useTiposEquipo, type ArticuloCatalogo } from "./comun";
 import { PulirDescripcion } from "./PulirDescripcion";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
  * Nombre, tipo de equipo y descripción de un equipo o subensamble. Los componentes ya se
@@ -27,7 +28,7 @@ export function EditarDatos({ a }: { a: ArticuloCatalogo }) {
 
   return (
     <>
-      <Boton variante="secundario" onClick={() => setAbierto(true)}><Pencil className="h-4 w-4" /> Editar datos</Boton>
+      <Boton variante="secundario" onClick={() => setAbierto(true)} data-explain={GLOSARIO.botonEditarDatosFabricado} data-explain-title="Editar datos"><Pencil className="h-4 w-4" /> Editar datos</Boton>
       <Dialogo abierto={abierto} alCambiar={setAbierto} titulo={`Datos de ${a.clave}`}
         descripcion="Las cotizaciones y pedidos que ya existen conservan el nombre con el que se hicieron."
         pie={<><Boton variante="secundario" onClick={() => setAbierto(false)}>Cancelar</Boton>
@@ -36,7 +37,7 @@ export function EditarDatos({ a }: { a: ArticuloCatalogo }) {
           <Campo etiqueta="Nombre"><Entrada value={f.nombre} autoFocus onChange={(e) => setF({ ...f, nombre: e.target.value })} /></Campo>
           {a.tipo === "equipo" && (
             <Campo etiqueta="Tipo de equipo" ayuda={cambiaTipo ? "Al cambiar el tipo, el precio de lista se vuelve a calcular con la política de ese tipo." : undefined}>
-              <Seleccion value={f.categoria} onChange={(e) => setF({ ...f, categoria: e.target.value })}>
+              <Seleccion value={f.categoria} onChange={(e) => setF({ ...f, categoria: e.target.value })} data-explain={GLOSARIO.tipoEquipo} data-explain-title="Tipo de equipo">
                 <option value="">OTRO (política por defecto)</option>
                 {tipos.data?.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
               </Seleccion>
@@ -44,7 +45,8 @@ export function EditarDatos({ a }: { a: ArticuloCatalogo }) {
           )}
           <Campo etiqueta="Descripción" ayuda={a.tipo === "equipo" ? "Sale en la cotización debajo del nombre: una viñeta por renglón." : "Qué es, para qué sirve y lo que conviene saber al armarlo. Se ve en la ficha del subensamble."}>
             <div className="space-y-1">
-              <textarea className="campo min-h-24 py-2" value={f.descripcion} onChange={(e) => setF({ ...f, descripcion: e.target.value })} />
+              <textarea className="campo min-h-24 py-2" value={f.descripcion} onChange={(e) => setF({ ...f, descripcion: e.target.value })}
+                data-explain={GLOSARIO.descripcionFabricado} data-explain-title="Descripción" />
               <PulirDescripcion leer={() => f.descripcion} nombre={f.nombre || a.nombre} tipo={a.tipo} alUsar={(v) => setF((x) => ({ ...x, descripcion: v }))} />
             </div>
           </Campo>

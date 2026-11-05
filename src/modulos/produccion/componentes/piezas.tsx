@@ -5,9 +5,18 @@ import {
 import { Insignia } from "@/components/ui/insignia";
 import { cn } from "@/lib/utilidades";
 import { fecha } from "@/lib/formato";
-import type { Evento, TipoEvento } from "./datos";
+import type { EstadoOP, EstadoOperacion, Evento, TipoEvento } from "./datos";
 import { haceRato, textoDias, textoEvento, tonoCompromiso } from "./util";
 import { GLOSARIO } from "@/tutorial/glosario";
+
+/** Qué quiere decir cada estado de una orden y de una etapa, para el globo del modo tutorial. */
+export const EXPLICA_ESTADO_OP: Record<EstadoOP, string> = {
+  planeada: GLOSARIO.opPlaneada, liberada: GLOSARIO.opLiberada, en_proceso: GLOSARIO.opEnProceso,
+  terminada: GLOSARIO.opTerminada, entregada: GLOSARIO.opEntregada, cancelada: GLOSARIO.opCancelada,
+};
+export const EXPLICA_ESTADO_ETAPA: Record<EstadoOperacion, string> = {
+  pendiente: GLOSARIO.etapaPendiente, en_proceso: GLOSARIO.etapaEnProceso, pausada: GLOSARIO.etapaPausada, terminada: GLOSARIO.etapaTerminada,
+};
 
 /** Avance por horas terminadas. El número va aparte, en tinta de texto. */
 export function BarraAvance({ valor, className, grosor = "h-1.5" }: { valor: number; className?: string; grosor?: string }) {

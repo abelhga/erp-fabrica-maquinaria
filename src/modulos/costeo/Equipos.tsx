@@ -72,9 +72,9 @@ function TablaFabricados({ filas, cargando, error, tipo }: {
     { clave: "lineas_bom", titulo: "Líneas", alinear: "der", sinBusqueda: true, valor: (a) => a.lineas_bom, explica: GLOSARIO.lineasLista },
     { clave: "usado_en", titulo: "Usado en", alinear: "der", sinBusqueda: true, valor: (a) => a.usado_en, oculta: tipo === "equipo", clase: "whitespace-nowrap", explica: GLOSARIO.usadoEnListas,
       celda: (a) => a.usado_en ? <span>{a.usado_en} {a.usado_en === 1 ? "lista" : "listas"}</span> : <span className="text-tenue">en ninguna</span> },
-    { clave: "horas", titulo: "Horas", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (a) => a.horas ?? null, celda: (a) => numero(a.horas), explica: GLOSARIO.horasEtapa },
+    { clave: "horas", titulo: "Horas", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (a) => a.horas ?? null, celda: (a) => numero(a.horas), explica: GLOSARIO.horasTotalesFabricado },
     { clave: "costo_total", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (a) => a.costo_total ?? null, celda: (a) => dinero(a.costo_total), explica: GLOSARIO.costoArticulo },
-    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, oculta: !vePrecios, valor: (a) => a.precio, explica: GLOSARIO.precioLista,
+    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, oculta: !vePrecios, valor: (a) => a.precio, explica: GLOSARIO.precioListaCatalogo,
       celda: (a) => a.precio == null ? <span className="text-tenue">sin precio</span> : <span className="font-medium">{dinero(a.precio)}</span> },
     { clave: "sin_costo", titulo: "Sin costo", oculta: !costos, sinBusqueda: true, valor: (a) => a.sin_costo ?? 0, celda: (a) => <SinCosto a={a} />, explica: GLOSARIO.piezasSinCosto },
     { clave: "costo_mas_viejo", titulo: "Más viejo", oculta: !costos, sinBusqueda: true, valor: (a) => a.costo_mas_viejo ?? null, explica: GLOSARIO.costoMasViejo,
@@ -91,15 +91,16 @@ function TablaFabricados({ filas, cargando, error, tipo }: {
       filtros={
         <>
           {tipo === "equipo" && categorias.length > 1 && (
-            <Seleccion value={categoria} onChange={(e) => setCategoria(e.target.value)} className="w-auto h-8 text-xs">
+            <Seleccion value={categoria} onChange={(e) => setCategoria(e.target.value)} className="w-auto h-8 text-xs"
+              data-explain={GLOSARIO.tipoEquipo} data-explain-title="Tipo de equipo">
               <option value="">Todos los tipos</option>
               {categorias.map((c) => <option key={c}>{c}</option>)}
             </Seleccion>
           )}
           <Filtro<FiltroEq> valor={filtro} alCambiar={setFiltro} opciones={[
             { valor: "todos", texto: "Activos" },
-            ...(costos ? [{ valor: "alertas" as const, texto: "Con piezas sin costo", cuenta: activos.filter(conAlerta).length }] : []),
-            { valor: "sin_lista", texto: "Sin lista de materiales", cuenta: activos.filter((a) => !a.lineas_bom).length },
+            ...(costos ? [{ valor: "alertas" as const, texto: "Con piezas sin costo", cuenta: activos.filter(conAlerta).length, explica: GLOSARIO.piezasSinCosto }] : []),
+            { valor: "sin_lista", texto: "Sin lista de materiales", cuenta: activos.filter((a) => !a.lineas_bom).length, explica: GLOSARIO.lineasLista },
             ...(inactivos ? [{ valor: "inactivos" as const, texto: "Inhabilitados", cuenta: inactivos, explica: GLOSARIO.articuloInhabilitado }] : []),
           ]} />
         </>
@@ -141,7 +142,7 @@ function Solicitudes({ filas, cargando, error }: { filas: Solicitud[] | undefine
         </Link>
       ) },
     { clave: "descripcion", titulo: "Qué hay que corregir", clase: "min-w-[280px] max-w-[420px] whitespace-normal" },
-    { clave: "orden", titulo: "Orden", clase: "whitespace-nowrap", valor: (s) => s.orden?.folio, celda: (s) => s.orden
+    { clave: "orden", titulo: "Orden", clase: "whitespace-nowrap", valor: (s) => s.orden?.folio, explica: GLOSARIO.ordenProduccion, celda: (s) => s.orden
       ? <Link to={`/produccion/ordenes/${s.orden.id}`} onClick={(e) => e.stopPropagation()} className="text-marca-texto hover:underline cifra">{s.orden.folio}</Link>
       : <span className="text-tenue">—</span> },
     { clave: "solicitante", titulo: "Pidió", clase: "whitespace-nowrap text-tenue", valor: (s) => s.solicitante?.nombre },
@@ -151,15 +152,15 @@ function Solicitudes({ filas, cargando, error }: { filas: Solicitud[] | undefine
             <div className="flex justify-end gap-1">
               <Boton tamano="sm" variante="secundario" onClick={(e) => { e.stopPropagation(); if (s.articulo) ir(rutaArticulo(s.articulo) + "?pestana=lista"); }}>Abrir lista</Boton>
               <Boton tamano="sm" variante="exito" title="Ya lo corregí en la lista de materiales" cargando={resolver.isPending && resolver.variables?.id === s.id}
-                onClick={(e) => { e.stopPropagation(); resolver.mutate({ id: s.id, estado: "aplicada" }); }}><Check className="h-3.5 w-3.5" /> Marcar aplicada</Boton>
+                data-explain={GLOSARIO.botonMarcarAplicada} data-explain-title="Marcar aplicada" onClick={(e) => { e.stopPropagation(); resolver.mutate({ id: s.id, estado: "aplicada" }); }}><Check className="h-3.5 w-3.5" /> Marcar aplicada</Boton>
               <Boton tamano="sm" variante="fantasma" title="Descartar: no procede" aria-label="Descartar"
-                onClick={(e) => { e.stopPropagation(); resolver.mutate({ id: s.id, estado: "descartada" }); }}><X className="h-3.5 w-3.5" /></Boton>
+                data-explain={GLOSARIO.botonDescartarSolicitud} data-explain-title="Descartar" onClick={(e) => { e.stopPropagation(); resolver.mutate({ id: s.id, estado: "descartada" }); }}><X className="h-3.5 w-3.5" /></Boton>
             </div>
           ) }
-      : { clave: "estado", titulo: "Resultado", clase: "whitespace-nowrap", valor: (s) => s.estado,
+      : { clave: "estado", titulo: "Resultado", clase: "whitespace-nowrap", valor: (s) => s.estado, explica: GLOSARIO.estadoSolicitudCambio,
           celda: (s) => (
             <span className="inline-flex items-center gap-2">
-              <Insignia tono={s.estado === "aplicada" ? "ok" : "neutro"}>{s.estado}</Insignia>
+              <span data-explain={GLOSARIO.estadoSolicitudCambio}><Insignia tono={s.estado === "aplicada" ? "ok" : "neutro"}>{s.estado}</Insignia></span>
               <span className="text-xs text-tenue">{s.resolvio?.nombre} · {fecha(s.resuelto_en)}</span>
             </span>
           ) },
@@ -170,8 +171,8 @@ function Solicitudes({ filas, cargando, error }: { filas: Solicitud[] | undefine
       filas={visibles} columnas={columnas} cargando={cargando} error={error} claveFila={(s) => s.id}
       placeholder="Buscar en las solicitudes…" exportarComo="solicitudes-cambio"
       filtros={<Filtro valor={vista} alCambiar={setVista} opciones={[
-        { valor: "pendiente", texto: "Pendientes", cuenta: (filas ?? []).filter((s) => s.estado === "pendiente").length },
-        { valor: "resueltas", texto: "Resueltas" },
+        { valor: "pendiente", texto: "Pendientes", cuenta: (filas ?? []).filter((s) => s.estado === "pendiente").length, explica: GLOSARIO.solicitudCambio },
+        { valor: "resueltas", texto: "Resueltas", explica: GLOSARIO.estadoSolicitudCambio },
       ]} />}
       vacio={{ icono: ClipboardList, titulo: vista === "pendiente" ? "Sin correcciones pendientes" : "Todavía no hay solicitudes resueltas",
         texto: "Cuando en piso algo no cuadra con la lista de materiales («los rodillos son de 14\"»), producción lo manda desde la orden y aparece aquí." }}
@@ -200,7 +201,7 @@ function AvisoSugerencias() {
     <div className="mb-3 rounded-xl border border-info/25 bg-info-suave px-4 py-3 text-sm flex flex-wrap items-center gap-3">
       <Lightbulb className="h-4 w-4 text-info shrink-0" />
       <span className="flex-1 min-w-[260px]">
-        <b>{sug.data} {sug.data === 1 ? "grupo de piezas se repite" : "grupos de piezas se repiten"} igual en varios equipos</b> y podrían ser subensambles
+        <b data-explain={GLOSARIO.subensambleSugerido} data-explain-title="Subensambles sugeridos">{sug.data} {sug.data === 1 ? "grupo de piezas se repite" : "grupos de piezas se repiten"} igual en varios equipos</b> y podrían ser subensambles
         (los encontró la importación de Nuevo Costeo).
       </span>
       {puede("admin", 3)
@@ -241,14 +242,14 @@ export default function Equipos() {
       acciones={puede("costeo", 2) && (
         <>
           <BotonReemplazarComponente />
-          <Boton variante="secundario" onClick={() => setNuevo("subensamble")}><Plus className="h-4 w-4" /> Nuevo subensamble</Boton>
-          <Boton onClick={() => setNuevo("equipo")}><Plus className="h-4 w-4" /> Nuevo equipo</Boton>
+          <Boton variante="secundario" onClick={() => setNuevo("subensamble")} data-explain={GLOSARIO.botonNuevoSubensamble}><Plus className="h-4 w-4" /> Nuevo subensamble</Boton>
+          <Boton onClick={() => setNuevo("equipo")} data-explain={GLOSARIO.botonNuevoEquipo}><Plus className="h-4 w-4" /> Nuevo equipo</Boton>
         </>
       )}
     >
       <Pestanas value={vista} onValueChange={(v) => setParams(v === "equipos" ? {} : { vista: v }, { replace: true })}>
         <ListaPestanas opciones={[
-          { valor: "equipos", texto: "Equipos", cuenta: cuenta(equipos) },
+          { valor: "equipos", texto: "Equipos", cuenta: cuenta(equipos), explica: GLOSARIO.equipoFabricado },
           { valor: "subensambles", texto: "Subensambles", cuenta: cuenta(subensambles), explica: GLOSARIO.subensamble },
           ...(verSolicitudes ? [{ valor: "solicitudes", texto: "Solicitudes de cambio", cuenta: pendientes || undefined, explica: GLOSARIO.solicitudCambio }] : []),
         ]} />

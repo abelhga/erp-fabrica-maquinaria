@@ -138,6 +138,11 @@
 :root[data-tutorial="true"] [data-explain] { cursor: help; }
 :root[data-tutorial="true"] :is(a, button, [role="tab"])[data-explain] { cursor: pointer; }
 :root[data-tutorial="true"] [data-explain]:hover { outline: 1px dashed hsl(var(--info) / 0.75); outline-offset: 2px; }
+/* En el celular no hay mouse: se toca para ver la explicación. Sin esto, dejar el dedo encima
+   seleccionaba el texto y salía el menú de copiar encima del globo. */
+@media (hover: none) {
+  :root[data-tutorial="true"] [data-explain] { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+}
 :root[data-tutorial="true"] :is(th[data-explain] > span, h3[data-explain], [data-explain] .titulo-explicable, [role="tab"][data-explain])::after {
   content: "?"; display: inline-grid; place-items: center; width: 14px; height: 14px; margin-left: 6px; vertical-align: 1px;
   border-radius: 9999px; border: 1px solid hsl(var(--info)); color: hsl(var(--info));

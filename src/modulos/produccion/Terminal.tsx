@@ -18,7 +18,8 @@ import { AvanceEtapa } from "./componentes/AvanceEtapa";
 import { DialogoIdea } from "./componentes/mejoras";
 import { useSesion } from "@/lib/sesion";
 import { GLOSARIO } from "@/tutorial/glosario";
-import { Explicacion } from "@/tutorial/Explicacion";
+import { AyudaDePantalla } from "@/tutorial/Explicacion";
+import { CapaExplicacion } from "@/tutorial/CapaExplicacion";
 import { PANTALLAS } from "@/tutorial/pantallas";
 
 // La tablet se queda en su estación: etapa y nombres se recuerdan en el aparato.
@@ -35,6 +36,10 @@ const ACCIONES: Record<Accion, { texto: string; verbo: string; hecho: string; ic
   reanudar: { texto: "Reanudar", verbo: "Reanudar", hecho: "reanudada", icono: PlayCircle, clase: "bg-ok text-white" },
   fin: { texto: "Terminar", verbo: "Terminar", hecho: "terminada", icono: CheckCircle2, clase: "bg-marca text-white" },
   problema: { texto: "Problema", verbo: "Reportar problema en", hecho: "con problema reportado", icono: AlertTriangle, clase: "bg-superficie text-peligro border-2 border-peligro/50" },
+};
+const EXPLICA: Record<Accion, string> = {
+  inicio: GLOSARIO.botonIniciarEtapa, pausa: GLOSARIO.botonPausarEtapa, reanudar: GLOSARIO.botonReanudarEtapa,
+  fin: GLOSARIO.botonTerminarEtapa, problema: GLOSARIO.botonProblemaEtapa,
 };
 
 
@@ -121,24 +126,26 @@ export default function Terminal() {
         <span className="hidden lg:inline text-tenue">Terminal de piso</span>
         <div className="ml-auto flex items-center gap-2 min-w-0">
           {/* Una idea de mejora se propone aquí mismo, con el nombre de quien está en la tablet. */}
-          <button onClick={() => setIdea(true)} aria-label="Tengo una idea de mejora"
+          <button onClick={() => setIdea(true)} aria-label="Tengo una idea de mejora" data-explain={GLOSARIO.botonProponerIdea} data-explain-title="Tengo una idea"
                   className="h-12 rounded-xl px-3 sm:px-4 flex items-center gap-2 border-2 border-marca/50 bg-superficie text-marca-texto font-semibold shrink-0">
             <Lightbulb className="h-6 w-6 shrink-0" /><span className="hidden sm:inline">Tengo una idea</span>
           </button>
           {/* Una máquina descompuesta se reporta desde aquí mismo, con foto (antes: foto al chat). */}
           {puede("mantenimiento", 2) && (
             <Link to={`/servicio/reportar?volver=/produccion/terminal${etapaId ? `&etapa=${etapaId}` : ""}`}
-                  className="h-12 rounded-xl px-3 sm:px-4 flex items-center gap-2 border-2 border-peligro/60 bg-superficie text-peligro font-semibold shrink-0" aria-label="Reportar falla de una máquina">
+                  className="h-12 rounded-xl px-3 sm:px-4 flex items-center gap-2 border-2 border-peligro/60 bg-superficie text-peligro font-semibold shrink-0" aria-label="Reportar falla de una máquina"
+                  data-explain={GLOSARIO.botonReportarFallaTerminal} data-explain-title="Reportar falla">
               <AlertTriangle className="h-6 w-6 shrink-0" /><span className="hidden sm:inline">Reportar falla</span>
             </Link>
           )}
           {etapa && (
             <button onClick={() => elegirEtapa(null)} className="h-12 rounded-xl px-3 sm:px-4 flex items-center gap-2 font-semibold min-w-0"
-                    style={{ background: etapa.color, color: tintaSobre(etapa.color) }} aria-label="Cambiar de etapa">
+                    style={{ background: etapa.color, color: tintaSobre(etapa.color) }} aria-label="Cambiar de etapa"
+                    data-explain={GLOSARIO.botonCambiarEtapaTerminal} data-explain-title="Cambiar de etapa">
               <span className="truncate">{etapa.nombre}</span><ChevronDown className="h-5 w-5 shrink-0" />
             </button>
           )}
-          <button onClick={() => setEligiendoNombre(true)}
+          <button onClick={() => setEligiendoNombre(true)} data-explain={GLOSARIO.quienMarcaTerminal} data-explain-title="¿Quién trabaja?"
                   className={cn("h-12 rounded-xl px-3 sm:px-4 flex items-center gap-2 border-2 min-w-0", nombre ? "border-borde bg-superficie" : "border-aviso bg-aviso-suave text-aviso")}>
             <HardHat className="h-6 w-6 shrink-0" />
             <span className="truncate max-w-[9rem] sm:max-w-[14rem]">{nombre || "¿Quién trabaja?"}</span>
@@ -152,12 +159,13 @@ export default function Terminal() {
           <ElegirEtapa etapas={etapas.data ?? []} cargando={etapas.isLoading} piso={todas} alElegir={elegirEtapa} />
         ) : (
           <div className="max-w-5xl mx-auto p-3 sm:p-5 space-y-6">
-            <Explicacion className="text-base">{PANTALLAS["/produccion/terminal"].map((t) => <p key={t}>{t}</p>)}</Explicacion>
+            <AyudaDePantalla className="text-base" ayuda={PANTALLAS["/produccion/terminal"]} ruta="/produccion/terminal" />
             <div className="flex items-center gap-3">
               <span className="h-10 w-2.5 rounded-full" style={{ background: etapa.color }} />
               <h1 className="text-3xl font-bold">{etapa.nombre}</h1>
               <span className="text-tenue">{deEtapa.length} {deEtapa.length === 1 ? "orden" : "órdenes"}</span>
-              <button onClick={() => elegirEtapa(null)} className="ml-auto h-12 px-4 rounded-xl border border-borde bg-superficie flex items-center gap-2">
+              <button onClick={() => elegirEtapa(null)} className="ml-auto h-12 px-4 rounded-xl border border-borde bg-superficie flex items-center gap-2"
+                      data-explain={GLOSARIO.botonCambiarEtapaTerminal} data-explain-title="Otra etapa">
                 <LayoutGrid className="h-5 w-5" /><span className="hidden sm:inline">Otra etapa</span>
               </button>
             </div>
@@ -181,9 +189,9 @@ export default function Terminal() {
               </div>
             ) : (
               <>
-                <Seccion titulo={fuera ? "Iniciadas (fuera de horario)" : "Trabajando ahora"} lista={trabajando} pedir={pedir} ahora={ahora} />
-                <Seccion titulo="Listas para empezar" lista={listas} pedir={pedir} ahora={ahora} />
-                <Seccion titulo="Todavía en otra etapa" ayuda="Se pueden empezar si hace falta" lista={despues} pedir={pedir} ahora={ahora} tenue />
+                <Seccion titulo={fuera ? "Iniciadas (fuera de horario)" : "Trabajando ahora"} explica={GLOSARIO.terminalTrabajandoAhora} lista={trabajando} pedir={pedir} ahora={ahora} />
+                <Seccion titulo="Listas para empezar" explica={GLOSARIO.terminalListasParaEmpezar} lista={listas} pedir={pedir} ahora={ahora} />
+                <Seccion titulo="Todavía en otra etapa" explica={GLOSARIO.terminalEnOtraEtapa} ayuda="Se pueden empezar si hace falta" lista={despues} pedir={pedir} ahora={ahora} tenue />
               </>
             )}
           </div>
@@ -211,6 +219,9 @@ export default function Terminal() {
           )}
         </div>
       )}
+      {/* La terminal vive fuera del marco del ERP, donde se monta la capa de los globos: sin esta,
+          con el modo tutorial encendido se marcaba lo explicable pero nada se explicaba. */}
+      <CapaExplicacion />
     </div>
   );
 }
@@ -228,6 +239,7 @@ function ElegirEtapa({ etapas, cargando, piso, alElegir }: { etapas: Etapa[]; ca
             const listas = de.filter((o) => o.estado === "pendiente" && o.lista).length;
             return (
               <button key={e.id} onClick={() => alElegir(e.id)} className="min-h-[7.5rem] rounded-2xl p-5 text-left shadow-sm active:scale-[0.98] transition"
+                      data-explain={GLOSARIO.elegirEtapaTerminal} data-explain-title={e.nombre}
                       style={{ background: e.color, color: tintaSobre(e.color) }}>
                 <span className="block text-3xl font-bold">{e.nombre}</span>
                 <span className="block mt-2 text-lg opacity-95">
@@ -244,13 +256,13 @@ function ElegirEtapa({ etapas, cargando, piso, alElegir }: { etapas: Etapa[]; ca
   );
 }
 
-function Seccion({ titulo, ayuda, lista, pedir, ahora, tenue }: {
-  titulo: string; ayuda?: string; lista: OperacionPiso[]; pedir: (o: OperacionPiso, a: Accion) => void; ahora: number; tenue?: boolean;
+function Seccion({ titulo, ayuda, explica, lista, pedir, ahora, tenue }: {
+  titulo: string; ayuda?: string; explica?: string; lista: OperacionPiso[]; pedir: (o: OperacionPiso, a: Accion) => void; ahora: number; tenue?: boolean;
 }) {
   if (lista.length === 0) return null;
   return (
     <section className="space-y-3">
-      <h2 className="text-xl font-semibold">{titulo} <span className="text-tenue font-normal">{lista.length}</span>
+      <h2 className="text-xl font-semibold" data-explain={explica} data-explain-title={explica ? titulo : undefined}>{titulo} <span className="text-tenue font-normal">{lista.length}</span>
         {ayuda && <span className="block text-base font-normal text-tenue">{ayuda}</span>}</h2>
       {lista.map((o) => <TarjetaPiso key={o.id} o={o} pedir={pedir} ahora={ahora} tenue={tenue} />)}
     </section>
@@ -270,32 +282,33 @@ function TarjetaPiso({ o, pedir, ahora, tenue }: { o: OperacionPiso; pedir: (o: 
         </div>
         <div className="text-right">
           <span className={cn("inline-block rounded-xl px-3 py-1 text-lg font-semibold",
-            tono === "peligro" ? "bg-peligro text-white" : tono === "aviso" ? "bg-aviso text-white" : "bg-ok-suave text-ok")}>
+            tono === "peligro" ? "bg-peligro text-white" : tono === "aviso" ? "bg-aviso text-white" : "bg-ok-suave text-ok")}
+            data-explain={GLOSARIO.fechaCompromiso} data-explain-title="Fecha compromiso">
             {textoDias(o.dias_restantes)}
           </span>
           <p className="text-lg text-tenue mt-1 cifra">{fecha(o.fecha_compromiso)}</p>
-          {o.prioridad === 1 && <p className="text-lg font-semibold text-peligro">Urgente</p>}
+          {o.prioridad === 1 && <p className="text-lg font-semibold text-peligro" data-explain={GLOSARIO.prioridadOrden} data-explain-title="Urgente">Urgente</p>}
         </div>
       </div>
 
       <div className="text-lg space-y-1">
         {o.estado === "en_proceso" && <p className="font-medium text-marca-texto">● En proceso{o.inicio && ` · empezó ${haceRato(o.inicio, ahora)}`}</p>}
         {o.estado === "en_proceso" && <CuadrillaEnEtapa o={o} ahora={ahora} />}
-        {o.estado === "pausada" && <p className="font-semibold text-aviso">❚❚ Pausada{o.responsable && ` · ${o.responsable}`}</p>}
+        {o.estado === "pausada" && <p className="font-semibold text-aviso" data-explain={GLOSARIO.etapaPausada} data-explain-title="Pausada">❚❚ Pausada{o.responsable && ` · ${o.responsable}`}</p>}
         {o.estado !== "en_proceso" && <LeToca o={o} />}
         {(o.estado === "en_proceso" || o.estado === "pausada") && <AvanceEtapa operacion={o.id} avance={o.avance_etapa} grande />}
         {o.estado === "pendiente" && (o.lista ? <p className="text-ok font-medium">Lista para empezar</p> : <p className="text-tenue">Todavía en {o.espera_a}</p>)}
         {o.ultimo_problema && o.estado !== "pendiente" && (
           <p className="text-peligro flex gap-2"><AlertTriangle className="h-6 w-6 shrink-0" /><span>{o.ultimo_problema} <span className="text-tenue">({haceRato(o.ultimo_problema_en, ahora)})</span></span></p>
         )}
-        {o.materiales_faltantes > 0 && <p className="text-aviso flex gap-2"><PackageX className="h-6 w-6 shrink-0" />{o.materiales_faltantes} material{o.materiales_faltantes === 1 ? "" : "es"} con faltante</p>}
+        {o.materiales_faltantes > 0 && <p className="text-aviso flex gap-2" data-explain={GLOSARIO.faltanteMaterial} data-explain-title="Material con faltante"><PackageX className="h-6 w-6 shrink-0" />{o.materiales_faltantes} material{o.materiales_faltantes === 1 ? "" : "es"} con faltante</p>}
       </div>
 
       <div className={cn("grid gap-2", botones.length === 3 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2")}>
         {botones.map((a, i) => {
           const A = ACCIONES[a];
           return (
-            <button key={a} onClick={() => pedir(o, a)}
+            <button key={a} onClick={() => pedir(o, a)} data-explain={EXPLICA[a]} data-explain-title={A.texto}
                     className={cn("min-h-[64px] rounded-xl px-4 text-xl font-bold flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition",
                       A.clase, botones.length === 3 && i === 2 && "col-span-2 sm:col-span-1")}>
               <A.icono className="h-7 w-7" />{A.texto}
@@ -393,7 +406,8 @@ function Confirmar({ p, nombre, cargando, alConfirmar, alCancelar, alCambiarNomb
       </div>
       <p className="mb-4 flex flex-wrap items-center gap-2">
         <HardHat className="h-6 w-6 text-tenue" />Lo marca <b>{nombre}</b>
-        <button onClick={alCambiarNombre} className="text-marca-texto underline underline-offset-4 min-h-[44px] px-1">No soy yo</button>
+        <button onClick={alCambiarNombre} className="text-marca-texto underline underline-offset-4 min-h-[44px] px-1"
+                data-explain={GLOSARIO.quienMarcaTerminal} data-explain-title="No soy yo">No soy yo</button>
       </p>
       {conCuadrilla && (
         <div className="mb-5" data-explain={GLOSARIO.cuadrillaEtapa} data-explain-title="Cuadrilla">
@@ -450,7 +464,7 @@ function ElegirPersonas({ etapaId, personal, cargando, valor, alCambiar, uno }: 
       {!todos && deEtapa.length > 0 && deEtapa.length < personal.length && (
         <button type="button" onClick={() => setTodos(true)} className="text-marca-texto underline underline-offset-4 min-h-[44px]">Ver a todo el personal</button>
       )}
-      <div className="flex items-center gap-3 rounded-xl border-2 border-dashed border-borde px-3 py-2">
+      <div className="flex items-center gap-3 rounded-xl border-2 border-dashed border-borde px-3 py-2" data-explain={GLOSARIO.sinNombreCuadrilla} data-explain-title="Sin nombre">
         <span className="flex-1">Sin nombre <span className="text-tenue text-base">(ayudante de paso)</span></span>
         {!uno && <button type="button" aria-label="Uno menos sin nombre" disabled={valor.sinNombre === 0} onClick={() => alCambiar({ ...valor, sinNombre: valor.sinNombre - 1 })}
                 className="h-12 w-12 rounded-xl border-2 border-borde flex items-center justify-center disabled:opacity-40"><Minus className="h-6 w-6" /></button>}
@@ -498,10 +512,12 @@ function CuadrillaEnEtapa({ o, ahora }: { o: OperacionPiso; ahora: number }) {
           <span key={t.tiempo_id} className="inline-flex items-center gap-2 rounded-xl bg-fondo border border-borde pl-3 pr-1 py-1">
             <span>{t.nombre} <span className="text-tenue text-base">· {haceRato(t.inicio, ahora)}</span></span>
             <button type="button" onClick={() => salir.mutate(t.tiempo_id)} disabled={salir.isPending} aria-label={`${t.nombre} sale`}
+                    data-explain={GLOSARIO.botonSaleDeEtapa} data-explain-title={`${t.nombre} sale`}
                     className="h-10 rounded-lg px-2 flex items-center gap-1 text-base text-tenue hover:text-texto"><LogOut className="h-5 w-5" />Sale</button>
           </span>
         ))}
-        <button type="button" onClick={() => setUniendo(true)} className="h-12 rounded-xl border-2 border-borde px-3 flex items-center gap-2 font-medium">
+        <button type="button" onClick={() => setUniendo(true)} className="h-12 rounded-xl border-2 border-borde px-3 flex items-center gap-2 font-medium"
+                data-explain={GLOSARIO.botonSeUneAEtapa} data-explain-title="Se une">
           <UserPlus className="h-6 w-6" />Se une
         </button>
       </div>

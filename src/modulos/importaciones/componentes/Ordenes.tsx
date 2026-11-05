@@ -11,6 +11,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, numero } from "@/lib/formato";
 import { InsigniaOC, type EstadoOC } from "@/modulos/compras/componentes/comun";
 import { CLAVE_EMBARQUES, type Embarque } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface OCLibre { id: string; folio: string; proveedor: string; estado: EstadoOC; moneda: string; total: number | null; es_importacion: boolean; fecha: string }
 
@@ -43,7 +44,7 @@ export function Ordenes({ e }: { e: Embarque }) {
 
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Órdenes de compra" descripcion={pideVolumen
+      <EncabezadoTarjeta titulo="Órdenes de compra" explica={GLOSARIO.ordenesEmbarque} descripcion={pideVolumen
         ? "En un consolidado la logística se reparte por volumen: anota el que da el forwarder por proveedor (m³ o su %)."
         : "La orden con sus partidas es la base del costeo y del tope de pagos."} />
       {e.ordenes.length === 0 ? (
@@ -55,18 +56,18 @@ export function Ordenes({ e }: { e: Embarque }) {
               <div className="min-w-[200px] flex-1">
                 <p className="text-sm font-medium flex flex-wrap items-center gap-2">
                   <Link to={`/compras/ordenes/${o.id}`} className="hover:underline">{o.folio}</Link>
-                  <InsigniaOC estado={o.estado as EstadoOC} />
+                  <span data-explain={GLOSARIO.estadoOrdenCompra} data-explain-title="Estado de la orden"><InsigniaOC estado={o.estado as EstadoOC} /></span>
                 </p>
                 <p className="text-xs text-tenue">{o.proveedor} · {o.moneda} · {fecha(o.fecha)}</p>
               </div>
-              <label className="text-xs text-tenue flex items-center gap-2">Factura
+              <label className="text-xs text-tenue flex items-center gap-2" data-explain={GLOSARIO.facturaProveedorEmbarque} data-explain-title="Factura">Factura
                 {captura ? <input className="campo h-8 w-36" defaultValue={o.factura ?? ""} key={o.factura ?? ""} placeholder="CI del proveedor"
                   onBlur={(ev) => ev.target.value.trim() !== (o.factura ?? "") && cambiar.mutate({ oc: o.id, cambios: { factura: ev.target.value.trim() || null } })}
                   onKeyDown={(ev) => ev.key === "Enter" && (ev.target as HTMLInputElement).blur()} />
                   : <span className="text-texto">{o.factura ?? "—"}</span>}
               </label>
               {pideVolumen && (
-                <label className="text-xs text-tenue flex items-center gap-2">Volumen
+                <label className="text-xs text-tenue flex items-center gap-2" data-explain={GLOSARIO.volumenOrdenConsolidado} data-explain-title="Volumen">Volumen
                   {captura ? <input className="campo h-8 w-24 text-right cifra" inputMode="decimal" defaultValue={o.volumen_m3 ?? ""} key={String(o.volumen_m3)}
                     onBlur={(ev) => { const v = ev.target.value.trim() === "" ? null : Number(ev.target.value); if (v !== o.volumen_m3 && (v === null || !Number.isNaN(v))) cambiar.mutate({ oc: o.id, cambios: { volumen_m3: v } }); }}
                     onKeyDown={(ev) => ev.key === "Enter" && (ev.target as HTMLInputElement).blur()} />
@@ -75,11 +76,12 @@ export function Ordenes({ e }: { e: Embarque }) {
               )}
               <div className="flex items-center gap-1 ml-auto">
                 {puede("compras", 2) && (
-                  <Boton asChild variante="secundario" tamano="sm">
+                  <Boton asChild variante="secundario" tamano="sm" data-explain={GLOSARIO.ocContratoAduana}>
                     <Link to={`/importaciones/oc/${o.id}/imprimir`} target="_blank"><Printer className="h-3.5 w-3.5" /> OC y contrato</Link>
                   </Boton>
                 )}
-                {captura && <Boton variante="fantasma" tamano="sm" onClick={() => quitar.mutate(o.id)} title="Quitar del embarque"><Unlink className="h-3.5 w-3.5" /></Boton>}
+                {captura && <Boton variante="fantasma" tamano="sm" onClick={() => quitar.mutate(o.id)} title="Quitar del embarque"
+                  data-explain={GLOSARIO.botonQuitarOrdenEmbarque} data-explain-title="Quitar del embarque"><Unlink className="h-3.5 w-3.5" /></Boton>}
               </div>
             </li>
           ))}
@@ -88,14 +90,15 @@ export function Ordenes({ e }: { e: Embarque }) {
       {captura && (
         <div className="border-t border-borde px-5 py-3 flex flex-wrap items-center gap-2">
           <Link2 className="h-4 w-4 text-tenue" />
-          <select className="campo h-9 max-w-md flex-1" value={elegida} onChange={(ev) => setElegida(ev.target.value)} aria-label="Orden de compra a ligar">
+          <select className="campo h-9 max-w-md flex-1" value={elegida} onChange={(ev) => setElegida(ev.target.value)} aria-label="Orden de compra a ligar"
+            data-explain={GLOSARIO.ligarOrdenEmbarque} data-explain-title="Ligar una orden de compra">
             <option value="">Ligar una orden de compra…</option>
             {opciones.map((o) => (
               <option key={o.id} value={o.id}>{o.folio} · {o.proveedor} · {o.total != null ? dinero(o.total, o.moneda === "USD" ? "USD" : "MXN") : o.moneda}{o.estado === "borrador" ? " (borrador)" : ""}</option>
             ))}
           </select>
           <Boton variante="secundario" disabled={!elegida} cargando={ligar.isPending} onClick={() => ligar.mutate(elegida)}>Ligar</Boton>
-          <Boton asChild variante="fantasma"><Link to="/compras/ordenes/nueva">Nueva orden</Link></Boton>
+          <Boton asChild variante="fantasma" data-explain={GLOSARIO.botonNuevaOrdenCompra}><Link to="/compras/ordenes/nueva">Nueva orden</Link></Boton>
         </div>
       )}
     </Tarjeta>

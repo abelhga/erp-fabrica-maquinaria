@@ -143,7 +143,7 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
             {minutos > 0 && <>Si te equivocaste en una salida o un traspaso, tienes {minutos} minutos para{" "}
               <span data-explain={GLOSARIO.deshacerMovimiento} data-explain-title="Deshacer">deshacerlo aquí abajo</span>, con el motivo. Después (o si no lo registraste tú), </>}
             {minutos > 0 ? "no" : "Si te equivocaste, no"} lo vuelvas a capturar al revés:{" "}
-            <button className="underline font-medium text-marca-texto" onClick={irAAjustes}>pide un ajuste</button> y lo autoriza otra persona.
+            <button className="underline font-medium text-marca-texto" onClick={irAAjustes} data-explain={GLOSARIO.ajusteInventario} data-explain-title="Ajuste">pide un ajuste</button> y lo autoriza otra persona.
           </p>
         </div>
 
@@ -154,7 +154,7 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
                 ["salida", "Salida", ArrowUpFromLine], ["devolucion", "Devolución", ArrowDownToLine], ["traspaso", "Traspaso", ArrowLeftRight],
               ] as const).map(([v, t, I]) => (
                 <button key={v} type="button" role="radio" aria-checked={modo === v} onClick={() => { setModo(v); setMotivo(""); }}
-                  data-explain={v === "traspaso" ? GLOSARIO.traspaso : v === "devolucion" ? GLOSARIO.devolucionAlmacen : undefined}
+                  data-explain={v === "traspaso" ? GLOSARIO.traspaso : v === "devolucion" ? GLOSARIO.devolucionAlmacen : GLOSARIO.salidaManualAlmacen} data-explain-title={t}
                   className={cn("h-10 rounded-md text-sm font-medium inline-flex items-center justify-center gap-1.5 transition",
                     modo === v ? "bg-superficie shadow-sm text-marca-texto" : "text-tenue hover:text-texto")}>
                   <I className="h-4 w-4" />{t}
@@ -166,7 +166,7 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
               <div className="flex gap-2">
                 {([["salida_consumo", "Consumo (taller, EPP, plasma…)"], ["salida_venta", "Venta (mostrador, ML)"]] as const).map(([v, t]) => (
                   <button key={v} type="button" onClick={() => { setTipoSalida(v); setMotivo(""); }}
-                    data-explain={v === "salida_consumo" ? GLOSARIO.salidaConsumo : undefined}
+                    data-explain={v === "salida_consumo" ? GLOSARIO.salidaConsumo : GLOSARIO.salidaVentaAlmacen}
                     className={cn("flex-1 rounded-lg border px-3 py-2 text-sm text-left transition",
                       tipoSalida === v ? "border-marca bg-marca-suave text-marca-texto font-medium" : "border-borde text-tenue hover:text-texto")}>
                     {t}
@@ -195,7 +195,7 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
 
             {articulo && (
               <div className="space-y-1.5">
-                <span className="text-sm font-medium">{modo === "devolucion" ? "Regresa a" : modo === "traspaso" ? "Sale de" : "Sale de"}</span>
+                <span className="text-sm font-medium" data-explain={GLOSARIO.almacenOrigenMovimiento}>{modo === "devolucion" ? "Regresa a" : modo === "traspaso" ? "Sale de" : "Sale de"}</span>
                 <div className="flex flex-wrap gap-1.5">
                   {(almacenes.data ?? []).map((a) => {
                     const hay = hayEn(a.id);
@@ -215,7 +215,7 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
 
             {articulo && modo === "traspaso" && (
               <div className="space-y-1.5">
-                <span className="text-sm font-medium">Entra a</span>
+                <span className="text-sm font-medium" data-explain={GLOSARIO.traspaso} data-explain-title="Entra a">Entra a</span>
                 <div className="flex flex-wrap gap-1.5">
                   {(almacenes.data ?? []).filter((a) => a.id !== almacen).map((a) => (
                     <button key={a.id} type="button" onClick={() => setDestino(a.id)}
@@ -237,13 +237,13 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
                   placeholder="0" aria-label="Cantidad" />
               </label>
               <label className="space-y-1.5 min-w-0">
-                <span className="text-sm font-medium">{modo === "salida" ? "Para qué o para quién" : "Motivo"}</span>
+                <span className="text-sm font-medium" data-explain={GLOSARIO.motivoMovimientoAlmacen}>{modo === "salida" ? "Para qué o para quién" : "Motivo"}</span>
                 <input ref={refMotivo} className="campo h-11" value={motivo} onChange={(e) => setMotivo(e.target.value)}
                   placeholder={modo === "salida" ? (tipoSalida === "salida_venta" ? "Venta mostrador · cliente" : "Taller, EPP, plasma…") : "Obligatorio"} />
               </label>
             </div>
             {pideRecibe && (
-              <label className="block space-y-1.5" data-explain={GLOSARIO.quienRecibe} data-explain-title="¿Quién lo recibe?">
+              <label className="block space-y-1.5" data-explain={GLOSARIO.quienRecibioMaterialAlmacen} data-explain-title="¿Quién lo recibe?">
                 <span className="text-sm font-medium">¿Quién lo recibe?</span>
                 <input className="campo h-11" list="recibe-consumo" value={recibe} onChange={(e) => setRecibe(e.target.value)} placeholder="Escribe o elige un nombre" />
                 <datalist id="recibe-consumo">{(personal.data ?? []).map((p) => <option key={p.id} value={p.nombre} />)}</datalist>
@@ -272,7 +272,7 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
 
       <Tarjeta className="overflow-hidden">
         <div className="px-4 pt-4 pb-2 flex items-baseline justify-between">
-          <h3 className="font-semibold">Lo que registraste hoy</h3>
+          <h3 className="font-semibold" data-explain={GLOSARIO.registradoHoyAlmacen} data-explain-title="Lo que registraste hoy">Lo que registraste hoy</h3>
           <span className="text-xs text-tenue cifra">{mios.data?.length ?? 0}</span>
         </div>
         {(mios.data?.length ?? 0) === 0 ? (

@@ -60,7 +60,7 @@ export function CargaSemanal({ semanas = 6, className }: { semanas?: number; cla
                     <td className="py-1 pr-3 whitespace-nowrap">
                       <span className="inline-flex items-center gap-2">
                         <span className="h-2.5 w-2.5 rounded-full" style={{ background: e.color }} />{e.etapa}
-                        <span className="text-[11px] text-tenue cifra">{horas(e.capacidad)}/sem</span>
+                        <span className="text-[11px] text-tenue cifra" data-explain={GLOSARIO.capacidadEtapa} data-explain-title="Capacidad por semana">{horas(e.capacidad)}/sem</span>
                       </span>
                     </td>
                     {semanasLista.map((s) => {

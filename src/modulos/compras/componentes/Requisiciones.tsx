@@ -87,12 +87,13 @@ export function Requisiciones() {
         <div className="sticky top-2 z-20 tarjeta shadow-lg px-4 py-3 flex flex-wrap items-center gap-3 border-marca/40">
           <p className="text-sm">
             <b className="cifra">{sel.size}</b> partida(s) · {new Set(elegidas.map((l) => l.proveedor_id ?? "—")).size} proveedor(es)
-            {verCostos && <> · <span className="cifra">{dinero(elegidas.reduce((s, l) => s + importe(l), 0))}</span> aprox.</>}
-            {sinProv.length > 0 && <span className="text-aviso"> · {sinProv.length} sin proveedor</span>}
+            {verCostos && <> · <span data-explain={GLOSARIO.importeAproxRequisicion} data-explain-title="Importe aproximado"><span className="cifra">{dinero(elegidas.reduce((s, l) => s + importe(l), 0))}</span> aprox.</span></>}
+            {sinProv.length > 0 && <span className="text-aviso" data-explain={GLOSARIO.sinProveedorRequisicion} data-explain-title="Sin proveedor"> · {sinProv.length} sin proveedor</span>}
           </p>
           <div className="ml-auto flex gap-2">
             <Boton variante="fantasma" tamano="sm" onClick={() => setSel(new Set())}>Quitar selección</Boton>
-            {compra && <Boton tamano="sm" cargando={crear.isPending} onClick={() => (sinProv.length ? setElegirProveedor(true) : crear.mutate(null))}>
+            {compra && <Boton tamano="sm" cargando={crear.isPending} onClick={() => (sinProv.length ? setElegirProveedor(true) : crear.mutate(null))}
+              data-explain={GLOSARIO.botonCrearOrdenesRequisicion} data-explain-title="Crear órdenes de compra">
               <ShoppingCart className="h-4 w-4" /> Crear órdenes de compra
             </Boton>}
           </div>
@@ -114,15 +115,15 @@ export function Requisiciones() {
               {r.notas_requisicion && <p className="text-sm text-tenue truncate max-w-[420px]">{r.notas_requisicion}</p>}
               <p className="ml-auto text-xs text-tenue">
                 {r.solicitante ?? "—"} · {hace(r.creado_en)}
-                {r.necesaria_para && <> · <span className={cn(urgente && "text-peligro font-medium")}>para el {fecha(r.necesaria_para)}</span></>}
+                {r.necesaria_para && <> · <span className={cn(urgente && "text-peligro font-medium")} data-explain={GLOSARIO.fechaNecesariaRequisicion} data-explain-title="Para cuándo">para el {fecha(r.necesaria_para)}</span></>}
               </p>
             </div>
             <div className="overflow-x-auto">
               <table className="tabla">
                 <thead>
                   <tr>
-                    {compra && <th className="w-8" />}<th>Artículo</th><th className="text-right">Cantidad</th><th className="text-right">En planta</th>
-                    <th>Proveedor</th>{verCostos && <th className="text-right">Costo vigente</th>}<th>Para</th>{compra && <th className="w-8" />}
+                    {compra && <th className="w-8" />}<th>Artículo</th><th className="text-right">Cantidad</th><th className="text-right" data-explain={GLOSARIO.enPlanta}>En planta</th>
+                    <th>Proveedor</th>{verCostos && <th className="text-right" data-explain={GLOSARIO.costoVigente}>Costo vigente</th>}<th data-explain={GLOSARIO.paraRequisicion}>Para</th>{compra && <th className="w-8" />}
                   </tr>
                 </thead>
                 <tbody>
@@ -134,10 +135,11 @@ export function Requisiciones() {
                       <td className="text-right cifra font-medium whitespace-nowrap">{numero(l.cantidad)} <span className="text-xs text-tenue font-normal">{l.unidad}</span></td>
                       <td className="text-right cifra text-tenue">{numero(l.en_planta ?? 0)}</td>
                       <td className="max-w-[220px]">{l.proveedor ? <p className="truncate text-sm">{l.proveedor}</p>
-                        : <span className="inline-flex items-center gap-1 text-xs text-aviso"><AlertTriangle className="h-3.5 w-3.5" /> sin proveedor</span>}</td>
+                        : <span className="inline-flex items-center gap-1 text-xs text-aviso" data-explain={GLOSARIO.sinProveedorRequisicion} data-explain-title="Sin proveedor"><AlertTriangle className="h-3.5 w-3.5" /> sin proveedor</span>}</td>
                       {verCostos && <td className="text-right cifra whitespace-nowrap">{l.costo == null ? <span className="text-tenue">—</span> : dinero(l.costo, l.moneda === "USD" ? "USD" : "MXN")}</td>}
                       <td className="text-xs whitespace-nowrap">{l.op_folio ?? <span className="text-tenue">{r.origen === "reabasto" ? "stock" : "—"}</span>}</td>
                       {compra && <td><button className="p-1 rounded text-tenue hover:bg-fondo hover:text-peligro" title="Cancelar esta partida (ya no se necesita)"
+                        data-explain={GLOSARIO.cancelarPartidaRequisicion} data-explain-title="Cancelar partida"
                         onClick={() => { if (confirm(`¿Cancelar ${l.nombre} de ${r.folio}? Ya no se comprará.`)) cancelar.mutate(l.id); }}><X className="h-4 w-4" /></button></td>}
                     </tr>
                   ))}

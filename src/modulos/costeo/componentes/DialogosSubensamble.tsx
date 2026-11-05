@@ -13,6 +13,7 @@ import { mensajeError, q } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
 import { cant } from "./comun";
 import type { LineaArbol } from "./datosLista";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Coincidencia {
   subensamble_id: string; clave: string; nombre: string; lineas_subensamble: number; lineas_elegidas: number;
@@ -103,7 +104,7 @@ export function DialogoConvertir({ abierto, alCambiar, padre, lineas, alTerminar
       descripcion="Las líneas elegidas pasan a un subensamble nuevo y aquí quedan como una sola línea de 1 pieza. El costo no cambia: es reorganizar, no recostear."
       pie={<>
         <Boton variante="secundario" type="button" onClick={() => alCambiar(false)}>Cancelar</Boton>
-        <Boton type="submit" form="convertir-sub" cargando={guardando}><Layers className="h-4 w-4" /> Crear subensamble</Boton>
+        <Boton type="submit" form="convertir-sub" cargando={guardando} data-explain={GLOSARIO.convertirEnSubensamble}><Layers className="h-4 w-4" /> Crear subensamble</Boton>
       </>}>
       <div className="space-y-4">
         {identico && (
@@ -112,7 +113,7 @@ export function DialogoConvertir({ abierto, alCambiar, padre, lineas, alTerminar
             <div className="flex-1">
               <p><b>Estas piezas ya son un subensamble:</b> <span className="cifra">{identico.clave}</span> {identico.nombre} (mismas piezas y cantidades).</p>
               <p className="text-tenue mt-0.5">Mejor úsalo en lugar de crear otro igual; así un cambio en él llega a todos los equipos.</p>
-              <Boton tamano="sm" variante="exito" className="mt-2" type="button" onClick={usarIdentico} cargando={guardando}>Usar {identico.clave}</Boton>
+              <Boton tamano="sm" variante="exito" className="mt-2" type="button" onClick={usarIdentico} cargando={guardando} data-explain={GLOSARIO.usarSubensambleExistente}>Usar {identico.clave}</Boton>
             </div>
           </div>
         )}
@@ -127,7 +128,7 @@ export function DialogoConvertir({ abierto, alCambiar, padre, lineas, alTerminar
           </p>
         )}
         <form id="convertir-sub" onSubmit={crear} className="grid gap-4 sm:grid-cols-[190px_1fr]">
-          <Campo etiqueta="Clave"><Entrada value={clave} onChange={(e) => setClave(e.target.value)} className="cifra" /></Campo>
+          <Campo etiqueta="Clave"><Entrada value={clave} onChange={(e) => setClave(e.target.value)} className="cifra" data-explain={GLOSARIO.claveSugerida} data-explain-title="Clave" /></Campo>
           <Campo etiqueta="Nombre del subensamble">
             <Entrada autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder='Cabezal motriz 18" con motorreductor 3 HP' />
           </Campo>
@@ -208,7 +209,7 @@ export function DialogoUsarExistente({ abierto, alCambiar, padre, lineas, grupo,
         {sustituir && <ResumenLineas lineas={lineas} />}
         {sustituir && (coinc.data?.length ?? 0) > 0 && (
           <div className="space-y-1.5">
-            <p className="etiqueta">Subensambles con estas piezas</p>
+            <p className="etiqueta" data-explain={GLOSARIO.subensamblesCoincidentes}>Subensambles con estas piezas</p>
             {coinc.data!.map((c) => (
               <button key={c.subensamble_id} type="button" onClick={() => setElegido({ id: c.subensamble_id, clave: c.clave, nombre: c.nombre, c })}
                 className={cn("w-full text-left rounded-lg border px-3 py-2 flex items-center gap-3 hover:bg-fondo",
@@ -218,8 +219,8 @@ export function DialogoUsarExistente({ abierto, alCambiar, padre, lineas, grupo,
                   <span className="cifra font-medium">{c.clave}</span> <span className="truncate">{c.nombre}</span>
                   {c.horas_detalle && <span className="block text-xs text-tenue">Horas propias: {c.horas_detalle}</span>}
                 </span>
-                {c.exacto ? <Insignia tono="ok">idéntico</Insignia>
-                  : <Insignia tono="aviso">{c.iguales} de {Math.max(c.lineas_subensamble, c.lineas_elegidas)} iguales</Insignia>}
+                <span data-explain={GLOSARIO.subensamblesCoincidentes}>{c.exacto ? <Insignia tono="ok">idéntico</Insignia>
+                  : <Insignia tono="aviso">{c.iguales} de {Math.max(c.lineas_subensamble, c.lineas_elegidas)} iguales</Insignia>}</span>
               </button>
             ))}
           </div>
@@ -236,7 +237,7 @@ export function DialogoUsarExistente({ abierto, alCambiar, padre, lineas, grupo,
               <p className="text-aviso">No está comprobado que sean las mismas piezas y cantidades: el costo del equipo puede cambiar. Revisa la diferencia en la pestaña Costo y precio.</p>
             )}
             {(horas?.total ?? 0) > 0 && (
-              <label className="flex items-start gap-2">
+              <label className="flex items-start gap-2" data-explain={GLOSARIO.restarHorasSubensamble} data-explain-title="Restar horas propias">
                 <input type="checkbox" checked={restar} onChange={(e) => setRestar(e.target.checked)} className="h-4 w-4 mt-0.5 accent-[hsl(var(--marca))]" />
                 <span>Restar sus horas propias ({horas!.detalle}) de las de este equipo.
                   <span className="block text-xs text-tenue">Márcalo si las horas de este equipo ya incluían armar esas piezas (pasa en las listas que vienen planas de la hoja).</span></span>
@@ -270,7 +271,7 @@ export function DialogoGrupo({ abierto, alCambiar, padre, lineas, grupos, alTerm
       pie={<><Boton variante="secundario" type="button" onClick={() => alCambiar(false)}>Cancelar</Boton><Boton type="submit" form="mover-grupo">Mover</Boton></>}>
       <form id="mover-grupo" onSubmit={mover}>
         <Campo etiqueta="Grupo">
-          <Entrada autoFocus list="grupos-lista" value={grupo} onChange={(e) => setGrupo(e.target.value)} placeholder="Estructura" />
+          <Entrada autoFocus list="grupos-lista" value={grupo} onChange={(e) => setGrupo(e.target.value)} placeholder="Estructura" data-explain={GLOSARIO.grupoLista} data-explain-title="Grupo" />
           <datalist id="grupos-lista">{grupos.map((g) => <option key={g} value={g} />)}</datalist>
         </Campo>
       </form>
