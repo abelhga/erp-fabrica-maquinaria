@@ -130,7 +130,7 @@ export function PanelContestar({ s, alCerrar }: { s: Solicitud; alCerrar: () => 
       <form onSubmit={enviar} className="tarjeta p-4 space-y-4">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-semibold" data-explain={GLOSARIO.contestarSolicitud}>Respuesta</h3>
-          <div className="flex rounded-lg border border-borde p-0.5 bg-fondo text-xs">
+          <div className="flex rounded-lg border border-borde p-0.5 bg-fondo text-xs" data-explain={GLOSARIO.modoCatalogoSolicitud} data-explain-title="Catálogo o alta">
             {([["catalogo", "Está en el catálogo", Search], ["nuevo", "Dar de alta", PackagePlus]] as const).map(([v, t, I]) => (
               <button key={v} type="button" onClick={() => setModo(v)}
                 className={cn("h-7 px-2.5 rounded-md inline-flex items-center gap-1.5 font-medium", modo === v ? "bg-superficie shadow-sm text-texto" : "text-tenue hover:text-texto")}>
@@ -153,7 +153,7 @@ export function PanelContestar({ s, alCerrar }: { s: Solicitud; alCerrar: () => 
                 alElegir={(a) => { setArticulo({ id: a.id, clave: a.clave, nombre: a.nombre }); setEntrega(a.tiempo_entrega_dias); costoRef.current?.focus(); }} />
             )}
             {actual.data?.costo != null && (
-              <p className="text-xs text-tenue">
+              <p className="text-xs text-tenue" data-explain={GLOSARIO.costoVigente} data-explain-title="Costo vigente">
                 Hoy en el catálogo: <b className="text-texto cifra">{dinero(Number(actual.data.costo), actual.data.moneda === "USD" ? "USD" : "MXN")}</b>
                 {actual.data.moneda === "EUR" ? " EUR" : ""}{actual.data.proveedor ? ` · ${actual.data.proveedor}` : ""}{actual.data.actualizado_en ? ` · ${hace(actual.data.actualizado_en)}` : ""}
               </p>
@@ -191,7 +191,7 @@ export function PanelContestar({ s, alCerrar }: { s: Solicitud; alCerrar: () => 
             </Seleccion>
           </label>
           <label className="space-y-1.5 col-span-2 sm:col-span-1">
-            <span className="text-sm font-medium">Entrega (días hábiles)</span>
+            <span className="text-sm font-medium" data-explain={GLOSARIO.entregaSolicitudPrecio}>Entrega (días hábiles)</span>
             <CampoNumero valor={entrega} alCambiar={(n) => setEntrega(Math.round(n))} decimales={0} min={0} vacioEsCero={false} etiqueta="Tiempo de entrega"
               placeholder="p. ej. 5" alEnter={() => enviar()} />
           </label>
@@ -199,7 +199,8 @@ export function PanelContestar({ s, alCerrar }: { s: Solicitud; alCerrar: () => 
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Campo etiqueta="Precio válido hasta" ayuda={vigencia ? `Vigencia del proveedor: ${fecha(vigencia)}` : "Sin vigencia"}>
-            <Entrada type="date" value={vigencia} min={hoyISO()} onChange={(e) => setVigencia(e.target.value)} />
+            <Entrada type="date" value={vigencia} min={hoyISO()} onChange={(e) => setVigencia(e.target.value)}
+              data-explain={GLOSARIO.vigenciaPrecioSolicitud} data-explain-title="Precio válido hasta" />
           </Campo>
           <Campo etiqueta="Nota para quien lo pidió" ayuda="La lee el vendedor: nada de costos aquí.">
             <Entrada value={respuesta} onChange={(e) => setRespuesta(e.target.value)} placeholder="Mínimo 10 piezas, llega por paquetería…" />
@@ -209,7 +210,7 @@ export function PanelContestar({ s, alCerrar }: { s: Solicitud; alCerrar: () => 
         {/* El precio de venta es de ventas: compras solo lo ve si además tiene ese permiso. */}
         {vePrecios && (
           <div className="rounded-lg bg-fondo px-3 py-2 text-sm flex flex-wrap items-baseline justify-between gap-2">
-            <span className="text-tenue">Precio de lista que verá el vendedor</span>
+            <span className="text-tenue" data-explain={GLOSARIO.precioListaEstimadoSolicitud}>Precio de lista que verá el vendedor</span>
             <span className="font-semibold cifra">{estimarCon ? (estimado.isFetching ? "…" : estimado.data != null ? <>{dinero(Number(estimado.data))} <span className="text-xs font-normal text-tenue">+ IVA</span></> : "sin política de precio") : "—"}</span>
           </div>
         )}
@@ -228,8 +229,9 @@ export function PanelContestar({ s, alCerrar }: { s: Solicitud; alCerrar: () => 
           </div>
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-            <Boton type="button" variante="fantasma" className="text-peligro" onClick={() => setSinPrecio(true)}><Ban className="h-4 w-4" />No se consigue…</Boton>
-            <Boton type="submit" cargando={contestar.isPending}><Check className="h-4 w-4" />Contestar <kbd className="ml-1 text-[10px] opacity-75">Enter</kbd></Boton>
+            <Boton type="button" variante="fantasma" className="text-peligro" onClick={() => setSinPrecio(true)}
+              data-explain={GLOSARIO.noSeConsigueSolicitud} data-explain-title="No se consigue"><Ban className="h-4 w-4" />No se consigue…</Boton>
+            <Boton type="submit" cargando={contestar.isPending} data-explain={GLOSARIO.contestarSolicitud} data-explain-title="Contestar"><Check className="h-4 w-4" />Contestar <kbd className="ml-1 text-[10px] opacity-75">Enter</kbd></Boton>
           </div>
         )}
       </form>

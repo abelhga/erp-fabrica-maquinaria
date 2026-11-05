@@ -7,6 +7,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { LlenarConConstancia, type DatosConstancia } from "@/components/datos/LlenarConConstancia";
 import { useSesion } from "@/lib/sesion";
 import type { ProveedorCompleto } from "./tipos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 type Datos = Omit<ProveedorCompleto, "id">;
 const BLOQUEADO = "bg-fondo text-tenue cursor-default";
@@ -89,23 +90,25 @@ export function DialogoProveedor({ abierto, alCambiar, proveedor, alGuardar, ini
             <option value="MXN">MXN</option><option value="USD">USD</option><option value="EUR">EUR</option>
           </Seleccion>
         </Campo>
-        <label className="flex items-center gap-2 text-sm sm:mt-7">
+        <label className="flex items-center gap-2 text-sm sm:mt-7" data-explain={GLOSARIO.proveedorImportacion} data-explain-title="Es importación">
           <input type="checkbox" className="accent-[hsl(var(--marca))]" checked={d.es_importacion} onChange={(e) => pon("es_importacion", e.target.checked)} />
           Es importación (sus artículos piden 6 meses de cobertura)
         </label>
         </>}
-        <Campo etiqueta="Días de crédito"><Entrada inputMode="numeric" value={String(d.dias_credito)} onChange={(e) => pon("dias_credito", Number(e.target.value.replace(/\D/g, "")) || 0)} /></Campo>
+        <Campo etiqueta="Días de crédito"><Entrada inputMode="numeric" value={String(d.dias_credito)} onChange={(e) => pon("dias_credito", Number(e.target.value.replace(/\D/g, "")) || 0)}
+          data-explain={GLOSARIO.creditoProveedor} data-explain-title="Días de crédito" /></Campo>
         {!soloFinanzas && <Campo etiqueta="Días de entrega (hábiles)" ayuda="Vacío = 7, el estándar"><Entrada inputMode="numeric" value={d.dias_entrega == null ? "" : String(d.dias_entrega)}
+          data-explain={GLOSARIO.entregaProveedor} data-explain-title="Días de entrega"
           onChange={(e) => pon("dias_entrega", e.target.value === "" ? null : Number(e.target.value.replace(/\D/g, "")))} /></Campo>}
         <Campo etiqueta="Contacto"><Entrada {...texto("contacto")} /></Campo>
         <Campo etiqueta="Teléfono"><Entrada {...texto("telefono")} /></Campo>
         <Campo etiqueta="Correo"><Entrada type="email" {...texto("correo")} /></Campo>
         {!soloFinanzas && <Campo etiqueta="Sitio web"><Entrada {...texto("sitio")} /></Campo>}
         <Campo etiqueta="Datos bancarios" className="sm:col-span-2" ayuda="Si cambian, dirección recibe un aviso para revisarlos antes del siguiente pago.">
-          <AreaTexto {...texto("datos_bancarios")} className="min-h-[56px]" /></Campo>
+          <AreaTexto {...texto("datos_bancarios")} className="min-h-[56px]" data-explain={GLOSARIO.datosBancariosProveedor} data-explain-title="Datos bancarios" /></Campo>
         <Campo etiqueta="Notas" className="sm:col-span-2"><AreaTexto {...texto("notas")} className="min-h-[56px]" /></Campo>
         {proveedor && !soloFinanzas && (
-          <label className="flex items-center gap-2 text-sm sm:col-span-2">
+          <label className="flex items-center gap-2 text-sm sm:col-span-2" data-explain={GLOSARIO.proveedorActivo} data-explain-title="Activo">
             <input type="checkbox" className="accent-[hsl(var(--marca))]" checked={d.activo} onChange={(e) => pon("activo", e.target.checked)} />
             Activo (si se desactiva ya no aparece al crear órdenes)
           </label>

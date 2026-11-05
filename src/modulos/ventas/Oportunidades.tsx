@@ -95,7 +95,7 @@ export default function Oportunidades() {
     { clave: "titulo", titulo: "Oportunidad", celda: (o) => <div className="min-w-[200px]"><p className="font-medium">{o.titulo}</p><p className="text-xs text-tenue">{o.cliente}</p></div>, valor: (o) => `${o.titulo} ${o.cliente}` },
     { clave: "etapa", titulo: "Etapa", explica: GLOSARIO.etapaOportunidad, valor: (o) => ETAPAS.findIndex((e) => e.valor === o.etapa), celda: (o) => <Insignia tono={ETAPA[o.etapa].tono} punto>{ETAPA[o.etapa].texto}</Insignia> },
     { clave: "vendedor", titulo: "Vendedor", oculta: !esGerente, valor: (o) => o.vendedor },
-    { clave: "linea", titulo: "Línea", explica: GLOSARIO.lineaVenta, valor: (o) => LINEA[o.linea] },
+    { clave: "linea", titulo: "Línea", explica: GLOSARIO.lineaOportunidad, valor: (o) => LINEA[o.linea] },
     { clave: "dias", titulo: "Días en etapa", explica: GLOSARIO.diasEnEtapa, alinear: "der", valor: (o) => o.dias_en_etapa, sinBusqueda: true },
     { clave: "seguimiento", titulo: "Seguimiento", explica: GLOSARIO.seguimientoCotizacion, valor: (o) => o.seguimiento_vence ?? "",
       celda: (o) => o.seguimiento_vence ? <ChipSeguimiento vence={o.seguimiento_vence} alClic={() => setAnotar({ objetivo: paraAnotar(o) })} /> : <span className="text-tenue">—</span> },
@@ -118,7 +118,7 @@ export default function Oportunidades() {
             <h2 className="font-semibold text-sm" data-explain={GLOSARIO.etapaOportunidad} data-explain-title={et.texto}>{et.texto}</h2>
             <span className="ml-auto rounded-full bg-superficie border border-borde px-2 text-xs cifra">{tarjetas.length}</span>
           </div>
-          <p className="text-xs text-tenue mt-0.5 cifra">{dineroCompacto(suma)}{["ganada", "perdida"].includes(et.valor) ? " · últimos 60 días" : ""}</p>
+          <p className="text-xs text-tenue mt-0.5 cifra" data-explain={GLOSARIO.sumaEtapaOportunidad} data-explain-title="Suma de la columna">{dineroCompacto(suma)}{["ganada", "perdida"].includes(et.valor) ? " · últimos 60 días" : ""}</p>
         </header>
         <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-2">
           {tarjetas.map((o) => {
@@ -131,12 +131,13 @@ export default function Oportunidades() {
                 <p className="text-sm font-medium leading-snug">{o.titulo}</p>
                 <p className="text-xs text-tenue mt-0.5 truncate">{o.cliente}{esGerente && o.vendedor ? ` · ${o.vendedor.split(" ")[0]}` : ""}</p>
                 <div className="mt-2 flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold cifra">{o.monto_estimado ? dinero(o.monto_estimado) : <span className="text-tenue font-normal">Sin monto</span>}</span>
+                  <span className="text-sm font-semibold cifra" data-explain={GLOSARIO.montoEstimado} data-explain-title="Monto estimado">{o.monto_estimado ? dinero(o.monto_estimado) : <span className="text-tenue font-normal">Sin monto</span>}</span>
                   <span className={cn("text-[11px] cifra", o.dias_en_etapa > 14 && !["ganada", "perdida"].includes(o.etapa) ? "text-aviso font-medium" : "text-tenue")}
                     title="Días en esta etapa" data-explain={GLOSARIO.diasEnEtapa}>{o.dias_en_etapa === 0 ? "hoy" : `${o.dias_en_etapa} d`}</span>
                 </div>
                 {o.tarea && !["ganada", "perdida"].includes(o.etapa) && (
-                  <p className={cn("mt-2 flex items-start gap-1.5 rounded-md px-2 py-1 text-xs", vencida ? "bg-peligro-suave text-peligro" : "bg-fondo text-tenue")}>
+                  <p className={cn("mt-2 flex items-start gap-1.5 rounded-md px-2 py-1 text-xs", vencida ? "bg-peligro-suave text-peligro" : "bg-fondo text-tenue")}
+                    data-explain={GLOSARIO.proximaTarea} data-explain-title="Próxima tarea">
                     <CalendarClock className="h-3.5 w-3.5 mt-px shrink-0" />
                     <span><b className="font-medium">{vencida ? "Venció" : o.tarea_vence === hoy ? "Hoy" : fecha(o.tarea_vence)}</b> · {o.tarea}</span>
                   </p>
@@ -144,7 +145,7 @@ export default function Oportunidades() {
                 {o.seguimiento_vence && !["ganada", "perdida"].includes(o.etapa) && (
                   <ChipSeguimiento vence={o.seguimiento_vence} className="mt-2" alClic={() => setAnotar({ objetivo: paraAnotar(o) })} />
                 )}
-                {o.etapa === "perdida" && o.motivo_perdida && <p className="mt-2 text-xs text-peligro">{o.motivo_perdida}</p>}
+                {o.etapa === "perdida" && o.motivo_perdida && <p className="mt-2 text-xs text-peligro" data-explain={GLOSARIO.motivoPerdida} data-explain-title="Motivo de pérdida">{o.motivo_perdida}</p>}
                 {o.cotizaciones > 0 && <p className="mt-1.5 text-[11px] text-tenue inline-flex items-center gap-1"><FileText className="h-3 w-3" />{o.cotizaciones} cotización(es)</p>}
               </article>
             );
@@ -168,14 +169,14 @@ export default function Oportunidades() {
             {vendedores.map(([id, n]) => <option key={id} value={id}>{n}</option>)}
           </select>
         )}
-        <div className="flex rounded-lg border border-borde p-0.5 bg-fondo">
+        <div className="flex rounded-lg border border-borde p-0.5 bg-fondo" data-explain={GLOSARIO.vistaTableroOportunidades} data-explain-title="Tablero o lista">
           {([["tablero", KanbanSquare, "Tablero"], ["lista", List, "Lista"]] as const).map(([v, I, t]) => (
             <button key={v} onClick={() => setVista(v)} className={cn("h-8 px-3 rounded-md text-sm inline-flex items-center gap-1.5", vista === v ? "bg-superficie shadow-sm" : "text-tenue")}>
               <I className="h-4 w-4" />{t}
             </button>
           ))}
         </div>
-        <Boton onClick={() => setAlta(true)}><Plus className="h-4 w-4" />Nueva oportunidad</Boton>
+        <Boton onClick={() => setAlta(true)} data-explain={GLOSARIO.botonNuevaOportunidad}><Plus className="h-4 w-4" />Nueva oportunidad</Boton>
       </>}>
       {lista.isLoading ? <div className="tarjeta"><Cargando /></div> : vista === "lista" ? (
         <TablaDatos filas={filas} columnas={columnas} claveFila={(o) => o.id} alClicFila={(o) => setAbierta(o.id)} exportarComo="oportunidades"
@@ -199,7 +200,7 @@ export default function Oportunidades() {
         textoBoton="Marcar perdida" cargando={mover.isPending}
         alConfirmar={(m) => { if (perder) mover.mutate({ id: perder.id, etapa: "perdida", motivo: m }, { onSuccess: () => setPerder(null) }); }} />
       <Lateral abierto={!!abiertoSel} alCambiar={(v) => !v && setAbierta(null)} titulo={abiertoSel?.titulo ?? ""}
-        subtitulo={abiertoSel && <span>{abiertoSel.cliente} · <Insignia tono={ETAPA[abiertoSel.etapa].tono}>{ETAPA[abiertoSel.etapa].texto}</Insignia></span>}>
+        subtitulo={abiertoSel && <span>{abiertoSel.cliente} · <span data-explain={GLOSARIO.etapaOportunidad} data-explain-title={ETAPA[abiertoSel.etapa].texto}><Insignia tono={ETAPA[abiertoSel.etapa].tono}>{ETAPA[abiertoSel.etapa].texto}</Insignia></span></span>}>
         {abiertoSel && <DetalleOportunidad o={abiertoSel} puedeEditar={esGerente || abiertoSel.vendedor_id === perfil?.id} alPerder={() => setPerder(abiertoSel)}
           alAnotar={(resultado) => setAnotar({ objetivo: paraAnotar(abiertoSel), resultado })} />}
       </Lateral>
@@ -245,7 +246,7 @@ function DetalleOportunidad({ o, puedeEditar, alPerder, alAnotar }: {
           <p className="flex-1 text-sm">{o.seguimiento_vence
             ? <>Seguimiento: <b>{textoVence(o.seguimiento_vence).toLowerCase()}</b></>
             : "Sin seguimiento agendado. Anota cómo va y, si quieres, cuándo le vuelves a buscar."}</p>
-          <Boton tamano="sm" onClick={() => alAnotar()}>¿Qué pasó?</Boton>
+          <Boton tamano="sm" onClick={() => alAnotar()} data-explain={GLOSARIO.resultadoSeguimiento} data-explain-title="¿Qué pasó?">¿Qué pasó?</Boton>
         </div>
       )}
       <div className="flex flex-wrap gap-2">
@@ -254,25 +255,37 @@ function DetalleOportunidad({ o, puedeEditar, alPerder, alAnotar }: {
       </div>
       <form className="grid gap-3 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); guardar.mutate(undefined); }}>
         <Campo etiqueta="Título" className="sm:col-span-2"><Entrada value={f.titulo} disabled={!puedeEditar} onChange={(e) => setF({ ...f, titulo: e.target.value })} /></Campo>
-        <Campo etiqueta="Etapa">
-          <Seleccion value={f.etapa} disabled={!puedeEditar} onChange={(e) => setF({ ...f, etapa: e.target.value as EtapaOportunidad })}>
-            {ETAPAS.map((e) => <option key={e.valor} value={e.valor}>{e.texto}</option>)}
-          </Seleccion>
-        </Campo>
-        <Campo etiqueta="Línea">
-          <Seleccion value={f.linea} disabled={!puedeEditar} onChange={(e) => setF({ ...f, linea: e.target.value as Linea })}>
-            {Object.entries(LINEA).map(([v, t]) => <option key={v} value={v}>{t}</option>)}
-          </Seleccion>
-        </Campo>
-        <Campo etiqueta="Monto estimado (sin IVA)"><CampoNumero valor={f.monto_estimado} prefijo="$" deshabilitado={!puedeEditar} vacioEsCero={false} alCambiar={(n) => setF({ ...f, monto_estimado: n })} /></Campo>
-        <Campo etiqueta="Probabilidad"><CampoNumero valor={f.probabilidad} decimales={0} min={0} max={100} sufijo="%" deshabilitado={!puedeEditar} alCambiar={(n) => setF({ ...f, probabilidad: Math.round(n) })} /></Campo>
-        <Campo etiqueta="Cierre estimado"><Entrada type="date" value={f.fecha_cierre_estimada ?? ""} disabled={!puedeEditar} onChange={(e) => setF({ ...f, fecha_cierre_estimada: e.target.value })} /></Campo>
-        <Campo etiqueta="¿Cómo llegó?">
-          <Seleccion value={f.fuente_id ?? ""} disabled={!puedeEditar} onChange={(e) => setF({ ...f, fuente_id: e.target.value ? Number(e.target.value) : null })}>
-            <option value="">—</option>
-            {fuentes.data?.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
-          </Seleccion>
-        </Campo>
+        <div data-explain={GLOSARIO.etapaOportunidad} data-explain-title="Etapa">
+          <Campo etiqueta="Etapa">
+            <Seleccion value={f.etapa} disabled={!puedeEditar} onChange={(e) => setF({ ...f, etapa: e.target.value as EtapaOportunidad })}>
+              {ETAPAS.map((e) => <option key={e.valor} value={e.valor}>{e.texto}</option>)}
+            </Seleccion>
+          </Campo>
+        </div>
+        <div data-explain={GLOSARIO.lineaOportunidad} data-explain-title="Línea">
+          <Campo etiqueta="Línea">
+            <Seleccion value={f.linea} disabled={!puedeEditar} onChange={(e) => setF({ ...f, linea: e.target.value as Linea })}>
+              {Object.entries(LINEA).map(([v, t]) => <option key={v} value={v}>{t}</option>)}
+            </Seleccion>
+          </Campo>
+        </div>
+        <div data-explain={GLOSARIO.montoEstimado} data-explain-title="Monto estimado">
+          <Campo etiqueta="Monto estimado (sin IVA)"><CampoNumero valor={f.monto_estimado} prefijo="$" deshabilitado={!puedeEditar} vacioEsCero={false} alCambiar={(n) => setF({ ...f, monto_estimado: n })} /></Campo>
+        </div>
+        <div data-explain={GLOSARIO.probabilidadOportunidad} data-explain-title="Probabilidad">
+          <Campo etiqueta="Probabilidad"><CampoNumero valor={f.probabilidad} decimales={0} min={0} max={100} sufijo="%" deshabilitado={!puedeEditar} alCambiar={(n) => setF({ ...f, probabilidad: Math.round(n) })} /></Campo>
+        </div>
+        <div data-explain={GLOSARIO.cierreEstimadoOportunidad} data-explain-title="Cierre estimado">
+          <Campo etiqueta="Cierre estimado"><Entrada type="date" value={f.fecha_cierre_estimada ?? ""} disabled={!puedeEditar} onChange={(e) => setF({ ...f, fecha_cierre_estimada: e.target.value })} /></Campo>
+        </div>
+        <div data-explain={GLOSARIO.fuenteOportunidad} data-explain-title="¿Cómo llegó?">
+          <Campo etiqueta="¿Cómo llegó?">
+            <Seleccion value={f.fuente_id ?? ""} disabled={!puedeEditar} onChange={(e) => setF({ ...f, fuente_id: e.target.value ? Number(e.target.value) : null })}>
+              <option value="">—</option>
+              {fuentes.data?.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
+            </Seleccion>
+          </Campo>
+        </div>
         <Campo etiqueta="Notas" className="sm:col-span-2"><AreaTexto value={f.notas ?? ""} disabled={!puedeEditar} onChange={(e) => setF({ ...f, notas: e.target.value })} /></Campo>
         {o.motivo_perdida && <p className="sm:col-span-2 rounded-lg bg-peligro-suave text-peligro text-sm px-3 py-2" data-explain={GLOSARIO.motivoPerdida}>Perdida: {o.motivo_perdida}</p>}
         {puedeEditar && cambio && <div className="sm:col-span-2 flex justify-end"><Boton type="submit" cargando={guardar.isPending}>Guardar cambios</Boton></div>}
@@ -285,7 +298,7 @@ function DetalleOportunidad({ o, puedeEditar, alPerder, alAnotar }: {
             {cotizaciones.data!.map((c) => (
               <Link key={c.id} to={`/ventas/cotizaciones/${c.id}`} className="flex items-center gap-3 px-3 py-2 hover:bg-fondo text-sm">
                 <span className="font-medium cifra">{c.folio}</span>
-                <Insignia tono={ESTADO_COT[c.estado].tono}>{ESTADO_COT[c.estado].texto}</Insignia>
+                <span data-explain={GLOSARIO.estadoCotizacion} data-explain-title={ESTADO_COT[c.estado].texto}><Insignia tono={ESTADO_COT[c.estado].tono}>{ESTADO_COT[c.estado].texto}</Insignia></span>
                 <span className="text-tenue">{fecha(c.fecha)}</span>
                 <span className="ml-auto cifra">{dineroEn(Number(c.total), c.moneda)}</span>
               </Link>
@@ -296,7 +309,7 @@ function DetalleOportunidad({ o, puedeEditar, alPerder, alAnotar }: {
 
       <section>
         {/* El seguimiento de la cotización va arriba («¿Qué pasó?»); aquí, la historia y tareas sueltas. */}
-        <h3 className="font-semibold mb-2">Historia y tareas</h3>
+        <h3 className="font-semibold mb-2" data-explain={GLOSARIO.actividad} data-explain-title="Historia y tareas">Historia y tareas</h3>
         <Actividades clienteId={o.cliente_id} oportunidadId={o.id} puedeCapturar={puedeEditar} />
       </section>
     </div>
@@ -340,25 +353,35 @@ function DialogoAlta({ abierto, alCambiar, alCrear }: { abierto: boolean; alCamb
             <ElegirCliente valor={f.cliente} alCambiar={(c) => setF({ ...f, cliente: c ? { id: c.id, nombre: c.nombre } : null })} alNuevo={() => setNuevoCliente("")} />
           </div>
           <Campo etiqueta="¿Qué busca?" className="sm:col-span-2"><Entrada value={f.titulo} onChange={(e) => setF({ ...f, titulo: e.target.value })} placeholder="Dosificadora para planta nueva" /></Campo>
-          <Campo etiqueta="Monto estimado"><CampoNumero valor={f.monto} prefijo="$" vacioEsCero={false} alCambiar={(n) => setF({ ...f, monto: n })} /></Campo>
-          <Campo etiqueta="Etapa">
-            <Seleccion value={f.etapa} onChange={(e) => setF({ ...f, etapa: e.target.value as EtapaOportunidad })}>
-              {/* Negociación se alcanza anotando qué pasó, no desde el alta. */}
-              {ETAPAS.filter((e) => !["negociacion", "ganada", "perdida"].includes(e.valor)).map((e) => <option key={e.valor} value={e.valor}>{e.texto}</option>)}
-            </Seleccion>
-          </Campo>
-          <Campo etiqueta="Línea">
-            <Seleccion value={f.linea} onChange={(e) => setF({ ...f, linea: e.target.value as Linea })}>
-              {Object.entries(LINEA).map(([v, t]) => <option key={v} value={v}>{t}</option>)}
-            </Seleccion>
-          </Campo>
-          <Campo etiqueta="¿Cómo llegó?">
-            <Seleccion value={f.fuente} onChange={(e) => setF({ ...f, fuente: e.target.value })}>
-              <option value="">—</option>
-              {fuentes.data?.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
-            </Seleccion>
-          </Campo>
-          <Campo etiqueta="Cierre estimado"><Entrada type="date" value={f.cierre} onChange={(e) => setF({ ...f, cierre: e.target.value })} /></Campo>
+          <div data-explain={GLOSARIO.montoEstimado} data-explain-title="Monto estimado">
+            <Campo etiqueta="Monto estimado"><CampoNumero valor={f.monto} prefijo="$" vacioEsCero={false} alCambiar={(n) => setF({ ...f, monto: n })} /></Campo>
+          </div>
+          <div data-explain={GLOSARIO.etapaOportunidad} data-explain-title="Etapa">
+            <Campo etiqueta="Etapa">
+              <Seleccion value={f.etapa} onChange={(e) => setF({ ...f, etapa: e.target.value as EtapaOportunidad })}>
+                {/* Negociación se alcanza anotando qué pasó, no desde el alta. */}
+                {ETAPAS.filter((e) => !["negociacion", "ganada", "perdida"].includes(e.valor)).map((e) => <option key={e.valor} value={e.valor}>{e.texto}</option>)}
+              </Seleccion>
+            </Campo>
+          </div>
+          <div data-explain={GLOSARIO.lineaOportunidad} data-explain-title="Línea">
+            <Campo etiqueta="Línea">
+              <Seleccion value={f.linea} onChange={(e) => setF({ ...f, linea: e.target.value as Linea })}>
+                {Object.entries(LINEA).map(([v, t]) => <option key={v} value={v}>{t}</option>)}
+              </Seleccion>
+            </Campo>
+          </div>
+          <div data-explain={GLOSARIO.fuenteOportunidad} data-explain-title="¿Cómo llegó?">
+            <Campo etiqueta="¿Cómo llegó?">
+              <Seleccion value={f.fuente} onChange={(e) => setF({ ...f, fuente: e.target.value })}>
+                <option value="">—</option>
+                {fuentes.data?.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
+              </Seleccion>
+            </Campo>
+          </div>
+          <div data-explain={GLOSARIO.cierreEstimadoOportunidad} data-explain-title="Cierre estimado">
+            <Campo etiqueta="Cierre estimado"><Entrada type="date" value={f.cierre} onChange={(e) => setF({ ...f, cierre: e.target.value })} /></Campo>
+          </div>
           <button type="submit" className="hidden" />
         </form>
       </Dialogo>

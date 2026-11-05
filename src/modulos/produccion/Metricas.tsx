@@ -49,8 +49,9 @@ interface Metricas {
 }
 
 type Periodo = "30" | "90" | "180" | "365";
-const PERIODOS: { valor: Periodo; texto: string }[] = [
-  { valor: "30", texto: "30 días" }, { valor: "90", texto: "90 días" }, { valor: "180", texto: "6 meses" }, { valor: "365", texto: "12 meses" },
+const PERIODOS: { valor: Periodo; texto: string; explica: string }[] = [
+  { valor: "30", texto: "30 días", explica: GLOSARIO.periodoMetricas }, { valor: "90", texto: "90 días", explica: GLOSARIO.periodoMetricas },
+  { valor: "180", texto: "6 meses", explica: GLOSARIO.periodoMetricas }, { valor: "365", texto: "12 meses", explica: GLOSARIO.periodoMetricas },
 ];
 const restarDias = (iso: string, d: number) => { const x = new Date(iso + "T12:00:00-06:00"); x.setDate(x.getDate() - d); return x.toISOString().slice(0, 10); };
 const fraccion = (a: number | null | undefined, b: number | null | undefined) => (a != null && b ? a / b : null);
@@ -105,7 +106,7 @@ function Contenido({ m }: { m: Metricas }) {
   ];
   const colEquipos: Columna<Equipo>[] = [
     { clave: "equipo", titulo: "Equipo", celda: (e) => <div className="min-w-[220px]">{e.equipo}<p className="text-xs text-tenue cifra">{e.clave}</p></div> },
-    { clave: "terminados", titulo: "Terminados", alinear: "der", valor: (e) => e.terminados, celda: (e) => <span className="cifra">{numero(e.terminados)}</span> },
+    { clave: "terminados", titulo: "Terminados", alinear: "der", valor: (e) => e.terminados, celda: (e) => <span className="cifra">{numero(e.terminados)}</span>, explica: GLOSARIO.equiposTerminados },
     { clave: "horas_reales", titulo: "Horas por equipo (real / estimada)", alinear: "der", valor: (e) => fraccion(e.horas_reales, e.horas_estimadas) ?? -1, explica: GLOSARIO.horasRealesVsEstimadas,
       celda: (e) => e.horas_reales == null ? <span className="text-tenue">Sin marcar · {horas(e.horas_estimadas)} est.</span>
         : <span className="cifra">{horas(e.horas_reales)} / {horas(e.horas_estimadas)} <ColorDesvio f={fraccion(e.horas_reales, e.horas_estimadas)} /></span> },
@@ -168,7 +169,7 @@ function Contenido({ m }: { m: Metricas }) {
 
         <Tarjeta>
           <EncabezadoTarjeta titulo="Máquinas" descripcion="Fallas y preventivos del periodo" explica={GLOSARIO.mantenimientoMetricas} />
-          <dl className="px-5 pb-5 grid grid-cols-2 gap-4 text-sm">
+          <dl className="px-5 pb-5 grid grid-cols-2 gap-4 text-sm" data-explain={GLOSARIO.mantenimientoMetricas} data-explain-title="Máquinas">
             <Dato icono={AlertTriangle} titulo="Fallas" valor={numero(m.mantenimiento.fallas)} detalle={`${numero(m.mantenimiento.fallas_que_paran)} pararon la máquina`} />
             <Dato icono={AlarmClock} titulo="Horas fuera de servicio" valor={horas(m.mantenimiento.horas_fuera ?? 0)} />
             <Dato icono={Wrench} titulo="Tiempo de reparación" valor={m.mantenimiento.mttr_h == null ? "—" : horas(m.mantenimiento.mttr_h)} detalle="promedio, de reporte a cierre" />
@@ -179,7 +180,7 @@ function Contenido({ m }: { m: Metricas }) {
       </div>
 
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Por etapa" descripcion="Dónde se va el tiempo: cuánto espera cada etapa para empezar y cuánto se trabaja" />
+        <EncabezadoTarjeta titulo="Por etapa" descripcion="Dónde se va el tiempo: cuánto espera cada etapa para empezar y cuánto se trabaja" explica={GLOSARIO.metricasPorEtapa} />
         <div className="px-3 pb-3">
           <TablaDatos filas={m.etapas} columnas={colEtapas} claveFila={(e) => String(e.etapa_id)} exportarComo="metricas-por-etapa" buscable={false} />
         </div>
@@ -187,7 +188,7 @@ function Contenido({ m }: { m: Metricas }) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Por equipo" descripcion="Horas por equipo terminado contra lo que dice el costeo" />
+          <EncabezadoTarjeta titulo="Por equipo" descripcion="Horas por equipo terminado contra lo que dice el costeo" explica={GLOSARIO.metricasPorEquipo} />
           <div className="px-3 pb-3">
             <TablaDatos filas={m.equipos} columnas={colEquipos} claveFila={(e) => e.clave} exportarComo="metricas-por-equipo"
               vacio={{ icono: Factory, titulo: "Sin equipos terminados", texto: "Cuando el taller termine equipos en este periodo, aquí sale cuánto tardó cada uno." }} />
@@ -219,7 +220,7 @@ function Contenido({ m }: { m: Metricas }) {
           </ul>
         </Tarjeta>
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Herramientas lean" descripcion="Se irán habilitando conforme el equipo de ingeniería de procesos las use" />
+          <EncabezadoTarjeta titulo="Herramientas lean" descripcion="Se irán habilitando conforme el equipo de ingeniería de procesos las use" explica={GLOSARIO.herramientasLean} />
           <div className="px-5 pb-5 text-sm space-y-2" data-explain={GLOSARIO.herramientasLean} data-explain-title="Herramientas lean">
             {[["5S", "auditorías por área con su calificación y fotos"], ["Kaizen", "registro de mejoras: problema, idea, responsable y resultado"],
               ["A3", "solución de problemas en una hoja, ligada a la orden o la máquina"], ["OEE", "disponibilidad, rendimiento y calidad del plasma y las máquinas clave"],

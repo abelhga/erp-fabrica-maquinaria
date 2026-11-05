@@ -183,7 +183,7 @@ export function useBonos(mes: string, habilitado: boolean) {
 export function SelectorMes({ mes, alCambiar, maximo }: { mes: string; alCambiar: (m: string) => void; maximo?: string }) {
   const siguiente = mesDe(`${mes}-01`, 1);
   return (
-    <div className="inline-flex items-center rounded-lg border border-borde bg-superficie">
+    <div className="inline-flex items-center rounded-lg border border-borde bg-superficie" data-explain={GLOSARIO.selectorMesObjetivos} data-explain-title="Mes">
       <button className="p-2 text-tenue hover:text-texto" onClick={() => alCambiar(mesDe(`${mes}-01`, -1))} aria-label="Mes anterior"><ChevronLeft className="h-4 w-4" /></button>
       <span className="px-2 text-sm font-medium min-w-[150px] text-center first-letter:uppercase">{nombreMes(mes)}</span>
       <button className="p-2 text-tenue hover:text-texto disabled:opacity-30" disabled={!!maximo && siguiente > maximo}
@@ -271,9 +271,9 @@ export function PanelEvaluacion({ evaluacion: e, propia = false }: { evaluacion:
           <p className="text-xs text-tenue">Resultado del mes</p>
           <p className={cn("text-4xl font-semibold cifra leading-tight mt-1", e.llave_activada ? "text-peligro" : "")}>{puntos(e.total_final)}</p>
           {e.total_corregido != null && <p className="text-xs text-tenue mt-1">ajustado; calificado {puntos(e.total)}</p>}
-          {!e.completa && !e.llave_activada && e.estado === "borrador" && <p className="text-xs text-aviso mt-1">parcial: faltan {e.pendientes}</p>}
+          {!e.completa && !e.llave_activada && e.estado === "borrador" && <p className="text-xs text-aviso mt-1" data-explain={GLOSARIO.indicadoresCalificados} data-explain-title="Parcial">parcial: faltan {e.pendientes}</p>}
           {!propia && puede("nomina", 1) && (
-            <p className="text-xs mt-2 pt-2 border-t border-borde">
+            <p className="text-xs mt-2 pt-2 border-t border-borde" data-explain={GLOSARIO.bonoObjetivos} data-explain-title="Bono">
               {bono?.monto != null ? <>Bono <b className="cifra">{dinero(bono.monto)}</b></> : <span className="text-aviso">Falta definir la base del bono</span>}
             </p>
           )}
@@ -291,13 +291,13 @@ export function PanelEvaluacion({ evaluacion: e, propia = false }: { evaluacion:
       </div>
 
       {e.llave_activada && (
-        <div className="rounded-lg border border-peligro/30 bg-peligro-suave p-3 text-sm text-peligro flex gap-2">
+        <div className="rounded-lg border border-peligro/30 bg-peligro-suave p-3 text-sm text-peligro flex gap-2" data-explain={GLOSARIO.llaveBono} data-explain-title="Llave activada">
           <KeyRound className="h-4 w-4 mt-0.5 shrink-0" />
           <div><b>Llave activada: el bono vale 0.</b> {e.llave_detalle}. Los indicadores suman {puntos(e.suma_renglones)}; si una marca estuvo mal, impúgnala.</div>
         </div>
       )}
       {e.devuelta_motivo && e.estado === "borrador" && (
-        <div className="rounded-lg border border-aviso/30 bg-aviso-suave p-3 text-sm text-aviso flex gap-2">
+        <div className="rounded-lg border border-aviso/30 bg-aviso-suave p-3 text-sm text-aviso flex gap-2" data-explain={GLOSARIO.evaluacionDevuelta} data-explain-title="Devuelta">
           <Undo2 className="h-4 w-4 mt-0.5 shrink-0" /><div><b>Devuelta:</b> {e.devuelta_motivo}</div>
         </div>
       )}
@@ -310,7 +310,7 @@ export function PanelEvaluacion({ evaluacion: e, propia = false }: { evaluacion:
               puedoImpugnar={puedoCalificar && ["borrador", "calificada"].includes(e.estado)}
               puedoResolver={!propia && !e.es_mia && esRrhh && ["borrador", "calificada"].includes(e.estado)} yo={yo} />
           ))}
-          <div className="flex items-center justify-between px-4 py-3 bg-fondo/60 rounded-b-xl text-sm">
+          <div className="flex items-center justify-between px-4 py-3 bg-fondo/60 rounded-b-xl text-sm" data-explain={GLOSARIO.resultadoObjetivos} data-explain-title="Suma de los indicadores">
             <span className="text-tenue">Suma de los indicadores {e.llave_activada ? "(la llave la deja en 0)" : "(tope de 100 %)"}</span>
             <b className="cifra">{puntos(e.suma_renglones)}</b>
           </div>
@@ -320,15 +320,15 @@ export function PanelEvaluacion({ evaluacion: e, propia = false }: { evaluacion:
       {/* Ajustes (solo meses aprobados) */}
       {(ajustes.data?.length ?? 0) > 0 && (
         <div className="space-y-2">
-          <p className="etiqueta">Ajustes</p>
+          <p className="etiqueta" data-explain={GLOSARIO.ajusteObjetivo} data-explain-title="Ajustes">Ajustes</p>
           {ajustes.data!.map((a) => <TarjetaAjuste key={a.id} a={a} puedoResolver={!propia && esRrhh && !e.es_mia && a.solicitado_por !== yo} />)}
         </div>
       )}
 
       {/* Acciones según el rol y el estado */}
       {!propia && (
-        <div className="flex flex-wrap gap-2">
-          {editable && <Boton variante="secundario" cargando={medir.isPending} onClick={() => medir.mutate(undefined)}><RefreshCw className="h-4 w-4" /> Volver a medir</Boton>}
+        <div className="flex flex-wrap gap-2" data-explain={GLOSARIO.botonesFlujoEvaluacion} data-explain-title="Pasos de la evaluación">
+          {editable && <Boton variante="secundario" cargando={medir.isPending} onClick={() => medir.mutate(undefined)} data-explain={GLOSARIO.botonVolverMedir}><RefreshCw className="h-4 w-4" /> Volver a medir</Boton>}
           {editable && (
             <Boton cargando={enviar.isPending} disabled={!e.completa && !e.llave_activada} onClick={() => enviar.mutate(undefined)}
               title={!e.completa && !e.llave_activada ? `Faltan ${e.pendientes} por calificar` : undefined}>
@@ -347,10 +347,10 @@ export function PanelEvaluacion({ evaluacion: e, propia = false }: { evaluacion:
             </Boton>
           )}
           {esRrhh && ["calificada", "revisada"].includes(e.estado) && (
-            <Boton variante="secundario" onClick={() => setDialogo("devolver")}><Undo2 className="h-4 w-4" /> Devolver al jefe</Boton>
+            <Boton variante="secundario" onClick={() => setDialogo("devolver")} data-explain={GLOSARIO.botonDevolverJefe}><Undo2 className="h-4 w-4" /> Devolver al jefe</Boton>
           )}
           {esRrhh && !e.es_mia && e.estado === "aprobada" && !ajustePendiente && (
-            <Boton variante="secundario" onClick={() => setDialogo("ajuste")}><Scale className="h-4 w-4" /> Pedir un ajuste</Boton>
+            <Boton variante="secundario" onClick={() => setDialogo("ajuste")} data-explain={GLOSARIO.ajusteObjetivo}><Scale className="h-4 w-4" /> Pedir un ajuste</Boton>
           )}
         </div>
       )}
@@ -390,7 +390,7 @@ function Renglon({ r, evidencias, editable, puedoImpugnar, puedoResolver, yo }: 
           {r.evidencia_url && <a href={r.evidencia_url} target="_blank" rel="noreferrer" className="text-xs text-marca-texto inline-flex items-center gap-1 mt-1"><ExternalLink className="h-3 w-3" /> Evidencia</a>}
           {r.nota_medicion && !r.capturado_en && <p className="text-xs text-tenue mt-1 flex gap-1"><Gauge className="h-3.5 w-3.5 shrink-0 mt-px" />{r.nota_medicion}</p>}
         </div>
-        <div className="w-16 sm:w-28 shrink-0 text-right space-y-1">
+        <div className="w-16 sm:w-28 shrink-0 text-right space-y-1" data-explain={GLOSARIO.calificacionIndicador} data-explain-title="Puntos de este indicador">
           <p className="cifra text-sm"><b className={r.calificacion == null ? "text-tenue" : ""}>{r.calificacion == null ? "—" : numero(r.calificacion)}</b><span className="text-tenue"> / {numero(r.peso)}</span></p>
           <BarraPeso valor={r.calificacion} peso={r.peso} />
         </div>
@@ -437,10 +437,10 @@ function FilaEvidencia({ v, puedoImpugnar, puedoResolver, unidad }: { v: Evidenc
           )}
         </div>
         {v.cuenta && v.vigente && !v.impugnacion && puedoImpugnar && !impugnando && (
-          <Boton variante="fantasma" tamano="sm" onClick={() => setImpugnando(true)}><Flag className="h-3.5 w-3.5" /> Impugnar</Boton>
+          <Boton variante="fantasma" tamano="sm" onClick={() => setImpugnando(true)} data-explain={GLOSARIO.impugnacion}><Flag className="h-3.5 w-3.5" /> Impugnar</Boton>
         )}
         {v.impugnacion === "pendiente" && puedoResolver && (
-          <div className="flex gap-1 shrink-0">
+          <div className="flex gap-1 shrink-0" data-explain={GLOSARIO.resolverImpugnacion} data-explain-title="Resolver la impugnación">
             <Boton variante="secundario" tamano="sm" onClick={() => resolver.mutate(false)} cargando={resolver.isPending && resolver.variables === false}><X className="h-3.5 w-3.5" /> Sí cuenta</Boton>
             <Boton variante="exito" tamano="sm" onClick={() => resolver.mutate(true)} cargando={resolver.isPending && resolver.variables === true}><Check className="h-3.5 w-3.5" /> No cuenta</Boton>
           </div>
@@ -479,7 +479,7 @@ function Captura({ r }: { r: Resultado }) {
 
   function enviar(ev: FormEvent) { ev.preventDefault(); guardar.mutate(undefined); }
   return (
-    <form onSubmit={enviar} className="mt-2 rounded-lg bg-fondo/70 border border-borde p-2.5 grid gap-2 sm:grid-cols-[auto_1fr_auto] items-end">
+    <form onSubmit={enviar} className="mt-2 rounded-lg bg-fondo/70 border border-borde p-2.5 grid gap-2 sm:grid-cols-[auto_1fr_auto] items-end" data-explain={GLOSARIO.capturaIndicador} data-explain-title="Calificar este indicador">
       <div className="flex gap-2 items-end">
         {porIncidencias && (
           <label className="text-xs text-tenue flex flex-col">Incidencias
@@ -516,7 +516,7 @@ function TarjetaAjuste({ a, puedoResolver }: { a: Ajuste; puedoResolver: boolean
     { exito: "Ajuste resuelto", invalidar: [["objetivos"]] });
   const tono: Tono = a.estado === "pendiente" ? "aviso" : a.estado === "autorizado" ? "ok" : "neutro";
   return (
-    <div className="rounded-lg border border-borde p-3 text-sm flex flex-col sm:flex-row sm:items-center gap-2">
+    <div className="rounded-lg border border-borde p-3 text-sm flex flex-col sm:flex-row sm:items-center gap-2" data-explain={GLOSARIO.ajusteObjetivo} data-explain-title="Ajuste">
       <div className="flex-1 min-w-0">
         <p><Insignia tono={tono}>{a.estado === "pendiente" ? "Por autorizar" : a.estado === "autorizado" ? "Autorizado" : "Rechazado"}</Insignia>
           <span className="ml-2 cifra">{puntos(a.total_anterior)} → <b>{puntos(a.total_corregido)}</b></span></p>
@@ -538,7 +538,7 @@ function Comentarios({ evaluacionId, lista }: { evaluacionId: string; lista: Com
     { invalidar: [["objetivos", "comentarios", evaluacionId]], alTerminar: () => setTexto("") });
   return (
     <div className="space-y-2">
-      <p className="etiqueta flex items-center gap-1"><MessageSquare className="h-3.5 w-3.5" /> Comentarios</p>
+      <p className="etiqueta flex items-center gap-1" data-explain={GLOSARIO.comentariosEvaluacion} data-explain-title="Comentarios"><MessageSquare className="h-3.5 w-3.5" /> Comentarios</p>
       {lista.length === 0 && <p className="text-sm text-tenue">Sin comentarios. La persona, su jefe y RRHH pueden dejar uno aquí.</p>}
       {lista.map((c) => (
         <div key={c.id} className="text-sm rounded-lg bg-fondo/70 px-3 py-2">
@@ -595,7 +595,7 @@ function DialogoAjuste({ abierto, alCerrar, e }: { abierto: boolean; alCerrar: (
 export function AvisoSinBase({ cuantos, className }: { cuantos: number; className?: string }) {
   if (!cuantos) return null;
   return (
-    <div className={cn("rounded-lg border border-aviso/30 bg-aviso-suave p-3 text-sm text-aviso flex gap-2", className)}>
+    <div className={cn("rounded-lg border border-aviso/30 bg-aviso-suave p-3 text-sm text-aviso flex gap-2", className)} data-explain={GLOSARIO.bonoObjetivos} data-explain-title="Base del bono">
       <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
       <span><b>Falta definir la base del bono.</b> {cuantos === 1 ? "Hay 1 evaluación aprobada" : `Hay ${cuantos} evaluaciones aprobadas`} con su %, pero dirección no ha dicho cuánto vale el bono por puesto o por persona. Mientras tanto se enseña el % y ningún monto.</span>
     </div>

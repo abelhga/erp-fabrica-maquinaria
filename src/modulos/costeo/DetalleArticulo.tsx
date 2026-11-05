@@ -45,7 +45,7 @@ function ComparacionCopia({ origen, copia }: { origen: string; copia: ArticuloCa
   const flecha = (d: number | null) => (d == null ? "" : d > 0 ? "▲" : d < 0 ? "▼" : "=");
   return (
     <div className="rounded-xl border border-marca/30 bg-marca-suave px-4 py-3 text-sm flex flex-wrap items-center gap-x-6 gap-y-2">
-      <span>Copia de <Link to={`/costeo/equipos/${o.id}`} className="font-medium hover:underline cifra">{o.clave}</Link> {o.nombre}</span>
+      <span data-explain={GLOSARIO.comparacionCopia} data-explain-title="Copia recién hecha">Copia de <Link to={`/costeo/equipos/${o.id}`} className="font-medium hover:underline cifra">{o.clave}</Link> {o.nombre}</span>
       {puede("costos") && <span>Costo <b className="cifra">{dinero(o.costo_total)}</b> <ArrowRight className="inline h-3.5 w-3.5" /> <b className="cifra">{dinero(copia.costo_total)}</b>
         {dc != null && <span className="ml-1 text-tenue cifra">{flecha(dc)} {dinero(Math.abs((copia.costo_total ?? 0) - (o.costo_total ?? 0)))} ({porcentaje(Math.abs(dc))})</span>}</span>}
       {vePrecios && <span>Precio de lista <b className="cifra">{dinero(o.precio)}</b> <ArrowRight className="inline h-3.5 w-3.5" /> <b className="cifra">{dinero(copia.precio)}</b>
@@ -87,7 +87,7 @@ function Encabezado({ a }: { a: ArticuloCatalogo }) {
         {/* El precio de venta es de quien vende (ventas, catálogo, márgenes, finanzas). */}
         {vePrecios ? (
           <div>
-            <p className="text-xs text-tenue">Precio de lista sin IVA</p>
+            <p className="text-xs text-tenue" data-explain={GLOSARIO.precioListaCatalogo} data-explain-title="Precio de lista">Precio de lista sin IVA</p>
             <p className="text-3xl sm:text-4xl font-semibold cifra tracking-tight leading-tight">{a.precio == null ? <span className="text-tenue text-2xl">sin precio</span> : dinero(a.precio)}</p>
             <p className="text-xs text-tenue mt-0.5">{a.precio != null ? <>Con IVA {dinero(a.precio * 1.16)} · calculado {hace(a.precio_calculado_en)}</> : "Sale solo en cuanto tenga costo."}</p>
           </div>
@@ -113,11 +113,11 @@ function Encabezado({ a }: { a: ArticuloCatalogo }) {
             </> : <>
               {/* Sin márgenes: lo que sí le sirve a compras en lugar de la utilidad. */}
               <Cifra etiqueta="Costo actualizado" valor={a.costo_actualizado_en ? hace(a.costo_actualizado_en) : fab && a.costo_mas_viejo ? hace(a.costo_mas_viejo) : "—"}
-                detalle={fab ? "su costo más viejo" : a.proveedor ?? undefined} explica={GLOSARIO.costoViejo} />
+                detalle={fab ? "su costo más viejo" : a.proveedor ?? undefined} explica={fab ? GLOSARIO.costoMasViejo : GLOSARIO.costoViejo} />
               <Cifra etiqueta={fab ? "Piezas sin costo" : "Tiempo de entrega"} valor={fab ? numero(a.sin_costo ?? 0) : a.tiempo_entrega_dias != null ? `${a.tiempo_entrega_dias} días` : "—"}
-                tono={fab && (a.sin_costo ?? 0) > 0 ? "aviso" : undefined} />
+                tono={fab && (a.sin_costo ?? 0) > 0 ? "aviso" : undefined} explica={fab ? GLOSARIO.piezasSinCosto : undefined} />
             </>}
-            {fab ? <Cifra etiqueta="Horas hombre" valor={numero(a.horas)} detalle="con las de sus subensambles" explica={GLOSARIO.horasEtapa} />
+            {fab ? <Cifra etiqueta="Horas hombre" valor={numero(a.horas)} detalle="con las de sus subensambles" explica={GLOSARIO.horasTotalesFabricado} />
               : <Cifra etiqueta="Existencia en planta" valor={`${numero(a.existencia ?? 0)}`} detalle={a.unidad} explica={GLOSARIO.enPlanta} />}
           </>
         ) : (
@@ -163,7 +163,7 @@ export default function DetalleArticulo() {
     ...(costos ? [{ valor: "costo", texto: puede("margenes") ? "Costo y precio" : "Costo", explica: puede("margenes") ? GLOSARIO.formulaPrecio : GLOSARIO.costoArticulo }, { valor: "historial", texto: "Historial", explica: GLOSARIO.historialCosteo }] : []),
     ...(a.tipo === "subensamble" || a.usado_en > 0 ? [{ valor: "usos", texto: "Dónde se usa", cuenta: a.usado_en, explica: GLOSARIO.usadoEnListas }] : []),
     { valor: "fotos", texto: "Fotos", explica: GLOSARIO.fotosEquipo },
-    { valor: "planos", texto: "Planos" },
+    { valor: "planos", texto: "Planos", explica: GLOSARIO.planosArticulo },
   ] : [];
   const pestana = pestanas.some((p) => p.valor === params.get("pestana")) ? params.get("pestana")! : "lista";
   const volver = fab ? { ruta: a.tipo === "subensamble" ? "/costeo/equipos?vista=subensambles" : "/costeo/equipos", texto: "Equipos y subensambles" }
@@ -177,9 +177,9 @@ export default function DetalleArticulo() {
           <Link to={volver.ruta} className="inline-flex items-center gap-1 hover:text-texto"><ArrowLeft className="h-3.5 w-3.5" /> {volver.texto}</Link>
           <span className="text-borde">|</span>
           <span className="cifra font-medium text-texto">{a.clave}</span>
-          <Insignia tono={fab ? "marca" : "neutro"}>{NOMBRE_TIPO[a.tipo]}</Insignia>
+          <span data-explain={GLOSARIO.tipoArticulo}><Insignia tono={fab ? "marca" : "neutro"}>{NOMBRE_TIPO[a.tipo]}</Insignia></span>
           {fab && !a.activo && <span data-explain={GLOSARIO.articuloInhabilitado} data-explain-title="Inhabilitado"><Insignia tono="aviso" punto>Inhabilitado</Insignia></span>}
-          {a.categoria && <Insignia>{a.categoria}</Insignia>}
+          {a.categoria && <span data-explain={a.tipo === "equipo" ? GLOSARIO.tipoEquipo : undefined} data-explain-title={a.tipo === "equipo" ? "Tipo de equipo" : undefined}><Insignia>{a.categoria}</Insignia></span>}
           {a.medida_especial && <span data-explain={GLOSARIO.medidaEspecial}><Insignia tono="info">medida especial</Insignia></span>}
           {a.es_importado && <Insignia tono="info">importado</Insignia>}
           {!a.se_vende && <span data-explain={GLOSARIO.noSeVendeSuelto}><Insignia>no se vende suelto</Insignia></span>}
@@ -216,7 +216,7 @@ export default function DetalleArticulo() {
           <FichaComponente articulo={a} />
           <EmpaqueArticulo articuloId={a.id} />
           <section className="space-y-2">
-            <h2 className="text-base font-semibold">Planos</h2>
+            <h2 className="text-base font-semibold" data-explain={GLOSARIO.planosArticulo}>Planos</h2>
             <PlanosArticulo articuloId={a.id} />
           </section>
         </>

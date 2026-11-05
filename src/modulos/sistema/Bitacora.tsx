@@ -78,11 +78,11 @@ export default function Bitacora() {
     { clave: "accion", titulo: "Acción", explica: GLOSARIO.accionBitacora, valor: (r) => ACCIONES[r.accion].texto, celda: (r) => <Insignia tono={ACCIONES[r.accion].tono}>{ACCIONES[r.accion].texto}</Insignia> },
     { clave: "tabla", titulo: "Qué", valor: (r) => nombreTabla(r.tabla), celda: (r) => <span className="whitespace-nowrap">{nombreTabla(r.tabla)}</span> },
     {
-      clave: "registro", titulo: "Registro", valor: (r) => r.etiqueta ?? etiquetaDeCambios(r.cambios) ?? r.registro_id,
+      clave: "registro", titulo: "Registro", explica: GLOSARIO.registroBitacora, valor: (r) => r.etiqueta ?? etiquetaDeCambios(r.cambios) ?? r.registro_id,
       celda: (r) => <span className="block max-w-[260px] truncate">{r.etiqueta ?? etiquetaDeCambios(r.cambios) ?? <span className="text-tenue font-mono text-xs">{r.registro_id.slice(0, 18)}</span>}</span>,
     },
     {
-      clave: "resumen", titulo: "Cambió", valor: (r) => (r.accion === "cambio" ? Object.keys(r.cambios ?? {}).map(nombreColumna).join(", ") : ""),
+      clave: "resumen", titulo: "Cambió", explica: GLOSARIO.cambioBitacora, valor: (r) => (r.accion === "cambio" ? Object.keys(r.cambios ?? {}).map(nombreColumna).join(", ") : ""),
       celda: (r) => {
         const filas = filasDiff(r.cambios, r.accion);
         if (r.accion !== "cambio") return <span className="text-tenue">{filas.length ? `${filas.length} datos` : "—"}</span>;
@@ -108,7 +108,7 @@ export default function Bitacora() {
             {Object.entries(TABLAS).sort((a, b) => a[1].localeCompare(b[1], "es")).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </Seleccion>
         </label>
-        <label className="space-y-1 col-span-2 md:col-span-1">
+        <label className="space-y-1 col-span-2 md:col-span-1" data-explain={GLOSARIO.bitacoraSistema} data-explain-title="Quién">
           <span className="etiqueta">Quién</span>
           <Seleccion value={usuario} onChange={(e) => setUsuario(e.target.value)}>
             <option value="">Cualquiera</option>
@@ -116,7 +116,7 @@ export default function Bitacora() {
             {(personas.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
           </Seleccion>
         </label>
-        <label className="space-y-1">
+        <label className="space-y-1" data-explain={GLOSARIO.accionBitacora} data-explain-title="Acción">
           <span className="etiqueta">Acción</span>
           <Seleccion value={accion} onChange={(e) => setAccion(e.target.value)}>
             <option value="">Todas</option>
@@ -193,7 +193,7 @@ function Detalle({ registro: r, nombres, alCerrar }: { registro: Registro | null
             </table>
           )}
           <section className="space-y-2">
-            <h4 className="font-medium">Historia de este registro</h4>
+            <h4 className="font-medium" data-explain={GLOSARIO.historiaRegistroBitacora} data-explain-title="Historia de este registro">Historia de este registro</h4>
             {historia.isLoading ? <Cargando filas={2} /> : (
               <ol className="relative border-l border-borde ml-2 space-y-3">
                 {(historia.data ?? []).map((h) => (

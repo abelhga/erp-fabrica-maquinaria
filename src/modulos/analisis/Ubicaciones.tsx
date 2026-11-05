@@ -44,6 +44,11 @@ type Vista = "resolver" | "confirmar" | "ficha" | "aproximadas" | "corregidas";
 // Sin ciudad (o sin nada) no hay texto que corregir con un alias: se arregla en la ficha del cliente.
 const soloFicha = (g: Grupo) => (!g.estado_norm && !g.ciudad_norm) || g.motivo === "sin_ciudad";
 const vistaDe = (g: Grupo): Vista => soloFicha(g) ? "ficha" : MOTIVO[g.motivo]?.grupo ?? "resolver";
+// Una explicación por lista: la misma en su filtro y en la insignia de cada renglón.
+const EXPLICA_VISTA: Record<Vista, string> = {
+  resolver: GLOSARIO.ubicacionesPorResolver, confirmar: GLOSARIO.ubicacionesPorConfirmar, ficha: GLOSARIO.ubicacionesFaltaDato,
+  aproximadas: GLOSARIO.ubicacionesAproximadas, corregidas: GLOSARIO.ubicacionesCorregidas,
+};
 
 export default function Ubicaciones() {
   const { puede } = useSesion();
@@ -71,24 +76,27 @@ export default function Ubicaciones() {
     { clave: "estado_texto", titulo: "Estado escrito", valor: (g) => g.estado_texto ?? "", celda: (g) => g.estado_texto || <span className="text-tenue italic">vacío</span> },
     { clave: "ciudad_texto", titulo: "Ciudad escrita", valor: (g) => g.ciudad_texto ?? "", celda: (g) => g.ciudad_texto || <span className="text-tenue italic">vacía</span> },
     { clave: "motivo", titulo: "Qué pasa", valor: (g) => MOTIVO[g.motivo]?.texto ?? g.motivo, explica: GLOSARIO.motivoUbicacion,
-      celda: (g) => <Insignia tono={MOTIVO[g.motivo]?.tono ?? "neutro"}>{!g.estado_norm && !g.ciudad_norm ? "Sin estado ni ciudad" : MOTIVO[g.motivo]?.texto ?? g.motivo}</Insignia> },
+      celda: (g) => <span data-explain={EXPLICA_VISTA[vistaDe(g)]}><Insignia tono={MOTIVO[g.motivo]?.tono ?? "neutro"}>{!g.estado_norm && !g.ciudad_norm ? "Sin estado ni ciudad" : MOTIVO[g.motivo]?.texto ?? g.motivo}</Insignia></span> },
     { clave: "clientes", titulo: "Clientes", alinear: "der", sinBusqueda: true,
-      celda: (g) => <button type="button" className="text-marca-texto hover:underline cifra" onClick={(e) => { e.stopPropagation(); setVerClientes(g); }}>{numero(g.clientes)}</button> },
-    { clave: "monto", titulo: "Vendido", alinear: "der", celda: (g) => dineroCompacto(g.monto), sinBusqueda: true },
-    { clave: "ubicado", titulo: "Hoy queda en", valor: (g) => [g.municipio, g.estado].filter(Boolean).join(", "),
+      celda: (g) => <button type="button" className="text-marca-texto hover:underline cifra" onClick={(e) => { e.stopPropagation(); setVerClientes(g); }}
+        data-explain={GLOSARIO.botonVerClientesUbicacion} data-explain-title="Ver quiénes son">{numero(g.clientes)}</button> },
+    { clave: "monto", titulo: "Vendido", alinear: "der", explica: GLOSARIO.vendidoUbicacion, celda: (g) => dineroCompacto(g.monto), sinBusqueda: true },
+    { clave: "ubicado", titulo: "Hoy queda en", explica: GLOSARIO.ubicacionHoyQuedaEn, valor: (g) => [g.municipio, g.estado].filter(Boolean).join(", "),
       celda: (g) => g.municipio ? <span>{g.municipio}, <span className="text-tenue">{g.estado}</span></span> : g.estado ? <span className="text-tenue">Solo {g.estado}</span> : <span className="text-tenue">—</span> },
     { clave: "accion", titulo: esDireccion ? "Municipio correcto" : "", sinBusqueda: true, clase: "min-w-[260px]",
       celda: (g) => !esDireccion ? null : soloFicha(g) ? (
-        <Boton tamano="sm" variante="secundario" onClick={() => setVerClientes(g)}><Users className="h-4 w-4" /> Ver clientes</Boton>
+        <Boton tamano="sm" variante="secundario" onClick={() => setVerClientes(g)} data-explain={GLOSARIO.botonVerClientesUbicacion}><Users className="h-4 w-4" /> Ver clientes</Boton>
       ) : (
         <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
           {(g.motivo === "parecido" || g.motivo === "otro_estado" || g.motivo === "ciudad" || g.motivo === "aproximado") && g.cvegeo && (
             <Boton tamano="sm" variante="secundario" title={`Confirmar ${g.municipio}`} aria-label={`Confirmar ${g.municipio}`}
+              data-explain={GLOSARIO.botonConfirmarMunicipio} data-explain-title={`Confirmar ${g.municipio}`}
               onClick={() => corregir.mutate({ g, cvegeo: g.cvegeo })}><Check className="h-4 w-4" /></Boton>
           )}
           <SelectorMunicipio cveEnt={g.motivo === "otro_estado" ? null : g.cve_ent} sugerencias={g.sugerencias}
             alElegir={(m) => corregir.mutate({ g, cvegeo: m.cvegeo })} />
           <button type="button" className="text-xs text-tenue hover:text-texto whitespace-nowrap" title="No se puede ubicar (p. ej. «Varios»): deja de salir aquí"
+            data-explain={GLOSARIO.botonNoSePuedeUbicar} data-explain-title="No se puede ubicar"
             onClick={() => corregir.mutate({ g, no_ubicable: true })}>No se puede</button>
         </div>
       ) },
@@ -97,19 +105,19 @@ export default function Ubicaciones() {
   return (
     <div className="space-y-4">
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
-        <Cifra titulo="Venta ubicada en un estado" valor={porcentaje(c.pct_estado, 1)} detalle={<>{dineroCompacto(c.estado)} de {dineroCompacto(c.total)} desde 2018</>} />
-        <Cifra titulo="Venta ubicada en un municipio" valor={porcentaje(c.pct_municipio, 1)} detalle={<>{numero(c.clientes_municipio)} de {numero(c.clientes)} clientes</>} />
+        <Cifra titulo="Venta ubicada en un estado" explica={GLOSARIO.coberturaEstado} valor={porcentaje(c.pct_estado, 1)} detalle={<>{dineroCompacto(c.estado)} de {dineroCompacto(c.total)} desde 2018</>} />
+        <Cifra titulo="Venta ubicada en un municipio" explica={GLOSARIO.coberturaMunicipio} valor={porcentaje(c.pct_municipio, 1)} detalle={<>{numero(c.clientes_municipio)} de {numero(c.clientes)} clientes</>} />
         <Cifra titulo="Exportación" explica={GLOSARIO.exportacionVenta} valor={dineroCompacto(c.extranjero)} detalle={<>{porcentaje(c.total ? c.extranjero / c.total : null, 1)} de la venta, fuera de México</>} />
         <Cifra titulo="Sin estado" explica={GLOSARIO.ventaSinUbicar} valor={dineroCompacto(c.total - c.estado - c.extranjero)} detalle={<>{numero(c.clientes - c.clientes_estado)} clientes no salen en el mapa</>} />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Filtro valor={vista} alCambiar={setVista} opciones={[
-          { valor: "resolver", texto: "Por resolver", cuenta: cuenta("resolver") },
-          { valor: "confirmar", texto: "Por confirmar", cuenta: cuenta("confirmar") },
-          { valor: "ficha", texto: "Falta el dato en la ficha", cuenta: cuenta("ficha") },
-          { valor: "aproximadas", texto: "Ubicadas por aproximación", cuenta: cuenta("aproximadas") },
-          { valor: "corregidas", texto: "Corregidas por dirección", cuenta: cuenta("corregidas") },
+          { valor: "resolver", texto: "Por resolver", cuenta: cuenta("resolver"), explica: EXPLICA_VISTA.resolver },
+          { valor: "confirmar", texto: "Por confirmar", cuenta: cuenta("confirmar"), explica: EXPLICA_VISTA.confirmar },
+          { valor: "ficha", texto: "Falta el dato en la ficha", cuenta: cuenta("ficha"), explica: EXPLICA_VISTA.ficha },
+          { valor: "aproximadas", texto: "Ubicadas por aproximación", cuenta: cuenta("aproximadas"), explica: EXPLICA_VISTA.aproximadas },
+          { valor: "corregidas", texto: "Corregidas por dirección", cuenta: cuenta("corregidas"), explica: EXPLICA_VISTA.corregidas },
         ]} />
         <p className="text-xs text-tenue" data-explain={GLOSARIO.correccionUbicacion}>Corregir una combinación ubica a todos los clientes que la escribieron igual, también a los que se den de alta después.</p>
       </div>
@@ -125,7 +133,8 @@ export default function Ubicaciones() {
             { clave: "por", titulo: "Quién", valor: (a) => a.por ?? "" },
             { clave: "en", titulo: "Cuándo", valor: (a) => a.en, celda: (a) => fecha(a.en) },
             ...(esDireccion ? [{ clave: "q", titulo: "", sinBusqueda: true, celda: (a: Alias) => (
-              <button type="button" className="inline-flex items-center gap-1 text-xs text-tenue hover:text-peligro" onClick={() => quitar.mutate(a.id)}><Undo2 className="h-3.5 w-3.5" /> Deshacer</button>
+              <button type="button" className="inline-flex items-center gap-1 text-xs text-tenue hover:text-peligro" onClick={() => quitar.mutate(a.id)}
+                data-explain={GLOSARIO.botonDeshacerUbicacion}><Undo2 className="h-3.5 w-3.5" /> Deshacer</button>
             ) } as Columna<Alias>] : []),
           ]} />
       ) : (
@@ -160,7 +169,8 @@ function SelectorMunicipio({ cveEnt, sugerencias, alElegir }: { cveEnt: string |
   return (
     <P.Root open={abierto} onOpenChange={setAbierto}>
       <P.Trigger asChild>
-        <button type="button" className="campo h-8 flex items-center justify-between gap-2 text-left text-xs min-w-[170px]">
+        <button type="button" className="campo h-8 flex items-center justify-between gap-2 text-left text-xs min-w-[170px]"
+          data-explain={GLOSARIO.selectorMunicipioCorrecto} data-explain-title="Elegir municipio">
           <span className="text-tenue truncate">Elegir municipio…</span><ChevronsUpDown className="h-3.5 w-3.5 text-tenue shrink-0" />
         </button>
       </P.Trigger>

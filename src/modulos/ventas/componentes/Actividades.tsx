@@ -9,6 +9,7 @@ import { Cargando } from "@/components/ui/estados";
 import { Insignia } from "@/components/ui/insignia";
 import { cn } from "@/lib/utilidades";
 import { hoyMx, type Actividad, haceCuanto } from "../comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const TIPOS = [
   { valor: "llamada", texto: "Llamada", icono: Phone },
@@ -67,7 +68,7 @@ export function Actividades({ clienteId, oportunidadId, puedeCapturar = true, li
     <div className="space-y-4">
       {puedeCapturar && (
         <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); if (texto.trim()) registrar.mutate(undefined); }}>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1" data-explain={GLOSARIO.actividad} data-explain-title="Qué registras">
             {TIPOS.map((t) => (
               <button key={t.valor} type="button" onClick={() => setTipo(t.valor)}
                 className={cn("inline-flex items-center gap-1.5 h-8 rounded-full px-3 text-xs font-medium border transition",
@@ -85,7 +86,8 @@ export function Actividades({ clienteId, oportunidadId, puedeCapturar = true, li
             <Boton type="submit" disabled={!texto.trim()} cargando={registrar.isPending}>Registrar</Boton>
           </div>
           {tipo !== "tarea" && !vence && (
-            <button type="button" className="text-xs text-marca-texto" onClick={() => setVence(hoy)}>+ agregar seguimiento con fecha</button>
+            <button type="button" className="text-xs text-marca-texto" onClick={() => setVence(hoy)}
+              data-explain={GLOSARIO.tareaConFechaActividad} data-explain-title="Con fecha">+ agregar seguimiento con fecha</button>
           )}
         </form>
       )}
@@ -94,7 +96,7 @@ export function Actividades({ clienteId, oportunidadId, puedeCapturar = true, li
         <>
           {pendientes.length > 0 && (
             <div className="space-y-1.5">
-              <p className="etiqueta">Pendientes</p>
+              <p className="etiqueta" data-explain={GLOSARIO.tareaConFechaActividad} data-explain-title="Pendientes">Pendientes</p>
               {pendientes.map((a) => {
                 const vencida = (a.vence_en ?? "") < hoy;
                 return (

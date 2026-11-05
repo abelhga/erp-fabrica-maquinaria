@@ -43,8 +43,8 @@ export default function Capacidad() {
         <Cifra titulo={`Trabajo en fila (${cuello})`} explica={GLOSARIO.filaTaller} valor={sem(d.semanas_cola)}
           detalle={`La etapa más cargada; ${d.cuello} trabaja una semana por semana.`} />
         <Cifra titulo="Se pone al día" explica={GLOSARIO.alDiaTaller} valor={d.al_dia ? fecha(d.al_dia) : "—"} detalle="Si no entrara ningún pedido más" />
-        <Cifra titulo="Ya vencido" valor={sem(d.vencido)} detalle="Trabajo cuya fecha compromiso ya pasó" />
-        <Cifra titulo="Sin fecha compromiso" valor={sem(d.sin_fecha)} detalle="Va al final de la fila (stock, sin fecha)" />
+        <Cifra titulo="Ya vencido" explica={GLOSARIO.trabajoVencidoTaller} valor={sem(d.vencido)} detalle="Trabajo cuya fecha compromiso ya pasó" />
+        <Cifra titulo="Sin fecha compromiso" explica={GLOSARIO.trabajoSinFechaTaller} valor={sem(d.sin_fecha)} detalle="Va al final de la fila (stock, sin fecha)" />
       </div>
 
       <TarjetaGrafica titulo={`Prometido contra lo que cabe, en semanas de ${cuello}`} explica={GLOSARIO.prometidoVsCapacidad}

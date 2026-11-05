@@ -69,31 +69,36 @@ export default function DetalleServicio() {
 
   return (
     <Pagina
-      titulo={<span className="flex flex-wrap items-center gap-3"><span className="cifra">{s.folio}</span><InsigniaEstado estado={s.estado} /></span>}
-      descripcion={<span className="flex flex-wrap items-center gap-x-3 gap-y-1"><Tipo tipo={s.tipo} /><span>{s.cliente}</span>
-        {s.prioridad === 1 && <Insignia tono="peligro">Urgente</Insignia>}</span>}
+      titulo={<span className="flex flex-wrap items-center gap-3"><span className="cifra">{s.folio}</span><span data-explain={GLOSARIO.estadoServicio} data-explain-title="Estado del servicio"><InsigniaEstado estado={s.estado} /></span></span>}
+      descripcion={<span className="flex flex-wrap items-center gap-x-3 gap-y-1"><span data-explain={GLOSARIO.tipoServicio} data-explain-title="Tipo de servicio"><Tipo tipo={s.tipo} /></span><span>{s.cliente}</span>
+        {s.prioridad === 1 && <span data-explain={GLOSARIO.prioridadServicio} data-explain-title="Urgente"><Insignia tono="peligro">Urgente</Insignia></span>}</span>}
       acciones={<>
         <Link to="/servicio" className="inline-flex items-center gap-1 text-sm text-tenue hover:text-texto mr-2"><ArrowLeft className="h-4 w-4" />Servicios</Link>
-        {abierto && enPlanta && !s.recibido_en && p.personal && <Boton variante="secundario" onClick={() => setDialogo("recibir")}><PackageCheck className="h-4 w-4" />Recibir equipo</Boton>}
+        {abierto && enPlanta && !s.recibido_en && p.personal && <Boton variante="secundario" onClick={() => setDialogo("recibir")} data-explain={GLOSARIO.botonRecibirEquipo}><PackageCheck className="h-4 w-4" />Recibir equipo</Boton>}
         {(s.estado === "solicitada" || s.estado === "programada") && p.gerencia && (
-          <Boton variante={s.estado === "solicitada" ? "primario" : "secundario"} onClick={() => setDialogo("programar")}>
+          <Boton variante={s.estado === "solicitada" ? "primario" : "secundario"} onClick={() => setDialogo("programar")} data-explain={GLOSARIO.botonProgramarServicio}>
             <CalendarClock className="h-4 w-4" />{s.estado === "solicitada" ? "Programar" : "Reprogramar"}
           </Boton>
         )}
+        {/* Iniciar y Cerrar se deshabilitan sin recepción: la explicación va en el envoltorio para que no se pierda. */}
         {s.estado === "programada" && p.personal && (
-          <Boton variante="secundario" onClick={() => iniciar.mutate()} cargando={iniciar.isPending} disabled={falta}
-                 title={falta ? "Primero recibe el equipo, con fotos" : undefined}><Play className="h-4 w-4" />Iniciar</Boton>
+          <span className="inline-flex" data-explain={GLOSARIO.botonIniciarServicio} data-explain-title="Iniciar">
+            <Boton variante="secundario" onClick={() => iniciar.mutate()} cargando={iniciar.isPending} disabled={falta}
+                   title={falta ? "Primero recibe el equipo, con fotos" : undefined}><Play className="h-4 w-4" />Iniciar</Boton>
+          </span>
         )}
         {(s.estado === "programada" || s.estado === "en_curso") && p.personal && (
-          <Boton variante="exito" onClick={() => setDialogo("cerrar")} disabled={falta}><CheckCircle2 className="h-4 w-4" />Cerrar servicio</Boton>
+          <span className="inline-flex" data-explain={GLOSARIO.botonCerrarServicio} data-explain-title="Cerrar servicio">
+            <Boton variante="exito" onClick={() => setDialogo("cerrar")} disabled={falta}><CheckCircle2 className="h-4 w-4" />Cerrar servicio</Boton>
+          </span>
         )}
-        {puedeCancelar && <Boton variante="fantasma" onClick={() => setDialogo("cancelar")}><Ban className="h-4 w-4" />Cancelar</Boton>}
+        {puedeCancelar && <Boton variante="fantasma" onClick={() => setDialogo("cancelar")} data-explain={GLOSARIO.botonCancelarServicio}><Ban className="h-4 w-4" />Cancelar</Boton>}
       </>}
     >
       {s.estado === "cancelada" ? (
         <div className="rounded-lg border border-borde bg-fondo p-3 text-sm">Cancelado {hace(s.cancelado_en)}: {s.motivo_cancelacion}</div>
       ) : (
-        <ol className="grid grid-cols-4 gap-1" aria-label="Avance del servicio">
+        <ol className="grid grid-cols-4 gap-1" aria-label="Avance del servicio" data-explain={GLOSARIO.avanceServicio} data-explain-title="Avance del servicio">
           {PASOS.map((x, i) => {
             const hecho = i <= indice;
             const f = fechaPaso[x.estado];
@@ -125,9 +130,9 @@ export default function DetalleServicio() {
                 <Dato etiqueta="Dónde">{s.lugar ?? (s.tipo === "reparacion_planta" ? "En planta" : "—")}</Dato>
                 <Dato etiqueta="Contacto">{s.contacto_nombre ?? "—"}{s.contacto_telefono && (
                   <a href={`tel:${s.contacto_telefono.replace(/\s/g, "")}`} className="flex items-center gap-1 text-marca-texto text-xs"><Phone className="h-3 w-3" />{s.contacto_telefono}</a>)}</Dato>
-                <Dato etiqueta="Lo quiere">{s.fecha_deseada ? fecha(s.fecha_deseada) : "Sin fecha"}<span className="block text-xs text-tenue">{PRIORIDAD[s.prioridad].texto}</span></Dato>
+                <Dato etiqueta="Lo quiere" explica={GLOSARIO.prioridadServicio}>{s.fecha_deseada ? fecha(s.fecha_deseada) : "Sin fecha"}<span className="block text-xs text-tenue">{PRIORIDAD[s.prioridad].texto}</span></Dato>
                 <Dato etiqueta="Pidió">{s.solicitado_por_nombre ?? "—"}<span className="block text-xs text-tenue">{fechaYHora(s.solicitado_en)}</span></Dato>
-                {s.referencia && <Dato etiqueta="Reporte del cliente">{s.referencia}</Dato>}
+                {s.referencia && <Dato etiqueta="Reporte del cliente" explica={GLOSARIO.referenciaServicio}>{s.referencia}</Dato>}
               </div>
             </div>
           </Tarjeta>
@@ -140,7 +145,7 @@ export default function DetalleServicio() {
                 <p className="text-sm text-tenue">{p.gerencia ? "Ponle fecha y cuadrilla: así el taller sabe con quién no cuenta esos días." : "La gerencia de producción le pone fecha y cuadrilla; te llega un aviso."}</p>
               ) : (
                 <>
-                  <ul className="grid sm:grid-cols-2 gap-2">
+                  <ul className="grid sm:grid-cols-2 gap-2" data-explain={GLOSARIO.cuadrilla} data-explain-title="Cuadrilla">
                     {s.cuadrilla.map((c) => (
                       <li key={c.id} className="flex items-center gap-2 rounded-lg border border-borde px-3 py-2">
                         <span className="h-2 w-2 rounded-full shrink-0" style={{ background: c.etapa_color ?? "hsl(var(--tenue))" }} />
@@ -190,7 +195,7 @@ export default function DetalleServicio() {
 
           {p.costos && (
             <Tarjeta>
-              <EncabezadoTarjeta titulo="Viáticos y costos" descripcion="Solo lo ven la gerencia y quien maneja costos." />
+              <EncabezadoTarjeta titulo="Viáticos y costos" explica={GLOSARIO.costosServicio} descripcion="Solo lo ven la gerencia y quien maneja costos." />
               <div className="px-5 pb-5"><Costos servicioId={s.id} conceptos={["viaticos", "servicio_externo", "mano_obra", "otro"]} /></div>
             </Tarjeta>
           )}
@@ -212,7 +217,7 @@ function Cierre({ s }: { s: Servicio }) {
       <EncabezadoTarjeta titulo="Cierre" descripcion={`${fechaYHora(s.cerrado_en)} · ${s.cerrado_por_nombre ?? ""}`} />
       <div className="px-5 pb-5 space-y-3 text-sm">
         <p className="whitespace-pre-line">{s.notas_cierre}</p>
-        {s.tipo === "garantia" && <Insignia tono={s.garantia_procede ? "ok" : "neutro"}>{s.garantia_procede ? "La garantía procedió" : "La garantía no procedió"}</Insignia>}
+        {s.tipo === "garantia" && <span data-explain={GLOSARIO.garantiaProcede} data-explain-title="¿Procedió la garantía?"><Insignia tono={s.garantia_procede ? "ok" : "neutro"}>{s.garantia_procede ? "La garantía procedió" : "La garantía no procedió"}</Insignia></span>}
         <div>
           <p className="etiqueta">Recibió</p>
           <p>{s.recibio_nombre}</p>
@@ -288,7 +293,7 @@ function DialogoCerrar({ s, alCerrar }: { s: Servicio; alCerrar: () => void }) {
         </Campo>
         {s.tipo === "garantia" && (
           <fieldset>
-            <legend className="text-sm font-medium mb-1.5">¿La garantía procedió?</legend>
+            <legend className="text-sm font-medium mb-1.5" data-explain={GLOSARIO.garantiaProcede} data-explain-title="¿La garantía procedió?">¿La garantía procedió?</legend>
             <div className="flex gap-2">
               {[true, false].map((v) => (
                 <button key={String(v)} type="button" onClick={() => setProcede(v)} aria-pressed={procede === v}
@@ -303,7 +308,7 @@ function DialogoCerrar({ s, alCerrar }: { s: Servicio; alCerrar: () => void }) {
           <Entrada value={recibio} onChange={(e) => setRecibio(e.target.value)} placeholder="Nombre de quien recibe" />
         </Campo>
         <div>
-          <p className="text-sm font-medium mb-1.5">Firma <span className="text-tenue font-normal">(opcional)</span></p>
+          <p className="text-sm font-medium mb-1.5" data-explain={GLOSARIO.firmaServicio} data-explain-title="Firma">Firma <span className="text-tenue font-normal">(opcional)</span></p>
           <PanelFirma alCambiar={setFirma} />
         </div>
       </form>

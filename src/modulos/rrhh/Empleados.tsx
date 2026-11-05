@@ -87,7 +87,7 @@ export default function Empleados() {
       ) : <span className="text-tenue">—</span>,
     },
     {
-      clave: "antiguedad", titulo: "Antigüedad", valor: (e) => mesesDeAntiguedad(e.fecha_ingreso), sinBusqueda: true,
+      clave: "antiguedad", titulo: "Antigüedad", explica: GLOSARIO.antiguedadPersonal, valor: (e) => mesesDeAntiguedad(e.fecha_ingreso), sinBusqueda: true,
       celda: (e) => (
         <div className="whitespace-nowrap">
           <p>{antiguedad(e.fecha_ingreso, e.activo ? null : e.baja_en)}</p>
@@ -113,7 +113,7 @@ export default function Empleados() {
       clave: "estado", titulo: "Estado", explica: GLOSARIO.estadoPersonal, sinBusqueda: true,
       valor: (e) => (!e.activo ? "Baja" : ausencia.get(e.id) ? TIPOS[ausencia.get(e.id)!.tipo].texto : "Activo"),
       celda: (e) => {
-        if (!e.activo) return <Insignia tono="neutro">Baja {fecha(e.baja_en)}</Insignia>;
+        if (!e.activo) return <span data-explain={GLOSARIO.estadoPersonal} data-explain-title="Baja"><Insignia tono="neutro">Baja {fecha(e.baja_en)}</Insignia></span>;
         const a = ausencia.get(e.id);
         if (a) return <Insignia tono={TIPOS[a.tipo].tono} punto>{TIPOS[a.tipo].texto} hasta {fecha(a.fin)}</Insignia>;
         return <Insignia tono="ok" punto>Activo</Insignia>;
@@ -127,10 +127,10 @@ export default function Empleados() {
     <Pagina
       titulo="Personal"
       descripcion="Quién trabaja en Hegamex, en qué área y cuántas vacaciones le quedan."
-      acciones={puede("rrhh", 2) && <Boton onClick={() => abrir("nuevo")}><Plus className="h-4 w-4" /> Nuevo empleado</Boton>}
+      acciones={puede("rrhh", 2) && <Boton onClick={() => abrir("nuevo")} data-explain={GLOSARIO.botonNuevoEmpleado}><Plus className="h-4 w-4" /> Nuevo empleado</Boton>}
     >
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
-        <Kpi titulo="Personal activo" valor={numero(activos.length)} icono={Users} tono="marca"
+        <Kpi titulo="Personal activo" valor={numero(activos.length)} icono={Users} tono="marca" explica={GLOSARIO.personalActivoRrhh}
           detalle={`${activos.filter((e) => e.etapa_id).length} en piso · antigüedad promedio ${promedio.toFixed(1)} años`} />
         <Kpi titulo="Ausentes hoy" valor={numero(ausentes.data?.length ?? 0)} icono={UserX} tono={(ausentes.data?.length ?? 0) > 0 ? "aviso" : "ok"} explica={GLOSARIO.ausentesHoy}
           detalle={nombresAusentes.length ? nombresAusentes.join(", ") : "Todos presentes"} alClic={() => ir("/rrhh/incidencias?vista=calendario")} />
@@ -154,7 +154,7 @@ export default function Empleados() {
           <div className="flex flex-wrap items-center gap-2">
             <Filtro<VistaEstado> valor={estado} alCambiar={setEstado} opciones={[
               { valor: "activos", texto: "Activos", cuenta: activos.length },
-              { valor: "bajas", texto: "Bajas", cuenta: todos.length - activos.length },
+              { valor: "bajas", texto: "Bajas", cuenta: todos.length - activos.length, explica: GLOSARIO.filtroBajasPersonal },
               { valor: "todos", texto: "Todos" },
             ]} />
             <Seleccion className="h-8 w-auto text-xs" value={depto} onChange={(e) => setDepto(e.target.value)} aria-label="Departamento">

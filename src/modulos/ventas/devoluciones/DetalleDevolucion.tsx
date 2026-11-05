@@ -56,11 +56,11 @@ export function DetalleDevolucion({ dev: d }: { dev: Devolucion }) {
       {/* Lo que toca */}
       {d.abierta && (
         <div className="flex flex-wrap gap-2">
-          {d.tipo === "reclamo" && d.estado === "abierta" && captura && <Boton onClick={() => setDlg("responder")}><MessageSquareReply className="h-4 w-4" />Registrar respuesta</Boton>}
-          {d.tipo !== "devolucion" && captura && <Boton variante={d.estado === "respondida" ? "primario" : "secundario"} onClick={() => setDlg("cerrar")}><CheckCircle2 className="h-4 w-4" />Cerrar con resultado</Boton>}
-          {d.tipo === "devolucion" && d.estado === "abierta" && almacen && <Boton onClick={() => setDlg("recibir")}><PackageOpen className="h-4 w-4" />Recibir en almacén</Boton>}
-          {d.tipo === "devolucion" && d.estado === "recibida" && almacen && <Boton onClick={() => setDlg("decidir")}><CheckCircle2 className="h-4 w-4" />Decidir qué se hace</Boton>}
-          {d.estado === "abierta" && captura && <Boton variante="fantasma" className="text-peligro" onClick={() => setDlg("cancelar")}><Ban className="h-4 w-4" />Cancelar</Boton>}
+          {d.tipo === "reclamo" && d.estado === "abierta" && captura && <Boton onClick={() => setDlg("responder")} data-explain={GLOSARIO.botonResponderReclamo}><MessageSquareReply className="h-4 w-4" />Registrar respuesta</Boton>}
+          {d.tipo !== "devolucion" && captura && <Boton variante={d.estado === "respondida" ? "primario" : "secundario"} onClick={() => setDlg("cerrar")} data-explain={GLOSARIO.botonCerrarReclamo}><CheckCircle2 className="h-4 w-4" />Cerrar con resultado</Boton>}
+          {d.tipo === "devolucion" && d.estado === "abierta" && almacen && <Boton onClick={() => setDlg("recibir")} data-explain={GLOSARIO.botonRecibirDevolucion}><PackageOpen className="h-4 w-4" />Recibir en almacén</Boton>}
+          {d.tipo === "devolucion" && d.estado === "recibida" && almacen && <Boton onClick={() => setDlg("decidir")} data-explain={GLOSARIO.botonDecidirDevolucion}><CheckCircle2 className="h-4 w-4" />Decidir qué se hace</Boton>}
+          {d.estado === "abierta" && captura && <Boton variante="fantasma" className="text-peligro" onClick={() => setDlg("cancelar")} data-explain={GLOSARIO.botonCancelarDevolucion} data-explain-title="Cancelar el registro"><Ban className="h-4 w-4" />Cancelar</Boton>}
         </div>
       )}
       {d.tipo === "cancelacion" && d.abierta && enviosVenta.filter((e) => e.abierto).map((e) => (
@@ -75,19 +75,19 @@ export function DetalleDevolucion({ dev: d }: { dev: Devolucion }) {
         <Dato etiqueta="Venta"><Link to={`/ventas/pedidos/${d.pedido_id}`} className="text-marca-texto hover:underline cifra">{d.id_externo ? `#${d.id_externo}` : d.pedido_folio}</Link>
           <span className="block text-xs text-tenue font-normal">{d.pedido_folio} · {CANAL[d.canal] ?? d.canal}</span></Dato>
         <Dato etiqueta="Cliente">{d.cliente ?? "—"}{d.vendedor && <span className="block text-xs text-tenue font-normal">{d.vendedor}</span>}</Dato>
-        <Dato etiqueta="Lo lleva">{d.responsable ?? "—"}</Dato>
+        <Dato etiqueta="Lo lleva" explica={GLOSARIO.responsableDevolucion}>{d.responsable ?? "—"}</Dato>
         <Dato etiqueta="Código de autorización" explica={GLOSARIO.codigoAutorizacion}>
           {d.abierta && captura ? <CampoTexto valor={d.codigo_autorizacion} alGuardar={(v) => actualizar.mutate({ codigo_autorizacion: v })} placeholder="El de Mercado Libre" />
             : <span className="cifra">{d.codigo_autorizacion ?? "—"}</span>}
         </Dato>
         {d.tipo === "devolucion" && (
-          <Dato etiqueta="Llega">
+          <Dato etiqueta="Llega" explica={GLOSARIO.venceDevolucion}>
             {d.estado === "abierta" && captura ? <input type="date" className="campo h-8" defaultValue={d.fecha_esperada ?? ""} aria-label="Fecha en que llega"
               onBlur={(e) => { if (e.target.value !== (d.fecha_esperada ?? "")) actualizar.mutate({ fecha_esperada: e.target.value || null }); }} /> : fecha(d.fecha_esperada)}
           </Dato>
         )}
-        {d.tipo === "reclamo" && <Dato etiqueta="Responder antes de">{fechaYHora(d.fecha_limite)}</Dato>}
-        <Dato etiqueta="Envío">{d.envio_folio ?? "—"}{d.numero_guia && <span className="block text-xs text-tenue font-normal cifra">{d.paqueteria} · {d.numero_guia}</span>}</Dato>
+        {d.tipo === "reclamo" && <Dato etiqueta="Responder antes de" explica={GLOSARIO.venceDevolucion}>{fechaYHora(d.fecha_limite)}</Dato>}
+        <Dato etiqueta="Envío" explica={GLOSARIO.envioDevolucion}>{d.envio_folio ?? "—"}{d.numero_guia && <span className="block text-xs text-tenue font-normal cifra">{d.paqueteria} · {d.numero_guia}</span>}</Dato>
       </div>
       <div className="rounded-xl border border-borde px-4 py-3 text-sm space-y-1">
         <p><span className="text-tenue">Motivo:</span> {d.motivo}</p>
@@ -107,8 +107,8 @@ export function DetalleDevolucion({ dev: d }: { dev: Devolucion }) {
               <li key={l.id} className="flex items-center gap-3 px-3 py-2">
                 <span className="cifra font-semibold w-10 text-right">{numero(Number(l.cantidad))}</span>
                 <span className="flex-1">{l.descripcion}</span>
-                {l.cantidad_recibida != null && <Insignia tono={Number(l.cantidad_recibida) === Number(l.cantidad) ? "ok" : "aviso"}>llegaron {numero(Number(l.cantidad_recibida))}</Insignia>}
-                {l.ajuste_id && <Insignia tono="aviso">ajuste por autorizar</Insignia>}
+                {l.cantidad_recibida != null && <span data-explain={GLOSARIO.cantidadRecibidaDevolucion} data-explain-title="Lo que llegó"><Insignia tono={Number(l.cantidad_recibida) === Number(l.cantidad) ? "ok" : "aviso"}>llegaron {numero(Number(l.cantidad_recibida))}</Insignia></span>}
+                {l.ajuste_id && <span data-explain={GLOSARIO.ajusteInventario} data-explain-title="Ajuste por autorizar"><Insignia tono="aviso">ajuste por autorizar</Insignia></span>}
               </li>
             ))}
           </ul>
@@ -117,7 +117,7 @@ export function DetalleDevolucion({ dev: d }: { dev: Devolucion }) {
 
       {(d.tipo === "devolucion" || fotosRecepcion.length > 0 || documentos.length > 0) && (
         <section className="space-y-2">
-          <h4 className="font-semibold">Cómo llegó</h4>
+          <h4 className="font-semibold" data-explain={GLOSARIO.fotosLlegadaDevolucion} data-explain-title="Cómo llegó">Cómo llegó</h4>
           <Galeria archivos={(archivos.data ?? []).filter((a) => a.tipo === "recepcion" || a.tipo === "documento")}
             retirar={(almacen && d.estado !== "resuelta" && d.estado !== "cancelada") || puede("envios", 3)}
             vacio={d.tipo === "devolucion" ? "Sin fotos todavía: al llegar, fotos antes de abrirla." : undefined} />
@@ -132,7 +132,7 @@ export function DetalleDevolucion({ dev: d }: { dev: Devolucion }) {
 
       {/* Lo que sirve para defenderse */}
       <section className="space-y-3 rounded-xl border border-ok/30 bg-ok-suave/40 p-4">
-        <h4 className="flex items-center gap-2 font-semibold"><ShieldCheck className="h-5 w-5 text-ok" />Evidencia de salida de esta venta</h4>
+        <h4 className="flex items-center gap-2 font-semibold" data-explain={GLOSARIO.evidenciaEmpaque} data-explain-title="Evidencia de salida"><ShieldCheck className="h-5 w-5 text-ok" />Evidencia de salida de esta venta</h4>
         {envios.isLoading ? <p className="text-sm text-tenue">Cargando…</p> : enviosVenta.length === 0 ? (
           <p className="text-sm text-tenue">Esta venta no salió con un envío del ERP: no hay fotos ni check list registrados.</p>
         ) : enviosVenta.map((e) => <EvidenciaSalida key={e.id} envio={e} className="border-t border-borde pt-3 first:border-0 first:pt-0" />)}

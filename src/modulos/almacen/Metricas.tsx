@@ -76,9 +76,9 @@ export default function MetricasAlmacen() {
     <Pagina titulo="Métricas de almacén" ancho="max-w-[1500px]"
       descripcion={vista === "salud" ? "Foto de hoy: cuánto alcanza el inventario contra lo que sale, y qué conviene controlar de cerca"
         : `Del ${fecha(desde)} al ${fecha(hasta)} · surtido, consumo, ajustes y conteos`}
-      acciones={vista === "periodo" ? <Filtro opciones={PERIODOS} valor={periodo} alCambiar={(v) => cambiar({ periodo: v === "30" ? null : v })} /> : undefined}>
+      acciones={vista === "periodo" ? <Filtro opciones={PERIODOS.map((p) => ({ ...p, explica: GLOSARIO.periodoMetricasAlmacen }))} valor={periodo} alCambiar={(v) => cambiar({ periodo: v === "30" ? null : v })} /> : undefined}>
       <Pestanas value={vista} onValueChange={(v) => cambiar({ vista: v === "salud" ? null : v })}>
-        <ListaPestanas opciones={[{ valor: "salud", texto: "Salud del inventario", explica: GLOSARIO.saludInventario }, { valor: "periodo", texto: "Movimiento del periodo" }]} />
+        <ListaPestanas opciones={[{ valor: "salud", texto: "Salud del inventario", explica: GLOSARIO.saludInventario }, { valor: "periodo", texto: "Movimiento del periodo", explica: GLOSARIO.pestanaMovimientoPeriodo }]} />
         <ContenidoPestana value="salud" className="pt-4"><SaludInventario /></ContenidoPestana>
         <ContenidoPestana value="periodo" className="pt-4">
           {m.error ? <ErrorCarga error={m.error} /> : m.isLoading || !m.data ? <Cargando filas={8} /> : <Contenido d={m.data} />}
@@ -133,7 +133,7 @@ function Contenido({ d }: { d: Datos }) {
       celda: (x) => <span className="cifra whitespace-nowrap">{numero(x.cantidad)} <span className="text-xs text-tenue">{x.unidad}</span></span> },
     { clave: "recibio", titulo: "Recibió", clase: "whitespace-nowrap text-xs", explica: GLOSARIO.quienRecibe },
     { clave: "motivo", titulo: "Motivo", clase: "max-w-[260px] text-xs text-tenue", celda: (x) => <span className="line-clamp-2" title={x.motivo ?? ""}>{x.motivo ?? "—"}</span> },
-    { clave: "usuario", titulo: "Registró", clase: "whitespace-nowrap text-xs", valor: (x) => x.usuario ?? "" },
+    { clave: "usuario", titulo: "Registró", clase: "whitespace-nowrap text-xs", valor: (x) => x.usuario ?? "", explica: GLOSARIO.quienCapturoMovimiento },
     ...(d.con_costos ? [{ clave: "valor", titulo: "Valor", alinear: "der" as const, sinBusqueda: true, valor: (x: FueraLista) => x.valor ?? 0,
       celda: (x: FueraLista) => <span className="cifra">{x.valor ? dinero(x.valor) : "—"}</span> }] : []),
   ];
@@ -145,7 +145,7 @@ function Contenido({ d }: { d: Datos }) {
       celda: (x) => <span className="cifra whitespace-nowrap">{numero(x.real)} <span className="text-xs text-tenue">{x.unidad}</span></span> },
     { clave: "previsto", titulo: "Receta", alinear: "der", sinBusqueda: true, valor: (x) => x.previsto, explica: GLOSARIO.consumoVsReceta,
       celda: (x) => x.previsto > 0 ? <span className="cifra">{numero(x.previsto)}</span> : <span className="text-xs text-tenue">No viene</span> },
-    { clave: "dif", titulo: "Contra receta", alinear: "der", sinBusqueda: true, valor: (x) => (x.previsto > 0 ? x.real / x.previsto : -1),
+    { clave: "dif", titulo: "Contra receta", alinear: "der", sinBusqueda: true, valor: (x) => (x.previsto > 0 ? x.real / x.previsto : -1), explica: GLOSARIO.contraRecetaPorcentaje,
       celda: (x) => {
         if (x.previsto <= 0) return <span className="text-tenue">—</span>;
         const k = x.real / x.previsto;
@@ -256,7 +256,7 @@ function Contenido({ d }: { d: Datos }) {
           <div className="overflow-x-auto pb-3">
             {pivote.filas.length === 0 ? <p className="px-5 py-6 text-center text-sm text-tenue">No salieron consumibles en el periodo.</p> : (
               <table className="tabla">
-                <thead><tr><th>Quién lo recibió</th>{pivote.cats.map((c) => <th key={c} className="text-right">{c}</th>)}<th className="text-right">Renglones</th>
+                <thead><tr><th><span data-explain={GLOSARIO.quienRecibe}>Quién lo recibió</span></th>{pivote.cats.map((c) => <th key={c} className="text-right">{c}</th>)}<th className="text-right">Renglones</th>
                   {d.con_costos && <th className="text-right">Valor</th>}</tr></thead>
                 <tbody>
                   {pivote.filas.map((f) => (
@@ -294,7 +294,8 @@ function Contenido({ d }: { d: Datos }) {
                   <span className={cn("cifra whitespace-nowrap font-medium", x.diferencia < 0 ? "text-peligro" : "text-ok")}>{x.diferencia > 0 ? "+" : ""}{numero(x.diferencia)} {x.unidad}</span>
                 </div>
                 <p className="text-xs text-tenue truncate" title={x.motivo}>
-                  {x.estado === "pendiente" ? <Insignia tono="aviso">Por autorizar</Insignia> : x.estado === "rechazado" ? <Insignia tono="neutro">Rechazado</Insignia> : null}{" "}
+                  {x.estado === "pendiente" ? <span data-explain={GLOSARIO.estadoAjusteInventario}><Insignia tono="aviso">Por autorizar</Insignia></span>
+                    : x.estado === "rechazado" ? <span data-explain={GLOSARIO.estadoAjusteInventario}><Insignia tono="neutro">Rechazado</Insignia></span> : null}{" "}
                   {x.almacen} · pidió {x.solicito ?? "—"}{x.resolvio ? ` · ${x.estado === "rechazado" ? "rechazó" : "autorizó"} ${x.resolvio}` : ""}{x.de_conteo ? " · de un conteo" : ""} · {x.motivo}
                   {x.valor != null && ` · ${dinero(x.valor)}`}
                 </p>

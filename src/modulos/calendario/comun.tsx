@@ -89,7 +89,7 @@ export function Renglon({ e, conDia }: { e: EventoCal; conDia?: string }) {
       {e.hora && <span className="text-xs cifra text-tenue shrink-0">{e.hora}</span>}
       {/* En celular basta el rojo; la insignia le quitaba espacio al nombre. */}
       {atrasado(e) && <span className="hidden sm:inline-flex" data-explain={GLOSARIO.atrasadoCalendario} data-explain-title="Atrasado"><Insignia tono="peligro">Atrasado</Insignia></span>}
-      {enRojo(e) && !atrasado(e) && <span className="hidden sm:inline-flex"><Insignia tono="peligro">Después del compromiso</Insignia></span>}
+      {enRojo(e) && !atrasado(e) && <span className="hidden sm:inline-flex" data-explain={GLOSARIO.atrasadoCalendario} data-explain-title="Después del compromiso"><Insignia tono="peligro">Después del compromiso</Insignia></span>}
       {e.mio && !enRojo(e) && <span className="hidden sm:inline-flex" data-explain={GLOSARIO.soloLoMio} data-explain-title="Tuyo"><Insignia tono="marca">Tuyo</Insignia></span>}
     </>
   );

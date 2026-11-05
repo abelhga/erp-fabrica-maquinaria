@@ -69,12 +69,13 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
   };
 
   const menu = (l: Partida, i: number) => (
-    <MenuAcciones disparador={<button className="h-8 w-8 rounded-lg hover:bg-fondo text-tenue flex items-center justify-center" aria-label="Opciones de la partida"><MoreVertical className="h-4 w-4" /></button>}>
+    <MenuAcciones disparador={<button className="h-8 w-8 rounded-lg hover:bg-fondo text-tenue flex items-center justify-center" aria-label="Opciones de la partida"
+      data-explain={GLOSARIO.opcionesPartidaCotizacion} data-explain-title="Opciones de la partida"><MoreVertical className="h-4 w-4" /></button>}>
       {l.articulo_id && <OpcionMenu icono={Info} alElegir={() => acciones.verFicha(l)}>Ver ficha de venta</OpcionMenu>}
       {editable && (
         <>
           {acciones.pedirPrecio && !pedida(l) && <OpcionMenu icono={MessageSquareQuote} alElegir={() => acciones.pedirPrecio!(l)}>Pedir precio a compras</OpcionMenu>}
-          {l.articulo_id && <OpcionMenu icono={RotateCcw} alElegir={() => acciones.restaurarPrecio(l)}>Volver al precio de lista</OpcionMenu>}
+          {l.articulo_id && <OpcionMenu icono={RotateCcw} alElegir={() => acciones.restaurarPrecio(l)}><span data-explain={GLOSARIO.volverPrecioLista}>Volver al precio de lista</span></OpcionMenu>}
           <OpcionMenu icono={Copy} alElegir={() => acciones.duplicar(l)}>Duplicar partida</OpcionMenu>
           <OpcionMenu icono={ArrowUp} deshabilitado={i === 0} alElegir={() => mover(l.id, -1)}>Subir</OpcionMenu>
           <OpcionMenu icono={ArrowDown} deshabilitado={i === lineas.length - 1} alElegir={() => mover(l.id, 1)}>Bajar</OpcionMenu>
@@ -100,7 +101,7 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
       {!l.articulo_id && <span data-explain={GLOSARIO.partidaLibre}><Insignia>Partida libre</Insignia></span>}
       {l.articulo_id && !Number(l.precio_lista) && !pedida(l) && <span data-explain={GLOSARIO.solicitudPrecio} data-explain-title="Sin precio de lista"><Insignia tono="aviso">Sin precio de lista</Insignia></span>}
       {editable && acciones.pedirPrecio && sinPrecio(l) && !pedida(l) && (
-        <button type="button" onClick={(e) => { e.stopPropagation(); acciones.pedirPrecio!(l); }}
+        <button type="button" onClick={(e) => { e.stopPropagation(); acciones.pedirPrecio!(l); }} data-explain={GLOSARIO.solicitudPrecio} data-explain-title="Pedir precio a compras"
           className="inline-flex items-center gap-1 rounded-full border border-marca/30 px-2 py-0.5 text-xs font-medium text-marca-texto hover:bg-marca-suave">
           <MessageSquareQuote className="h-3.5 w-3.5" />Pedir precio a compras
         </button>
@@ -113,7 +114,7 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
   );
 
   const opcional = (l: Partida) => (
-    <label className="inline-flex items-center gap-1.5 text-xs text-tenue cursor-pointer select-none">
+    <label className="inline-flex items-center gap-1.5 text-xs text-tenue cursor-pointer select-none" data-explain={GLOSARIO.partidaOpcional} data-explain-title="Opcional">
       <input type="checkbox" checked={l.opcional} disabled={!editable} onChange={(e) => acciones.editar(l.id, { opcional: e.target.checked })} />
       Opcional
     </label>
@@ -125,7 +126,9 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
       <div ref={cont} className="text-sm">
         <div className={cn("grid gap-x-2 px-3 py-2 border-y border-borde bg-fondo/60 text-xs font-medium uppercase tracking-wide text-tenue", columnas)}>
           <span /><span>#</span><span>Artículo y descripción</span><span className="text-right">Cant.</span>
-          <span className="text-right">P. unitario</span><span className="text-right">Desc.</span><span className="text-right">Importe</span><span />
+          <span className="text-right" data-explain={GLOSARIO.precioLista} data-explain-title="Precio unitario">P. unitario</span>
+          <span className="text-right" data-explain={GLOSARIO.descuentoPartidaCotizacion} data-explain-title="Descuento">Desc.</span>
+          <span className="text-right" data-explain={GLOSARIO.importePartidaCotizacion} data-explain-title="Importe">Importe</span><span />
         </div>
         {lineas.map((l, i) => {
           const imp = sucias.has(l.id) ? importeLocal(l) : Number(l.importe);
@@ -216,13 +219,13 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
                   alCambiar={(n) => acciones.editar(l.id, { cantidad: n })} alEnter={() => saltar("cantidad", i)} />
               </label>
               <label className="space-y-1">
-                <span className="text-[11px] text-tenue">P. unitario</span>
+                <span className="text-[11px] text-tenue" data-explain={GLOSARIO.precioLista} data-explain-title="Precio unitario">P. unitario</span>
                 <CampoNumero valor={Number(l.precio_unitario)} min={0} deshabilitado={!editable}
                   className={cn(l.bajo_minimo && !sucias.has(l.id) && "[&_input]:border-peligro [&_input]:text-peligro")}
                   alCambiar={(n) => acciones.editar(l.id, { precio_unitario: n })} />
               </label>
               <div className="space-y-1 text-right">
-                <span className="text-[11px] text-tenue">Importe</span>
+                <span className="text-[11px] text-tenue" data-explain={GLOSARIO.importePartidaCotizacion} data-explain-title="Importe">Importe</span>
                 <p className={cn("h-9 flex items-center justify-end font-semibold cifra", l.opcional && "text-tenue line-through")}>
                   {dineroEn(l.opcional ? r2(Number(l.cantidad) * Number(l.precio_unitario) * (1 - Number(l.descuento_pct))) : imp, moneda)}
                 </p>
@@ -298,7 +301,8 @@ function ImagenPartida({ l, editable, alCambiar, chica }: { l: Partida; editable
   if (!editable) return <div className="shrink-0">{contenido}</div>;
   return (
     <P.Root open={abierto} onOpenChange={setAbierto}>
-      <P.Trigger asChild><button type="button" className="shrink-0 self-start" title="Cambiar foto">{contenido}</button></P.Trigger>
+      <P.Trigger asChild><button type="button" className="shrink-0 self-start" title="Cambiar foto"
+        data-explain={GLOSARIO.fotoPartidaCotizacion} data-explain-title="Foto de la partida">{contenido}</button></P.Trigger>
       <P.Portal>
         <P.Content sideOffset={6} align="start" className="z-50 tarjeta shadow-xl p-3 w-80 space-y-2">
           <p className="text-sm font-medium">Foto de la partida</p>

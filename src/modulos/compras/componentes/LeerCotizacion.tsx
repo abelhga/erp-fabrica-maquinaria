@@ -79,7 +79,8 @@ export function SubirCotizacion({ alLeer }: { alLeer: (c: CotizacionLeida) => vo
         <p className="text-sm flex-1 min-w-[200px]">
           <b data-explain={GLOSARIO.leerCotizacionProveedor}>¿Tienes la cotización del proveedor?</b> Súbela y la IA arma la orden. <span className="text-tenue">PDF o foto.</span>
         </p>
-        <Boton type="button" variante="secundario" onClick={() => entrada.current?.click()} cargando={leyendo}>
+        <Boton type="button" variante="secundario" onClick={() => entrada.current?.click()} cargando={leyendo}
+          data-explain={GLOSARIO.leerCotizacionProveedor} data-explain-title="Subir cotización">
           {!leyendo && <FileUp className="h-4 w-4" />}{leyendo ? "Leyendo…" : "Subir cotización"}
         </Boton>
         <input ref={entrada} type="file" accept="application/pdf,image/jpeg,image/png" className="hidden" aria-label="Cotización del proveedor"
@@ -168,7 +169,8 @@ export function RevisarCotizacion({ leida, alQuitar, alCrear }: { leida: Cotizac
           <a href={vista} target="_blank" rel="noreferrer" className="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-marca-texto hover:underline">
             Ver archivo <ExternalLink className="h-3 w-3" />
           </a>
-          <button type="button" onClick={alQuitar} className="shrink-0 p-1 rounded text-tenue hover:bg-fondo" aria-label="Descartar la cotización" title="Descartar y armar la orden a mano">
+          <button type="button" onClick={alQuitar} className="shrink-0 p-1 rounded text-tenue hover:bg-fondo" aria-label="Descartar la cotización" title="Descartar y armar la orden a mano"
+            data-explain={GLOSARIO.descartarCotizacionLeida} data-explain-title="Descartar la cotización">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -184,7 +186,8 @@ export function RevisarCotizacion({ leida, alQuitar, alCrear }: { leida: Cotizac
           ayuda={!buscado ? "Buscándolo en el catálogo…" : prov ? undefined : texto(c.proveedor) ? `«${texto(c.proveedor)}» no está en el catálogo: elígelo o dalo de alta.` : "Elige al proveedor."}>
           <div className="flex gap-2">
             <SelectorProveedor valor={prov} alCambiar={elegirProveedor} className="flex-1 min-w-0" />
-            {buscado && !prov && <Boton type="button" variante="secundario" onClick={() => setAlta(true)}><Plus className="h-4 w-4" />Dar de alta</Boton>}
+            {buscado && !prov && <Boton type="button" variante="secundario" onClick={() => setAlta(true)}
+              data-explain={GLOSARIO.altaProveedorDesdeCotizacion} data-explain-title="Dar de alta al proveedor"><Plus className="h-4 w-4" />Dar de alta</Boton>}
           </div>
         </Campo>
         <Campo etiqueta="Moneda">
@@ -218,10 +221,11 @@ export function RevisarCotizacion({ leida, alQuitar, alCrear }: { leida: Cotizac
                   {l.articulo && buscando !== i ? (
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span className="text-sm min-w-0"><span className="text-tenue cifra">{l.articulo.clave}</span> {l.articulo.nombre}</span>
-                      {o && <span title={o.ayuda}><Insignia tono={o.tono}>{o.texto}</Insignia></span>}
+                      {o && <span title={o.ayuda} data-explain={GLOSARIO.emparejadoCotizacion} data-explain-title={o.texto}><Insignia tono={o.tono}>{o.texto}</Insignia></span>}
                       <span className="flex gap-1">
                         <Boton type="button" variante="fantasma" tamano="sm" onClick={() => setBuscando(i)}>Cambiar</Boton>
                         <Boton type="button" variante="fantasma" tamano="sm" title="Que quede como texto, sin artículo del catálogo"
+                          data-explain={GLOSARIO.partidaSinArticulo} data-explain-title="Sin artículo"
                           onClick={() => poner(i, { articulo: null, origen: "manual" })}>Sin artículo</Boton>
                       </span>
                       {otraUnidad && <p className="w-full text-xs text-aviso">Cotizan por {l.unidad}; el artículo va por {l.articulo.unidad}. Ajusta cantidad y precio a la unidad del artículo.</p>}
@@ -262,13 +266,13 @@ export function RevisarCotizacion({ leida, alQuitar, alCrear }: { leida: Cotizac
 
       <div className="space-y-2">
         {conClave && (
-          <label className="flex items-start gap-2 text-sm">
+          <label className="flex items-start gap-2 text-sm" data-explain={GLOSARIO.recordarClavesProveedor} data-explain-title="Recordar las claves">
             <input type="checkbox" checked={recordar} onChange={(e) => setRecordar(e.target.checked)} className="h-4 w-4 mt-0.5 accent-[hsl(var(--marca))]" />
             <span>Recordar las claves de este proveedor <span className="text-tenue">— la próxima cotización suya llega con los artículos ya emparejados.</span></span>
           </label>
         )}
         {puede("costos", 2) && (
-          <label className="flex items-start gap-2 text-sm">
+          <label className="flex items-start gap-2 text-sm" data-explain={GLOSARIO.actualizarCostoDesdeCotizacion} data-explain-title="Actualizar el costo">
             <input type="checkbox" checked={costos} onChange={(e) => setCostos(e.target.checked)} className="h-4 w-4 mt-0.5 accent-[hsl(var(--marca))]" />
             <span>Actualizar el costo de compra de los artículos con estos precios <span className="text-tenue">— queda en el historial como cotización del proveedor y se recalculan los precios.</span></span>
           </label>
@@ -278,8 +282,11 @@ export function RevisarCotizacion({ leida, alQuitar, alCrear }: { leida: Cotizac
       <div className={cn("flex flex-wrap items-center gap-2", incompletas > 0 && "justify-between")}>
         {incompletas > 0 && <p className="text-sm text-aviso">{incompletas} {incompletas === 1 ? "partida necesita" : "partidas necesitan"} cantidad y precio.</p>}
         <div className="flex gap-2 ml-auto">
-          <Boton variante="secundario" onClick={alQuitar}>Descartar</Boton>
-          <Boton disabled={!prov || incompletas > 0 || lineas.length === 0} cargando={crear.isPending} onClick={() => crear.mutate(undefined)}>Crear orden en borrador</Boton>
+          <Boton variante="secundario" onClick={alQuitar} data-explain={GLOSARIO.descartarCotizacionLeida} data-explain-title="Descartar">Descartar</Boton>
+          {/* Se deshabilita mientras falte algo: la explicación va en el envoltorio para que no se pierda. */}
+          <span className="inline-flex" data-explain={GLOSARIO.crearOrdenDesdeCotizacion} data-explain-title="Crear orden en borrador">
+            <Boton disabled={!prov || incompletas > 0 || lineas.length === 0} cargando={crear.isPending} onClick={() => crear.mutate(undefined)}>Crear orden en borrador</Boton>
+          </span>
         </div>
       </div>
 

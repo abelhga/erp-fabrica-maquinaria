@@ -5,6 +5,7 @@ import { q } from "@/lib/consultas";
 import { numero } from "@/lib/formato";
 import { Insignia, type Tono } from "@/components/ui/insignia";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface Almacen { id: number; nombre: string; tipo: string; disponible_para_planta: boolean; activo: boolean }
 
@@ -29,22 +30,24 @@ export type TipoMovimiento =
   | "inicial" | "entrada_compra" | "devolucion" | "salida_produccion" | "salida_venta" | "salida_consumo"
   | "traspaso_salida" | "traspaso_entrada" | "ajuste_entrada" | "ajuste_salida";
 
-export const TIPO_MOV: Record<TipoMovimiento, { texto: string; tono: Tono }> = {
-  inicial: { texto: "Saldo inicial", tono: "neutro" },
-  entrada_compra: { texto: "Entrada de compra", tono: "ok" },
-  devolucion: { texto: "Devolución", tono: "ok" },
-  salida_produccion: { texto: "Salida a producción", tono: "marca" },
-  salida_venta: { texto: "Venta", tono: "info" },
-  salida_consumo: { texto: "Consumo", tono: "aviso" },
-  traspaso_salida: { texto: "Traspaso (sale)", tono: "neutro" },
-  traspaso_entrada: { texto: "Traspaso (entra)", tono: "neutro" },
-  ajuste_entrada: { texto: "Ajuste +", tono: "peligro" },
-  ajuste_salida: { texto: "Ajuste −", tono: "peligro" },
+// `explica`: qué es ese tipo de movimiento, para el modo tutorial (cada insignia dice lo suyo).
+export const TIPO_MOV: Record<TipoMovimiento, { texto: string; tono: Tono; explica: string }> = {
+  inicial: { texto: "Saldo inicial", tono: "neutro", explica: GLOSARIO.saldoInicialInventario },
+  entrada_compra: { texto: "Entrada de compra", tono: "ok", explica: GLOSARIO.entradaCompraAlmacen },
+  devolucion: { texto: "Devolución", tono: "ok", explica: GLOSARIO.devolucionAlmacen },
+  salida_produccion: { texto: "Salida a producción", tono: "marca", explica: GLOSARIO.salidaProduccionAlmacen },
+  salida_venta: { texto: "Venta", tono: "info", explica: GLOSARIO.salidaVentaAlmacen },
+  salida_consumo: { texto: "Consumo", tono: "aviso", explica: GLOSARIO.salidaConsumo },
+  traspaso_salida: { texto: "Traspaso (sale)", tono: "neutro", explica: GLOSARIO.traspaso },
+  traspaso_entrada: { texto: "Traspaso (entra)", tono: "neutro", explica: GLOSARIO.traspaso },
+  ajuste_entrada: { texto: "Ajuste +", tono: "peligro", explica: GLOSARIO.ajusteInventario },
+  ajuste_salida: { texto: "Ajuste −", tono: "peligro", explica: GLOSARIO.ajusteInventario },
 };
 
 export function InsigniaMovimiento({ tipo }: { tipo: TipoMovimiento }) {
-  const t = TIPO_MOV[tipo] ?? { texto: tipo, tono: "neutro" as Tono };
-  return <Insignia tono={t.tono}>{t.texto}</Insignia>;
+  const t = TIPO_MOV[tipo] ?? { texto: tipo, tono: "neutro" as Tono, explica: GLOSARIO.tipoMovimiento };
+  // Insignia no reenvía atributos: el envoltorio es el que se explica.
+  return <span data-explain={t.explica} data-explain-title={t.texto}><Insignia tono={t.tono}>{t.texto}</Insignia></span>;
 }
 
 /** "2 piezas", "1 pieza", "3 kg": las unidades vienen en singular del catálogo. */

@@ -5,6 +5,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { cn } from "@/lib/utilidades";
 import { BarraPeso, ESTADOS_EVAL, PanelEvaluacion, nombreMes, puntos, useEvaluaciones } from "./componentes/objetivos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /** Lo que ve cada quien de sus objetivos: solo lo suyo, sin montos, con la evidencia de cada indicador. */
 export default function MiDesempeno() {
@@ -29,7 +30,7 @@ export default function MiDesempeno() {
             {lista.map((e) => {
               const activo = e.id === elegida?.id;
               return (
-                <button key={e.id} onClick={() => setParams({ mes: e.mes.slice(0, 7) }, { replace: true })}
+                <button key={e.id} onClick={() => setParams({ mes: e.mes.slice(0, 7) }, { replace: true })} data-explain={GLOSARIO.mesMiDesempeno} data-explain-title={nombreMes(e.mes)}
                   className={cn("tarjeta px-4 py-3 text-left min-w-[150px] shrink-0 transition", activo ? "border-marca ring-2 ring-marca/20" : "hover:border-marca/40")}>
                   <p className="text-xs text-tenue first-letter:uppercase">{nombreMes(e.mes)}</p>
                   <p className={cn("text-2xl font-semibold cifra flex items-center gap-1", e.llave_activada && "text-peligro")}>

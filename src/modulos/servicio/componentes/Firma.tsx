@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Eraser } from "lucide-react";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
  * Firma con el dedo. Es "papel": fondo blanco y tinta negra siempre (también en
@@ -72,7 +73,7 @@ export function PanelFirma({ alCambiar }: { alCambiar: (png: Blob | null) => voi
         />
         {vacia && <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-gray-400">Firme aquí</span>}
       </div>
-      <button type="button" onClick={borrar} className="inline-flex items-center gap-1 text-xs text-tenue hover:text-texto">
+      <button type="button" onClick={borrar} className="inline-flex items-center gap-1 text-xs text-tenue hover:text-texto" data-explain={GLOSARIO.botonBorrarFirma}>
         <Eraser className="h-3.5 w-3.5" />Borrar firma
       </button>
     </div>

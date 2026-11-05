@@ -49,6 +49,9 @@ const ACTIVOS: EstadoPedido[] = ["confirmado", "en_produccion", "listo"];
 // Va en su propio filtro; si la venta lleva un equipo, se queda con los demás.
 const deML = (p: PedidoPlanta) => p.canal === "mercadolibre" && p.equipos === 0 && p.ordenes === 0 && p.ordenes_sueltas.length === 0;
 const CLAVE_PED = ["v_pedidos_produccion"];
+const EXPLICA_ESTADO_OP: Partial<Record<keyof typeof ESTADO_OP, string>> = {
+  planeada: GLOSARIO.opPlaneada, liberada: GLOSARIO.opLiberada, en_proceso: GLOSARIO.opEnProceso, terminada: GLOSARIO.opTerminada,
+};
 
 export default function PedidosPlanta() {
   const { puede } = useSesion();
@@ -82,10 +85,10 @@ export default function PedidosPlanta() {
 
   const cuenta = (pred: (p: PedidoPlanta) => boolean) => lista.data?.filter(pred).length;
   const opciones: { valor: FiltroPed; texto: string; cuenta?: number; explica?: string }[] = [
-    { valor: "activos", texto: "Activos", cuenta: cuenta((p) => ACTIVOS.includes(p.estado) && !deML(p)) },
+    { valor: "activos", texto: "Activos", cuenta: cuenta((p) => ACTIVOS.includes(p.estado) && !deML(p)), explica: GLOSARIO.filtroPedidosActivos },
     { valor: "por_ordenar", texto: "Sin orden", cuenta: cuenta((p) => ACTIVOS.includes(p.estado) && p.sin_orden > 0), explica: GLOSARIO.sinOrden },
-    { valor: "listos", texto: "Listos para entregar", cuenta: cuenta((p) => p.estado === "listo" && !deML(p)) },
-    { valor: "entregados", texto: "Entregados (60 días)" },
+    { valor: "listos", texto: "Listos para entregar", cuenta: cuenta((p) => p.estado === "listo" && !deML(p)), explica: GLOSARIO.filtroPedidosListos },
+    { valor: "entregados", texto: "Entregados (60 días)", explica: GLOSARIO.filtroPedidosEntregados },
     { valor: "ml", texto: "Mercado Libre", explica: GLOSARIO.pedidosMercadoLibre },
     { valor: "todos", texto: "Todos" },
   ];
@@ -106,7 +109,7 @@ export default function PedidosPlanta() {
     { clave: "cliente", titulo: "Cliente", celda: (p) => <span className="block max-w-[220px] truncate">{p.cliente ?? "—"}</span> },
     { clave: "vendedor", titulo: "Vendedor", clase: "text-tenue", celda: (p) => <span className="block max-w-[140px] truncate">{p.vendedor ?? "—"}</span> },
     {
-      clave: "equipos", titulo: "Lleva", valor: (p) => [...p.partidas.map((x) => x.titulo), ...p.ordenes_sueltas.map((o) => o.equipo)].join(" "),
+      clave: "equipos", titulo: "Lleva", explica: GLOSARIO.columnaLlevaPedido, valor: (p) => [...p.partidas.map((x) => x.titulo), ...p.ordenes_sueltas.map((o) => o.equipo)].join(" "),
       celda: (p) => {
         const equipos = [...p.partidas.filter((x) => x.fabrica).map((x) => `${numero(x.cantidad)} × ${x.titulo}`), ...p.ordenes_sueltas.map((o) => abreviarEquipo(o.equipo))];
         const otras = p.partidas.filter((x) => !x.fabrica);
@@ -119,7 +122,7 @@ export default function PedidosPlanta() {
       },
     },
     {
-      clave: "fecha_compromiso", titulo: "Compromiso", sinBusqueda: true, valor: (p) => p.fecha_compromiso ?? "",
+      clave: "fecha_compromiso", titulo: "Compromiso", sinBusqueda: true, explica: GLOSARIO.fechaCompromiso, valor: (p) => p.fecha_compromiso ?? "",
       celda: (p) => p.fecha_compromiso ? <InsigniaCompromiso dias={p.dias_restantes} fechaCompromiso={p.fecha_compromiso} cerrada={!ACTIVOS.includes(p.estado)} corta /> : <span className="text-tenue">—</span>,
     },
     {
@@ -132,11 +135,11 @@ export default function PedidosPlanta() {
               <BarraAvance valor={p.avance ?? 0} />
             </>
           ) : p.equipos === 0 ? <span className="text-xs text-tenue">No se fabrica</span> : null}
-          {p.sin_orden > 0 && ACTIVOS.includes(p.estado) && <Insignia tono="aviso" className="mt-1">{p.sin_orden} sin orden</Insignia>}
+          {p.sin_orden > 0 && ACTIVOS.includes(p.estado) && <span className="inline-flex mt-1" data-explain={GLOSARIO.sinOrden} data-explain-title="Sin orden"><Insignia tono="aviso">{p.sin_orden} sin orden</Insignia></span>}
         </div>
       ),
     },
-    { clave: "estado", titulo: "Estado", valor: (p) => ESTADO_PEDIDO[p.estado].texto, celda: (p) => <Insignia tono={ESTADO_PEDIDO[p.estado].tono}>{ESTADO_PEDIDO[p.estado].texto}</Insignia> },
+    { clave: "estado", titulo: "Estado", explica: GLOSARIO.estadoPedido, valor: (p) => ESTADO_PEDIDO[p.estado].texto, celda: (p) => <Insignia tono={ESTADO_PEDIDO[p.estado].tono}>{ESTADO_PEDIDO[p.estado].texto}</Insignia> },
   ];
 
   return (
@@ -204,12 +207,15 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
       </div>
       {hoja.data && <RecuadroEntrega hoja={hoja.data} invalidar={[CLAVE_PED, CLAVE]} />}
       <div className="flex flex-wrap items-center gap-3 text-sm">
-        <span className="text-tenue">Compromiso</span>
+        <span className="text-tenue" data-explain={GLOSARIO.fechaCompromiso} data-explain-title="Compromiso">Compromiso</span>
         {p.fecha_compromiso ? <InsigniaCompromiso dias={p.dias_restantes} fechaCompromiso={p.fecha_compromiso} cerrada={!activo} /> : <span>sin fecha</span>}
         {gerencia && activo && p.sin_orden > 0 && (
-          <Boton tamano="sm" className="ml-auto" onClick={() => crear.mutate(undefined)} cargando={crear.isPending}>
-            <ClipboardPlus className="h-3.5 w-3.5" /> Crear las órdenes que faltan
-          </Boton>
+          // Mientras crea, el botón se deshabilita y Chrome no le da el mouse: la explicación va afuera.
+          <span className="ml-auto inline-flex" data-explain={GLOSARIO.botonCrearOrdenesFaltantes} data-explain-title="Crear las órdenes que faltan">
+            <Boton tamano="sm" onClick={() => crear.mutate(undefined)} cargando={crear.isPending}>
+              <ClipboardPlus className="h-3.5 w-3.5" /> Crear las órdenes que faltan
+            </Boton>
+          </span>
         )}
       </div>
       {p.partidas.length === 0 && p.ordenes_sueltas.length === 0 && <p className="text-sm text-tenue">El pedido no tiene partidas capturadas.</p>}
@@ -224,10 +230,10 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
                   <p className="font-medium">{numero(x.cantidad)} {x.unidad} · {x.titulo}</p>
                   <p className="text-xs text-tenue cifra">{x.clave}</p>
                 </div>
-                {!x.articulo_id ? <Insignia>No se fabrica</Insignia>
-                  : !x.fabrica ? <Insignia>Componente</Insignia>
+                {!x.articulo_id ? <span data-explain={GLOSARIO.tipoPartidaPlanta} data-explain-title="No se fabrica"><Insignia>No se fabrica</Insignia></span>
+                  : !x.fabrica ? <span data-explain={GLOSARIO.tipoPartidaPlanta} data-explain-title="Componente"><Insignia>Componente</Insignia></span>
                   : faltan > 0 ? <span data-explain={GLOSARIO.sinOrden} data-explain-title="Sin orden"><Insignia tono="aviso">{faltan} sin orden</Insignia></span>
-                  : <Insignia tono="ok">Con orden</Insignia>}
+                  : <span data-explain={GLOSARIO.tipoPartidaPlanta} data-explain-title="Con orden"><Insignia tono="ok">Con orden</Insignia></span>}
               </div>
               <DescripcionVenta texto={x.descripcion} />
               {x.ordenes.length > 0 && (
@@ -235,9 +241,9 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
                   {x.ordenes.map((o) => (
                     <li key={o.id} className="flex items-center gap-3 text-sm">
                       <Link to={`/produccion/ordenes/${o.id}`} className="font-medium cifra text-marca-texto hover:underline whitespace-nowrap">{o.folio}</Link>
-                      {o.serie && <span className="text-xs text-tenue cifra">{o.serie}</span>}
-                      <Insignia tono={ESTADO_OP[o.estado]?.tono}>{ESTADO_OP[o.estado]?.texto ?? o.estado}</Insignia>
-                      <div className="flex-1 min-w-[80px]"><BarraAvance valor={o.avance} /></div>
+                      {o.serie && <span className="text-xs text-tenue cifra" data-explain={GLOSARIO.numeroSerie} data-explain-title="Número de serie">{o.serie}</span>}
+                      <span data-explain={EXPLICA_ESTADO_OP[o.estado]}><Insignia tono={ESTADO_OP[o.estado]?.tono}>{ESTADO_OP[o.estado]?.texto ?? o.estado}</Insignia></span>
+                      <div className="flex-1 min-w-[80px]" data-explain={GLOSARIO.avanceOrden} data-explain-title="Avance"><BarraAvance valor={o.avance} /></div>
                       <span className="text-xs cifra w-9 text-right">{o.avance}%</span>
                       {soltar && o.estado !== "entregada" && o.estado !== "cancelada" && (
                         <button type="button" onClick={() => setRegresar({ id: o.id, folio: o.folio })} title="Regresar a stock" aria-label={`Regresar ${o.folio} a stock`}
@@ -279,9 +285,9 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
                 <p className="truncate" title={o.equipo}>{abreviarEquipo(o.equipo)} <span className="text-xs text-tenue cifra">{o.clave}</span></p>
                 <div className="flex items-center gap-3">
                   <Link to={`/produccion/ordenes/${o.id}`} className="font-medium cifra text-marca-texto hover:underline whitespace-nowrap">{o.folio}</Link>
-                  {o.serie && <span className="text-xs text-tenue cifra">{o.serie}</span>}
-                  <Insignia tono={ESTADO_OP[o.estado]?.tono}>{ESTADO_OP[o.estado]?.texto ?? o.estado}</Insignia>
-                  <div className="flex-1 min-w-[80px]"><BarraAvance valor={o.avance} /></div>
+                  {o.serie && <span className="text-xs text-tenue cifra" data-explain={GLOSARIO.numeroSerie} data-explain-title="Número de serie">{o.serie}</span>}
+                  <span data-explain={EXPLICA_ESTADO_OP[o.estado]}><Insignia tono={ESTADO_OP[o.estado]?.tono}>{ESTADO_OP[o.estado]?.texto ?? o.estado}</Insignia></span>
+                  <div className="flex-1 min-w-[80px]" data-explain={GLOSARIO.avanceOrden} data-explain-title="Avance"><BarraAvance valor={o.avance} /></div>
                   <span className="text-xs cifra w-9 text-right">{o.avance}%</span>
                   {soltar && o.estado !== "entregada" && o.estado !== "cancelada" && (
                         <button type="button" onClick={() => setRegresar({ id: o.id, folio: o.folio })} title="Regresar a stock" aria-label={`Regresar ${o.folio} a stock`}

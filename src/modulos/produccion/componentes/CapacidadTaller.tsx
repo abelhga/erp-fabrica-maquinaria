@@ -61,8 +61,10 @@ export function CapacidadTaller() {
       <div className="overflow-x-auto">
         <table className="tabla">
           <thead>
-            <tr><th>Área</th><th className="!text-right">Personas</th><th className="!text-right">Capacidad h/semana</th><th>De dónde sale</th>
-              <th className="!text-center" data-explain={GLOSARIO.capacidadAutomatica}>Automática</th></tr>
+            <tr><th>Área</th><th className="!text-right" data-explain={GLOSARIO.personasCapacidad} data-explain-title="Personas">Personas</th>
+              <th className="!text-right" data-explain={GLOSARIO.capacidadEtapa} data-explain-title="Capacidad h/semana">Capacidad h/semana</th>
+              <th data-explain={GLOSARIO.deDondeSaleCapacidad} data-explain-title="De dónde sale">De dónde sale</th>
+              <th className="!text-center" data-explain={GLOSARIO.capacidadAutomatica} data-explain-title="Automática">Automática</th></tr>
           </thead>
           <tbody>
             {filas.map((f) => {
@@ -80,8 +82,9 @@ export function CapacidadTaller() {
                   <td className="text-center">
                     {editable
                       ? <Interruptor activo={f.automatica} cargando={automatica.isPending} aria-label={`Capacidad automática de ${f.nombre}`}
+                          data-explain={GLOSARIO.capacidadAutomatica} data-explain-title={`Capacidad automática de ${f.nombre}`}
                           alCambiar={(v) => automatica.mutate({ etapa: f.etapa_id, v })} />
-                      : <Insignia tono={f.automatica ? "ok" : "neutro"}>{f.automatica ? "Sí" : "A mano"}</Insignia>}
+                      : <span data-explain={GLOSARIO.capacidadAutomatica} data-explain-title="Automática"><Insignia tono={f.automatica ? "ok" : "neutro"}>{f.automatica ? "Sí" : "A mano"}</Insignia></span>}
                   </td>
                 </tr>
               );

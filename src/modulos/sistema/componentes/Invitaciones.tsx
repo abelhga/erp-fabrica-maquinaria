@@ -97,7 +97,7 @@ export function Invitaciones({ usuarios }: { usuarios: { id: string; nombre: str
               </Campo>
             </div>
             <div>
-              <p className="text-sm font-medium mb-1.5">Roles con los que entra</p>
+              <p className="text-sm font-medium mb-1.5" data-explain={GLOSARIO.rolUsuario} data-explain-title="Roles con los que entra">Roles con los que entra</p>
               <SelectorRoles valor={f.roles} alCambiar={(roles) => setF({ ...f, roles })} deshabilitados={tieneRol("direccion") ? [] : ["direccion"]} />
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -108,7 +108,7 @@ export function Invitaciones({ usuarios }: { usuarios: { id: string; nombre: str
         </Tarjeta>
 
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Invitaciones pendientes" descripcion="Gente que todavía no entra por primera vez." />
+          <EncabezadoTarjeta titulo="Invitaciones pendientes" explica={GLOSARIO.invitacionesPendientes} descripcion="Gente que todavía no entra por primera vez." />
           {lista.isLoading ? <Cargando filas={2} /> : (lista.data ?? []).length === 0 ? (
             <Vacio icono={MailPlus} titulo="Nadie pendiente" texto="Cuando invites a alguien aparecerá aquí hasta que entre por primera vez." className="py-8" />
           ) : (
@@ -122,7 +122,8 @@ export function Invitaciones({ usuarios }: { usuarios: { id: string; nombre: str
                   <div className="flex flex-wrap gap-1">
                     {i.roles.length ? i.roles.map((r) => <Insignia key={r} tono={r === "pantalla" ? "info" : "marca"}>{NOMBRE_ROL[r]}</Insignia>) : <Insignia>Sin rol</Insignia>}
                   </div>
-                  <Boton variante="fantasma" tamano="icono" aria-label={`Cancelar invitación de ${i.correo}`} onClick={() => borrar.mutate(i.correo)}>
+                  <Boton variante="fantasma" tamano="icono" aria-label={`Cancelar invitación de ${i.correo}`} onClick={() => borrar.mutate(i.correo)}
+                    data-explain={GLOSARIO.botonCancelarInvitacion} data-explain-title="Cancelar invitación">
                     <Trash2 className="h-4 w-4 text-tenue" />
                   </Boton>
                 </li>
@@ -148,7 +149,7 @@ export function Invitaciones({ usuarios }: { usuarios: { id: string; nombre: str
             La TV no tiene cuenta de Google. Se le crea una con contraseña: se invita su correo con el rol <b className="text-texto">Pantalla de piso</b> y
             se le pone una contraseña. En la TV se abre el ERP, “Entrar con correo y contraseña”, y entra directo al tablero de piso sin ver nada más.
           </p>
-          <Boton variante="secundario" className="w-full" onClick={() => setAparato("tv")}><Monitor className="h-4 w-4" /> Crear cuenta de pantalla</Boton>
+          <Boton variante="secundario" className="w-full" onClick={() => setAparato("tv")} data-explain={GLOSARIO.cuentaPantalla} data-explain-title="Crear cuenta de pantalla"><Monitor className="h-4 w-4" /> Crear cuenta de pantalla</Boton>
         </Tarjeta>
         <Tarjeta className="p-5 space-y-3 text-sm">
           <p className="font-semibold flex items-center gap-2" data-explain={GLOSARIO.cuentaTerminal}><Tablet className="h-4 w-4 text-info" /> Terminal de piso (tablet)</p>
@@ -156,7 +157,7 @@ export function Invitaciones({ usuarios }: { usuarios: { id: string; nombre: str
             La tablet del taller tampoco necesita cuenta de Google. Se le crea una con contraseña y el rol <b className="text-texto">Terminal de piso</b>:
             entra directo a la terminal para marcar el avance de las etapas y reportar fallas, y no ve nada más. Cada quien elige su nombre en la terminal.
           </p>
-          <Boton variante="secundario" className="w-full" onClick={() => setAparato("terminal")}><Tablet className="h-4 w-4" /> Crear cuenta de terminal</Boton>
+          <Boton variante="secundario" className="w-full" onClick={() => setAparato("terminal")} data-explain={GLOSARIO.cuentaTerminal} data-explain-title="Crear cuenta de terminal"><Tablet className="h-4 w-4" /> Crear cuenta de terminal</Boton>
         </Tarjeta>
       </div>
       {aparato && <CrearCuentaAparato tipo={aparato} alCerrar={() => setAparato(null)} />}
@@ -238,7 +239,8 @@ function CrearCuentaAparato({ tipo, alCerrar }: { tipo: Aparato; alCerrar: () =>
           <Campo etiqueta="Contraseña" ayuda={`Generada para dictarla fácil ${tipo === "tv" ? "en la TV" : "en la tablet"} (sin 0/O ni 1/l).`}>
             <div className="flex gap-2">
               <Entrada required minLength={8} value={f.clave} onChange={(e) => setF({ ...f, clave: e.target.value })} className="font-mono" />
-              <Boton type="button" variante="secundario" tamano="icono" aria-label="Otra contraseña" onClick={() => setF({ ...f, clave: contrasenaNueva() })}><RefreshCw className="h-4 w-4" /></Boton>
+              <Boton type="button" variante="secundario" tamano="icono" aria-label="Otra contraseña" onClick={() => setF({ ...f, clave: contrasenaNueva() })}
+                data-explain={GLOSARIO.botonOtraContrasena} data-explain-title="Otra contraseña"><RefreshCw className="h-4 w-4" /></Boton>
             </div>
           </Campo>
         </form>

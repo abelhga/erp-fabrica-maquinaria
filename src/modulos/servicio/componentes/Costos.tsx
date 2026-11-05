@@ -8,6 +8,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha } from "@/lib/formato";
 import { useSesion } from "@/lib/sesion";
 import { CLAVE, CONCEPTOS, type Costo } from "../datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const RAPIDOS = ["Hospedaje", "Comidas", "Gasolina y casetas", "Pasajes"];
 const EJEMPLO: Record<Costo["concepto"], string> = {
@@ -54,7 +55,8 @@ export function Costos({ servicioId, mantenimientoId, conceptos }: {
                 <td><p className="leading-tight">{c.descripcion}</p><p className="text-[11px] text-tenue">{CONCEPTOS[c.concepto]} · {fecha(c.en)}</p></td>
                 <td className="text-right cifra whitespace-nowrap">{dinero(c.monto)}</td>
                 <td className="w-8">{capturar && c.concepto !== "material" && (
-                  <Boton variante="fantasma" tamano="icono" onClick={() => baja.mutate(c.id)} aria-label={`Quitar ${c.descripcion}`}><Trash2 className="h-4 w-4" /></Boton>
+                  <Boton variante="fantasma" tamano="icono" onClick={() => baja.mutate(c.id)} aria-label={`Quitar ${c.descripcion}`}
+                          data-explain={GLOSARIO.botonQuitarCostoServicio} data-explain-title="Quitar"><Trash2 className="h-4 w-4" /></Boton>
                 )}</td>
               </tr>
             ))}
@@ -65,7 +67,7 @@ export function Costos({ servicioId, mantenimientoId, conceptos }: {
       {capturar && (
         <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); if (desc.trim() && Number(monto) >= 0 && monto !== "") alta.mutate(); }}>
           {concepto === "viaticos" && (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1" data-explain={GLOSARIO.atajosViaticos} data-explain-title="Atajos de viáticos">
               {RAPIDOS.map((r) => (
                 <button key={r} type="button" onClick={() => setDesc(r)} className="h-7 rounded-full border border-borde px-2.5 text-xs text-tenue hover:text-texto hover:bg-fondo">{r}</button>
               ))}
@@ -73,7 +75,8 @@ export function Costos({ servicioId, mantenimientoId, conceptos }: {
           )}
           <div className="flex flex-wrap gap-2">
             {conceptos.length > 1 && (
-              <Seleccion className="w-auto" value={concepto} onChange={(e) => setConcepto(e.target.value as Costo["concepto"])} aria-label="Concepto">
+              <Seleccion className="w-auto" value={concepto} onChange={(e) => setConcepto(e.target.value as Costo["concepto"])} aria-label="Concepto"
+                         data-explain={GLOSARIO.conceptoCostoServicio} data-explain-title="Concepto">
                 {conceptos.map((c) => <option key={c} value={c}>{CONCEPTOS[c]}</option>)}
               </Seleccion>
             )}

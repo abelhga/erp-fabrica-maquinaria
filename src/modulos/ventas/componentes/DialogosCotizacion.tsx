@@ -13,6 +13,7 @@ import {
   compromisoDesde, dineroEn, enlaceWhatsApp, telefonoWa, textoWhatsApp,
   type Contacto, type Cotizacion, type Partida, type PlanMeses,
 } from "../comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
  * Enviar = mandar el PDF y el mensaje por WhatsApp (como hoy) y dejar la
@@ -70,7 +71,8 @@ export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vende
       </>}>
       <div className="space-y-3">
         {bloqueado && (
-          <div className="flex items-start gap-3 rounded-lg border border-peligro/30 bg-peligro-suave px-3 py-2.5 text-sm">
+          <div className="flex items-start gap-3 rounded-lg border border-peligro/30 bg-peligro-suave px-3 py-2.5 text-sm"
+            data-explain={GLOSARIO.frenoSeguimientos} data-explain-title="Freno">
             <AlertTriangle className="h-4 w-4 text-peligro mt-0.5 shrink-0" />
             <p>Tienes <b>{frenado!.vencidos} seguimientos vencidos</b> y el tope es {frenado!.tope}: primero anota qué pasó con las cotizaciones que ya mandaste.{" "}
               <Link to="/ventas/cotizaciones?estado=seguimiento" className="font-medium text-marca-texto underline" onClick={() => alCambiar(false)}>Ponerme al día</Link>.
@@ -84,7 +86,7 @@ export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vende
           <AreaTexto value={texto} onChange={(e) => setTexto(e.target.value)} className="min-h-[180px] text-sm" />
         </Campo>
         {fichas.length > 0 && (
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <label className="flex items-center gap-2 text-sm cursor-pointer" data-explain={GLOSARIO.fichaTecnica} data-explain-title="Fichas técnicas">
             <input type="checkbox" checked={conFichas} onChange={(e) => alternarFichas(e.target.checked)} />
             Incluir las ligas de las fichas técnicas ({fichas.length})
             <span className="text-xs text-tenue">· van también en el PDF</span>
@@ -128,18 +130,20 @@ export function DialogoConvertir({ abierto, alCambiar, c, partidas, alConfirmar,
       </>}>
       <div className="space-y-4">
         {!c.cliente_id && <p className="rounded-lg bg-aviso-suave text-aviso text-sm p-3">Liga la cotización a un cliente antes de convertirla (arriba, en “Cliente”).</p>}
-        <Campo etiqueta="Fecha compromiso de entrega"
-          ayuda={estimacion?.fecha_propuesta
-            ? `Con el taller como está hoy, lo realista es el ${fecha(estimacion.fecha_propuesta)}${c.tiempo_entrega ? ` (la cotización dice “${c.tiempo_entrega}”)` : ""}.`
-            : c.tiempo_entrega ? `Propuesta según “${c.tiempo_entrega}”` : undefined}>
-          <Entrada type="date" value={fechaC} onChange={(e) => setFechaC(e.target.value)} className="sm:w-52" />
-        </Campo>
+        <div data-explain={GLOSARIO.fechaCompromisoPedido} data-explain-title="Fecha compromiso">
+          <Campo etiqueta="Fecha compromiso de entrega"
+            ayuda={estimacion?.fecha_propuesta
+              ? `Con el taller como está hoy, lo realista es el ${fecha(estimacion.fecha_propuesta)}${c.tiempo_entrega ? ` (la cotización dice “${c.tiempo_entrega}”)` : ""}.`
+              : c.tiempo_entrega ? `Propuesta según “${c.tiempo_entrega}”` : undefined}>
+            <Entrada type="date" value={fechaC} onChange={(e) => setFechaC(e.target.value)} className="sm:w-52" />
+          </Campo>
+        </div>
         {estimacion?.fecha_propuesta && fechaC && fechaC < estimacion.fecha_propuesta && (
-          <p className="rounded-lg bg-aviso-suave text-aviso text-sm p-3">
+          <p className="rounded-lg bg-aviso-suave text-aviso text-sm p-3" data-explain={GLOSARIO.entregaRealista} data-explain-title="Entrega realista">
             Esa fecha es antes de lo que el taller puede sacar ({fecha(estimacion.fecha_propuesta)}): el pedido nacería atrasado. Si de todos modos la prometes, avísale a producción.
           </p>
         )}
-        <div className="tarjeta divide-y divide-borde">
+        <div className="tarjeta divide-y divide-borde" data-explain={GLOSARIO.partidasAlConvertir} data-explain-title="Partidas del pedido">
           {partidas.map((p) => (
             <label key={p.id} className={cn("flex items-start gap-3 px-3 py-2.5 cursor-pointer", !sel.has(p.id) && "opacity-60")}>
               <input type="checkbox" className="mt-1" checked={sel.has(p.id)}
@@ -173,10 +177,10 @@ export function DialogoPedirAutorizacion({ abierto, alCambiar, partidasBajo, alC
       descripcion={pedidaEn ? `Ya la pediste el ${fecha(pedidaEn)}; puedes mandar otra nota.` : "La gerencia de ventas la verá en su cola de autorización."}
       pie={<>
         <Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
-        <Boton onClick={() => alConfirmar(nota)} cargando={cargando}>Pedir autorización</Boton>
+        <Boton onClick={() => alConfirmar(nota)} cargando={cargando} data-explain={GLOSARIO.autorizacionPrecios}>Pedir autorización</Boton>
       </>}>
       <div className="space-y-3">
-        <div className="rounded-lg border border-peligro/30 bg-peligro-suave p-3 text-sm">
+        <div className="rounded-lg border border-peligro/30 bg-peligro-suave p-3 text-sm" data-explain={GLOSARIO.bajoMinimo} data-explain-title="Bajo el mínimo">
           <p className="font-medium text-peligro mb-1">{partidasBajo.length} partida(s) abajo del precio mínimo</p>
           <ul className="list-disc pl-5 text-texto/90">{partidasBajo.map((p) => <li key={p.id}>{p.titulo}</li>)}</ul>
         </div>

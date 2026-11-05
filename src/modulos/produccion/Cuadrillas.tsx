@@ -217,8 +217,9 @@ export default function Cuadrillas() {
     <Pagina titulo="Cuadrillas" ancho="max-w-[1800px]"
       descripcion={`Quién trabaja qué en cada etapa y quién sigue · ${fuera ? `fuera de horario, ${trabajaEn.size} con su tiempo abierto` : `${trabajaEn.size} personas trabajando ahorita`}`}
       acciones={<>
-        {gestionar && <Boton variante="secundario" onClick={() => setPersonalAbierto(true)}><UserCog className="h-4 w-4" />Personal de piso</Boton>}
-        <BotonLink a="/produccion/terminal"><Tablet className="h-4 w-4" />Terminal de piso</BotonLink>
+        {gestionar && <Boton variante="secundario" onClick={() => setPersonalAbierto(true)} data-explain={GLOSARIO.botonPersonalPiso} data-explain-title="Personal de piso"><UserCog className="h-4 w-4" />Personal de piso</Boton>}
+        {/* BotonLink no reenvía atributos: la explicación va en un envoltorio del mismo tamaño. */}
+        <span className="inline-flex" data-explain={GLOSARIO.ligaTerminalPiso} data-explain-title="Terminal de piso"><BotonLink a="/produccion/terminal"><Tablet className="h-4 w-4" />Terminal de piso</BotonLink></span>
       </>}>
       {error ? <ErrorCarga error={error} /> : cargando ? <Cargando filas={6} /> : (
         <>
@@ -249,8 +250,8 @@ export default function Cuadrillas() {
                 const deEtapa = trabajos.filter((t) => t.etapa_id === et.id);
                 const despues = deEtapa.filter((t) => t.estado === "pendiente" && !t.lista).sort(enCola);
                 const grupos: { titulo: string; lista: Trabajo[]; explica?: string }[] = [
-                  { titulo: "Trabajando", lista: deEtapa.filter((t) => t.estado === "en_proceso") },
-                  { titulo: "Pausadas", lista: deEtapa.filter((t) => t.estado === "pausada") },
+                  { titulo: "Trabajando", lista: deEtapa.filter((t) => t.estado === "en_proceso"), explica: GLOSARIO.etapaTrabajando },
+                  { titulo: "Pausadas", lista: deEtapa.filter((t) => t.estado === "pausada"), explica: GLOSARIO.etapaPausada },
                   { titulo: "Listas para empezar", lista: deEtapa.filter((t) => t.estado === "pendiente" && t.lista).sort(enCola), explica: GLOSARIO.colaEtapa },
                 ];
                 const abierta = masAdelante.has(et.id);
@@ -259,7 +260,7 @@ export default function Cuadrillas() {
                     <header className="flex items-center gap-2 px-1.5 pt-1 pb-2">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: et.color }} />
                       <h2 className="font-semibold text-sm">{et.nombre}</h2>
-                      <span className="ml-auto text-xs text-tenue cifra">{deEtapa.length - despues.length}</span>
+                      <span className="ml-auto text-xs text-tenue cifra" data-explain={GLOSARIO.cuentaColumnaEtapa} data-explain-title={et.nombre}>{deEtapa.length - despues.length}</span>
                     </header>
                     <div className="space-y-3 xl:max-h-[calc(100vh-21rem)] overflow-y-auto pr-0.5">
                       {grupos.map((g) => g.lista.length > 0 && (
@@ -293,12 +294,13 @@ export default function Cuadrillas() {
                 <section key={c.clave} className="w-[17rem] shrink-0 rounded-xl bg-fondo border border-borde/70 p-2" aria-label={c.titulo}>
                   <header className="px-1.5 pt-1 pb-2">
                     <h2 className="font-semibold text-sm leading-snug">{c.titulo}</h2>
-                    <p className="text-[11px] text-tenue">{c.trabajando ? "Trabajando ahorita" : "Sin nada en proceso"}{veFabricacion && c.horas > 0 ? ` · ≈ ${horas(Math.round(c.horas))} encima` : ""}</p>
+                    <p className="text-[11px] text-tenue" data-explain={veFabricacion && c.horas > 0 ? GLOSARIO.horasEncimaCuadrilla : undefined} data-explain-title={veFabricacion && c.horas > 0 ? "Horas encima" : undefined}>
+                      {c.trabajando ? "Trabajando ahorita" : "Sin nada en proceso"}{veFabricacion && c.horas > 0 ? ` · ≈ ${horas(Math.round(c.horas))} encima` : ""}</p>
                   </header>
                   <div className="space-y-2 xl:max-h-[calc(100vh-21rem)] overflow-y-auto pr-0.5">
                     {c.lista.map((t, k) => (
                       <div key={t.id}>
-                        {k === 1 && <p className="px-1 pb-1 text-[11px] font-medium uppercase tracking-wide text-tenue">Después</p>}
+                        {k === 1 && <p className="px-1 pb-1 text-[11px] font-medium uppercase tracking-wide text-tenue" data-explain={GLOSARIO.vistaPorCuadrilla} data-explain-title="Después">Después</p>}
                         {tarjeta(t, true)}
                       </div>
                     ))}
@@ -439,15 +441,15 @@ function TarjetaTrabajo({ t, ahora, gestionar, veHoras, sobre, conEtapa, reposo,
       className={cn("tarjeta p-2.5 cursor-pointer border-l-4 transition hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-marca",
         sobre && "ring-2 ring-marca")} style={{ borderLeftColor: t.color }}>
       <div className="flex items-start gap-1.5">
-        {gestionar && deCola && <GripVertical className="h-4 w-4 text-tenue shrink-0 mt-0.5 cursor-grab" aria-hidden />}
+        {gestionar && deCola && <GripVertical className="h-4 w-4 text-tenue shrink-0 mt-0.5 cursor-grab" aria-hidden data-explain={GLOSARIO.colaEtapa} data-explain-title="Arrastra para acomodar la cola" />}
         <div className="min-w-0 flex-1">
           {conEtapa && <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: t.color }}>{t.etapa}{t.estado === "pausada" ? " · pausada" : ""}</p>}
-          <p className="text-xs text-tenue cifra">{folioCorto(t.folio)}{t.numero_serie && ` · ${t.numero_serie}`}{t.prioridad === 1 && <b className="text-peligro"> · Urgente</b>}</p>
+          <p className="text-xs text-tenue cifra">{folioCorto(t.folio)}{t.numero_serie && ` · ${t.numero_serie}`}{t.prioridad === 1 && <b className="text-peligro" data-explain={GLOSARIO.prioridadOrden} data-explain-title="Urgente"> · Urgente</b>}</p>
           <p className="text-sm font-medium leading-snug">{abreviarEquipo(t.equipo)}</p>
           <p className="text-xs text-tenue truncate">{t.pedido_folio ? <><span className="text-texto cifra">{t.pedido_folio}</span> · {t.cliente ?? "—"}</> : "Para stock"}</p>
         </div>
         <span className={cn("text-[11px] cifra whitespace-nowrap", tono === "peligro" ? "text-peligro font-medium" : tono === "aviso" ? "text-aviso font-medium" : "text-tenue")}
-          title={`Compromiso ${fecha(t.fecha_compromiso)}`}>{textoDias(t.dias_restantes)}</span>
+          title={`Compromiso ${fecha(t.fecha_compromiso)}`} data-explain={GLOSARIO.fechaCompromiso} data-explain-title={`Compromiso ${fecha(t.fecha_compromiso)}`}>{textoDias(t.dias_restantes)}</span>
       </div>
       <div className="mt-2 flex flex-wrap gap-1">
         {t.personas.map((p) => (
@@ -455,19 +457,20 @@ function TarjetaTrabajo({ t, ahora, gestionar, veHoras, sobre, conEtapa, reposo,
             onDragStart={(e) => { e.stopPropagation(); alArrastrarPersona(p.id); }} onDragEnd={alTerminar}
             className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border", gestionar && "cursor-grab",
               p.trabajando ? (reposo ? "border-borde bg-fondo" : "border-ok/40 bg-ok-suave") : "border-dashed border-borde bg-superficie")}
-            title={p.trabajando ? (reposo ? `Fuera de horario: su tiempo sigue abierto y vuelve a contar ${reposo}` : "Trabajando ahorita (su tiempo está contando)") : "Planeado: le toca cuando arranque"}>
+            title={p.trabajando ? (reposo ? `Fuera de horario: su tiempo sigue abierto y vuelve a contar ${reposo}` : "Trabajando ahorita (su tiempo está contando)") : "Planeado: le toca cuando arranque"}
+            data-explain={p.trabajando ? GLOSARIO.cuadrillaEtapa : GLOSARIO.cuadrillaPlaneada} data-explain-title={p.trabajando ? "Trabajando" : "Planeado"}>
             {p.trabajando && <span className={cn("h-1.5 w-1.5 rounded-full", reposo ? "bg-tenue" : "bg-ok")} />}{p.nombre}
           </span>
         ))}
-        {t.sinNombre > 0 && <span className="rounded-full px-2 py-0.5 text-xs bg-fondo border border-borde">+{t.sinNombre} sin nombre</span>}
+        {t.sinNombre > 0 && <span className="rounded-full px-2 py-0.5 text-xs bg-fondo border border-borde" data-explain={GLOSARIO.cuadrillaEtapa} data-explain-title="Sin nombre">+{t.sinNombre} sin nombre</span>}
         {t.gente === 0 && <span className="text-xs text-tenue" data-explain={GLOSARIO.cuadrillaPlaneada} data-explain-title="Cuadrilla">{gestionar ? "Suelta aquí a quien le toca" : "Sin cuadrilla"}</span>}
       </div>
       <div className="mt-1.5 flex flex-wrap gap-x-2 text-[11px] text-tenue">
         {t.especialidad && <span className="font-medium text-texto" data-explain={GLOSARIO.especialidad} data-explain-title="Especialidad">{t.especialidad}</span>}
         {t.estado === "en_proceso" && t.desde && <span>desde {haceRato(t.desde, ahora).replace("hace ", "")}</span>}
         {f && <span className="cifra" data-explain={GLOSARIO.faltanHoras} data-explain-title="Faltan">{f}</span>}
-        {deCola && !t.lista && <span className="text-aviso">Antes: {t.espera_a}</span>}
-        {t.materiales_faltantes > 0 && <span className="text-aviso">{t.materiales_faltantes} con faltante</span>}
+        {deCola && !t.lista && <span className="text-aviso" data-explain={GLOSARIO.colaEtapa} data-explain-title={`Antes: ${t.espera_a}`}>Antes: {t.espera_a}</span>}
+        {t.materiales_faltantes > 0 && <span className="text-aviso" data-explain={GLOSARIO.faltanteMaterial} data-explain-title="Con faltante">{t.materiales_faltantes} con faltante</span>}
       </div>
     </article>
   );
@@ -487,8 +490,9 @@ function DetalleTrabajo({ t, personal, trabajaEn, gestionar, veHoras, reposo, al
   return (
     <div className="space-y-5 text-sm">
       <dl className="grid grid-cols-2 gap-3">
-        <div><dt className="text-xs text-tenue">Estado</dt><dd>{t.estado === "en_proceso" ? "En proceso" : t.estado === "pausada" ? "Pausada" : t.lista ? "En cola, lista para empezar" : `En cola · antes: ${t.espera_a}`}</dd></div>
-        <div><dt className="text-xs text-tenue">Compromiso</dt><dd className="cifra">{fecha(t.fecha_compromiso)} · {textoDias(t.dias_restantes)}</dd></div>
+        <div data-explain={t.estado === "en_proceso" ? GLOSARIO.etapaTrabajando : t.estado === "pausada" ? GLOSARIO.etapaPausada : GLOSARIO.colaEtapa} data-explain-title="Estado">
+          <dt className="text-xs text-tenue">Estado</dt><dd>{t.estado === "en_proceso" ? "En proceso" : t.estado === "pausada" ? "Pausada" : t.lista ? "En cola, lista para empezar" : `En cola · antes: ${t.espera_a}`}</dd></div>
+        <div data-explain={GLOSARIO.fechaCompromiso} data-explain-title="Compromiso"><dt className="text-xs text-tenue">Compromiso</dt><dd className="cifra">{fecha(t.fecha_compromiso)} · {textoDias(t.dias_restantes)}</dd></div>
         <div><dt className="text-xs text-tenue">Cliente</dt><dd>{t.cliente ?? "Para stock"}</dd></div>
         {t.especialidad && <div data-explain={GLOSARIO.especialidad} data-explain-title="Especialidad"><dt className="text-xs text-tenue">Especialidad</dt><dd>{t.especialidad}</dd></div>}
         {veHoras && <div data-explain={GLOSARIO.faltanHoras} data-explain-title="Horas"><dt className="text-xs text-tenue">Horas</dt>
@@ -503,14 +507,15 @@ function DetalleTrabajo({ t, personal, trabajaEn, gestionar, veHoras, reposo, al
             <li key={p.id} className="flex items-center gap-2 py-1.5">
               <HardHat className={cn("h-4 w-4", p.trabajando && !reposo ? "text-ok" : "text-tenue")} />
               <span className="flex-1">{p.nombre} <span className="text-xs text-tenue">{p.trabajando ? (reposo ? `· vuelve a contar ${reposo}` : "· trabajando") : "· planeado"}</span></span>
-              {gestionar && <Boton variante="fantasma" tamano="sm" onClick={() => alQuitar(p.id)}><UserMinus className="h-3.5 w-3.5" />Sacar</Boton>}
+              {gestionar && <Boton variante="fantasma" tamano="sm" onClick={() => alQuitar(p.id)} data-explain={GLOSARIO.botonSacarDeCuadrilla} data-explain-title={`Sacar a ${p.nombre}`}><UserMinus className="h-3.5 w-3.5" />Sacar</Boton>}
             </li>
           ))}
           {t.sinNombre > 0 && <li className="py-1.5 text-tenue">+{t.sinNombre} sin nombre (se sacan desde la terminal)</li>}
         </ul>
         {gestionar && (
           <div className="mt-3 flex gap-2">
-            <Seleccion value={elegido} onChange={(e) => setElegido(e.target.value)} aria-label="Agregar persona" className="flex-1">
+            <Seleccion value={elegido} onChange={(e) => setElegido(e.target.value)} aria-label="Agregar persona" className="flex-1"
+              data-explain={GLOSARIO.agregarACuadrilla} data-explain-title="Agregar a alguien">
               <option value="">Agregar a alguien…</option>
               {fuera.map((p) => {
                 const en = trabajaEn.get(p.id);
@@ -573,7 +578,7 @@ function PersonalPiso({ etapas }: { etapas: Etapa[] }) {
               <p className="font-medium truncate">{p.nombre}</p>
               <p className="text-xs text-tenue truncate">{p.puesto ?? "Sin puesto"}{p.trabajando_en && ` · trabajando en ${p.trabajando_en}`}</p>
             </div>
-            <Seleccion className="w-36" value={p.etapa_id ?? ""} aria-label={`Área de ${p.nombre}`}
+            <Seleccion className="w-36" value={p.etapa_id ?? ""} aria-label={`Área de ${p.nombre}`} data-explain={GLOSARIO.areaPiso} data-explain-title="Área"
               onChange={(e) => ajustar.mutate({ p, etapa: e.target.value ? Number(e.target.value) : null, cuadrillas: p.en_cuadrillas })}>
               <option value="">Sin área</option>
               {etapas.map((et) => <option key={et.id} value={et.id}>{et.nombre}</option>)}
@@ -586,7 +591,7 @@ function PersonalPiso({ etapas }: { etapas: Etapa[] }) {
                 {(especialidades.data ?? []).filter((e) => e.etapa_id === p.etapa_id).map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
               </Seleccion>
             )}
-            <label className="flex items-center gap-2 text-xs text-tenue">
+            <label className="flex items-center gap-2 text-xs text-tenue" data-explain={GLOSARIO.enCuadrillas} data-explain-title="Entra a cuadrillas">
               <Interruptor activo={p.en_cuadrillas} cargando={ajustar.isPending} aria-label={`${p.nombre} entra a cuadrillas`}
                 alCambiar={(v) => ajustar.mutate({ p, etapa: p.etapa_id, cuadrillas: v })} />
               Cuadrillas
@@ -659,10 +664,13 @@ function DialogoEspecialidad({ esp, etapas, lista, alCerrar }: { esp: Especialid
       descripcion="Qué equipos hace esta cuadrilla. Cada tipo de equipo es de una sola especialidad por área."
       pie={<>
         {esp && (
-          <Boton variante={borrar ? "peligro" : "fantasma"} className="mr-auto" cargando={quitar.isPending}
-            onClick={() => (borrar ? quitar.mutate(undefined) : setBorrar(true))}>
-            <Trash2 className="h-4 w-4" />{borrar ? (esp.personas ? `Sí, borrar (${esp.personas} quedan haciendo de todo)` : "Sí, borrar") : "Borrar"}
-          </Boton>
+          // Mientras borra, el botón se deshabilita y Chrome no le da el mouse: la explicación va afuera.
+          <span className="mr-auto inline-flex" data-explain={GLOSARIO.borrarEspecialidad} data-explain-title="Borrar especialidad">
+            <Boton variante={borrar ? "peligro" : "fantasma"} cargando={quitar.isPending}
+              onClick={() => (borrar ? quitar.mutate(undefined) : setBorrar(true))}>
+              <Trash2 className="h-4 w-4" />{borrar ? (esp.personas ? `Sí, borrar (${esp.personas} quedan haciendo de todo)` : "Sí, borrar") : "Borrar"}
+            </Boton>
+          </span>
         )}
         <Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton>
         <Boton type="submit" form="especialidad" cargando={guardar.isPending} disabled={!f.nombre.trim()}>Guardar</Boton>
@@ -679,7 +687,7 @@ function DialogoEspecialidad({ esp, etapas, lista, alCerrar }: { esp: Especialid
           </Campo>
         </div>
         <fieldset>
-          <legend className="text-sm font-medium mb-1.5">Equipos que hace</legend>
+          <legend className="text-sm font-medium mb-1.5" data-explain={GLOSARIO.equiposDeEspecialidad} data-explain-title="Equipos que hace">Equipos que hace</legend>
           {familias.error ? <ErrorCarga error={familias.error} /> : familias.isLoading ? <Cargando filas={3} /> : (
             <div className="grid gap-0.5 sm:grid-cols-2">
               {(familias.data ?? []).map((c) => {
@@ -847,7 +855,7 @@ function HorarioTaller({ cfg }: { cfg: HorasTaller }) {
 
       <div className="flex flex-wrap items-center gap-2 border-t border-borde pt-3">
         <Boton type="submit" disabled={!cambiado || guardar.isPending}>{guardar.isPending ? "Guardando…" : "Guardar horario"}</Boton>
-        {cambiado && <Boton type="button" variante="secundario" onClick={() => setE(aEditable(cfg))}>Deshacer cambios</Boton>}
+        {cambiado && <Boton type="button" variante="secundario" onClick={() => setE(aEditable(cfg))} data-explain={GLOSARIO.deshacerCambiosHorario} data-explain-title="Deshacer cambios">Deshacer cambios</Boton>}
         <p className="text-xs text-tenue">Las horas ya marcadas se vuelven a contar con el horario nuevo.</p>
       </div>
     </form>

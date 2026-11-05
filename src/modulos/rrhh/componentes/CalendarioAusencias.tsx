@@ -58,12 +58,12 @@ export function CalendarioAusencias({ alElegirDia }: { alElegirDia?: (dia: strin
   return (
     <div className="tarjeta overflow-hidden">
       <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-borde">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1" data-explain={GLOSARIO.cambiarMesAusencias} data-explain-title="Cambiar de mes">
           <Boton variante="fantasma" tamano="icono" aria-label="Mes anterior" onClick={() => setMes(new Date(mes.getFullYear(), mes.getMonth() - 1, 1))}><ChevronLeft className="h-4 w-4" /></Boton>
           <h3 className="font-semibold w-40 text-center capitalize">{MESES[mes.getMonth()]} {mes.getFullYear()}</h3>
           <Boton variante="fantasma" tamano="icono" aria-label="Mes siguiente" onClick={() => setMes(new Date(mes.getFullYear(), mes.getMonth() + 1, 1))}><ChevronRight className="h-4 w-4" /></Boton>
         </div>
-        <Boton variante="secundario" tamano="sm" onClick={() => { const h = new Date(); setMes(new Date(h.getFullYear(), h.getMonth(), 1)); }}>Hoy</Boton>
+        <Boton variante="secundario" tamano="sm" onClick={() => { const h = new Date(); setMes(new Date(h.getFullYear(), h.getMonth(), 1)); }} data-explain={GLOSARIO.cambiarMesAusencias} data-explain-title="Hoy">Hoy</Boton>
         <div className="ml-auto flex flex-wrap gap-x-3 gap-y-1 text-xs text-tenue" data-explain={GLOSARIO.calendarioAusencias} data-explain-title="Colores del calendario">
           {usados.map((t) => <span key={t} className="inline-flex items-center gap-1.5"><span className={cn("h-2.5 w-2.5 rounded-sm", FONDO_TIPO[t])} />{TIPOS[t].texto}</span>)}
           <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm border border-dashed border-tenue" />Por aprobar</span>

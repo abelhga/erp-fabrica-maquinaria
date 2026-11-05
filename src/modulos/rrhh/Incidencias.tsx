@@ -50,14 +50,14 @@ export default function Incidencias() {
     <Pagina
       titulo="Vacaciones e incidencias"
       descripcion="Solicitudes por aprobar, quién falta cada día y cuántas vacaciones le quedan a cada quien."
-      acciones={puedeRegistrar && <Boton onClick={() => setNueva({ abierto: true })}><CalendarPlus className="h-4 w-4" /> Registrar</Boton>}
+      acciones={puedeRegistrar && <Boton onClick={() => setNueva({ abierto: true })} data-explain={GLOSARIO.botonRegistrarIncidencia}><CalendarPlus className="h-4 w-4" /> Registrar</Boton>}
     >
       <Pestanas value={vista} onValueChange={(v) => setParams(v === "pendientes" ? {} : { vista: v }, { replace: true })}>
         <ListaPestanas opciones={[
           { valor: "pendientes", texto: "Por aprobar", cuenta: pendientes.length, explica: GLOSARIO.solicitudesPorAprobar },
           { valor: "calendario", texto: "Calendario", explica: GLOSARIO.calendarioAusencias },
           { valor: "saldos", texto: "Saldos de vacaciones", explica: GLOSARIO.saldoVacaciones },
-          { valor: "historial", texto: "Historial" },
+          { valor: "historial", texto: "Historial", explica: GLOSARIO.historialIncidencias },
         ]} />
         <ContenidoPestana value="pendientes" className="pt-4">
           {todas.error ? <ErrorCarga error={todas.error} /> : todas.isLoading ? <Cargando /> : (
@@ -103,26 +103,26 @@ function Pendientes({ pendientes, todas, vacaciones }: { pendientes: IncidenciaC
               <div className="min-w-0 space-y-1">
                 <p className="font-medium">{i.empleado?.nombre} <span className="text-tenue font-normal text-sm">· {i.empleado?.puesto}</span></p>
                 <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <Insignia tono={TIPOS[i.tipo].tono}>{TIPOS[i.tipo].texto}</Insignia>
+                  <span data-explain={GLOSARIO.tipoIncidencia} data-explain-title={TIPOS[i.tipo].texto}><Insignia tono={TIPOS[i.tipo].tono}>{TIPOS[i.tipo].texto}</Insignia></span>
                   <span className="cifra">{rango(i)}</span>
-                  <span className="text-tenue">· {cantidad(i)}</span>
+                  <span className="text-tenue" data-explain={GLOSARIO.cantidadIncidencia} data-explain-title="Cantidad">· {cantidad(i)}</span>
                 </div>
                 {i.motivo && <p className="text-sm text-tenue">“{i.motivo}”</p>}
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-tenue">
                   <span>Pedida {hace(i.creado_en)}</span>
                   {i.tipo === "vacaciones" && v && <CargoSolicitud incidencia={i} saldo={v.saldo} />}
-                  {coinciden.length > 0 && <span>Esos días también faltan: {coinciden.join(", ")}</span>}
+                  {coinciden.length > 0 && <span data-explain={GLOSARIO.tambienFaltanEsosDias} data-explain-title="También faltan">Esos días también faltan: {coinciden.join(", ")}</span>}
                 </div>
               </div>
             </div>
             {puede("rrhh", 2) ? (
               <div className="flex gap-2 sm:shrink-0">
-                <Boton variante="secundario" tamano="sm" onClick={() => setRechazo(i)}><X className="h-4 w-4" /> Rechazar</Boton>
-                <Boton variante="exito" tamano="sm" cargando={aprobar.isPending && aprobar.variables?.id === i.id} onClick={() => aprobar.mutate(i)}>
+                <Boton variante="secundario" tamano="sm" onClick={() => setRechazo(i)} data-explain={GLOSARIO.botonRechazarSolicitud}><X className="h-4 w-4" /> Rechazar</Boton>
+                <Boton variante="exito" tamano="sm" cargando={aprobar.isPending && aprobar.variables?.id === i.id} onClick={() => aprobar.mutate(i)} data-explain={GLOSARIO.botonAprobarSolicitud}>
                   <Check className="h-4 w-4" /> Aprobar
                 </Boton>
               </div>
-            ) : <Insignia tono="aviso">Espera a Recursos Humanos</Insignia>}
+            ) : <span data-explain={GLOSARIO.estadoIncidencia} data-explain-title="Por aprobar"><Insignia tono="aviso">Espera a Recursos Humanos</Insignia></span>}
           </div>
         );
       })}
@@ -166,12 +166,12 @@ function DialogoRechazo({ incidencia: i, alCerrar }: { incidencia: IncidenciaCom
 function Saldos({ vacaciones, cargando }: { vacaciones: Vacaciones[] | undefined; cargando: boolean }) {
   const columnas: Columna<Vacaciones>[] = [
     { clave: "nombre", titulo: "Empleado", celda: (v) => <span className="flex items-center gap-2 whitespace-nowrap"><Avatar nombre={v.nombre} tamano="sm" />{v.nombre}</span> },
-    { clave: "anios", titulo: "Antigüedad", valor: (v) => v.anios, sinBusqueda: true, celda: (v) => <span className="whitespace-nowrap" title={`Ingresó el ${fecha(v.fecha_ingreso)}`}>{antiguedad(v.fecha_ingreso)}</span> },
+    { clave: "anios", titulo: "Antigüedad", explica: GLOSARIO.antiguedadPersonal, valor: (v) => v.anios, sinBusqueda: true, celda: (v) => <span className="whitespace-nowrap" title={`Ingresó el ${fecha(v.fecha_ingreso)}`}>{antiguedad(v.fecha_ingreso)}</span> },
     { clave: "dias_periodo", titulo: "Le tocan", explica: GLOSARIO.diasPorLey, alinear: "der", sinBusqueda: true },
     { clave: "tomados", titulo: "Tomados", explica: GLOSARIO.diasTomados, alinear: "der", sinBusqueda: true, valor: (v) => Number(v.tomados), celda: (v) => numero(v.tomados) },
     { clave: "solicitados", titulo: "Por aprobar", explica: GLOSARIO.diasPorAprobar, alinear: "der", sinBusqueda: true, valor: (v) => Number(v.solicitados), celda: (v) => (Number(v.solicitados) ? numero(v.solicitados) : <span className="text-tenue">—</span>) },
     {
-      clave: "disponible", titulo: "Vigentes", explica: GLOSARIO.periodoVacaciones, alinear: "der", sinBusqueda: true, valor: (v) => Number(v.disponible),
+      clave: "disponible", titulo: "Vigentes", explica: GLOSARIO.diasVigentesVacaciones, alinear: "der", sinBusqueda: true, valor: (v) => Number(v.disponible),
       celda: (v) => (Number(v.disponible) ? numero(v.disponible) : <span className="text-tenue">—</span>),
     },
     {
@@ -199,7 +199,7 @@ function Saldos({ vacaciones, cargando }: { vacaciones: Vacaciones[] | undefined
   return (
     <div className="space-y-4">
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Cómo se calculan" descripcion="Ley Federal del Trabajo, reforma 2023 (vacaciones dignas)" />
+        <EncabezadoTarjeta titulo="Cómo se calculan" descripcion="Ley Federal del Trabajo, reforma 2023 (vacaciones dignas)" explica={GLOSARIO.diasPorLey} />
         <div className="px-5 pb-5 grid gap-4 lg:grid-cols-2 text-sm">
           <div>
             <p className="text-xs text-tenue mb-2">Años cumplidos → días de vacaciones</p>
@@ -233,7 +233,7 @@ function Historial({ filas, cargando }: { filas: IncidenciaCompleta[] | undefine
     { clave: "empleado", titulo: "Empleado", valor: (i) => i.empleado?.nombre },
     { clave: "tipo", titulo: "Tipo", explica: GLOSARIO.tipoIncidencia, valor: (i) => TIPOS[i.tipo].texto, celda: (i) => <Insignia tono={TIPOS[i.tipo].tono}>{TIPOS[i.tipo].texto}</Insignia> },
     { clave: "inicio", titulo: "Fechas", valor: (i) => i.inicio, celda: (i) => <span className="whitespace-nowrap cifra">{rango(i)}</span> },
-    { clave: "dias", titulo: "Cantidad", alinear: "der", sinBusqueda: true, valor: (i) => Number(i.dias), celda: (i) => <span className="whitespace-nowrap">{cantidad(i)}</span> },
+    { clave: "dias", titulo: "Cantidad", explica: GLOSARIO.cantidadIncidencia, alinear: "der", sinBusqueda: true, valor: (i) => Number(i.dias), celda: (i) => <span className="whitespace-nowrap">{cantidad(i)}</span> },
     { clave: "estado", titulo: "Estado", explica: GLOSARIO.estadoIncidencia, valor: (i) => ESTADOS[i.estado].texto, celda: (i) => <Insignia tono={ESTADOS[i.estado].tono}>{ESTADOS[i.estado].texto}</Insignia> },
     { clave: "motivo", titulo: "Motivo", clase: "max-w-[320px] truncate", valor: (i) => i.motivo },
     { clave: "creado_en", titulo: "Registrada", sinBusqueda: true, valor: (i) => i.creado_en, celda: (i) => <span className="text-tenue whitespace-nowrap">{fechaYHora(i.creado_en)}</span> },
@@ -243,11 +243,11 @@ function Historial({ filas, cargando }: { filas: IncidenciaCompleta[] | undefine
       placeholder="Buscar por empleado o motivo…"
       filtros={
         <div className="flex flex-wrap gap-2">
-          <Seleccion className="h-8 w-auto text-xs" value={tipo} onChange={(e) => setTipo(e.target.value as TipoIncidencia | "")} aria-label="Tipo">
+          <Seleccion className="h-8 w-auto text-xs" value={tipo} onChange={(e) => setTipo(e.target.value as TipoIncidencia | "")} aria-label="Tipo" data-explain={GLOSARIO.tipoIncidencia} data-explain-title="Tipo">
             <option value="">Todos los tipos</option>
             {(Object.keys(TIPOS) as TipoIncidencia[]).map((t) => <option key={t} value={t}>{TIPOS[t].texto}</option>)}
           </Seleccion>
-          <Seleccion className="h-8 w-auto text-xs" value={estado} onChange={(e) => setEstado(e.target.value)} aria-label="Estado">
+          <Seleccion className="h-8 w-auto text-xs" value={estado} onChange={(e) => setEstado(e.target.value)} aria-label="Estado" data-explain={GLOSARIO.estadoIncidencia} data-explain-title="Estado">
             <option value="">Todos los estados</option>
             {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v.texto}</option>)}
           </Seleccion>

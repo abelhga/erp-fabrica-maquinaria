@@ -151,7 +151,7 @@ export function BorradorMensaje({ objetivo, alt = 40 }: { objetivo: ParaAnotar; 
           onClick={() => { navigator.clipboard.writeText(mensaje); toast.success("Mensaje copiado"); }}><Copy className="h-4 w-4" />Copiar</Boton>
         {objetivo.telefono && <Boton tamano="sm" asChild><a href={enlaceWhatsApp(objetivo.telefono, mensaje)} target="_blank" rel="noopener noreferrer">
           <MessageCircle className="h-4 w-4" />Abrir en WhatsApp</a></Boton>}
-        {!d?.simulado && <Boton tamano="sm" variante="fantasma" onClick={() => borrador.refetch()}><RefreshCw className="h-4 w-4" />Otra versión</Boton>}
+        {!d?.simulado && <Boton tamano="sm" variante="fantasma" onClick={() => borrador.refetch()} data-explain={GLOSARIO.otraVersionMensajeIA}><RefreshCw className="h-4 w-4" />Otra versión</Boton>}
       </div>
     </div>
   );
@@ -226,7 +226,8 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
         {(objetivo.telefono || objetivo.ultimo_que_paso || puede("asistente", 1)) && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
             {objetivo.telefono && <>
-              <a className="inline-flex items-center gap-1 rounded-md border border-borde px-2 py-1 text-xs hover:bg-fondo" href={enlaceWhatsApp(objetivo.telefono, "")} target="_blank" rel="noopener noreferrer">
+              <a className="inline-flex items-center gap-1 rounded-md border border-borde px-2 py-1 text-xs hover:bg-fondo" href={enlaceWhatsApp(objetivo.telefono, "")} target="_blank" rel="noopener noreferrer"
+                data-explain={GLOSARIO.whatsappSeguimientoCotizacion} data-explain-title="WhatsApp">
                 <MessageCircle className="h-3.5 w-3.5" />WhatsApp{objetivo.contacto ? ` a ${nombrePila(objetivo.contacto)}` : ""}</a>
               <a className="inline-flex items-center gap-1 rounded-md border border-borde px-2 py-1 text-xs hover:bg-fondo" href={`tel:${objetivo.telefono}`}>
                 <Phone className="h-3.5 w-3.5" />Llamar</a>
@@ -277,7 +278,7 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
           </Campo>
           <div className="flex flex-wrap items-end gap-3">
             <div className="space-y-1.5">
-              <p className="text-sm font-medium">¿Por dónde?</p>
+              <p className="text-sm font-medium" data-explain={GLOSARIO.canalSeguimientoCotizacion}>¿Por dónde?</p>
               <div className="flex flex-wrap gap-1">
                 {CANALES.map((c) => (
                   <button key={c.valor} type="button" onClick={() => setCanal(c.valor)}
@@ -289,10 +290,12 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
               </div>
             </div>
             {conFecha && (
-              <Campo etiqueta="Siguiente seguimiento" className="sm:w-48"
-                ayuda={proxima ? undefined : resultado === "no_contesta" ? "Vacío: en 2 días hábiles" : resultado === "contactado" ? "Vacío: sin fecha si no hay cotización" : "Vacío: en 3 días hábiles"}>
-                <Entrada type="date" value={proxima} min={hoyMx()} onChange={(e) => setProxima(e.target.value)} />
-              </Campo>
+              <div data-explain={GLOSARIO.siguienteSeguimientoCotizacion} data-explain-title="Siguiente seguimiento">
+                <Campo etiqueta="Siguiente seguimiento" className="sm:w-48"
+                  ayuda={proxima ? undefined : resultado === "no_contesta" ? "Vacío: en 2 días hábiles" : resultado === "contactado" ? "Vacío: sin fecha si no hay cotización" : "Vacío: en 3 días hábiles"}>
+                  <Entrada type="date" value={proxima} min={hoyMx()} onChange={(e) => setProxima(e.target.value)} />
+                </Campo>
+              </div>
             )}
           </div>
         </>}
@@ -346,11 +349,13 @@ export function ColaSeguimientos({ filas, cargando, conVendedor }: { filas: Segu
                 <div className="flex items-center gap-2 shrink-0">
                   <span className={cn("text-xs whitespace-nowrap", s.vence < hoy ? "text-peligro font-medium" : "text-tenue")}>{textoVence(s.vence)}</span>
                   {s.telefono && <a href={enlaceWhatsApp(s.telefono, "")} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp a ${s.cliente ?? "cliente"}`}
+                    data-explain={GLOSARIO.whatsappSeguimientoCotizacion} data-explain-title="WhatsApp"
                     className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-borde text-tenue hover:text-texto hover:bg-fondo"><MessageCircle className="h-4 w-4" /></a>}
                   {puede("asistente", 1) && <button type="button" onClick={() => setParaMensaje(s)} aria-label={`Redactar mensaje para ${s.cliente ?? "el cliente"}`}
                     data-explain={GLOSARIO.mensajeSeguimiento} data-explain-title="Mensaje con IA"
                     className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg border border-marca/30 bg-marca-suave text-marca-texto text-xs font-medium hover:ring-1 hover:ring-marca/40"><Sparkles className="h-4 w-4" />Mensaje</button>}
-                  <Boton tamano="sm" variante={s.vence <= hoy ? "primario" : "secundario"} onClick={() => setActual(s.id)}>¿Qué pasó?</Boton>
+                  <Boton tamano="sm" variante={s.vence <= hoy ? "primario" : "secundario"} onClick={() => setActual(s.id)}
+                    data-explain={GLOSARIO.resultadoSeguimiento} data-explain-title="¿Qué pasó?">¿Qué pasó?</Boton>
                 </div>
               </div>
             ))}
@@ -381,12 +386,13 @@ export function ResumenVendedores({ filas, elegido, alElegir }: { filas: PorVend
             <div className="flex items-center justify-between gap-2">
               <p className="font-semibold truncate">{v.vendedor}</p>
               {v.frenado ? <span data-explain={GLOSARIO.frenoSeguimientos} data-explain-title="Frenado"><Insignia tono="peligro">Frenado</Insignia></span>
-                : v.liberado_motivo ? <Insignia tono="info">Liberado hoy</Insignia> : null}
+                : v.liberado_motivo ? <span data-explain={GLOSARIO.frenoSeguimientos} data-explain-title="Liberado hoy"><Insignia tono="info">Liberado hoy</Insignia></span> : null}
             </div>
             <p className="mt-2 text-sm"><b className={cn("cifra", v.vencidos > 0 && "text-peligro")}>{v.vencidos}</b> vencidos · <b className="cifra">{v.para_hoy}</b> para hoy · <span className="cifra">{v.pendientes}</span> en total</p>
             <p className="text-xs text-tenue mt-1">Últimos 7 días: envió <span className="cifra">{v.enviadas_7d}</span> cotización{v.enviadas_7d === 1 ? "" : "es"} y anotó <span className="cifra">{v.anotados_7d}</span> seguimiento{v.anotados_7d === 1 ? "" : "s"}</p>
             {v.frenado && (
-              <Boton tamano="sm" variante="secundario" className="mt-3" onClick={(e) => { e.stopPropagation(); setLiberar(v); }}>
+              <Boton tamano="sm" variante="secundario" className="mt-3" onClick={(e) => { e.stopPropagation(); setLiberar(v); }}
+                data-explain={GLOSARIO.liberarFrenoSeguimiento}>
                 <LockOpen className="h-3.5 w-3.5" />Liberar por hoy</Boton>
             )}
           </div>

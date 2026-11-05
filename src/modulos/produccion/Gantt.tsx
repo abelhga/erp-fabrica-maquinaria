@@ -60,8 +60,14 @@ type Vista = "orden" | "pedido" | "area";
 type Ver = "todas" | "tarde";
 
 const PX: Record<Zoom, number> = { dia: 42, semana: 18, mes: 5 };
-const ZOOMS: { valor: Zoom; texto: string }[] = [{ valor: "dia", texto: "Días" }, { valor: "semana", texto: "Semanas" }, { valor: "mes", texto: "Meses" }];
+const ZOOMS: { valor: Zoom; texto: string; explica: string }[] = [
+  { valor: "dia", texto: "Días", explica: GLOSARIO.zoomGantt }, { valor: "semana", texto: "Semanas", explica: GLOSARIO.zoomGantt },
+  { valor: "mes", texto: "Meses", explica: GLOSARIO.zoomGantt },
+];
 const ALTO_ORDEN = 56, ALTO_GRUPO = 36, ALTO_CARRIL = 28, ALTO_REGLA = 48;
+const EXPLICA_ETAPA: Record<EstadoOperacion, string> = {
+  terminada: GLOSARIO.ganttHecho, en_proceso: GLOSARIO.ganttTrabajandose, pausada: GLOSARIO.etapaPausada, pendiente: GLOSARIO.ganttPlaneado,
+};
 
 // Días como números enteros (días desde 1970): restar fechas sin pelearse con zonas horarias.
 const DIA = 86_400_000;
@@ -248,7 +254,7 @@ export default function Gantt() {
       acciones={<div className="flex flex-wrap gap-2">
         <Filtro opciones={[
           { valor: "orden" as Vista, texto: "Por orden", explica: GLOSARIO.ganttPorOrden },
-          { valor: "pedido" as Vista, texto: "Por pedido" },
+          { valor: "pedido" as Vista, texto: "Por pedido", explica: GLOSARIO.ganttPorPedido },
           { valor: "area" as Vista, texto: "Por área", explica: GLOSARIO.ganttPorArea },
         ]} valor={vista} alCambiar={(v) => { guardarVista(v); cambiar("vista", v, "orden"); }} />
         <Filtro opciones={ZOOMS} valor={zoom} alCambiar={(v) => { guardarZoom(v); cambiar("zoom", v, window.innerWidth < 640 ? "semana" : "dia"); }} />
@@ -522,7 +528,8 @@ function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, 
         compacto ? "sm:[--izq:13rem] max-h-[28rem]" : "sm:[--izq:17rem] max-h-[calc(100vh-17rem)] min-h-[420px]")}>
       <div className="relative" style={{ width: `calc(var(--izq) + ${ancho}px)` }}>
         <div className="sticky top-0 z-30 flex border-b border-borde bg-superficie/95 backdrop-blur" style={{ height: ALTO_REGLA }}>
-          <div data-izq className="sticky left-0 z-10 w-[var(--izq)] shrink-0 border-r border-borde bg-superficie px-3 flex items-end pb-2 text-xs font-medium text-tenue">
+          <div data-izq className="sticky left-0 z-10 w-[var(--izq)] shrink-0 border-r border-borde bg-superficie px-3 flex items-end pb-2 text-xs font-medium text-tenue"
+            data-explain={compacto ? undefined : vista === "area" ? GLOSARIO.ganttPorArea : vista === "pedido" ? GLOSARIO.ganttPorPedido : GLOSARIO.ganttPorOrden}>
             {vista === "area" ? "Área" : vista === "pedido" ? "Pedido y orden" : compacto ? "Orden" : "Orden (en el orden de la fila)"}
           </div>
           <Regla zoom={zoom} ini={ini} fin={fin} px={px} hoy={hoy} xHoy={xHoy} />
@@ -539,7 +546,7 @@ function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, 
               return (
                 <div key={it.clave} className="absolute inset-x-0 flex transition-[top] duration-500 ease-out" style={{ top: it.y, height: it.h }}>
                   <div className={cn("sticky left-0 z-20 w-[var(--izq)] shrink-0 border-r border-b border-borde px-3 flex flex-col justify-center min-w-0",
-                    it.espera ? "bg-aviso-suave" : "bg-fondo")}>
+                    it.espera ? "bg-aviso-suave" : "bg-fondo")} data-explain={it.espera ? GLOSARIO.ordenEnEspera : GLOSARIO.ganttPorPedido} data-explain-title={it.titulo}>
                     <p className="text-xs font-semibold truncate">{it.titulo}</p>
                     <p className="text-[11px] text-tenue truncate">{it.detalle}</p>
                   </div>
@@ -558,7 +565,7 @@ function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, 
                     <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: it.etapa.color }} />
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate">{it.etapa.nombre}{it.sub && <span className="font-normal" data-explain={GLOSARIO.especialidad} data-explain-title="Especialidad"> · {it.sub}</span>}</p>
-                      <p className="text-[11px] text-tenue truncate">
+                      <p className="text-[11px] text-tenue truncate" data-explain={GLOSARIO.filaAreaGantt} data-explain-title="Fila y horas por semana">
                         {it.semanas != null ? `≈ ${numero(Math.round(it.semanas * 10) / 10)} sem. de fila · ` : ""}{numero(Math.round(it.horasSemana))} h/sem
                       </p>
                     </div>
@@ -589,13 +596,16 @@ function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, 
                   onDragEnd={() => { setArrastrando(null); setDestino(null); }}
                   className={cn("sticky left-0 z-20 w-[var(--izq)] shrink-0 border-r border-b border-borde bg-superficie group-hover:bg-fondo flex items-center gap-1 pr-2 min-w-0",
                     arrastrable && !g.enEspera ? "pl-0.5" : "pl-3", g.enEspera && "opacity-70")}>
-                  {arrastrable && !g.enEspera && <GripVertical className="h-4 w-4 shrink-0 text-tenue/60 cursor-grab group-hover:text-tenue" />}
+                  {arrastrable && !g.enEspera && <GripVertical className="h-4 w-4 shrink-0 text-tenue/60 cursor-grab group-hover:text-tenue"
+                    data-explain={GLOSARIO.ganttPorOrden} data-explain-title="Arrastra para cambiar su lugar en la fila" />}
                   <button type="button" onClick={() => alAbrir(g.id)} className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca rounded">
                     <p className="flex items-center gap-1.5 text-[13px] font-semibold leading-tight">
                       {o.prioridad === 1 && <span className="h-1.5 w-1.5 rounded-full bg-peligro shrink-0" data-explain={GLOSARIO.prioridadOrden} data-explain-title="Urgente" />}
                       <span className="truncate">{folioCorto(o.folio)}</span>
-                      {g.retraso > 0 && <span className="ml-auto shrink-0 rounded-full bg-peligro-suave px-1.5 text-[10px] font-semibold text-peligro cifra">+{g.retraso} d</span>}
-                      {g.enEspera && <span className="ml-auto shrink-0 rounded-full bg-aviso-suave px-1.5 text-[10px] font-semibold text-aviso">En espera</span>}
+                      {g.retraso > 0 && <span className="ml-auto shrink-0 rounded-full bg-peligro-suave px-1.5 text-[10px] font-semibold text-peligro cifra"
+                        data-explain={GLOSARIO.tardeSegunPlan} data-explain-title={`${g.retraso} ${g.retraso === 1 ? "día" : "días"} tarde`}>+{g.retraso} d</span>}
+                      {g.enEspera && <span className="ml-auto shrink-0 rounded-full bg-aviso-suave px-1.5 text-[10px] font-semibold text-aviso"
+                        data-explain={GLOSARIO.ordenEnEspera} data-explain-title="En espera">En espera</span>}
                     </p>
                     <p className="text-xs truncate leading-tight mt-0.5">{abreviarEquipo(o.equipo)}</p>
                     <p className="hidden sm:block text-[11px] text-tenue truncate leading-tight mt-0.5">
@@ -605,7 +615,8 @@ function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, 
                 </div>
                 <div className="relative shrink-0 border-b border-borde group-hover:bg-marca/[0.03]" style={{ width: ancho }}>
                   {g.retraso > 0 && xComp != null && xFin != null && (
-                    <span className="gantt-retraso absolute top-2 bottom-2 rounded-r-md transition-all duration-500" style={{ left: xComp + px / 2, width: Math.max(xFin - xComp - px / 2, 2) }} />
+                    <span className="gantt-retraso absolute top-2 bottom-2 rounded-r-md transition-all duration-500" style={{ left: xComp + px / 2, width: Math.max(xFin - xComp - px / 2, 2) }}
+                      data-explain={GLOSARIO.tardeSegunPlan} data-explain-title="Retraso" />
                   )}
                   {(() => {
                     const { linea, total } = lineasDeOrden(g.barras);
@@ -617,7 +628,8 @@ function Diagrama({ zoom, vista, hoy, activas, enEspera, etapas, carga, buscar, 
                   })()}
                   {xComp != null && (
                     // Una raya punteada de arriba abajo y el rombo arriba: no tapa el nombre de la etapa de ese día.
-                    <span title={`Compromiso: ${fecha(o.fecha_compromiso)}`} className="absolute inset-y-1 z-[5] transition-all duration-500" style={{ left: xComp }}>
+                    <span title={`Compromiso: ${fecha(o.fecha_compromiso)}`} className="absolute inset-y-1 z-[5] transition-all duration-500" style={{ left: xComp }}
+                      data-explain={GLOSARIO.fechaCompromiso} data-explain-title={`Compromiso: ${fecha(o.fecha_compromiso)}`}>
                       <span className={cn("absolute inset-y-0 border-l-2 border-dashed -ml-px", g.retraso > 0 ? "border-peligro/60" : "border-ok/60")} />
                       <span className={cn("absolute top-0 z-20 h-2.5 w-2.5 -ml-[5px] rotate-45 rounded-[2px] ring-2 ring-superficie", g.retraso > 0 ? "bg-peligro" : "bg-ok")} />
                     </span>
@@ -766,7 +778,7 @@ function DetalleOrdenPlan({ g, hoy, cuadrillas, lugar, total, gestionar, ocupado
         </div>
         {g.enEspera && <p className="rounded-lg bg-aviso-suave px-3 py-2 text-sm text-aviso">En espera: {o.en_espera_motivo}. No entra al plan hasta que se reanude.</p>}
         {gestionar && !g.enEspera && lugar >= 0 && (
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-borde p-3">
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-borde p-3" data-explain={GLOSARIO.lugarEnFila} data-explain-title="Lugar en la fila">
             <p className="text-sm mr-auto">Lugar en la fila: <span className="font-semibold cifra">{lugar + 1}</span> de <span className="cifra">{total}</span></p>
             <Boton variante="secundario" tamano="sm" disabled={lugar === 0 || ocupado} onClick={() => alMover("arriba")}><ChevronsUp className="h-4 w-4" />Hasta arriba</Boton>
             <Boton variante="secundario" tamano="sm" disabled={lugar === 0 || ocupado} onClick={() => alMover("subir")}><ChevronUp className="h-4 w-4" />Subir</Boton>
@@ -781,7 +793,9 @@ function DetalleOrdenPlan({ g, hoy, cuadrillas, lugar, total, gestionar, ocupado
                 <span className="mt-1 h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: b.etapa.color }} />
                 <div className="min-w-0 flex-1 text-sm">
                   <p className="flex items-center gap-2 font-medium">{b.etapa.nombre}
-                    <Insignia tono={ESTADO_OPERACION[b.estado].tono} className="ml-auto">{ESTADO_OPERACION[b.estado].texto}</Insignia>
+                    <span className="ml-auto" data-explain={EXPLICA_ETAPA[b.estado]} data-explain-title={ESTADO_OPERACION[b.estado].texto}>
+                      <Insignia tono={ESTADO_OPERACION[b.estado].tono}>{ESTADO_OPERACION[b.estado].texto}</Insignia>
+                    </span>
                   </p>
                   <p className="text-xs text-tenue mt-0.5">
                     {b.estado === "terminada" ? `Del ${fecha(b.inicioReal ?? b.finReal)} al ${fecha(b.finReal)}`
@@ -791,9 +805,10 @@ function DetalleOrdenPlan({ g, hoy, cuadrillas, lugar, total, gestionar, ocupado
                     {b.estado !== "terminada" && b.horasEst > 0 && ` · faltan ≈ ${horas(b.horasRest)} de ${horas(b.horasEst)}`}
                   </p>
                   {b.estado !== "terminada" && (
-                    <p className="text-xs mt-0.5">{c?.nombres.length ? `${c.trabajando ? "Trabajando" : "Cuadrilla planeada"}: ${c.nombres.join(", ")}` : <span className="text-tenue">Sin cuadrilla (el plan cuenta 2 personas)</span>}</p>
+                    <p className="text-xs mt-0.5" data-explain={c?.trabajando ? GLOSARIO.cuadrillaEtapa : GLOSARIO.cuadrillaPlaneada} data-explain-title="Cuadrilla">
+                      {c?.nombres.length ? `${c.trabajando ? "Trabajando" : "Cuadrilla planeada"}: ${c.nombres.join(", ")}` : <span className="text-tenue">Sin cuadrilla (el plan cuenta 2 personas)</span>}</p>
                   )}
-                  {b.estado === "pendiente" && b.desde != null && b.desde < hoy && <p className="text-xs text-aviso mt-0.5">Ya debió empezar según el plan</p>}
+                  {b.estado === "pendiente" && b.desde != null && b.desde < hoy && <p className="text-xs text-aviso mt-0.5" data-explain={GLOSARIO.yaDebioEmpezar} data-explain-title="Ya debió empezar">Ya debió empezar según el plan</p>}
                 </div>
               </li>
             );

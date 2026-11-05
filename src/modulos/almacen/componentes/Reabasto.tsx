@@ -2,6 +2,7 @@ import * as P from "@radix-ui/react-popover";
 import { HelpCircle } from "lucide-react";
 import { numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface FilaReabasto {
   articulo_id: string; clave: string; nombre: string; unidad: string; es_importado: boolean; proveedor: string | null;
@@ -96,7 +97,8 @@ export function PorQue({ r, regla }: { r: FilaReabasto; regla: ReglaReabasto | u
   return (
     <P.Root>
       <P.Trigger asChild>
-        <button className="inline-flex items-center gap-1 text-xs text-marca-texto hover:underline whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+        <button className="inline-flex items-center gap-1 text-xs text-marca-texto hover:underline whitespace-nowrap" onClick={(e) => e.stopPropagation()}
+          data-explain={GLOSARIO.botonPorQueReabasto} data-explain-title="¿Por qué?">
           <HelpCircle className="h-3.5 w-3.5" /> ¿por qué?
         </button>
       </P.Trigger>

@@ -10,12 +10,12 @@ import { GLOSARIO } from "@/tutorial/glosario";
 // y se pueda mandar la liga tal cual.
 // -----------------------------------------------------------------------------
 export type ClavePeriodo = "anio" | "12m" | "anterior" | "todo" | "rango";
-export const PERIODOS: { valor: ClavePeriodo; texto: string }[] = [
-  { valor: "anio", texto: "Este año" },
-  { valor: "12m", texto: "Últimos 12 meses" },
-  { valor: "anterior", texto: "Año anterior" },
-  { valor: "todo", texto: "Desde 2018" },
-  { valor: "rango", texto: "Rango" },
+export const PERIODOS: { valor: ClavePeriodo; texto: string; explica: string }[] = [
+  { valor: "anio", texto: "Este año", explica: GLOSARIO.periodoEsteAnio },
+  { valor: "12m", texto: "Últimos 12 meses", explica: GLOSARIO.periodoDoceMeses },
+  { valor: "anterior", texto: "Año anterior", explica: GLOSARIO.periodoAnioAnterior },
+  { valor: "todo", texto: "Desde 2018", explica: GLOSARIO.periodoDesde2018 },
+  { valor: "rango", texto: "Rango", explica: GLOSARIO.periodoRango },
 ];
 
 export interface Periodo { clave: ClavePeriodo; desde: string; hasta: string; etiqueta: string }
@@ -128,11 +128,11 @@ export function escalaCrecimiento(): Escala {
 
 /** Cambio contra el periodo anterior, con flecha e insignia (nunca el color solo). */
 export function Cambio({ v, nuevo, className }: { v: number | null | undefined; nuevo?: boolean; className?: string }) {
-  if (nuevo) return <span className={cn("inline-flex items-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold bg-info-suave text-info", className)}>nuevo</span>;
+  if (nuevo) return <span data-explain={GLOSARIO.crecimientoVenta} className={cn("inline-flex items-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold bg-info-suave text-info", className)}>nuevo</span>;
   if (v == null || !Number.isFinite(v)) return <span className={cn("text-xs text-tenue", className)}>—</span>;
   const sube = v >= 0;
   return (
-    <span className={cn("inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold cifra",
+    <span data-explain={GLOSARIO.crecimientoVenta} className={cn("inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold cifra",
       Math.abs(v) < 0.05 ? "bg-fondo text-tenue" : sube ? "bg-ok-suave text-ok" : "bg-peligro-suave text-peligro", className)}>
       {sube ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
       {/* Arriba de +200 % se lee mejor "×21" que "2,000 %". */}
@@ -178,10 +178,12 @@ export function TarjetaGrafica({ titulo, descripcion, acciones, tabla, children,
           {tabla && (
             <div className="inline-flex rounded-lg border border-borde p-0.5" role="group" aria-label="Ver como">
               <button type="button" onClick={() => setVerTabla(false)} aria-pressed={!verTabla} title="Gráfica"
+                data-explain={GLOSARIO.botonVerGraficaTabla} data-explain-title="Ver la gráfica"
                 className={cn("p-1 rounded-md", !verTabla ? "bg-marca-suave text-marca-texto" : "text-tenue hover:text-texto")}>
                 <BarChart3 className="h-4 w-4" />
               </button>
               <button type="button" onClick={() => setVerTabla(true)} aria-pressed={verTabla} title="Tabla"
+                data-explain={GLOSARIO.botonVerGraficaTabla} data-explain-title="Ver la tabla"
                 className={cn("p-1 rounded-md", verTabla ? "bg-marca-suave text-marca-texto" : "text-tenue hover:text-texto")}>
                 <Table2 className="h-4 w-4" />
               </button>
@@ -248,12 +250,14 @@ export const colorFamilia = (clave: string) => {
   return i >= 0 ? `var(--serie-${i + 1})` : "var(--serie-resto)";
 };
 
+// La regla de cada segmento vive en el glosario: así la pantalla, el globo del modo tutorial y el
+// manual del asistente dicen lo mismo que clientes_segmentados() en la base.
 export const NOMBRE_SEGMENTO: Record<string, { nombre: string; texto: string }> = {
-  campeones: { nombre: "Campeones", texto: "Compraron en el último año, 3 o más veces en 3 años y están entre los que más compran." },
-  nuevos: { nombre: "Nuevos", texto: "Su primera compra fue en los últimos 12 meses." },
-  leales: { nombre: "Leales", texto: "Compraron en el último año y 2 o más veces en 3 años." },
-  ocasionales: { nombre: "Ocasionales", texto: "Compraron en el último año, una sola vez en 3 años." },
-  en_riesgo: { nombre: "En riesgo", texto: "Su última compra fue hace 12 a 24 meses y compraban seguido o mucho." },
-  dormidos: { nombre: "Dormidos", texto: "Su última compra fue hace 12 a 24 meses." },
-  perdidos: { nombre: "Perdidos", texto: "Hace más de 2 años que no compran." },
+  campeones: { nombre: "Campeones", texto: GLOSARIO.segmentoCampeones },
+  nuevos: { nombre: "Nuevos", texto: GLOSARIO.segmentoNuevos },
+  leales: { nombre: "Leales", texto: GLOSARIO.segmentoLeales },
+  ocasionales: { nombre: "Ocasionales", texto: GLOSARIO.segmentoOcasionales },
+  en_riesgo: { nombre: "En riesgo", texto: GLOSARIO.segmentoEnRiesgo },
+  dormidos: { nombre: "Dormidos", texto: GLOSARIO.segmentoDormidos },
+  perdidos: { nombre: "Perdidos", texto: GLOSARIO.segmentoPerdidos },
 };

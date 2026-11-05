@@ -71,7 +71,7 @@ export default function OrdenesCompra() {
     {
       clave: "proveedor", titulo: "Proveedor", clase: "max-w-[240px]",
       celda: (o) => <>
-        <p className="truncate flex items-center gap-1.5" title={o.proveedor}><span className="truncate">{o.proveedor}</span>{o.es_importacion && <Globe2 className="h-3.5 w-3.5 text-info shrink-0" aria-label="importación" />}</p>
+        <p className="truncate flex items-center gap-1.5" title={o.proveedor}><span className="truncate">{o.proveedor}</span>{o.es_importacion && <Globe2 className="h-3.5 w-3.5 text-info shrink-0" aria-label="importación" data-explain={GLOSARIO.proveedorImportacion} data-explain-title="Importación" />}</p>
         <p className="text-xs text-tenue">{o.partidas} partida(s){o.creado_por_nombre ? ` · ${o.creado_por_nombre}` : ""}</p>
       </>,
     },
@@ -105,7 +105,7 @@ export default function OrdenesCompra() {
     <Pagina
       titulo="Órdenes de compra"
       descripcion="De la requisición al proveedor y del proveedor al almacén: cada orden con su folio, su entrega y lo que ya llegó."
-      acciones={puede("compras", 2) && <Boton onClick={() => ir("/compras/ordenes/nueva")}><Plus className="h-4 w-4" /> Nueva orden</Boton>}
+      acciones={puede("compras", 2) && <Boton onClick={() => ir("/compras/ordenes/nueva")} data-explain={GLOSARIO.botonNuevaOrdenCompra} data-explain-title="Nueva orden"><Plus className="h-4 w-4" /> Nueva orden</Boton>}
     >
       <Pestanas value={vista} onValueChange={(v) => cambiar("vista", v === "ordenes" ? null : v)}>
         <ListaPestanas opciones={[
@@ -114,12 +114,12 @@ export default function OrdenesCompra() {
         ]} />
         <ContenidoPestana value="ordenes" className="pt-5 space-y-5">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Kpi titulo="Por recibir" explica={GLOSARIO.estadoOrdenCompra} valor={numero(porRecibir.length)} icono={Truck} tono="info"
+            <Kpi titulo="Por recibir" explica={GLOSARIO.porRecibirOrdenes} valor={numero(porRecibir.length)} icono={Truck} tono="info"
               detalle={verDinero ? `${dineroCompacto(porRecibir.reduce((s, o) => s + enPesos(o) * (1 - Number(o.avance_recibido)), 0))} en camino` : "enviadas al proveedor"}
               alClic={() => cambiar("filtro", "por_recibir")} />
             <Kpi titulo="Atrasadas" explica={GLOSARIO.ocAtrasada} valor={numero(todas.filter((o) => o.atrasada).length)} icono={AlertTriangle}
               tono={todas.some((o) => o.atrasada) ? "peligro" : "ok"} detalle="pasó su fecha de entrega" alClic={() => cambiar("filtro", "atrasadas")} />
-            <Kpi titulo="En borrador" valor={numero(todas.filter((o) => o.estado === "borrador").length)} icono={FilePen} tono="neutro"
+            <Kpi titulo="En borrador" explica={GLOSARIO.ordenesEnBorrador} valor={numero(todas.filter((o) => o.estado === "borrador").length)} icono={FilePen} tono="neutro"
               detalle="falta enviarlas al proveedor" alClic={() => cambiar("filtro", "borrador")} />
             <Kpi titulo="Requisiciones" explica={GLOSARIO.requisicionCompra} valor={numero(reqPendientes.data ?? 0)} icono={ClipboardList} tono="marca"
               detalle="partidas esperando orden de compra" alClic={() => cambiar("vista", "requisiciones")} />
@@ -129,7 +129,8 @@ export default function OrdenesCompra() {
             <div className="rounded-xl border border-ok/30 bg-ok-suave px-4 py-3 text-sm flex items-center gap-3">
               <PackageCheck className="h-5 w-5 text-ok" />
               <p className="flex-1">Se crearon <b>{creadas.length}</b> órdenes en borrador, una por proveedor. Revisa precios y fechas, y envíalas.</p>
-              <button onClick={() => cambiar("creadas", null)} className="p-1 rounded text-tenue hover:bg-fondo" aria-label="Ver todas"><X className="h-4 w-4" /></button>
+              <button onClick={() => cambiar("creadas", null)} className="p-1 rounded text-tenue hover:bg-fondo" aria-label="Ver todas"
+                data-explain={GLOSARIO.cerrarOrdenesCreadas} data-explain-title="Ver todas"><X className="h-4 w-4" /></button>
             </div>
           )}
 
@@ -145,10 +146,10 @@ export default function OrdenesCompra() {
             claseFila={(o) => (o.atrasada ? "bg-peligro-suave/30" : undefined)}
             filtros={!creadas.length && (
               <Filtro<FiltroOC> valor={filtro} alCambiar={(f) => cambiar("filtro", f === "abiertas" ? null : f)} opciones={[
-                { valor: "abiertas", texto: "Abiertas", cuenta: todas.filter((o) => pasa(o, "abiertas")).length },
-                { valor: "atrasadas", texto: "Atrasadas", cuenta: todas.filter((o) => o.atrasada).length },
-                { valor: "borrador", texto: "Borradores" },
-                { valor: "por_recibir", texto: "Por recibir" },
+                { valor: "abiertas", texto: "Abiertas", cuenta: todas.filter((o) => pasa(o, "abiertas")).length, explica: GLOSARIO.filtroOrdenesAbiertas },
+                { valor: "atrasadas", texto: "Atrasadas", cuenta: todas.filter((o) => o.atrasada).length, explica: GLOSARIO.ocAtrasada },
+                { valor: "borrador", texto: "Borradores", explica: GLOSARIO.ordenesEnBorrador },
+                { valor: "por_recibir", texto: "Por recibir", explica: GLOSARIO.porRecibirOrdenes },
                 { valor: "recibidas", texto: "Recibidas" },
                 { valor: "todas", texto: "Todas" },
               ]} />

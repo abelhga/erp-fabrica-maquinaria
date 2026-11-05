@@ -46,17 +46,17 @@ export function Ajustes() {
     { clave: "solicitado_en", titulo: "Pedido", clase: "whitespace-nowrap text-xs text-tenue", celda: (a) => fecha(a.solicitado_en) },
     { clave: "nombre", titulo: "Artículo", clase: "min-w-[220px]", celda: (a) => <><p>{a.nombre}</p><p className="text-xs text-tenue">{a.clave}</p></> },
     { clave: "almacen", titulo: "Almacén", clase: "whitespace-nowrap", celda: (a) => nombreCorto(a.almacen) },
-    { clave: "diferencia", titulo: "Diferencia", alinear: "der", sinBusqueda: true, valor: (a) => Number(a.aplicado ?? a.diferencia),
+    { clave: "diferencia", titulo: "Diferencia", alinear: "der", sinBusqueda: true, explica: GLOSARIO.diferenciaAjusteInventario, valor: (a) => Number(a.aplicado ?? a.diferencia),
       celda: (a) => (
         <div>
           <CantidadConSigno n={Number(a.estado === "aprobado" ? a.aplicado : a.diferencia)} unidad={a.unidad} />
           <p className="text-[11px] text-tenue cifra">{numero(a.cantidad_sistema)} → {numero(a.cantidad_fisica)}</p>
         </div>
       ) },
-    { clave: "valor_diferencia", titulo: "Valor", alinear: "der", sinBusqueda: true, oculta: !verCostos,
+    { clave: "valor_diferencia", titulo: "Valor", alinear: "der", sinBusqueda: true, oculta: !verCostos, explica: GLOSARIO.valorNetoDiferenciasInventario,
       celda: (a) => a.valor_diferencia == null ? "—" : <span className={Number(a.valor_diferencia) < 0 ? "text-peligro" : ""}>{dinero(a.valor_diferencia)}</span> },
     { clave: "motivo", titulo: "Motivo", clase: "max-w-[240px] text-tenue", celda: (a) => <span className="line-clamp-2" title={a.motivo}>{a.motivo}</span> },
-    { clave: "estado", titulo: "Resultado",
+    { clave: "estado", titulo: "Resultado", explica: GLOSARIO.estadoAjusteInventario,
       celda: (a) => <Insignia tono={a.estado === "aprobado" ? "ok" : "peligro"}>{a.estado === "aprobado" ? "Aprobado" : "Rechazado"}</Insignia> },
     { clave: "quien", titulo: "Pidió · autorizó", valor: (a) => `${a.solicitado_por_nombre ?? ""} ${a.resuelto_por_nombre ?? ""}`, clase: "text-xs",
       celda: (a) => <><p>{a.solicitado_por_nombre}</p><p className="text-tenue">{a.resuelto_por_nombre} · {fecha(a.resuelto_en)}</p></> },
@@ -78,7 +78,7 @@ export function Ajustes() {
             explica={GLOSARIO.ajusteInventario}
             descripcion={resuelve ? "Revisa el motivo y, si hace falta, que alguien lo vuelva a contar." : "Los autoriza la gerencia de producción, dirección o el jefe de almacén."}
             acciones={verCostos && pendientes.length > 0 && (
-              <span className="text-sm text-tenue">Neto: <b className={cn("cifra", netoPendiente < 0 ? "text-peligro" : "text-texto")}>{dinero(netoPendiente)}</b></span>
+              <span className="text-sm text-tenue" data-explain={GLOSARIO.valorNetoDiferenciasInventario} data-explain-title="Neto">Neto: <b className={cn("cifra", netoPendiente < 0 ? "text-peligro" : "text-texto")}>{dinero(netoPendiente)}</b></span>
             )}
           />
           <div className="px-4 pb-4">
@@ -154,10 +154,12 @@ function TarjetaPendiente({ a, resuelve, esMio, verCostos }: { a: Ajuste; resuel
           {esMio && <p className="text-xs text-aviso flex items-center gap-1"><ShieldAlert className="h-3.5 w-3.5" /> Lo pediste tú: lo debe autorizar otra persona.</p>}
           <input className="campo h-8 text-sm" placeholder="Comentario (opcional)" value={comentario} onChange={(e) => setComentario(e.target.value)} />
           <div className="flex gap-2">
-            <Boton variante="exito" tamano="sm" className="flex-1" onClick={() => intentar(true)} cargando={resolver.isPending && resolver.variables === true}>
+            <Boton variante="exito" tamano="sm" className="flex-1" onClick={() => intentar(true)} cargando={resolver.isPending && resolver.variables === true}
+              data-explain={GLOSARIO.botonAprobarAjuste} data-explain-title="Aprobar">
               <ClipboardCheck className="h-4 w-4" /> Aprobar
             </Boton>
-            <Boton variante="secundario" tamano="sm" className="flex-1" onClick={() => intentar(false)} cargando={resolver.isPending && resolver.variables === false}>
+            <Boton variante="secundario" tamano="sm" className="flex-1" onClick={() => intentar(false)} cargando={resolver.isPending && resolver.variables === false}
+              data-explain={GLOSARIO.botonRechazarAjuste} data-explain-title="Rechazar">
               <X className="h-4 w-4" /> Rechazar
             </Boton>
           </div>
@@ -214,7 +216,7 @@ function SolicitarAjuste() {
           </div>
         )}
         <div className="grid grid-cols-2 gap-3">
-          <label className="space-y-1">
+          <label className="space-y-1" data-explain={GLOSARIO.sistemaAlPedirAjuste} data-explain-title="Sistema">
             <span className="text-xs text-tenue">Sistema</span>
             <p className="h-9 flex items-center justify-end px-3 rounded-lg bg-fondo cifra">{almacen != null ? numero(sistema) : "—"}</p>
           </label>

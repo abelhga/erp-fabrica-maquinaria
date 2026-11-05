@@ -61,21 +61,23 @@ export function SugerenciasSubensamble() {
           {lista.data.map((s) => (
             <div key={s.id}>
               <div className="flex items-center gap-3 px-5 py-3">
-                <button onClick={() => setAbierta(abierta === s.id ? null : s.id)} className="text-tenue" aria-label="Ver detalle">
+                <button onClick={() => setAbierta(abierta === s.id ? null : s.id)} className="text-tenue" aria-label="Ver detalle"
+                  data-explain={GLOSARIO.botonVerDetalleSugerencia} data-explain-title="Ver detalle">
                   {abierta === s.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </button>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{s.nombre_sugerido ?? `Grupo ${s.id}`}</p>
-                  <p className="text-xs text-tenue">{s.lineas} piezas · en {s.num_equipos} equipos · ahorra {numero(s.ahorro)} líneas</p>
+                  <p className="text-xs text-tenue" data-explain={GLOSARIO.ahorroLineasSubensamble} data-explain-title="Líneas que ahorra">{s.lineas} piezas · en {s.num_equipos} equipos · ahorra {numero(s.ahorro)} líneas</p>
                 </div>
                 {s.estado === "pendiente" ? (
                   puede("costeo", 2) && (
                     <div className="flex gap-2">
-                      <Boton tamano="sm" variante="fantasma" onClick={() => descartar.mutate(s.id)}>Descartar</Boton>
-                      <Boton tamano="sm" onClick={() => { setAplicando(s); setNombre(""); setClave(`SUB-${String(s.id).padStart(3, "0")}`); }}>Convertir en subensamble</Boton>
+                      <Boton tamano="sm" variante="fantasma" onClick={() => descartar.mutate(s.id)} data-explain={GLOSARIO.botonDescartarSugerencia}>Descartar</Boton>
+                      <Boton tamano="sm" onClick={() => { setAplicando(s); setNombre(""); setClave(`SUB-${String(s.id).padStart(3, "0")}`); }}
+                        data-explain={GLOSARIO.botonConvertirSugerencia}>Convertir en subensamble</Boton>
                     </div>
                   )
-                ) : <Insignia tono={s.estado === "aplicada" ? "ok" : "neutro"}>{s.estado}</Insignia>}
+                ) : <span data-explain={GLOSARIO.estadoSugerenciaSubensamble} data-explain-title="Estado"><Insignia tono={s.estado === "aplicada" ? "ok" : "neutro"}>{s.estado}</Insignia></span>}
               </div>
               {abierta === s.id && (
                 <div className="grid md:grid-cols-2 gap-4 px-12 pb-4 text-sm">

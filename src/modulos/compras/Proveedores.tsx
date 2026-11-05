@@ -68,15 +68,15 @@ export default function Proveedores() {
     { clave: "categoria", titulo: "Categoría", clase: "max-w-[170px] truncate text-tenue text-xs px-2", celda: (p) => <span title={p.categoria ?? ""}>{p.categoria ?? "—"}</span> },
     {
       clave: "pais", titulo: "Origen", clase: "px-2 whitespace-nowrap", valor: (p) => `${p.pais}${p.es_importacion ? " importación" : ""} ${p.moneda}`,
-      celda: (p) => <>{p.es_importacion ? <Insignia tono="info"><Globe2 className="h-3 w-3" /> {p.pais}</Insignia> : <span className="text-sm">{p.pais}</span>}
+      celda: (p) => <>{p.es_importacion ? <span className="inline-flex" data-explain={GLOSARIO.proveedorImportacion} data-explain-title="Importación"><Insignia tono="info"><Globe2 className="h-3 w-3" /> {p.pais}</Insignia></span> : <span className="text-sm">{p.pais}</span>}
         {p.moneda !== "MXN" && <span className="ml-1 text-xs text-tenue">{p.moneda}</span>}</>,
     },
     { clave: "dias_credito", titulo: "Crédito", alinear: "der", sinBusqueda: true, explica: GLOSARIO.creditoProveedor, clase: "px-2 whitespace-nowrap", celda: (p) => p.dias_credito ? `${p.dias_credito} d` : <span className="text-tenue">contado</span> },
     { clave: "dias_entrega", titulo: "Entrega", alinear: "der", sinBusqueda: true, explica: GLOSARIO.entregaProveedor, clase: "px-2 whitespace-nowrap", celda: (p) => p.dias_entrega != null ? `${p.dias_entrega} d háb.` : <span className="text-tenue">—</span> },
-    { clave: "articulos", titulo: "Artículos", alinear: "der", sinBusqueda: true, clase: "px-2", celda: (p) => p.articulos ? numero(p.articulos) : <span className="text-tenue/50">·</span> },
+    { clave: "articulos", titulo: "Artículos", alinear: "der", sinBusqueda: true, clase: "px-2", explica: GLOSARIO.articulosQueSurte, celda: (p) => p.articulos ? numero(p.articulos) : <span className="text-tenue/50">·</span> },
     {
       clave: "oc_abiertas", titulo: "OC abiertas", alinear: "der", sinBusqueda: true, clase: "px-2 whitespace-nowrap", explica: GLOSARIO.ordenesAbiertasProveedor,
-      celda: (p) => p.oc_abiertas ? <span>{p.oc_abiertas}{p.oc_atrasadas > 0 && <Insignia tono="peligro" className="ml-1">{p.oc_atrasadas} tarde</Insignia>}</span> : <span className="text-tenue/50">·</span>,
+      celda: (p) => p.oc_abiertas ? <span>{p.oc_abiertas}{p.oc_atrasadas > 0 && <span className="inline-flex ml-1" data-explain={GLOSARIO.ocAtrasada} data-explain-title="Tarde"><Insignia tono="peligro">{p.oc_atrasadas} tarde</Insignia></span>}</span> : <span className="text-tenue/50">·</span>,
     },
     { clave: "comprado_12m", titulo: "Comprado 12 m", alinear: "der", sinBusqueda: true, oculta: !verDinero, explica: GLOSARIO.compradoDoceMeses, clase: "px-2 whitespace-nowrap", celda: (p) => p.comprado_12m ? dineroCompacto(p.comprado_12m) : <span className="text-tenue/50">·</span> },
     { clave: "ultima_compra", titulo: "Última OC", clase: "whitespace-nowrap text-tenue text-xs px-2 hidden 2xl:table-cell", celda: (p) => p.ultima_compra ? fecha(p.ultima_compra) : "—" },
@@ -86,7 +86,7 @@ export default function Proveedores() {
     <Pagina
       titulo="Proveedores"
       descripcion="A quién se le compra, en qué moneda, con cuánto crédito y en cuántos días entrega."
-      acciones={(puede("compras", 2) || puede("finanzas", 2)) && <Boton onClick={() => setNuevo(true)}><Plus className="h-4 w-4" /> Nuevo proveedor</Boton>}
+      acciones={(puede("compras", 2) || puede("finanzas", 2)) && <Boton onClick={() => setNuevo(true)} data-explain={GLOSARIO.botonNuevoProveedor} data-explain-title="Nuevo proveedor"><Plus className="h-4 w-4" /> Nuevo proveedor</Boton>}
     >
       <TablaDatos
         filas={filas.filter((p) => pasa(p, vista))}
@@ -98,11 +98,11 @@ export default function Proveedores() {
         exportarComo="proveedores"
         placeholder="Nombre, razón social, categoría…"
         filtros={<Filtro<Vista> valor={vista} alCambiar={setVista} opciones={[
-          { valor: "surten", texto: "Surten artículos", cuenta: filas.filter((p) => pasa(p, "surten")).length },
-          { valor: "importacion", texto: "Importación", cuenta: filas.filter((p) => pasa(p, "importacion")).length },
-          { valor: "abiertas", texto: "Con OC abiertas", cuenta: filas.filter((p) => pasa(p, "abiertas")).length },
-          { valor: "todos", texto: "Todo el directorio", cuenta: filas.filter((p) => pasa(p, "todos")).length },
-          { valor: "inactivos", texto: "Inactivos" },
+          { valor: "surten", texto: "Surten artículos", cuenta: filas.filter((p) => pasa(p, "surten")).length, explica: GLOSARIO.filtroProveedoresSurten },
+          { valor: "importacion", texto: "Importación", cuenta: filas.filter((p) => pasa(p, "importacion")).length, explica: GLOSARIO.proveedorImportacion },
+          { valor: "abiertas", texto: "Con OC abiertas", cuenta: filas.filter((p) => pasa(p, "abiertas")).length, explica: GLOSARIO.ordenesAbiertasProveedor },
+          { valor: "todos", texto: "Todo el directorio", cuenta: filas.filter((p) => pasa(p, "todos")).length, explica: GLOSARIO.filtroTodoDirectorio },
+          { valor: "inactivos", texto: "Inactivos", explica: GLOSARIO.proveedorActivo },
         ]} />}
         vacio={{ icono: Truck, titulo: "Sin proveedores con este filtro", texto: "Prueba con “Todo el directorio” o da de alta uno nuevo." }}
       />

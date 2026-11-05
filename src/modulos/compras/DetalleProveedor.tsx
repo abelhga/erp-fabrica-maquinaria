@@ -86,8 +86,8 @@ export default function DetalleProveedor() {
 
   const columnas: Columna<ArticuloSurtido>[] = [
     { clave: "clave", titulo: "Clave", clase: "text-xs text-tenue whitespace-nowrap" },
-    { clave: "nombre", titulo: "Artículo", clase: "min-w-[240px]", celda: (a) => <><p>{a.nombre}</p><p className="text-xs text-tenue">{a.unidad}{a.proveedor_id !== id && " · su costo vigente es de otro proveedor"}</p></> },
-    { clave: "costo", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !verCostos, valor: (a) => Number(a.costo ?? 0),
+    { clave: "nombre", titulo: "Artículo", clase: "min-w-[240px]", celda: (a) => <><p>{a.nombre}</p><p className="text-xs text-tenue">{a.unidad}{a.proveedor_id !== id && <span data-explain={GLOSARIO.costoDeOtroProveedor} data-explain-title="Costo de otro proveedor"> · su costo vigente es de otro proveedor</span>}</p></> },
+    { clave: "costo", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !verCostos, valor: (a) => Number(a.costo ?? 0), explica: GLOSARIO.costoVigente,
       celda: (a) => a.costo == null ? <span className="text-peligro text-xs">sin costo</span> : dinero(a.costo, a.moneda === "USD" ? "USD" : "MXN") },
     { clave: "actualizado_en", titulo: "Actualizado", clase: "whitespace-nowrap text-xs", oculta: !verCostos, explica: GLOSARIO.costoViejo,
       celda: (a) => <span className={cn((a.dias_sin_actualizar ?? 0) > 180 ? "text-aviso" : "text-tenue")}>{hace(a.actualizado_en)}</span> },
@@ -95,17 +95,19 @@ export default function DetalleProveedor() {
 
   return (
     <Pagina
-      titulo={<span className="flex flex-wrap items-center gap-3">{p.nombre}{p.es_importacion && <Insignia tono="info"><Globe2 className="h-3 w-3" /> Importación</Insignia>}{!p.activo && <Insignia>Inactivo</Insignia>}</span>}
+      titulo={<span className="flex flex-wrap items-center gap-3">{p.nombre}
+        {p.es_importacion && <span className="inline-flex" data-explain={GLOSARIO.proveedorImportacion} data-explain-title="Importación"><Insignia tono="info"><Globe2 className="h-3 w-3" /> Importación</Insignia></span>}
+        {!p.activo && <span className="inline-flex" data-explain={GLOSARIO.proveedorActivo} data-explain-title="Inactivo"><Insignia>Inactivo</Insignia></span>}</span>}
       descripcion={[p.razon_social !== p.nombre ? p.razon_social : null, p.categoria, p.pais].filter(Boolean).join(" · ")}
       acciones={<>
         <Boton variante="fantasma" onClick={() => ir("/compras/proveedores")}><ArrowLeft className="h-4 w-4" /> Proveedores</Boton>
         {/* Finanzas y Gerencia administrativa editan los datos de pago y fiscales (el diálogo sabe qué). */}
-        {(puede("compras", 2) || puede("finanzas", 2)) && <Boton variante="secundario" onClick={() => setEditando(true)}><Pencil className="h-4 w-4" /> Editar</Boton>}
-        {puede("compras", 2) && <Boton onClick={() => ir(`/compras/ordenes/nueva?proveedor=${p.id}`)}><Plus className="h-4 w-4" /> Nueva orden</Boton>}
+        {(puede("compras", 2) || puede("finanzas", 2)) && <Boton variante="secundario" onClick={() => setEditando(true)} data-explain={GLOSARIO.editarProveedor} data-explain-title="Editar proveedor"><Pencil className="h-4 w-4" /> Editar</Boton>}
+        {puede("compras", 2) && <Boton onClick={() => ir(`/compras/ordenes/nueva?proveedor=${p.id}`)} data-explain={GLOSARIO.botonNuevaOrdenCompra} data-explain-title="Nueva orden"><Plus className="h-4 w-4" /> Nueva orden</Boton>}
       </>}
     >
       <div className={cn("grid gap-3 sm:grid-cols-2", verCuenta && verCostos ? "xl:grid-cols-5" : "xl:grid-cols-4")}>
-        <Kpi titulo="Artículos que surte" valor={numero(resumen.data?.articulos ?? 0)} icono={Boxes} tono="marca" detalle={`${p.dias_entrega ?? 7} días hábiles de entrega`} />
+        <Kpi titulo="Artículos que surte" explica={GLOSARIO.articulosQueSurte} valor={numero(resumen.data?.articulos ?? 0)} icono={Boxes} tono="marca" detalle={`${p.dias_entrega ?? 7} días hábiles de entrega`} />
         <Kpi titulo="Órdenes abiertas" explica={GLOSARIO.ordenesAbiertasProveedor} valor={numero(resumen.data?.oc_abiertas ?? 0)} icono={ClipboardList} tono={resumen.data?.oc_atrasadas ? "peligro" : "info"}
           detalle={resumen.data?.oc_atrasadas ? `${resumen.data.oc_atrasadas} atrasada(s)`
             : (comprado.data?.[0]?.ultima_compra ?? resumen.data?.ultima_compra) ? `última compra el ${fecha(comprado.data?.[0]?.ultima_compra ?? resumen.data?.ultima_compra)}` : "sin órdenes de compra"} />
@@ -115,7 +117,7 @@ export default function DetalleProveedor() {
           tono={vencido > 1 ? "peligro" : debe > 1 ? "aviso" : "ok"}
           detalle={vencido > 1 ? `${dinero(vencido)} vencido · ver su cuenta` : cuenta.data?.[0]?.ultimo_pago ? `último pago el ${fecha(cuenta.data[0].ultimo_pago)} · ver su cuenta` : "ver su cuenta y sus movimientos"}
           alClic={cuenta.data?.[0] ? () => ir(`/finanzas/pagos?proveedor=${encodeURIComponent(cuenta.data![0].proveedor_llave)}`) : undefined} />}
-        {verCostos && <Kpi titulo="Sus precios en 12 meses" explica={GLOSARIO.indicePreciosProveedor} valor={variacion12 == null ? "—" : `${variacion12 >= 0 ? "+" : "−"}${porcentaje(Math.abs(variacion12))}`}
+        {verCostos && <Kpi titulo="Sus precios en 12 meses" explica={GLOSARIO.variacionPreciosProveedor} valor={variacion12 == null ? "—" : `${variacion12 >= 0 ? "+" : "−"}${porcentaje(Math.abs(variacion12))}`}
           icono={TrendingUp} tono={variacion12 == null ? "neutro" : variacion12 > 0.1 ? "peligro" : variacion12 > 0 ? "aviso" : "ok"}
           detalle="índice de precios de lo que nos vende" />}
       </div>
@@ -150,7 +152,7 @@ export default function DetalleProveedor() {
           )}
 
           <div>
-            <h3 className="font-semibold mb-2">Artículos que surte</h3>
+            <h3 className="font-semibold mb-2" data-explain={GLOSARIO.articulosQueSurte} data-explain-title="Artículos que surte">Artículos que surte</h3>
             <TablaDatos filas={articulos.data} columnas={columnas} cargando={articulos.isLoading} error={articulos.error}
               claveFila={(a) => a.articulo_id} exportarComo={`articulos-${p.nombre}`} compacta limite={100}
               vacio={{ icono: Boxes, titulo: "No tiene artículos asignados", texto: "Se ligan al capturar su costo en Actualizar precios o al recibir una orden suya." }} />
@@ -164,11 +166,11 @@ export default function DetalleProveedor() {
               {([
                 ["Contacto", p.contacto], ["Teléfono", p.telefono], ["Correo", p.correo], ["Sitio", p.sitio], ["RFC", p.rfc],
                 ["Razón social", p.razon_social], ["Régimen fiscal", p.regimen_fiscal], ["CP fiscal", p.cp_fiscal],
-                ["Domicilio", p.domicilio], ["Moneda", p.moneda], ["Crédito", p.dias_credito ? `${p.dias_credito} días` : "Contado"],
-                ["Entrega", p.dias_entrega != null ? `${p.dias_entrega} días hábiles` : "7 días hábiles (estándar)"],
-                ["Bancarios", p.datos_bancarios], ["Notas", p.notas],
-              ] as [string, string | null | undefined][]).map(([k, v]) => (
-                <div key={k} className="contents"><dt className="text-tenue">{k}</dt><dd className="min-w-0 break-words whitespace-pre-line">{v || <span className="text-tenue">—</span>}</dd></div>
+                ["Domicilio", p.domicilio], ["Moneda", p.moneda], ["Crédito", p.dias_credito ? `${p.dias_credito} días` : "Contado", GLOSARIO.creditoProveedor],
+                ["Entrega", p.dias_entrega != null ? `${p.dias_entrega} días hábiles` : "7 días hábiles (estándar)", GLOSARIO.entregaProveedor],
+                ["Bancarios", p.datos_bancarios, GLOSARIO.datosBancariosProveedor], ["Notas", p.notas],
+              ] as [string, string | null | undefined, string?][]).map(([k, v, explica]) => (
+                <div key={k} className="contents"><dt className="text-tenue" data-explain={explica} data-explain-title={explica ? k : undefined}>{k}</dt><dd className="min-w-0 break-words whitespace-pre-line">{v || <span className="text-tenue">—</span>}</dd></div>
               ))}
             </dl>
           </Tarjeta>

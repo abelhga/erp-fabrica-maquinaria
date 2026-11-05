@@ -17,11 +17,11 @@ type Momento = "" | "entrada" | "break1" | "break2";
 interface Marca { momento: Momento; cumplio: boolean; nota: string | null; por: string | null; en: string }
 interface Fila { empleado_id: string | null; area_id: number | null; nombre: string; puesto: string | null; en_plantilla: boolean; soy_yo: boolean; marcas: Marca[] }
 
-const TIPOS: Record<Tipo, { texto: string; icono: LucideIcon; ayuda: string }> = {
-  celular: { texto: "Celular", icono: Smartphone, ayuda: "¿Entregó el celular? Tres veces al día. 3 días con falla en el mes anulan el bono." },
-  epp: { texto: "EPP", icono: HardHat, ayuda: "Casco, botas y guantes. Lo marca calidad; cuenta proporcional a los días marcados." },
-  limpieza: { texto: "Limpieza", icono: Brush, ayuda: "Por área: una marca cuenta para todos los que comparten el área." },
-  vehiculo: { texto: "Vehículos", icono: Truck, ayuda: "Niveles, llantas y documentos del vehículo y el montacargas." },
+const TIPOS: Record<Tipo, { texto: string; icono: LucideIcon; ayuda: string; explica: string }> = {
+  celular: { texto: "Celular", icono: Smartphone, ayuda: "¿Entregó el celular? Tres veces al día. 3 días con falla en el mes anulan el bono.", explica: GLOSARIO.checklistCelular },
+  epp: { texto: "EPP", icono: HardHat, ayuda: "Casco, botas y guantes. Lo marca calidad; cuenta proporcional a los días marcados.", explica: GLOSARIO.checklistEpp },
+  limpieza: { texto: "Limpieza", icono: Brush, ayuda: "Por área: una marca cuenta para todos los que comparten el área.", explica: GLOSARIO.checklistLimpieza },
+  vehiculo: { texto: "Vehículos", icono: Truck, ayuda: "Niveles, llantas y documentos del vehículo y el montacargas.", explica: GLOSARIO.checklistVehiculos },
 };
 const MOMENTOS: { valor: Momento; texto: string }[] = [
   { valor: "entrada", texto: "Entrada" }, { valor: "break1", texto: "Break 1" }, { valor: "break2", texto: "Break 2" },
@@ -68,7 +68,7 @@ export default function Checklist() {
         {(Object.keys(TIPOS) as Tipo[]).map((t) => {
           const I = TIPOS[t].icono;
           return (
-            <button key={t} onClick={() => setParams(t === "celular" ? {} : { tipo: t }, { replace: true })}
+            <button key={t} onClick={() => setParams(t === "celular" ? {} : { tipo: t }, { replace: true })} data-explain={TIPOS[t].explica} data-explain-title={TIPOS[t].texto}
               className={cn("rounded-xl border px-1 py-2.5 flex flex-col items-center gap-1 text-xs font-medium transition",
                 t === tipo ? "bg-marca text-white border-marca" : "bg-superficie border-borde text-tenue hover:text-texto")}>
               <I className="h-5 w-5" />{TIPOS[t].texto}
@@ -79,15 +79,15 @@ export default function Checklist() {
 
       <div className="tarjeta p-3 space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <button className="p-2 rounded-lg hover:bg-fondo text-tenue" onClick={() => setDia(moverDia(dia, -1))} aria-label="Día anterior"><ChevronLeft className="h-5 w-5" /></button>
-          <label className="text-center">
+          <button className="p-2 rounded-lg hover:bg-fondo text-tenue" onClick={() => setDia(moverDia(dia, -1))} aria-label="Día anterior" data-explain={GLOSARIO.diaChecklist} data-explain-title="Día anterior"><ChevronLeft className="h-5 w-5" /></button>
+          <label className="text-center" data-explain={GLOSARIO.diaChecklist} data-explain-title="Día">
             <span className="block font-medium">{dia === hoyISO() ? "Hoy" : fecha(dia)}</span>
             <input type="date" className="text-xs text-tenue bg-transparent text-center" value={dia} max={hoyISO()} onChange={(e) => e.target.value && setDia(e.target.value)} />
           </label>
           <button className="p-2 rounded-lg hover:bg-fondo text-tenue disabled:opacity-30" disabled={dia >= hoyISO()} onClick={() => setDia(moverDia(dia, 1))} aria-label="Día siguiente"><ChevronRight className="h-5 w-5" /></button>
         </div>
         {tipo === "celular" && (
-          <div className="grid grid-cols-3 gap-1 rounded-lg bg-fondo p-1">
+          <div className="grid grid-cols-3 gap-1 rounded-lg bg-fondo p-1" data-explain={GLOSARIO.momentoCelular} data-explain-title="Momento">
             {MOMENTOS.map((m) => (
               <button key={m.valor} onClick={() => setMomento(m.valor)}
                 className={cn("rounded-md py-1.5 text-sm font-medium", m.valor === momento ? "bg-superficie shadow-tarjeta text-texto" : "text-tenue")}>{m.texto}</button>
@@ -108,7 +108,7 @@ export default function Checklist() {
           <div className="flex items-center justify-between gap-2 text-sm">
             <span className="text-tenue cifra" data-explain={GLOSARIO.marcaChecklist} data-explain-title="Marcas del día">{marcados} de {visibles.length} marcados{fallas > 0 && <span className="text-peligro"> · {fallas} no {fallas === 1 ? "cumplió" : "cumplieron"}</span>}</span>
             {restantes.length > 0 && (
-              <Boton variante="secundario" tamano="sm" cargando={todosCumplieron.isPending} onClick={() => todosCumplieron.mutate(undefined)}>
+              <Boton variante="secundario" tamano="sm" cargando={todosCumplieron.isPending} onClick={() => todosCumplieron.mutate(undefined)} data-explain={GLOSARIO.botonRestantesCumplieron}>
                 <Check className="h-4 w-4" /> Los {restantes.length} restantes cumplieron
               </Boton>
             )}
@@ -140,8 +140,8 @@ function FilaMarca({ f, marca, marcar }: {
             {marca ? <>{marca.cumplio ? "Cumplió" : "No cumplió"} · {quien}{marca.nota && ` · “${marca.nota}”`}</> : f.puesto ?? (f.area_id ? "Área" : "Sin marcar")}
           </p>
         </div>
-        {f.soy_yo ? <span className="text-xs text-tenue">Te marca otra persona</span> : (
-          <div className="flex gap-2 shrink-0">
+        {f.soy_yo ? <span className="text-xs text-tenue" data-explain={GLOSARIO.sinAutoMarcaChecklist}>Te marca otra persona</span> : (
+          <div className="flex gap-2 shrink-0" data-explain={GLOSARIO.botonesMarcaChecklist} data-explain-title="Cumplió o no cumplió">
             <button aria-label={`${f.nombre}: no cumplió`} disabled={ocupado}
               onClick={() => { marcar.mutate({ f, cumplio: false }); setNota(marca?.nota ?? ""); }}
               className={cn("h-11 w-11 rounded-xl border flex items-center justify-center transition",

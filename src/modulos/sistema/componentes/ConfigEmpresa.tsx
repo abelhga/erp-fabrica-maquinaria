@@ -86,7 +86,7 @@ function Fiscal({ inicial, comercial, editable }: { inicial: Config; comercial: 
   const guardar = useGuardarConfig("Datos fiscales guardados");
   const rfcMal = f.rfc && !/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(f.rfc);
   return (
-    <TarjetaForm titulo="Datos fiscales" descripcion="Encabezado de cotizaciones, pedidos y facturas." editable={editable} quien="sistemas o dirección"
+    <TarjetaForm titulo="Datos fiscales" explica={GLOSARIO.datosFiscalesEmpresa} descripcion="Encabezado de cotizaciones, pedidos y facturas." editable={editable} quien="sistemas o dirección"
       guardando={guardar.isPending}
       alGuardar={async () => {
         try {
@@ -209,7 +209,7 @@ function Calendario({ inicial, editable }: { inicial: { dias: number[]; descanso
       alGuardar={() => guardar.mutate({ clave: "calendario_laboral", valor: { dias: [...dias].sort(), descansos_empresa: [...descansos].sort() } })}>
       <div className="grid gap-6 md:grid-cols-3">
         <div>
-          <p className="text-sm font-medium mb-2">Días que se trabajan</p>
+          <p className="text-sm font-medium mb-2" data-explain={GLOSARIO.diasHabiles} data-explain-title="Días que se trabajan">Días que se trabajan</p>
           <div className="flex flex-wrap gap-1.5">
             {DIAS.map((d, k) => {
               const n = k + 1, on = dias.includes(n);
@@ -221,7 +221,7 @@ function Calendario({ inicial, editable }: { inicial: { dias: number[]; descanso
           </div>
         </div>
         <div>
-          <p className="text-sm font-medium mb-2">Descansos de la empresa</p>
+          <p className="text-sm font-medium mb-2" data-explain={GLOSARIO.descansosEmpresa} data-explain-title="Descansos de la empresa">Descansos de la empresa</p>
           <ul className="space-y-1 mb-2">
             {descansos.length === 0 && <li className="text-xs text-tenue">Ninguno (p. ej. 12 de diciembre o Semana Santa).</li>}
             {descansos.map((d) => (
@@ -240,7 +240,7 @@ function Calendario({ inicial, editable }: { inicial: { dias: number[]; descanso
           )}
         </div>
         <div>
-          <p className="text-sm font-medium mb-2">Feriados de ley {anio} (art. 74 LFT)</p>
+          <p className="text-sm font-medium mb-2" data-explain={GLOSARIO.feriadosLey} data-explain-title="Feriados de ley">Feriados de ley {anio} (art. 74 LFT)</p>
           <ul className="text-sm text-tenue space-y-0.5">{(feriados.data ?? []).sort().map((d) => <li key={d}>{fecha(d)}</li>)}</ul>
         </div>
       </div>

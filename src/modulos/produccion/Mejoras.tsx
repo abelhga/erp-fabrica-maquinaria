@@ -43,6 +43,9 @@ const TEXTO_PROBLEMA: Record<string, string> = { problema: "Problema", pausa: "P
 const NOMBRE_ESTADO: Record<EstadoMejora, string> = { propuesta: "Propuesta", en_marcha: "En marcha", hecha: "Hecha", descartada: "Descartada" };
 const TONO_ESTADO = { propuesta: "marca", en_marcha: "aviso", hecha: "ok", descartada: "neutro" } as const;
 const NOVENTA_DIAS = 90 * 86_400_000;
+const EXPLICA_ESTADO: Record<EstadoMejora, string> = {
+  propuesta: GLOSARIO.mejoraPropuesta, en_marcha: GLOSARIO.mejoraEnMarcha, hecha: GLOSARIO.mejoraHecha, descartada: GLOSARIO.mejoraDescartada,
+};
 
 export default function Mejoras() {
   const { puede } = useSesion();
@@ -75,8 +78,8 @@ export default function Mejoras() {
   return (
     <Pagina titulo="Mejoras (kaizen)" descripcion="Las ideas y los problemas del piso, convertidos en mejoras con quién las lleva y qué se logró"
       acciones={<>
-        {decide && <Boton variante="secundario" onClick={() => setSugerir(true)}><Sparkles className="h-4 w-4" />Sugerir con IA</Boton>}
-        <Boton onClick={() => setIdea({})}><Lightbulb className="h-4 w-4" />Tengo una idea</Boton>
+        {decide && <Boton variante="secundario" onClick={() => setSugerir(true)} data-explain={GLOSARIO.sugerenciasClaude} data-explain-title="Sugerir con IA"><Sparkles className="h-4 w-4" />Sugerir con IA</Boton>}
+        <Boton onClick={() => setIdea({})} data-explain={GLOSARIO.mejoraKaizen} data-explain-title="Tengo una idea"><Lightbulb className="h-4 w-4" />Tengo una idea</Boton>
       </>}>
       {mejoras.error ? <ErrorCarga error={mejoras.error} /> : mejoras.isLoading ? <Cargando filas={6} /> : (
         <>
@@ -115,7 +118,7 @@ export default function Mejoras() {
 
           <div className="flex flex-wrap items-center gap-3">
             {areas.length > 2 && <Filtro opciones={areas} valor={area} alCambiar={setArea} />}
-            <label className="ml-auto flex items-center gap-2 text-sm text-tenue">
+            <label className="ml-auto flex items-center gap-2 text-sm text-tenue" data-explain={GLOSARIO.mejoraDescartada} data-explain-title="Descartadas">
               <input type="checkbox" checked={verDescartadas} onChange={(e) => setVerDescartadas(e.target.checked)} />
               Ver descartadas ({lista.filter((m) => m.estado === "descartada").length})
             </label>
@@ -147,7 +150,7 @@ export default function Mejoras() {
 
           {verDescartadas && (
             <section className="tarjeta p-4 space-y-2">
-              <h2 className="font-semibold text-sm flex items-center gap-2"><ArchiveX className="h-4 w-4 text-tenue" />Descartadas</h2>
+              <h2 className="font-semibold text-sm flex items-center gap-2" data-explain={GLOSARIO.mejoraDescartada} data-explain-title="Descartadas"><ArchiveX className="h-4 w-4 text-tenue" />Descartadas</h2>
               <ul className="divide-y divide-borde">
                 {delArea.filter((m) => m.estado === "descartada").map((m) => (
                   <li key={m.id}>
@@ -172,7 +175,7 @@ export default function Mejoras() {
       <Lateral abierto={!!detalle} alCambiar={(v) => !v && abrir(null)} ancho="max-w-3xl"
         titulo={detalle ? `${detalle.folio} · ${detalle.titulo}` : ""}
         subtitulo={detalle && <span className="inline-flex items-center gap-2">
-          <Insignia tono={TONO_ESTADO[detalle.estado]}>{NOMBRE_ESTADO[detalle.estado]}</Insignia>
+          <span data-explain={EXPLICA_ESTADO[detalle.estado]} data-explain-title={NOMBRE_ESTADO[detalle.estado]}><Insignia tono={TONO_ESTADO[detalle.estado]}>{NOMBRE_ESTADO[detalle.estado]}</Insignia></span>
           {detalle.tipo === "a3" && <span data-explain={GLOSARIO.mejoraA3} data-explain-title="A3"><Insignia tono="info">A3</Insignia></span>}
           Propuso {detalle.propuso ?? "—"} · {fecha(detalle.propuesta_en)}
         </span>}>
@@ -208,9 +211,9 @@ function TarjetaMejora({ m, alAbrir }: { m: Mejora; alAbrir: () => void }) {
         <span className="cifra">{m.folio}</span>
         {m.etapa && <span className="truncate">{m.etapa}</span>}
         <span className="ml-auto flex items-center gap-1">
-          {m.origen === "piso" && <AlertTriangle className="h-3.5 w-3.5" aria-label="Salió de un problema del piso" />}
-          {m.origen === "maquina" && <Wrench className="h-3.5 w-3.5" aria-label="Salió de una falla de máquina" />}
-          {m.tipo === "a3" && <Insignia tono="info">A3</Insignia>}
+          {m.origen === "piso" && <AlertTriangle className="h-3.5 w-3.5" aria-label="Salió de un problema del piso" data-explain={GLOSARIO.origenMejora} data-explain-title="Salió del piso" />}
+          {m.origen === "maquina" && <Wrench className="h-3.5 w-3.5" aria-label="Salió de una falla de máquina" data-explain={GLOSARIO.origenMejora} data-explain-title="Salió de una falla" />}
+          {m.tipo === "a3" && <span data-explain={GLOSARIO.mejoraA3} data-explain-title="A3"><Insignia tono="info">A3</Insignia></span>}
         </span>
       </div>
       <p className="text-sm font-medium leading-snug">{m.titulo}</p>
@@ -218,9 +221,9 @@ function TarjetaMejora({ m, alAbrir }: { m: Mejora; alAbrir: () => void }) {
       <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-tenue">
         {m.responsable ? <span>Lleva: <span className="text-texto">{m.responsable}</span></span> : <span>Propuso {m.propuso ?? "—"}</span>}
         {m.estado === "en_marcha" && m.fecha_compromiso && (
-          <span className={cn("cifra flex items-center gap-1", m.vencida && "text-peligro font-medium")}><CalendarClock className="h-3.5 w-3.5" />{fecha(m.fecha_compromiso)}</span>
+          <span className={cn("cifra flex items-center gap-1", m.vencida && "text-peligro font-medium")} data-explain={GLOSARIO.mejoraEnMarcha} data-explain-title="Para cuándo"><CalendarClock className="h-3.5 w-3.5" />{fecha(m.fecha_compromiso)}</span>
         )}
-        {m.estado === "hecha" && m.ahorro_horas_mes != null && Number(m.ahorro_horas_mes) > 0 && <span className="text-ok cifra">ahorra {horas(Number(m.ahorro_horas_mes))}/mes</span>}
+        {m.estado === "hecha" && m.ahorro_horas_mes != null && Number(m.ahorro_horas_mes) > 0 && <span className="text-ok cifra" data-explain={GLOSARIO.ahorroHorasMes} data-explain-title="Horas ahorradas">ahorra {horas(Number(m.ahorro_horas_mes))}/mes</span>}
       </div>
     </button>
   );
@@ -279,7 +282,7 @@ function FichaMejora({ m }: { m: Mejora }) {
   return (
     <form className="space-y-5 text-sm" onSubmit={(e) => { e.preventDefault(); if (hayCambios) accion.mutate({}); }}>
       {(m.origen_nota || m.origen_falla) && (
-        <div className="rounded-lg border border-borde bg-fondo px-3 py-2 text-xs flex items-start gap-2">
+        <div className="rounded-lg border border-borde bg-fondo px-3 py-2 text-xs flex items-start gap-2" data-explain={GLOSARIO.origenMejora} data-explain-title="De dónde salió">
           {m.origen === "maquina" ? <Wrench className="h-4 w-4 text-peligro shrink-0" /> : <AlertTriangle className="h-4 w-4 text-peligro shrink-0" />}
           <p className="flex-1">Salió de {m.origen === "maquina" ? "una falla" : "lo que reportó el piso"}: «{m.origen_nota ?? m.origen_falla}»
             {m.origen_en && <span className="text-tenue"> · {fecha(m.origen_en)}</span>}</p>
@@ -331,11 +334,14 @@ function FichaMejora({ m }: { m: Mejora }) {
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Campo etiqueta="Quién la lleva">
-          <Seleccion value={String(c.responsable_id ?? "")} onChange={(e) => poner("responsable_id")(e.target.value)} disabled={!puedeCampo("responsable_id")}>
-            <option value="">Nadie todavía</option>
-            {(personas.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-            {m.responsable_id && !(personas.data ?? []).some((p) => p.id === m.responsable_id) && <option value={m.responsable_id}>{m.responsable}</option>}
-          </Seleccion>
+          {/* El selector puede estar deshabilitado (Chrome no le da el mouse): la explicación va en su envoltorio. */}
+          <span className="block" data-explain={GLOSARIO.responsableMejora} data-explain-title="Quién la lleva">
+            <Seleccion value={String(c.responsable_id ?? "")} onChange={(e) => poner("responsable_id")(e.target.value)} disabled={!puedeCampo("responsable_id")}>
+              <option value="">Nadie todavía</option>
+              {(personas.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              {m.responsable_id && !(personas.data ?? []).some((p) => p.id === m.responsable_id) && <option value={m.responsable_id}>{m.responsable}</option>}
+            </Seleccion>
+          </span>
         </Campo>
         <Campo etiqueta="Para cuándo">
           <Entrada type="date" value={String(c.fecha_compromiso ?? "")} onChange={(e) => poner("fecha_compromiso")(e.target.value)}
@@ -349,7 +355,7 @@ function FichaMejora({ m }: { m: Mejora }) {
         </Campo>
       </div>
 
-      <div className="grid gap-3 grid-cols-2">
+      <div className="grid gap-3 grid-cols-2" data-explain={GLOSARIO.fotosMejora} data-explain-title="Fotos de antes y después">
         {(["foto_antes", "foto_despues"] as const).map((k) => (
           <div key={k} className="space-y-1.5">
             <p className="text-xs text-tenue">{k === "foto_antes" ? "Antes" : "Después"}</p>
@@ -365,25 +371,34 @@ function FichaMejora({ m }: { m: Mejora }) {
 
       <div className="flex flex-wrap items-center gap-2 border-t border-borde pt-4">
         {hayCambios && <Boton type="submit" disabled={accion.isPending}>Guardar cambios</Boton>}
+        {/* Estos botones se deshabilitan (falta un dato, o mientras guarda) y Chrome no les da el mouse: la explicación va en su envoltorio. */}
         {gestor && m.estado === "propuesta" && (
-          <Boton type="button" onClick={() => accion.mutate({ estado: "en_marcha" })} disabled={accion.isPending || !c.responsable_id || !c.fecha_compromiso}
-            title={!c.responsable_id || !c.fecha_compromiso ? "Primero elige quién la lleva y para cuándo" : undefined}>
-            <Rocket className="h-4 w-4" />Ponerla en marcha
-          </Boton>
+          <span className="inline-flex" data-explain={GLOSARIO.botonPonerMejoraEnMarcha} data-explain-title="Ponerla en marcha">
+            <Boton type="button" onClick={() => accion.mutate({ estado: "en_marcha" })} disabled={accion.isPending || !c.responsable_id || !c.fecha_compromiso}
+              title={!c.responsable_id || !c.fecha_compromiso ? "Primero elige quién la lleva y para cuándo" : undefined}>
+              <Rocket className="h-4 w-4" />Ponerla en marcha
+            </Boton>
+          </span>
         )}
         {(gestor || esResponsable) && m.estado === "en_marcha" && (
-          <Boton type="button" onClick={() => accion.mutate({ estado: "hecha" })} disabled={accion.isPending || !String(c.resultado ?? "").trim()}
-            title={!String(c.resultado ?? "").trim() ? "Escribe el resultado para marcarla hecha" : undefined}>
-            <CheckCircle2 className="h-4 w-4" />Marcar hecha
-          </Boton>
+          <span className="inline-flex" data-explain={GLOSARIO.botonMarcarMejoraHecha} data-explain-title="Marcar hecha">
+            <Boton type="button" onClick={() => accion.mutate({ estado: "hecha" })} disabled={accion.isPending || !String(c.resultado ?? "").trim()}
+              title={!String(c.resultado ?? "").trim() ? "Escribe el resultado para marcarla hecha" : undefined}>
+              <CheckCircle2 className="h-4 w-4" />Marcar hecha
+            </Boton>
+          </span>
         )}
         {gestor && m.estado !== "propuesta" && (
-          <Boton type="button" variante="secundario" onClick={() => accion.mutate({ estado: "propuesta" })} disabled={accion.isPending}>
-            <Undo2 className="h-4 w-4" />Regresar a propuesta
-          </Boton>
+          <span className="inline-flex" data-explain={GLOSARIO.botonRegresarMejoraPropuesta} data-explain-title="Regresar a propuesta">
+            <Boton type="button" variante="secundario" onClick={() => accion.mutate({ estado: "propuesta" })} disabled={accion.isPending}>
+              <Undo2 className="h-4 w-4" />Regresar a propuesta
+            </Boton>
+          </span>
         )}
         {gestor && m.estado !== "descartada" && m.estado !== "hecha" && (
-          <Boton type="button" variante="fantasma" onClick={() => setDescartar(true)} disabled={accion.isPending}><ArchiveX className="h-4 w-4" />Descartar</Boton>
+          <span className="inline-flex" data-explain={GLOSARIO.botonDescartarMejora} data-explain-title="Descartar">
+            <Boton type="button" variante="fantasma" onClick={() => setDescartar(true)} disabled={accion.isPending}><ArchiveX className="h-4 w-4" />Descartar</Boton>
+          </span>
         )}
         {!gestor && !esResponsable && !(esAutor && m.estado === "propuesta") && (
           <p className="text-xs text-tenue">La deciden ingeniería de procesos y la gerencia de producción; la trabaja quien la lleva.</p>
@@ -448,7 +463,7 @@ function PanelSugerencias({ existentes }: { existentes: Mejora[] }) {
             <li key={s.titulo} className="tarjeta p-3 space-y-2 border-l-4" style={{ borderLeftColor: color ?? "var(--color-borde)" }}>
               <div className="flex items-start gap-2">
                 <p className="font-medium flex-1">{s.titulo}</p>
-                {s.tipo === "a3" && <Insignia tono="info">A3</Insignia>}
+                {s.tipo === "a3" && <span data-explain={GLOSARIO.mejoraA3} data-explain-title="A3"><Insignia tono="info">A3</Insignia></span>}
               </div>
               <p className="text-xs text-tenue">{s.etapa} · {textoDesperdicio(s.desperdicio) ?? s.desperdicio}{s.ahorro_horas_mes > 0 && <> · ahorraría ≈ <span className="cifra">{horas(s.ahorro_horas_mes)}</span> al mes</>}</p>
               <p><span className="text-tenue">Hoy: </span>{s.problema}</p>

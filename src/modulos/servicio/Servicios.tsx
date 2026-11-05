@@ -83,19 +83,19 @@ export default function Servicios() {
       descripcion="Instalaciones, puestas en marcha, garantías y reparaciones: quién sale, a dónde y cuánto le quita al taller."
       ancho="max-w-[1500px]"
       acciones={<>
-        {p.personal && <EnlaceBoton a="/servicio/maquinas"><Wrench className="h-4 w-4" />Máquinas y herramienta</EnlaceBoton>}
-        {p.pedir && <Boton onClick={() => setPidiendo(true)}><Plus className="h-4 w-4" />Pedir servicio</Boton>}
+        {p.personal && <span className="inline-flex" data-explain={GLOSARIO.botonIrMaquinasHerramienta} data-explain-title="Máquinas y herramienta"><EnlaceBoton a="/servicio/maquinas"><Wrench className="h-4 w-4" />Máquinas y herramienta</EnlaceBoton></span>}
+        {p.pedir && <Boton onClick={() => setPidiendo(true)} data-explain={GLOSARIO.botonPedirServicio}><Plus className="h-4 w-4" />Pedir servicio</Boton>}
       </>}
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi titulo="Por programar" valor={numero(solicitadas.length)} icono={Inbox} tono={solicitadas.length ? "aviso" : "ok"} explica={GLOSARIO.estadoServicio}
+        <Kpi titulo="Por programar" valor={numero(solicitadas.length)} icono={Inbox} tono={solicitadas.length ? "aviso" : "ok"} explica={GLOSARIO.kpiServiciosPorProgramar}
              detalle={masVieja ? `El más viejo: ${masVieja.cliente}, ${hace(masVieja.solicitado_en)}` : "Nada esperando fecha"}
              alClic={() => setVista("solicitada")} />
-        <Kpi titulo="Esta semana" valor={numero(estaSemana.length)} icono={CalendarClock} tono="marca" explica={GLOSARIO.cuadrilla}
+        <Kpi titulo="Esta semana" valor={numero(estaSemana.length)} icono={CalendarClock} tono="marca" explica={GLOSARIO.kpiServiciosEstaSemana}
              detalle={`${estaSemana.reduce((s, x) => s + x.cuadrilla.length, 0)} personas fuera del taller en algún momento`} alClic={() => setVista("programada")} />
-        <Kpi titulo="En curso" valor={numero(enCurso.length)} icono={Truck} tono="info"
+        <Kpi titulo="En curso" valor={numero(enCurso.length)} icono={Truck} tono="info" explica={GLOSARIO.kpiServiciosEnCurso}
              detalle={enCurso[0] ? `${enCurso[0].cliente}${enCurso[0].lugar ? ` · ${enCurso[0].lugar}` : ""}` : "Nadie en campo ahora"} alClic={() => setVista("en_curso")} />
-        <Kpi titulo="Garantías abiertas" valor={numero(garantias.length)} icono={ShieldCheck} tono={garantias.length ? "aviso" : "ok"}
+        <Kpi titulo="Garantías abiertas" valor={numero(garantias.length)} icono={ShieldCheck} tono={garantias.length ? "aviso" : "ok"} explica={GLOSARIO.kpiGarantiasAbiertas}
              detalle={garantias.length ? `${garantias.filter((g) => g.estado === "solicitada").length} sin fecha todavía` : "Ninguna"} />
       </div>
 
@@ -108,6 +108,7 @@ export default function Servicios() {
         filtros={<Filtro<Vista> valor={vista} alCambiar={(v) => { setVista(v); setParams((x) => { x.set("vista", v); return x; }, { replace: true }); }}
           opciones={(["abiertos", "solicitada", "programada", "en_curso", "cerrada", "todos"] as Vista[]).map((v) => ({
             valor: v, cuenta: cuenta(v),
+            explica: v === "abiertos" ? GLOSARIO.filtroServiciosAbiertos : v === "todos" ? undefined : GLOSARIO.estadoServicio,
             texto: v === "abiertos" ? "Abiertos" : v === "todos" ? "Todos" : ESTADO_SERVICIO[v].texto,
           }))} />}
         vacio={{ icono: Inbox, titulo: vista === "solicitada" ? "Nada por programar" : "No hay servicios aquí",
@@ -120,13 +121,13 @@ export default function Servicios() {
         <div className={p.almacen ? "xl:col-span-2 space-y-4" : "hidden"}>
           {p.almacen && (porSurtir.data ?? []).length > 0 && (
             <Tarjeta>
-              <EncabezadoTarjeta titulo="Por entregar de almacén" descripcion="Insumos de servicios y refacciones de mantenimiento" />
+              <EncabezadoTarjeta titulo="Por entregar de almacén" explica={GLOSARIO.porEntregarAlmacenServicio} descripcion="Insumos de servicios y refacciones de mantenimiento" />
               <div className="px-3 pb-3 divide-y divide-borde/70">
                 {porSurtir.data!.map((m) => (
                   <div key={m.id} className="py-2 flex flex-wrap items-center gap-2 justify-between">
                     <div className="min-w-0">
                       <p className="text-sm font-medium leading-tight">{numero(m.cantidad)} {m.unidad} · {m.nombre}</p>
-                      <p className="text-xs text-tenue">{m.folio} · {m.para} · {m.estado === "en_compra" ? `en compras ${m.requisicion_folio ?? ""}` : `pedido ${fecha(m.pedido_en)}`} · hay {numero(m.existencia_planta)}</p>
+                      <p className="text-xs text-tenue">{m.folio} · {m.para} · {m.estado === "en_compra" ? `en compras ${m.requisicion_folio ?? ""}` : `pedido ${fecha(m.pedido_en)}`} · <span data-explain={GLOSARIO.enPlanta} data-explain-title="Hay en planta">hay {numero(m.existencia_planta)}</span></p>
                     </div>
                     <Entregar m={m} />
                   </div>

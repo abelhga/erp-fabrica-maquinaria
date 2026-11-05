@@ -74,9 +74,9 @@ export default function Solicitudes() {
     <span className="inline-flex gap-1.5">
       {s.estado === "abierta" && (
         <Boton tamano="sm" variante="secundario" cargando={tomar.isPending && tomar.variables?.id === s.id}
-          onClick={(e) => { e.stopPropagation(); tomar.mutate(s); }}><Hand className="h-3.5 w-3.5" />Tomar</Boton>
+          onClick={(e) => { e.stopPropagation(); tomar.mutate(s); }} data-explain={GLOSARIO.tomarSolicitud}><Hand className="h-3.5 w-3.5" />Tomar</Boton>
       )}
-      {puedeContestar && <Boton tamano="sm" onClick={(e) => { e.stopPropagation(); cambiar("id", s.id); }}>Contestar</Boton>}
+      {puedeContestar && <Boton tamano="sm" onClick={(e) => { e.stopPropagation(); cambiar("id", s.id); }} data-explain={GLOSARIO.contestarSolicitud}>Contestar</Boton>}
     </span>
   );
 
@@ -93,7 +93,7 @@ export default function Solicitudes() {
     },
     {
       clave: "folio", titulo: "Folio", clase: "whitespace-nowrap",
-      celda: (s) => <div><p className="font-medium cifra">{s.folio}</p>{s.urgente && abierta(s) && <Insignia tono="peligro"><Siren className="h-3 w-3" />Urgente</Insignia>}</div>,
+      celda: (s) => <div><p className="font-medium cifra">{s.folio}</p>{s.urgente && abierta(s) && <span className="inline-flex" data-explain={GLOSARIO.solicitudUrgente} data-explain-title="Urgente"><Insignia tono="peligro"><Siren className="h-3 w-3" />Urgente</Insignia></span>}</div>,
     },
     { clave: "que", titulo: "Qué piden", clase: "min-w-[240px] max-w-[380px]", valor: (s) => `${s.articulo ?? ""} ${s.descripcion ?? ""} ${s.marca ?? ""} ${s.modelo ?? ""}`, celda: (s) => <QueSePide s={s} chico /> },
     {
@@ -116,13 +116,13 @@ export default function Solicitudes() {
       ancho="max-w-[1400px]"
     >
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
-        <Kpi titulo="Por contestar" valor={numero(resumen.data?.abiertas ?? 0)} icono={Inbox} tono="info" explica={GLOSARIO.tomarSolicitud}
+        <Kpi titulo="Por contestar" valor={numero(resumen.data?.abiertas ?? 0)} icono={Inbox} tono="info" explica={GLOSARIO.porContestarSolicitud}
           detalle={resumen.data ? `${resumen.data.sin_tomar} sin tomar` : undefined} alClic={() => cambiar("filtro", null)} />
         <Kpi titulo="Por vencer" explica={GLOSARIO.semaforoSolicitud} valor={numero(resumen.data?.por_vencer ?? 0)} icono={AlarmClock} tono={resumen.data?.por_vencer ? "aviso" : "neutro"}
           detalle="en menos de una hora hábil" alClic={() => cambiar("filtro", null)} />
-        <Kpi titulo="Vencidas" explica={GLOSARIO.plazoSolicitud} valor={numero(resumen.data?.vencidas ?? 0)} icono={Siren} tono={resumen.data?.vencidas ? "peligro" : "ok"}
+        <Kpi titulo="Vencidas" explica={GLOSARIO.solicitudVencida} valor={numero(resumen.data?.vencidas ?? 0)} icono={Siren} tono={resumen.data?.vencidas ? "peligro" : "ok"}
           detalle="el vendedor sigue esperando" alClic={() => cambiar("filtro", "vencidas")} />
-        <Kpi titulo="Contestadas hoy" explica={GLOSARIO.contestarSolicitud} valor={numero(resumen.data?.contestadas_hoy ?? 0)} icono={CheckCircle2} tono="ok"
+        <Kpi titulo="Contestadas hoy" explica={GLOSARIO.solicitudesContestadas} valor={numero(resumen.data?.contestadas_hoy ?? 0)} icono={CheckCircle2} tono="ok"
           detalle="con precio o “no se consigue”" alClic={() => cambiar("filtro", "contestadas")} />
       </div>
 
@@ -179,7 +179,7 @@ export default function Solicitudes() {
         titulo={seleccion ? <span className="cifra">{seleccion.folio}</span> : "Solicitud"}
         subtitulo={seleccion ? (abierta(seleccion) ? plazo(seleccion) : ESTADO_SOL[seleccion.estado].texto) : undefined}
         acciones={seleccion?.estado === "abierta" ? (
-          <Boton tamano="sm" variante="secundario" cargando={tomar.isPending} onClick={() => tomar.mutate(seleccion)}><Hand className="h-3.5 w-3.5" />Tomar</Boton>
+          <Boton tamano="sm" variante="secundario" cargando={tomar.isPending} onClick={() => tomar.mutate(seleccion)} data-explain={GLOSARIO.tomarSolicitud}><Hand className="h-3.5 w-3.5" />Tomar</Boton>
         ) : null}>
         {seleccion ? <PanelContestar key={seleccion.id + seleccion.estado} s={seleccion} alCerrar={() => cambiar("id", null)} />
           : lista.isLoading ? <Cargando /> : <Vacio icono={MessageSquareQuote} titulo="No encontramos esa solicitud" texto="Puede que la hayan cancelado. Ciérrala y elige otra de la lista." />}
@@ -193,9 +193,9 @@ function FiltroVista({ vista, todas, pasa, alCambiar }: {
 }) {
   return (
     <Filtro<Vista> valor={vista} alCambiar={alCambiar} opciones={[
-      { valor: "pendientes", texto: "Por contestar", cuenta: todas.filter((s) => pasa(s, "pendientes")).length },
-      { valor: "vencidas", texto: "Vencidas", cuenta: todas.filter((s) => pasa(s, "vencidas")).length },
-      { valor: "contestadas", texto: "Contestadas" },
+      { valor: "pendientes", texto: "Por contestar", cuenta: todas.filter((s) => pasa(s, "pendientes")).length, explica: GLOSARIO.porContestarSolicitud },
+      { valor: "vencidas", texto: "Vencidas", cuenta: todas.filter((s) => pasa(s, "vencidas")).length, explica: GLOSARIO.solicitudVencida },
+      { valor: "contestadas", texto: "Contestadas", explica: GLOSARIO.solicitudesContestadas },
       { valor: "todas", texto: "Todas" },
     ]} />
   );
@@ -222,17 +222,17 @@ function Indicador({ r }: { r: ResumenSolicitudes }) {
           <p className="text-xs text-tenue">{m.resueltas} contestada(s){m.mediana_acuse != null ? ` · acuse en ${horas(m.mediana_acuse)}` : ""}</p>
         </div>
       </div>
-      <Comparacion titulo="Mediana hasta el precio" valor={horas(m.mediana_horas)} antes={`${b.mediana_horas} h`} mejor={mejorMediana}
+      <Comparacion titulo="Mediana hasta el precio" explica={GLOSARIO.medianaRespuestaPrecio} valor={horas(m.mediana_horas)} antes={`${b.mediana_horas} h`} mejor={mejorMediana}
         nota={`horas hábiles · ${b.mediana_horas_2026} h en 2026`} />
-      <Comparacion titulo="Tardaron más de un día hábil" valor={porcentaje(m.pct_mas_de_un_dia ?? 0, 0)} antes={porcentaje(b.pct_mas_de_un_dia, 0)} mejor={mejorPct}
+      <Comparacion titulo="Tardaron más de un día hábil" explica={GLOSARIO.masDeUnDiaPrecio} valor={porcentaje(m.pct_mas_de_un_dia ?? 0, 0)} antes={porcentaje(b.pct_mas_de_un_dia, 0)} mejor={mejorPct}
         nota={m.abiertas_mas_de_un_dia ? `incluye ${m.abiertas_mas_de_un_dia} abierta(s) que ya pasaron de un día` : `${porcentaje(b.pct_mas_de_un_dia_2026, 0)} en 2026`} />
     </div>
   );
 }
 
-function Comparacion({ titulo, valor, antes, mejor, nota }: { titulo: string; valor: string; antes: string; mejor: boolean; nota: string }) {
+function Comparacion({ titulo, valor, antes, mejor, nota, explica }: { titulo: string; valor: string; antes: string; mejor: boolean; nota: string; explica?: string }) {
   return (
-    <div className="rounded-lg bg-fondo px-3 py-2">
+    <div className="rounded-lg bg-fondo px-3 py-2" data-explain={explica} data-explain-title={explica ? titulo : undefined}>
       <p className="text-xs text-tenue">{titulo}</p>
       <p className="flex items-baseline gap-2">
         <span className={cn("text-xl font-semibold cifra", mejor ? "text-ok" : "text-aviso")}>{valor}</span>

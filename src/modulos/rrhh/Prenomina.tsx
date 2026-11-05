@@ -66,7 +66,7 @@ export default function Prenomina() {
       acciones={semana && (
         <div className="flex items-center rounded-lg border border-borde bg-superficie">
           <button className="p-2 text-tenue hover:text-texto disabled:opacity-30" disabled={idx >= lista.length - 1} onClick={() => ir(lista[idx + 1].inicio)} aria-label="Semana anterior"><ChevronLeft className="h-4 w-4" /></button>
-          <Seleccion className="h-8 border-0 bg-transparent text-sm font-medium w-auto" value={elegida ?? ""} onChange={(e) => ir(e.target.value)} aria-label="Semana">
+          <Seleccion className="h-8 border-0 bg-transparent text-sm font-medium w-auto" value={elegida ?? ""} onChange={(e) => ir(e.target.value)} aria-label="Semana" data-explain={GLOSARIO.semanaNomina} data-explain-title="Semana">
             {lista.map((s) => <option key={s.inicio} value={s.inicio}>Del {rango(s)}{s.estado === "cerrada" ? " · cerrada" : ""}</option>)}
           </Seleccion>
           <button className="p-2 text-tenue hover:text-texto disabled:opacity-30" disabled={idx <= 0} onClick={() => ir(lista[idx - 1].inicio)} aria-label="Semana siguiente"><ChevronRight className="h-4 w-4" /></button>
@@ -111,7 +111,7 @@ function VistaSemana({ semana }: { semana: Semana }) {
         <div className="min-w-[180px]">
           <p className="font-medium">{r.nombre}</p>
           <p className="text-xs text-tenue">{[r.numero, r.puesto].filter(Boolean).join(" · ")}</p>
-          <p className="text-xs">{r.sueldo_semanal == null ? <span className="text-peligro">sin sueldo registrado</span> : <span className="text-tenue cifra">{dinero(r.sueldo_semanal)} a la semana</span>}</p>
+          <p className="text-xs">{r.sueldo_semanal == null ? <span className="text-peligro" data-explain={GLOSARIO.sinSueldoNomina} data-explain-title="Sin sueldo">sin sueldo registrado</span> : <span className="text-tenue cifra">{dinero(r.sueldo_semanal)} a la semana</span>}</p>
         </div>
       ),
     },
@@ -123,7 +123,7 @@ function VistaSemana({ semana }: { semana: Semana }) {
         return <span title={motivos.join(", ")} className={n(r.dias_pagados) < 7 ? "text-aviso font-medium" : ""}>{numero(r.dias_pagados)}{motivos.length > 0 && <span className="block text-[11px] text-tenue font-normal">{motivos.join(", ")}</span>}</span>;
       },
     },
-    { clave: "importe_dias", titulo: "Sueldo", alinear: "der", sinBusqueda: true, valor: (r) => n(r.importe_dias), celda: (r) => dinero(r.importe_dias) },
+    { clave: "importe_dias", titulo: "Sueldo", explica: GLOSARIO.sueldoDiasNomina, alinear: "der", sinBusqueda: true, valor: (r) => n(r.importe_dias), celda: (r) => dinero(r.importe_dias) },
     {
       clave: "horas_extra", titulo: "Horas extra", explica: GLOSARIO.horasDoblesTriples, alinear: "der", sinBusqueda: true, valor: (r) => n(r.importe_dobles) + n(r.importe_triples),
       celda: (r) => n(r.horas_extra) === 0 ? <span className="text-tenue">—</span> : (
@@ -148,7 +148,7 @@ function VistaSemana({ semana }: { semana: Semana }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span data-explain={GLOSARIO.cerrarSemana} data-explain-title="Estado de la semana">{cerrada
+        <span data-explain={GLOSARIO.estadoSemanaNomina} data-explain-title="Estado de la semana">{cerrada
           ? <Insignia tono="ok"><Lock className="h-3 w-3" /> Cerrada {semana.cerrada_por && `por ${semana.cerrada_por}`} el {fechaYHora(semana.cerrada_en)}</Insignia>
           : terminada ? <Insignia tono="aviso">Lista para cerrar: terminó el jueves {fecha(semana.fin)}</Insignia>
           : <Insignia tono="info">En curso: termina el jueves {fecha(semana.fin)}, se paga el {fecha(semana.pago)}</Insignia>}</span>
@@ -158,8 +158,8 @@ function VistaSemana({ semana }: { semana: Semana }) {
           : <span data-explain={GLOSARIO.nominaPagada} data-explain-title="Pago de la semana"><Insignia tono="neutro">Sin pago registrado</Insignia></span>)}
         <div className="ml-auto flex flex-wrap gap-2">
           <Boton variante="secundario" disabled={!datos.length} onClick={() => exportarCsv(semana, datos)}><Download className="h-4 w-4" /> Exportar CSV</Boton>
-          {cerrada && !semana.pagada_el && puede("finanzas", 2) && <Boton onClick={() => setDialogo("pagar")}><Banknote className="h-4 w-4" /> Registrar pago</Boton>}
-          {!cerrada && puede("nomina", 2) && <Boton variante="secundario" onClick={() => setDialogo("concepto")}><Plus className="h-4 w-4" /> Agregar concepto</Boton>}
+          {cerrada && !semana.pagada_el && puede("finanzas", 2) && <Boton onClick={() => setDialogo("pagar")} data-explain={GLOSARIO.botonRegistrarPagoNomina}><Banknote className="h-4 w-4" /> Registrar pago</Boton>}
+          {!cerrada && puede("nomina", 2) && <Boton variante="secundario" onClick={() => setDialogo("concepto")} data-explain={GLOSARIO.botonAgregarConceptoNomina}><Plus className="h-4 w-4" /> Agregar concepto</Boton>}
           {!cerrada && puede("nomina", 3) && (
             <Boton disabled={!terminada} title={!terminada ? "Se cierra cuando termina la semana" : undefined} onClick={() => setDialogo("cerrar")}><Lock className="h-4 w-4" /> Cerrar semana</Boton>
           )}
@@ -178,8 +178,8 @@ function VistaSemana({ semana }: { semana: Semana }) {
         <div className="rounded-lg border border-aviso/30 bg-aviso-suave p-3 text-sm text-aviso flex gap-2">
           <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
           <div className="space-y-1">
-            {sinBase > 0 && <p><b>Falta definir la base del bono.</b> {sinBase} {sinBase === 1 ? "persona tiene" : "personas tienen"} objetivos aprobados: se enseña el % y no se paga nada hasta que dirección diga cuánto vale el bono por puesto o por persona.</p>}
-            {sinSueldo > 0 && <p><b>{sinSueldo} sin sueldo registrado.</b> Captúralo en la pestaña Sueldos.</p>}
+            {sinBase > 0 && <p data-explain={GLOSARIO.bonoObjetivos} data-explain-title="Base del bono"><b>Falta definir la base del bono.</b> {sinBase} {sinBase === 1 ? "persona tiene" : "personas tienen"} objetivos aprobados: se enseña el % y no se paga nada hasta que dirección diga cuánto vale el bono por puesto o por persona.</p>}
+            {sinSueldo > 0 && <p data-explain={GLOSARIO.sinSueldoNomina} data-explain-title="Sin sueldo"><b>{sinSueldo} sin sueldo registrado.</b> Captúralo en la pestaña Sueldos.</p>}
           </div>
         </div>
       )}
@@ -227,11 +227,11 @@ function DetalleRenglon({ r, editable }: { r: Renglon; editable: boolean }) {
         {r.conceptos.filter((c) => c.tipo === "percepcion").map((c, i) => (
           <div key={c.id ?? i} className="flex items-start gap-2">
             <div className="flex-1">{linea(c.concepto, n(c.importe), [c.nota, c.referencia].filter(Boolean).join(" · "))}</div>
-            {editable && c.id && <button className="mt-2 text-tenue hover:text-peligro" onClick={() => quitar.mutate(c.id!)} aria-label="Quitar"><Trash2 className="h-4 w-4" /></button>}
+            {editable && c.id && <button className="mt-2 text-tenue hover:text-peligro" onClick={() => quitar.mutate(c.id!)} aria-label="Quitar" data-explain={GLOSARIO.botonQuitarConceptoNomina} data-explain-title="Quitar concepto"><Trash2 className="h-4 w-4" /></button>}
           </div>
         ))}
         {r.bono_pct != null && (
-          <div className="flex items-start justify-between gap-3 py-2">
+          <div className="flex items-start justify-between gap-3 py-2" data-explain={GLOSARIO.bonoObjetivos} data-explain-title="Bono de objetivos">
             <div>
               <p>Bono de objetivos</p>
               <p className="text-xs text-tenue">{(r.bono_detalle ?? []).map((b) => `${nombreMes(b.mes)}: ${puntos(b.pct)}`).join(" · ")}</p>
@@ -243,7 +243,7 @@ function DetalleRenglon({ r, editable }: { r: Renglon; editable: boolean }) {
         {r.conceptos.filter((c) => c.tipo === "deduccion").map((c, i) => (
           <div key={c.id ?? `d${i}`} className="flex items-start gap-2">
             <div className="flex-1">{linea(c.concepto, n(c.importe), [c.nota, c.referencia && c.clave !== "prestamo" ? c.referencia : null].filter(Boolean).join(" · "), -1)}</div>
-            {editable && c.id && <button className="mt-2 text-tenue hover:text-peligro" onClick={() => quitar.mutate(c.id!)} aria-label="Quitar"><Trash2 className="h-4 w-4" /></button>}
+            {editable && c.id && <button className="mt-2 text-tenue hover:text-peligro" onClick={() => quitar.mutate(c.id!)} aria-label="Quitar" data-explain={GLOSARIO.botonQuitarConceptoNomina} data-explain-title="Quitar concepto"><Trash2 className="h-4 w-4" /></button>}
           </div>
         ))}
         <div className="flex items-center justify-between py-3 text-base"><b>A pagar</b><b className="cifra">{dinero(r.neto)}</b></div>
@@ -291,7 +291,7 @@ function DialogoCerrar({ semana, total, personas, alCerrar }: { semana: Semana; 
     { exito: (n) => `Semana cerrada: ${n} renglones congelados`, invalidar: [["nomina"]], alTerminar: alCerrar });
   return (
     <Dialogo abierto alCambiar={(v) => !v && alCerrar()} titulo="Cerrar la semana" descripcion={`Del ${rango(semana)}`}
-      pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton cargando={cerrar.isPending} onClick={() => cerrar.mutate(undefined)}><Lock className="h-4 w-4" /> Cerrar</Boton></>}>
+      pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton><Boton cargando={cerrar.isPending} onClick={() => cerrar.mutate(undefined)} data-explain={GLOSARIO.cerrarSemana}><Lock className="h-4 w-4" /> Cerrar</Boton></>}>
       <div className="space-y-2 text-sm">
         <p>Se congelan {personas} renglones por <b className="cifra">{dinero(total)}</b>, se descuentan los préstamos y se marcan como pagados los bonos que ya tienen base.</p>
         <p className="text-tenue">Después ya no se modifica: un error se corrige en la semana abierta con otro concepto.</p>
@@ -363,9 +363,9 @@ function Prestamos({ semanas, puedeCapturar }: { semanas: Semana[]; puedeCaptura
       clave: "abonado", titulo: "Abonado", explica: GLOSARIO.abonoPrestamo, alinear: "der", sinBusqueda: true, valor: (p) => n(p.abonado),
       celda: (p) => <span>{dinero(p.abonado)}{n(p.pagado_aparte) > 0 && <span className="block text-[11px] text-tenue">{dinero(p.pagado_aparte)} en efectivo</span>}</span>,
     },
-    { clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, valor: (p) => n(p.saldo), celda: (p) => <b className={n(p.saldo) > 0 ? "" : "text-ok"}>{dinero(p.saldo)}</b> },
+    { clave: "saldo", titulo: "Saldo", explica: GLOSARIO.saldoPrestamo, alinear: "der", sinBusqueda: true, valor: (p) => n(p.saldo), celda: (p) => <b className={n(p.saldo) > 0 ? "" : "text-ok"}>{dinero(p.saldo)}</b> },
     {
-      clave: "estado", titulo: "Estado", valor: (p) => p.estado,
+      clave: "estado", titulo: "Estado", explica: GLOSARIO.estadoPrestamo, valor: (p) => p.estado,
       celda: (p) => p.estado === "cancelado" ? <Insignia tono="neutro">Cancelado</Insignia> : n(p.saldo) <= 0 ? <Insignia tono="ok">Liquidado</Insignia>
         : <Insignia tono="info">{p.semanas_restantes} semana{p.semanas_restantes === 1 ? "" : "s"} más</Insignia>,
     },
@@ -378,8 +378,8 @@ function Prestamos({ semanas, puedeCapturar }: { semanas: Semana[]; puedeCaptura
       clave: "acciones", titulo: "", sinBusqueda: true,
       celda: (p) => puedeCapturar && p.estado === "activo" && n(p.saldo) > 0 && (
         <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-          <Boton variante="secundario" tamano="sm" onClick={() => setAbonar(p)}>Abonar</Boton>
-          <Boton variante="fantasma" tamano="sm" onClick={() => setCancelar(p)}>Cancelar</Boton>
+          <Boton variante="secundario" tamano="sm" onClick={() => setAbonar(p)} data-explain={GLOSARIO.abonoPrestamo}>Abonar</Boton>
+          <Boton variante="fantasma" tamano="sm" onClick={() => setCancelar(p)} data-explain={GLOSARIO.botonCancelarPrestamo}>Cancelar</Boton>
         </div>
       ),
     },
@@ -392,8 +392,8 @@ function Prestamos({ semanas, puedeCapturar }: { semanas: Semana[]; puedeCaptura
       <TablaDatos filas={prestamos.data} columnas={columnas} cargando={prestamos.isLoading} error={prestamos.error} claveFila={(p) => p.id}
         exportarComo="prestamos-nomina" placeholder="Buscar persona o motivo…"
         filtros={puedeCapturar && <div className="flex gap-2">
-          <Boton tamano="sm" onClick={() => setNuevo(true)}><Plus className="h-4 w-4" /> Nuevo préstamo</Boton>
-          <Boton variante="fantasma" tamano="sm" onClick={() => setReglas(true)}>Interés y reglas</Boton>
+          <Boton tamano="sm" onClick={() => setNuevo(true)} data-explain={GLOSARIO.botonNuevoPrestamo}><Plus className="h-4 w-4" /> Nuevo préstamo</Boton>
+          <Boton variante="fantasma" tamano="sm" onClick={() => setReglas(true)} data-explain={GLOSARIO.reglasAhorroPrestamos}>Interés y reglas</Boton>
         </div>}
         vacio={{ icono: Banknote, titulo: "Sin préstamos", texto: "Registra el préstamo con su descuento semanal: la prenómina lo descuenta sola y lleva el saldo." }} />
       {reglas && <DialogoReglas alCerrar={() => setReglas(false)} />}
@@ -470,7 +470,7 @@ function Sueldos({ puedeCapturar }: { puedeCapturar: boolean }) {
   const columnas: Columna<Sueldo>[] = [
     { clave: "nombre", titulo: "Persona", celda: (s) => <div><p className="font-medium">{s.nombre}</p><p className="text-xs text-tenue">{[s.numero, s.puesto].filter(Boolean).join(" · ")}</p></div>, valor: (s) => `${s.nombre} ${s.puesto ?? ""}` },
     { clave: "sueldo_semanal", titulo: "Sueldo semanal", explica: GLOSARIO.sueldoSemanal, alinear: "der", sinBusqueda: true, valor: (s) => s.sueldo_semanal, celda: (s) => s.sueldo_semanal == null ? <span className="text-xs text-peligro">sin sueldo</span> : <b>{dinero(s.sueldo_semanal)}</b> },
-    { clave: "dia", titulo: "Por día", alinear: "der", sinBusqueda: true, valor: (s) => n(s.sueldo_semanal) / 7, celda: (s) => s.sueldo_semanal == null ? "—" : dinero(n(s.sueldo_semanal) / 7) },
+    { clave: "dia", titulo: "Por día", explica: GLOSARIO.sueldoPorDia, alinear: "der", sinBusqueda: true, valor: (s) => n(s.sueldo_semanal) / 7, celda: (s) => s.sueldo_semanal == null ? "—" : dinero(n(s.sueldo_semanal) / 7) },
     { clave: "desde", titulo: "Desde", explica: GLOSARIO.sueldoDeLaFicha, valor: (s) => s.desde, celda: (s) => s.origen === "ficha" ? <Insignia tono="aviso">De la ficha</Insignia> : fecha(s.desde) },
     { clave: "cambios", titulo: "Cambios", alinear: "der", sinBusqueda: true, valor: (s) => s.historial.length, celda: (s) => <span className="text-tenue">{s.historial.length}</span> },
   ];
@@ -479,10 +479,10 @@ function Sueldos({ puedeCapturar }: { puedeCapturar: boolean }) {
       <p className="text-sm text-tenue max-w-3xl">Sueldo base semanal de cada persona. Un aumento es un renglón nuevo con su fecha y motivo; el anterior no se reescribe (en la hoja vivía dentro de la fórmula). Total semanal: <b className="text-texto cifra">{dinero(total)}</b>.</p>
       <TablaDatos filas={sueldos.data} columnas={columnas} cargando={sueldos.isLoading} error={sueldos.error} claveFila={(s) => s.empleado_id}
         alClicFila={(s) => setAbierto(s.empleado_id)} exportarComo="sueldos" placeholder="Buscar persona o puesto…"
-        filtros={puedeCapturar && <Boton tamano="sm" onClick={() => setNuevo("")}><Plus className="h-4 w-4" /> Registrar sueldo</Boton>}
+        filtros={puedeCapturar && <Boton tamano="sm" onClick={() => setNuevo("")} data-explain={GLOSARIO.botonRegistrarSueldo}><Plus className="h-4 w-4" /> Registrar sueldo</Boton>}
         vacio={{ icono: Wallet, titulo: "Sin personal activo", texto: "Da de alta al personal en Personal; aquí se registra su sueldo semanal." }} />
       <Lateral abierto={!!elegido} alCambiar={(v) => !v && setAbierto(null)} titulo={elegido?.nombre ?? ""} subtitulo="Historial de sueldo"
-        acciones={puedeCapturar && elegido && <Boton tamano="sm" onClick={() => setNuevo(elegido.empleado_id)}><Plus className="h-4 w-4" /> Cambio</Boton>}>
+        acciones={puedeCapturar && elegido && <Boton tamano="sm" onClick={() => setNuevo(elegido.empleado_id)} data-explain={GLOSARIO.botonRegistrarSueldo} data-explain-title="Cambio de sueldo"><Plus className="h-4 w-4" /> Cambio</Boton>}>
         {elegido && (
           <ol className="space-y-3">
             {elegido.historial.length === 0 && <p className="text-sm text-tenue">Sin historial: se usa el salario diario de la ficha × 7.</p>}

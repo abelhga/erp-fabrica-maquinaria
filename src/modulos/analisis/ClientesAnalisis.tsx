@@ -65,8 +65,8 @@ export default function ClientesAnalisis() {
     { clave: "vendedor", titulo: "Vendedor", valor: (x) => x.vendedor ?? "Sin vendedor" },
     { clave: "estado", titulo: "Dónde", valor: (x) => [x.municipio, x.estado].filter(Boolean).join(", ") || "Sin ubicar" },
     { clave: "ultima", titulo: "Última compra", valor: (x) => x.ultima, celda: (x) => <span title={fecha(x.ultima)}>{hace(x.ultima)}</span> },
-    { clave: "compras_3a", titulo: "Compras (3 años)", alinear: "der", sinBusqueda: true },
-    { clave: "monto_3a", titulo: "Venta (3 años)", alinear: "der", celda: (x) => dinero(x.monto_3a), sinBusqueda: true },
+    { clave: "compras_3a", titulo: "Compras (3 años)", alinear: "der", explica: GLOSARIO.comprasTresAnios, sinBusqueda: true },
+    { clave: "monto_3a", titulo: "Venta (3 años)", alinear: "der", explica: GLOSARIO.ventaTresAnios, celda: (x) => dinero(x.monto_3a), sinBusqueda: true },
     { clave: "monto_total", titulo: "Venta desde 2018", alinear: "der", celda: (x) => dinero(x.monto_total), sinBusqueda: true },
     { clave: "primera", titulo: "Cliente desde", valor: (x) => x.primera, celda: (x) => fecha(x.primera) },
   ];
@@ -74,7 +74,7 @@ export default function ClientesAnalisis() {
   return (
     <div className={cn("space-y-4 transition-opacity", c.isFetching && c.isPlaceholderData && "opacity-60")}>
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
-        <Cifra titulo="Clientes que compraron" valor={numero(r.clientes)} detalle={<>{numero(r.operaciones)} operaciones en {periodo.etiqueta}</>} />
+        <Cifra titulo="Clientes que compraron" explica={GLOSARIO.clientesQueCompraron} valor={numero(r.clientes)} detalle={<>{numero(r.operaciones)} operaciones en {periodo.etiqueta}</>} />
         <Cifra titulo="Hacen el 80 % de la venta" explica={GLOSARIO.paretoClientes} valor={r.clientes_80 == null ? "—" : `${numero(r.clientes_80)} clientes`}
           detalle={r.pct_clientes_80 == null ? "—" : <>el {porcentaje(r.pct_clientes_80, 0)} de los que compraron</>} />
         <Cifra titulo="Los 10 más grandes pesan" explica={GLOSARIO.participacionVenta} valor={porcentaje(r.top10_participacion, 0)} detalle="de la venta del periodo" />
@@ -108,7 +108,7 @@ export default function ClientesAnalisis() {
           </div>
         </TarjetaGrafica>
 
-        <TarjetaGrafica titulo={`Los clientes que más compraron en ${periodo.etiqueta}`}
+        <TarjetaGrafica titulo={`Los clientes que más compraron en ${periodo.etiqueta}`} explica={GLOSARIO.topClientesPeriodo}
           descripcion="Con lo que pesa cada uno y lo que llevan juntos."
           acciones={d.top.length > 10 && <button type="button" className="text-sm text-marca-texto" onClick={() => setVerTop(verTop === 10 ? 15 : 10)}>{verTop === 10 ? "Ver 15" : "Ver 10"}</button>}>
           <ol className="px-5 pb-4 space-y-2.5">
@@ -200,6 +200,7 @@ export default function ClientesAnalisis() {
           {d.segmentos.map((s) => (
             <button key={s.segmento} type="button" onClick={() => { const n = new URLSearchParams(params); n.set("segmento", s.segmento); setParams(n, { replace: true }); }}
               aria-pressed={segmento === s.segmento} title={NOMBRE_SEGMENTO[s.segmento]?.texto}
+              data-explain={NOMBRE_SEGMENTO[s.segmento]?.texto} data-explain-title={NOMBRE_SEGMENTO[s.segmento]?.nombre}
               className={cn("tarjeta text-left px-3 py-2.5 transition", segmento === s.segmento ? "border-marca ring-2 ring-marca/30" : "hover:border-marca/40")}>
               <p className="text-sm font-medium">{NOMBRE_SEGMENTO[s.segmento]?.nombre ?? s.segmento}</p>
               <p className="text-xl font-semibold">{numero(s.clientes)}</p>

@@ -3,6 +3,7 @@ import { Boton } from "@/components/ui/boton";
 import { dinero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { cuando, type Solicitud } from "@/modulos/compras/solicitudes/datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
  * En la partida del cotizador: por dónde va el precio que se le pidió a compras.
@@ -16,7 +17,8 @@ export function EstadoPartida({ s, editable, alAplicar, aplicando, textoAplicar 
   if (s.estado === "abierta" || s.estado === "tomada") {
     const vencida = s.semaforo === "vencida";
     return (
-      <span className={cn(base, vencida ? "border-peligro/30 bg-peligro-suave text-peligro" : "border-aviso/30 bg-aviso-suave/70 text-texto")}>
+      <span className={cn(base, vencida ? "border-peligro/30 bg-peligro-suave text-peligro" : "border-aviso/30 bg-aviso-suave/70 text-texto")}
+        data-explain={GLOSARIO.plazoSolicitud} data-explain-title="Precio pedido a compras">
         {s.urgente ? <Siren className="h-3.5 w-3.5 text-peligro" /> : s.estado === "tomada" ? <Hand className="h-3.5 w-3.5 text-info" /> : <Hourglass className="h-3.5 w-3.5 text-aviso" />}
         <span>
           <b className="cifra">{s.folio}</b>{" "}
@@ -28,7 +30,7 @@ export function EstadoPartida({ s, editable, alAplicar, aplicando, textoAplicar 
   }
   if (s.estado === "no_se_consigue") {
     return (
-      <span className={cn(base, "border-peligro/30 bg-peligro-suave")}>
+      <span className={cn(base, "border-peligro/30 bg-peligro-suave")} data-explain={GLOSARIO.estadoSolicitud} data-explain-title="No se consigue">
         <XCircle className="h-3.5 w-3.5 text-peligro" /><span><b className="text-peligro">No se consigue</b> · {s.respuesta}</span>
       </span>
     );
@@ -43,11 +45,11 @@ export function EstadoPartida({ s, editable, alAplicar, aplicando, textoAplicar 
     );
   }
   return (
-    <span className={cn(base, "border-ok/30 bg-ok-suave/70")}>
+    <span className={cn(base, "border-ok/30 bg-ok-suave/70")} data-explain={GLOSARIO.solicitudPrecio} data-explain-title="Precio de compras">
       <MessageSquareQuote className="h-3.5 w-3.5 text-ok" />
       <span>Compras: <b className="cifra">{dinero(precio)}</b> de lista · entrega <b>{s.tiempo_entrega_dias ?? "—"} días hábiles</b>{s.respuesta ? ` · “${s.respuesta}”` : ""}</span>
       {editable && precio != null && (
-        <Boton tamano="sm" variante="exito" className="h-6 px-2 text-[11px]" cargando={aplicando}
+        <Boton tamano="sm" variante="exito" className="h-6 px-2 text-[11px]" cargando={aplicando} data-explain={GLOSARIO.aplicarPrecioCompras}
           onClick={(e) => { e.stopPropagation(); alAplicar(s); }}>{textoAplicar}</Boton>
       )}
     </span>

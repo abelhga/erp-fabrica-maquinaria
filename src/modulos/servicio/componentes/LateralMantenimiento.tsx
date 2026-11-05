@@ -75,11 +75,12 @@ function Checklist({ ordenId, planId, editable }: { ordenId: string; planId: str
                 </div>
                 {editable && (x.bien === null ? (
                   <div className="flex gap-1 shrink-0">
-                    <Boton tamano="sm" variante="secundario" onClick={() => marcar.mutate({ id: x.id, bien: true })} aria-label="Bien">Bien</Boton>
-                    <Boton tamano="sm" variante="fantasma" className="text-peligro" onClick={() => setFalla({ id: x.id, nota: "" })} aria-label="Con falla">Falla</Boton>
+                    <Boton tamano="sm" variante="secundario" onClick={() => marcar.mutate({ id: x.id, bien: true })} aria-label="Bien" data-explain={GLOSARIO.botonPuntoBien}>Bien</Boton>
+                    <Boton tamano="sm" variante="fantasma" className="text-peligro" onClick={() => setFalla({ id: x.id, nota: "" })} aria-label="Con falla" data-explain={GLOSARIO.botonPuntoFalla}>Falla</Boton>
                   </div>
                 ) : (
-                  <Boton tamano="sm" variante="fantasma" onClick={() => marcar.mutate({ id: x.id, bien: null })} aria-label="Deshacer"><Undo2 className="h-3.5 w-3.5" /></Boton>
+                  <Boton tamano="sm" variante="fantasma" onClick={() => marcar.mutate({ id: x.id, bien: null })} aria-label="Deshacer"
+                         data-explain={GLOSARIO.botonDeshacerPunto} data-explain-title="Deshacer"><Undo2 className="h-3.5 w-3.5" /></Boton>
                 ))}
               </div>
             </li>
@@ -129,16 +130,18 @@ export function LateralMantenimiento({ id, alCerrar }: { id: string | null; alCe
   return (
     <Lateral abierto={!!id} alCambiar={(v) => { if (!v) alCerrar(); }} ancho="max-w-2xl"
       titulo={o ? `${o.folio} · ${o.numero} ${o.maquina}` : "Orden de mantenimiento"}
-      subtitulo={o && <span className="flex flex-wrap items-center gap-2"><InsigniaMto estado={o.estado} />
-        <Insignia tono={o.tipo === "preventivo" ? "info" : "neutro"}>{o.tipo === "preventivo" ? "Preventivo" : "Correctivo"}</Insignia>
-        {o.vencida && <Insignia tono="peligro">Vencido</Insignia>}
-        {o.detiene && o.abierta && <Insignia tono="peligro">Máquina parada</Insignia>}</span>}>
+      subtitulo={o && <span className="flex flex-wrap items-center gap-2">
+        <span data-explain={GLOSARIO.estadoOrdenMto} data-explain-title="Estado de la orden"><InsigniaMto estado={o.estado} /></span>
+        <span data-explain={GLOSARIO.tipoOrdenMto} data-explain-title={o.tipo === "preventivo" ? "Preventivo" : "Correctivo"}>
+          <Insignia tono={o.tipo === "preventivo" ? "info" : "neutro"}>{o.tipo === "preventivo" ? "Preventivo" : "Correctivo"}</Insignia></span>
+        {o.vencida && <span data-explain={GLOSARIO.situacionPreventivo} data-explain-title="Vencido"><Insignia tono="peligro">Vencido</Insignia></span>}
+        {o.detiene && o.abierta && <span data-explain={GLOSARIO.estadoMaquina} data-explain-title="Máquina parada"><Insignia tono="peligro">Máquina parada</Insignia></span>}</span>}>
       {orden.isLoading || !o ? <Cargando filas={6} /> : (
         <div className="space-y-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <Dato etiqueta={o.tipo === "preventivo" ? "Generado" : "Reportó"}>{o.reportado_por_nombre ?? "—"}<span className="block text-xs text-tenue">{fechaYHora(o.reportado_en)}</span></Dato>
             {o.tipo === "preventivo" && <Dato etiqueta="Vence">{o.vence ? fecha(o.vence) : `${horas(o.vence_horas)} de uso`}</Dato>}
-            <Dato etiqueta="Tiempo parada">{o.horas_paro == null ? "No se paró" : o.horas_paro >= 48 ? `${Math.round(o.horas_paro / 24)} días` : horas(o.horas_paro)}
+            <Dato etiqueta="Tiempo parada" explica={GLOSARIO.tiempoParadaOrden}>{o.horas_paro == null ? "No se paró" : o.horas_paro >= 48 ? `${Math.round(o.horas_paro / 24)} días` : horas(o.horas_paro)}
               {o.fuera_desde && o.abierta && <span className="block text-xs text-tenue">desde {hace(o.fuera_desde)}</span>}</Dato>
             {o.horas_tramos != null && (
               <Dato etiqueta="Trabajado" explica={GLOSARIO.tramoMantenimiento}>{horas(o.horas_tramos)}
@@ -159,31 +162,35 @@ export function LateralMantenimiento({ id, alCerrar }: { id: string | null; alCe
             </Seccion>
           )}
 
-          <Seccion titulo="Fotos">
+          <Seccion titulo="Fotos" explica={GLOSARIO.fotosOrdenMto}>
             <GaleriaEvidencias mantenimientoId={o.id} carpeta={`mantenimiento/${o.maquina_id}`} puedeSubir={abierta && p.pedir}
                                momentos={["falla", "antes", "durante", "despues"]} momentoInicial={o.estado === "pendiente" ? "falla" : "despues"} />
           </Seccion>
 
-          <Seccion titulo="Diagnóstico">
+          <Seccion titulo="Diagnóstico" explica={GLOSARIO.diagnosticoMto}>
             {abierta && p.personal ? (
               <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); atender.mutate(); }}>
                 <AreaTexto rows={2} value={diag ?? o.diagnostico ?? ""} onChange={(e) => setDiag(e.target.value)} placeholder="Qué tiene (cable de tierra quemado, carbones gastados…)" />
                 <div className="flex flex-wrap gap-2">
                   <Entrada className="flex-1 min-w-[180px]" value={atiende ?? o.atendido_por ?? ""} onChange={(e) => setAtiende(e.target.value)} placeholder="Quién la repara (del taller o externo)" aria-label="Quién la repara" />
-                  <Boton type="submit" variante="secundario" cargando={atender.isPending} disabled={(diag ?? o.diagnostico ?? "").trim().length < 3}>
-                    <Stethoscope className="h-4 w-4" />{o.estado === "pendiente" ? "Empezar a repararla" : "Guardar"}
-                  </Boton>
+                  {/* Se deshabilita sin diagnóstico: la explicación va en el envoltorio para que no se pierda. */}
+                  <span className="inline-flex" data-explain={GLOSARIO.botonEmpezarReparacion}
+                        data-explain-title={o.estado === "pendiente" ? "Empezar a repararla" : "Guardar diagnóstico"}>
+                    <Boton type="submit" variante="secundario" cargando={atender.isPending} disabled={(diag ?? o.diagnostico ?? "").trim().length < 3}>
+                      <Stethoscope className="h-4 w-4" />{o.estado === "pendiente" ? "Empezar a repararla" : "Guardar"}
+                    </Boton>
+                  </span>
                 </div>
               </form>
             ) : <p className="text-sm">{o.diagnostico ?? "Sin diagnóstico."}{o.atendido_por && <span className="block text-xs text-tenue">Atendió: {o.atendido_por}</span>}</p>}
           </Seccion>
 
-          <Seccion titulo="Refacciones">
+          <Seccion titulo="Refacciones" explica={GLOSARIO.insumosServicio}>
             <Materiales mantenimientoId={o.id} abierto={abierta} />
           </Seccion>
 
           {p.costos && (
-            <Seccion titulo="Costo">
+            <Seccion titulo="Costo" explica={GLOSARIO.costosOrdenMto}>
               <Costos mantenimientoId={o.id} conceptos={["servicio_externo", "mano_obra", "otro"]} />
             </Seccion>
           )}
@@ -198,7 +205,7 @@ export function LateralMantenimiento({ id, alCerrar }: { id: string | null; alCe
 
           {abierta && p.gerencia && (
             <section className="space-y-2 rounded-lg border border-borde p-3 bg-fondo/50">
-              <h3 className="font-semibold">Cerrar la orden</h3>
+              <h3 className="font-semibold" data-explain={GLOSARIO.cerrarOrdenMto} data-explain-title="Cerrar la orden">Cerrar la orden</h3>
               <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); if (trabajo.trim().length >= 5) cerrar.mutate(); }}>
                 <AreaTexto rows={2} value={trabajo} onChange={(e) => setTrabajo(e.target.value)} placeholder="Qué se hizo: qué se cambió o reparó" />
                 <div className="flex flex-wrap gap-2 items-end">
@@ -210,14 +217,19 @@ export function LateralMantenimiento({ id, alCerrar }: { id: string | null; alCe
                   </Campo>
                   {maquina.data?.usa_horometro && (
                     <Campo etiqueta="Horómetro" className="w-36" ayuda={`Última: ${horas(maquina.data.horas_uso)}`}>
-                      <Entrada type="number" min={maquina.data.horas_uso} step="0.1" value={horometro} onChange={(e) => setHorometro(e.target.value)} />
+                      <span data-explain={GLOSARIO.horometroAlCerrar} data-explain-title="Horómetro" className="block">
+                        <Entrada type="number" min={maquina.data.horas_uso} step="0.1" value={horometro} onChange={(e) => setHorometro(e.target.value)} />
+                      </span>
                     </Campo>
                   )}
-                  <Boton type="submit" variante="exito" cargando={cerrar.isPending} disabled={trabajo.trim().length < 5 || o.puntos_revisados < o.puntos}
-                         title={o.puntos_revisados < o.puntos ? `Faltan ${o.puntos - o.puntos_revisados} puntos del checklist` : undefined}>
-                    <CheckCircle2 className="h-4 w-4" />Cerrar y poner en servicio
-                  </Boton>
-                  <Boton type="button" variante="fantasma" onClick={() => setCancelando((v) => !v)}><Ban className="h-4 w-4" />Cancelar orden</Boton>
+                  {/* Se deshabilita mientras falte el checklist: la explicación va en el envoltorio. */}
+                  <span className="inline-flex" data-explain={GLOSARIO.cerrarOrdenMto} data-explain-title="Cerrar y poner en servicio">
+                    <Boton type="submit" variante="exito" cargando={cerrar.isPending} disabled={trabajo.trim().length < 5 || o.puntos_revisados < o.puntos}
+                           title={o.puntos_revisados < o.puntos ? `Faltan ${o.puntos - o.puntos_revisados} puntos del checklist` : undefined}>
+                      <CheckCircle2 className="h-4 w-4" />Cerrar y poner en servicio
+                    </Boton>
+                  </span>
+                  <Boton type="button" variante="fantasma" onClick={() => setCancelando((v) => !v)} data-explain={GLOSARIO.botonCancelarOrdenMto}><Ban className="h-4 w-4" />Cancelar orden</Boton>
                 </div>
               </form>
               {cancelando && (

@@ -90,7 +90,8 @@ export function DialogoFleteSkydropx({ abierto, alCambiar, cotizacionId, contact
       {bultosBD.isLoading ? <Cargando filas={3} /> : tarifas ? (
         tarifas.length === 0 ? <p className="rounded-lg bg-aviso-suave px-3 py-3 text-sm">Ninguna paquetería cotizó esta ruta con estas medidas. Revisa el CP y la colonia o ponlo como flete a mano.</p> : (
           <div className="space-y-2">
-            <ul className="divide-y divide-borde rounded-xl border border-borde" role="radiogroup" aria-label="Tarifas">
+            <ul className="divide-y divide-borde rounded-xl border border-borde" role="radiogroup" aria-label="Tarifas"
+              data-explain={GLOSARIO.tarifasFlete} data-explain-title="Tarifas">
               {tarifas.map((t, i) => (
                 <li key={t.id}>
                   <button type="button" role="radio" aria-checked={elegida?.id === t.id} onClick={() => setElegida(t)}
@@ -121,7 +122,7 @@ export function DialogoFleteSkydropx({ abierto, alCambiar, cotizacionId, contact
           </div>
           {contacto?.domicilio && !contacto.domicilio_cp && <p className="text-xs text-tenue">Domicilio del contacto: {contacto.domicilio}</p>}
           <section className="space-y-2">
-            <p className="text-sm font-medium">Bultos <span className="font-normal text-tenue">· salen del empaque de cada artículo; completa los que falten</span></p>
+            <p className="text-sm font-medium" data-explain={GLOSARIO.bultosFlete} data-explain-title="Bultos">Bultos <span className="font-normal text-tenue">· salen del empaque de cada artículo; completa los que falten</span></p>
             {bultos.length === 0 ? <p className="text-sm text-tenue">Agrega partidas con artículos para calcular los bultos, o agrega uno a mano.</p> : (
               <div className="space-y-2">
                 <div className="grid grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))_1.5rem] gap-2 text-xs text-tenue">

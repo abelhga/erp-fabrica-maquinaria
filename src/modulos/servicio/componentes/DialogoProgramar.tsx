@@ -9,6 +9,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
 import { useJornadas } from "@/modulos/produccion/componentes/datos";
 import { CLAVE, horaMx, horas, instanteMx, isoLocal, periodo, sumarDias, usePersonal, type CuadrillaFila, type Servicio } from "../datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 // Si todavía no llega el horario del taller: el de siempre (lo edita la gerencia de producción).
 const JORNADA = { inicio: "08:00", fin: "17:30" };
@@ -95,19 +96,23 @@ export function DialogoProgramar({ s, abierto, alCambiar }: { s: Servicio; abier
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
           <Campo etiqueta="Día"><Entrada type="date" value={dia} onChange={(e) => setDia(e.target.value)} required /></Campo>
           <Campo etiqueta="Sale a las"><Entrada type="time" value={hora} onChange={(e) => setHora(e.target.value)} required /></Campo>
-          <Campo etiqueta="Duración"><Entrada type="number" min="0.5" step="0.5" value={n} onChange={(e) => setN(e.target.value)} /></Campo>
+          <Campo etiqueta="Duración">
+            <span data-explain={GLOSARIO.duracionServicio} data-explain-title="Duración" className="block">
+              <Entrada type="number" min="0.5" step="0.5" value={n} onChange={(e) => setN(e.target.value)} />
+            </span>
+          </Campo>
           <Campo etiqueta="En">
             <Seleccion value={unidad} onChange={(e) => setUnidad(e.target.value as "dias" | "horas")}>
               <option value="dias">días</option><option value="horas">horas</option>
             </Seleccion>
           </Campo>
         </div>
-        <p className="text-sm">
+        <p className="text-sm" data-explain={GLOSARIO.horasServicio} data-explain-title="Horas de taller">
           {valido ? <>Ocupa a la cuadrilla: <b>{periodo(inicio.toISOString(), fin!.toISOString())}</b> · <span className="cifra">{horas(hPersona)}</span> de taller por persona.</>
             : <span className="text-peligro">El fin tiene que quedar después del inicio.</span>}
         </p>
         <fieldset>
-          <legend className="text-sm font-medium mb-1.5">Cuadrilla <span className="text-tenue font-normal">({elegidos.length})</span></legend>
+          <legend className="text-sm font-medium mb-1.5" data-explain={GLOSARIO.cuadrilla} data-explain-title="Cuadrilla">Cuadrilla <span className="text-tenue font-normal">({elegidos.length})</span></legend>
           <div className="max-h-[42vh] overflow-y-auto rounded-lg border border-borde divide-y divide-borde/70">
             {grupos.map(([area, lista]) => (
               <div key={area} className="p-2">
@@ -122,12 +127,13 @@ export function DialogoProgramar({ s, abierto, alCambiar }: { s: Servicio; abier
                         <span className="min-w-0">
                           <span className="block truncate">{p.nombre}</span>
                           <span className="block text-[11px] text-tenue truncate">{p.puesto}</span>
-                          {c && <span className="flex items-center gap-1 text-[11px] text-peligro"><AlertTriangle className="h-3 w-3" />Va en {c.folio} ({c.cliente})</span>}
+                          {c && <span className="flex items-center gap-1 text-[11px] text-peligro" data-explain={GLOSARIO.choqueCuadrilla} data-explain-title="Ya va en otro servicio"><AlertTriangle className="h-3 w-3" />Va en {c.folio} ({c.cliente})</span>}
                         </span>
                         {marcado && (
                           <button type="button" onClick={(e) => { e.preventDefault(); setJefe(p.id); }} title="Jefe de cuadrilla"
                                   className={cn("ml-auto rounded p-0.5", (jefe || elegidos[0]) === p.id ? "text-marca-texto" : "text-tenue/50 hover:text-tenue")}
-                                  aria-label={`Hacer a ${p.nombre} jefe de cuadrilla`}>
+                                  aria-label={`Hacer a ${p.nombre} jefe de cuadrilla`}
+                                  data-explain={GLOSARIO.botonJefeCuadrilla} data-explain-title="Jefe de cuadrilla">
                             <Crown className="h-4 w-4" />
                           </button>
                         )}

@@ -9,6 +9,7 @@ import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
 import { SelectorProveedor } from "@/modulos/compras/componentes/comun";
 import { CLAVE_EMBARQUES, INCOTERMS, MODALIDADES, subirArchivo, type Embarque, type Modalidad } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 import { camposParaRegistrar, datosDesdeDocumento, DOC_DE, EL_DOC, LlenarConDocumento, type DatosEmbarque, type Leido } from "./LlenarConDocumento";
 
 type Datos = DatosEmbarque;
@@ -104,18 +105,18 @@ export function DialogoEmbarque({ abierto, alCambiar, embarque }: { abierto: boo
           <SelectorProveedor valor={proveedor} alCambiar={(p) => setProveedor({ id: p.id, nombre: p.nombre })} placeholder="Elegir proveedor (opcional)…" />
         </Campo>
         <Campo etiqueta="Modalidad">
-          <Seleccion value={d.modalidad} className={marca("modalidad")} onChange={(e) => { tocar("modalidad"); setD((x) => ({ ...x, modalidad: e.target.value as Modalidad })); }}>
+          <Seleccion value={d.modalidad} className={marca("modalidad")} data-explain={GLOSARIO.modalidad} data-explain-title="Modalidad" onChange={(e) => { tocar("modalidad"); setD((x) => ({ ...x, modalidad: e.target.value as Modalidad })); }}>
             {Object.entries(MODALIDADES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </Seleccion>
         </Campo>
         <Campo etiqueta="Incoterm" ayuda="CIF pide póliza de seguro.">
-          <Seleccion value={d.incoterm ?? ""} onChange={poner("incoterm")} className={marca("incoterm")}>
+          <Seleccion value={d.incoterm ?? ""} onChange={poner("incoterm")} className={marca("incoterm")} data-explain={GLOSARIO.incoterm} data-explain-title="Incoterm">
             <option value="">Sin definir</option>
             {INCOTERMS.map((i) => <option key={i} value={i}>{i}</option>)}
           </Seleccion>
         </Campo>
         <Campo etiqueta="Importador">
-          <Seleccion value={d.importador} onChange={(e) => setD((x) => ({ ...x, importador: e.target.value as Datos["importador"] }))}>
+          <Seleccion value={d.importador} data-explain={GLOSARIO.importadorEmbarque} data-explain-title="Importador" onChange={(e) => setD((x) => ({ ...x, importador: e.target.value as Datos["importador"] }))}>
             <option value="empresa">La empresa</option>
             <option value="persona_fisica">Persona física</option>
           </Seleccion>
@@ -123,22 +124,22 @@ export function DialogoEmbarque({ abierto, alCambiar, embarque }: { abierto: boo
         <Campo etiqueta="Puerto de origen"><Entrada value={d.puerto_origen ?? ""} onChange={poner("puerto_origen")} className={marca("puerto_origen")} placeholder="Ningbo, Qingdao, Shekou…" /></Campo>
         <Campo etiqueta="Puerto de destino"><Entrada value={d.puerto_destino ?? ""} onChange={poner("puerto_destino")} className={marca("puerto_destino")} placeholder="Manzanillo" /></Campo>
         <Campo etiqueta="Naviera"><Entrada value={d.naviera ?? ""} onChange={poner("naviera")} className={marca("naviera")} placeholder="TS Lines, CMA CGM, COSCO…" /></Campo>
-        <Campo etiqueta="Forwarder o consolidador"><Entrada value={d.forwarder ?? ""} onChange={poner("forwarder")} placeholder="Sea Bridge, Interteam, XPD…" /></Campo>
-        <Campo etiqueta="Agente aduanal"><Entrada value={d.agente_aduanal ?? ""} onChange={poner("agente_aduanal")} placeholder="Careaga, LME…" /></Campo>
+        <Campo etiqueta="Forwarder o consolidador"><Entrada value={d.forwarder ?? ""} onChange={poner("forwarder")} placeholder="Sea Bridge, Interteam, XPD…" data-explain={GLOSARIO.forwarderEmbarque} data-explain-title="Forwarder" /></Campo>
+        <Campo etiqueta="Agente aduanal"><Entrada value={d.agente_aduanal ?? ""} onChange={poner("agente_aduanal")} placeholder="Careaga, LME…" data-explain={GLOSARIO.agenteAduanalEmbarque} data-explain-title="Agente aduanal" /></Campo>
         <Campo etiqueta="Referencia del agente"><Entrada value={d.referencia_agente ?? ""} onChange={poner("referencia_agente")} placeholder="LCM2311-2026" /></Campo>
-        <Campo etiqueta="BL (master)"><Entrada value={d.bl ?? ""} onChange={poner("bl")} className={marca("bl")} /></Campo>
+        <Campo etiqueta="BL (master)"><Entrada value={d.bl ?? ""} onChange={poner("bl")} className={marca("bl")} data-explain={GLOSARIO.bl} data-explain-title="BL" /></Campo>
         <Campo etiqueta="Contenedores"><Entrada value={d.contenedores ?? ""} onChange={poner("contenedores")} className={marca("contenedores")} placeholder="TCLU1234567 40HC" /></Campo>
         <Campo etiqueta="Buque y viaje">
           <div className="flex gap-2"><Entrada value={d.buque ?? ""} onChange={poner("buque")} placeholder="Buque" className={marca("buque")} /><Entrada className={cn("w-28", marca("viaje"))} value={d.viaje ?? ""} onChange={poner("viaje")} placeholder="Viaje" /></div>
         </Campo>
-        <Campo etiqueta="ETD (salida estimada)"><Entrada type="date" value={d.etd ?? ""} onChange={poner("etd")} className={marca("etd")} /></Campo>
-        <Campo etiqueta="ETA (llegada estimada a puerto)"><Entrada type="date" value={d.eta ?? ""} onChange={poner("eta")} className={marca("eta")} /></Campo>
+        <Campo etiqueta="ETD (salida estimada)"><Entrada type="date" value={d.etd ?? ""} onChange={poner("etd")} className={marca("etd")} data-explain={GLOSARIO.etdEmbarque} data-explain-title="ETD" /></Campo>
+        <Campo etiqueta="ETA (llegada estimada a puerto)"><Entrada type="date" value={d.eta ?? ""} onChange={poner("eta")} className={marca("eta")} data-explain={GLOSARIO.eta} data-explain-title="ETA" /></Campo>
         <Campo etiqueta="Días libres de almacenaje" ayuda="Aviso al día 4 de 7.">
-          <Entrada type="number" min={0} value={d.dias_libres_almacenaje ?? 7} onChange={poner("dias_libres_almacenaje")} />
+          <Entrada type="number" min={0} value={d.dias_libres_almacenaje ?? 7} onChange={poner("dias_libres_almacenaje")} data-explain={GLOSARIO.diasLibres} data-explain-title="Días libres de almacenaje" />
         </Campo>
         {conContenedor && (
           <Campo etiqueta="Días libres de demoras (contenedor)" ayuda="21 si no se dice otra cosa.">
-            <Entrada type="number" min={0} value={d.dias_libres_demoras ?? ""} onChange={poner("dias_libres_demoras")} placeholder="21" />
+            <Entrada type="number" min={0} value={d.dias_libres_demoras ?? ""} onChange={poner("dias_libres_demoras")} placeholder="21" data-explain={GLOSARIO.demorasContenedor} data-explain-title="Días libres de demoras" />
           </Campo>
         )}
         <Campo etiqueta="Carpeta del expediente" className="sm:col-span-2"><Entrada value={d.carpeta_url ?? ""} onChange={poner("carpeta_url")} placeholder="Enlace a la carpeta en Drive" /></Campo>

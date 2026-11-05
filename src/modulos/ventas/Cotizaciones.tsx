@@ -85,7 +85,7 @@ export default function Cotizaciones() {
             <span className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-tenue">
               {fecha(c.fecha)}
               <Insignia tono={ESTADO_COT[c.estado].tono}>{ESTADO_COT[c.estado].texto}</Insignia>
-              {c.vencida && <Insignia tono="peligro">Vencida</Insignia>}
+              {c.vencida && <span data-explain={GLOSARIO.vigenciaCotizacion} data-explain-title="Vencida"><Insignia tono="peligro">Vencida</Insignia></span>}
             </span>
           )}
         </span>
@@ -108,8 +108,8 @@ export default function Cotizaciones() {
       celda: (c) => (
         <div className="flex flex-wrap gap-1">
           <Insignia tono={ESTADO_COT[c.estado].tono} punto>{ESTADO_COT[c.estado].texto}</Insignia>
-          {c.vencida && <Insignia tono="peligro">Vencida</Insignia>}
-          {c.estado === "por_autorizar" && c.autorizacion_pedida_en && <Insignia tono="aviso">pedida</Insignia>}
+          {c.vencida && <span data-explain={GLOSARIO.vigenciaCotizacion} data-explain-title="Vencida"><Insignia tono="peligro">Vencida</Insignia></span>}
+          {c.estado === "por_autorizar" && c.autorizacion_pedida_en && <span data-explain={GLOSARIO.autorizacionPedida} data-explain-title="Autorización pedida"><Insignia tono="aviso">pedida</Insignia></span>}
         </div>
       ),
     },
@@ -123,7 +123,7 @@ export default function Cotizaciones() {
       celda: (c) => { const s = segPorCot.get(c.id); return s ? <ChipSeguimiento vence={s.vence} alClic={() => setAnotar(s.id)} /> : <span className="text-tenue">—</span>; },
     },
     {
-      clave: "total", titulo: "Total", oculta: angosta, alinear: "der", sinBusqueda: true, valor: (c) => Number(c.total),
+      clave: "total", titulo: "Total", oculta: angosta, alinear: "der", sinBusqueda: true, explica: GLOSARIO.totalCotizacion, valor: (c) => Number(c.total),
       celda: (c) => <span className="font-medium whitespace-nowrap">{dineroEn(Number(c.total), c.moneda)}</span>,
     },
   ];
@@ -133,15 +133,15 @@ export default function Cotizaciones() {
   return (
     <Pagina titulo="Cotizaciones" descripcion="Cada cotización con su folio, versión y estado. Ya no se pisa la anterior."
       // Producción y finanzas ven ventas (nivel 1) pero no cotizan: el botón les daba un 403.
-      acciones={puede("ventas", 2) && <Boton onClick={() => ir("/ventas/cotizaciones/nueva")}><Plus className="h-4 w-4" />Nueva cotización</Boton>}>
+      acciones={puede("ventas", 2) && <Boton onClick={() => ir("/ventas/cotizaciones/nueva")} data-explain={GLOSARIO.botonNuevaCotizacion}><Plus className="h-4 w-4" />Nueva cotización</Boton>}>
       <AvisoSeguimientos enCola={pestana === "seguimiento"} alAbrir={() => setParams({ estado: "seguimiento" }, { replace: true })} />
       <Pestanas value={pestana} onValueChange={(v) => setParams(v === "abiertas" ? {} : { estado: v }, { replace: true })}>
         <ListaPestanas opciones={[
           { valor: "abiertas", texto: esGerente ? "Abiertas" : "Mías abiertas", explica: GLOSARIO.cotizacionAbierta, cuenta: cuenta((c) => ABIERTAS.includes(c.estado) && (esGerente || c.vendedor_id === perfil?.id)) },
           { valor: "seguimiento", texto: "Seguimiento", explica: GLOSARIO.seguimientoCotizacion, cuenta: tocan || undefined },
           ...(esGerente ? [{ valor: "por_autorizar", texto: "Por autorizar", explica: GLOSARIO.autorizacionPrecios, cuenta: cuenta((c) => c.estado === "por_autorizar") }] : []),
-          { valor: "enviadas", texto: "Enviadas", cuenta: cuenta((c) => c.estado === "enviada") },
-          { valor: "aceptadas", texto: "Aceptadas", cuenta: cuenta((c) => c.estado === "aceptada") },
+          { valor: "enviadas", texto: "Enviadas", explica: GLOSARIO.cotizacionesEnviadas, cuenta: cuenta((c) => c.estado === "enviada") },
+          { valor: "aceptadas", texto: "Aceptadas", explica: GLOSARIO.cotizacionesAceptadas, cuenta: cuenta((c) => c.estado === "aceptada") },
           { valor: "todas", texto: "Todas", cuenta: cuenta(() => true) },
         ]} />
       </Pestanas>
@@ -166,7 +166,7 @@ export default function Cotizaciones() {
                   {vendedores.map(([id, n]) => <option key={id} value={id}>{n}</option>)}
                 </select>
               )}
-              <Filtro opciones={[{ valor: "no", texto: "Todas" }, { valor: "si", texto: "Solo vencidas", cuenta: visibles.filter((c) => c.vencida).length || undefined }]}
+              <Filtro opciones={[{ valor: "no", texto: "Todas" }, { valor: "si", texto: "Solo vencidas", explica: GLOSARIO.vigenciaCotizacion, cuenta: visibles.filter((c) => c.vencida).length || undefined }]}
                 valor={soloVencidas ? "si" : "no"} alCambiar={(v) => setSoloVencidas(v === "si")} />
             </div>
           }
@@ -176,7 +176,7 @@ export default function Cotizaciones() {
             accion: puede("ventas", 2) ? <Boton onClick={() => ir("/ventas/cotizaciones/nueva")}><Plus className="h-4 w-4" />Nueva cotización</Boton> : undefined,
           }}
           pie={visibles.length > 0 && (
-            <p className="text-sm text-tenue text-right">
+            <p className="text-sm text-tenue text-right" data-explain={GLOSARIO.totalCotizacion} data-explain-title="Suma sin IVA">
               {visibles.length} cotizaciones · <b className="text-texto cifra">{dinero(sumaNeto)}</b> sin IVA (en pesos)
             </p>
           )}
@@ -204,7 +204,7 @@ function ColaAutorizacion({ filas, cargando, alAutorizar, autorizando }: {
         <div key={c.id} className={cn("tarjeta p-4 flex flex-col gap-3", c.autorizacion_pedida_en ? "border-aviso/40" : "opacity-80")}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs text-tenue">{c.vendedor} · {c.autorizacion_pedida_en ? `pidió autorización ${haceCuanto(c.autorizacion_pedida_en)}` : "todavía capturando"}</p>
+              <p className="text-xs text-tenue" data-explain={GLOSARIO.autorizacionPedida} data-explain-title="Autorización pedida">{c.vendedor} · {c.autorizacion_pedida_en ? `pidió autorización ${haceCuanto(c.autorizacion_pedida_en)}` : "todavía capturando"}</p>
               <Link to={`/ventas/cotizaciones/${c.id}`} className="font-semibold hover:text-marca-texto">{folioCot(c.folio)} · {c.cliente ?? c.atencion ?? "Sin cliente"}</Link>
               <p className="text-sm text-tenue truncate">{c.primera_partida}{c.partidas > 1 ? ` y ${c.partidas - 1} más` : ""}</p>
             </div>
@@ -221,7 +221,7 @@ function ColaAutorizacion({ filas, cargando, alAutorizar, autorizando }: {
           {c.nota_autorizacion && <p className="rounded-lg bg-aviso-suave px-3 py-2 text-sm">“{c.nota_autorizacion}”</p>}
           <div className="flex gap-2 justify-end mt-auto">
             <Boton asChild variante="secundario" tamano="sm"><Link to={`/ventas/cotizaciones/${c.id}`}>Revisar partidas</Link></Boton>
-            <Boton tamano="sm" onClick={() => alAutorizar(c.id)} cargando={autorizando === c.id}><ShieldCheck className="h-4 w-4" />Autorizar</Boton>
+            <Boton tamano="sm" onClick={() => alAutorizar(c.id)} cargando={autorizando === c.id} data-explain={GLOSARIO.botonAutorizarPrecios}><ShieldCheck className="h-4 w-4" />Autorizar</Boton>
           </div>
         </div>
       ))}

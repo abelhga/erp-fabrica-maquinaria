@@ -13,6 +13,7 @@ import { q, mensajeError } from "@/lib/consultas";
 import { leerDocumento, type TipoImportacion as TipoDocumento } from "@/lib/asistente";
 import { cn } from "@/lib/utilidades";
 import { CLAVE_EMBARQUES, CONCEPTOS_GASTO, subirArchivo, type Embarque } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export const TIPOS_CLAUDE: Record<TipoDocumento, { nombre: string; doc: string; efecto: string }> = {
   proforma: { nombre: "Proforma invoice (PI)", doc: "pi", efecto: "Se guarda la PI; si el embarque no tenía incoterm ni puerto de origen, se toman de aquí y queda la fecha de la PI." },
@@ -124,7 +125,8 @@ export function LeerDocumento({ abierto, alCambiar, embarque, tipoInicial }: {
       {!resultado ? (
         <div className="space-y-4">
           <Campo etiqueta="¿Qué documento es?">
-            <Seleccion value={tipo} onChange={(e) => setTipo(e.target.value as TipoDocumento)} disabled={leyendo}>
+            <Seleccion value={tipo} onChange={(e) => setTipo(e.target.value as TipoDocumento)} disabled={leyendo}
+              data-explain={GLOSARIO.tipoDocumentoLeerIA} data-explain-title="¿Qué documento es?">
               {Object.entries(TIPOS_CLAUDE).map(([k, v]) => <option key={k} value={k}>{v.nombre}</option>)}
             </Seleccion>
           </Campo>
@@ -201,7 +203,7 @@ function TablaCampos({ nombre, filas, conIncluir, alCambiar }: { nombre: string;
       <p className="text-sm font-medium">{ETIQUETAS[nombre] ?? nombre}</p>
       <div className="overflow-x-auto rounded-lg border border-borde">
         <table className="tabla">
-          <thead><tr>{conIncluir && <th className="w-10">Entra</th>}{columnas.map((c) => <th key={c} className={NUMEROS.has(c) ? "text-right" : ""}>{ETIQUETAS[c] ?? c}</th>)}</tr></thead>
+          <thead><tr>{conIncluir && <th className="w-10" data-explain={GLOSARIO.conceptoEntraComoGasto} data-explain-title="Entra">Entra</th>}{columnas.map((c) => <th key={c} className={NUMEROS.has(c) ? "text-right" : ""}>{ETIQUETAS[c] ?? c}</th>)}</tr></thead>
           <tbody>
             {filas.map((f, i) => {
               const excluido = conIncluir && (f.concepto === "impuestos" || f.concepto === "anticipo");

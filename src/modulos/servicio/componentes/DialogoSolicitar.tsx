@@ -10,6 +10,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { CLAVE, ORDEN_TIPOS, TIPOS, type TipoServicio } from "../datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface EquipoCliente {
   orden_id: string; folio: string; numero_serie: string | null; equipo: string; pedido_id: string; pedido_folio: string;
@@ -70,7 +71,7 @@ export function DialogoSolicitar({ abierto, alCambiar }: { abierto: boolean; alC
       </>}>
       <form id="form-solicitar" className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (listo) pedir.mutate(); }}>
         <fieldset>
-          <legend className="text-sm font-medium mb-1.5">¿Qué necesita el cliente?</legend>
+          <legend className="text-sm font-medium mb-1.5" data-explain={GLOSARIO.tipoServicio} data-explain-title="Tipo de servicio">¿Qué necesita el cliente?</legend>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {ORDEN_TIPOS.map((t) => (
               <button key={t} type="button" onClick={() => setTipo(t)} aria-pressed={tipo === t}
@@ -88,12 +89,14 @@ export function DialogoSolicitar({ abierto, alCambiar }: { abierto: boolean; alC
           <Campo etiqueta={tipo === "garantia" ? "Equipo (número de serie)" : "Equipo"}
                  error={cliente && tipo === "garantia" && !equipos.isLoading && entregados.length === 0 ? "Ese cliente no tiene equipos con número de serie en el sistema" : undefined}
                  ayuda={eq?.garantia_vence ? `Entregado el ${fecha(eq.entregado)} · garantía hasta el ${fecha(eq.garantia_vence)}` : undefined}>
-            <Seleccion value={equipo} onChange={(e) => setEquipo(e.target.value)} disabled={!cliente}>
-              <option value="">{cliente ? (tipo === "garantia" ? "Elige el equipo…" : "Otro equipo / sin número Hegamex") : "Primero elige el cliente"}</option>
-              {(tipo === "garantia" ? entregados : equipos.data ?? []).map((e) => (
-                <option key={e.orden_id} value={e.orden_id}>{e.numero_serie ?? e.folio} · {e.equipo.slice(0, 50)} · {e.pedido_folio}</option>
-              ))}
-            </Seleccion>
+            <span data-explain={GLOSARIO.equipoServicio} data-explain-title="Equipo" className="block">
+              <Seleccion value={equipo} onChange={(e) => setEquipo(e.target.value)} disabled={!cliente}>
+                <option value="">{cliente ? (tipo === "garantia" ? "Elige el equipo…" : "Otro equipo / sin número Hegamex") : "Primero elige el cliente"}</option>
+                {(tipo === "garantia" ? entregados : equipos.data ?? []).map((e) => (
+                  <option key={e.orden_id} value={e.orden_id}>{e.numero_serie ?? e.folio} · {e.equipo.slice(0, 50)} · {e.pedido_folio}</option>
+                ))}
+              </Seleccion>
+            </span>
           </Campo>
         </div>
         {!eq && tipo !== "garantia" && (
@@ -111,13 +114,21 @@ export function DialogoSolicitar({ abierto, alCambiar }: { abierto: boolean; alC
           <Campo etiqueta="Dónde"><Entrada value={lugar} onChange={(e) => setLugar(e.target.value)} placeholder="Ciudad o planta" /></Campo>
           <Campo etiqueta="Contacto en sitio"><Entrada value={contacto} onChange={(e) => setContacto(e.target.value)} /></Campo>
           <Campo etiqueta="Teléfono"><Entrada value={tel} onChange={(e) => setTel(e.target.value)} inputMode="tel" /></Campo>
-          <Campo etiqueta="Para cuándo lo quiere"><Entrada type="date" value={deseada} onChange={(e) => setDeseada(e.target.value)} /></Campo>
+          <Campo etiqueta="Para cuándo lo quiere">
+            <span data-explain={GLOSARIO.prioridadServicio} data-explain-title="Para cuándo lo quiere" className="block">
+              <Entrada type="date" value={deseada} onChange={(e) => setDeseada(e.target.value)} />
+            </span>
+          </Campo>
           <Campo etiqueta="Prioridad">
-            <Seleccion value={prioridad} onChange={(e) => setPrioridad(Number(e.target.value))}>
+            <Seleccion value={prioridad} onChange={(e) => setPrioridad(Number(e.target.value))}
+                       data-explain={GLOSARIO.prioridadServicio} data-explain-title="Prioridad">
               <option value={1}>Urgente (equipo parado)</option><option value={2}>Normal</option><option value={3}>Puede esperar</option>
             </Seleccion>
           </Campo>
-          <Campo etiqueta="Reporte u orden del cliente"><Entrada value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="Opcional" /></Campo>
+          <Campo etiqueta="Reporte u orden del cliente">
+            <Entrada value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="Opcional"
+                     data-explain={GLOSARIO.referenciaServicio} data-explain-title="Reporte u orden del cliente" />
+          </Campo>
         </div>
       </form>
     </Dialogo>

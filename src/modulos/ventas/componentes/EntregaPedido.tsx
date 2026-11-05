@@ -10,6 +10,13 @@ import { q, useAccion, useRpc } from "@/lib/consultas";
 import { fechaYHora, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
+import type { EstadoPedido } from "../comun";
+
+/** Qué significa cada estado del pedido y qué sigue, para el globo de su insignia (modo tutorial). */
+export const EXPLICA_ESTADO_PEDIDO: Record<EstadoPedido, string> = {
+  confirmado: GLOSARIO.pedidoEstadoConfirmado, en_produccion: GLOSARIO.pedidoEstadoEnProduccion, listo: GLOSARIO.pedidoEstadoListo,
+  entregado: GLOSARIO.pedidoEstadoEntregado, cancelado: GLOSARIO.pedidoEstadoCancelado,
+};
 
 /**
  * La entrega de un pedido, igual en Ventas y en los pedidos de la planta (donde entrega
@@ -112,7 +119,7 @@ export function BotonEntregar({ pedido, invalidar = [], antes }: {
   const valido = recibio.trim().length >= 3 && !demas && (pendientes.length === 0 || lineas.length > 0);
   return (
     <>
-      <Boton variante="exito" onClick={() => { if (!antes || antes()) setAbierto(true); }}><Truck className="h-4 w-4" />{yaSalio ? "Entregar lo que falta" : "Entregar"}</Boton>
+      <Boton variante="exito" onClick={() => { if (!antes || antes()) setAbierto(true); }} data-explain={GLOSARIO.botonEntregarPedido}><Truck className="h-4 w-4" />{yaSalio ? "Entregar lo que falta" : "Entregar"}</Boton>
       <Dialogo abierto={abierto} alCambiar={setAbierto} titulo="Registrar la entrega" ancho="max-w-2xl"
         descripcion="Escribe lo que sale de cada partida (si es una parte, lo demás queda por entregar). Imprime la hoja de salida, que el cliente la firme y anota quién recibió. Lo que sale se descuenta del inventario."
         pie={<>

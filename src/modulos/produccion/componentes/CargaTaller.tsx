@@ -87,7 +87,7 @@ function FilaCarga({ f, maximo, marcas, esCuello }: {
       </div>
       <div className="text-right leading-tight">
         <p className="text-sm font-semibold cifra">{sem(f.semTaller)} sem</p>
-        {esCuello ? <Insignia tono="aviso" className="mt-0.5">Cuello de botella</Insignia>
+        {esCuello ? <span className="inline-flex mt-0.5" data-explain={GLOSARIO.cuelloBotellaTaller} data-explain-title="Cuello de botella"><Insignia tono="aviso">Cuello de botella</Insignia></span>
           : f.semPlan > 0 && <p className="text-[11px] text-tenue cifra">+{sem(f.semPlan)} planeadas</p>}
       </div>
     </>

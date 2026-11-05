@@ -73,18 +73,18 @@ export default function Embarques() {
     <Pagina
       titulo="Importaciones"
       descripcion="Cada embarque con su fecha real por etapa, qué falta y quién lo debe."
-      acciones={puede("importaciones", 2) && <Boton onClick={() => setNuevo(true)}><Plus className="h-4 w-4" /> Nuevo embarque</Boton>}
+      acciones={puede("importaciones", 2) && <Boton onClick={() => setNuevo(true)} data-explain={GLOSARIO.botonNuevoEmbarque}><Plus className="h-4 w-4" /> Nuevo embarque</Boton>}
     >
       <Pestanas value={pestana} onValueChange={(v) => { setPestana(v); ir(v === "dinero" ? "/importaciones/dinero" : "/importaciones", { replace: true }); }}>
         <ListaPestanas opciones={[
           { valor: "embarques", texto: "Embarques", cuenta: activos.length },
-          ...(veDinero ? [{ valor: "dinero", texto: "Dinero" }] : []),
+          ...(veDinero ? [{ valor: "dinero", texto: "Dinero", explica: GLOSARIO.pestanaDineroImportaciones }] : []),
           { valor: "tiempos", texto: "Tiempos por proveedor", explica: GLOSARIO.tiempoProveedor },
         ]} />
 
         <ContenidoPestana value="embarques" className="space-y-5 pt-5">
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
-            <Kpi titulo="En curso" valor={numero(activos.length)} icono={Ship} explica={GLOSARIO.faseEmbarque}
+            <Kpi titulo="En curso" valor={numero(activos.length)} icono={Ship} explica={GLOSARIO.embarquesEnCurso}
               detalle={`${activos.filter((e) => e.fase === "transito").length} en el mar · ${activos.filter((e) => e.fase === "puerto").length} en puerto`} />
             <Kpi titulo="Riesgos hoy" valor={numero(riesgos)} icono={Siren} tono={riesgos ? "peligro" : "ok"} explica={GLOSARIO.alertaImportacion}
               detalle={`${(alertas.data ?? []).length} alertas en total`} />
@@ -96,7 +96,7 @@ export default function Embarques() {
                   detalle="Saldos a favor y garantías de contenedor" alClic={() => setPestana("dinero")} explica={GLOSARIO.porRecuperar} />
               </>
             ) : (
-              <Kpi titulo="Llegan a planta en 14 días" valor={numero(llegan.length)} icono={CalendarClock} tono="info" explica={GLOSARIO.llegadaPlanta}
+              <Kpi titulo="Llegan a planta en 14 días" valor={numero(llegan.length)} icono={CalendarClock} tono="info" explica={GLOSARIO.lleganPlantaCatorceDias}
                 detalle={llegan[0] ? `El primero: ${llegan[0].folio} hacia el ${fecha(llegan[0].llegada_planta_estimada)}` : "Nada en camino tan pronto"} />
             )}
           </div>
@@ -134,7 +134,7 @@ function Alertas({ alertas, cargando }: { alertas: Alerta[] | undefined; cargand
     <Tarjeta>
       <EncabezadoTarjeta titulo="Lo que no puede esperar" explica={GLOSARIO.alertaImportacion} descripcion={veDinero ? "Documentos antes del arribo, días libres, pagos, cuentas de gastos y dinero por recuperar" : "Documentos antes del arribo, días libres y cambios de ETA"}
         acciones={(alertas?.length ?? 0) > mostrar.length || todas
-          ? <Boton variante="fantasma" tamano="sm" onClick={() => setTodas(!todas)}>{todas ? "Solo lo urgente" : `Ver las ${alertas!.length}`}</Boton> : undefined} />
+          ? <Boton variante="fantasma" tamano="sm" onClick={() => setTodas(!todas)} data-explain={GLOSARIO.botonVerTodasAlertasImportacion}>{todas ? "Solo lo urgente" : `Ver las ${alertas!.length}`}</Boton> : undefined} />
       {mostrar.length === 0 ? (
         <Vacio icono={AlarmClock} titulo="Nada urgente hoy" texto="Cuando falte un documento a una semana del arribo, se acaben los días libres o un pago no tenga comprobante, aparece aquí." className="py-8" />
       ) : (
@@ -149,7 +149,7 @@ function Alertas({ alertas, cargando }: { alertas: Alerta[] | undefined; cargand
                     <p className="text-sm font-medium">{a.titulo}</p>
                     <p className="text-xs text-tenue mt-0.5">{a.detalle}</p>
                   </div>
-                  <div className="hidden sm:flex items-start"><InsigniaDebe debe={a.debe} /></div>
+                  <div className="hidden sm:flex items-start" data-explain={a.debe ? GLOSARIO.quienDebe : undefined} data-explain-title={a.debe ? "Quién lo debe" : undefined}><InsigniaDebe debe={a.debe} /></div>
                 </Link>
               </li>
             );
@@ -190,7 +190,7 @@ function Tubo({ embarques, alertas }: { embarques: Embarque[]; alertas: Alerta[]
       </div>
       {cerrados.length > 0 && (
         <div>
-          <Boton variante="fantasma" tamano="sm" onClick={() => setVerCerrados(!verCerrados)}>
+          <Boton variante="fantasma" tamano="sm" onClick={() => setVerCerrados(!verCerrados)} data-explain={GLOSARIO.botonVerEmbarquesCerrados}>
             {verCerrados ? "Ocultar" : "Ver"} cerrados y cancelados ({cerrados.length})
           </Boton>
           {verCerrados && (
@@ -218,7 +218,7 @@ function TarjetaEmbarque({ e, enRiesgo }: { e: Embarque; enRiesgo: boolean }) {
       className={cn("block tarjeta p-3 space-y-2 hover:border-marca/40 hover:shadow-md transition", enRiesgo && "border-peligro/50")}>
       <div className="flex items-center justify-between gap-2">
         <span className="font-semibold text-sm cifra">{e.folio}</span>
-        <span className="text-[11px] text-tenue">{MODALIDAD_CORTA[e.modalidad]}{e.incoterm ? ` · ${e.incoterm}` : ""}</span>
+        <span className="text-[11px] text-tenue" data-explain={GLOSARIO.modalidad} data-explain-title="Modalidad">{MODALIDAD_CORTA[e.modalidad]}{e.incoterm ? ` · ${e.incoterm}` : ""}</span>
       </div>
       <div>
         <p className="text-sm leading-snug line-clamp-2">{e.descripcion}</p>
@@ -226,7 +226,9 @@ function TarjetaEmbarque({ e, enRiesgo }: { e: Embarque; enRiesgo: boolean }) {
       </div>
       {e.fase === "puerto" && <DiasLibres usados={e.dias_en_puerto} libres={e.dias_libres_almacenaje} etiqueta="Días en puerto" explica={GLOSARIO.diasLibres} />}
       {conContenedor && <DiasLibres usados={e.dias_contenedor} libres={e.dias_libres_demoras} etiqueta="Contenedor" explica={GLOSARIO.demorasContenedor} />}
-      <p className="text-xs text-tenue flex items-center gap-1.5">
+      <p className="text-xs text-tenue flex items-center gap-1.5"
+        data-explain={e.eta && !e.arribo && !e.en_planta && e.fase !== "planta" ? GLOSARIO.eta : GLOSARIO.llegadaPlanta}
+        data-explain-title={e.eta && !e.arribo && !e.en_planta && e.fase !== "planta" ? "ETA" : "Llegada"}>
         <CalendarClock className="h-3.5 w-3.5" />
         {e.en_planta ? `En planta desde el ${fecha(e.en_planta)}`
           : e.fase === "planta" ? "Ya está en planta; falta anotar el día que llegó"
@@ -241,7 +243,8 @@ function TarjetaEmbarque({ e, enRiesgo }: { e: Embarque; enRiesgo: boolean }) {
         </div>
       )}
       {e.docs_pendientes > 0 && (
-        <p className={cn("text-xs flex items-center gap-1.5", e.docs_pendientes_arribo > 0 && (e.fase === "transito" || e.fase === "puerto") ? "text-aviso" : "text-tenue")}>
+        <p className={cn("text-xs flex items-center gap-1.5", e.docs_pendientes_arribo > 0 && (e.fase === "transito" || e.fase === "puerto") ? "text-aviso" : "text-tenue")}
+          data-explain={GLOSARIO.documentosPendientesEmbarque} data-explain-title="Documentos pendientes">
           <FileWarning className="h-3.5 w-3.5" /> {e.docs_pendientes} {e.docs_pendientes === 1 ? "documento pendiente" : "documentos pendientes"}
         </p>
       )}
@@ -301,14 +304,14 @@ function Esperando({ embarques }: { embarques: Embarque[] }) {
                 {items.sort((a, b) => (a.documentos_importacion?.orden ?? 0) - (b.documentos_importacion?.orden ?? 0)).slice(0, 8).map((d) => (
                   <li key={d.id} className="px-3 py-2 flex items-center gap-2 text-sm">
                     <div className="min-w-0 flex-1">
-                      <p className="truncate">{d.documentos_importacion?.nombre ?? d.tipo}{d.estado === "observado" && <span className="text-aviso"> · con observaciones</span>}</p>
+                      <p className="truncate">{d.documentos_importacion?.nombre ?? d.tipo}{d.estado === "observado" && <span className="text-aviso" data-explain={GLOSARIO.estadoDocumentoImportacion} data-explain-title="Con observaciones"> · con observaciones</span>}</p>
                       <p className="text-xs text-tenue truncate">
                         <Link to={`/importaciones/${d.embarque_id}`} className="hover:underline">{d.emb.folio}</Link>
                         {" · "}{d.ultimo_seguimiento ? `pedido ${hace(d.ultimo_seguimiento)}` : "sin pedir todavía"}
                       </p>
                     </div>
                     {puede("importaciones", 2) && d.ultimo_seguimiento !== hoyISO() && (
-                      <Boton variante="secundario" tamano="sm" className="shrink-0" onClick={() => pedi.mutate({ id: d.id, antes: d.ultimo_seguimiento })} title="Anotar que hoy se pidió">
+                      <Boton variante="secundario" tamano="sm" className="shrink-0" onClick={() => pedi.mutate({ id: d.id, antes: d.ultimo_seguimiento })} title="Anotar que hoy se pidió" data-explain={GLOSARIO.botonYaLoPediDocumento}>
                         <Clock className="h-3.5 w-3.5" /> Ya lo pedí
                       </Boton>
                     )}
@@ -350,12 +353,12 @@ function VistaDinero({ embarques, dinero: filas }: { embarques: Embarque[]; dine
     { clave: "embarque", titulo: "Embarque", celda: (f) => <Link className="font-medium hover:underline whitespace-nowrap" to={`/importaciones/${f.embarque_id}`}>{f.embarque}</Link> },
     { clave: "proveedor", titulo: "Proveedor", celda: (f) => <span className="block max-w-[220px] truncate" title={f.proveedor}>{f.proveedor}</span> },
     { clave: "folio", titulo: "Orden", celda: (f) => <Link className="hover:underline whitespace-nowrap" to={`/compras/ordenes/${f.orden_compra_id}`}>{f.folio}</Link> },
-    { clave: "fase", titulo: "Va en", valor: (f) => FASES[f.fase].texto, celda: (f) => <InsigniaFase fase={f.fase} /> },
+    { clave: "fase", titulo: "Va en", explica: GLOSARIO.faseEmbarque, valor: (f) => FASES[f.fase].texto, celda: (f) => <InsigniaFase fase={f.fase} /> },
     { clave: "total", titulo: "Total", alinear: "der", valor: (f) => Number(f.total), celda: (f) => dinero(f.total, f.moneda === "USD" ? "USD" : "MXN"), sinBusqueda: true },
     { clave: "pagado", titulo: "Pagado", alinear: "der", valor: (f) => Number(f.pagado), celda: (f) => dinero(f.pagado, f.moneda === "USD" ? "USD" : "MXN"), sinBusqueda: true },
     { clave: "saldo", titulo: "Falta", alinear: "der", valor: (f) => Number(f.saldo), celda: (f) => <b>{dinero(f.saldo, f.moneda === "USD" ? "USD" : "MXN")}</b>, sinBusqueda: true },
-    { clave: "saldo_mxn", titulo: "≈ en pesos hoy", alinear: "der", valor: (f) => Number(f.saldo_mxn), celda: (f) => dinero(f.saldo_mxn), sinBusqueda: true },
-    { clave: "proximo_pago", titulo: "Próximo pago", valor: (f) => f.proximo_pago,
+    { clave: "saldo_mxn", titulo: "≈ en pesos hoy", alinear: "der", explica: GLOSARIO.aproximadoPesosHoyImportacion, valor: (f) => Number(f.saldo_mxn), celda: (f) => dinero(f.saldo_mxn), sinBusqueda: true },
+    { clave: "proximo_pago", titulo: "Próximo pago", explica: GLOSARIO.proximoPagoImportacion, valor: (f) => f.proximo_pago,
       celda: (f) => f.proximo_pago ? <span className={cn(f.proximo_pago < hoy && "text-peligro font-medium")}>{fecha(f.proximo_pago)} · {dinero(f.proximo_monto, f.moneda === "USD" ? "USD" : "MXN")}</span>
         : <span className="text-tenue text-xs">{f.fase === "produccion" || f.fase === "cotizando" ? "cuando avise que está lista" : "sin programar"}</span> },
   ];
@@ -364,7 +367,7 @@ function VistaDinero({ embarques, dinero: filas }: { embarques: Embarque[]; dine
     { clave: "tipo", titulo: "Qué", valor: (f) => f.tipo === "saldo_agente" ? "Saldo a favor" : f.tipo === "garantia_contenedor" ? "Garantía de contenedor" : f.descripcion ?? "Otro" },
     { clave: "deudor", titulo: "Lo debe", valor: (f) => f.deudor ?? "—" },
     { clave: "monto", titulo: "Monto", alinear: "der", valor: (f) => Number(f.monto) * Number(f.tipo_cambio), celda: (f) => dinero(f.monto, f.moneda === "USD" ? "USD" : "MXN"), sinBusqueda: true },
-    { clave: "fecha_esperada", titulo: "Se esperaba", valor: (f) => f.fecha_esperada,
+    { clave: "fecha_esperada", titulo: "Se esperaba", explica: GLOSARIO.seEsperaRecuperarImportacion, valor: (f) => f.fecha_esperada,
       celda: (f) => f.fecha_esperada && f.fecha_esperada < hoy
         ? <Insignia tono="peligro" punto>{fecha(f.fecha_esperada)} · {Math.round((Date.now() - new Date(f.fecha_esperada + "T12:00:00").getTime()) / 86_400_000)} días tarde</Insignia>
         : fecha(f.fecha_esperada) },
@@ -372,10 +375,10 @@ function VistaDinero({ embarques, dinero: filas }: { embarques: Embarque[]; dine
   const colEmb: Columna<Dinero>[] = [
     { clave: "folio", titulo: "Embarque", celda: (f) => <Link className="font-medium hover:underline whitespace-nowrap" to={`/importaciones/${f.embarque_id}`}>{f.folio}</Link> },
     { clave: "desc", titulo: "Qué", valor: (f) => porEmbarque.get(f.embarque_id)?.descripcion, celda: (f) => <span className="block max-w-[240px] truncate">{porEmbarque.get(f.embarque_id)?.descripcion}</span> },
-    { clave: "comprometido_usd", titulo: "Mercancía", alinear: "der", valor: (f) => Number(f.comprometido_usd), celda: (f) => dinero(f.comprometido_usd, "USD"), sinBusqueda: true },
+    { clave: "comprometido_usd", titulo: "Mercancía", alinear: "der", explica: GLOSARIO.mercanciaEmbarque, valor: (f) => Number(f.comprometido_usd), celda: (f) => dinero(f.comprometido_usd, "USD"), sinBusqueda: true },
     { clave: "pagado_usd", titulo: "Pagado", alinear: "der", valor: (f) => Number(f.pagado_usd), celda: (f) => dinero(f.pagado_usd, "USD"), sinBusqueda: true },
     { clave: "tc_promedio", titulo: "TC real", alinear: "der", explica: GLOSARIO.tcReal, valor: (f) => f.tc_promedio, celda: (f) => f.tc_promedio ? numero(f.tc_promedio) : "—", sinBusqueda: true },
-    { clave: "gastos", titulo: "Gastos e impuestos", alinear: "der", valor: (f) => Number(f.gastos_mxn) + Number(f.impuestos_mxn), celda: (f) => dinero(Number(f.gastos_mxn) + Number(f.impuestos_mxn)), sinBusqueda: true },
+    { clave: "gastos", titulo: "Gastos e impuestos", alinear: "der", explica: GLOSARIO.gastosEImpuestosEmbarque, valor: (f) => Number(f.gastos_mxn) + Number(f.impuestos_mxn), celda: (f) => dinero(Number(f.gastos_mxn) + Number(f.impuestos_mxn)), sinBusqueda: true },
     { clave: "iva", titulo: "IVA acreditable", alinear: "der", explica: GLOSARIO.ivaAcreditable, valor: (f) => Number(f.iva_acreditable_mxn), celda: (f) => dinero(f.iva_acreditable_mxn), sinBusqueda: true },
     { clave: "por_recuperar_mxn", titulo: "Por recuperar", alinear: "der", explica: GLOSARIO.porRecuperar, valor: (f) => Number(f.por_recuperar_mxn), celda: (f) => dinero(f.por_recuperar_mxn), sinBusqueda: true },
   ];
@@ -389,22 +392,22 @@ function VistaDinero({ embarques, dinero: filas }: { embarques: Embarque[]; dine
     <div className="space-y-5">
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
         <Kpi titulo="Por pagar a proveedores" valor={dinero(totalUsd, "USD")} icono={DollarSign} tono="info" explica={GLOSARIO.porPagarProveedores} detalle={`≈ ${dinero(totalMxn)} al tipo de cambio de hoy. No hay cuenta en dólares: sale de pesos o por EBANX.`} />
-        <Kpi titulo="Programado en 30 días" valor={dinero(en30, "USD")} icono={CalendarClock} tono="marca" detalle="Pagos con fecha ya acordada" />
+        <Kpi titulo="Programado en 30 días" valor={dinero(en30, "USD")} icono={CalendarClock} tono="marca" explica={GLOSARIO.programadoTreintaDiasImportacion} detalle="Pagos con fecha ya acordada" />
         <Kpi titulo="Por recuperar" valor={dinero(recuperar)} icono={Undo2} explica={GLOSARIO.porRecuperar} tono={recuperar ? "aviso" : "ok"} detalle={`${saldos.data?.length ?? 0} saldos a favor o garantías`} />
       </div>
       <section className="space-y-2">
-        <h2 className="font-semibold">Pagos en dólares que vienen</h2>
+        <h2 className="font-semibold" data-explain={GLOSARIO.pagosQueVienenImportacion} data-explain-title="Pagos en dólares que vienen">Pagos en dólares que vienen</h2>
         <TablaDatos filas={porPagar.data} cargando={porPagar.isLoading} error={porPagar.error} columnas={colPagar} claveFila={(f) => f.orden_compra_id + f.embarque_id}
           exportarComo="importaciones-por-pagar" placeholder="Buscar proveedor, orden o embarque…"
           vacio={{ icono: DollarSign, titulo: "Nada por pagar", texto: "Cuando una orden ligada a un embarque tenga saldo, aparece aquí con su próximo pago." }} />
       </section>
       <section className="space-y-2">
-        <h2 className="font-semibold">Dinero por recuperar</h2>
+        <h2 className="font-semibold" data-explain={GLOSARIO.porRecuperar} data-explain-title="Dinero por recuperar">Dinero por recuperar</h2>
         <TablaDatos filas={saldos.data} cargando={saldos.isLoading} error={saldos.error} columnas={colSaldos} claveFila={(f) => f.id} buscable={false}
           vacio={{ icono: Undo2, titulo: "Nadie nos debe dinero", texto: "Los saldos a favor de la cuenta de gastos y las garantías de contenedor se anotan en el detalle de cada embarque." }} />
       </section>
       <section className="space-y-2">
-        <h2 className="font-semibold">Por embarque</h2>
+        <h2 className="font-semibold" data-explain={GLOSARIO.resumenDineroPorEmbarque} data-explain-title="Por embarque">Por embarque</h2>
         <TablaDatos filas={filas} columnas={colEmb} claveFila={(f) => f.embarque_id} exportarComo="importaciones-dinero"
           vacio={{ icono: Ship, titulo: "Sin embarques todavía" }} />
       </section>
@@ -429,13 +432,13 @@ function Tiempos() {
   const colProv: Columna<TiempoProveedor>[] = [
     { clave: "proveedor", titulo: "Proveedor", celda: (f) => <span className="block max-w-[240px] truncate" title={f.proveedor}>{f.proveedor}</span> },
     { clave: "embarques", titulo: "Embarques", alinear: "der" },
-    { clave: "pedido_a_zarpe", titulo: "Pedido → zarpe", alinear: "der", celda: (f) => d(f.pedido_a_zarpe) },
-    { clave: "travesia", titulo: "Travesía", alinear: "der", celda: (f) => d(f.travesia) },
-    { clave: "puerto_a_planta", titulo: "Puerto → planta", alinear: "der", celda: (f) => d(f.puerto_a_planta) },
-    { clave: "dias_naturales", titulo: "Pedido → planta", alinear: "der", celda: (f) => <b>{d(f.dias_naturales)}</b> },
+    { clave: "pedido_a_zarpe", titulo: "Pedido → zarpe", alinear: "der", explica: GLOSARIO.tramoPedidoZarpe, celda: (f) => d(f.pedido_a_zarpe) },
+    { clave: "travesia", titulo: "Travesía", alinear: "der", explica: GLOSARIO.tramoTravesia, celda: (f) => d(f.travesia) },
+    { clave: "puerto_a_planta", titulo: "Puerto → planta", alinear: "der", explica: GLOSARIO.tramoPuertoPlanta, celda: (f) => d(f.puerto_a_planta) },
+    { clave: "dias_naturales", titulo: "Pedido → planta", alinear: "der", explica: GLOSARIO.tramoPedidoPlanta, celda: (f) => <b>{d(f.dias_naturales)}</b> },
     { clave: "dias_habiles", titulo: "Hábiles (reabasto)", alinear: "der", explica: GLOSARIO.tiempoProveedor, celda: (f) => (
       <span title={f.dias_entrega_capturados ? `Capturado en el proveedor: ${f.dias_entrega_capturados}` : undefined}>{f.dias_habiles}</span>) },
-    { clave: "planta_a_cuenta_gastos", titulo: "Planta → CG", alinear: "der", explica: GLOSARIO.cuentaGastos, celda: (f) => d(f.planta_a_cuenta_gastos) },
+    { clave: "planta_a_cuenta_gastos", titulo: "Planta → CG", alinear: "der", explica: GLOSARIO.tramoPlantaCuentaGastos, celda: (f) => d(f.planta_a_cuenta_gastos) },
   ];
   const colEmb: Columna<TiempoEmbarque>[] = [
     { clave: "folio", titulo: "Embarque", celda: (f) => <Link className="font-medium hover:underline whitespace-nowrap" to={`/importaciones/${f.embarque_id}`}>{f.folio}</Link> },
@@ -444,7 +447,7 @@ function Tiempos() {
     { clave: "zarpe", titulo: "Zarpe", valor: (f) => f.zarpe, celda: (f) => fecha(f.zarpe) },
     { clave: "arribo", titulo: "Arribo", valor: (f) => f.arribo, celda: (f) => fecha(f.arribo) },
     { clave: "en_planta", titulo: "En planta", valor: (f) => f.en_planta, celda: (f) => fecha(f.en_planta) },
-    { clave: "pedido_a_planta", titulo: "Total", alinear: "der", celda: (f) => d(f.pedido_a_planta) },
+    { clave: "pedido_a_planta", titulo: "Total", alinear: "der", explica: GLOSARIO.tramoPedidoPlanta, celda: (f) => d(f.pedido_a_planta) },
   ];
   return (
     <div className="space-y-5">

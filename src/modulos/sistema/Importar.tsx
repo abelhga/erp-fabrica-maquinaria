@@ -56,13 +56,13 @@ export default function Importar() {
                 detalle={v.distintos ? `${v.distintos} con diferencia: revisar antes de cotizar` : "El ERP calcula exactamente lo mismo que la hoja"} />
             )}
             <Kpi titulo="Existencias de arranque" valor={numero(cargado.data?.existencias)} icono={Database} explica={GLOSARIO.existenciasArranque} tono="marca" detalle="Artículo × almacén, cargadas una sola vez" />
-            <Kpi titulo="Historial de costos" valor={numero(ultima.resumen.historial_costos)} icono={Database} tono="info" detalle="Precios de compra desde 2011" />
-            <Kpi titulo="Ventas históricas" valor={numero(ultima.resumen.ventas_historicas)} icono={Database} tono="neutro" detalle={`${numero(ultima.resumen.clientes_paneles)} clientes de los paneles`} />
+            <Kpi titulo="Historial de costos" valor={numero(ultima.resumen.historial_costos)} icono={Database} tono="info" explica={GLOSARIO.historialCostosImportado} detalle="Precios de compra desde 2011" />
+            <Kpi titulo="Ventas históricas" valor={numero(ultima.resumen.ventas_historicas)} icono={Database} tono="neutro" explica={GLOSARIO.ventasHistoricasImportadas} detalle={`${numero(ultima.resumen.clientes_paneles)} clientes de los paneles`} />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
             <Tarjeta className="lg:col-span-1">
-              <EncabezadoTarjeta titulo="Lo que se leyó" descripcion={`Última importación: ${fechaYHora(ultima.en)}`} />
+              <EncabezadoTarjeta titulo="Lo que se leyó" explica={GLOSARIO.loLeidoImportacion} descripcion={`Última importación: ${fechaYHora(ultima.en)}`} />
               <table className="tabla">
                 <tbody>
                   {Object.entries(ultima.resumen.leidos ?? {}).map(([k, n]) => (
@@ -72,7 +72,7 @@ export default function Importar() {
               </table>
             </Tarjeta>
             <Tarjeta className="lg:col-span-2">
-              <EncabezadoTarjeta titulo="Para revisar" descripcion="Problemas que ya existían en las hojas y que el ERP hizo visibles" />
+              <EncabezadoTarjeta titulo="Para revisar" explica={GLOSARIO.avisosImportacion} descripcion="Problemas que ya existían en las hojas y que el ERP hizo visibles" />
               <ul className="px-5 pb-4 space-y-2 text-sm">
                 {(ultima.resumen.avisos ?? []).length === 0 ? <li className="text-tenue">Nada pendiente.</li> :
                   ultima.resumen.avisos!.map((a, i) => (
@@ -87,7 +87,7 @@ export default function Importar() {
       <SugerenciasSubensamble />
 
       <Tarjeta>
-        <EncabezadoTarjeta titulo={<span className="inline-flex items-center gap-2"><Terminal className="h-4 w-4" /> Cómo volver a importar</span>}
+        <EncabezadoTarjeta explica={GLOSARIO.reimportarHojas} titulo={<span className="inline-flex items-center gap-2"><Terminal className="h-4 w-4" /> Cómo volver a importar</span>}
           descripcion="Mientras dure la transición se puede correr las veces que haga falta: actualiza por clave y no duplica." />
         <div className="px-5 pb-5 text-sm space-y-2">
           <p>Desde una computadora con el repositorio y la cadena de conexión de la base (Supabase → Project Settings → Database):</p>
@@ -101,7 +101,7 @@ npx tsx scripts/detectar-subensambles.ts`}</pre>
         <Tarjeta>
           <EncabezadoTarjeta titulo="Importaciones anteriores" />
           <table className="tabla">
-            <thead><tr><th>Fecha</th><th>Fuente</th><th className="text-right">Precios iguales</th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Fuente</th><th className="text-right" data-explain={GLOSARIO.precioIgualHoja} data-explain-title="Precios iguales">Precios iguales</th></tr></thead>
             <tbody>
               {hist.data.map((h) => (
                 <tr key={h.id}><td>{fechaYHora(h.en)}</td><td className="text-tenue">{h.fuente.startsWith("archivos") ? "Archivos" : "Google Sheets"}</td>

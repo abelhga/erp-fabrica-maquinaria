@@ -8,12 +8,18 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "modulos": [],
   "nivel": 1,
   "texto": [
-   "Es tu punto de partida del día. Lo que ves depende de tu puesto: dirección ve el centro de mando de toda la empresa; los demás ven solo lo que le importa a su área (ventas sus ventas y cotizaciones, finanzas lo que se cobra y se paga, importaciones sus embarques, producción el taller, recepción los leads que registró…). Si tienes dos puestos, ves lo de los dos.",
-   "Arriba, “Lo que importa hoy” junta lo urgente de tu área: en rojo los riesgos, en ámbar lo que pide atención, en verde lo que va bien. Dale clic a una tarjeta para ir directo a donde se atiende; el botón de flechas lo vuelve a analizar. A almacén le sale primero «Por surtir»: las órdenes con material pendiente, en el orden en que el taller las va a trabajar. A los supervisores de piso les sale lo del taller y a mantenimiento lo de las máquinas (paradas, fallas sin atender, preventivos vencidos o por vencer, herramienta sin regresar), calculado por reglas, sin IA.",
+   "Tu punto de partida del día: lo urgente de tu área y sus números. Dirección ve el centro de mando de toda la empresa; los demás, lo de su puesto.",
+   "Paso 1: Lee «Lo que importa hoy»: rojo es riesgo, ámbar pide atención, verde va bien.",
+   "Paso 2: Dale clic a una tarjeta o a un indicador para ir directo a donde se atiende.",
+   "Lo que ves depende de tu puesto: ventas ve sus ventas y cotizaciones, finanzas lo que se cobra y se paga, importaciones sus embarques, producción el taller, recepción los leads que registró. Si tienes dos puestos, ves lo de los dos.",
+   "«Lo que importa hoy» junta lo urgente de tu área (en azul, lo que conviene saber); el botón de flechas lo vuelve a analizar. A almacén le sale primero «Por surtir»: las órdenes con material pendiente, en el orden en que el taller las va a trabajar.",
+   "A los supervisores de piso les sale lo del taller y a mantenimiento lo de las máquinas: paradas, fallas sin atender, preventivos vencidos o por vencer y herramienta sin regresar. Eso lo calcula el ERP con reglas, sin IA.",
    "Casi todos los indicadores se abren con un clic y te llevan a la lista de donde salen (Ventas del mes abre los pedidos, por ejemplo). Todo se calcula con tus permisos: un vendedor ve lo suyo, no el total de la empresa.",
-   "En el tablero de área, la tarjeta “Pendientes” reúne lo que espera algo de ti según tu puesto: lo que la revisión de la madrugada encontró en algo tuyo, precios por autorizar, seguimientos de cotizaciones vencidos o para hoy (a la gerencia, los del equipo y quién está frenado), tareas con clientes vencidas, ajustes de inventario, compras atrasadas, documentos de embarques que faltan. En el centro de mando las cifras se actualizan solas cuando alguien registra un pedido, un cobro o un avance del taller; abajo del embudo comercial ves cómo va cada vendedor con el seguimiento de sus cotizaciones y quién está frenado.",
-   "El ERP recuerda cómo dejaste las cosas: el orden de cada lista (la columna por la que ordenaste), «Agrupar por» en el material de una orden y la vista y el zoom del Gantt. Los filtros y las búsquedas no se recuerdan, para que nunca se te esconda algo sin darte cuenta. Se guarda en tu computadora o celular, por persona.",
-   "Los lunes, si hay, te salen «Tus consejos de la semana»: hasta tres, escritos por la IA con tus propios números (cómo capturas, y si vendes, qué podrías probar para cerrar más). Solo los ves tú. Dale «Me sirve» o «No me sirve»: los de la semana siguiente lo toman en cuenta."
+   "En el tablero de área, la tarjeta «Pendientes» reúne lo que espera algo de ti según tu puesto: lo que encontró la revisión de la madrugada en algo tuyo, precios por autorizar, seguimientos de cotizaciones vencidos o para hoy, tareas con clientes vencidas, ajustes de inventario, compras atrasadas o documentos de embarques que faltan.",
+   "A la gerencia de ventas los seguimientos le salen de todo el equipo, con quién está frenado. Un vendedor frenado no puede enviar cotizaciones nuevas hasta ponerse al día.",
+   "En el centro de mando las cifras se actualizan solas cuando alguien registra un pedido, un cobro o un avance del taller. Abajo del embudo comercial ves cómo va cada vendedor con el seguimiento de sus cotizaciones y quién está frenado.",
+   "El ERP recuerda cómo dejaste las cosas, en tu computadora o celular y por persona: el orden de cada lista (la columna por la que ordenaste), «Agrupar por» en el material de una orden y la vista y el zoom del Gantt. Los filtros y las búsquedas no, para que nunca se te esconda algo sin darte cuenta.",
+   "Cada lunes la IA te puede escribir hasta tres consejos con tus propios números (cómo capturas y, si vendes, qué podrías probar para cerrar más). Salen aquí, en «Tus consejos de la semana», y solo los ves tú. Dale «Me sirve» o «No me sirve»: los de la semana siguiente lo toman en cuenta."
   ]
  },
  {
@@ -201,9 +207,13 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "modulos": [],
   "nivel": 1,
   "texto": [
-   "Todo lo que tiene fecha y te toca ver, en un solo lugar: entregas de pedidos, cierres de oportunidades y llamadas, compras y embarques que llegan, envíos por recolectar, compromisos del taller y cuándo termina cada orden según el plan, servicios, preventivos, herramienta por devolver, pagos, vacaciones, cumpleaños y tus pendientes. No se captura nada aquí: cada cosa sale de su pantalla.",
-   "Cada quien ve lo de su puesto: un vendedor ve sus entregas y sus llamadas, no las compras; los pagos solo los ve finanzas. Lo que ya se cerró no sale; lo que ya pasó su fecha y sigue abierto sale en rojo («atrasado»).",
-   "Arriba eliges Mes, Semana o Lista y te mueves con las flechas; «Hoy» te regresa. Los colores son las áreas: toca una para esconderla. «Solo lo mío» deja lo que está a tu nombre. Dale clic a un día para ver todo lo de ese día, y a una línea para ir a su pantalla."
+   "Todo lo que tiene fecha y te toca ver, en un solo lugar. Aquí no se captura nada: cada cosa sale de su pantalla.",
+   "Paso 1: Elige Mes, Semana o Lista y muévete con las flechas; «Hoy» te regresa.",
+   "Paso 2: Toca un área para esconderla, o prende «Solo lo mío» para dejar lo tuyo.",
+   "Paso 3: Clic en un día para verlo completo; clic en una línea para ir a su pantalla.",
+   "Salen entregas de pedidos, cierres de oportunidades y llamadas, compras y embarques que llegan, envíos por recolectar, compromisos del taller y cuándo termina cada orden según el plan, servicios, preventivos, herramienta por devolver, pagos, vacaciones, cumpleaños y tus pendientes.",
+   "Cada quien ve lo de su puesto: un vendedor ve sus entregas y sus llamadas, no las compras; los pagos solo los ve finanzas.",
+   "Lo que ya se cerró no sale; lo que ya pasó su fecha y sigue abierto sale en rojo («atrasado»). Cada área tiene siempre el mismo color."
   ]
  },
  {
@@ -556,13 +566,20 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "modulos": [],
   "nivel": 1,
   "texto": [
-   "Aquí ves lo que te pidieron a ti y lo que tú les pediste a otros, con fecha. Reemplaza el “¿ya quedó?” por chat: cuando alguien termina, a quien lo pidió le llega un aviso en la campana.",
-   "“Me tocan” son los tuyos: dale clic al círculo para marcarlo hecho y, si quieres, deja una respuesta corta (un precio, una fecha). “Los que pedí” son los que esperas de otros; si ya no hace falta, cancélalo con la X: te pide confirmarlo y, si quieres, por qué (el motivo lo ve quien lo tenía). La flecha te lleva al pedido, orden o pantalla de donde salió.",
-   "Si lo cancelaste o lo marcaste hecho por error, tienes unos minutos para regresarlo (15 de inicio; los fija dirección en Configuración): con «Deshacer» en el aviso que sale, o con «Reabrir» en «Cerrados» o en su ficha. Lo reabre solo quien lo cerró; en la conversación del pendiente queda quién lo reabrió y por qué, y si estaba hecho a quien lo pidió le avisa. Pasado ese tiempo, pide uno nuevo.",
+   "Lo que te pidieron y lo que pediste a otros, con fecha. Reemplaza el «¿ya quedó?» por chat: al terminar, a quien lo pidió le llega un aviso.",
+   "Paso 1: En «Me tocan», dale clic al círculo para marcarlo hecho; si quieres, deja una respuesta corta.",
+   "Paso 2: Para pedir algo nuevo usa «Pedir algo a alguien»: qué hay que hacer, quién y para cuándo.",
+   "Paso 3: Si te falta un dato, abre el pendiente y pregúntale ahí a quien te lo pidió.",
+   "Al marcarlo hecho, a quien lo pidió le llega un aviso en la campana. La respuesta corta puede ser un precio o una fecha. En la ficha también lo cierras con «Ya quedó».",
+   "«Los que pedí» son los que esperas de otros. Si ya no hace falta, cancélalo con la X: te pide confirmarlo y, si quieres, por qué (el motivo lo ve quien lo tenía). La flecha te lleva al pedido, orden o pantalla de donde salió.",
+   "Si lo cancelaste o lo marcaste hecho por error, tienes unos minutos para regresarlo (15 de inicio; los fija dirección en Configuración): con «Deshacer» en el aviso que sale, o con «Reabrir» en «Cerrados» o en su ficha. Pasado ese tiempo, pide uno nuevo.",
+   "Lo reabre solo quien lo cerró. En la conversación del pendiente queda quién lo reabrió y por qué, y si estaba hecho, a quien lo pidió le avisa.",
    "Algunos los pone la revisión nocturna (dicen «De Revisión nocturna»): son errores urgentes en algo tuyo. Márcalo hecho cuando lo corrijas; si no es error, contéstalo en «Por revisar» con «Está bien así».",
-   "La fecha sale en ámbar si vence hoy y en rojo si ya venció; mientras siga vencido, el sistema les recuerda a los dos. Para pedir algo nuevo usa “Pedir algo a alguien”: qué hay que hacer, quién y para cuándo. Puedes agregar a varias personas y elegir si basta con que uno lo haga o si cada quien lo tiene que hacer.",
-   "Arriba ves tu propio cumplimiento de los últimos 30 días: qué tanto cierras a tiempo, a cuántas personas tienes esperando algo tuyo, cuántos días de retraso suman tus vencidos y cuánto tardas en cerrar. Dirección y Recursos Humanos ven además la pestaña “Equipo” con el de todos.",
-   "Dale clic a un pendiente para abrir su ficha. Si te falta un dato para terminarlo, pregúntale ahí a quien te lo pidió: le llega un aviso y, mientras contesta, el pendiente dice “Esperando respuesta” y no cuenta como retraso tuyo. Si alguien te preguntó en algo que pediste, arriba sale “Te preguntaron”: contesta en su ficha."
+   "La fecha sale en ámbar si vence hoy y en rojo si ya venció; mientras siga vencido, el sistema les recuerda a los dos.",
+   "Puedes pedirle algo a varias personas a la vez y elegir si «Basta con que uno lo haga» o si «Cada quien lo tiene que hacer».",
+   "Arriba ves tu propio cumplimiento de los últimos 30 días: qué tanto cierras a tiempo, a cuántas personas tienes esperando algo tuyo, cuántos días de retraso suman tus vencidos y cuánto tardas en cerrar. Dirección y Recursos Humanos ven además la pestaña «Equipo» con el de todos.",
+   "Dale clic a un pendiente para abrir su ficha. Si preguntas ahí, a quien te lo pidió le llega un aviso y, mientras contesta, el pendiente dice «Esperando a» y su nombre, y no cuenta como retraso tuyo.",
+   "Si alguien te preguntó en algo que pediste, arriba sale «Te preguntaron»: contesta en su ficha."
   ]
  },
  {
@@ -724,13 +741,21 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "modulos": [],
   "nivel": 1,
   "texto": [
-   "Cada madrugada el ERP revisa lo que se capturó y te deja aquí lo que parece un error en algo tuyo: un artículo o un cliente dado de alta dos veces, un pago capturado dos veces, una compra que ya debió llegar y no se recibió, un costo muy distinto al de la última compra, etapas que se terminaron sin pasar por la terminal. Si sale algo, a las 6 de la mañana te llega un aviso.",
-   "Lo urgente (un pago repetido, una compra con un cero de más, una compra muy atrasada) también te llega a Pendientes, para el siguiente día hábil: ahí se pone rojo si se vence y cuenta para tu cumplimiento. Contestarlo en cualquiera de los dos lados cierra el otro; si no era error, «Está bien así» lo cancela y no cuenta para nadie.",
-   "Contesta cada uno: «Ya lo corregí» si lo arreglaste, «Está bien así» si no es error, o «Corrígelo» cuando el ERP puede hacer la corrección por ti con tus permisos. «Abrir» te lleva al registro. Lo que se arregla solo (una compra que por fin se recibe) se cierra sin que hagas nada.",
-   "«Está bien así» pide siempre el porqué. Si dirección lo tiene prendido, la IA lo lee: si es una razón de verdad (son dos sucursales, el proveedor cambió la fecha) se cierra; si suena a costumbre (dejar vacío un dato porque «todavía no se sabe»), te pregunta, hasta 3 veces. Si al final no queda claro, se queda abierto con «Lo ve dirección» y le llega con la conversación.",
-   "«Ayúdame a corregirlo» sale cuando la corrección es un dato de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida). La IA te propone el cambio exacto, con cómo está y cómo quedaría; puedes decirle algo que deba saber («el tiempo es de 45 días hábiles»). Nada se aplica hasta que eliges «Aplicar a mi nombre»: se hace con tus permisos, como si lo capturaras a mano, y queda en la bitácora. Precios, dinero, existencias y permisos nunca se cambian así.",
+   "Lo que la revisión de cada madrugada encontró en algo tuyo y parece error: un registro repetido, un pago doble, una compra atrasada. Contesta cada uno.",
+   "Paso 1: En «Para ti», lee el hallazgo y su evidencia; «Abrir» te lleva al registro.",
+   "Paso 2: Si lo arreglaste, dale «Ya lo corregí»; si no es error, «Está bien así» con el porqué.",
+   "Paso 3: Si sale «Corrígelo», el ERP hace la corrección por ti, con tus permisos.",
+   "Busca, por ejemplo, un artículo o un cliente dado de alta dos veces, un pago capturado dos veces, una compra que ya debió llegar y no se recibió, una compra a un precio muy distinto al de la anterior o etapas terminadas sin pasar por la terminal. Si sale algo, a las 6 de la mañana te llega un aviso.",
+   "Lo urgente (un pago repetido, una compra con un cero de más, una compra muy atrasada) también te llega a Pendientes, para el siguiente día hábil: ahí se pone rojo si se vence y cuenta para tu cumplimiento. Contestarlo en cualquiera de los dos lados cierra el otro.",
+   "Si no era error, «Está bien así» lo cancela en Pendientes y no cuenta para nadie. Lo que se arregla solo (una compra que por fin se recibe) se cierra sin que hagas nada.",
+   "«Está bien así» pide siempre el porqué. Si dirección lo tiene prendido, la IA lo lee: si es una razón de verdad (son dos sucursales, el proveedor cambió la fecha) se cierra; si suena a costumbre (dejar vacío un dato porque «todavía no se sabe»), te pregunta, hasta 3 veces.",
+   "Si al final no queda claro, se queda abierto con «Lo ve dirección» y le llega con la conversación. Lo que contesta dirección no pasa por la IA.",
+   "«Ayúdame a corregirlo» sale cuando la corrección es un dato de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida). La IA te propone el cambio exacto, con cómo está y cómo quedaría; puedes decirle algo que deba saber («el tiempo es de 45 días hábiles»).",
+   "Nada se aplica hasta que eliges «Aplicar a mi nombre»: se hace con tus permisos, como si lo capturaras a mano, y queda en la bitácora. Precios, dinero, existencias y permisos nunca se cambian así.",
    "Lo que dice «Regla» lo encontró una regla fija; lo que dice «IA» (con destellos ✦) lo señaló la IA al leer lo de ayer. Ninguno cambia nada sin que tú lo digas. En «Contestado» ves lo que ya respondiste.",
-   "Dirección ve además los patrones (consumos que se disparan, ajustes a la baja que se repiten, gastos iguales en caja chica), que nunca le llegan a la persona; todo lo abierto con a quién le toca; lo que la IA leyó anoche de cada módulo; los consejos que recibió cada quien y si les sirvieron; y puede apagar la revisión, la IA, los consejos, que la IA cuestione el «Está bien así» o cada regla. En «Contestado» puede ver lo que cada quien platicó con la IA."
+   "Dirección abre en «Todo lo abierto», con a quién le toca cada cosa, y ve además «Patrones» (consumos que se disparan, ajustes a la baja que se repiten, gastos iguales en caja chica), que nunca le llegan a la persona.",
+   "En «Anoche» dirección ve lo que la IA leyó de cada módulo, y en «Consejos», los que recibió cada quien y si les sirvieron.",
+   "En «Reglas», dirección puede apagar la revisión, la IA, los consejos, que la IA cuestione el «Está bien así» o cada regla, y correr las reglas en ese momento. En «Contestado» puede ver lo que cada quien platicó con la IA."
   ]
  },
  {
@@ -828,10 +853,14 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   ],
   "nivel": 1,
   "texto": [
-   "Tu resumen de los lunes: lo que pasó la semana pasada comparado con la anterior, y lo que viene en esta. Sirve para preparar la junta o para saber de un vistazo cómo vamos.",
-   "Arriba, “La semana en una frase” la narra la IA con los números (o las reglas del ERP si no está conectada); el botón de flechas la vuelve a escribir. En las tarjetas, el porcentaje compara contra la semana anterior: verde si subió, rojo si bajó.",
-   "La agenda “Esta semana” sale del calendario: todo lo que tiene fecha de lunes a domingo y tu puesto puede ver (entregas, lo que llega, taller, servicios, pagos, vacaciones, tus pendientes). Lo que ya pasó su fecha y sigue abierto sale en rojo. Dale clic a un renglón para ir a su pantalla, o a «Abrir el calendario» para ver más allá de esta semana.",
-   "Si eres vendedor, las ventas y “Quién compró más” son solo de tus clientes. Las ventas de esta pantalla van con IVA, como en el libro de ventas de la hoja."
+   "Tu resumen de los lunes: la semana pasada contra la anterior y lo que viene en esta. Sirve para preparar la junta o saber cómo vamos.",
+   "Paso 1: Lee «La semana en una frase» y dale clic a una tarjeta para ir a atenderla.",
+   "Paso 2: Revisa «Esta semana» para ver lo que tiene fecha de lunes a domingo.",
+   "«La semana en una frase» la narra la IA con los números (o las reglas del ERP si no está conectada); el botón de flechas la vuelve a escribir. En las tarjetas, el porcentaje compara contra la semana anterior: verde si subió, rojo si bajó.",
+   "La agenda «Esta semana» sale del calendario: todo lo que tiene fecha de lunes a domingo y tu puesto puede ver (entregas, lo que llega, taller, servicios, pagos, vacaciones, tus pendientes). Lo que ya pasó su fecha y sigue abierto sale en rojo.",
+   "Dale clic a un renglón para ir a su pantalla, o a «Abrir el calendario» para ver más allá de esta semana.",
+   "Si eres vendedor, las ventas y «Quién compró más» son solo de tus clientes. Las ventas de esta pantalla van con IVA, como en el libro de ventas de la hoja.",
+   "Esta pantalla sale en el menú de los puestos que tienen el Asistente."
   ]
  },
  {
@@ -1271,6 +1300,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que ya se pagó del préstamo: lo descontado en las semanas cerradas más los abonos que hizo aparte. Con «Abonar» registras un pago mayor al descuento: en efectivo (dices a qué cuenta entró, queda en finanzas y sale un recibo con folio para firmar) o descontando más en la nómina de una semana abierta. El saldo y las semanas que faltan se recalculan solos, con el mismo descuento semanal."
  },
  {
+  "clave": "abrirDetalleExistencia",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Dale clic a un renglón para abrir el artículo a la derecha sin perder la lista: cuánto hay en cada almacén, para qué está apartado y, si tu puesto los ve, sus movimientos."
+ },
+ {
   "clave": "abrirPedidoDeOrden",
   "modulos": [
    "produccion",
@@ -1294,6 +1331,35 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Llamadas, WhatsApp, correos, visitas y notas con el cliente. Una tarea lleva fecha y se queda arriba hasta que la marcas hecha; vencida sale en rojo. También cuenta como seguimiento para la vigencia de la cuenta."
+ },
+ {
+  "clave": "actividadReciente",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Los últimos 15 movimientos de las órdenes, en vivo: órdenes creadas, liberadas, terminadas o entregadas; etapas que empiezan, se pausan, terminan o se reabren; problemas del piso, material surtido y cambios de material. Clic en una línea abre su orden."
+ },
+ {
+  "clave": "actualizarCostoAlRecibir",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Marcada, el precio de esta orden pasa a ser el costo vigente de cada artículo (en el historial dice «por orden de compra») y el costeo de los equipos que lo usan se mueve con él. Desmárcala si fue un precio especial. En una orden que viene en un embarque de importación no cambia el costo: ahí manda el costeo de la importación."
+ },
+ {
+  "clave": "actualizarCostoDesdeCotizacion",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Los precios de esta cotización pasan a ser el costo vigente de cada artículo (en el historial dice «cotización») y se recalculan sus precios. Solo lo ve quien administra costos."
+ },
+ {
+  "clave": "acumuladoMetaAnio",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Lo vendido sumado mes con mes contra la meta sumada igual. Si la línea de lo vendido va abajo de la de la meta, vas atrasado; arriba, adelantado."
  },
  {
   "clave": "adelantoVacaciones",
@@ -1325,12 +1391,57 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que tiene fecha de lunes a domingo de esta semana, sacado del calendario: entregas, lo que llega de compras e importaciones, órdenes del taller, servicios, preventivos, pagos, vacaciones y tus pendientes (lo que tu puesto puede ver). Lo que ya pasó su fecha y sigue abierto sale en rojo como «Atrasado»."
  },
  {
+  "clave": "agenteAduanalEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Quien despacha la mercancía en la aduana: revalida el BL, hace el previo, paga el pedimento y al final manda la cuenta de gastos. Su referencia es con la que se busca todo con él."
+ },
+ {
+  "clave": "agregarACuadrilla",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Mete a alguien a esta etapa sin arrastrar; salen primero los de su área y su especialidad. Si la etapa está en proceso, su tiempo empieza a contar en ese momento y, si trabajaba en otra, sale de ahí (primero te pregunta). Si no ha empezado, queda planeado."
+ },
+ {
+  "clave": "agregarAlConteo",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "¿Hay en el estante algo que no viene en la lista? Búscalo aquí: se agrega al conteo con 0 y te lleva a su renglón para que escribas cuánto hay."
+ },
+ {
   "clave": "agregarEtapa",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "Agrega a esta orden una etapa que le falta, con sus horas y el porqué. Las etapas de una orden salen de las horas por etapa del equipo; si el equipo no trae una (por ejemplo Detallado), la orden se termina al acabar la anterior. La agrega la gerencia de producción y queda pendiente para el taller; si la orden ya estaba terminada, regresa a «en proceso» y su pedido deja de estar listo. Solo cambia esta orden: para que las siguientes la traigan, ingeniería la agrega al equipo."
+ },
+ {
+  "clave": "agregarInsumoServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Busca el insumo o la refacción, pon la cantidad y dale Agregar. Almacén recibe un aviso para entregarlo."
+ },
+ {
+  "clave": "agregarOtroDocumentoEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Para un documento que no está en la lista (una carta de no previo, el DODA, otro): elige el tipo y luego «Elegir archivo». Entra ya como recibido."
+ },
+ {
+  "clave": "agregarPartidaOrden",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Busca el artículo y Enter: entra con cantidad 1 y su costo vigente como precio sugerido, en la moneda de la orden. Si ya estaba en la orden, le suma 1."
  },
  {
   "clave": "agruparMaterial",
@@ -1341,12 +1452,31 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cómo se ordena la lista de material. «Categoría» (la que sale primero): junta lo del mismo tipo aunque vaya en partes distintas (todo lo eléctrico, todo el material para aire, la tornillería), para encontrarlo rápido en el almacén. «Subensamble»: por la parte del equipo donde va (como en la lista de materiales del costeo); si lo eliges, se recuerda en tu navegador. El buscador encuentra por nombre, clave o categoría."
  },
  {
+  "clave": "ahorradoTotal",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Todo lo que ha entrado a su ahorro: lo descontado en semanas cerradas, lo que puso la empresa y su saldo inicial."
+ },
+ {
   "clave": "ahorroHorasMes",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "Cuántas horas de trabajo al mes se ahorran con la mejora, según la estima quien la lleva. Es una estimación, no una medición: sirve para ver qué mejoras rinden más."
+ },
+ {
+  "clave": "ahorroLineasSubensamble",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Cuántos renglones de listas de materiales se dejan de capturar si lo conviertes: (equipos − 1) × (piezas − 1). Arriba van las que más ahorran."
  },
  {
   "clave": "ahorroSemanal",
@@ -1379,9 +1509,29 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La única forma de corregir una existencia. Lo pide quien encontró la diferencia y lo autoriza la gerencia de producción, dirección o el jefe de almacén; quien lo pidió no se lo autoriza (salvo dirección). Hasta entonces la existencia no cambia. Al autorizarlo se aplica la diferencia que se encontró, así que lo que entró o salió desde que se pidió se respeta; si con eso la existencia quedaría negativa, no se autoriza y se vuelve a contar. Si el artículo se contó en ese almacén después de pedir el ajuste, ya no se autoriza: el conteo ya lo dejó en lo que hay, así que se rechaza y queda como constancia."
  },
  {
+  "clave": "ajusteObjetivo",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Un mes aprobado ya no se vuelve a calificar: si hubo un error, Recursos Humanos o dirección piden un ajuste con el resultado corregido y el motivo. Lo autoriza otra persona, no quien lo pidió; autorizado, el resultado corregido es el que cuenta."
+ },
+ {
   "clave": "alcanceRol",
   "modulos": [],
   "texto": "Los números salen con tus permisos: un vendedor ve lo de sus clientes; la gerencia y dirección ven toda la empresa. Por eso dos personas pueden ver cifras distintas en la misma pantalla."
+ },
+ {
+  "clave": "alcanzaMesesSalud",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cuántos meses dura lo disponible al ritmo que sale: disponible ÷ lo que sale al mes. Solo se calcula en artículos con demanda mensual."
  },
  {
   "clave": "alDiaTaller",
@@ -1395,7 +1545,15 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "importaciones"
   ],
-  "texto": "Avisos que arma el sistema solo: documentos que faltan cerca del arribo, días libres por acabarse, cambios de ETA y, si ves dinero, pagos retenidos o sin comprobante y dinero por recuperar. Rojo es riesgo; ámbar, atención."
+  "texto": "Avisos que arma el sistema solo: documentos que faltan cerca del arribo, días libres o del contenedor por acabarse, cambios de ETA, cuenta de gastos o EIR que no llegan y, si ves dinero, pagos retenidos o sin comprobante y dinero por recuperar. Rojo es riesgo; ámbar, atención. A importaciones le llegan a la campana una vez al día."
+ },
+ {
+  "clave": "almacenOrigenMovimiento",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cada cuadro es un almacén con lo que hay hoy de este artículo: toca de cuál sale (o, en una devolución, a cuál regresa). Ya viene marcado el que tiene más; al sacar, los que están en cero se ven pálidos."
  },
  {
   "clave": "almacenParaPlanta",
@@ -1403,6 +1561,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "admin"
   ],
   "texto": "Si lo que hay en ese almacén cuenta para producción y para el cotizador. El Full de Mercado Libre existe, pero no está disponible para planta."
+ },
+ {
+  "clave": "almacenParaTodas",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Pone el mismo almacén en todas las partidas de una vez; después puedes cambiar el de cada una. De entrada, cada artículo va a su almacén de siempre."
+ },
+ {
+  "clave": "altaProveedorDesdeCotizacion",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "El proveedor de la cotización no está en el catálogo: dalo de alta con lo que leyó la IA (nombre, razón social, RFC y moneda) y queda elegido para esta orden."
  },
  {
   "clave": "amarreXml",
@@ -1453,6 +1625,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Días desde la primera factura del pedido o, si aún no se factura, desde la fecha del pedido. Lo que se debía en la hoja cuenta desde la venta: los pagos van tapando las ventas más viejas, así que lo que falta es lo más reciente. Se agrupa en 0 a 30, 31 a 60, 61 a 90 y más de 90 días; pasando 90 se pinta en rojo."
  },
  {
+  "clave": "antiguedadPersonal",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Tiempo desde su fecha de ingreso hasta hoy (o hasta su baja). De ahí salen sus vacaciones. Si reingresa después de una baja, cuenta desde la nueva fecha."
+ },
+ {
   "clave": "aPagarNomina",
   "modulos": [
    "rrhh",
@@ -1481,11 +1665,46 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Material reservado para esta orden: sigue en el almacén, pero nadie más lo puede tomar."
  },
  {
+  "clave": "apartadosDetalle",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Para qué orden de producción o pedido está apartado, quién lo apartó y cuándo. El número grande es lo que falta por entregar; abajo, cuánto ya se surtió de lo apartado."
+ },
+ {
+  "clave": "aplicarPrecioCompras",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Pone en la partida el precio de lista que dio compras, en la moneda de la cotización. Si la partida estaba escrita a mano, se vuelve el artículo del catálogo con su nombre y su unidad. Solo mientras la cotización no se haya enviado."
+ },
+ {
+  "clave": "aplicarPrecioFicha",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Pone en la partida el precio de lista o el mínimo, ya en la moneda de la cotización (y con IVA si va con IVA incluido). El descuento de la partida y el general se aplican encima."
+ },
+ {
   "clave": "aprovechamientoTaller",
   "modulos": [
    "admin"
   ],
   "texto": "Qué parte de las horas de la gente se va de verdad a órdenes. Descuenta faltas, vacaciones, limpieza, esperar material y juntas. Empieza en 85 %; se afina comparando con las horas que registra la terminal. Lo pone la gerencia de producción."
+ },
+ {
+  "clave": "aproximadoPesosHoyImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Lo que falta, pasado a pesos con el tipo de cambio de hoy. Es aproximado: lo que cueste de verdad depende del tipo de cambio del día en que se pague."
  },
  {
   "clave": "areaPiso",
@@ -1500,6 +1719,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La etapa del taller donde trabaja la persona (la misma de la pantalla de piso). Sirve para planear la carga del taller. Vacío = no es personal de piso."
  },
  {
+  "clave": "areasLimpiezaPlantilla",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Las áreas cuya limpieza cuenta para este puesto. La marca de limpieza de un área cuenta para todos los que la tienen elegida."
+ },
+ {
   "clave": "armarMes",
   "modulos": [
    "rrhh",
@@ -1509,7 +1740,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Crea el borrador del mes para cada persona con puesto asignado y vuelve a medir los borradores con los datos de hoy. Lo ya calificado no se toca. Al empezar cada mes se hace solo para el mes que terminó."
+  "texto": "Crea el borrador del mes para cada persona con puesto asignado y vuelve a medir los borradores con los datos de hoy. Lo ya calificado no se toca, y quien no tiene plantilla vigente se queda fuera (te dice quién). Al empezar cada mes se hace solo para el mes que terminó."
  },
  {
   "clave": "arqueo",
@@ -1532,12 +1763,35 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Un equipo o subensamble que ya no se fabrica ni se vende: deja de salir en el cotizador, en pedidos nuevos y al armar listas de materiales, y no tiene precio de lista. Lo que ya existe no cambia: dentro de los equipos que lo usan sigue igual, y las cotizaciones y pedidos abiertos conservan sus partidas. Se reactiva con el mismo interruptor y regresa con su precio."
  },
  {
+  "clave": "articulosConExistencia",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cuántos artículos tienen más de cero en planta (lo del Full de Mercado Libre no cuenta). Abajo, cuántos componentes y materias primas controla el almacén en total, tengan o no."
+ },
+ {
+  "clave": "articulosQueSurte",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Artículos activos que tienen a este proveedor como su proveedor de siempre o como el del costo vigente."
+ },
+ {
   "clave": "asignarStock",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "Si ya hay un equipo igual fabricándose (o terminado) para stock, la gerencia lo asigna a esta partida con «Usar»: la orden pasa a ser del pedido, con su número de serie, y ya no hay que fabricar otro."
+ },
+ {
+  "clave": "atajosViaticos",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Atajos para no escribir: ponen el concepto más común en la descripción. Luego escribe el monto y dale Agregar."
  },
  {
   "clave": "aTiempo",
@@ -1584,6 +1838,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Con el interruptor prendido, cada hora de 7:41 a 19:41 el ERP trae las publicaciones y corrige solo lo seguro. Precio: si la comisión y el envío los dio Mercado Libre, la publicación está activa y el cambio es de 15 % o menos. Existencia: nunca la deja en 0 ni la sube si el artículo está en otra publicación activa, para no venderlo dos veces. Lo demás se queda para el botón. Hasta 30 cambios por vuelta. Lo prenden gerencia de ventas o dirección, por separado para precio y existencia; viene apagado."
  },
  {
+  "clave": "autorizacionPedida",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "El vendedor ya terminó de capturar y pidió la autorización, con su nota: está esperando a la gerencia de ventas. «Todavía capturando» quiere decir que tiene precios abajo del mínimo pero aún no la pide."
+ },
+ {
   "clave": "autorizacionPrecios",
   "modulos": [
    "ventas",
@@ -1600,6 +1864,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Cuánto lleva una etapa empezada, como se dice en el piso: ¼, ½, ¾ o casi. Lo reporta el supervisor en la terminal o la gerencia en la orden. Cuenta en el avance de la orden, en lo que le falta a su área y en el plan del Gantt. Para acabarla se sigue usando «Terminar»."
+ },
+ {
+  "clave": "avanceMetaEstado",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Lo vendido este año en el estado entre su meta: la que puso dirección o, si no hay, la sugerida. 100 % quiere decir que ya llegó."
  },
  {
   "clave": "avanceOrden",
@@ -1627,6 +1898,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Qué parte de lo pedido ya llegó al almacén, sumando todas las partidas."
  },
  {
+  "clave": "avanceServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Por dónde va el servicio: Pedido, Programado, En curso y Cerrado. Los pasos que ya pasaron se ven en verde, con su fecha y quién lo hizo."
+ },
+ {
   "clave": "aviso",
   "modulos": [],
   "texto": "Notificación que llega a la campana del encabezado: un pendiente nuevo, algo que se terminó, una autorización que espera. Al darle clic te lleva a la pantalla donde se atiende."
@@ -1635,6 +1914,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "clave": "avisosDeReglas",
   "modulos": [],
   "texto": "Estos avisos los calcula el ERP con reglas fijas (órdenes atrasadas, máquinas paradas, preventivos vencidos…), sin IA. Así salen en puestos que no usan el Asistente, como los supervisores de piso y mantenimiento."
+ },
+ {
+  "clave": "avisosImportacion",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Problemas que ya venían en las hojas y que la última importación encontró: nombres repetidos, materiales que no están en el catálogo, existencias negativas que no se cargaron, equipos sin lista de materiales…"
+ },
+ {
+  "clave": "avisosSinLeerUso",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Los avisos de la campana que tiene sin abrir, a hoy (no depende del periodo). Si se juntan muchos, quizá no está revisando la campana."
  },
  {
   "clave": "backlogMantenimiento",
@@ -1708,12 +2001,1259 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Bono fijo por escalón de venta de refacciones en el mes. Igual que la meta: se paga solo el escalón más alto alcanzado."
  },
  {
+  "clave": "borrarEspecialidad",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Borra la especialidad (pide un segundo clic para confirmar). Su gente queda haciendo de todo en el área y sus equipos los hace cualquiera."
+ },
+ {
+  "clave": "botonAgregarConceptoNomina",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Registra un pago o un descuento fuera del sueldo para una persona esta semana (servicio fuera de planta, apoyo, herramienta dañada…), con una nota. Solo en semanas abiertas; queda quién lo registró."
+ },
+ {
+  "clave": "botonAgregarGastoEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Captura a mano un gasto del embarque: quién lo cobra, monto sin IVA, su IVA aparte y cómo se reparte. Marca «estimado» si todavía no llega la cuenta de gastos."
+ },
+ {
+  "clave": "botonAjusteComision",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Agrega un bono o un descuento a la comisión de este mes, con su concepto (un bono de Mercado Libre, una corrección…). Negativo descuenta. Lo hacen la gerencia de ventas y dirección."
+ },
+ {
+  "clave": "botonAnotarPorRecuperar",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Anota dinero que nos tienen que regresar: la garantía del contenedor, un saldo a favor con el agente u otro. El saldo a favor de una cuenta de gastos leída con la IA se anota solo."
+ },
+ {
+  "clave": "botonAprobarAjuste",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Aplica la diferencia a la existencia de hoy, con un movimiento de ajuste a tu nombre. No se puede si tú lo pediste (salvo dirección), si la existencia quedaría en negativo o si el artículo se volvió a contar en ese almacén después de pedirlo."
+ },
+ {
+  "clave": "botonAprobarSolicitud",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "La das por buena: si son vacaciones se restan del saldo, sale en el calendario y cuenta en la prenómina de esa semana."
+ },
+ {
+  "clave": "botonAQuienLlamar",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Abre «A quién llamar»: los clientes que conviene buscar, cada uno con su motivo (le toca comprar, refacciones, reactivar o una cotización por vencer) y su contacto a la mano."
+ },
+ {
+  "clave": "botonAsignarPuesto",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Dice con qué plantilla se evalúa a una persona y quién es su jefe directo, desde una fecha. Sin jefe, la califica Recursos Humanos. Con esto entra a la evaluación de cada mes."
+ },
+ {
+  "clave": "botonAutorizarPrecios",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Aprueba los precios abajo del mínimo: la cotización queda Autorizada y el vendedor ya la puede enviar o convertir en pedido. Solo la gerencia de ventas autoriza. Si después le cambian partidas, descuento, moneda o IVA, la autorización se pierde."
+ },
+ {
+  "clave": "botonBorrarCobroPedido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Borra un cobro mal capturado (te pide confirmar). El saldo del pedido sube otra vez."
+ },
+ {
+  "clave": "botonBorrarContacto",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Borra este contacto del cliente (te pide confirmar). Si solo cambió de teléfono o de puesto, mejor edítalo con el lápiz."
+ },
+ {
+  "clave": "botonBorrarFirma",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Limpia el recuadro para volver a firmar. Nada se guarda hasta que cierras el servicio."
+ },
+ {
+  "clave": "botonCancelarDevolucion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cancela el registro con su motivo, por ejemplo si se capturó dos veces o el comprador ya no la mandó. Solo mientras sigue abierta: si ya llegó a almacén, ya no."
+ },
+ {
+  "clave": "botonCancelarInvitacion",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Borra la invitación. Un correo de fuera de la empresa ya no podrá entrar; uno de la empresa sí entra, pero sin rol, hasta que se lo des."
+ },
+ {
+  "clave": "botonCancelarOrdenMto",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Cancela la orden con su motivo (por ejemplo, era el mismo reporte). Se quitan las refacciones que nadie había entregado ni pedido a compras, se pausan los play y la máquina recalcula su estado."
+ },
+ {
+  "clave": "botonCancelarPedido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cancela el pedido con su motivo: deja de contar para comisiones y cobranza. Sus órdenes de taller no se cancelan solas: avísale a producción."
+ },
+ {
+  "clave": "botonCancelarPendiente",
+  "modulos": [],
+  "texto": "Se lo quitas a quien lo tiene: te pide confirmarlo y, si quieres, por qué (el motivo lo ve esa persona). Si se lo pediste a varias, se cancela para todas. Si fue error, lo puedes reabrir durante los minutos que fije dirección (15 de inicio)."
+ },
+ {
+  "clave": "botonCancelarPrestamo",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Deja de descontarse desde ya, con el motivo (lo pagó en efectivo, se condonó…). Lo ya descontado se queda en el historial: un préstamo no se borra."
+ },
+ {
+  "clave": "botonCancelarServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Cancela el servicio con su motivo: la cuadrilla queda libre y se quitan los insumos que nadie había entregado ni pedido a compras. Quien lo pidió puede cancelarlo mientras no tenga fecha; después, solo la gerencia."
+ },
+ {
+  "clave": "botonCapturarPedimento",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Captura a mano el pedimento pagado: número de 15 dígitos, fecha de pago e impuestos. Con eso se anota la etapa «Pedimento pagado» y ya se puede calcular el costeo preliminar. También lo puedes leer con la IA desde Documentos."
+ },
+ {
+  "clave": "botonCerrarCosteoImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Cierra esta versión. El final pone el costo puesto en planta a los artículos del catálogo (con historial y el folio del embarque), sus precios se recalculan y se avisa a compras e ingeniería; el preliminar solo queda de referencia. Si cambió algo desde que se calculó, te pide recalcular."
+ },
+ {
+  "clave": "botonCerrarReclamo",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cierra el reclamo o la cancelación con lo que pasó: a favor (nos dieron la razón), en contra (se perdió) o sin efecto. Ya cerrado no se cambia."
+ },
+ {
+  "clave": "botonCerrarServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Termina el servicio. Pide al menos una foto del trabajo, qué se hizo y el nombre de quien recibe (la firma es opcional); en una garantía, si procedió. A quien lo pidió y al vendedor les llega un aviso, y si acabó antes de lo programado, la cuadrilla queda libre desde ese momento."
+ },
+ {
+  "clave": "botonCompartirCredito",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Reparte el crédito de esta venta entre varios vendedores, en porcentajes que deben sumar 100 %. Cada uno cobra comisión solo sobre su parte. Solo la gerencia de ventas."
+ },
+ {
+  "clave": "botonConectarGmailLectura",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Te lleva a Google para conectar tu Gmail una sola vez, con permiso de leer, para poder buscar y ligar hilos. Deja marcadas las dos casillas que te pide."
+ },
+ {
+  "clave": "botonConectarML",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Te lleva a Mercado Libre para dar permiso con la cuenta de Hegamex. Antes hay que hacer los pasos de «Cómo se conecta»."
+ },
+ {
+  "clave": "botonConfirmarMunicipio",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Acepta el municipio que propuso el ERP y lo aplica a todos los clientes que escribieron igual, también a los que se den de alta después."
+ },
+ {
+  "clave": "botonConvertirSugerencia",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Le pones nombre y clave, y el grupo se vuelve un subensamble: en cada equipo de la sugerencia, esas piezas sueltas se cambian por una línea con el subensamble. El costo y el precio no cambian."
+ },
+ {
+  "clave": "botonCorregirFechaEtapa",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Corrige la fecha de este paso si se anotó mal. Ahí mismo sale «Quitar este paso» por si no debió registrarse."
+ },
+ {
+  "clave": "botonCorregirSaldoVacaciones",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Fija a mano cuántos días le quedan hoy de un periodo, como diga el control en papel o en Excel. Los periodos anteriores se dan por usados y desde hoy se le cargan las vacaciones que se aprueben."
+ },
+ {
+  "clave": "botonCrearOrdenesFaltantes",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Crea una orden de producción por cada equipo vendido que todavía no tiene, con su lista de materiales y la fecha compromiso del pedido. Solo entran los equipos con lista de materiales. Si hay uno igual para stock, usa antes «Usar»."
+ },
+ {
+  "clave": "botonCrearOrdenesRequisicion",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Convierte las partidas marcadas en órdenes en borrador, una por proveedor: el mismo artículo de varias requisiciones va en una sola partida, con su costo vigente como precio. Si alguna no tiene proveedor, primero te pregunta a quién comprársela."
+ },
+ {
+  "clave": "botonDarDeBaja",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Registra su último día y el motivo. Deja de contar en el personal activo y en las vacaciones; su historial se conserva. Te recuerda lo de su finiquito (vacaciones sin tomar, préstamo, ahorro) y, si tiene cuenta en el ERP, que se desactive."
+ },
+ {
+  "clave": "botonDatosEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Corrige o completa los datos del embarque: modalidad, incoterm, naviera, agente, BL, ETA, días libres… Si cambias la ETA, queda en la historia y se avisa a importaciones, compras y almacén; si cambias la modalidad o el incoterm, se ajusta la lista de documentos."
+ },
+ {
+  "clave": "botonDecidirDevolucion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Qué pasa con lo que regresó: reingresa al inventario si está bien para venderse (entra al almacén que elijas), es merma (entra y se pide el ajuste de salida, que autoriza otra persona) o se reclama a la paquetería con su folio (no entra al inventario). Lo decide almacén."
+ },
+ {
+  "clave": "botonDescartarMejora",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Descarta la idea con su motivo: a quien la propuso le llega el aviso con el porqué. Sale del tablero y queda en «Ver descartadas»."
+ },
+ {
+  "clave": "botonDescartarPropuestaCorreos",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Descarta lo que propuso la IA sin aplicar nada. Puedes volver a leer los correos cuando quieras."
+ },
+ {
+  "clave": "botonDescartarSolicitud",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Cierra la solicitud sin cambiar la lista, porque no procede. Pasa a Resueltas como descartada, el pendiente de ingeniería se cierra y a quien la pidió le llega el aviso."
+ },
+ {
+  "clave": "botonDescartarSugerencia",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Marca la sugerencia como descartada: deja de estar pendiente y ninguna lista de materiales cambia."
+ },
+ {
+  "clave": "botonDesconectarML",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Quita la conexión con Mercado Libre (pide confirmar): las ventas, los reclamos y las preguntas dejan de entrar solos hasta que se vuelva a conectar."
+ },
+ {
+  "clave": "botonDeshacerPunto",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Regresa el punto a «sin revisar» para volver a marcarlo."
+ },
+ {
+  "clave": "botonDeshacerUbicacion",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Borra esta corrección: los clientes que lo escribieron igual se vuelven a ubicar con su texto y, si no se reconoce, regresan a la lista por revisar."
+ },
+ {
+  "clave": "botonDevolverJefe",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Regresa la evaluación a borrador para que el jefe la corrija, con el motivo de lo que hay que arreglar. Se borran el calificado y el revisado, y el motivo queda en los comentarios. Solo antes de aprobarla."
+ },
+ {
+  "clave": "botonEditarDatosFabricado",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Cambia el nombre, la descripción y, en un equipo, su tipo. Las cotizaciones y pedidos que ya existen conservan el nombre con el que se hicieron."
+ },
+ {
+  "clave": "botonEditarPlantilla",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Cambia la versión vigente: indicadores, pesos, reglas y desde qué mes vale. Si ya se calificó a alguien con ella, no se deja: crea una versión nueva."
+ },
+ {
+  "clave": "botonEmpezarReparacion",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Guarda el diagnóstico. Si la orden estaba sin atender, pasa a En reparación con la hora de ahora; si la falla detiene la máquina, o es un preventivo, la máquina se ve En reparación hasta que se cierre la orden."
+ },
+ {
+  "clave": "botonEntregarInsumo",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Para almacén: elige de qué almacén de planta sale y dale Entregar. Se registra la salida de inventario con el folio del servicio u orden, y la partida queda como Entregado."
+ },
+ {
+  "clave": "botonEntregarPedido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Registra lo que sale: cuánto de cada partida (todo lo que falta o solo una parte), quién recibió y, si ya la tienes, la foto de la hoja firmada. Lo que sale se descuenta del inventario. Si te equivocas, «Deshacer» en el aviso lo regresa todo."
+ },
+ {
+  "clave": "botonEnviarCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Abre el envío: por WhatsApp con el mensaje ya armado, por correo desde tu Gmail con el PDF, o solo marcarla enviada. Al enviarla ya no se edita, su oportunidad pasa a Cotizado (si no había, se abre) y se agenda preguntar qué pasó en 3 días hábiles. Antes te pide el tiempo de entrega."
+ },
+ {
+  "clave": "botonesFlujoEvaluacion",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "«Enviar a RRHH»: el jefe la manda cuando ya calificó todo. «Marcar revisada»: Recursos Humanos, cuando ya no quedan impugnaciones pendientes; no la revisa quien la calificó. «Aprobar y cerrar el mes»: dirección, y no quien la revisó; después ya no se cambia."
+ },
+ {
+  "clave": "botonesMarcaChecklist",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Palomita: cumplió. Tache: no cumplió, y se abre un campo para anotar qué pasó (Enter guarda). Si te equivocaste, toca la otra: la marca se reemplaza y la anterior queda guardada."
+ },
+ {
+  "clave": "botonEstadoMatriz",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Abre abajo qué se vende en este estado, en qué municipios y los textos que más se vendieron. Otro clic lo quita."
+ },
+ {
+  "clave": "botonExpedienteEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Abre en otra pestaña la carpeta del expediente de este embarque (la de Drive), la que se capturó en sus datos."
+ },
+ {
+  "clave": "botonFamiliaMatriz",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Pinta abajo el mapa de dónde se vende esta familia. Otro clic lo quita."
+ },
+ {
+  "clave": "botonGenerarOrdenesReabasto",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Crea órdenes de compra en borrador, una por proveedor, con lo sugerido de lo que marcaste, menos lo que ya está en un borrador o en una requisición. Lo que no tiene proveedor no se pide y te lo enlista. Quedan en borrador para que compras las revise antes de enviarlas."
+ },
+ {
+  "clave": "botonHacerloMio",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Este cliente no tiene dueño: con esto pasa a tu cartera. Desde ese momento sus contactos y su historia solo los ven tú, la gerencia y cobranza."
+ },
+ {
+  "clave": "botonIniciarServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Marca que la cuadrilla ya empezó: el servicio pasa a En curso con la hora de ahora. Una reparación en planta no se inicia sin recibir antes el equipo con fotos."
+ },
+ {
+  "clave": "botonIrCuadrillas",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Quién trabaja qué en cada etapa ahorita y qué sigue. Ahí la gerencia de producción arma las cuadrillas arrastrando a la gente y acomoda la cola."
+ },
+ {
+  "clave": "botonIrMaquinasHerramienta",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Te lleva a las máquinas y la herramienta del taller: su estado, las fallas reportadas, los preventivos y los préstamos. Es el mantenimiento de la planta, no el servicio a clientes."
+ },
+ {
+  "clave": "botonIvaPedido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "«Quitar IVA» es para cuando el cliente no quiere factura: el total queda igual al subtotal. «Agregar IVA» lo regresa y sube el total. No se puede quitar si el pedido ya tiene una factura registrada."
+ },
+ {
+  "clave": "botonJefeCuadrilla",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Marca a esta persona como jefe de cuadrilla: lleva la corona en el servicio y en el calendario. Si no eliges a nadie, el jefe es el primero que marcaste."
+ },
+ {
+  "clave": "botonLeerCorreosIA",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "La IA lee todos los correos ligados a este embarque y te propone fechas de etapas, ETA, datos y documentos que llegaron, cada uno con el correo de donde salió. Nada cambia hasta que lo revisas y lo aplicas."
+ },
+ {
+  "clave": "botonLeerDocumentoEmbarqueIA",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Sube un PDF o una foto (proforma, factura, packing list, BL, pedimento o cuenta de gastos) y la IA te propone sus datos junto al archivo. Nada se guarda hasta que lo revisas y das «Confirmar y guardar»."
+ },
+ {
+  "clave": "botonLlenarEmbarqueConDocumento",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Sube el BL (o la PI, la factura o el packing list) y la IA llena el alta. Lo que llenó queda marcado para que lo revises; el archivo se guarda en el expediente al dar de alta."
+ },
+ {
+  "clave": "botonMandarProduccion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Crea una orden de taller por cada equipo de este pedido que tiene lista de materiales y todavía no tiene orden (una por pieza), y el pedido pasa a «En producción». Si ya hay uno igual hecho para stock, mejor asígnalo con «Usar» en Producción → Pedidos."
+ },
+ {
+  "clave": "botonMarcarAplicada",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Dice que ya corregiste la lista de materiales: la solicitud pasa a Resueltas, tu pendiente se cierra solo y a quien la pidió le llega el aviso. No cambia nada de la lista: la corrección la haces antes con «Abrir lista»."
+ },
+ {
+  "clave": "botonMarcarListoPedido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Pasa el pedido a «Listo para entregar». Con equipos pasa solo cuando el taller termina su última orden; este botón es para lo que no se fabrica (refacciones, piezas de almacén)."
+ },
+ {
+  "clave": "botonMarcarMejoraHecha",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Pasa la mejora a «Hechas». Antes escribe el resultado: qué se logró. La marcan quien la lleva o quien decide, y a quien la propuso le llega el aviso."
+ },
+ {
+  "clave": "botonMarcarRecuperado",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Márcalo cuando ya te lo regresaron: queda recuperado con fecha de hoy y por el monto completo, y deja de avisar. Hace falta para poder cerrar el embarque."
+ },
+ {
+  "clave": "botonNoSePuedeUbicar",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Para textos que no son un lugar, como «Varios»: deja de salir aquí y esos clientes se quedan fuera del mapa. Se deshace en «Corregidas por dirección»."
+ },
+ {
+  "clave": "botonNuevaCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Abre una cotización en borrador con las condiciones de pago, entrega y notas que dejó la gerencia. El folio se asigna cuando agregas la primera partida: si sales sin capturar, no se gasta."
+ },
+ {
+  "clave": "botonNuevaDevolucion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Registra una devolución, un reclamo o una cancelación: buscas la venta por su número de Mercado Libre o el folio del pedido, eliges qué es y anotas el motivo y el código. Con una devolución, almacén ya sabe que viene."
+ },
+ {
+  "clave": "botonNuevaOportunidad",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Registra una venta posible: el cliente, qué busca y cuánto podría ser. Queda a tu nombre en la etapa que elijas (Prospecto, Contactado o Cotizado); lo demás lo llenas después."
+ },
+ {
+  "clave": "botonNuevaOrdenCompra",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Arma una orden de compra nueva: eliges al proveedor (desde su ficha ya viene elegido) o subes su cotización y la IA la lee. Queda en borrador para agregarle partidas."
+ },
+ {
+  "clave": "botonNuevaOrdenTablero",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Abre los pedidos confirmados que tienen equipos sin orden, para crearles la suya: una orden por equipo, con su lista de materiales y sus horas por etapa. Para un equipo sin cliente, usa «Orden para stock» en Órdenes y material."
+ },
+ {
+  "clave": "botonNuevaVersionPlantilla",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Copia la plantilla vigente para cambiarla desde el mes que elijas (de entrada, el siguiente). La versión anterior termina el mes antes y los meses ya calificados no cambian."
+ },
+ {
+  "clave": "botonNuevoCliente",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Da de alta un cliente con lo mínimo para cotizar: su nombre y un teléfono; lo fiscal se completa después o con su constancia. Queda a tu nombre. Búscalo antes en la lista: ahí salen todos, también los de otros vendedores."
+ },
+ {
+  "clave": "botonNuevoClienteRapido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Da de alta un cliente que no está en la lista, con su nombre y un teléfono. Búscalo primero: si ya existe y lo das de alta otra vez, queda repetido."
+ },
+ {
+  "clave": "botonNuevoEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Da de alta un embarque. Basta con decir qué viene; si ya tienes el BL, la PI, la factura o el packing list, la IA llena el alta por ti. Al guardarlo se arma su lista de documentos y te lleva a su ficha."
+ },
+ {
+  "clave": "botonNuevoEmpleado",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Da de alta a una persona. Con su fecha de ingreso se calculan solas la antigüedad y las vacaciones. Si es de Producción, de entrada queda en cuadrillas."
+ },
+ {
+  "clave": "botonNuevoEquipo",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Da de alta un equipo con su clave (te propone la siguiente), nombre y tipo, y abre su ficha para que le captures la lista de materiales y las horas. Si se parece a uno que ya existe, es más rápido abrir ése y usar «Duplicar con otros parámetros»."
+ },
+ {
+  "clave": "botonNuevoPrestamo",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Registra el préstamo con su descuento semanal y la semana en que empieza a descontarse. Queda autorizado a tu nombre (nadie se autoriza uno a sí mismo) y se abre su pagaré para imprimir y firmar."
+ },
+ {
+  "clave": "botonNuevoProveedor",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Da de alta un proveedor: basta el nombre, lo demás es opcional, y lo fiscal se llena subiendo su constancia de situación fiscal. Si lo da de alta finanzas y ya existe uno con ese RFC, le pone al día los datos en vez de duplicarlo."
+ },
+ {
+  "clave": "botonNuevoSubensamble",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Da de alta un subensamble vacío con su clave y nombre, y abre su ficha para capturarle sus piezas. Si esas piezas ya están en un equipo, es más rápido marcarlas ahí y usar «Convertir en subensamble»."
+ },
+ {
+  "clave": "botonOrdenesMaterial",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "La lista de todas las órdenes con su material: qué está apartado, qué falta y si ya se pidió a compras. Ahí también se crean órdenes desde pedido o para stock."
+ },
+ {
+  "clave": "botonOtraContrasena",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Genera otra contraseña fácil de dictar: letras y números separados por guiones, sin 0, O, 1 ni l."
+ },
+ {
+  "clave": "botonPagarComision",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Marca la comisión del mes como pagada, con la fecha y la referencia del pago. Se guarda el cálculo de ese momento: si después cambia un pedido del mes, la tarjeta te enseña la diferencia. El mismo mes no se paga dos veces."
+ },
+ {
+  "clave": "botonPantallaPiso",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Abre en otra pestaña lo que se ve en la TV del taller: lo que se trabaja en cada etapa, quién trabaja qué y lo que se entrega pronto, rotando solo, con la cinta de lo último que pasó. Ahí no se captura nada."
+ },
+ {
+  "clave": "botonPedirACompras",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Le manda a compras una requisición con lo sugerido de lo que marcaste, menos lo que ya está pedido en un borrador o en otra requisición. Compras la convierte en órdenes de compra."
+ },
+ {
+  "clave": "botonPedirAlgo",
+  "modulos": [],
+  "texto": "Le pides algo con fecha a una o varias personas: a cada una le llega un aviso y en «Los que pedí» ves cuándo lo terminan. Con varias, eliges si basta con que uno lo haga o si cada quien lo tiene que hacer."
+ },
+ {
+  "clave": "botonPedirInsumosCompras",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Manda a compras, en una sola requisición con el folio, todo lo que sigue por entregar aquí. Esas partidas pasan a «En compras» y ya no se pueden quitar. Sale cuando lo pedido es más de lo que hay en planta."
+ },
+ {
+  "clave": "botonPedirServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Abre el formulario para pedir una instalación, puesta en marcha, garantía, reparación en planta o servicio en campo para un cliente. Al guardarlo le llega un aviso a la gerencia de producción, que le pone fecha y cuadrilla; a ti te llega otro cuando queda programado."
+ },
+ {
+  "clave": "botonPendienteHecho",
+  "modulos": [],
+  "texto": "Lo das por terminado. Puedes dejar una respuesta corta (un precio, una fecha) y a quien te lo pidió le llega un aviso. Si fue error, lo puedes deshacer durante los minutos que fije dirección (15 de inicio)."
+ },
+ {
+  "clave": "botonPersonalPiso",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "La gente de Producción y cómo trabaja el taller: el área y la especialidad de cada quien y si entra a cuadrillas, cómo se cuentan las horas, el horario del taller y la capacidad por área. Solo la gerencia de producción."
+ },
+ {
+  "clave": "botonPonerMejoraEnMarcha",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Guarda lo que cambiaste y pasa la mejora a «En marcha». Antes elige quién la lleva y para cuándo. A quien la propuso le llega el aviso."
+ },
+ {
+  "clave": "botonPorQueReabasto",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Abre el cálculo de este artículo paso a paso, con sus números: consumo de los últimos meses, demanda, punto de reorden, lote, disponible y por qué quedó en este estado."
+ },
+ {
+  "clave": "botonProbarSkydropx",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Revisa que el ERP pueda entrar a Skydropx: muestra el saldo de la cuenta y las direcciones dadas de alta allá, para que elijas la de la planta. No genera ni cobra nada."
+ },
+ {
+  "clave": "botonProgramarServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Le pones día, hora, duración y cuadrilla. No te deja poner a alguien que ya va en otro servicio a esa hora ni a quien tiene vacaciones, permiso o incapacidad aprobados. Al guardar, a quien lo pidió y al vendedor del cliente les llega un aviso."
+ },
+ {
+  "clave": "botonProponerIdea",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Manda la idea al tablero de Mejoras como propuesta, a nombre de quien la tuvo. A ingeniería de procesos y a la gerencia de producción les llega el aviso para decidirla."
+ },
+ {
+  "clave": "botonPuntoBien",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Marca este punto como revisado y en buen estado, a tu nombre."
+ },
+ {
+  "clave": "botonPuntoFalla",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Marca este punto con falla: escribe qué tiene y confírmalo. Queda anotado en rojo en la orden."
+ },
+ {
+  "clave": "botonQuitarAjusteComision",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Quita este ajuste de la comisión del mes. Ya no se puede cuando la comisión está pagada."
+ },
+ {
+  "clave": "botonQuitarConceptoNomina",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Quita este concepto capturado a mano. Solo se puede mientras la semana está abierta; el préstamo, el ahorro y el bono no se quitan aquí."
+ },
+ {
+  "clave": "botonQuitarCostoServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Borra este costo. Las refacciones que entregó almacén no se quitan desde aquí."
+ },
+ {
+  "clave": "botonQuitarGastoEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Borra este gasto del embarque al instante, sin preguntar. Si ya calculaste el costeo, vuelve a calcularlo antes de cerrarlo."
+ },
+ {
+  "clave": "botonQuitarHilo",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Quita el hilo de este embarque y borra los correos que se guardaron de él. En Gmail no se toca nada."
+ },
+ {
+  "clave": "botonQuitarIndicador",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Quita este indicador de la plantilla. Sus puntos quedan libres: repártelos para que vuelvan a sumar 100."
+ },
+ {
+  "clave": "botonQuitarInsumoServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Quita esta partida. Solo se puede mientras almacén no la haya entregado ni se haya pedido a compras."
+ },
+ {
+  "clave": "botonQuitarOrdenEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Quita esta orden del embarque; la orden no se borra. No te deja si ya tiene pagos registrados en este embarque."
+ },
+ {
+  "clave": "botonQuitarReglaFamilia",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Borra la regla y vuelve a clasificar todas las ventas de la hoja sin ella. No pide confirmación."
+ },
+ {
+  "clave": "botonRechazarAjuste",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Lo cierra sin mover la existencia; queda en el historial con tu comentario. Úsalo cuando haya que volver a contar o cuando un conteo posterior ya dejó bien el artículo."
+ },
+ {
+  "clave": "botonRechazarSolicitud",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "La rechazas con un motivo, que la persona ve en su historial. No se resta del saldo, no sale en el calendario y no cuenta en la prenómina."
+ },
+ {
+  "clave": "botonRecibirDevolucion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Almacén registra que llegó: cuántas piezas de cada partida llegaron de verdad y cómo venía. Antes pide al menos una foto de cómo llegó, sin abrirla: es la prueba ante Mercado Libre o la paquetería. Todavía no entra al inventario."
+ },
+ {
+  "clave": "botonRecibirEquipo",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Registra que el equipo ya llegó al taller: tomas fotos de cómo llega y anotas su condición (golpes, piezas que faltan). Sin al menos una foto no se recibe. Una reparación en planta no se puede iniciar ni cerrar sin esto."
+ },
+ {
+  "clave": "botonReciboRetiro",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Abre el recibo de este retiro para volver a imprimirlo: sale con su folio, original y copia."
+ },
+ {
+  "clave": "botonReescribirSemana",
+  "modulos": [],
+  "texto": "Pide que la IA vuelva a escribir la semana con los números de este momento. Si no, se queda la primera que escribió esta semana. Cuenta para tus consultas de IA del día."
+ },
+ {
+  "clave": "botonRegistrarEtapaEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Guarda la fecha real de este paso (Enter también). Solo acepta hoy o antes. «Cerrado» pide antes la cuenta de gastos y que lo que había por recuperar ya esté marcado como recuperado."
+ },
+ {
+  "clave": "botonRegistrarIncidencia",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Registra vacaciones, permiso, falta, incapacidad, retardo u horas extra. Recursos Humanos lo puede dejar aprobado de una vez; si lo registra alguien más, queda como solicitud por aprobar."
+ },
+ {
+  "clave": "botonRegistrarMovimiento",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Te lleva a Entradas y salidas para registrar una salida (consumo o venta), una devolución o un traspaso. Desde la ficha de un artículo, llega con el artículo ya elegido."
+ },
+ {
+  "clave": "botonRegistrarPagoImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Registra un anticipo, saldo o pago total de una orden del embarque, o déjalo programado con su fecha. Si ya salió, pide los pesos que salieron para sacar el tipo de cambio real."
+ },
+ {
+  "clave": "botonRegistrarPagoNomina",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Anota que la nómina de esta semana ya se pagó: fecha, cuenta de donde salió y monto. Queda en los pagos de finanzas como nómina (aparte de proveedores), la semana dice «Pagada el…» y Recursos Humanos recibe un aviso."
+ },
+ {
+  "clave": "botonRegistrarSueldo",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Registra el sueldo base semanal de una persona desde una fecha, con su motivo. El anterior no se borra y las semanas ya cerradas no cambian."
+ },
+ {
+  "clave": "botonRegresarMejoraPropuesta",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Regresa la mejora a «Propuestas» para volver a decidirla. Si estaba descartada, se borra el motivo."
+ },
+ {
+  "clave": "botonReingreso",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Lo vuelve a activar. La antigüedad y las vacaciones cuentan desde la fecha de reingreso; si la baja fue un error de captura, marca que conserve su fecha de ingreso original."
+ },
+ {
+  "clave": "botonResponderReclamo",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Anota lo que se le contestó al cliente o a Mercado Libre. El reclamo pasa a «Respondido»; después lo cierras con su resultado."
+ },
+ {
+  "clave": "botonRestantesCumplieron",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Marca «cumplió» de un jalón a todos los que todavía no tienen marca este día (y en este momento, si es el celular). Las marcas que ya pusiste no cambian y a ti no te marca."
+ },
+ {
+  "clave": "botonRevisarAhoraML",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Vuelve a procesar los avisos de Mercado Libre que quedaron pendientes o con error, hasta 50 a la vez, también los que ya se habían dejado de intentar."
+ },
+ {
+  "clave": "botonSacarDeCuadrilla",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Saca a la persona de esta etapa. Si estaba trabajando, su tiempo ahí se cierra en ese momento (primero te pregunta) y la etapa sigue con los demás; si solo estaba planeada, deja de tocarle."
+ },
+ {
+  "clave": "botonSaldoInicialAhorro",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Lo que ya tenía ahorrado antes del ERP, según el control en Excel. Se registra una sola vez: un ajuste después se hace con un retiro o en la nómina."
+ },
+ {
+  "clave": "botonSubirDocumentoEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Sube el archivo (PDF, imagen, Word o Excel) sin leerlo con la IA: queda en su casilla y pasa a recibido. Si ya tenía uno, el nuevo se agrega como otro renglón del mismo documento y el anterior se queda."
+ },
+ {
+  "clave": "botonTerminarAsignacion",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Pone su último día en ese puesto. Para cambiarla de puesto, termina esta asignación y asigna la nueva desde el día siguiente."
+ },
+ {
+  "clave": "botonTraerLoNuevoHilo",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Trae los correos nuevos de este hilo desde tu Gmail. Solo te sale si tú lo ligaste, porque es tu cuenta."
+ },
+ {
+  "clave": "botonUsarEscenario",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Copia la meta del escenario en la casilla de la meta. Todavía no queda guardada: revísala y dale Guardar."
+ },
+ {
+  "clave": "botonUsarTextoRegla",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Copia este texto como patrón en el formulario de arriba, sin números ni medidas, para que lo ajustes y elijas la familia. No guarda nada."
+ },
+ {
+  "clave": "botonVerClientesUbicacion",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Abre la lista de clientes que escribieron esta combinación, para corregir su ficha si hace falta."
+ },
+ {
+  "clave": "botonVerDetalleSugerencia",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Muestra las piezas del grupo y los equipos que lo tienen completo."
+ },
+ {
+  "clave": "botonVerEmbarquesCerrados",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Muestra la lista de los embarques ya cerrados y los cancelados. No salen en las columnas de arriba ni cuentan en «En curso»."
+ },
+ {
+  "clave": "botonVerGraficaTabla",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Cambia entre la gráfica y la misma información en tabla, para leer las cifras exactas o copiarlas."
+ },
+ {
+  "clave": "botonVerTodasAlertasImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "De inicio ves hasta 6 avisos rojos o ámbar. «Ver las…» muestra todos, también los informativos (como una ETA que se adelantó); «Solo lo urgente» regresa a los primeros."
+ },
+ {
+  "clave": "botonVolverAnalizar",
+  "modulos": [],
+  "texto": "Pide el resumen otra vez, con los datos de este momento. Si no lo pides, el que escribió la IA se reusa hasta 6 horas. Cuando lo escribe la IA cuenta para tus consultas de IA del día; sin IA, solo se recalculan los avisos."
+ },
+ {
+  "clave": "botonVolverMedir",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Vuelve a medir con los datos de hoy lo que mide el sistema y el checklist, y toma los cambios de la plantilla del puesto. Lo que el jefe calificó a mano se queda, salvo en un indicador que cambió en la plantilla."
+ },
+ {
+  "clave": "botonVolverPaisMapa",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Regresa al mapa de todo el país, con el mismo periodo y la misma medida."
+ },
+ {
+  "clave": "botonYaLoPediDocumento",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Anota que hoy volviste a pedir este documento a quien lo debe, para que se vea hace cuánto se pidió. No manda ningún correo. Si te equivocaste, usa «Deshacer» en el aviso."
+ },
+ {
   "clave": "bultosEnvio",
   "modulos": [
    "inventario",
    "envios"
   ],
   "texto": "Cuántos paquetes lleva y su peso total. Salen del empaque guardado en cada artículo; \"sin medir\" son paquetes a los que les faltan medidas."
+ },
+ {
+  "clave": "bultosFlete",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Las cajas que van a salir, con peso y medidas. Salen del empaque capturado de cada artículo de la cotización (sin contar opcionales ni servicios); si a uno le falta, escríbelo o agrega un bulto a mano. Sin peso y medidas de todos, la paquetería no cotiza."
  },
  {
   "clave": "calendarioAreas",
@@ -1733,11 +3273,50 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Quién falta cada día del mes, con un color por tipo. Las solicitudes por aprobar se ven punteadas y los días que no se trabajan, en gris. Clic en un día para registrar algo en esa fecha."
  },
  {
+  "clave": "calendarioCuadrillas",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Una fila por persona y una barra por servicio, dos semanas a la vez; los fines de semana van sombreados. El color es el tipo de servicio y, si la barra se ve más clara, ya se cerró. Pasa el mouse por una barra para ver su horario y sus horas de taller; con clic abres el servicio."
+ },
+ {
+  "clave": "calificacionIndicador",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Los puntos que sacó en este indicador contra su peso, que es lo más que puede dar. Verde: todo el peso; amarillo: una parte; rojo: 0. Un guion: falta calificarlo."
+ },
+ {
+  "clave": "cambiarMesAusencias",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Pasa al mes anterior o al siguiente. «Hoy» te regresa al mes en curso."
+ },
+ {
+  "clave": "cambioBitacora",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Qué datos cambiaron. Si fue uno solo, ves el antes tachado y el después; en altas y bajas, cuántos datos traía. Dale clic al renglón para ver todo."
+ },
+ {
   "clave": "cambioCosto",
   "modulos": [
    "compras"
   ],
-  "texto": "Cuánto sube o baja el costo nuevo contra el actual, comparado en pesos. Rojo: sube más de 10 %. Amarillo: sube. Verde: baja. Con un triángulo, el cambio pasa de 50 %: revisa que la unidad y la moneda sean las mismas."
+  "texto": "Cuánto sube o baja el costo nuevo contra el actual, comparado en pesos. Rojo: sube más de 10 %. Amarillo: sube. Verde: baja. Con un triángulo, el cambio pasa de 50 %: revisa que la unidad y la moneda sean las mismas. Sin nada escrito, en gris va el último cambio que tuvo."
  },
  {
   "clave": "cambioDeManos",
@@ -1765,12 +3344,29 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que habría que cambiar en Mercado Libre para que cuadre con el ERP: el precio, cuando difiere 2 % o más del sugerido, y la existencia, cuando Mercado Libre tiene más de lo libre en planta o se agotó allá y en planta sí hay. Te enseña el antes y el después; palomeas los que quieres y se mandan. El valor siempre es el sugerido. Antes de mandar se vuelve a leer cada publicación: si alguien la cambió en Mercado Libre, esa no se toca. Dejar una en 0 viene sin palomear porque Mercado Libre la pausa."
  },
  {
+  "clave": "campoMetaAnual",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Escribe la meta del año con IVA: acepta «32,000,000» o «32 M». Enter o Guardar la guarda; abajo ves cuánto es contra lo que cerró el año anterior."
+ },
+ {
   "clave": "canalesEnLinea",
   "modulos": [
    "costeo",
    "margenes"
   ],
   "texto": "Precio sugerido con IVA para cada canal (Mercado Libre, sitio web…): parte del precio de lista y le suma la comisión del canal, la cuota fija y el envío. «Abajo del sugerido» avisa que una publicación está más barata que eso."
+ },
+ {
+  "clave": "canalSeguimientoCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Por dónde hablaste con el cliente. Lo que escribes queda en su historia con ese medio y cuenta como seguimiento para la vigencia de su cuenta."
  },
  {
   "clave": "canalVenta",
@@ -1783,12 +3379,66 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Por dónde entró la venta: Directo (vendedores), Mercado Libre, Sitio web, Mostrador, Distribuidor o Amazon."
  },
  {
+  "clave": "cancelarOrdenCompra",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Cancela una orden enviada de la que no ha llegado nada. Escribes el motivo (queda en sus notas) y lo que venía de requisiciones regresa a pendiente para volver a pedirse."
+ },
+ {
+  "clave": "cancelarPartidaRequisicion",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Cancela esta partida porque ya no se necesita: sale de la lista y ya no se comprará. Te pide confirmar."
+ },
+ {
+  "clave": "cancelarSolicitudPrecio",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cancela la solicitud con su motivo: compras deja de cotizarla y, si ya la tenía alguien, le llega un aviso. Solo se puede mientras no la contesten."
+ },
+ {
   "clave": "cantidadEfectiva",
   "modulos": [
    "costeo",
    "margenes"
   ],
-  "texto": "Lo que de verdad lleva el equipo: la cantidad fija más lo que suma el parámetro, redondeada hacia arriba si está marcado, y con la merma. Pasa el mouse sobre la cifra para ver la cuenta."
+  "texto": "Lo que de verdad lleva el equipo: la cantidad fija más lo que suma el parámetro, redondeada hacia arriba si está marcado, y con la merma. Si depende de un parámetro, la cifra sale subrayada: pasa el mouse sobre ella para ver la cuenta."
+ },
+ {
+  "clave": "cantidadFijaLinea",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Cuánto lleva de esa pieza, en su unidad (piezas, metros, kilos…). Si la línea depende de un parámetro, ésta es la parte fija y se le suma lo de «Por parámetro»."
+ },
+ {
+  "clave": "cantidadIncidencia",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Vacaciones, permisos y faltas se cuentan en días hábiles; la incapacidad, en días naturales, como el IMSS. El retardo va en minutos y las horas extra, en horas."
+ },
+ {
+  "clave": "cantidadRecibidaDevolucion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cuántas piezas llegaron de verdad, según almacén al recibirla. En ámbar si llegaron menos de las que se esperaban."
  },
  {
   "clave": "capacidadAutomatica",
@@ -1803,6 +3453,33 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "admin"
   ],
   "texto": "Horas hombre por semana que da esa área del taller. Con ellas se arma el plan del taller, la fecha realista de entrega y la carga por semana. Si es automática, la calcula el ERP con la gente del área; si no, se pone a mano."
+ },
+ {
+  "clave": "capacidadTotalTaller",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "La suma de la capacidad por semana de las etapas activas, en horas hombre."
+ },
+ {
+  "clave": "capturaConteo",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Escribe lo que contaste y Enter: se guarda y bajas al siguiente (con ↑ ↓ también te mueves). Esc borra lo que escribiste. La palomita verde dice que ya quedó guardado."
+ },
+ {
+  "clave": "capturaIndicador",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Lo que pone el jefe según la regla: cuántas incidencias, el resultado del mes o lo cumplido de lo posible, con una nota y, si quieres, una liga de evidencia. Enter guarda y el resultado se recalcula."
  },
  {
   "clave": "cargaPersona",
@@ -1826,7 +3503,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "Cuánto trabajo tiene cada área por semana: producción liberada más horas en servicio, contra lo que el área puede trabajar. Las órdenes atrasadas cuentan completas en esta semana."
+  "texto": "Cuánto trabajo tiene cada área por semana: producción liberada (repartida entre hoy y su fecha de compromiso) más las horas de su gente en servicio, contra lo que el área puede trabajar. Las órdenes atrasadas cuentan completas en esta semana; las que están en espera no cuentan, y lo planeado sin liberar se ve aparte («plan.») sin sumar."
  },
  {
   "clave": "cargaTaller",
@@ -1835,6 +3512,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Semanas de trabajo pendientes en cada etapa: horas que faltan ÷ horas que esa etapa puede trabajar por semana. Oscuro es lo liberado; claro, lo planeado que viene."
+ },
+ {
+  "clave": "cargaTallerTablero",
+  "modulos": [],
+  "texto": "Cuántas semanas de trabajo le quedan a cada área con lo que ya entró al taller (órdenes liberadas y en proceso, sin las que están en espera): horas que faltan ÷ horas que el área trabaja por semana. Lo planeado que no se ha liberado no cuenta aquí."
  },
  {
   "clave": "cartaPorte",
@@ -1855,12 +3537,27 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cada cliente es de un vendedor hasta la fecha que ves: la más lejana entre su última venta con él + 12 meses, su último seguimiento (cotización, oportunidad o actividad) + 90 días y, si es nuevo, su alta + 90 días. Los plazos se ajustan en Configuración. Pasada esa fecha la cuenta vence y puede quedar libre."
  },
  {
+  "clave": "casillaElegirReabasto",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Marca lo que quieres pedir; solo se pueden marcar los artículos con sugerido. La casilla de arriba marca todos los de la vista que tienen sugerido."
+ },
+ {
   "clave": "categoriaMaquina",
   "modulos": [
    "servicio",
    "mantenimiento"
   ],
   "texto": "Qué clase de equipo es (soldadora, compresor, impresora, aire acondicionado…). Es libre: si no está en la lista, se escribe. Agrupa las refacciones que lleva y las rutinas de mantenimiento, así que conviene usar la misma palabra para lo mismo."
+ },
+ {
+  "clave": "categoriasConsumibles",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Las categorías cuyos artículos cuentan como consumibles del taller. Marca o desmarca y da «Guardar categorías»; con el interruptor prendido, al guardar se suelta lo apartado para órdenes de las que quedaron marcadas."
  },
  {
   "clave": "categoriaSugeridaSat",
@@ -1887,6 +3584,21 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "En qué se gastó, según el XML: por lo comprado cuando las claves del SAT de sus conceptos lo dicen (como al registrar una compra de hoy); si no dicen nada, por el giro del proveedor. La de «por lo comprado» es la que cuenta en Resultados, salvo cuando el proveedor está en una categoría que no es gasto (como «Sin efectos»): ahí manda la del proveedor."
  },
  {
+  "clave": "cerrarOrdenesCreadas",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Quita este aviso y regresa a la lista con su filtro de siempre. Las órdenes que se crearon siguen ahí, en borrador."
+ },
+ {
+  "clave": "cerrarOrdenMto",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Escribe qué se hizo y, si hace falta, corrige las horas trabajadas y el horómetro. No se cierra mientras falte un punto del checklist. Al cerrar se pausan los play abiertos, la máquina recalcula su estado y, si es preventivo, su plan empieza a contar desde hoy."
+ },
+ {
   "clave": "cerrarSemana",
   "modulos": [
    "rrhh",
@@ -1896,7 +3608,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Al cerrar la semana se congelan los renglones, se descuentan los préstamos y se marcan pagados los bonos que ya tienen base. Después ya no cambia: un error se corrige en una semana abierta con otro concepto."
+  "texto": "Al cerrar la semana se congelan los renglones, se descuentan los préstamos, lo descontado para la caja de ahorro pasa al saldo de cada quien y se marcan pagados los bonos que ya tienen base. Después ya no cambia: un error se corrige en una semana abierta con otro concepto."
  },
  {
   "clave": "cfdi",
@@ -1935,12 +3647,93 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Los puntos del checklist diario que le revisan a esta persona: EPP (casco, botas y guantes, normalmente el personal de taller), entrega de celular y revisión de vehículo (quien maneja). Los palomea Recursos Humanos en su ficha. Sin palomear, la persona no sale en ese checklist y no se le puede marcar. Si sus objetivos miden uno de esos puntos, palomealo, o ese objetivo se queda sin dato. La limpieza no va aquí: se marca por área."
  },
  {
+  "clave": "checklistCelular",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Si entregó el celular. Se revisa tres veces al día (entrada, break 1 y break 2) y cada vez es una marca aparte. Salen quienes lo tienen palomeado en su ficha."
+ },
+ {
+  "clave": "checklistEpp",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Si trae su equipo de protección: casco, botas y guantes. Salen quienes lo tienen palomeado en su ficha, normalmente el personal de taller."
+ },
+ {
+  "clave": "checklistLimpieza",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Se marca por área, no por persona: la marca de un área cuenta para todos los que la tienen en sus objetivos."
+ },
+ {
   "clave": "checklistMantenimiento",
   "modulos": [
    "servicio",
    "mantenimiento"
   ],
   "texto": "Los puntos de la rutina en esta orden. Cada uno se marca bien, o con falla y qué tiene. La orden no se cierra mientras quede alguno sin revisar."
+ },
+ {
+  "clave": "checklistVehiculos",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "La revisión del vehículo y el montacargas: niveles, llantas y documentos. Salen quienes lo tienen palomeado en su ficha (quien maneja)."
+ },
+ {
+  "clave": "choqueCuadrilla",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Esta persona ya va en otro servicio que se encima con estas fechas. Así no se puede guardar: quítala o mueve uno de los dos."
+ },
+ {
+  "clave": "cierreEstimadoOportunidad",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "El día en que crees que el cliente va a decidir. Sale en el calendario como «Cierre esperado», en ámbar si ya pasó y sigue abierta."
+ },
+ {
+  "clave": "claveInegi",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "La clave oficial del INEGI del estado o del municipio. Sirve para cruzar estos datos con otras bases o mapas."
+ },
+ {
+  "clave": "claveSugerida",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "La clave que te propone el ERP: el siguiente número de la serie que más se usa en ese tipo. Puedes cambiarla; nunca te propone una que ya exista."
  },
  {
   "clave": "clienteLibre",
@@ -1953,11 +3746,35 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cliente sin vendedor dueño: cualquiera le puede cotizar o darle “Hacerlo mío”."
  },
  {
+  "clave": "clienteQuedaAMiNombre",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Marcado, el cliente queda en tu cartera. Sin marcar queda libre, sin dueño: cualquier vendedor le puede dar «Hacerlo mío»."
+ },
+ {
+  "clave": "clientesDejaronComprar",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Clientes de ese lugar que compraron en el periodo anterior y en este nada, con lo que compraban y su vendedor. Salen hasta 6, los que más compraban primero; clic para abrir su ficha."
+ },
+ {
   "clave": "clientesNuevosRecurrentes",
   "modulos": [
    "analisis"
   ],
-  "texto": "Nuevo: su primera compra fue ese año. Recurrente: ya había comprado antes."
+  "texto": "Nuevo: su primera compra fue ese año (en la cifra de arriba, dentro del periodo). Recurrente: ya había comprado antes."
+ },
+ {
+  "clave": "clientesQueCompraron",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Cuántos clientes distintos compraron en el periodo. Un cliente con varias compras cuenta una vez."
  },
  {
   "clave": "coberturaContraMeta",
@@ -1966,6 +3783,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "Cuántos meses alcanza lo disponible con lo que sale al mes, dividido entre la meta de cobertura del artículo (1 mes nacional y 6 importado, salvo que el artículo tenga la suya). «En la meta» es de 1 a 2 veces; abajo falta, arriba sobra. Solo cuenta artículos con demanda mensual."
+ },
+ {
+  "clave": "coberturaEstado",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Qué parte de toda la venta desde 2018 es de clientes con estado reconocido: eso es lo que sale en el mapa. Más alto es mejor."
+ },
+ {
+  "clave": "coberturaMunicipio",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Qué parte de toda la venta desde 2018 es de clientes ubicados hasta su municipio. Abajo, cuántos clientes lo están."
  },
  {
   "clave": "coberturaTerminal",
@@ -2000,6 +3831,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Los cobros registrados cada mes, en pesos, con los pagos que trae la hoja y lo que se ha cobrado aquí de los saldos de la hoja. Los de pedidos en dólares se convierten al tipo de cambio del pedido, no al de hoy."
  },
  {
+  "clave": "cobradoSemana",
+  "modulos": [],
+  "texto": "Lo que se cobró la semana pasada de pedidos del ERP, en pesos (los de dólares, al tipo de cambio del pedido), contra la semana anterior. Verde si subió."
+ },
+ {
+  "clave": "cobranzaAntiguedadTablero",
+  "modulos": [],
+  "texto": "Lo que deben los clientes en pedidos del ERP, agrupado por días desde la fecha del pedido: 0 a 30, 31 a 60, 61 a 90 y más de 90. Lo que se debía en la hoja no entra en las barras: su total va arriba, en la descripción."
+ },
+ {
   "clave": "cobroSaldoHoja",
   "modulos": [
    "rrhh",
@@ -2010,6 +3851,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Un pago de un cliente a lo que debía en la hoja (antes de que sus pedidos se capturaran aquí). Baja su saldo al momento; no deja cobrar más de lo que debe."
+ },
+ {
+  "clave": "cobrosPedido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Los pagos de este pedido, con su fecha, forma de pago y referencia. Los registra finanzas; los de Mercado Libre entran solos con su pago. La barra es lo cobrado contra el total."
  },
  {
   "clave": "codigoAutorizacion",
@@ -2053,6 +3904,26 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuánto hay de este artículo en ese almacén. El punto (·) es cero; en rojo, negativo."
  },
  {
+  "clave": "columnaLlevaPedido",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Los equipos que se vendieron en el pedido, con su cantidad. Abajo, con «+», lo demás que lleva y no se fabrica (componentes, refacciones, servicios)."
+ },
+ {
+  "clave": "comentariosEvaluacion",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Lo que escriben la persona, su jefe y Recursos Humanos sobre ese mes. Sirve para aclarar algo antes de que se apruebe; cuando se devuelve una evaluación, el motivo también queda aquí."
+ },
+ {
   "clave": "comision",
   "modulos": [
    "ventas",
@@ -2063,6 +3934,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El porcentaje de tu plan sobre lo que vendiste en el mes de todo lo que no es refacción (maquinaria y, si el plan lo dice, “otros”), sin IVA. Más un bono por escalón de maquinaria, otro por escalón de refacciones y los ajustes."
  },
  {
+  "clave": "comisionCanal",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Lo que se queda el canal de cada venta. El precio en ese canal sube para que, después de la comisión, llegue completo el precio de lista."
+ },
+ {
   "clave": "comisionPagada",
   "modulos": [
    "ventas",
@@ -2071,6 +3949,56 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Finanzas la marca pagada y se guarda una foto del cálculo de ese momento. Si después se mueve un pedido del mes, la tarjeta te avisa la diferencia."
+ },
+ {
+  "clave": "comoLoLleva",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Directo: va en la lista de ese equipo o subensamble, con la cantidad que ves. Dentro de un subensamble: lo lleva a través de uno; nivel 2 es un subensamble del equipo, nivel 3 un subensamble dentro de otro."
+ },
+ {
+  "clave": "comoTerminoSeguimientoCliente",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cierra el seguimiento. Le interesa: se crea su oportunidad en Contactado (o se usa la que ya tenía abierta). No por ahora o No contesta: vuelve a esta lista en 90 días. Ya no compra: sale de la lista, con la razón."
+ },
+ {
+  "clave": "comoVaCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "En qué quedó cada una: «Se volvió pedido»; perdida, con su motivo; lo abierto, según lo que le falta (Negociando, Seguimiento atrasado, No contesta, Vigencia vencida, Esperando respuesta); lo que nunca salió (Borrador, Por autorizar, Autorizada sin enviar, Cancelada sin enviar); o «Se cerró con otra cotización», cuando la venta se ganó con otra."
+ },
+ {
+  "clave": "comparacionCopia",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Así quedó la copia contra el equipo del que salió: la flecha dice si subió o bajó y cuánto. Este aviso solo sale justo después de duplicar."
+ },
+ {
+  "clave": "compararPeriodoUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Prendido, las gráficas también muestran el periodo anterior del mismo largo: la línea punteada y las barras grises. Los indicadores siempre comparan."
+ },
+ {
+  "clave": "comparativoPersonaUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Cada persona contra sí misma: la barra de color es este periodo y la gris, el anterior. Salen hasta 14, de más a menos; quien no tuvo nada en ninguno de los dos no sale."
  },
  {
   "clave": "complementoPago",
@@ -2124,11 +4052,68 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que el cliente compró y pagó según el libro de ventas de la hoja, antes del ERP. Solo lo ven el dueño, la gerencia y cobranza."
  },
  {
+  "clave": "comprasEnCaminoInicio",
+  "modulos": [],
+  "texto": "Órdenes de compra ya enviadas al proveedor o recibidas en parte: lo que está por llegar. «Atrasadas» son las que ya pasaron su fecha de entrega: llámale al proveedor o mueve la fecha."
+ },
+ {
+  "clave": "comprasQueLleganSemana",
+  "modulos": [],
+  "texto": "Órdenes de compra enviadas o recibidas en parte con fecha de entrega de lunes a domingo de esta semana. «Atrasadas» son las que ya pasaron su fecha sin llegar completas; también dice cuántos ajustes de inventario esperan autorización."
+ },
+ {
+  "clave": "comprasTresAnios",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Cuántas compras distintas (facturas o pedidos) hizo en los 3 años antes del último día del periodo."
+ },
+ {
+  "clave": "comprobantePagoImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "El comprobante del banco (o de EBANX) de un pago que ya salió. El agente aduanal lo pide para demostrar el tipo de cambio; mientras falte, sale un aviso."
+ },
+ {
   "clave": "concentracionTop3",
   "modulos": [
    "analisis"
   ],
   "texto": "Qué parte de la venta juntan los 3 estados (o municipios) que más vendieron. Muy alto quiere decir que dependes de pocos lugares."
+ },
+ {
+  "clave": "conceptoCostoServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "De qué es el gasto: viáticos (en un servicio con cliente: hospedaje, comidas, gasolina, pasajes), servicio externo (un taller de fuera), mano de obra (un técnico externo) u otro."
+ },
+ {
+  "clave": "conceptoEntraComoGasto",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Marca los conceptos de la cuenta de gastos que entran como gasto del costeo. Los impuestos y el anticipo no se pueden marcar: los impuestos ya vienen en el pedimento y el anticipo no es gasto."
+ },
+ {
+  "clave": "condicionesCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Forma de pago, tiempo de entrega y notas: salen al pie de la cotización. Vienen llenas con lo que dejó la gerencia por defecto; puedes elegir otra opción del catálogo o escribir la tuya."
+ },
+ {
+  "clave": "conDiferenciaConteo",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Lo contado menos lo que decía el sistema al capturarlo: en verde sobra, en rojo falta. Al cerrar el conteo, cada artículo con diferencia se vuelve un ajuste por autorizar."
  },
  {
   "clave": "conexionML",
@@ -2149,6 +4134,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que puede hacer que el costo esté mal: piezas sin costo (cuentan como $0) y costos de hace más de 6 meses. Corrígelos y el precio se recalcula solo."
  },
  {
+  "clave": "confirmarIntentoCliente",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Anota el intento (quién, cuándo y por dónde) y el cliente pasa a «En seguimiento» con el siguiente paso. Si fue un error, «Deshacer» en el aviso lo quita: un intento tuyo se deshace en los primeros 15 minutos."
+ },
+ {
   "clave": "consejoExperimento",
   "modulos": [],
   "texto": "Una prueba que haces tú durante unas semanas, con la forma de ver en el ERP si funcionó. Por ejemplo: llamar el primer día a la mitad de tus cotizaciones nuevas y comparar cuántas cierran de cada mitad."
@@ -2157,6 +4152,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "clave": "consejoSemana",
   "modulos": [],
   "texto": "Cada lunes en la madrugada la IA le escribe a cada persona hasta tres consejos con sus propios números de las últimas semanas: cómo usa el ERP (por ejemplo, si captura todo de golpe en la tarde, como en la hoja) y, a quien vende, qué podría probar para cerrar más. Solo los ves tú; dirección puede ver todos para cuidar lo que se dice. No menciona costos ni compara con compañeros."
+ },
+ {
+  "clave": "consultasIaErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Cuántas veces la IA trabajó para la persona: preguntas al asistente, resúmenes, mensajes que redactó, documentos que leyó… Las que fallaron no cuentan, y la revisión nocturna va aparte porque no es de nadie."
  },
  {
   "clave": "consumibleTaller",
@@ -2199,6 +4201,54 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que salió de cada consumible en el periodo contra lo que prevén las recetas de las órdenes que se terminaron en ese mismo periodo. Arriba de la receta es más de 20 % sobre lo previsto. Lo que no viene en ninguna receta (como el EPP) solo se ve por persona."
  },
  {
+  "clave": "contactoParaLlamar",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Abre el chat, el correo o marca el número. Al volver, la tarjeta te pregunta si sí le escribiste o le llamaste: un toque lo anota y el cliente pasa a «En seguimiento», para que nadie del equipo le vuelva a escribir sin saber."
+ },
+ {
+  "clave": "contactoPrincipal",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "El contacto que sale en las cotizaciones de este cliente. Hay uno solo: si marcas otro como principal, este deja de serlo."
+ },
+ {
+  "clave": "contactosCliente",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Las personas con quien tratas en este cliente: teléfono, WhatsApp, correo y domicilio. Los ven su vendedor, la gerencia y cobranza (si el cliente es libre, cualquiera); si es de otro vendedor, te salen bloqueados."
+ },
+ {
+  "clave": "contactosPrivadosCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Este cliente es de la cartera de otro vendedor: sus contactos solo los ven él y la gerencia. Si la regla de cartera está prendida y su cuenta sigue vigente, no te deja ligarlo a tu cotización: pide a la gerencia que lo reasigne o que compartan el crédito."
+ },
+ {
+  "clave": "contadosConteo",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cuántos artículos de la lista ya capturaste. La lista trae lo que el sistema dice que hay en este almacén más lo que agregaste; lo que no captures no se ajusta al cerrar."
+ },
+ {
   "clave": "conteoFisico",
   "modulos": [
    "inventario",
@@ -2211,7 +4261,22 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "compras"
   ],
-  "texto": "Contestar es capturar el costo que dio el proveedor: entra al catálogo con su historial, el precio de lista se recalcula solo y el vendedor lo ve en su cotización. La nota para el vendedor nunca lleva costos."
+  "texto": "Contestar es capturar el costo que dio el proveedor: entra al catálogo con su historial, el precio de lista se recalcula solo y el vendedor lo ve en su cotización. Pide costo y días de entrega; la nota para el vendedor nunca lleva costos."
+ },
+ {
+  "clave": "contraRecetaPorcentaje",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Lo que salió entre lo que prevén las recetas. En rojo, más de 120 % (se gastó de más); en verde, de 80 a 120 %; en gris, menos de 80 %."
+ },
+ {
+  "clave": "contribucionesPedimento",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "IGI es el arancel; DTA, el derecho de trámite aduanero; PRV, la prevalidación. Son costo y entran al costeo repartidos por valor. El IVA del pedimento va aparte porque se acredita."
  },
  {
   "clave": "conversionML",
@@ -2224,6 +4289,24 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "De cada 100 visitas, cuántas terminaron en venta (ventas de 30 días entre visitas de 30 días). Una publicación con muchas visitas y poca conversión suele pedir mejores fotos, otra descripción o revisar el precio."
  },
  {
+  "clave": "convertirCotizacionPedido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Crea el pedido con los precios, descuentos y condiciones de esta cotización: eliges qué partidas entran y la fecha compromiso. La cotización queda Aceptada, su oportunidad Ganada y su seguimiento se cierra. Producción y cobranza lo ven al momento."
+ },
+ {
+  "clave": "convertirEnSubensamble",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Las líneas marcadas pasan a un subensamble nuevo y aquí quedan como una sola línea de 1 pieza. Solo se reorganiza: lo que lleva el equipo no cambia. Antes de crearlo te avisa si esas piezas ya son un subensamble, para que uses ése."
+ },
+ {
   "clave": "convertirLead",
   "modulos": [
    "ventas",
@@ -2232,6 +4315,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Un lead se vuelve oportunidad cuando ya te contestó: primero anotas en «Intentos de contacto» que contestó y qué te dijo, y entonces se habilita «Crear oportunidad». Si ya era cliente va a su cuenta; si no, eliges la empresa si ya existe o se da de alta como cliente nuevo con este contacto. Si su teléfono o correo ya es de otro cliente, no deja darlo de alta otra vez: te dice cuál es para que lo elijas. La oportunidad nace en Contactado, a tu nombre, con lo que te dijo, y quien registró el lead ve en qué etapa va."
+ },
+ {
+  "clave": "convertirMonedaCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cambiar la moneda o el tipo de cambio convierte el precio de todas las partidas para que, en pesos, la cotización valga lo mismo. En dólares toma el tipo de cambio más reciente; puedes escribir otro y aplicarlo con Enter. Ya enviada no se cambia: saca una nueva versión."
  },
  {
   "clave": "correccionUbicacion",
@@ -2260,6 +4353,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Los correos de los hilos de Gmail ligados a este embarque, guardados en el ERP sin lo citado de correos anteriores. Traen montos: solo los ve quien ve el dinero de importaciones."
  },
  {
+  "clave": "costeoPorPartida",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "El costo de cada partida: su valor en pesos, los gastos que le tocaron y el costo unitario sin IVA. «Antes» es el costo que tenía en el catálogo al calcular; la flecha dice cuánto sube o baja."
+ },
+ {
   "clave": "costoArticulo",
   "modulos": [
    "costeo",
@@ -2273,6 +4373,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "compras"
   ],
   "texto": "Cuánto difiere el costo de esta partida del costo vigente del artículo. Rojo: más de 10 % arriba; amarillo: arriba; verde: abajo."
+ },
+ {
+  "clave": "costoDeOtroProveedor",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Este proveedor es el de siempre del artículo, pero el último costo capturado se le compró a otro: el costo de hoy viene de aquel."
  },
  {
   "clave": "costoDesperdicio",
@@ -2299,7 +4406,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "Lo que cuesta la IA del ERP, estimado con los tokens de cada consulta (lo que lee y lo que escribe) y los precios por millón de tokens que están en Configuración → «precios_ia», en dólares y su equivalente en pesos al tipo de cambio del día. Incluye la revisión nocturna (que va por lotes, a mitad de precio), que no es de nadie en particular. Lo que factura el proveedor es lo que manda; si cambian los precios, se cambian en Configuración y todo se recalcula."
+  "texto": "Lo que cuesta la IA, estimado con lo que lee y escribe cada consulta y los precios del proveedor que tiene guardados el ERP; en dólares, y en pesos al tipo de cambio del día. El total suma la revisión nocturna (va por lotes, a mitad de precio), que no es de nadie; cada persona, solo lo suyo. Es un estimado: lo que factura el proveedor es lo que manda."
  },
  {
   "clave": "costoMasViejo",
@@ -2307,7 +4414,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "costeo",
    "margenes"
   ],
-  "texto": "La fecha del costo más antiguo entre las piezas del equipo. Si pasa de un año se marca en amarillo: el costo del equipo ya no es el de hoy."
+  "texto": "La fecha del costo más antiguo entre las piezas del equipo. En la lista de equipos se marca en amarillo si pasa de un año: el costo del equipo ya no es el de hoy."
+ },
+ {
+  "clave": "costoPuestoEnPlanta",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Lo que de verdad costó cada artículo ya en planta: su precio al tipo de cambio real de los pagos más los gastos e impuestos sin IVA, repartidos entre las partidas. El preliminar se calcula con el pedimento; el final, con la cuenta de gastos, y es el único que cambia el costo del catálogo al cerrarlo."
  },
  {
   "clave": "costoReparacionCriticidad",
@@ -2316,6 +4430,27 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Lo que se ha gastado en reparar esta máquina en los últimos 12 meses (refacciones, servicio externo, mano de obra), en escalones: casi nada, bajo, medio o alto. Suma hasta 3 puntos a la criticidad. Aquí no se ve el monto; quien ve costos lo ve en la ficha."
+ },
+ {
+  "clave": "costosOrdenMto",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Lo que costó la reparación: servicio externo, mano de obra u otros que anota mantenimiento o la gerencia; las refacciones que entrega almacén se suman solas (solo las ve quien tiene permiso de costos). Todo suma al costo de reparación de los últimos 12 meses, uno de los factores de la criticidad."
+ },
+ {
+  "clave": "costosQueSubieronTablero",
+  "modulos": [],
+  "texto": "Los artículos cuyo costo subió más de 3 % en los últimos 30 días, de mayor a menor alza: costo anterior → nuevo, cuánto subió y en cuántos equipos y subensambles se usa, que es donde pega el alza. Clic para abrir el artículo."
+ },
+ {
+  "clave": "costosServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Lo que costó de verdad el servicio: viáticos, servicio externo, mano de obra y otros que anota la gerencia. Las refacciones que entrega almacén se suman solas, y esas solo las ve quien tiene permiso de costos."
  },
  {
   "clave": "costoViejo",
@@ -2330,7 +4465,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "compras"
   ],
-  "texto": "El costo con el que se calcula hoy: el último que se capturó, a mano, al contestar una solicitud de precio o al recibir una orden de compra."
+  "texto": "El costo con el que se calcula hoy: el último que se capturó, ya sea a mano, al contestar una solicitud de precio, desde la cotización de un proveedor o al recibir una orden de compra."
  },
  {
   "clave": "cotizacionAbierta",
@@ -2341,6 +4476,26 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Una cotización que sigue viva: en borrador, por autorizar, autorizada o enviada."
+ },
+ {
+  "clave": "cotizacionesAceptadas",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Las que se convirtieron en pedido. Al abrir una, «Ver pedido» te lleva a su pedido."
+ },
+ {
+  "clave": "cotizacionesEnviadas",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Las que ya tiene el cliente y siguen sin respuesta: ni pedido ni rechazo. Ya no se editan; para cambiar algo, saca una nueva versión."
  },
  {
   "clave": "cotizacionesSemana",
@@ -2364,6 +4519,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "Cotiza el envío con todas las paqueterías de Skydropx a la vez y genera la guía sin salir del ERP: el PDF, el número, el rastreo y el costo quedan en el envío y el costo se descuenta del saldo de Skydropx. La guía se cobra al generarla. Si Skydropx falla o es flete, registra la guía a mano como antes."
+ },
+ {
+  "clave": "crearOrdenBorrador",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Crea la orden vacía con la moneda y las condiciones de pago del proveedor. Queda en borrador: ahí le agregas partidas y, cuando esté lista, la envías."
+ },
+ {
+  "clave": "crearOrdenDesdeCotizacion",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Crea la orden en borrador con lo que revisaste: partidas, moneda, condiciones y fecha de entrega (con los días que escribiste o los del proveedor). Si marcaste las casillas, también recuerda las claves y pone al día los costos."
  },
  {
   "clave": "crecimientoMovil",
@@ -2409,6 +4578,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Días que da el proveedor para pagar. El vencimiento de cada orden se fija al recibirla: fecha de recepción más estos días. Sin crédito, es de contado."
  },
  {
+  "clave": "criterioRepartoGasto",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Cómo se reparte el gasto entre las partidas en el costeo. Por valor: cada partida carga según lo que vale. Por volumen (consolidado): según el volumen de cada orden y, dentro de ella, por valor; pide el volumen en la pestaña Órdenes."
+ },
+ {
   "clave": "criticidadMaquina",
   "modulos": [
    "servicio",
@@ -2422,7 +4598,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "Las personas del taller que salen al servicio. Una persona no puede estar en dos servicios que se enciman, ni salir con vacaciones o incapacidad aprobadas. La corona marca al jefe de cuadrilla."
+  "texto": "Las personas del taller que salen al servicio. Una persona no puede estar en dos servicios que se enciman, ni salir con vacaciones, permiso o incapacidad aprobados. La corona marca al jefe de cuadrilla."
  },
  {
   "clave": "cuadrillaEtapa",
@@ -2441,11 +4617,27 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Quiénes van a trabajar esta etapa cuando arranque. La planea la gerencia de producción en Cuadrillas, arrastrando a la gente, y la terminal la trae marcada al iniciar. Si se inicia con otras personas, manda lo que se hizo: la cuadrilla queda como arrancó. Al pausar, la cuadrilla se queda para reanudar. Una persona puede estar planeada en varias etapas (es su fila de trabajo), pero trabajando solo en una."
  },
  {
+  "clave": "cuelloBotellaTaller",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "El área con más semanas de trabajo liberado, cuando pasa de una semana. Es la que marca el paso del taller: lo que se adelante en las demás termina esperando aquí."
+ },
+ {
   "clave": "cuentaActiva",
   "modulos": [
    "admin"
   ],
   "texto": "Activa: puede entrar con sus roles. Desactivada: no ve ni hace nada, aunque tenga la sesión abierta; sus roles se guardan para cuando regrese. En rojo si RRHH ya lo dio de baja y su cuenta sigue abierta."
+ },
+ {
+  "clave": "cuentaColumnaEtapa",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Lo que esta área tiene ahorita: trabajando, pausado y listo para empezar. No cuenta lo de «Más adelante»."
  },
  {
   "clave": "cuentaDinero",
@@ -2518,6 +4710,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "De los preventivos que vencían en el periodo, cuántos se hicieron en su fecha o antes. Un preventivo hecho tarde ya no previno igual. Los vencidos son los que pasaron su fecha y siguen abiertos."
  },
  {
+  "clave": "cuotaFijaCanal",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Un cargo fijo por venta que se suma al precio del canal (antes de IVA) cuando el precio con IVA queda abajo del umbral. Arriba del umbral no se suma."
+ },
+ {
   "clave": "datoFaltante",
   "modulos": [
    "rrhh",
@@ -2547,6 +4746,30 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que siempre aplica al contestar en Mercado Libre: si se factura, tiempos de envío, garantía, horario, medidas especiales. La IA lo toma como la verdad de la empresa al sugerir respuestas. Aquí también se guardan las respuestas rápidas."
  },
  {
+  "clave": "datosFiscalesCliente",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Lo que va en la factura (razón social, RFC, régimen, CP fiscal y uso de CFDI) y lo comercial: giro, ubicación, días de crédito y por dónde llegó. Lo editan su vendedor y la gerencia (si es libre, cualquier vendedor); con la constancia de situación fiscal, lo fiscal se llena solo."
+ },
+ {
+  "clave": "datosFiscalesEmpresa",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "La razón social, el RFC y el domicilio fiscal salen en el encabezado de la cotización impresa y de la hoja de salida; el enlace de términos y condiciones, al pie de la cotización."
+ },
+ {
+  "clave": "datosOrdenCompra",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Lo que va impreso para el proveedor. En borrador compras cambia proveedor, moneda, tipo de cambio e IVA; la fecha de entrega, las condiciones y las notas se pueden corregir después (la fecha, hasta que llegue todo)."
+ },
+ {
   "clave": "datosSensibles",
   "modulos": [
    "rrhh",
@@ -2557,6 +4780,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "CURP, RFC, NSS, salario, cuenta bancaria, domicilio, tipo de sangre, alergias, crédito Infonavit y si sus contratos están firmados. Solo los ven Recursos Humanos con nivel de administrar y dirección; cada cambio queda en la bitácora."
+ },
+ {
+  "clave": "deDondeSaleCapacidad",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Automática: personas × horas de la semana del taller × aprovechamiento. A mano: el número lo puso la gerencia; al lado dice cuánto daría con su gente (en ámbar si difiere en 10 horas o más). Un área automática sin gente conserva su último número."
  },
  {
   "clave": "demandaMensual",
@@ -2571,7 +4802,15 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "importaciones"
   ],
-  "texto": "Días que la naviera presta el contenedor sin cobrar, desde el arribo hasta que se devuelve vacío. Al pasarse se pagan demoras."
+  "texto": "Días que la naviera presta el contenedor sin cobrar, desde el arribo hasta que se devuelve vacío (21 si no se captura otra cosa). Al pasarse se pagan demoras; 5 días antes sale un aviso."
+ },
+ {
+  "clave": "dependeDelParametro",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Las líneas de la lista y las etapas de horas que usan este parámetro, con su cuenta. Mientras algo dependa de él no se puede eliminar."
  },
  {
   "clave": "desabasto",
@@ -2582,12 +4821,26 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "De los artículos que tienen punto de reorden, qué porcentaje está abajo de él. Entre más bajo, mejor: menos de 8 % es óptimo, de 8 a 17 % aceptable y más de 17 % deficiente."
  },
  {
+  "clave": "descansosEmpresa",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Días que la empresa no trabaja aunque caigan en día laboral (12 de diciembre, Semana Santa…). Se descuentan igual que los feriados al contar vacaciones y permisos."
+ },
+ {
   "clave": "descansosTaller",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "Lo que se descuenta del horario cada día. Si el descanso va por turnos (unos desayunan de 10:00 a 10:40 y otros de 10:20 a 11:00), se pone la ventana completa y cuánto dura: de lo que un tiempo abierto cubra de esa ventana, se descuenta la parte que dura el descanso."
+ },
+ {
+  "clave": "descartarCotizacionLeida",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Descarta lo que leyó la IA y regresa a armar la orden a mano. No se había guardado nada."
  },
  {
   "clave": "descripcionFabricado",
@@ -2624,6 +4877,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo más que un vendedor puede bajar del precio de lista sin pedir autorización."
  },
  {
+  "clave": "descuentoPartidaCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Descuento de esta partida, en porcentaje. Se aplica además del descuento general, y los dos cuentan para el precio mínimo."
+ },
+ {
   "clave": "descuentosNomina",
   "modulos": [
    "rrhh",
@@ -2646,6 +4909,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuánto abajo del precio de lista va lo cotizado del catálogo, sumando todos los descuentos (en pesos y sin IVA)."
  },
  {
+  "clave": "deshacerCambiosHorario",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Regresa el horario a como está guardado, sin guardar nada."
+ },
+ {
   "clave": "deshacerMovimiento",
   "modulos": [
    "inventario",
@@ -2662,12 +4933,32 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que la mejora quita, según los ocho desperdicios de lean: espera (gente o equipos parados), transporte (mover material de un lado a otro), movimiento de más (buscar, agacharse, dar vueltas), inventario de más, sobreproceso (hacer más de lo que el cliente necesita), sobreproducción (hacer antes o más de lo pedido), defectos y retrabajo, y talento no aprovechado."
  },
  {
+  "clave": "devolucionAbierta",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Falta atenderla. Un reclamo se responde antes de su hora límite; una devolución la recibe almacén cuando llega; una cancelación se cierra con su resultado."
+ },
+ {
   "clave": "devolucionAlmacen",
   "modulos": [
    "inventario",
    "envios"
   ],
   "texto": "Material que regresa al almacén: lo que sobró de una orden, lo que devolvió un cliente o una garantía."
+ },
+ {
+  "clave": "devolucionCancelada",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Se canceló el registro con su motivo (se capturó dos veces, el comprador ya no la mandó…). No movió nada del inventario."
  },
  {
   "clave": "devolucionDanada",
@@ -2678,12 +4969,67 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Herramienta que regresó dañada o incompleta. Al recibirla así, la falla se reporta sola."
  },
  {
+  "clave": "devolucionRecibida",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Ya llegó a almacén, con fotos de cómo venía. Falta decidir qué se hace: reingresa al inventario, es merma o se reclama a la paquetería."
+ },
+ {
+  "clave": "devolucionRespondida",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Ya se le contestó al reclamo. Falta cerrarlo con su resultado cuando Mercado Libre o el cliente decidan."
+ },
+ {
+  "clave": "devolucionResuelta",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cerrada con su resultado: en una devolución, qué se hizo con lo que regresó; en un reclamo o una cancelación, si quedó a favor, en contra o sin efecto."
+ },
+ {
+  "clave": "diaCalendario",
+  "modulos": [],
+  "texto": "Abre todo lo de ese día en un panel a la derecha, aunque en la casilla no quepa. Cada línea te lleva a la pantalla donde se atiende."
+ },
+ {
+  "clave": "diaChecklist",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "El día que estás marcando; cámbialo con las flechas o con la fecha. No se marca un día que no ha llegado. Puedes corregir hasta una semana atrás; después, solo Recursos Humanos, y nunca en un mes ya calificado."
+ },
+ {
   "clave": "diaEspecialTaller",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "Un día con otro horario: tiempo extra (un sábado de 8:00 a 14:00, salir a las 7 de la noche) o un día que no se trabaja. Manda sobre el horario de ese día, y también sobre un feriado si deciden trabajarlo. Cuenta en las horas hombre y en el plan. Si lo quitas después, las horas de ese día se vuelven a contar sin él."
+ },
+ {
+  "clave": "diagnosticoMto",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Qué tiene la máquina y quién la repara (alguien del taller o un externo). Se escribe cuando ya se sabe qué tiene; el play de la terminal no lo pide."
  },
  {
   "clave": "diaHabilPreventivo",
@@ -2718,6 +5064,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Cuántos días da el proveedor para pagar. Deciden cuándo vence cada factura, también las que vienen de la hoja: si lo cambias, todas sus fechas se recorren."
+ },
+ {
+  "clave": "diasCreditoCliente",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cuántos días tiene el cliente para pagar. En cobranza, su pago vence esos días después de la primera factura (o del pedido, si no se ha facturado). En 0 es de contado."
  },
  {
   "clave": "diasEnEtapa",
@@ -2762,7 +5118,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "importaciones"
   ],
-  "texto": "Días que el puerto deja la mercancía sin cobrar almacenaje. La barra se pone ámbar a 3 días de acabarse y roja al pasarse: desde ahí se paga."
+  "texto": "Días que el puerto deja la mercancía sin cobrar almacenaje (7 si no se captura otra cosa). La barra se pone ámbar cuando faltan 3 días o menos y roja cuando se acaban: lo que pase de ahí se paga."
  },
  {
   "clave": "diasPagados",
@@ -2833,6 +5189,33 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Días usados del periodo que corre (el de su último aniversario), incluidos los que adelantó antes de que empezara y los que ya había tomado según el control de vacaciones."
  },
  {
+  "clave": "diasVigentesVacaciones",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Lo que le queda hoy de sus periodos que no han vencido, sin restar lo que adelantó. Cada vacación aprobada sale primero del periodo más viejo."
+ },
+ {
+  "clave": "diferenciaAjusteInventario",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Lo contado menos lo que decía el sistema: en verde sobraba, en rojo faltaba. En los aprobados es lo que de verdad se aplicó. Abajo, sistema → contado."
+ },
+ {
+  "clave": "diferenciaPromesa",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Días entre la fecha a la que sale y la prometida. En rojo, cuántos días tarde llegaría; en verde, cuántos le sobran."
+ },
+ {
   "clave": "dineroML",
   "modulos": [
    "ventas",
@@ -2883,6 +5266,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Para decidir si pedir: en planta menos apartado más lo que ya viene en tránsito. Así no se vuelve a pedir lo que ya está en camino."
  },
  {
+  "clave": "documentoConPrecios",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Este documento trae precios o montos: solo lo abre quien ve el dinero de importaciones. Tú ves que llegó, pero no puedes abrirlo."
+ },
+ {
   "clave": "documentosAntesArribo",
   "modulos": [
    "importaciones"
@@ -2898,12 +5288,41 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El manual, la ficha técnica, los diagramas o la garantía de la máquina: un archivo (PDF o foto, hasta 50 MB) o una liga de Drive. Puede ser solo de esta máquina o de todas las de su tipo y modelo, para no subir el mismo manual a cada inversora. Los ve todo el que ve mantenimiento; los agrega o quita el encargado."
  },
  {
+  "clave": "documentosPendientesEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Documentos de la lista de este embarque que todavía no llegan o llegaron con observaciones. Se pone ámbar si va en el mar o en puerto y falta alguno de los que el agente pide antes del arribo."
+ },
+ {
+  "clave": "dondeVendemosInicio",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "La venta de este año por estado, con IVA; el tono dice cuánto (gris: sin venta). Abajo, los 3 estados que más venden y su parte del total. Clic en el mapa para abrir el análisis."
+ },
+ {
   "clave": "duplicarConParametros",
   "modulos": [
    "costeo",
    "margenes"
   ],
-  "texto": "Hace una copia del equipo con su lista, horas y parámetros, para otra medida. Los subensambles no se copian: la copia usa los mismos."
+  "texto": "Hace una copia del equipo con su lista, horas y parámetros, para otra medida. Los subensambles no se copian: la copia usa los mismos. Al terminar se abre la copia y arriba ves cómo cambió contra el original."
+ },
+ {
+  "clave": "duracionServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Cuánto dura, en días o en horas. En días, termina a la hora de salida del taller del último día; en horas, cuenta seguidas desde que sale."
+ },
+ {
+  "clave": "editarProveedor",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Cambia sus datos. Compras edita todo; finanzas y la gerencia administrativa, lo fiscal, lo bancario, el crédito y el contacto. Cada cambio queda registrado, y si cambian los datos bancarios dirección recibe un aviso."
  },
  {
   "clave": "eficienciaFlujo",
@@ -2921,6 +5340,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El comprobante de que el contenedor vacío se devolvió a la naviera. Sin él no se recupera la garantía."
  },
  {
+  "clave": "eliminarBorradorOrden",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Borra el borrador completo (te pide confirmar). Lo que venía de requisiciones regresa a pendiente. Una orden ya enviada no se borra: se cancela."
+ },
+ {
   "clave": "embarque",
   "modulos": [
    "importaciones"
@@ -2935,6 +5361,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Embarques en el mar o en puerto. En ámbar si alguno llega a planta en los próximos 7 días; abiertos son todos los que no se han cerrado ni cancelado, incluidos los que siguen en producción con el proveedor."
  },
  {
+  "clave": "embarquesEnCurso",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Los embarques abiertos: todos los que no se han cerrado ni cancelado, desde que se cotizan con el proveedor hasta que se cierran sus cuentas. Abajo dice cuántos van en el mar y cuántos en puerto."
+ },
+ {
   "clave": "embudo",
   "modulos": [
    "ventas",
@@ -2943,6 +5376,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Las oportunidades abiertas por etapa: prospecto → contactado → cotizado → negociación. Al enviar una cotización, su oportunidad pasa sola a “cotizado” (y si no había, se abre); al convertirla en pedido, a “ganada”."
+ },
+ {
+  "clave": "empaqueSkydropx",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "La clave del SAT del tipo de empaque que se declara en cada paquete de la guía. Si no se elige otra, va 4G (caja de cartón)."
+ },
+ {
+  "clave": "emparejadoCotizacion",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Cómo se encontró el artículo del catálogo. «Ya la conocemos»: esa clave del proveedor ya se usó con este artículo. «Por su clave»: la clave es la del catálogo o viene en el nombre. «Sugerido: revísalo»: por el parecido del nombre; confirma que sea el mismo."
  },
  {
   "clave": "enCuadrillas",
@@ -2981,6 +5428,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Clientes a los que alguien del equipo ya les escribió o llamó y falta su respuesta. Cada uno dice quién, cuándo, por dónde y qué sigue: llamar al día 3, último mensaje al día 10, luego esperar una semana. Lo ven todos los que venden."
  },
  {
+  "clave": "entradaCompraAlmacen",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Material que llegó de una orden de compra. Entra cuando almacén recibe la orden y captura lo que llegó y a qué almacén; en la referencia va el folio de la orden."
+ },
+ {
   "clave": "enTransito",
   "modulos": [
    "inventario",
@@ -2994,6 +5449,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "analisis"
   ],
   "texto": "Entra: el trabajo de las órdenes nuevas del mes. Sale: lo que el taller marcó terminado. Si entra más de lo que sale, la fila crece y las fechas se alargan para todos."
+ },
+ {
+  "clave": "entregaArticuloFicha",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Días hábiles que tarda en salir según el catálogo o, si el artículo no lo tiene, lo que tarda su proveedor. En un equipo sin dato dice «Según taller»: la fecha realista sale bajo «Tiempo de entrega»."
  },
  {
   "clave": "entregadoAntesDelErp",
@@ -3018,7 +5483,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "compras"
   ],
-  "texto": "Días hábiles que tarda en entregar desde que se le manda la orden. Sin dato se usa 7. De aquí sale la fecha de entrega de sus órdenes."
+  "texto": "Días hábiles que tarda en entregar desde que se le manda la orden; sin dato se usa 7. Con esto se calcula la fecha de entrega de sus órdenes (en las que salen de requisiciones cuenta primero el tiempo de entrega de cada artículo, y la orden toma el más largo)."
  },
  {
   "clave": "entregaRealista",
@@ -3037,6 +5502,51 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "De las órdenes que se terminaron en el periodo y tenían fecha compromiso, cuántas se terminaron ese día o antes. Abajo, lo mismo para los pedidos entregados (fecha de entrega contra compromiso). En lean es el OTD: lo primero que ve el cliente."
+ },
+ {
+  "clave": "entregaSolicitudPrecio",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Días hábiles que tarda en llegar. Es obligatorio, porque es lo primero que pregunta el cliente. Se guarda en el artículo, así que la ficha de venta también lo muestra."
+ },
+ {
+  "clave": "entregasPorFamilia",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Lo mismo con las órdenes de producción: qué parte de las que tenían compromiso en el periodo se terminó a tiempo, por familia de equipo. Una orden abierta solo cuenta cuando ya venció."
+ },
+ {
+  "clave": "entregasPorVendedor",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Qué parte de los pedidos de cada vendedor con compromiso en el periodo se entregó a tiempo. Después del porcentaje: cuántos se juzgaron y, si hubo tarde, el atraso promedio en días."
+ },
+ {
+  "clave": "enviarOrdenCompra",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Fija la orden: deja de ser borrador, lo pedido cuenta como en camino para almacén y, si no tenía fecha de entrega, se calcula con los días del proveedor. No le manda nada al proveedor: imprímela o usa «Por correo». No se envía si alguna partida está en $0."
+ },
+ {
+  "clave": "envioCanal",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Lo que se suma al precio del canal (antes de IVA) cuando se publica con envío incluido."
+ },
+ {
+  "clave": "envioDevolucion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "El envío del ERP con que salió esta venta (el último, si hubo varios), con su paquetería y su guía. De él sale la evidencia de abajo."
  },
  {
   "clave": "envioEnCamino",
@@ -3104,12 +5614,44 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La pantalla se actualiza sola cuando alguien registra algo (un pedido, un cobro, un avance de taller). No hace falta recargar."
  },
  {
+  "clave": "equipoFabricado",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Una máquina que fabricamos y vendemos completa: banda transportadora, cribadora, dosificadora, tolva, silo, elevador… Tiene su lista de materiales y sus horas por etapa, y sus subensambles se comparten con otros equipos."
+ },
+ {
   "clave": "equipoHistorico",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "Equipo que viene del libro de seriales de la hoja (desde 2015): se puede buscar y dar servicio, pero no tiene orden de producción en el ERP. ERP = lo numeró el ERP."
+ },
+ {
+  "clave": "equiposDeEspecialidad",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Los tipos de equipo que hace esta cuadrilla. Cada tipo es de una sola especialidad por área: si ya lo tiene otra, sale apagado con su nombre. «Modelos» es cuántos equipos del catálogo son de ese tipo."
+ },
+ {
+  "clave": "equiposEnTallerSerie",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Equipos con número de serie que todavía no se entregan: en espera, en proceso o terminados en planta."
+ },
+ {
+  "clave": "equipoServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Los equipos que le hemos hecho a este cliente, con su número de serie y su pedido. En una garantía es obligatorio elegirlo: de ahí sale si sigue vigente. Si no es nuestro o no aparece, deja «Otro equipo» y escríbelo abajo."
  },
  {
   "clave": "equiposTerminados",
@@ -3120,11 +5662,43 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Órdenes de producción que se terminaron en el periodo. Es la salida del taller (throughput): cuánto produce de verdad por semana."
  },
  {
+  "clave": "equiposTerminadosSemana",
+  "modulos": [],
+  "texto": "Órdenes de producción que se terminaron la semana pasada, contra la anterior. Abajo, cuántas están en proceso hoy y cuántas ya pasaron su fecha compromiso sin terminarse (las que están en espera no cuentan)."
+ },
+ {
   "clave": "escalaCuantiles",
   "modulos": [
    "analisis"
   ],
   "texto": "Cada tono junta un número parecido de regiones (o de celdas): así un estado muy grande no deja a los demás en el mismo color pálido. Gris: sin venta."
+ },
+ {
+  "clave": "escalonesComision",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cada renglón es un escalón: desde cuánto vendido en el mes, sin IVA, se gana ese bono fijo. Se paga solo el escalón más alto que se alcanzó, no la suma de todos."
+ },
+ {
+  "clave": "escenarioMeta",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Una meta de prueba: lo que cerró el año anterior más el porcentaje que escribas, redondeada a miles. No se guarda; mientras no haya meta capturada, las cifras, las gráficas y la meta por estado la usan para que veas cómo quedaría."
+ },
+ {
+  "clave": "esDistribuidor",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cliente que revende nuestros equipos. Se marca en sus datos comerciales y sale con esta etiqueta en la lista."
  },
  {
   "clave": "especialidad",
@@ -3151,11 +5725,34 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Órdenes abiertas con partidas de su lista todavía por surtir (sin contar los consumibles del taller). Las que ya están en proceso empezaron sin su material completo."
  },
  {
+  "clave": "esperaRol",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Entró con su cuenta de Google de la empresa, pero todavía no tiene rol: ve un aviso para que pida acceso y no puede ver nada. Dale clic y márcale su rol."
+ },
+ {
   "clave": "estacionalidadVenta",
   "modulos": [
    "analisis"
   ],
   "texto": "Qué meses pesan más en la venta del año. La meta de cada mes se reparte con lo que pesó ese mes en los últimos 3 años completos."
+ },
+ {
+  "clave": "estadoAjusteInventario",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Por autorizar: la existencia todavía no cambia. Aprobado: la diferencia ya se aplicó. Rechazado: no se movió nada; queda como constancia con el comentario de quien lo resolvió."
+ },
+ {
+  "clave": "estadoConteoFisico",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Abierto: se sigue capturando y todavía no hay ajustes. Cerrado: ya no se captura y cada diferencia se volvió un ajuste por autorizar; en la lista de conteos dice cuántos salieron y cuántos faltan por autorizar."
  },
  {
   "clave": "estadoCotizacion",
@@ -3178,12 +5775,27 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Abierta → Respondido (reclamo) o Llegó: por decidir (devolución, ya en almacén) → Resuelta con su resultado. O Cancelada, con motivo."
  },
  {
+  "clave": "estadoDocumentoImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Pendiente: todavía no llega. Recibido: ya está (subir el archivo lo marca solo). Con observaciones: llegó con algo que corregir y sigue contando como pendiente. Aceptado: revisado y bueno. No aplica: este embarque no lo necesita."
+ },
+ {
   "clave": "estadoEnvio",
   "modulos": [
    "inventario",
    "envios"
   ],
   "texto": "En qué paso va: Por cotizar, Cotizado, Guía lista, Empacado, En camino, Entregado o Cancelado. Lo que recoge el cliente o surte Full se salta los pasos de guía."
+ },
+ {
+  "clave": "estadoEquipoSerie",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "En espera: su orden todavía no empieza en el taller. En proceso: alguna etapa ya empezó. Terminado: está hecho y falta entregarlo. Entregado: ya es del cliente. Los del libro de la hoja traen el estado que tenían ahí."
  },
  {
   "clave": "estadoIncidencia",
@@ -3196,6 +5808,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Por aprobar: la pidió alguien y espera a Recursos Humanos. Aprobada: cuenta en el saldo, en el calendario y en la prenómina. Rechazada: no cuenta; el motivo queda en el historial."
+ },
+ {
+  "clave": "estadoInsumoServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Por entregar: almacén ya tiene el aviso y no lo ha entregado. En compras: se pidió a compras con una requisición (dice su folio); almacén lo entrega cuando llegue. Entregado: ya salió de almacén con el folio, y dice quién y cuándo."
  },
  {
   "clave": "estadoLead",
@@ -3223,6 +5843,21 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Borrador: todavía se edita y el proveedor no la tiene. Enviada: ya se mandó y lo pedido cuenta como en camino. Recibida en parte: llegó algo y falta lo demás. Recibida: llegó todo. Cancelada: lo que venía de requisiciones regresa a pendiente."
  },
  {
+  "clave": "estadoOrdenMto",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Sin atender: se reportó o se generó y nadie la ha tomado. En reparación: alguien ya escribió el diagnóstico o le dio play. Cerrada: se terminó y se anotó qué se hizo. Cancelada: no procedía, con su motivo."
+ },
+ {
+  "clave": "estadoPagoImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Programado: tiene fecha pero no ha salido. Pagado: ya salió del banco. Retenido: el banco lo detuvo (sale como riesgo). Confirmado: el proveedor dijo que lo recibió; si a los 7 días de pagado no confirma, sale un aviso. Devuelto: regresó y ya no cuenta."
+ },
+ {
   "clave": "estadoPedido",
   "modulos": [
    "ventas",
@@ -3231,6 +5866,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Confirmado → En producción → Listo para entregar → Entregado. Cancelado lleva su motivo y deja de contar para comisiones y cobranza."
+ },
+ {
+  "clave": "estadoPendienteCerrado",
+  "modulos": [],
+  "texto": "Hecho (palomita verde): lo terminó quien lo tenía. Lo hizo otra persona (palomita clara): era «basta con que uno lo haga» y otro del grupo lo terminó primero. Cancelado (tache): ya no hacía falta."
  },
  {
   "clave": "estadoPersonal",
@@ -3245,12 +5885,36 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Activo si trabaja hoy. Si hoy tiene vacaciones, permiso, falta o incapacidad aprobada, dice cuál y hasta cuándo. «Baja» con su fecha si ya no trabaja aquí: su historial se conserva."
  },
  {
+  "clave": "estadoPrestamo",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Cuántas semanas le faltan con su descuento semanal. Liquidado: ya no debe nada. Cancelado: ya no se descuenta; lo descontado se queda en el historial."
+ },
+ {
   "clave": "estadoReabasto",
   "modulos": [
    "inventario",
    "envios"
   ],
-  "texto": "Ordenar: está abajo de su punto de reorden. OK: alcanza. Excedente: no se usó en 12 meses y hay existencia (dinero parado). Negativo: la existencia en planta es menor que cero."
+  "texto": "Negativo: la existencia en planta es menor que cero (se revisa antes que lo demás). Ordenar: lo disponible está abajo de su punto de reorden. Excedente: no salió nada en 12 meses, hay existencia en planta y no tiene stock de seguridad (dinero parado). OK: alcanza."
+ },
+ {
+  "clave": "estadoSemanaNomina",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "En curso: todavía no llega el jueves en que termina. Lista para cerrar: ya terminó; revísala y ciérrala. Cerrada: ya no cambia y finanzas registra su pago."
  },
  {
   "clave": "estadoServicio",
@@ -3258,7 +5922,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "Por programar (se pidió y nadie le ha puesto fecha), Programado (tiene fecha y cuadrilla), En curso, Cerrado o Cancelado."
+  "texto": "Por programar: se pidió y nadie le ha puesto fecha. Programado: ya tiene fecha y cuadrilla. En curso: la cuadrilla ya empezó. Cerrado: terminó, con fotos, qué se hizo y quién recibió. Cancelado: no se hizo, con su motivo."
  },
  {
   "clave": "estadoSolicitud",
@@ -3266,6 +5930,21 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "compras"
   ],
   "texto": "Sin tomar: nadie la ha agarrado. Cotizando: alguien de compras la tomó. Con precio: ya se contestó y el vendedor ve el precio de lista. No se consigue: se le explicó por qué. Cancelada: el vendedor ya no la necesita."
+ },
+ {
+  "clave": "estadoSolicitudCambio",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Aplicada: ingeniería ya corrigió la lista de materiales. Descartada: se revisó y no procedía. En los dos casos el pendiente de ingeniería se cierra solo y a quien la pidió le llega el aviso."
+ },
+ {
+  "clave": "estadoSugerenciaSubensamble",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Aplicada: ya es un subensamble y lo usan sus equipos. Descartada: alguien decidió dejar las listas como estaban."
  },
  {
   "clave": "estimadoResultados",
@@ -3285,6 +5964,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "importaciones"
   ],
   "texto": "Fecha estimada de arribo al puerto que da la naviera. Si cambia, queda en la historia del embarque y cuenta cuántas veces cambió."
+ },
+ {
+  "clave": "etapaActivaTaller",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Apagada, la etapa deja de ofrecerse para capturar horas de los equipos y para acomodar gente o máquinas, y no entra al plan del taller ni a la capacidad total. Lo que ya tenía registrado se conserva."
  },
  {
   "clave": "etapaEnParalelo",
@@ -3312,12 +5998,46 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Una etapa que empezó y el taller detuvo. La orden se marca en ámbar hasta que la reanudan."
  },
  {
+  "clave": "etapasEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Los pasos del embarque, de la PI aceptada al cierre, cada uno con la fecha real en que pasó: no acepta fechas futuras (lo esperado va en la ETA). La palomita verde ya pasó y el círculo marcado es el que sigue. Algunos se anotan solos: el anticipo al registrar el pago y el pedimento al capturarlo."
+ },
+ {
+  "clave": "etapaTrabajando",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Etapas que el taller inició y no ha pausado ni terminado. En verde, quien tiene su tiempo contando ahí."
+ },
+ {
+  "clave": "etdEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Fecha estimada en que sale el buque del puerto de origen. La salida real se anota en la etapa «Zarpó»; si el ETD pasa y no ha zarpado, sale un aviso para pedirle fecha al proveedor."
+ },
+ {
   "clave": "etiquetaQR",
   "modulos": [
    "servicio",
    "mantenimiento"
   ],
   "texto": "Una etiqueta para pegar en la máquina con su número y un código QR. Al escanearlo con la cámara del celular se abre «Reportar falla» con esa máquina ya elegida. La misma liga se puede grabar en una etiqueta NFC: basta acercar el celular. Si quien escanea no ha entrado al sistema, primero entra y luego llega directo al reporte."
+ },
+ {
+  "clave": "evaluacionDevuelta",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Recursos Humanos la regresó a borrador para que el jefe la corrija; el motivo también queda en los comentarios. El aviso se quita cuando el jefe la vuelve a enviar."
  },
  {
   "clave": "evaluacionMes",
@@ -3390,7 +6110,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "El inventario con el que arrancó el ERP, por artículo y almacén. Se carga una sola vez; después, una diferencia se corrige con un ajuste autorizado, no reimportando."
+  "texto": "El inventario con el que arrancó el ERP se cargó una sola vez, por artículo y almacén; el número cuenta cuántos artículo × almacén tienen existencia hoy. Después, una diferencia se corrige con un ajuste autorizado, no reimportando."
  },
  {
   "clave": "exportacionVenta",
@@ -3398,6 +6118,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "analisis"
   ],
   "texto": "Venta a clientes fuera de México: cuenta en el total, pero no sale en el mapa."
+ },
+ {
+  "clave": "factorCosteoImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Cuánto se suma de gastos por cada peso de mercancía: los gastos sin IVA entre el valor de la mercancía. Un factor de 0.25 quiere decir $0.25 de gastos por cada $1."
+ },
+ {
+  "clave": "facturaAlRecibir",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "El folio de la factura o remisión que vino con la mercancía. Queda en la orden y en la entrada del inventario; si es el de la factura, finanzas la liga sola a la orden."
  },
  {
   "clave": "facturaDeLaOrden",
@@ -3431,6 +6165,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Facturas que finanzas sacó de la lista porque no se registran en estos libros (las cobra el banco directo, son de un socio, se pagaron con un anticipo que ya está registrado). Cada una dice por qué y quién la sacó; se pueden regresar."
  },
  {
+  "clave": "facturaProveedorEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "El número de la factura comercial (commercial invoice) del proveedor para esta orden. Se guarda al salir del campo o con Enter; también se llena sola al leer la factura con la IA."
+ },
+ {
   "clave": "facturaRepetida",
   "modulos": [
    "rrhh",
@@ -3453,6 +6194,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Una factura que el SAT dice que nos hicieron (está en los XML cargados) y que no está en ningún libro: ni en la hoja de compras, ni en las compras del ERP, ni en caja chica. Para saber si ya está, se busca por su folio fiscal, por su folio con el mismo proveedor o por el mismo monto del mismo proveedor en una fecha cercana. Mientras no se registre, Resultados sale con menos gasto del real."
+ },
+ {
+  "clave": "facturasPedido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Las facturas registradas de este pedido: folio, fecha, total y UUID del SAT. Las registra finanzas. Con una factura registrada, el pedido ya no puede quedar sin IVA."
  },
  {
   "clave": "facturasPendientes",
@@ -3491,6 +6242,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que la orden necesita y todavía no está ni surtido ni apartado. Después de apartar, lo que queda es lo que no había libre en planta. En las tarjetas: ámbar si todo ya se pidió a compras, rojo si algo nadie lo ha pedido."
  },
  {
+  "clave": "faltanteMeta",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "La meta menos lo vendido en el año, nunca menos de cero. Abajo, los meses que quedan contando el que corre."
+ },
+ {
   "clave": "faltanteSinPedir",
   "modulos": [
    "produccion",
@@ -3503,7 +6261,15 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "analisis"
   ],
-  "texto": "Tipo de producto de cada venta. En las ventas de la hoja sale del texto, con las reglas de familia; en los pedidos del ERP, de la categoría del artículo."
+  "texto": "Tipo de producto de cada venta. En las ventas de la hoja sale del texto, con las reglas de familia; en los pedidos del ERP, de la categoría del artículo (si la categoría no tiene familia, de las mismas reglas sobre el texto de la partida)."
+ },
+ {
+  "clave": "familiaSerie",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "El tipo de equipo que lleva su propia numeración (bandas, tolvas, cribadoras…). Cada familia tiene su consecutivo, y el ERP sigue donde se quedó el libro de seriales."
  },
  {
   "clave": "faseEmbarque",
@@ -3542,7 +6308,22 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "compras"
   ],
-  "texto": "Si no la capturas, al enviar la orden se calcula con los días hábiles de entrega del proveedor (7 si no tiene). Pasada esa fecha, la orden sale como atrasada."
+  "texto": "Cuándo debe llegar. Las órdenes que salen de requisiciones o de una cotización ya la traen; si no la capturas, al enviar la orden se calcula con los días hábiles de entrega del proveedor (7 si no tiene). Pasada esa fecha, la orden sale como atrasada."
+ },
+ {
+  "clave": "fechasHistorialMovimientos",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "De entrada, los últimos 30 días. Se muestran hasta 2,000 movimientos, los más recientes; si llegas a ese tope, acorta las fechas para ver o exportar el resto."
+ },
+ {
+  "clave": "feriadosLey",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Los descansos obligatorios del artículo 74 de la Ley Federal del Trabajo de este año (los que van en lunes ya vienen movidos). Los pone el ERP solo y se descuentan de vacaciones y permisos."
  },
  {
   "clave": "fichaTecnica",
@@ -3565,6 +6346,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que veías en el BUSCADOR de la hoja: precio de lista y mínimo, existencia en planta (y cuánto está apartado), piezas en Full de Mercado Libre, tiempo de entrega, envío gratis y precio sugerido en Mercado Libre."
  },
  {
+  "clave": "filaAreaGantt",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Semanas de fila: lo que le falta a esta área (o especialidad), liberado y planeado, entre las horas que da por semana. h/sem: lo que da por semana; en una especialidad, las horas de su gente, y en «Lo demás», lo que queda del área."
+ },
+ {
   "clave": "filaTaller",
   "modulos": [
    "produccion",
@@ -3573,12 +6362,157 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que un pedido nuevo tiene que esperar: las horas que ya tienen las órdenes en el taller y las planeadas, entre lo que trabaja cada etapa por semana. La etapa más cargada manda."
  },
  {
+  "clave": "filtroAlmacenExistencias",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Deja solo los artículos que tienen algo (o un negativo) en ese almacén y resalta su columna. El almacén elegido queda en el enlace de la página: si lo compartes, abre igual."
+ },
+ {
+  "clave": "filtroBajasPersonal",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Quienes ya no trabajan aquí, con su fecha de baja. Su ficha y su historial se conservan; desde la ficha se registra un reingreso."
+ },
+ {
+  "clave": "filtroConExistencia",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Los artículos que tienen algo en planta o en el Full de Mercado Libre, incluidos los que están en negativo. Es la vista con la que abre la pantalla."
+ },
+ {
+  "clave": "filtroDevolucionesPorVencer",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Las abiertas cuya hora límite (o fecha de llegada) ya pasó o vence en menos de un día. Empieza por aquí."
+ },
+ {
+  "clave": "filtroEtapaTablero",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Deja solo las órdenes que se están trabajando en esa etapa o que la tienen como la siguiente."
+ },
+ {
+  "clave": "filtroMisClientes",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Los clientes que están a tu nombre. Junto a cada uno dice hasta cuándo es tuyo."
+ },
+ {
+  "clave": "filtroOrdenesAbiertas",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Lo que sigue en curso: borradores, enviadas y recibidas en parte. Es la vista de entrada."
+ },
+ {
+  "clave": "filtroPedidosActivos",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Pedidos confirmados, en producción o listos para entregar. No salen las ventas de Mercado Libre que no llevan nada que fabricar: esas están en «Mercado Libre»."
+ },
+ {
+  "clave": "filtroPedidosEntregados",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Pedidos que se entregaron en los últimos 60 días."
+ },
+ {
+  "clave": "filtroPedidosListos",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Pedidos con todas sus órdenes terminadas en el taller: falta entregarlos. El pedido queda así solo, al terminar su última orden."
+ },
+ {
+  "clave": "filtroPersonasUso",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Las personas con cuenta activa, sin la TV ni la tablet del taller."
+ },
+ {
+  "clave": "filtroProveedoresSurten",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Los que surten algún artículo, tienen órdenes abiertas o se les compró en los últimos 12 meses. Es la vista de entrada: el directorio de las hojas mezclaba acreedores (nómina, casetas, hoteles)."
+ },
+ {
+  "clave": "filtroRolUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Deja solo a quien tiene ese rol en los indicadores, la tabla y las gráficas por persona. La gráfica día por día sigue contando a todos, y el costo de la revisión nocturna solo se suma con «Todos los roles»."
+ },
+ {
+  "clave": "filtroServiciosAbiertos",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Lo que no se ha cerrado ni cancelado: por programar, programado y en curso. Es con lo que abre la lista."
+ },
+ {
+  "clave": "filtroSinUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Personas con cuenta activa que en todo el periodo no abrieron una pantalla, no registraron un cambio ni le preguntaron a la IA. Son a quienes conviene acompañar."
+ },
+ {
+  "clave": "filtroTodasCuentasUso",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Todas las cuentas: también las desactivadas y las de la TV y la tablet del taller."
+ },
+ {
+  "clave": "filtroTodoDirectorio",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Todos los proveedores activos, aunque no surtan artículos. La nómina, los impuestos, los socios y los bancos no salen aquí: son de finanzas."
+ },
+ {
   "clave": "finDelPlan",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "El día en que el taller acabaría todas las órdenes abiertas según el plan, si no entrara nada nuevo. Dice qué tan llena está la planta."
+ },
+ {
+  "clave": "firmaServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Quien recibe firma con el dedo (o con el mouse) en el recuadro. Es opcional: lo obligatorio es su nombre. Se guarda al cerrar y sale en el cierre del servicio."
  },
  {
   "clave": "fleteCotizacion",
@@ -3608,9 +6542,29 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El número que el sistema le pone solo a cada documento (cotización, pedido, orden…), en orden y sin repetirse. Con él lo buscas y lo citas; no se escribe a mano."
  },
  {
+  "clave": "folioCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "El número de la cotización. Se asigna cuando agregas la primera partida: abrir y salir sin capturar no gasta folios. Sus nuevas versiones llevan el mismo número con -v2, -v3…"
+ },
+ {
   "clave": "folioPedido",
   "modulos": [],
   "texto": "El número del pedido. Los de clientes van PED-26-799: el año en que se levantó y el número corrido de siempre (el que seguía al pedido 798 de la hoja); el número no vuelve a 1 al cambiar de año. Mercado Libre, la tienda web y Amazon llevan su propia serie que sí empieza cada año (ML-26-0001, WEB-26-0001). Un equipo de stock que se vende lleva un folio de pedido normal. Si el pedido tenía otro folio antes (HIS-…, P-…, PED-2026-…), sale como «antes …» y también lo encuentras por él."
+ },
+ {
+  "clave": "formatoComarca",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Para cotizar con la marca de un distribuidor o del cliente: pega la liga de su logo y la hoja sale con ese logo y «Powered by HEGAMEX»."
  },
  {
   "clave": "formulaPrecio",
@@ -3619,6 +6573,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "margenes"
   ],
   "texto": "Cómo sale el precio de un equipo: al costo se le suman los recargos sobre costo (y el de medida especial, si aplica). Eso se divide entre lo que queda del precio después de apartar la utilidad (subida para cubrir el ISR) y los recargos sobre precio. Al final se redondea hacia arriba según la política: en equipos, a $100 abajo de $100,000 y a $1,000 arriba. Lo que se revende sale del costo con el margen sobre precio de su política."
+ },
+ {
+  "clave": "forwarderEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Quien contrata el flete internacional y, en carga consolidada, junta nuestra mercancía con la de otros (Sea Bridge, Interteam, XPD…). En una carga LCL manda el aviso de desconsolidación."
  },
  {
   "clave": "fotoCatalogo",
@@ -3639,6 +6600,28 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Una foto opcional de cómo regresó la herramienta, tomada al recibirla. Si regresó dañada o incompleta, la foto va también en el reporte de falla que se abre solo."
  },
  {
+  "clave": "fotoEmpleado",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "La foto de su ficha (en el celular abre la cámara). La ven Recursos Humanos, la gerencia de producción y la propia persona; no queda en una liga abierta."
+ },
+ {
+  "clave": "fotoPartidaCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "La foto con la que sale esta partida en la cotización; viene del catálogo. Clic para pegar otra liga (la de Drive se convierte sola) o subir una: solo cambia en esta cotización, no en el catálogo."
+ },
+ {
   "clave": "fotoRetirada",
   "modulos": [
    "inventario",
@@ -3655,6 +6638,42 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Las fotos del equipo. La primera es la principal: sale en el buscador y junto a la partida de la cotización; las demás salen en la hoja de fotos al final del PDF. Al agregar el equipo a una cotización, sus fotos se copian: cambiarlas después no cambia las cotizaciones ya hechas."
  },
  {
+  "clave": "fotosLlegadaDevolucion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Las fotos de cómo llegó el paquete, tomadas antes de abrirlo, y las capturas de Mercado Libre. Son la prueba si hay que reclamar."
+ },
+ {
+  "clave": "fotosMejora",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Cómo estaba y cómo quedó. La de antes se sube desde que se propone; la de después, ya en marcha. Las suben quien la propuso (mientras es propuesta), quien la lleva y quien decide las mejoras."
+ },
+ {
+  "clave": "fotoSolicitudPrecio",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Una foto de la pieza, de su placa o de su ficha técnica (imagen o PDF): con eso compras sabe qué buscar. Se sube junto con la solicitud."
+ },
+ {
+  "clave": "fotosOrdenMto",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Fotos de la falla (las que se tomaron al reportarla), de antes, de durante y del trabajo terminado. No se pueden borrar."
+ },
+ {
   "clave": "frenoSeguimientos",
   "modulos": [
    "ventas",
@@ -3663,6 +6682,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Con más de 10 seguimientos vencidos no puedes enviar cotizaciones nuevas, ni sacar el PDF o la vista previa de una que todavía no envías, hasta anotar qué pasó con las que ya mandaste: la idea es no seguir cotizando sin saber qué pasó con lo anterior. Las que ya enviaste sí las puedes volver a compartir. Convertir en pedido nunca se frena. Si un cliente está esperando, la gerencia de ventas te libera por ese día con un motivo, y te llega el aviso."
+ },
+ {
+  "clave": "fuenteCliente",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Por dónde llegó el cliente: una visita de ruta, una llamada a recepción, el formulario del sitio web, una pregunta de Mercado Libre, una recomendación… La lista la mantiene la gerencia de ventas."
  },
  {
   "clave": "fuenteIndicador",
@@ -3675,6 +6704,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "De dónde sale cada indicador. Lo mide el sistema: lo calcula solo con lo capturado en el ERP. Checklist diario: de las marcas de cada día. Califica el jefe o Captura con evidencia: lo pone el jefe, con nota o liga."
+ },
+ {
+  "clave": "fuenteOportunidad",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Por dónde llegó esta venta: una llamada a recepción, el sitio web, Mercado Libre, una recomendación… Si nació de un lead, ya viene llena."
  },
  {
   "clave": "fueraDeHorario",
@@ -3747,6 +6786,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Un renglón por orden, en el orden de la fila: la de arriba es la primera que toma cada área. La gerencia de producción la acomoda arrastrando."
  },
  {
+  "clave": "ganttPorPedido",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Las órdenes juntas por pedido. Cada grupo dice cuántos equipos lleva, cuándo termina el pedido completo según el plan y cuántos días va tarde. Las de stock van en «Para stock»."
+ },
+ {
   "clave": "ganttTrabajandose",
   "modulos": [
    "produccion",
@@ -3755,12 +6802,41 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Etapa en proceso: llena hasta hoy y translúcida en lo que, según el plan, le falta. Las rayas se mueven: es lo que se trabaja ahorita."
  },
  {
+  "clave": "garantiaProcede",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Al cerrar una garantía se anota si procedió (era defecto nuestro) o no (mal uso, desgaste…). Sin esa respuesta la garantía no se cierra."
+ },
+ {
   "clave": "garantiaVigente",
   "modulos": [
    "servicio",
    "mantenimiento"
   ],
   "texto": "Si la garantía sigue en pie cuando se pidió el servicio. Cuenta desde que se entregó (o terminó) el equipo con ese número de serie."
+ },
+ {
+  "clave": "gastoEstimadoImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Un gasto calculado antes de tener la cuenta de gastos. Entra al costeo preliminar, pero no al final: ahí manda lo que de verdad cobraron."
+ },
+ {
+  "clave": "gastosEImpuestosEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Fletes, maniobras, almacenaje, honorarios y demás gastos sin IVA, más el IGI, DTA, PRV y otras contribuciones del pedimento. El IVA no entra aquí: va aparte porque se acredita."
+ },
+ {
+  "clave": "gastosEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Lo que cuesta traer la mercancía además de su precio: fletes, cargos locales, maniobras, almacenaje, honorarios del agente, flete a planta… Va sin IVA y dice cómo se reparte entre las partidas. Al confirmar la cuenta de gastos leída con la IA, sus conceptos entran solos."
  },
  {
   "clave": "gastosFabricacion",
@@ -3775,6 +6851,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Compras del libro de compras con categoría de taller: consumibles, gases, equipo de seguridad, reparación de máquinas. Una factura ligada a su orden de compra suma aquí lo de sus partidas que son consumibles del taller. Sin IVA si la compra tiene factura."
  },
  {
+  "clave": "gastoSoloUnaOrden",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Si el gasto le toca a una sola orden (por ejemplo, el flete de un proveedor), elígela: se reparte solo entre sus partidas. Si no, entre todo el embarque."
+ },
+ {
   "clave": "gastosOperacion",
   "modulos": [
    "rrhh",
@@ -3785,6 +6868,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Lo que cuesta vender y administrar: sueldos de oficina (todos los departamentos menos Producción), comisiones de los vendedores, compras de oficina y servicios, salidas de caja chica, lo que se queda Mercado Libre de cada venta y las guías pagadas en Envíos."
+ },
+ {
+  "clave": "gastosQueEntraronCosteo",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "La foto de los gastos que usó este cálculo y cómo se repartió cada uno. El final no lleva estimados. Si después llega otro gasto, sale un aviso para calcular otra versión del final."
  },
  {
   "clave": "gmailConectado",
@@ -3803,6 +6893,32 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "Gráfica de control (tipo p): cada punto es la parte de las partidas surtidas a órdenes que salió fuera de su lista esa semana. La línea punteada es el promedio y las grises los límites a 3 desviaciones, más abiertos en semanas con pocas partidas. Un punto rojo arriba del límite es un cambio real que hay que investigar; lo que se mueve entre los límites es variación normal."
+ },
+ {
+  "clave": "grupoLista",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Una sección de la lista de materiales (Estructura, Motriz…) para tenerla ordenada; no cambia cantidades. Arriba eliges en qué grupo entran las líneas nuevas; para pasar las que ya están, márcalas y usa «Mover a grupo». Vacío las deja sin grupo."
+ },
+ {
+  "clave": "guardadoAutomaticoCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "La cotización se guarda sola un momento después de que dejas de escribir: no hay botón de guardar. «Sin guardar» quiere decir que el cambio va en camino; si dice «No se guardó», dale clic para reintentar."
+ },
+ {
+  "clave": "guardadoSoloLista",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Cada cambio se guarda en cuanto das Enter o sales de la celda; no hay botón de guardar. Esc, antes de salir, regresa la celda a como estaba."
  },
  {
   "clave": "herramientaAsignada",
@@ -3826,7 +6942,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Las herramientas que ingeniería de procesos irá usando conforme se capacite. Se habilitan una por una, cuando el equipo las vaya a usar; ninguna está activa todavía."
+  "texto": "Las herramientas que ingeniería de procesos irá usando conforme se capacite. Kaizen y A3 ya se trabajan en Producción → Mejoras; las demás se habilitan una por una, cuando el equipo las vaya a usar."
  },
  {
   "clave": "hiloCorreo",
@@ -3834,6 +6950,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "importaciones"
   ],
   "texto": "Una conversación de Gmail (el correo y todas sus respuestas). Se liga desde el Gmail de quien lo busca, y solo esa persona lo pone al día con «Traer lo nuevo», porque es su cuenta."
+ },
+ {
+  "clave": "historiaEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Lo que pasó fuera de las etapas: cada cambio de ETA (se anota solo), las notas de importaciones y las etapas que se quitaron, con su motivo. No se borra."
  },
  {
   "clave": "historialCambiosML",
@@ -3852,6 +6975,32 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "margenes"
   ],
   "texto": "Una foto del costo y del precio cada vez que cambian. Con permiso de márgenes también ves la línea «a utilidad de hoy», que dice qué precio habría tenido con la utilidad actual: si se separa del precio real, la diferencia vino de cambiar la utilidad, no el costo."
+ },
+ {
+  "clave": "historialCostosImportado",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Cuántos precios de compra de las hojas se trajeron como historia, desde 2011. Así cada artículo trae cómo ha cambiado lo que se paga por él."
+ },
+ {
+  "clave": "historialIncidencias",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Todo lo registrado que terminó en los últimos 400 días: aprobado, por aprobar y rechazado. Filtra por tipo o estado y bájalo en CSV."
+ },
+ {
+  "clave": "historiaRegistroBitacora",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Todos los cambios de este mismo registro, del más reciente al más viejo (hasta 50). El punto de color marca el que abriste."
  },
  {
   "clave": "hojaSalida",
@@ -3884,6 +7033,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Las horas extra aprobadas de la semana. Las primeras 9 se pagan al doble y de la décima en adelante al triple (LFT arts. 67 y 68). En amarillo si alguien tiene triples."
  },
  {
+  "clave": "horasEncimaCuadrilla",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Las horas que faltan de lo que tiene esta cuadrilla (lo de ahorita y lo que sigue), cada etapa repartida entre su gente. Sirve para darse idea de cuándo queda libre."
+ },
+ {
   "clave": "horasEtapa",
   "modulos": [
    "costeo",
@@ -3906,6 +7063,22 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Las horas laborales del periodo que la máquina estuvo fuera de servicio por sus órdenes de mantenimiento: de que se paró a que volvió a operar, sin contar noches, fines de semana, feriados ni descansos."
+ },
+ {
+  "clave": "horasPendientesColumna",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Las horas estimadas que les faltan a las órdenes de esta columna: las de sus etapas sin terminar, menos lo que el piso ya reportó de avance."
+ },
+ {
+  "clave": "horasPorParametro",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Horas que se suman por cada unidad del parámetro. El total de la etapa es horas fijas + esto × el valor del parámetro: una banda más larga pide más horas sin capturarlas aparte."
  },
  {
   "clave": "horasRealesVsEstimadas",
@@ -3932,6 +7105,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cómo se cuentan las horas de la terminal; lo elige la gerencia de producción en Cuadrillas → Personal de piso. «Solo el horario del taller»: cuenta el horario que pone la gerencia (qué días, entrada y salida) menos los descansos; la noche, los días que no se trabaja y los feriados no cuentan, así que nadie tiene que pausar para desayunar, comer o al irse. El tiempo extra cuenta solo si la gerencia da de alta ese día con su horario. «Lo que marque la terminal»: cuenta tal cual el tiempo que la etapa estuvo iniciada, también fuera de horario; el piso pausa en cada descanso y al irse. En los dos, «Pausar» es para cuando dejan la orden (falta material, los mueven a otra)."
  },
  {
+  "clave": "horasTotalesFabricado",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Todas las horas hombre que lleva fabricarlo completo: las de cada etapa del taller más las de sus subensambles, multiplicadas por cuántos lleva. El detalle está en la pestaña Horas por etapa."
+ },
+ {
   "clave": "horasTrabajadas",
   "modulos": [
    "servicio",
@@ -3955,6 +7136,24 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El contador de horas de uso de una máquina. La lectura nueva no puede ser menor que la anterior; al registrarla se revisa si ya toca un preventivo."
  },
  {
+  "clave": "horometroAlCerrar",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "La lectura del contador de horas de la máquina al terminar. No puede ser menor que la última. Con ella se cuentan las horas que faltan para su siguiente preventivo por horas."
+ },
+ {
+  "clave": "iaAnalizando",
+  "modulos": [],
+  "texto": "La IA está escribiendo el resumen (la primera vez del día puede tardar medio minuto). Mientras, ves los avisos que calcula el ERP con reglas; cuando termine, se cambian solos."
+ },
+ {
+  "clave": "iaRedacto",
+  "modulos": [],
+  "texto": "Lo escribió la IA con los números del ERP, hace el tiempo que dice. Para que salga con lo más reciente, dale a las flechas."
+ },
+ {
   "clave": "imagenArticulo",
   "modulos": [
    "costeo",
@@ -3971,6 +7170,25 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Qué pasa en el taller si esta máquina se para: no afecta, la hace más lenta, detiene una parte o para el área. Lo califica mantenimiento. Pesa hasta 9 de los 30 puntos de la criticidad; si hay otra con qué suplirla, cuenta un escalón menos."
  },
  {
+  "clave": "importadorEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "A nombre de quién se importa: la empresa o la persona física. Se ha importado de las dos formas, así que cada embarque dice de quién es."
+ },
+ {
+  "clave": "importadosBajoReordenTablero",
+  "modulos": [],
+  "texto": "Artículos importados que ya están abajo de su punto de reorden, los que más les falta primero: disponible / punto de reorden · días que tarda en llegar. Como tardan meses, son los primeros que conviene pedir."
+ },
+ {
+  "clave": "importeAproxRequisicion",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Lo que costarían las partidas marcadas con su costo vigente, en pesos (los dólares al tipo de cambio de hoy). Es aproximado: el precio final queda en la orden."
+ },
+ {
   "clave": "importeLinea",
   "modulos": [
    "costeo",
@@ -3979,12 +7197,29 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cantidad efectiva por el costo unitario de la pieza. La suma de la lista más la mano de obra propia da el costo del equipo."
  },
  {
+  "clave": "importePartidaCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cantidad por precio unitario, menos el descuento de la partida. Si la partida es opcional, se ve tachado: no suma al total."
+ },
+ {
   "clave": "imprimirDescripcion",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "Abre en otra pestaña la descripción de lo que se vendió, lista para imprimir o guardar en PDF: cliente, vendedor, compromiso y cada partida con su descripción y sus órdenes. Sin precios. Desde una orden sale solo su partida. Los pedidos que se cargaron de la hoja traen solo el nombre de cada partida: se imprimen igual, y la descripción completa está en el PDF del pedido."
+ },
+ {
+  "clave": "imprimirOrdenCompra",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Imprime la orden o guárdala como PDF, tal como la recibe el proveedor. Si se cambió después de enviarla, sale con su revisión («Rev. 2») y dice que sustituye a la anterior."
  },
  {
   "clave": "impuestosFinancieros",
@@ -4011,11 +7246,33 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuando una evidencia en contra no aplica, el jefe la impugna con un motivo y Recursos Humanos decide si cuenta o no. Queda como constancia; no se borra."
  },
  {
+  "clave": "incidenciaYaAutorizada",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Palomeado, queda aprobado al guardar y cuenta de una vez en el saldo, el calendario y la prenómina. Sin palomear, queda por aprobar."
+ },
+ {
+  "clave": "incluirHistoricosPedidos",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Los pedidos que vienen de las hojas y ya se entregaron o cancelaron no salen, para no llenar la lista. Márcalo para verlos. Los de la hoja que siguen en el taller salen siempre."
+ },
+ {
   "clave": "incoterm",
   "modulos": [
    "importaciones"
   ],
-  "texto": "El acuerdo con el proveedor sobre hasta dónde paga él el flete y el seguro (FOB, CIF, EXW…). Define qué gastos nos tocan a nosotros."
+  "texto": "El acuerdo con el proveedor sobre hasta dónde paga él el flete y el seguro (FOB, CIF, EXW…). Define qué gastos nos tocan a nosotros; en CIF o CIP la lista de documentos pide además la póliza de seguro."
  },
  {
   "clave": "indicadoresCalificados",
@@ -4027,7 +7284,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Cuántos indicadores del mes ya tienen calificación. Mientras falte alguno, el resultado es parcial y el jefe no puede enviarlo a Recursos Humanos."
+  "texto": "Cuántos indicadores del mes ya tienen calificación. Mientras falte alguno, el resultado es parcial y el jefe no puede enviarlo a Recursos Humanos (salvo que la llave del bono ya se haya activado)."
  },
  {
   "clave": "indiceCostoFamilia",
@@ -4049,7 +7306,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "analisis"
   ],
-  "texto": "Peso de la familia en el estado entre su peso en todo el país. Mayor a 1: ahí se vende más de esa familia que en el resto; resaltado arriba de 1.25."
+  "texto": "Peso de la familia en el estado entre su peso en todo el país. Mayor a 1: ahí se vende más de esa familia que en el resto; resaltado de 1.25 para arriba."
  },
  {
   "clave": "infonavit",
@@ -4062,6 +7319,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Si tiene crédito Infonavit, su número y el descuento que dice el aviso de retención. Sirve para no olvidar el descuento al hacer la nómina."
+ },
+ {
+  "clave": "inicialesVendedorCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Las iniciales del vendedor de la cotización. Salen junto al folio en la hoja que recibe el cliente."
  },
  {
   "clave": "instruccionIA",
@@ -4092,11 +7359,43 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cada vez que le llamas, le escribes o lo visitas, anótalo. Si le escribiste por WhatsApp o correo, «Le escribí»; si le llamaste y no contestó, «No contestó»; si fuiste y no estaba, «No estaba»; y cuando conteste, «Contestó» con lo que te dijo. Todo cuenta como intento, conteste o no, y en la lista se ve lo último que hiciste y cuándo. Mientras no conteste, sigue siendo lead (no se da de alta como cliente). Los leads que alguien tiene varios días sin ningún intento, o que se volvieron oportunidad y no se cotizan, le aparecen a dirección en «Por revisar»."
  },
  {
+  "clave": "interruptorConsumiblesTaller",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Prendido, lo de las categorías marcadas sale a nombre de quien lo recibe y no a la orden. Al prenderlo se suelta lo que estaba apartado de esos artículos para órdenes. Apagado, todo lo que sale para una orden se carga a la orden."
+ },
+ {
+  "clave": "inventarioTablero",
+  "modulos": [],
+  "texto": "Lo que vale la existencia de cada almacén, al costo de hoy. Arriba, cuánto costaría comprar lo que sugiere Reabasto y para cuántos artículos (los que están abajo de su punto de reorden)."
+ },
+ {
+  "clave": "inversionSugeridaReabasto",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Lo que costaría comprar lo sugerido de los artículos marcados «Ordenar», al costo vigente y sin IVA. Solo lo ve quien tiene permiso de costos."
+ },
+ {
   "clave": "invitacion",
   "modulos": [
    "admin"
   ],
   "texto": "Deja lista la cuenta de alguien antes de que entre: al entrar por primera vez recibe los roles de la invitación. Un correo de fuera de la empresa solo puede entrar si está invitado. No se manda ningún correo: avísale tú."
+ },
+ {
+  "clave": "invitacionesPendientes",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Correos invitados que todavía no entran por primera vez. Al entrar reciben los roles de su invitación y desaparecen de aquí."
+ },
+ {
+  "clave": "irAlOrigenPendiente",
+  "modulos": [],
+  "texto": "Te lleva al pedido, la orden o la pantalla de donde salió este pendiente."
  },
  {
   "clave": "isrCompensacion",
@@ -4129,6 +7428,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Marcado, los precios de las partidas ya traen IVA y el total es su suma; sin marcar, el IVA se agrega al final. Cambiarlo convierte los precios y el total no se mueve."
  },
  {
+  "clave": "ivaOrdenCompra",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "La tasa que cobra el proveedor: 16 % normal, 8 % en zona fronteriza, 0 % en importaciones o exentos. Cambia el IVA y el total de la orden."
+ },
+ {
   "clave": "jackKnife",
   "modulos": [
    "servicio",
@@ -4156,7 +7462,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Para cuando el mismo cliente está dado de alta dos veces. Todo lo del repetido (pedidos, cotizaciones, saldo de la hoja, facturas, contactos) pasa al que se queda y el repetido se borra. Se queda el que tiene RFC; con RFC distinto no se pueden juntar."
+  "texto": "Para cuando el mismo cliente está dado de alta dos veces. Tú eliges cuál se queda (se propone el que trae lo de la hoja y las facturas o, si no, el que tiene RFC). Todo lo del otro (pedidos, cotizaciones, saldo de la hoja, facturas, contactos) pasa al que se queda, le completa los datos que le falten y el repetido se borra. Con RFC distinto no se pueden juntar. Lo hace la gerencia de ventas, o tú si los dos son tuyos o libres."
  },
  {
   "clave": "kardex",
@@ -4165,6 +7471,38 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "La historia de un artículo: cada entrada y salida con fecha, quién la hizo, para qué y el saldo que quedó en ese almacén."
+ },
+ {
+  "clave": "kpiGarantiasAbiertas",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Garantías que no se han cerrado ni cancelado, tengan fecha o no. Abajo, cuántas siguen sin fecha. Al cerrar cada una se anota si procedió."
+ },
+ {
+  "clave": "kpiServiciosEnCurso",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Servicios que ya se iniciaron y no se han cerrado: la cuadrilla está trabajando en ellos. Abajo, el cliente y el lugar de uno de ellos. Clic para verlos en la lista."
+ },
+ {
+  "clave": "kpiServiciosEstaSemana",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Servicios programados o en curso que caen en algún día de esta semana, de lunes a domingo. Abajo, cuántas personas salen del taller, sumando la cuadrilla de cada servicio. Clic para ver los programados."
+ },
+ {
+  "clave": "kpiServiciosPorProgramar",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Servicios que ya se pidieron y nadie les ha puesto fecha ni cuadrilla. Abajo, el que lleva más tiempo esperando. Lo ideal es cero; clic para ver solo esos."
  },
  {
   "clave": "lead",
@@ -4187,6 +7525,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Un lead está completo cuando el vendedor tiene con qué atenderlo: dónde está (ciudad o estado), la empresa (o «Particular» si es una persona) y qué busca con modelo, medida o para qué («Cribadora V3», «Silo fijo para cemento», no solo «Informes»). Si ya es cliente, la empresa y el lugar salen de su ficha. Al abrir uno incompleto te dice qué le falta y lo completas ahí; lo puede completar quien lo registró, el vendedor que lo tiene o la gerencia, mientras siga abierto. «Incompletos» junta los que tienen algo pendiente. Para recepción es un objetivo: cuenta cómo están al revisar el mes, así que si lo completas antes, ya no cuenta."
  },
  {
+  "clave": "leadsDeHoyInicio",
+  "modulos": [],
+  "texto": "Los leads que tú registraste hoy. Abajo, de los que puedes ver, cuántos esperan vendedor y cuántos ya tienen vendedor pero no los ha atendido; se pinta en ámbar si alguno espera vendedor. Clic para abrir Leads."
+ },
+ {
   "clave": "leadTime",
   "modulos": [
    "produccion",
@@ -4202,11 +7545,63 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Sube el PDF o la foto de la cotización del proveedor y la IA lee proveedor, partidas, cantidades y precios y los empareja con el catálogo. Tú lo revisas: nada se guarda hasta crear la orden."
  },
  {
+  "clave": "leyendaPromocion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Un texto en rojo bajo el total de la hoja, por ejemplo hasta cuándo vale la promoción. Si hay descuento, sale después de «Ahorro de $…»."
+ },
+ {
+  "clave": "liberarFrenoSeguimiento",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Deja enviar cotizaciones a este vendedor solo por hoy, aunque siga con seguimientos vencidos. Pide el motivo y le llega un aviso; mañana el freno vuelve si no se pone al día."
+ },
+ {
   "clave": "ligaEmpleado",
   "modulos": [
    "admin"
   ],
   "texto": "La ficha de Personal ligada a esta cuenta. Con ella la persona ve su saldo de vacaciones y su desempeño, y aquí se avisa si la dieron de baja."
+ },
+ {
+  "clave": "ligarHiloGmail",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Busca en tu Gmail (como lo harías allá: BL, referencia del agente, PI o proveedor) y liga el hilo a este embarque. Sus correos se guardan aquí sin lo citado, para que los vea quien ve el dinero de importaciones."
+ },
+ {
+  "clave": "ligarOrdenEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Elige una orden de compra (en borrador, enviada o recibida en parte) para que viaje en este embarque; primero salen las de importación o en otra moneda. Al ligarla, si traía IVA se pone en 0: el IVA se paga en el pedimento."
+ },
+ {
+  "clave": "ligaTerminalPiso",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "La pantalla de la tablet del taller, donde se inicia, pausa y termina cada etapa con quién la trabaja. Lo que se marca ahí sale aquí al momento."
+ },
+ {
+  "clave": "lineaOportunidad",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Qué se está vendiendo: Maquinaria, Refacciones u Otros (fletes, servicios, instalaciones). La eliges tú; para la comisión cuenta la línea de cada partida del pedido, no esta."
  },
  {
   "clave": "lineasLista",
@@ -4215,6 +7610,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "margenes"
   ],
   "texto": "Cuántos renglones tiene su lista de materiales (un subensamble cuenta como un renglón). Cero quiere decir que ingeniería todavía no lo captura."
+ },
+ {
+  "clave": "lineaTiempoSolicitud",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Por dónde va: cuándo se pidió y su plazo, quién de compras la tomó y cuándo se contestó. Las horas son hábiles: solo cuentan las del horario de la planta."
  },
  {
   "clave": "lineaVenta",
@@ -4227,12 +7629,37 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Maquinaria, Refacciones u Otros (fletes, servicios, instalaciones). La pone el catálogo en cada partida y de ella depende cómo cuenta para la comisión; solo la gerencia la puede cambiar."
  },
  {
+  "clave": "listaDocumentosEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Lo que necesita este embarque, según su modalidad y su incoterm (la póliza de seguro, por ejemplo, solo en CIF o CIP). Cada uno dice quién lo debe y en qué va; subir el archivo lo marca como recibido. Los que traen precios solo los abre quien ve el dinero."
+ },
+ {
   "clave": "listaMateriales",
   "modulos": [
    "costeo",
    "margenes"
   ],
   "texto": "La receta del artículo: cada componente, materia prima o subensamble que lleva y en qué cantidad. Producción surte cada orden con esta lista, así que lo que no está aquí no llega al taller."
+ },
+ {
+  "clave": "listaParaLlamar",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Todos los clientes con un motivo para buscarlos, menos los que ya están en seguimiento. Salen tus clientes y los que no tienen vendedor (la gerencia ve los de todos); primero, los que más vale buscar."
+ },
+ {
+  "clave": "listasDondeVaDirecto",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Los equipos y subensambles que llevan esta pieza en su propia lista (no dentro de un subensamble). Ninguna viene marcada: elige en cuáles cambiarla. Si eliges un subensamble, el cambio llega a todos los equipos que lo usan."
  },
  {
   "clave": "llaveBono",
@@ -4251,7 +7678,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "importaciones"
   ],
-  "texto": "Cuándo llega a planta. Mientras está en el mar o en puerto, es el arribo (o la ETA) más lo que normalmente tarda en salir del puerto; ya despachado, el día siguiente; ya en planta, la fecha real (si nadie la anotó, dice que falta)."
+  "texto": "Cuándo llega a planta. Mientras está en el mar o en puerto, es el arribo (o la ETA) más lo que suelen tardar los embarques de puerto a planta; ya despachado, el día siguiente; ya en planta, la fecha real (si nadie la anotó, dice que falta)."
+ },
+ {
+  "clave": "lleganPlantaCatorceDias",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Embarques que todavía no están en planta y que, según su llegada estimada, llegan en las próximas dos semanas. Sirve para preparar espacio y quién recibe."
  },
  {
   "clave": "llenarSurtido",
@@ -4272,6 +7706,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Todas las cotizaciones que empezaron en el periodo, cada una una sola vez aunque tenga varias versiones, con el monto de su última versión, sin IVA y en pesos (las de dólares, con su tipo de cambio)."
  },
  {
+  "clave": "loLeidoImportacion",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Cuántos renglones de cada hoja leyó la última importación: proveedores, componentes, equipos, líneas de materiales… Es lo que se trajo en esa corrida, no lo que hay hoy en el ERP."
+ },
+ {
   "clave": "loQueImportaHoy",
   "modulos": [],
   "texto": "Resumen del día de tu área. En rojo los riesgos, en ámbar lo que pide atención, en verde lo que va bien. Si tu puesto tiene el Asistente y la IA está conectada, ella lo redacta con los datos del ERP; si no, salen los avisos calculados por reglas (dice “Reglas de la base · sin IA”). Cada tarjeta lleva a donde se atiende."
@@ -4283,6 +7724,22 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "Cuánto se pide normalmente: los meses de cobertura por la demanda mensual."
+ },
+ {
+  "clave": "lugarEnFila",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "El lugar de la orden en la fila del taller: la primera es la que toma antes cada área. «Hasta arriba», «Subir» y «Bajar» la mueven; el plan se recalcula y la cola de Cuadrillas y de la terminal queda en ese orden."
+ },
+ {
+  "clave": "manoObraPropia",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Lo que cuestan las horas de este equipo o subensamble en cada etapa (horas × tarifa de la etapa), sin las de sus subensambles: ésas ya vienen dentro del costo de cada uno."
  },
  {
   "clave": "manoObraTaller",
@@ -4309,7 +7766,21 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "Un renglón por persona y un cuadro por día. Entre más oscuro, más uso ese día según la medida que escojas. Los huecos dicen quién deja de usar el ERP algunos días o quién ya no lo usa."
+  "texto": "Un renglón por persona (hasta 25, las de más uso primero) y un cuadro por día. Entre más oscuro, más de la medida que escojas ese día (con «Costo de la IA» cuenta las consultas). Los huecos dicen quién deja de usar el ERP algunos días o quién ya no lo usa."
+ },
+ {
+  "clave": "mapaFamilia",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Cuánto se vendió de una familia en cada estado en el periodo; cada tono junta estados con venta parecida. Clic en un estado para ver qué más se vende ahí."
+ },
+ {
+  "clave": "mapaVentasComoLeer",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "El tono de cada lugar dice cuánto tiene de lo que elegiste (venta, clientes, ticket o crecimiento); gris es sin venta. Pasa el mouse para ver sus números y, en el país, dale clic a un estado para ver sus municipios."
  },
  {
   "clave": "maquinaCritica",
@@ -4348,6 +7819,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Órdenes que todavía están en una etapa anterior (siguen en Corte o en Pailería, por ejemplo). Se juntan aquí, cerradas, para no repetir la misma orden en todas las columnas; ábrelas si quieres planear desde ya quién las va a hacer."
  },
  {
+  "clave": "masDeUnDiaPrecio",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Qué parte de las solicitudes de este mes tardó más de un día hábil (10 horas) en contestarse; cuentan también las abiertas que ya pasaron de un día. Menos es mejor: en verde si es igual o mejor que en el chat."
+ },
+ {
   "clave": "materialQuitado",
   "modulos": [
    "produccion",
@@ -4376,12 +7854,43 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cruza dos preguntas para decidir cómo controlar cada artículo. ABC: con permiso de costos, cuánto valor salió en 12 meses (A es el 80 % del valor, B el siguiente 15 %, C el resto); sin costos, qué tan seguido sale (A 6 meses o más de 12, B de 3 a 5, C 1 o 2). XYZ: qué tan parejo sale mes con mes, medido con la variación (desviación ÷ promedio): X hasta 0.5, Y hasta 1, Z más de 1. Un AX se controla fino con punto de reorden; un CZ casi nunca conviene tenerlo en almacén."
  },
  {
+  "clave": "matrizFamiliaEstado",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Cada renglón es una familia y cada columna uno de los 12 estados que más compran; los demás van juntos en «Resto». Clic en el nombre de un estado para verlo de cerca abajo, o en una familia para ver su mapa; otro clic lo quita."
+ },
+ {
+  "clave": "medianaRespuestaPrecio",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "La mitad de los precios de este mes se contestó en menos de este tiempo, contado en horas hábiles desde que se pidió. Menos es mejor: en verde si es igual o mejor que en el chat."
+ },
+ {
   "clave": "medidaEspecial",
   "modulos": [
    "costeo",
    "margenes"
   ],
-  "texto": "Equipo hecho a una medida fuera de la estándar. Se marca en su ficha y su precio de lista ya lo toma en cuenta."
+  "texto": "Equipo hecho a una medida fuera de la estándar. Se marca al darlo de alta (y la copia de «Duplicar» lo conserva); su precio de lista ya lo toma en cuenta."
+ },
+ {
+  "clave": "medidaLoCotizado",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "En dinero: el grueso de cada franja es el monto sin IVA, en pesos. En cotizaciones: cuántas son, sin importar su monto."
+ },
+ {
+  "clave": "medidaUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Qué medir en las gráficas: tiempo activo, cambios, consultas a la IA, su costo o personas activas (cuántas personas hicieron algo cada día). Los indicadores y la tabla no cambian."
  },
  {
   "clave": "mejoraA3",
@@ -4390,6 +7899,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Una mejora grande se trabaja como A3, la hoja de una sola página de lean: a la izquierda la situación actual, el objetivo y la causa raíz (preguntar «¿por qué?» hasta llegar al fondo); a la derecha las contramedidas, el plan y el resultado. La decide ingeniería de procesos o la gerencia."
+ },
+ {
+  "clave": "mejoraDescartada",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Ideas que se decidió no hacer. Al descartarla se escribe el porqué y a quien la propuso le llega el aviso con el motivo. No salen en el tablero; «Regresar a propuesta» la vuelve a abrir."
  },
  {
   "clave": "mejoraEnMarcha",
@@ -4424,6 +7941,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Ideas que todavía nadie decide. Ingeniería de procesos o la gerencia de producción las revisan: si van, les ponen quién las lleva y para cuándo y las ponen en marcha; si no, las descartan con su motivo (quien la propuso lo lee)."
  },
  {
+  "clave": "mejoresClientesAnio",
+  "modulos": [],
+  "texto": "Los 8 clientes que más han comprado este año, con IVA y en pesos: lo del libro de ventas de la hoja más los pedidos del ERP no cancelados. Clic para abrir su ficha."
+ },
+ {
   "clave": "mensajeIALead",
   "modulos": [
    "ventas",
@@ -4449,9 +7971,26 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Las pantallas que más usas, arriba. Pasa el mouse por cualquier opción del menú y con el alfiler la fijas aquí; con el alfiler tachado la quitas. Siguen también en su sección."
  },
  {
+  "clave": "menuMasCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Más acciones: vista previa, imprimir, compartir por WhatsApp o correo, nueva versión, duplicar con folio nuevo, convertir a pedido y marcar rechazada con su motivo. En un borrador también lo puedes eliminar."
+ },
+ {
   "clave": "menuPersonal",
   "modulos": [],
   "texto": "Las secciones del menú salen en el orden de tu puesto: si eres de producción, Producción va primero. Clic en el nombre de una sección la colapsa o la abre; con las flechas que aparecen al pasar el mouse la subes o la bajas. Lo que acomodas se queda en esta computadora, solo para ti. «Restaurar el menú de mi puesto», al final, lo regresa como estaba."
+ },
+ {
+  "clave": "mercanciaEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "El total de las órdenes de compra que van en el embarque, en dólares. Si alguna está en pesos o euros, se pasa a dólares con el tipo de cambio de hoy."
  },
  {
   "clave": "mermaLinea",
@@ -4480,6 +8019,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Plan de meses para pagar con tarjeta. La mensualidad ya incluye la comisión del plan: total ÷ (1 − tasa del plan) ÷ meses. Sale en la cotización y en el mensaje de WhatsApp."
  },
  {
+  "clave": "mesMiDesempeno",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Tu resultado de ese mes, de 0 a 100 %. «En calificación»: tu jefe todavía no termina. «En revisión»: lo revisan Recursos Humanos o dirección. «Aprobado»: ya es definitivo. En rojo con la llave: ese mes el bono vale 0."
+ },
+ {
   "clave": "metaAnual",
   "modulos": [
    "analisis"
@@ -4491,7 +8042,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "analisis"
   ],
-  "texto": "La sugerida reparte la meta del año con lo que pesó cada estado en los últimos 3 años. Dirección puede poner otra; vacía regresa a la sugerida."
+  "texto": "La sugerida reparte la meta del año con lo que pesó cada estado en los 3 años completos anteriores. Dirección puede escribir otra (se guarda con Enter o al salir de la casilla); vacía regresa a la sugerida. Solo se puede ya capturada la meta del año."
+ },
+ {
+  "clave": "metodoAcceso",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Google: entra con «Continuar con Google». Contraseña: entra con correo y contraseña, como las cuentas de la TV y la tablet del taller."
  },
  {
   "clave": "metodoPagoCfdi",
@@ -4504,6 +8062,36 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Lo dice la factura. De contado (PUE): ya se pagó o se paga al momento. A crédito (PPD): se paga después; si no se registra, es una cuenta por pagar que no sale en Pagos a proveedores."
+ },
+ {
+  "clave": "metodoPagoImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Transferencia internacional desde una cuenta en pesos, o EBANX cuando se paga por Alibaba. No hay cuenta en dólares: todo sale de pesos."
+ },
+ {
+  "clave": "metricasPorEquipo",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Una fila por modelo terminado en el periodo: cuántos salieron, las horas hombre por equipo contra las del costeo y cuántos días tardó en promedio de liberado a terminado."
+ },
+ {
+  "clave": "metricasPorEtapa",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Una fila por área con las etapas que terminaron en el periodo: cuántas se marcaron en la terminal, horas reales contra estimadas y cuánto esperaron y se trabajaron en promedio. Las pausas, los problemas y las reabiertas son del periodo; «En proceso hoy», de ahorita."
+ },
+ {
+  "clave": "mezclaEstadoMatriz",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Cada columna suma 100 %: qué parte de lo que compró ese estado fue de cada familia. Sirve para comparar un estado chico con uno grande."
  },
  {
   "clave": "mezclaUsoErp",
@@ -4535,6 +8123,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cómo viaja: contenedor completo (FCL), carga consolidada con otros (LCL), consolidado de varios proveedores nuestros o aéreo. De eso depende la lista de documentos."
  },
  {
+  "clave": "modoCatalogoSolicitud",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "«Está en el catálogo»: busca y elige el artículo que ya existe. «Dar de alta»: si no existe, se crea aquí como componente con la clave que sigue, y el vendedor ya lo encuentra en su buscador."
+ },
+ {
   "clave": "modoLeads",
   "modulos": [
    "ventas",
@@ -4545,6 +8140,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "A quién le llega un lead nuevo. Hay tres formas, se escoge en Configuración: bandeja (se avisa a los vendedores y el primero que lo toma se lo queda), la gerencia de ventas lo asigna, o quien lo registra escoge al vendedor. En las tres, si ya es cliente y tiene vendedor vigente, le llega directo a su vendedor."
  },
  {
+  "clave": "momentoCelular",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Qué revisión del celular estás marcando. Se elige sola según la hora: antes de las 11, entrada; antes de las 3 de la tarde, break 1; después, break 2."
+ },
+ {
   "clave": "montoEstimado",
   "modulos": [
    "ventas",
@@ -4553,6 +8160,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Lo que crees que vale la venta, sin IVA. Si la oportunidad la abre una cotización enviada, toma el total sin IVA de esa cotización."
+ },
+ {
+  "clave": "montoMatriz",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Los pesos vendidos de cada familia en cada estado, con IVA. Aquí resaltan los estados que más compran."
+ },
+ {
+  "clave": "montosCorreos",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Importes que se mencionan en los correos (fletes, saldos, cargos). Solo se muestran: para que cuenten hay que capturarlos como pago, gasto o saldo por recuperar."
  },
  {
   "clave": "montoSinIva",
@@ -4578,6 +8199,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Compra con ritmo (3 compras o más, cada 1 a 12 meses) y ya pasó su tiempo de siempre, pero no el doble. Es el momento de buscarlo."
+ },
+ {
+  "clave": "motivoMovimientoAlmacen",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Obligatorio: queda en el historial para saber a dónde fue cada cosa. Los botones de abajo lo llenan rápido; si ya escribiste algo, el botón lo pone adelante de tu texto."
  },
  {
   "clave": "motivoPerdida",
@@ -4614,7 +8243,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "analisis"
   ],
-  "texto": "Por resolver: el estado o la ciudad no se reconocieron. Por confirmar: se ligó por parecido o a una ciudad de otro estado. Falta el dato en la ficha: no hay ciudad escrita y se arregla en el cliente. Por aproximación: el nombre corto o largo de un solo municipio."
+  "texto": "Por resolver: el estado o la ciudad no se reconocieron. Por confirmar: se ligó por parecido, a una ciudad de otro estado o adivinando el estado por la ciudad. Falta el dato en la ficha: no hay ciudad escrita y se arregla en el cliente. Por aproximación: el nombre corto o largo de un solo municipio."
+ },
+ {
+  "clave": "moverCalendario",
+  "modulos": [],
+  "texto": "Pasa al mes anterior o al siguiente (a la semana, en la vista Semana). «Hoy» te regresa a la fecha de hoy."
+ },
+ {
+  "clave": "moverCalendarioCuadrillas",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Recorre el calendario una semana para atrás o para adelante. «Hoy» lo regresa a esta semana."
  },
  {
   "clave": "movimientoCorreccion",
@@ -4641,6 +8283,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Tiempo promedio de reparación, en horas laborales: de que se reporta la falla a que se cierra su orden. Si se paró el viernes a las 5 y quedó el lunes a las 9, cuenta una hora, no todo el fin de semana. Más bajo es mejor. El «paro promedio» es solo de las fallas que detuvieron la máquina, de que se paró a que volvió a operar, también en horas laborales."
  },
  {
+  "clave": "municipiosEstado",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Los 8 municipios del estado que más compraron en el periodo. Lo de clientes sin municipio no sale aquí."
+ },
+ {
   "clave": "netoML",
   "modulos": [
    "ventas",
@@ -4655,7 +8304,15 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "Lo que un rol puede hacer en un módulo: 1 ver, 2 capturar (ver y registrar), 3 administrar (aprobar, borrar, configurar). Un guion = sin acceso: ni lo ve en el menú ni la base le entrega esos datos."
+  "texto": "Lo que un rol puede hacer en un módulo: 1 ver, 2 capturar (ver y registrar), 3 administrar (aprobar, borrar, configurar). Un guion = sin acceso: ni lo ve en el menú ni el ERP le entrega esos datos."
+ },
+ {
+  "clave": "nombreParametro",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Cómo se llama el parámetro en las cuentas (largo_m, ancho_pulg…): sin acentos ni espacios. Si escribes «Largo en metros», se guarda como largo_en_metros."
  },
  {
   "clave": "nominaPagada",
@@ -4670,12 +8327,36 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuando finanzas registra la salida del dinero de una semana cerrada, la semana dice la fecha, la cuenta de donde salió y el monto. Mientras diga «Sin pago registrado», finanzas todavía no la anota como pagada."
  },
  {
+  "clave": "noSeConsigueSolicitud",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Contesta que no se puede conseguir (descontinuado, sin proveedor…). Escribes el motivo, al vendedor le llega un aviso y se lo explica al cliente. Después ya no se puede contestar con precio."
+ },
+ {
   "clave": "noSeVendeSuelto",
   "modulos": [
    "costeo",
    "margenes"
   ],
   "texto": "Artículo que solo se usa dentro de un equipo: no se cotiza por separado."
+ },
+ {
+  "clave": "notaEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Escribe algo que deba saber quien vea el embarque (lo que pidió el agente, un acuerdo con el proveedor) y da Enter. Queda en la historia con tu nombre y la fecha."
+ },
+ {
+  "clave": "notasCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Las notas del catálogo se palomean y salen en su orden; abajo escribes las tuyas y Enter. Todas salen al pie de la cotización."
  },
  {
   "clave": "nuevaVersion",
@@ -4696,6 +8377,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Una nueva versión sale como borrador con las mismas partidas y el folio con -v2, -v3… Si la actual sigue viva, te pregunta qué pasa con ella: «Ya no vale» la deja rechazada (si ya se había enviado) o cancelada (si no), con «Se reemplazó por la versión…»; deja de agendar seguimientos, no se puede convertir a pedido por error y no cuenta como venta perdida. «Sigue vigente» la deja como está, para cuando el cliente puede escoger cualquiera de las dos."
+ },
+ {
+  "clave": "nuevoCostoPrecios",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Escribe el costo nuevo y Enter: se guarda esa fila con tu nombre y bajas a la siguiente. Con ↑ ↓ te mueves sin guardar y lo escrito queda en amarillo; Esc deshace la fila. Cambiar solo la moneda también cuenta como cambio."
  },
  {
   "clave": "numeroSerie",
@@ -4723,6 +8411,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Una orden enviada o recibida en parte cuya fecha de entrega ya pasó. Llámale al proveedor o mueve la fecha si ya te dio otra."
  },
  {
+  "clave": "ocContratoAduana",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Abre la orden y el contrato de compraventa bilingües que pide el agente aduanal. Sale en órdenes de proveedores de importación o en otra moneda."
+ },
+ {
   "clave": "ocupacionArea",
   "modulos": [
    "servicio",
@@ -4731,12 +8426,34 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Qué tanto de su capacidad tiene ocupada el área esa semana. Con holgura: menos de 85 %. Justa: de 85 a 100 %. Se pasa: más de 100 %, algo se va a atrasar."
  },
  {
+  "clave": "opcionesPartidaCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Lo que puedes hacer con la partida: ver su ficha de venta, pedir su precio a compras, volver al precio de lista, duplicarla, subirla o bajarla y quitarla."
+ },
+ {
   "clave": "opEnProceso",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "En proceso: alguna etapa del taller ya empezó."
+ },
+ {
+  "clave": "operacionesVenta",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Cuántas ventas distintas hubo: cada factura o venta del libro de la hoja y cada pedido del ERP cuentan una vez, tengan las partidas que tengan."
+ },
+ {
+  "clave": "opinarConsejo",
+  "modulos": [],
+  "texto": "Dile a la IA si este consejo te sirvió. Los consejos de las semanas siguientes lo toman en cuenta. Se contesta una sola vez."
  },
  {
   "clave": "opLiberada",
@@ -4798,12 +8515,43 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Órdenes enviadas o recibidas en parte que todavía esperan mercancía. «Tarde» cuenta las que ya pasaron su fecha de entrega."
  },
  {
+  "clave": "ordenesEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Las órdenes de compra que viajan en este embarque: un BL puede traer varias facturas y un consolidado, varios proveedores. De ellas salen lo que se le debe a cada proveedor, el tope de los pagos y las partidas del costeo."
+ },
+ {
+  "clave": "ordenesEnBorrador",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Órdenes que compras armó pero no ha enviado: el proveedor no las tiene y lo pedido todavía no cuenta como en camino. Ábrela, revisa precios y fechas, y «Enviar al proveedor»."
+ },
+ {
+  "clave": "ordenesEnTallerInicio",
+  "modulos": [],
+  "texto": "Órdenes de producción que no se han entregado ni cancelado: planeadas, liberadas, en proceso y terminadas por entregar. Se pinta en rojo si alguna ya pasó su fecha compromiso sin terminarse (las que están en espera no cuentan). Clic para abrir el tablero de producción."
+ },
+ {
+  "clave": "ordenesPorVencer",
+  "modulos": [],
+  "texto": "Órdenes sin entregar cuya fecha compromiso es en 5 días o menos, o ya pasó: hasta 6, la fecha más vieja primero. «N días tarde» ya pasó su compromiso; «en N días» es lo que le queda. Clic en una para abrirla."
+ },
+ {
   "clave": "ordenesSueltas",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "Órdenes del pedido que no están ligadas a una partida. Pasa con los pedidos que vinieron de la hoja: la partida dice algo general («línea de envasado») y cada equipo es una orden. Aquí ves cada equipo con su orden y su avance."
+ },
+ {
+  "clave": "ordenEtapaTaller",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "El lugar de la etapa en el recorrido del equipo: va de menor a mayor. Una etapa nueva se agrega al final."
  },
  {
   "clave": "ordenMantenimiento",
@@ -4814,6 +8562,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El registro de una falla (correctivo) o de un preventivo que tocó: qué tiene, quién lo reportó, quién la atiende, las refacciones y cuánto tiempo estuvo parada."
  },
  {
+  "clave": "ordenPorCorreo",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "La manda desde tu Gmail al correo del proveedor, con el PDF de la orden adjunto; antes puedes cambiar a quién, el asunto y el mensaje. Si estaba en borrador, al mandarla queda enviada."
+ },
+ {
   "clave": "ordenProduccion",
   "modulos": [
    "produccion",
@@ -4822,11 +8577,26 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La orden para fabricar un equipo (o varios iguales). Al crearse copia la lista de materiales del equipo, así un cambio posterior al catálogo no la mueve."
  },
  {
+  "clave": "ordenReglaFamilia",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Si dos reglas atrapan la misma venta, gana la de número más bajo. De entrada es 50."
+ },
+ {
   "clave": "origenCosto",
   "modulos": [
    "compras"
   ],
-  "texto": "De dónde salió el cambio: a mano (aquí o en la ficha), por orden de compra (al recibirla), por cotización (al contestar una solicitud de precio) o importado de la hoja."
+  "texto": "De dónde salió el cambio: a mano (aquí o en la ficha), por orden de compra (al recibirla), por cotización (al contestar una solicitud de precio o al crear una orden desde la cotización del proveedor) o importado de la hoja."
+ },
+ {
+  "clave": "origenMejora",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Esta mejora salió de algo que reportó el piso (un problema, una pausa con motivo o una etapa reabierta) o de una falla de máquina. En su ficha está lo que se reportó y la liga a la orden o a la máquina."
  },
  {
   "clave": "origenRequisicion",
@@ -4834,6 +8604,23 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "compras"
   ],
   "texto": "Quién la pidió: Producción (faltante de una orden de producción), Reabasto (almacén, por stock mínimo) o Manual. La fecha en rojo es para menos de una semana."
+ },
+ {
+  "clave": "origenSkydropx",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "La dirección de la planta de donde salen los paquetes. Se elige de las que ya están dadas de alta en Skydropx, después de «Probar conexión». Sin ella no se puede cotizar ni generar guía."
+ },
+ {
+  "clave": "otraVersionMensajeIA",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Le pide a la IA otro mensaje con los mismos datos. Lo que hayas cambiado a mano en la caja se pierde."
  },
  {
   "clave": "otrosPagosNomina",
@@ -4872,12 +8659,47 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Todo lo que ya se pagó a proveedores, en una lista: lo registrado en el ERP, lo del libro de compras desde 2022 y los pagos de órdenes de compra. Si un pago está en la hoja y también se registró aquí, se cuenta una sola vez. Las órdenes en dólares se suman en pesos con el tipo de cambio de la orden."
  },
  {
+  "clave": "pagosOrdenCompra",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Los pagos al proveedor por esta orden: los ve compras y los registra solo finanzas. El saldo es el total menos lo pagado. Si su factura ya está registrada, se paga desde la cuenta del proveedor, no aquí."
+ },
+ {
+  "clave": "pagosProveedorEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Lo que se le paga al proveedor por cada orden del embarque: anticipo, saldo o pago total, con el tipo de cambio real de cada uno. No deja pagar más de lo que se debe por la orden, contando lo que finanzas ya le pagó. El primer anticipo pagado marca solo la etapa «Anticipo pagado»."
+ },
+ {
+  "clave": "pagosQueVienenImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Cada orden de compra que va en un embarque y todavía tiene saldo con el proveedor: lo pagado, lo que falta y su próximo pago programado. Lo que sigue en producción no tiene fecha hasta que el proveedor avisa que está listo."
+ },
+ {
   "clave": "panelPersonal",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "Todo el personal activo, por su área. En verde, quien está trabajando ahorita (tiene su tiempo abierto en alguna etapa). La gerencia de producción arrastra de aquí a una tarjeta para meter a alguien, y arrastra a alguien de una tarjeta hasta aquí para sacarlo de esa cuadrilla."
+ },
+ {
+  "clave": "pantallasAbiertasErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Cuántas veces abrió una pantalla en el periodo y cuántas pantallas distintas. Se cuenta desde el 5 de noviembre de 2026."
+ },
+ {
+  "clave": "pantallasQueMasUsa",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Las 15 pantallas donde más tiempo activo tuvo en el periodo: cuánto tiempo, cuántas veces la abrió, en cuántos días y la última vez."
  },
  {
   "clave": "parametroEquipo",
@@ -4888,12 +8710,27 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Una medida del equipo (largo_m, ancho…) de la que dependen algunas cantidades u horas: cantidad = fija + por parámetro × valor. Así la banda de 22 m es la de 20 m con otro largo."
  },
  {
+  "clave": "parametrosCopia",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "La medida que tendrá la copia: con ella se recalculan sus cantidades y horas; lo que no cambies queda como en el original. Si el nombre trae la medida («20 m»), se ajusta solo mientras no lo cambies a mano."
+ },
+ {
   "clave": "paraQuePrestamo",
   "modulos": [
    "servicio",
    "mantenimiento"
   ],
   "texto": "Qué va a hacer con la herramienta o en qué trabajo la va a usar. Es obligatorio, salvo que se la lleve a un servicio (entonces el servicio dice para qué)."
+ },
+ {
+  "clave": "paraRequisicion",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Para qué es: el folio de la orden de producción que lo necesita, o «stock» si lo pidió el reabasto para reponer existencias."
  },
  {
   "clave": "paraStock",
@@ -4966,11 +8803,67 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Partida que sale en la cotización como opción o alternativa, pero no suma al total ni cuenta para el precio mínimo."
  },
  {
+  "clave": "partidasAlConvertir",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Palomea las partidas que entran al pedido. Las opcionales vienen sin palomear porque no suman; si el cliente escogió esa alternativa, palomeala. Lo que no palomees no pasa al pedido."
+ },
+ {
   "clave": "partidaSinArticulo",
   "modulos": [
    "compras"
   ],
   "texto": "Una partida escrita a mano, sin artículo del catálogo (vienen así de la hoja o de un PDF). Si es material, búscala y elige su artículo: entra al almacén con el costo de la orden, como cualquier otra. Si es un cobro como «Manejo» o un flete, recíbela tal cual: cuenta como recibida y no toca el inventario. Cuando finanzas liga la factura a la orden, una partida sin artículo cuenta con la categoría de la factura; con artículo, como material o consumible del taller."
+ },
+ {
+  "clave": "partidaSinCosto",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Esta partida está en $0: captura el precio que dio el proveedor. Con una partida en $0 la orden no se puede enviar."
+ },
+ {
+  "clave": "partidasOrdenCompra",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Lo que se le pide al proveedor. En borrador, cantidad y costo se editan en su lugar (Enter o salir guarda). Ya enviada, solo se cambia con el lápiz de cada partida y la orden sube de revisión."
+ },
+ {
+  "clave": "partidasPedido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Lo que se vendió. Mientras el pedido está confirmado, su vendedor o la gerencia agregan, quitan o cambian cantidades; el precio que viene de una cotización solo lo cambia la gerencia. Abajo de la cantidad sale cuánto ya se entregó."
+ },
+ {
+  "clave": "partidasPorSurtir",
+  "modulos": [],
+  "texto": "Cuántos renglones del material de la orden faltan por entregar al taller, completos o en parte. No cuenta los consumibles del taller cuando esa opción está encendida."
+ },
+ {
+  "clave": "patronReglaFamilia",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "El texto que se busca en la descripción de cada venta de la hoja, en minúsculas y sin acentos. Con | separas opciones: «molino|martillo» atrapa cualquiera de las dos. Al guardar se vuelven a clasificar todas las ventas de la hoja."
+ },
+ {
+  "clave": "pdfCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Abre la hoja en otra pestaña para imprimirla o guardarla en PDF. Sacar el PDF no la marca como enviada: para eso es Enviar, que le agenda su seguimiento. Con el freno de seguimientos no sale si la cotización todavía no se envía."
  },
  {
   "clave": "pedidoACompras",
@@ -4991,6 +8884,56 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La fecha compromiso ya pasó y el pedido todavía no se entrega."
  },
  {
+  "clave": "pedidoEstadoCancelado",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Se canceló, con su motivo. Ya no cuenta para comisiones ni para cobranza."
+ },
+ {
+  "clave": "pedidoEstadoConfirmado",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Ya es venta y todavía no entra al taller. Mientras está así, su vendedor o la gerencia pueden ajustar las partidas. Sigue: producción crea sus órdenes o, si no lleva nada que fabricar, se marca listo."
+ },
+ {
+  "clave": "pedidoEstadoEnProduccion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Ya tiene órdenes en el taller; su avance sale en Producción. Pasa solo a «Listo para entregar» cuando el taller termina todas."
+ },
+ {
+  "clave": "pedidoEstadoEntregado",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Ya salió todo lo del pedido, con su hoja de salida. Si se marcó por error, la gerencia de ventas o dirección reabren la entrega."
+ },
+ {
+  "clave": "pedidoEstadoListo",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Lo que se vende ya está terminado. Sigue entregarlo: qué sale, quién recibe y la hoja de salida firmada."
+ },
+ {
   "clave": "pedidoHistorico",
   "modulos": [
    "ventas",
@@ -4999,6 +8942,36 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Pedido que viene de las hojas. Cuenta para el historial y para las comisiones de su mes, pero no es una cuenta por cobrar del ERP: lo que el cliente debe está en su saldo de arranque. Si sigue en el taller, su avance y su entrega se llevan aquí como cualquier otro."
+ },
+ {
+  "clave": "pedidosAbiertos",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Los que todavía no se entregan: confirmados, en producción y listos para entregar."
+ },
+ {
+  "clave": "pedidosComisionMes",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Los pedidos con fecha de este mes que se le acreditan al vendedor, sin los cancelados. Arriba, lo de maquinaria y otros; abajo, lo de refacciones; sin IVA y en pesos. Si el crédito es compartido, sale qué parte le toca."
+ },
+ {
+  "clave": "pedidoSinCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Para las ventas que no salieron de una cotización: Mercado Libre, sitio web o mostrador. Eliges cliente, canal y número de venta; las partidas las agregas después, en el pedido. Con la cuenta de Mercado Libre conectada sus ventas entran solas: no las captures otra vez."
  },
  {
   "clave": "pedidosMercadoLibre",
@@ -5021,6 +8994,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Algo que una persona le pide a otra, con fecha. Al asignarlo le llega un aviso al responsable; cuando lo marca hecho, le llega un aviso a quien lo pidió."
  },
  {
+  "clave": "pendienteDeRevision",
+  "modulos": [],
+  "texto": "Lo puso la revisión de la madrugada: encontró algo urgente en lo que capturaste. Márcalo hecho cuando lo corrijas (cuenta como «Ya lo corregí»); si no es error, contéstalo en «Por revisar» con «Está bien así» y se cancela sin contar en tu contra."
+ },
+ {
   "clave": "pendienteEsperandoRespuesta",
   "modulos": [],
   "texto": "Quien tiene el pendiente preguntó algo que necesita para terminarlo y espera la respuesta de quien lo pidió. Mientras tanto, el pendiente no cuenta como vencido ni suma días de retraso a quien lo tiene (no lo detiene él), y a quien lo pidió le sale como «Te preguntaron» o «Por responder» hasta que conteste en la ficha. Todos los que ven el pendiente ven la conversación."
@@ -5028,7 +9006,12 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
  {
   "clave": "pendientesATiempo",
   "modulos": [],
-  "texto": "De tus pendientes con fecha de los últimos 30 días, cuántos cerraste a tiempo, contando como fallas los que cerraste tarde y los que hoy siguen vencidos. Verde de 90 % para arriba, ámbar de 70 % a 89 %, rojo abajo de 70 %. Los que no tenían fecha no cuentan aquí."
+  "texto": "De tus pendientes con fecha, cuántos cerraste ese día o antes, contando como fallas los que cerraste tarde y los que hoy siguen vencidos. Arriba cuenta lo cerrado en los últimos 30 días; en «Equipo», en el periodo que elijas. Verde de 90 % para arriba, ámbar de 70 % a 89 %, rojo abajo de 70 %; los que no tenían fecha no cuentan."
+ },
+ {
+  "clave": "pendientesCerradosPeriodo",
+  "modulos": [],
+  "texto": "Pendientes que esta persona marcó hechos en el periodo. No cuenta los cancelados ni los que terminó otra persona de su grupo."
  },
  {
   "clave": "pendientesCorreos",
@@ -5048,14 +9031,31 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La suma de los días que lleva vencido cada pendiente tuyo que sigue abierto: uno vencido hace 3 días y otro hace 2 son 5 días de retraso. Mide cuánto está esperando la gente por ti; baja a cero al cerrarlos."
  },
  {
+  "clave": "pendientesInicio",
+  "modulos": [],
+  "texto": "Lo que espera algo de ti según tu puesto: lo que la revisión de la madrugada encontró en algo tuyo, seguimientos de cotizaciones, leads sin atender, autorizaciones, ajustes de inventario, compras atrasadas o documentos de embarques, entre otros. Clic en un renglón para ir a donde se atiende. Lo que alguien te pidió con fecha está en Pendientes."
+ },
+ {
   "clave": "pendientesPidio",
   "modulos": [],
   "texto": "Cuántos pendientes le pidió esta persona a otros en el periodo y cuántos siguen abiertos."
  },
  {
+  "clave": "pendientesSemana",
+  "modulos": [],
+  "texto": "El número grande son tus pendientes vencidos: siguen abiertos y su fecha ya pasó. Abajo, los que vencen de hoy al domingo y cuántos se cerraron la semana pasada."
+ },
+ {
   "clave": "pendientesTeEsperan",
   "modulos": [],
   "texto": "Cuántas personas te pidieron algo que sigue abierto: es a cuántos detiene tu trabajo mientras no lo cierres. En rojo si alguno ya está vencido."
+ },
+ {
+  "clave": "pendientesVencidosUso",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Sus pendientes que siguen abiertos y ya pasaron su fecha, a hoy. No depende del periodo que escojas."
  },
  {
   "clave": "pendienteVarios",
@@ -5080,6 +9080,79 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El periodo se queda al cambiar de pestaña y va en la liga, así que puedes mandarla tal cual. Si es de un año o menos se compara contra el mismo tramo del año anterior; si es más largo, contra el tramo de la misma duración justo antes."
  },
  {
+  "clave": "periodoAnioAnterior",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "El año pasado completo, de enero a diciembre, contra el año antes de ese."
+ },
+ {
+  "clave": "periodoDesde2018",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Toda la historia, del 1 de enero de 2018 a hoy. El libro de ventas empieza en 2018, así que aquí no hay contra qué comparar: el crecimiento sale vacío o «nuevo»."
+ },
+ {
+  "clave": "periodoDoceMeses",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Los 12 meses que terminan hoy, contra los 12 meses anteriores a esos. Sirve para comparar sin que importe en qué mes del año vas."
+ },
+ {
+  "clave": "periodoEsteAnio",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Del 1 de enero a hoy, contra el mismo tramo del año pasado."
+ },
+ {
+  "clave": "periodoLoCotizado",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Qué cotizaciones entran: las que empezaron en ese periodo, por la fecha de su primera versión. Lo que les pasó después cuenta aunque haya sido fuera del periodo."
+ },
+ {
+  "clave": "periodoMetricas",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Cuántos días hacia atrás se cuentan, hasta hoy. Lo de ahorita (en proceso, pausadas, órdenes abiertas) no cambia con el periodo."
+ },
+ {
+  "clave": "periodoMetricasAlmacen",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cuántos días hacia atrás, contando hoy, se miden los números de «Movimiento del periodo». La salud del inventario no cambia con esto: es una foto de hoy."
+ },
+ {
+  "clave": "periodoPendientesEquipo",
+  "modulos": [],
+  "texto": "Cuántos días hacia atrás se miden lo cerrado, lo hecho a tiempo, los días para cerrar y lo que pidió cada quien. Abiertos, vencidos, días de retraso, a cuántos detiene y lo que tiene por responder son de hoy, sin importar el periodo."
+ },
+ {
+  "clave": "periodoRango",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Tú eliges desde y hasta; se aplica al salir de cada fecha o con Enter. Si dura un año o menos se compara con las mismas fechas del año anterior; si es más largo, con un tramo igual de largo justo antes."
+ },
+ {
+  "clave": "periodoUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Los últimos 7, 30 o 90 días, contando hoy. Todo se compara contra los días justo anteriores, del mismo largo."
+ },
+ {
   "clave": "periodoVacaciones",
   "modulos": [
    "rrhh",
@@ -5096,7 +9169,240 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "La tabla de rol × módulo. Cada cruce dice el nivel que tiene ese rol en ese módulo. Solo dirección la cambia, y dirección siempre tiene nivel 3 en todo."
+  "texto": "La tabla de rol × módulo: cada cruce dice el nivel de ese rol en ese módulo. Solo dirección la cambia, y dirección siempre tiene nivel 3 en todo. Cada quien ve el cambio al recargar el ERP."
+ },
+ {
+  "clave": "personalActivoRrhh",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Personas dadas de alta que no tienen baja. Abajo, cuántas tienen área de piso y cuántos años llevan en promedio en la empresa."
+ },
+ {
+  "clave": "personalInicio",
+  "modulos": [],
+  "texto": "Cuántas personas están activas en Recursos Humanos (sin las bajas). Abajo, las ausentes hoy: vacaciones, permiso, falta o incapacidad aprobada que cae hoy. Clic para ver la lista de personal."
+ },
+ {
+  "clave": "personasActivasErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "De las personas con cuenta activa (sin la TV ni la tablet del taller), cuántas hicieron algo en el periodo: abrir una pantalla, registrar un cambio o preguntarle a la IA. Si alguien no lo usó, dale clic para ver quién."
+ },
+ {
+  "clave": "personasCapacidad",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "La gente activa del área que entra a cuadrillas. Con ella se calcula la capacidad automática."
+ },
+ {
+  "clave": "personasDelPendiente",
+  "modulos": [],
+  "texto": "A quién se lo pediste. En verde, quien ya lo hizo; en ámbar con signo de pregunta, quien te preguntó algo y espera tu respuesta. Clic en un nombre para abrir su ficha."
+ },
+ {
+  "clave": "pesoEstadoTresAnios",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Qué parte de la venta de los 3 años completos anteriores fue de ese estado. Con eso se reparte la meta sugerida."
+ },
+ {
+  "clave": "pesoFamiliaEstado",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "La barra es qué parte de la venta del estado fue de esa familia; la rayita, lo que pesa en todo el país. Si la barra pasa la rayita, ahí se vende más de esa familia que en el promedio."
+ },
+ {
+  "clave": "pesoIndicador",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Cuántos puntos de los 100 vale este indicador. Entre todos deben sumar 100 exactos para poder guardar."
+ },
+ {
+  "clave": "pestanaCapacidadTaller",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Si se promete más de lo que el taller saca: lo prometido para cada mes contra lo que cabe, y lo que entra contra lo que sale."
+ },
+ {
+  "clave": "pestanaClientesAnalisis",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Cuánto depende la venta de pocos clientes, quiénes regresan y a quiénes se está perdiendo, con la lista de cada grupo y su vendedor."
+ },
+ {
+  "clave": "pestanaConfigAlmacenes",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Los almacenes, cuáles cuentan para planta y los consumibles del taller."
+ },
+ {
+  "clave": "pestanaConfigEmpresa",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Datos fiscales y comerciales, IVA, fecha de arranque, tema, minutos para deshacer errores y la semana laboral con sus descansos."
+ },
+ {
+  "clave": "pestanaConfigIntegraciones",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Mercado Libre (conectar la cuenta, quién la atiende y a nombre de quién quedan las ventas) y Skydropx (guías de paquetería)."
+ },
+ {
+  "clave": "pestanaConfigTaller",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Las etapas del taller (orden, color, capacidad por semana y cuáles van en paralelo) y el aprovechamiento con que se calcula la capacidad automática."
+ },
+ {
+  "clave": "pestanaConfigTipoCambio",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "El dólar y el euro del día, y su historial."
+ },
+ {
+  "clave": "pestanaConfigVentas",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Envío gratis, tope de meses, la regla de cartera, a quién le llegan los leads, los textos de la cotización, los planes de meses y la comisión de cada canal."
+ },
+ {
+  "clave": "pestanaDineroEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Los pagos al proveedor con su tipo de cambio real, los gastos, el pedimento y lo que nos tienen que regresar. Solo aparece si tu puesto ve el dinero de importaciones."
+ },
+ {
+  "clave": "pestanaDineroImportaciones",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Lo que se les debe a los proveedores del extranjero, los pagos que vienen, lo que nos tienen que regresar y el dinero de cada embarque. Solo aparece si tu puesto ve el dinero de importaciones."
+ },
+ {
+  "clave": "pestanaEntregas",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Si cumplimos las fechas prometidas: pedidos a tiempo, días de atraso y cada orden del taller con la fecha a la que sale de verdad."
+ },
+ {
+  "clave": "pestanaHistorialMovimientos",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Todos los movimientos de inventario, con quién, cuándo y para qué. Filtra por tipo, almacén, persona y fechas (abre con los últimos 30 días) y bájalo a Excel con el botón de CSV."
+ },
+ {
+  "clave": "pestanaLosQuePedi",
+  "modulos": [],
+  "texto": "Lo que tú pediste a otros y sigue abierto. Si se lo pediste a varias personas sale una sola vez, con quién ya terminó. Con la X lo cancelas."
+ },
+ {
+  "clave": "pestanaMapaVentas",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Dónde se vende y dónde se dejó de vender: el mapa por estado y municipio, el ranking y las zonas que se enfriaron."
+ },
+ {
+  "clave": "pestanaMeTocan",
+  "modulos": [],
+  "texto": "Lo que te pidieron a ti y sigue abierto, lo que vence primero arriba. Dale clic al círculo para marcarlo hecho, o al título para abrir su ficha y preguntar lo que te falte."
+ },
+ {
+  "clave": "pestanaMovimientoPeriodo",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Lo que pasó en el almacén en el periodo que eliges (de 30 días a 12 meses): surtido a órdenes, lo que salió fuera de lista, consumibles por persona, ajustes y conteos."
+ },
+ {
+  "clave": "pestanaPendientesCerrados",
+  "modulos": [],
+  "texto": "Lo que ya se cerró, tuyo o que tú pediste: hecho, cancelado o que hizo otra persona del grupo. Si lo cerraste tú hace unos minutos, aquí lo puedes reabrir."
+ },
+ {
+  "clave": "pestanaPlaneacion",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "La meta del año repartida por mes y por estado contra lo vendido, y a qué ritmo hay que vender lo que falta. El año se elige con las flechas."
+ },
+ {
+  "clave": "pestanaProductoRegion",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Qué familia de producto se vende en cada estado, y las reglas que clasifican las ventas de la hoja."
+ },
+ {
+  "clave": "pestanaRegistrarMovimiento",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Para registrar una salida (consumo del taller o venta), una devolución o un traspaso entre almacenes. Lo que llega de compras entra al recibir la orden de compra, y lo que va a una orden de producción sale al surtirla desde la orden."
+ },
+ {
+  "clave": "pestanaTendencias",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "La venta mes a mes desde 2018: estacionalidad, crecimiento y qué familias pesan cada año. No usa el periodo: siempre es toda la historia."
+ },
+ {
+  "clave": "pestanaUbicacionesRevisar",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Ciudades y estados de clientes que no se reconocieron y por eso no salen en el mapa. Lo que dirección corrige aquí se queda para los clientes que vengan después."
+ },
+ {
+  "clave": "pestanaUsuariosLista",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Todas las cuentas del ERP: con qué roles entra cada quien y si su cuenta está activa. Dale clic a alguien para darle o quitarle roles, o para desactivarlo."
+ },
+ {
+  "clave": "pestanaVacacionesFicha",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Su saldo de vacaciones, cada periodo (cuánto le tocó, usó y le queda, y cuándo vence) y todo lo que se le ha registrado: vacaciones, permisos, faltas, incapacidades, retardos y horas extra."
  },
  {
   "clave": "piezasPorVentaML",
@@ -5117,12 +9423,30 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Componentes dentro de la lista, en cualquier nivel, que no tienen costo capturado. Cuentan como $0: el costo y el precio del equipo salen más bajos de lo real sin avisar."
  },
  {
+  "clave": "planComision",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "El plan de comisión del vendedor: su porcentaje, sus escalones de bono y con qué fecha cuenta cada venta. Lo asigna dirección; el detalle está abajo, en «Cómo se calcula»."
+ },
+ {
   "clave": "planoEstado",
   "modulos": [
    "costeo",
    "margenes"
   ],
   "texto": "Vigente: la revisión con la que se fabrica. Por aprobar: un borrador que todavía no sustituye al vigente. Anteriores: revisiones que ya se reemplazaron."
+ },
+ {
+  "clave": "planosArticulo",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Los planos y archivos técnicos del artículo (plano, corte DXF, programa de plasma, modelo 3D…), cada uno con su folio y su revisión. El archivo vive en Drive; aquí queda cuál es el vigente, qué cambió y quién lo aprobó. Los da de alta y los aprueba ingeniería."
  },
  {
   "clave": "planoSinVigente",
@@ -5165,7 +9489,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "compras"
   ],
-  "texto": "Cuánto tiempo tiene compras para contestar: unas horas hábiles que se fijan en Configuración (al arrancar: un día hábil, o medio día si el vendedor la marcó urgente porque el cliente está esperando). Solo corre en horario de la planta: una solicitud del domingo empieza a contar el lunes."
+  "texto": "Cuánto tiempo tiene compras para contestar: 10 horas hábiles (un día de planta), o 4 si quien la pidió la marcó urgente porque el cliente está esperando. Solo corre en horario de la planta: una solicitud del domingo empieza a contar el lunes."
  },
  {
   "clave": "politicaPrecio",
@@ -5176,9 +9500,32 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La regla de precio de un tipo de equipo: utilidad, recargos, medida especial, redondeo y descuento máximo. Cada categoría con política propia la usa; lo que no tiene categoría usa la de por defecto."
  },
  {
+  "clave": "porAlmacenDetalle",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cuánto hay de este artículo en cada almacén, incluido el Full de Mercado Libre. En rojo, negativo: hay que contarlo y pedir un ajuste."
+ },
+ {
   "clave": "porCobrar",
   "modulos": [],
   "texto": "Lo que los clientes nos deben, en pesos: lo de sus pedidos (total con IVA menos los cobros registrados) más lo que ya debían en la hoja el día que arrancó el ERP, menos lo que han pagado de eso."
+ },
+ {
+  "clave": "porContestarSolicitud",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Las que siguen abiertas: las que nadie ha tomado más las que alguien ya está cotizando. Abajo, cuántas no tiene nadie todavía."
+ },
+ {
+  "clave": "porEntregarAlmacenServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Insumos de servicios y refacciones de mantenimiento que almacén todavía no entrega, también los que se pidieron a compras; lo más viejo arriba. «Hay» es lo que hay en planta de ese artículo."
  },
  {
   "clave": "porPagar",
@@ -5207,11 +9554,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que falta pagar a proveedores del extranjero de las órdenes que van en embarques. Los pesos son aproximados al tipo de cambio de hoy."
  },
  {
+  "clave": "porRecibirOrdenes",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Órdenes enviadas o recibidas en parte que todavía esperan mercancía. Si ves importes, abajo dice cuánto dinero viene en camino: lo que falta por llegar, en pesos."
+ },
+ {
   "clave": "porRecuperar",
   "modulos": [
    "importaciones"
   ],
-  "texto": "Dinero nuestro que alguien tiene que regresar: el saldo a favor de la cuenta de gastos con el agente y la garantía del contenedor. Si no se dice otra fecha, se espera a los 15 días el saldo y a los 30 la garantía. Cuando te lo regresen, márcalo con «Recuperado»: mientras no, te llega el aviso cada día y el embarque no se puede cerrar."
+  "texto": "Dinero nuestro que alguien tiene que regresar: el saldo a favor de la cuenta de gastos con el agente y la garantía del contenedor. Si no se dice otra fecha, se espera a los 15 días el saldo y a los 30 la garantía. Cuando te lo regresen, márcalo con «Recuperado»: si pasa su fecha sin marcarse, a importaciones le llega el aviso cada día, y el embarque no se puede cerrar mientras haya algo sin marcar."
  },
  {
   "clave": "porSurtirAlmacen",
@@ -5242,7 +9596,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "Cuántos precios de equipo que calcula el ERP salen idénticos a los de la hoja «Nuevo Costeo». Si alguno sale distinto, revísalo antes de cotizar ese equipo."
+  "texto": "Al importar, cuántos precios de equipo que calcula el ERP salieron idénticos a los de la hoja «Nuevo Costeo». Si alguno sale distinto, revísalo antes de cotizar ese equipo."
  },
  {
   "clave": "precioLista",
@@ -5265,6 +9619,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El precio oficial de cada artículo, en pesos y sin IVA: el que se da por teléfono. Descuentos, fletes y condiciones de pago los ve el vendedor con el cliente."
  },
  {
+  "clave": "precioListaEstimadoSolicitud",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Cómo quedará el precio de lista con el costo que escribes, con la misma regla del catálogo. Solo lo ves si tu rol también ve precios de venta. «Sin política de precio»: ese artículo todavía no tiene regla para calcular su precio."
+ },
+ {
   "clave": "precioMinimo",
   "modulos": [
    "ventas",
@@ -5273,6 +9634,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Lo más bajo a lo que puedes dejar una pieza del catálogo sin pedir permiso: el precio de lista menos el descuento máximo autorizado para ese artículo. Se compara con el precio ya con todos los descuentos, en pesos y sin IVA."
+ },
+ {
+  "clave": "preciosQueSeMovieronTablero",
+  "modulos": [],
+  "texto": "Equipos cuyo precio de lista de hoy es distinto al que tenían hace 30 días: los 6 que más cambiaron. Ámbar si subió, verde si bajó. Clic para abrir el equipo."
  },
  {
   "clave": "precioSugeridoML",
@@ -5345,12 +9711,44 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Urgente, normal o baja. Las urgentes y las atrasadas van arriba en cada columna. Solo la gerencia la cambia."
  },
  {
+  "clave": "prioridadServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Para cuándo lo quiere el cliente y qué tan urgente es: urgente (equipo parado), normal o puede esperar. Al programarlo, el día que se propone es esa fecha si todavía no pasa."
+ },
+ {
+  "clave": "probabilidadOportunidad",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Qué tan seguro ves el cierre, de 0 a 100 %. Lo pones tú como referencia; el ERP no lo calcula."
+ },
+ {
   "clave": "problemasSinMejora",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "Lo que el piso reportó en los últimos 30 días y todavía no tiene mejora: los problemas de la terminal, las pausas con motivo, las etapas reabiertas y las fallas de máquinas. «Volverla mejora» la propone con lo que se reportó; cada problema da una sola mejora."
+ },
+ {
+  "clave": "productosEstado",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Los 10 textos de venta que más dinero juntaron en el estado, sumando los que se escriben igual (sin importar mayúsculas ni acentos), con cuántas veces se vendieron."
+ },
+ {
+  "clave": "programadoTreintaDiasImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "La suma del siguiente pago programado de cada orden con fecha en los próximos 30 días. Incluye los que ya pasaron de su fecha y siguen sin registrarse como pagados."
  },
  {
   "clave": "promedioAprobado",
@@ -5369,14 +9767,21 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "analisis"
   ],
-  "texto": "Una orden abierta que, con la fila del taller, sale después de su fecha compromiso. La fila va por fecha compromiso: cada orden sale cuando la etapa más cargada acaba lo prometido antes que ella y lo suyo. Avisar al cliente a tiempo o mover prioridades."
+  "texto": "Una orden abierta que, con la fila del taller, sale después de su fecha compromiso. La fila va por fecha compromiso: cada orden sale cuando su etapa más cargada acaba lo prometido antes que ella y lo suyo. Las órdenes en espera no cuentan. Avisa al cliente a tiempo o mueve prioridades."
+ },
+ {
+  "clave": "promesasTodas",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Todas las órdenes abiertas con fecha compromiso, también las que van con holgura, de la más atrasada a la más holgada."
  },
  {
   "clave": "prometidoVsCapacidad",
   "modulos": [
    "analisis"
   ],
-  "texto": "Barra: el trabajo de las órdenes que se prometieron para ese mes, en semanas de la etapa más cargada. Línea: las semanas que tiene el mes. Si la barra pasa la línea, ese mes ya se prometió más de lo que cabe."
+  "texto": "Barra: el trabajo de las órdenes que se prometieron para ese mes, en semanas de la etapa más cargada. Línea: las semanas hábiles que tiene el mes (en el actual, las que quedan). Si la barra pasa la línea, ese mes ya se prometió más de lo que cabe. Las órdenes en espera no cuentan."
  },
  {
   "clave": "propuestaCorreos",
@@ -5384,6 +9789,27 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "importaciones"
   ],
   "texto": "Lo que la IA encontró al leer todos los correos del embarque: fechas de etapas que ya pasaron, ETA, datos y documentos que llegaron, cada uno con el correo de donde salió. Es una propuesta: nada cambia hasta que la revisas y la aplicas."
+ },
+ {
+  "clave": "proveedorActivo",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Desactivado, ya no aparece en los buscadores de proveedor (órdenes, solicitudes de precio); sus órdenes y su historial se quedan. Lo encuentras en el filtro «Inactivos»."
+ },
+ {
+  "clave": "proveedorFiltroPrecios",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Deja solo los artículos de ese proveedor (el de su costo vigente o, si el costo no lo dice, su proveedor de siempre), para pasar su lista de precios completa de una vez."
+ },
+ {
+  "clave": "proveedorImportacion",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Proveedor del extranjero (importación). En sus órdenes aparece «OC y contrato para aduana», la versión que pide el agente aduanal."
  },
  {
   "clave": "proximaTarea",
@@ -5408,9 +9834,23 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuándo cumple otro año en la empresa y cuántos días de vacaciones le tocarán a partir de esa fecha."
  },
  {
+  "clave": "proximoPagoImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "El siguiente pago programado a ese proveedor por esa orden, con su monto. En rojo si la fecha ya pasó y no se ha registrado como pagado."
+ },
+ {
   "clave": "proyeccionCierre",
   "modulos": [],
   "texto": "Cuánto cerraría el año si seguimos al mismo ritmo, con la estacionalidad del año pasado: si vamos 20 % arriba a la misma fecha, cierra 20 % arriba de lo que cerró el año pasado."
+ },
+ {
+  "clave": "pruebaReglaFamilia",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Lo que haría la regla antes de guardarla: a cuántas ventas de la hoja les pega, cuántas estaban sin clasificar y, ya con familia elegida, cuántas quedarían en otra. Si una regla de número más bajo ya atrapa alguna, esa no cambia."
  },
  {
   "clave": "publicacionAjenaML",
@@ -5471,11 +9911,34 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuándo pedir: la demanda de los días que tarda en llegar (demanda ÷ días hábiles del mes × días de entrega) más el stock de seguridad. Si el disponible queda abajo, toca pedir."
  },
  {
+  "clave": "quePasoCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Lo último que anotó el vendedor en «¿Qué pasó?» de esa venta. Si no hay nota, el motivo con que se rechazó o se perdió."
+ },
+ {
   "clave": "quienCambioQue",
   "modulos": [
    "compras"
   ],
   "texto": "Cada alta o cambio del proveedor queda registrado con el nombre de quien lo hizo, la fecha y qué datos cambió. Solo dirección y sistemas ven esta lista."
+ },
+ {
+  "clave": "quienCapturoMovimiento",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Quién lo registró en el ERP. Lo pone el servidor: no se puede capturar a nombre de otra persona. No es quien se llevó el material; eso va en «Recibió»."
+ },
+ {
+  "clave": "quienComproMas",
+  "modulos": [],
+  "texto": "Los 3 clientes que más compraron la semana pasada, con IVA y en pesos, de pedidos no cancelados. Si eres vendedor, solo cuentan tus clientes."
  },
  {
   "clave": "quienDebe",
@@ -5501,11 +9964,43 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuántos movimientos registró cada persona en el ERP en el periodo, por tipo. Es quién lo capturó, no quién se lo llevó."
  },
  {
+  "clave": "quitarDocumentoAlta",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Quita el documento del alta: lo que ya llenó se queda en el formulario, pero el archivo ya no se guarda."
+ },
+ {
   "clave": "quitarEtapaEmbarque",
   "modulos": [
    "importaciones"
   ],
   "texto": "Borra una etapa que se registró por error (por ejemplo, cerraste un embarque que no era). Pide el motivo y en la historia queda una nota con la fecha que tenía, quién la quitó y por qué. La cuenta de gastos no se quita mientras el embarque esté cerrado: quita primero «Cerrado»."
+ },
+ {
+  "clave": "quitarLineasLista",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Quita la línea (o las marcadas) de la lista de materiales. Desde el aviso que sale lo puedes deshacer."
+ },
+ {
+  "clave": "quitarPartidaOrden",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Quita la partida del borrador. Si venía de una requisición, esa partida regresa a pendiente."
+ },
+ {
+  "clave": "quitarPartidaPedido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Quita la partida del pedido y los totales se recalculan. Solo mientras el pedido está confirmado."
  },
  {
   "clave": "reabrirEntrega",
@@ -5555,11 +10050,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuando un equipo llega a reparación se reciben primero fotos de cómo llegó (golpes, piezas que faltan, placa). Sin recepción la reparación no empieza."
  },
  {
+  "clave": "recepcionesOrden",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Cada entrada al almacén de esta orden: cuándo, qué, cuánto, a qué almacén y quién, con la factura si se anotó. Las partidas sin artículo no salen aquí porque no entran al inventario."
+ },
+ {
   "clave": "recibirOrden",
   "modulos": [
    "compras"
   ],
-  "texto": "Almacén captura lo que de verdad llegó, a qué almacén y con qué factura; lo que falte se queda pendiente. No deja recibir más de 10 % arriba de lo pendiente. Con la casilla marcada, el costo de la orden pasa a ser el costo vigente del artículo."
+  "texto": "Almacén captura lo que de verdad llegó, a qué almacén y con qué factura; lo que falte se queda pendiente. No deja que lo recibido pase de 10 % arriba de lo pedido. Con la casilla marcada, el costo de la orden pasa a ser el costo vigente del artículo."
  },
  {
   "clave": "recienCapturados",
@@ -5590,6 +10092,23 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "El día que la paquetería o el cliente pasa por el envío. En ámbar si es hoy o ya pasó y sigue abierto."
+ },
+ {
+  "clave": "recordarClavesProveedor",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Guarda con qué clave llama este proveedor a cada artículo. La próxima cotización suya llega con esas partidas ya emparejadas («Ya la conocemos»)."
+ },
+ {
+  "clave": "redactarMensajeCliente",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "La IA escribe un WhatsApp o un correo para este cliente con su historial de compras y el motivo de la tarjeta. No se manda solo: lo revisas, lo cambias si quieres y lo abres en WhatsApp o en tu correo. Sin la IA conectada sale una plantilla."
  },
  {
   "clave": "redondearArriba",
@@ -5632,6 +10151,58 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Las piezas que lleva este tipo de máquina (y modelo), con cuántas hay en almacén. Si no hay, se pide desde la orden de mantenimiento."
  },
  {
+  "clave": "referenciaMovimiento",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "De qué documento salió: la orden de compra, la orden de producción, el pedido o el ajuste. En un traspaso dice a qué almacén fue o de cuál vino."
+ },
+ {
+  "clave": "referenciaServicio",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "El número con que el cliente identifica su reporte o su orden, si te lo dio. Sale en la ficha del servicio para que lo cites al hablar con él."
+ },
+ {
+  "clave": "registradoHoyAlmacen",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Lo que tú registraste hoy, lo más reciente arriba (hasta 30), para que confirmes que quedó bien. Mientras corre el tiempo para deshacer, cada salida o traspaso tuyo trae su botón «Deshacer»."
+ },
+ {
+  "clave": "registroBitacora",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "De qué es el cambio: el folio, el nombre o la clave. En listas de materiales dice el equipo, el artículo y la cantidad; en el material de una orden, la OP, el artículo y cuánto lleva."
+ },
+ {
+  "clave": "reglaCarteraEncendida",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Prendida, cada noche los clientes vencidos quedan libres, y nadie puede cotizar a un cliente vigente de otro vendedor (la gerencia de ventas sí). Un cliente libre es del primero que lo cotiza. Apagada, solo se calcula y se muestra."
+ },
+ {
+  "clave": "reglaDeFabrica",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Viene con el ERP y no se quita desde aquí. Para ganarle, agrega una regla con número de orden más bajo."
+ },
+ {
+  "clave": "reglaEnvioGratis",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Desde qué monto con IVA una pieza lleva envío gratis, y las palabras que lo quitan: si el nombre del artículo lleva una (banda, cangilón…), nunca lleva envío gratis. El vendedor lo ve al elegir la partida."
+ },
+ {
   "clave": "reglaFamilia",
   "modulos": [
    "analisis"
@@ -5651,12 +10222,31 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cómo se convierte lo medido en puntos: meta (todo o nada), descuento por incidencia, una incidencia = 0, proporcional a lo cumplido, escalones o llave del bono."
  },
  {
+  "clave": "reglasAhorroPrestamos",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Cuántos días antes se pide un retiro de ahorro, qué porcentaje de lo ahorrado pone la empresa y el interés moratorio de los préstamos. El interés solo cambia lo que dice el pagaré: la prenómina no cobra intereses."
+ },
+ {
   "clave": "regresarStock",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "Suelta una orden de su pedido y la regresa a «Para stock», con su avance, su número de serie y el material que ya se le surtió. Sirve cuando se le dio «Usar» a la orden equivocada o cuando el cliente canceló: el equipo se puede dar a otro pedido. En el pedido, ese equipo vuelve a quedar «Sin orden». Solo la gerencia de producción, con el motivo."
+ },
+ {
+  "clave": "reimportarHojas",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "La importación se corre desde una computadora (los pasos están aquí abajo), no desde esta pantalla. Actualiza por clave, así que no duplica, y no vuelve a cargar las existencias de arranque."
  },
  {
   "clave": "reincidencia",
@@ -5712,12 +10302,49 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El registro de quién se llevó una herramienta, desde cuándo y para qué. Se cierra cuando alguien la recibe de regreso y anota cómo llegó."
  },
  {
+  "clave": "resolverImpugnacion",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Tú decides si la evidencia impugnada cuenta en contra. «No cuenta»: deja de restar y el indicador se recalcula. «Sí cuenta»: se queda como estaba. No la resuelve quien la impugnó."
+ },
+ {
   "clave": "respaldoMaquina",
   "modulos": [
    "servicio",
    "mantenimiento"
   ],
   "texto": "Si hay otra máquina con qué suplirla. Si no lo calificas, el sistema la busca solo: otra de la misma categoría, en la misma área y que no esté dada de baja. Con respaldo, «si se para» cuenta un escalón menos."
+ },
+ {
+  "clave": "responsableDevolucion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Quién la atiende: la persona que la registró, salvo que se le haya asignado a otra."
+ },
+ {
+  "clave": "responsableMejora",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Quien trabaja la mejora: escribe el plan y el resultado, sube las fotos y la marca hecha. Al elegirlo le llega el aviso. Solo puede ser alguien de producción o de ingeniería de procesos."
+ },
+ {
+  "clave": "responsableVentasML",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "La persona a cuyo nombre entran como pedidos las ventas de Mercado Libre: es a quien se le cuentan para la comisión. «Nadie» = los pedidos entran sin vendedor."
  },
  {
   "clave": "respuestaRapidaML",
@@ -5740,6 +10367,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La IA propone la respuesta con la ficha del artículo (medidas, existencia libre, días de fabricación), lo que dice la publicación en Mercado Libre, lo que ese comprador ya preguntó y los datos para contestar. Queda en la caja para que la leas y la corrijas: no se manda sola. Debajo te dice en qué se basó y qué no sabía. Nunca pone teléfonos, correos ni ligas, porque Mercado Libre lo castiga."
  },
  {
+  "clave": "restarHorasSubensamble",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Quita de las horas de este equipo, etapa por etapa, las que el subensamble ya trae, para no contar dos veces el mismo trabajo; nunca quedan negativas. Márcalo si las horas del equipo ya incluían armar esas piezas (pasa en las listas que vinieron planas de la hoja)."
+ },
+ {
   "clave": "resultadoObjetivos",
   "modulos": [
    "rrhh",
@@ -5760,6 +10395,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Cómo va la venta después de hablar con el cliente. Sigue en pie: lo está pensando; le vuelves a buscar en 3 días hábiles o la fecha que pongas. No contestó: se reintenta en 2. Negociando: pasa a Negociación. Ya compró: te lleva a convertir la cotización en pedido. Se perdió: con su motivo, la oportunidad y su cotización se cierran. Lo que escribes queda en la historia del cliente."
+ },
+ {
+  "clave": "resumenDineroPorEmbarque",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Un renglón por embarque: lo que vale su mercancía, lo pagado con su tipo de cambio real, los gastos e impuestos, el IVA acreditable aparte y lo que falta recuperar."
+ },
+ {
+  "clave": "resumenSinIA",
+  "modulos": [],
+  "texto": "Lo armó el ERP con reglas fijas, sin IA: la IA no está conectada o ya se usaron tus consultas de IA de hoy. Los números son los mismos."
  },
  {
   "clave": "retencionesML",
@@ -5792,6 +10439,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Almacén revisó la existencia física del material de la orden, no solo lo que dice el sistema."
  },
  {
+  "clave": "revisionAplicarPropuesta",
+  "modulos": [],
+  "texto": "Hace el cambio que propuso la IA a tu nombre y con tus permisos, como si lo capturaras tú, y queda en la bitácora. Si a mano no podrías cambiarlo, así tampoco. Al aplicarse, el hallazgo se cierra como corregido."
+ },
+ {
   "clave": "revisionAyudaCorregir",
   "modulos": [],
   "texto": "La IA lee lo que se señaló y el registro y te propone el cambio exacto (por ejemplo, escribir el tiempo de entrega que falta). Nada se aplica hasta que lo aceptas, y se hace a tu nombre con tus permisos, como si lo capturaras a mano: queda en la bitácora. Solo cambia datos de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida); nunca precios, dinero, existencias ni permisos. Si el dato correcto solo lo sabes tú, te lo pide."
@@ -5807,6 +10459,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo señaló la IA al leer lo que se capturó ayer: cosas que una regla no ve, como una nota que contradice la orden o una cantidad que no cuadra con la unidad. La IA solo señala; no cambia nada."
  },
  {
+  "clave": "revisionContestado",
+  "modulos": [],
+  "texto": "Lo que ya se contestó, lo más reciente primero, con la respuesta y quién la dio. Ves lo que te tocaba a ti; dirección ve lo de todos y lo que cada quien platicó con la IA."
+ },
+ {
+  "clave": "revisionCorrerAhora",
+  "modulos": [],
+  "texto": "Corre en este momento todas las reglas prendidas, sin la IA, y les avisa de una vez a quienes les tocó algo (lo urgente también va a sus Pendientes). Sirve para probar una regla nueva o ver si algo ya quedó corregido."
+ },
+ {
   "clave": "revisionCorrigelo",
   "modulos": [],
   "texto": "El ERP hace la corrección por ti, con tus permisos, como si la hicieras a mano. Solo sale cuando la corrección es segura (inhabilitar el artículo repetido y quedarse con el que ya existía; ligar tu cuenta a tu ficha). Si algo lo impide, te dice qué hacer primero."
@@ -5815,6 +10477,21 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "clave": "revisionEscalado",
   "modulos": [],
   "texto": "Contestaste «Está bien así», la IA hizo sus preguntas y el porqué no quedó claro. Se queda abierto y dirección lo ve con la conversación para decidir. Si mientras lo corriges, contesta «Ya lo corregí»."
+ },
+ {
+  "clave": "revisionEstadoContestado",
+  "modulos": [],
+  "texto": "Corregido: alguien contestó «Ya lo corregí» (o marcó hecho su pendiente), usó «Corrígelo» o aplicó la propuesta de la IA. Está bien así: no era error; abajo va el porqué. Se corrigió solo: la siguiente revisión ya no lo encontró."
+ },
+ {
+  "clave": "revisionEstadoIA",
+  "modulos": [],
+  "texto": "Qué pasó con la IA esa noche. «La IA leyó»: regresó su lectura. «Esperando a la IA»: todavía no contesta. «La IA falló»: hubo un error o no regresó a tiempo (la nota dice cuál). «IA apagada»: estaba apagada o se corrió a mano, solo con reglas. «Tope del mes»: ya se usó lo permitido. «Sin IA»: no está conectada."
+ },
+ {
+  "clave": "revisionEvidencia",
+  "modulos": [],
+  "texto": "Los registros en los que se basa: folio, qué se vio, quién, cantidad y fecha. Salen hasta 12; si hay más, dice cuántos."
  },
  {
   "clave": "revisionGravedad",
@@ -5835,11 +10512,26 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que la IA leyó de cada módulo la madrugada pasada, en dos o tres frases, y cuántas cosas encontraron las reglas y la IA. Si la IA no corrió (apagada, sin llave, tope del mes), lo dice."
  },
  {
+  "clave": "revisionListaReglas",
+  "modulos": [],
+  "texto": "Para prender o apagar la revisión, la IA, los consejos y cada regla, y para correr las reglas a mano. Lo que apagas deja de buscarse desde la siguiente corrida; lo ya encontrado sigue abierto."
+ },
+ {
+  "clave": "revisionNocturnaActiva",
+  "modulos": [],
+  "texto": "Cada madrugada a las 2:07 corre las reglas sobre lo capturado y, si la IA está prendida, ella lee lo de ayer; los avisos salen a partir de las 6. Apagada no corre nada, pero lo que ya se encontró sigue abierto."
+ },
+ {
   "clave": "revisionOC",
   "modulos": [
    "compras"
   ],
   "texto": "Una orden ya enviada se puede cambiar cuando el proveedor y quien la pidió acuerdan otro artículo, otra cantidad u otro precio. Compras lo hace con el lápiz de la partida, siempre que de esa partida no haya llegado nada, y escribe por qué. El folio no cambia (el proveedor ya lo tiene): la orden sube de revisión, lo impreso dice «Rev. 2» para mandársela otra vez, y abajo queda el antes y el después de cada cambio. Si lo que cambia es el proveedor, cancélala y haz otra."
+ },
+ {
+  "clave": "revisionParaQuien",
+  "modulos": [],
+  "texto": "A quién le toca contestarlo. «Solo dirección» es un patrón: no le llega a nadie más."
  },
  {
   "clave": "revisionParaTi",
@@ -5855,6 +10547,21 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "clave": "revisionRegla",
   "modulos": [],
   "texto": "Lo encontró una regla fija del ERP (por ejemplo: mismo tipo, unidad y medidas y un nombre casi igual). Siempre revisa lo mismo y de la misma forma."
+ },
+ {
+  "clave": "revisionReglaActiva",
+  "modulos": [],
+  "texto": "Prendida, esta regla busca cada madrugada. Apagada, deja de buscar; lo que ya encontró sigue abierto hasta que alguien lo conteste."
+ },
+ {
+  "clave": "revisionTodoAbierto",
+  "modulos": [],
+  "texto": "Todo lo que la revisión encontró y nadie ha contestado, de todas las personas y con a quién le toca. Tú también lo puedes contestar desde aquí."
+ },
+ {
+  "clave": "revisionYaLoCorregi",
+  "modulos": [],
+  "texto": "Dices que ya lo arreglaste en su pantalla: se cierra como corregido y, si también estaba en tus Pendientes, ahí queda hecho. Si es algo que la revisión puede volver a medir (un dato que falta, una compra sin recibir) y sigue igual, vuelve a salir la siguiente madrugada. En los patrones dice «Ya lo revisé»."
  },
  {
   "clave": "riesgoSeguridad",
@@ -5951,12 +10658,40 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El efectivo que debería haber en caja chica: todas las entradas menos todas las salidas, desde que empezó la hoja. Si el conteo no cuadra, el arqueo lo corrige."
  },
  {
+  "clave": "saldoInicialInventario",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "La existencia con la que arrancó el ERP: lo que había en cada almacén según la hoja Inventario. De ahí en adelante, todo cambio es un movimiento."
+ },
+ {
   "clave": "saldoPaqueteria",
   "modulos": [
    "inventario",
    "envios"
   ],
   "texto": "Lo que queda en la cuenta de prepago de una paquetería: recargas menos lo que costaron las guías. En rojo, abajo del mínimo."
+ },
+ {
+  "clave": "saldoPedido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Lo que falta por cobrar de este pedido: su total menos los cobros registrados. Un pedido cancelado no debe nada; uno que viene de la hoja se cobra contra el saldo de arranque del cliente."
+ },
+ {
+  "clave": "saldoPedidosCliente",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Lo que falta por cobrar de sus pedidos del ERP, en pesos: el total menos los cobros registrados. No incluye lo que ya debía en la hoja al arrancar: eso sale en su ficha, en «Saldo por cobrar»."
  },
  {
   "clave": "saldoPorCobrar",
@@ -5967,6 +10702,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Lo que falta por cobrar: lo de sus pedidos (total con IVA menos los cobros registrados) más lo que ya debía en la hoja al arrancar el ERP. Los pedidos cancelados y los que vienen de la hoja no suman aparte: lo de la hoja ya va en su saldo. Los cobros los registra finanzas."
+ },
+ {
+  "clave": "saldoPrestamo",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Lo que todavía debe: lo prestado menos lo descontado en semanas cerradas y lo que abonó aparte. Si se da de baja debiendo, se descuenta completo en su última semana."
  },
  {
   "clave": "saldoProveedor",
@@ -6001,12 +10748,43 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Días de vacaciones que puede tomar hoy, en días hábiles: lo que le queda de sus periodos vigentes menos lo que ya adelantó de periodos que todavía no empiezan. En rojo (negativo) si debe días: se los descuenta su próximo periodo, no se perdonan al cumplir año."
  },
  {
+  "clave": "saleHaciaOrden",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "El día en que la orden saldría con la fila de hoy: cuando su etapa más cargada acaba lo prometido antes que ella y lo suyo, contando de lunes a viernes. Cambia cada día con lo que el taller termina y lo que entra."
+ },
+ {
   "clave": "salidaConsumo",
   "modulos": [
    "inventario",
    "envios"
   ],
   "texto": "Material que se gasta en la planta y no va a un cliente: taller, EPP, plasma, torno, pintura, uniformes, mantenimiento. Se anota quién lo recibe, para ver cuánto se lleva cada persona."
+ },
+ {
+  "clave": "salidaManualAlmacen",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Lo que sale del almacén sin una orden de producción: consumo del taller o venta. No deja sacar más de lo que hay en el almacén que elijas. Lo que va a una orden de producción se surte desde la orden."
+ },
+ {
+  "clave": "salidaProduccionAlmacen",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Material que almacén le entregó a una orden de producción. Se registra al surtir desde la orden, no desde aquí; en la referencia va el folio de la orden."
+ },
+ {
+  "clave": "salidaVentaAlmacen",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Material que salió vendido. La registra sola el ERP al entregar o enviar un pedido, o almacén a mano (mostrador, Mercado Libre, sitio web) desde Entradas y salidas, con el motivo de qué venta fue."
  },
  {
   "clave": "saludBajoReorden",
@@ -6038,7 +10816,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "Cada artículo con existencia o con demanda, clasificado por cuánto alcanza lo disponible contra lo que sale: quiebre, debajo del punto de reorden, sano, exceso, esporádico o sin movimiento. Es una foto de hoy y sale de los mismos 12 meses de salidas (hoja y ERP) que usa Reabasto. «Por valor» pesa cada artículo por lo que vale lo que hay (solo con permiso de costos)."
+  "texto": "Cada artículo con existencia o con demanda, clasificado por cuánto alcanza lo disponible contra lo que sale: quiebre, debajo del punto de reorden, sano, exceso, esporádico o sin movimiento. Es una foto de hoy y sale de los mismos 12 meses de salidas (hoja y ERP) que usa Reabasto."
  },
  {
   "clave": "saludNegativo",
@@ -6047,6 +10825,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "El sistema dice que hay menos de cero. Siempre es un error de captura (una salida sin su entrada, un traspaso al revés): hay que contar y ajustar."
+ },
+ {
+  "clave": "saludPorValorArticulos",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "«Por valor» mide cada clase por lo que vale su existencia al costo; «Por artículos», por cuántos artículos tiene. Solo con permiso de costos se puede ver por valor."
  },
  {
   "clave": "saludQuiebre",
@@ -6073,11 +10859,67 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Hay existencia y no salió nada en 12 meses. Es el primer lugar para buscar qué rematar, devolver o usar en otro equipo, y para revisar si el conteo es real."
  },
  {
+  "clave": "seEsperaRecuperarImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Cuándo nos deben regresar ese dinero. Si nadie pone otra fecha, son 15 días después de su fecha de inicio para un saldo a favor (la de la cuenta de gastos, si salió de ahí) y 30 para una garantía. En rojo, con los días de retraso, si ya pasó."
+ },
+ {
+  "clave": "segmentoCampeones",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Compraron en el último año, 3 o más veces en 3 años, y están en el 20 % que más compró en esos 3 años."
+ },
+ {
   "clave": "segmentoCliente",
   "modulos": [
    "analisis"
   ],
-  "texto": "Grupo según qué tan reciente fue su última compra, qué tan seguido compran y cuánto: campeones, nuevos, leales, ocasionales, en riesgo, dormidos y perdidos. Pasa el mouse por cada uno para ver su regla y dale clic para ver quiénes son."
+  "texto": "Grupo según qué tan reciente fue su última compra, qué tan seguido compran y cuánto: campeones, nuevos, leales, ocasionales, en riesgo, dormidos y perdidos. Se calcula al último día del periodo. Pasa el mouse por cada uno para ver su regla y dale clic para ver quiénes son."
+ },
+ {
+  "clave": "segmentoDormidos",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Su última compra fue hace 12 a 24 meses; compraron una sola vez en 3 años y poco."
+ },
+ {
+  "clave": "segmentoEnRiesgo",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Su última compra fue hace 12 a 24 meses y compraban seguido (2 o más veces en 3 años) o mucho (más que la mitad de los clientes)."
+ },
+ {
+  "clave": "segmentoLeales",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Compraron en el último año y 2 o más veces en 3 años."
+ },
+ {
+  "clave": "segmentoNuevos",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Su primera compra fue en los últimos 12 meses."
+ },
+ {
+  "clave": "segmentoOcasionales",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Compraron en el último año, una sola vez en 3 años."
+ },
+ {
+  "clave": "segmentoPerdidos",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Hace más de 2 años que no compran."
  },
  {
   "clave": "seguimientoCotizacion",
@@ -6110,11 +10952,35 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuántos seguimientos trae cada vendedor: vencidos, para hoy y en total, y en los últimos 7 días cuántas cotizaciones envió contra cuántos seguimientos anotó. «Frenado» = pasó de 10 vencidos y no puede enviar; con «Liberar por hoy» lo dejas enviar ese día (pide el motivo y le avisa). Clic en un vendedor filtra la lista de abajo."
  },
  {
+  "clave": "selectorMesObjetivos",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "El mes que estás viendo. De entrada abre el que terminó, que es el que se califica. No se puede pasar del mes en curso."
+ },
+ {
+  "clave": "selectorMunicipioCorrecto",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Escribe para buscar el municipio: dentro del estado reconocido o, si no hay (o la ciudad es de otro estado), en todo el país. Sin escribir, salen los que más se parecen. Al elegirlo se aplica de inmediato a todos los que lo escribieron igual."
+ },
+ {
   "clave": "semaforoSolicitud",
   "modulos": [
    "compras"
   ],
   "texto": "Verde: a tiempo. Amarillo: vence en menos de una hora hábil. Rojo: ya venció y el vendedor sigue esperando. Las vencidas van arriba de la lista."
+ },
+ {
+  "clave": "semanaEnUnaFrase",
+  "modulos": [],
+  "texto": "La semana pasada contada con tus números: qué subió, qué bajó y qué conviene atender. La escribe la IA una vez por semana (o las reglas del ERP si no hay IA); con las flechas la pides de nuevo. Cada tarjeta lleva a donde se atiende."
  },
  {
   "clave": "semanaNomina",
@@ -6139,11 +11005,29 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que conviene revisar de una publicación: que no esté ligada a un artículo, que su precio se aleje 2 % o más del sugerido, que publique más piezas de las que hay libres en planta, que tenga menos de 3 fotos, o que tenga 50 visitas o más en 30 días sin ninguna venta."
  },
  {
+  "clave": "serialSiguiente",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "El número de serie que sacaría la siguiente orden de este equipo: su código más el consecutivo que sigue en su familia."
+ },
+ {
   "clave": "siguientePaso",
   "modulos": [
    "importaciones"
   ],
   "texto": "Lo que sigue para que el embarque avance, según la etapa en que va y los documentos que faltan."
+ },
+ {
+  "clave": "siguienteSeguimientoCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cuándo le vuelves a preguntar, de hoy a cuatro meses. Si lo dejas vacío se agenda solo: en 2 días hábiles si no contestó y en 3 si sigue en pie o negociando."
  },
  {
   "clave": "simuladorPrecios",
@@ -6154,6 +11038,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Antes de guardar un cambio de utilidad, recargo o ISR, ves cuántos precios se mueven, cuánto en promedio y los diez que más cambian. Respeta precios fijos y utilidades propias, igual que el cálculo real."
  },
  {
+  "clave": "sinAutoMarcaChecklist",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Nadie se marca a sí mismo: tu marca la pone otra persona."
+ },
+ {
   "clave": "sinContactarLead",
   "modulos": [
    "ventas",
@@ -6162,6 +11058,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Los leads que ya tienes asignados y a los que todavía no les has escrito, llamado ni visitado (ningún intento anotado). La gerencia ve los de todos los vendedores."
+ },
+ {
+  "clave": "sinCostoPrecios",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Artículos que no tienen costo o lo tienen en $0. En el costeo de los equipos donde van cuentan como $0, así que el precio de esos equipos sale más bajo de lo real."
  },
  {
   "clave": "sinCuadrilla",
@@ -6179,7 +11082,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cotizaciones que nunca se mandaron al cliente: en borrador, esperando que la gerencia autorice el precio o canceladas antes de enviarse."
+  "texto": "Cotizaciones que nunca se mandaron al cliente: en borrador, esperando que la gerencia autorice el precio, autorizadas pero sin enviar, o canceladas antes de enviarse."
+ },
+ {
+  "clave": "sinGuardarPrecios",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Lo que escribiste y todavía no se guarda (las filas en amarillo). «Guardar cambios» las guarda todas juntas; «Descartar» las borra sin guardar."
  },
  {
   "clave": "sinIva",
@@ -6200,6 +11110,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Equipos vendidos que todavía no tienen orden de producción: nadie los está fabricando. La gerencia los crea con «Crear las órdenes que faltan» o les asigna uno de stock."
  },
  {
+  "clave": "sinProveedorRequisicion",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Ni su costo ni el catálogo dicen a quién se le compra. Al crear las órdenes te pide elegir uno para estas partidas; si no, se quedan pendientes."
+ },
+ {
   "clave": "sinSalidaInventario",
   "modulos": [
    "ventas",
@@ -6210,6 +11127,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Algo salió con la entrega pero en el ERP no había suficiente para descontarlo, por ejemplo porque la existencia no estaba al día. La entrega se registró igual, porque el cliente ya se lo llevó; almacén revisa la existencia y la corrige con un ajuste."
  },
  {
+  "clave": "sinSueldoNomina",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "No tiene sueldo en nómina ni salario diario en su ficha, así que no se le calcula sueldo. Regístralo en la pestaña Sueldos."
+ },
+ {
   "clave": "sistemaAlContar",
   "modulos": [
    "inventario",
@@ -6218,12 +11147,28 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que decía el sistema cuando capturaste ese artículo; si todavía no lo cuentas, lo que dice ahorita. La diferencia se mide contra ese número, así que lo que entre o salga después no la cambia."
  },
  {
+  "clave": "sistemaAlPedirAjuste",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Lo que dice el sistema hoy en ese almacén. Se guarda con el ajuste: al autorizarlo se aplica la diferencia contra este número, aunque mientras tanto entre o salga algo."
+ },
+ {
   "clave": "situacionPreventivo",
   "modulos": [
    "servicio",
    "mantenimiento"
   ],
   "texto": "Al día: todavía no toca. Por vencer: faltan pocos días o ya lleva 90 % de las horas. Vencido: ya pasó la fecha o las horas."
+ },
+ {
+  "clave": "sobranFaltanConteo",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "De los artículos con diferencia, en cuántos hay más de lo que dice el sistema (sobran) y en cuántos menos (faltan)."
  },
  {
   "clave": "sociosBancos",
@@ -6246,6 +11191,23 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuando algo de la lista de materiales está mal, producción, almacén o ventas lo reportan desde la orden. A ingeniería le llega como pendiente (con aviso en la campana) para dentro de dos días hábiles; cuando lo marca como aplicado o descartado, el pendiente se cierra solo y a quien lo pidió le llega el aviso."
  },
  {
+  "clave": "solicitudesConPrecio",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Las que compras ya contestó con precio de lista y entrega, las hayas usado o no."
+ },
+ {
+  "clave": "solicitudesContestadas",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Las que compras ya contestó: con precio o con «no se consigue». Las que canceló el vendedor solo salen en «Todas»."
+ },
+ {
   "clave": "solicitudesPorAprobar",
   "modulos": [
    "rrhh",
@@ -6255,7 +11217,17 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Vacaciones y permisos que alguien pidió y que Recursos Humanos todavía no aprueba ni rechaza. Mientras tanto no se restan del saldo."
+  "texto": "Lo que alguien pidió o registró sin autorizar (vacaciones, permisos, faltas…) y que Recursos Humanos todavía no aprueba ni rechaza. Mientras tanto no se resta del saldo ni cuenta en la prenómina."
+ },
+ {
+  "clave": "solicitudesPorUsar",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Las que compras todavía no contesta y las que ya tienen precio que no has usado: ni lo aplicaste a la cotización ni has cotizado ese artículo desde que te contestaron."
  },
  {
   "clave": "solicitudPrecio",
@@ -6266,6 +11238,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Cuando algo no tiene precio de lista, se lo pides a compras desde la partida o con “Pedir precio”. Compras tiene un plazo en horas hábiles (más corto si es urgente) y, al contestar, ves el precio de lista y la entrega, nunca el costo. Con un clic lo aplicas a la cotización."
+ },
+ {
+  "clave": "solicitudUrgente",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Quien la pidió la marcó urgente porque el cliente está esperando: compras tiene 4 horas hábiles en vez de un día, y va antes que las demás de su mismo color."
+ },
+ {
+  "clave": "solicitudVencida",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Ya pasó su plazo y el vendedor sigue esperando. Le llega un aviso a quien la tiene (o a todo compras, si nadie la tomó) y a la gerencia de quien la pidió. Mientras menos, mejor."
  },
  {
   "clave": "soloLoMio",
@@ -6297,11 +11283,27 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "A una orden también se le agrega un subensamble completo. «Se fabrica aquí» mete sus componentes y materia prima a la lista (agrupados bajo ese subensamble, y si alguno ya estaba se le suma); «Ya está hecho» lo agrega como una sola pieza que sale del almacén. Queda en la línea de tiempo con su motivo."
  },
  {
+  "clave": "subensamblesCoincidentes",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Subensambles activos que ya llevan alguna de las piezas marcadas con la misma cantidad. «Idéntico»: mismas piezas y cantidades, ni una más ni una menos. «3 de 5 iguales»: se parecen, pero al sustituir la lista del equipo cambia."
+ },
+ {
   "clave": "subensambleSugerido",
   "modulos": [
    "admin"
   ],
   "texto": "Un grupo de piezas que se repite idéntico en varios equipos porque las listas se copiaron. Convertirlo en subensamble lo deja en un solo lugar para todos esos equipos; el costo y el precio no cambian."
+ },
+ {
+  "clave": "subirFotosEvidencia",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Elige de qué momento es la foto y tómala o elígela; en el celular se abre la cámara. Puedes subir hasta 6 a la vez. Una foto subida ya no se borra."
  },
  {
   "clave": "sueldoDeLaFicha",
@@ -6314,6 +11316,30 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Esta persona no tiene sueldo registrado en nómina: se usa el salario diario de su ficha de Personal × 7. Registra su sueldo para que deje de depender de la ficha."
+ },
+ {
+  "clave": "sueldoDiasNomina",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Lo que le toca de su sueldo semanal por los días pagados de esta semana."
+ },
+ {
+  "clave": "sueldoPorDia",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "El sueldo semanal entre 7: lo que vale cada día."
  },
  {
   "clave": "sueldoSemanal",
@@ -6344,6 +11370,26 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que conviene pedir: el lote más lo que falta para llegar al punto de reorden, redondeado al empaque del proveedor. Abajo avisa si ya está en una orden en borrador o en una requisición."
  },
  {
+  "clave": "sugeridoMLFicha",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "«Publicado» es el precio que tiene hoy su publicación en Mercado Libre. «Sugerido» es el que habría que poner allá para que llegue completo el precio de lista: el precio de lista con IVA más la comisión de Mercado Libre (y su cuota fija si es barato); «con envío» suma además lo que se paga por el envío."
+ },
+ {
+  "clave": "sumaEtapaOportunidad",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "La suma del monto estimado de las tarjetas de esta columna, sin IVA. En Ganada y Perdida solo cuentan las de los últimos 60 días."
+ },
+ {
   "clave": "surtidoOrden",
   "modulos": [
    "produccion",
@@ -6370,6 +11416,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cada publicación de Mercado Libre con lo que dice ML (precio, existencia, visitas, fotos) junto a lo que dice el catálogo, y sus preguntas y ventas de los últimos 30 días. Se pone al día con «Traer de Mercado Libre», que solo lee. Para corregir precio o existencia allá está «Cambios sugeridos»."
  },
  {
+  "clave": "tallerCentroMando",
+  "modulos": [],
+  "texto": "Órdenes de producción sin entregar ni cancelar; en rojo si alguna ya pasó su fecha compromiso (las que están en espera no cuentan). «A tiempo» es qué parte de las terminadas en los últimos 90 días con fecha compromiso se terminó ese día o antes. «Promesas en riesgo» son órdenes que, con la fila del taller, saldrían tarde: si hay, el clic te lleva al análisis de entregas."
+ },
+ {
   "clave": "tambienEnHoja",
   "modulos": [
    "rrhh",
@@ -6382,12 +11433,34 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La hoja trae un movimiento igual (mismo proveedor o cliente, mismo monto, con una semana de diferencia o menos), así que se cuenta una sola vez. Por eso un pago capturado con la fecha de un pago que ya está en la hoja no baja el saldo; desde el arranque de finanzas el sistema ya no lo deja capturar y te dice por qué."
  },
  {
+  "clave": "tambienFaltanEsosDias",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Otras personas con vacaciones, permiso, falta o incapacidad aprobada que se cruzan con esas fechas. Sirve para ver si el área se queda corta antes de aprobar."
+ },
+ {
   "clave": "tardeSegunPlan",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "Órdenes cuyo plan termina después de su fecha compromiso. La franja roja va del compromiso a donde acaba el plan: son los días que faltarían. Se corrige subiéndola en la fila, poniéndole más gente a sus etapas o acordando otra fecha con el cliente."
+ },
+ {
+  "clave": "tareaConFechaActividad",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Una tarea con fecha: se queda arriba, en «Pendientes», hasta que la palomeas como hecha. Vencida sale en rojo, y aparece en el calendario de la semana."
  },
  {
   "clave": "tarifaManoObra",
@@ -6408,6 +11481,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que Mercado Libre le cobra a esta publicación por cada venta: el porcentaje de comisión de su categoría y tipo, y el envío gratis que paga la cuenta. ML los cambia según la categoría, el peso y la reputación, por eso se leen de cada publicación al traerlas. «Estimado» quiere decir que ML no los dio esta vez y se usaron los de la configuración del canal."
  },
  {
+  "clave": "tarifasFlete",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Lo que cotizó cada paquetería para esa ruta, de la más barata a la más cara, con los días hábiles aproximados que tarda. Elige una y «Agregar flete» la pone como partida."
+ },
+ {
   "clave": "tasaCierre",
   "modulos": [],
   "texto": "De las cotizaciones emitidas en los últimos 90 días que ya se cerraron (aceptadas, rechazadas o vencidas), qué porcentaje se aceptó. Más alto es mejor."
@@ -6421,6 +11504,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "De lo que ya se decidió (ganado más perdido), qué parte se ganó, en dinero. Lo abierto no cuenta todavía."
+ },
+ {
+  "clave": "tasaPlanMeses",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "La comisión del banco por ese plan, con IVA; la paga el cliente en la mensualidad. Solo salen en la cotización los planes activos."
  },
  {
   "clave": "tcReal",
@@ -6441,7 +11531,29 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "La medida que escojas arriba (tiempo, cambios, consultas o costo de la IA, o cuántas personas lo usaron), día por día. La línea punteada es el periodo anterior del mismo largo, alineado por día: el primer día contra el primer día, y así."
+  "texto": "La medida que escojas arriba (tiempo, cambios, consultas o costo de la IA, o cuántas personas lo usaron), día por día. La línea punteada es el periodo anterior del mismo largo, alineado por día: el primero contra el primero, y así. Cuenta a todas las cuentas, aunque arriba escojas un rol."
+ },
+ {
+  "clave": "terminadasEsteMes",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Órdenes que el taller terminó desde el día 1 de este mes, ya entregadas o no. Abajo, cuántas terminadas siguen esperando que se entreguen."
+ },
+ {
+  "clave": "textoPorDefectoCotizacion",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Marcado, sale ya puesto en cada cotización nueva: la condición de pago y el tiempo de entrega marcados (si no hay, el primero de la lista) y todas las notas al pie marcadas. El vendedor lo puede cambiar."
+ },
+ {
+  "clave": "textosComerciales",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Las opciones que el vendedor escoge en la cotización: condiciones de pago, tiempo de entrega, vigencia y notas al pie. Apagar una («Activo») la quita de la lista; las cotizaciones que ya la usan no cambian."
  },
  {
   "clave": "ticketPromedio",
@@ -6468,6 +11580,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuándo recibe el cliente. Es obligatorio para enviar la cotización: sin él no se puede mandar por WhatsApp ni por correo. Escoge uno del catálogo, escribe otro, usa el que estima el ERP con la carga del taller («Usar … días hábiles»), o los atajos: «Inmediata (en existencia)» si ya está en almacén, o «Se confirma al recibir el anticipo» si todavía no se sabe."
  },
  {
+  "clave": "tiempoParadaOrden",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Cuánto estuvo (o lleva) la máquina fuera de servicio por esta orden, de que se paró a que se cerró, en horas de reloj. «No se paró» quiere decir que no ha dejado de trabajar por esta orden. Las métricas lo cuentan solo en horas laborales."
+ },
+ {
   "clave": "tiempoProveedor",
   "modulos": [
    "importaciones"
@@ -6489,7 +11609,22 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "compras"
   ],
-  "texto": "Mediana de horas hábiles desde que el vendedor pidió el precio hasta que compras lo contestó, este mes, contra lo que se tardaba cuando se pedía por el chat. Las que siguen abiertas y ya pasaron de un día cuentan como tardadas."
+  "texto": "Mediana de horas hábiles desde que el vendedor pidió el precio hasta que compras lo contestó, este mes, contra lo que se tardaba cuando se pedía por el chat. Las que siguen abiertas y ya pasaron de un día cuentan como tardadas. «Acuse» es lo que tardó compras en tomarla."
+ },
+ {
+  "clave": "tipoAlmacen",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Físico: una bodega de Hegamex. Mercado Libre (Full): la bodega de Mercado Libre; ahí llega lo que se manda a Full y de ahí salen sus ventas. Un almacén físico nuevo nace disponible para planta; uno de Mercado Libre, no."
+ },
+ {
+  "clave": "tipoArticulo",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Equipo: lo que fabricamos y vendemos completo. Subensamble: un grupo de piezas que se captura una vez y se usa en varios equipos. Componente, materia prima y servicio son lo que se compra; los servicios (vulcanizado, calibración, puesta en marcha…) van en la lista de materiales, pero no se surten del almacén."
  },
  {
   "clave": "tipoCambio",
@@ -6527,6 +11662,21 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Devolución: el producto regresa a planta y almacén lo recibe. Reclamo: el cliente reclama y hay que responder antes de la hora límite. Cancelación: se canceló la venta."
  },
  {
+  "clave": "tipoDocumentoLeerIA",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Dile a la IA qué documento es para que sepa qué datos buscar. Abajo dice qué pasa con cada tipo al guardarlo."
+ },
+ {
+  "clave": "tipoEquipo",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "La familia del equipo: banda transportadora, cribadora, dosificadora, tolva, silo, elevador… Sirve para filtrar el catálogo. Lo cambia ingeniería en «Editar datos»; al cambiarlo, su precio de lista se vuelve a calcular."
+ },
+ {
   "clave": "tipoIncidencia",
   "modulos": [
    "rrhh",
@@ -6555,6 +11705,22 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Qué fue: entrada de compra, devolución, salida a producción, venta, consumo, traspaso, ajuste autorizado o saldo inicial. Lo que entra suma (verde) y lo que sale resta (rojo)."
  },
  {
+  "clave": "tipoOrdenMto",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Correctivo: una falla que alguien reportó. Preventivo: lo generó solo su plan cuando le tocaba, con el checklist de su rutina si tiene."
+ },
+ {
+  "clave": "tipoPartidaPlanta",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Qué le toca al taller de esta partida. No se fabrica: es un concepto sin artículo del catálogo, como una instalación. Componente: sale del almacén, no lleva orden. Con orden: cada equipo de la partida ya tiene su orden de producción."
+ },
+ {
   "clave": "tipoServicio",
   "modulos": [
    "servicio",
@@ -6570,6 +11736,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "«Tomar» le avisa al vendedor que ya la tienes tú y que estás cotizando. No contesta nada todavía; evita que dos compradores busquen el mismo precio."
  },
  {
+  "clave": "topClientesPeriodo",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Los clientes que más compraron en el periodo. La primera cifra chica es lo que pesa cada uno en la venta; la segunda, lo que juntan del primero hasta él. «Ver 15» muestra más; clic en uno para abrir su ficha."
+ },
+ {
+  "clave": "topeMesesTarjeta",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "El monto más alto que el banco deja diferir a meses en una sola transacción. Sale impreso en la cotización, junto a los planes de meses."
+ },
+ {
   "clave": "topesCaja",
   "modulos": [
    "rrhh",
@@ -6580,6 +11760,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Abajo del mínimo toca reponer el efectivo; arriba del máximo hay dinero que debería estar en el banco."
+ },
+ {
+  "clave": "totalCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Lo que paga el cliente, en la moneda en que se cotizó y con IVA (sin IVA si no lleva factura). La suma de abajo es otra cuenta: todo en pesos y sin IVA, para poder sumar pesos y dólares."
  },
  {
   "clave": "trabajoEnProceso",
@@ -6596,6 +11786,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "En promedio, cuántas horas de reloj hubo alguien trabajando la etapa (si dos personas trabajan al mismo tiempo cuenta una vez). Junto con la espera dice dónde se va el tiempo."
+ },
+ {
+  "clave": "trabajoSinFechaTaller",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Semanas de trabajo de órdenes sin fecha compromiso, como las de stock. En la fila van al final, después de todo lo prometido."
+ },
+ {
+  "clave": "trabajoVencidoTaller",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Semanas de trabajo de la etapa más cargada en órdenes cuya fecha compromiso ya pasó y siguen en el taller. En la gráfica va en su propia barra, antes de los meses."
  },
  {
   "clave": "traerPendienteML",
@@ -6616,12 +11820,89 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cada vez que alguien le da play a una orden de mantenimiento empieza un tramo, y la pausa lo cierra. Al cerrar la orden, las horas trabajadas son la suma de los tramos de todos los que le dieron play, contadas como las del taller (sin noches, fines de semana ni descansos). Dar play en otra orden pausa la que traías."
  },
  {
+  "clave": "tramoPedidoPlanta",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Todo el viaje en días naturales: de la orden (o la PI o el anticipo) a planta. En la lista por proveedor es la mediana de sus últimos 5 embarques que llegaron a planta en los últimos 3 años."
+ },
+ {
+  "clave": "tramoPedidoZarpe",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Días de la orden (o la PI o el anticipo, lo que haya sido primero) a que zarpó el buque: lo que tarda el proveedor en fabricar y embarcar."
+ },
+ {
+  "clave": "tramoPlantaCuentaGastos",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Días que tarda el agente aduanal en mandar la cuenta de gastos (CG) después de que la mercancía llegó a planta. A los 7 días sin ella sale un aviso."
+ },
+ {
+  "clave": "tramoPuertoPlanta",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Días de que llegó a puerto a que se recibió en planta: revalidar el BL, previo, pedimento y flete."
+ },
+ {
+  "clave": "tramoTravesia",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Días en el mar: del zarpe a que llegó a puerto."
+ },
+ {
   "clave": "traspaso",
   "modulos": [
    "inventario",
    "envios"
   ],
   "texto": "Mover material de un almacén a otro. El total no cambia, solo dónde está. Mandar mercancía al Full de Mercado Libre es un traspaso."
+ },
+ {
+  "clave": "ubicacionesAproximadas",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Se ubicaron por el nombre corto o largo de un solo municipio («Tepatitlán» por «Tepatitlán de Morelos») y ya salen en el mapa. Si está bien, confírmalo con ✓ y deja de salir aquí."
+ },
+ {
+  "clave": "ubicacionesCorregidas",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Lo que dirección ya corrigió a mano, con quién y cuándo. «Deshacer» borra la corrección y esos clientes se vuelven a ubicar con lo que escribieron."
+ },
+ {
+  "clave": "ubicacionesFaltaDato",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "La ficha del cliente no tiene ciudad (o ni estado ni ciudad): aquí no hay texto que corregir. Abre sus clientes y captura el dato en su ficha; al guardar se ubica solo."
+ },
+ {
+  "clave": "ubicacionesPorConfirmar",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "El ERP ya los ubicó, pero con duda: por parecido (un error de dedo), porque la ciudad es de otro estado o porque adivinó el estado por la ciudad. Confirma con ✓ o elige otro municipio."
+ },
+ {
+  "clave": "ubicacionesPorResolver",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "El estado o la ciudad escritos no se reconocieron: esos clientes no salen en el mapa (o salen sin municipio). Elige el municipio correcto o márcalo «No se puede»."
+ },
+ {
+  "clave": "ubicacionHoyQuedaEn",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Dónde se ubica hoy esa combinación: municipio y estado, solo el estado si la ciudad no se reconoció, o una raya si no se sabe nada."
  },
  {
   "clave": "ultimaCompra",
@@ -6632,6 +11913,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Fecha del último pedido del cliente (o de la última venta en el libro de la hoja, si es más reciente). De clientes de otro vendedor no se muestra."
+ },
+ {
+  "clave": "ultimoAccesoCuenta",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "La última vez que inició sesión. La sesión dura semanas, así que puede verse vieja aunque use el ERP a diario: el uso real está en «Uso del ERP»."
+ },
+ {
+  "clave": "ultimoAvisoML",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Cuándo llegó el último aviso de Mercado Libre (una venta, un reclamo o una pregunta que cambió). «Pendientes» son avisos que todavía no se procesan; si alguno falló, el error sale abajo en rojo."
  },
  {
   "clave": "ultimoUsoErp",
@@ -6654,6 +11949,24 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "margenes"
   ],
   "texto": "En cuántas listas de materiales aparece directamente. Un subensamble en ninguna lista todavía no se usa en ningún equipo."
+ },
+ {
+  "clave": "usarEntregaRealista",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Pone esos días hábiles como tiempo de entrega de la cotización, en lugar del que tiene ahora."
+ },
+ {
+  "clave": "usarSubensambleExistente",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Pone un subensamble que ya existe como una línea de 1 pieza. Si marcaste líneas, las quita y deja el subensamble en su lugar; si no son idénticas a las suyas te avisa antes, porque la lista del equipo ya no queda igual. Un cambio en el subensamble llega a todos los equipos que lo usan."
  },
  {
   "clave": "utilidadNeta",
@@ -6690,6 +12003,50 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Los cinco pasos antes del taller: ingeniería revisa la lista, se aparta el material, se piden los faltantes, almacén revisa y la gerencia libera. Cada uno guarda quién y cuándo."
+ },
+ {
+  "clave": "valorDelInventario",
+  "modulos": [],
+  "texto": "Lo que vale todo lo que hay en existencia, en todos los almacenes (incluido el de Mercado Libre), al costo de hoy de cada artículo. «En excedentes» es lo que hay en planta de artículos sin salidas en 12 meses: dinero parado."
+ },
+ {
+  "clave": "valorExistenciasCosto",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Lo que vale lo que hay en planta más lo del Full de Mercado Libre, al costo vigente de cada artículo y sin IVA. Solo lo ve quien tiene permiso de costos."
+ },
+ {
+  "clave": "valorMovimientoInventario",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "La cantidad por el costo que tenía el artículo cuando se registró el movimiento, en pesos y sin IVA. Solo lo ve quien tiene permiso de costos."
+ },
+ {
+  "clave": "valorNetoDiferenciasInventario",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Lo que valen las diferencias al costo de cada artículo, sin IVA: lo que sobra suma y lo que falta resta. En rojo, falta más de lo que sobra. Solo lo ve quien tiene permiso de costos."
+ },
+ {
+  "clave": "valorParametro",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "La medida de este artículo. Al cambiarla se recalculan las cantidades y horas que dependen de ella, solo en este artículo. Para otra medida sin tocar éste, usa «Duplicar con otros parámetros»."
+ },
+ {
+  "clave": "variacionPreciosProveedor",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Cuánto cambió su índice de precios contra hace 12 meses (o contra el primer mes con datos, si hay menos). Rojo: subió más de 10 %; amarillo: subió; verde: igual o bajó."
  },
  {
   "clave": "venceDevolucion",
@@ -6731,6 +12088,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Ya pasó su fecha y sigue abierto. Se pinta en rojo; lo que vence hoy, en ámbar."
  },
  {
+  "clave": "vencidosSinEntregar",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Pedidos con fecha compromiso en el periodo que ya pasó y siguen sin entregarse. En el porcentaje a tiempo cuentan como tarde."
+ },
+ {
+  "clave": "vendidoUbicacion",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Todo lo vendido desde 2018 a los clientes de esa combinación, con IVA. La lista va de más a menos: corrige primero lo que más pesa."
+ },
+ {
   "clave": "ventaAnalisis",
   "modulos": [
    "analisis"
@@ -6745,9 +12116,29 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cada punto suma los 12 meses que terminan ahí. Quita la estacionalidad y deja ver si la venta va para arriba o para abajo."
  },
  {
+  "clave": "ventaPerdidaZona",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Lo que se dejó de vender ahí: lo del periodo anterior menos lo de este."
+ },
+ {
   "clave": "ventasAnio",
   "modulos": [],
   "texto": "Lo vendido en el año, con IVA y en pesos. Antes del arranque del ERP sale del libro de ventas de la hoja; después, de los pedidos. La flecha compara contra el mismo tramo del año pasado."
+ },
+ {
+  "clave": "ventasContraAniosAnteriores",
+  "modulos": [],
+  "texto": "Cada barra es lo vendido en un mes de este año, con IVA; la línea sólida es el mismo mes del año pasado y la punteada, el de hace dos años. Sirve para ver si un mes flojo es de temporada o de verdad viene abajo."
+ },
+ {
+  "clave": "ventasDelArticulo",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Cada pedido que trajo este artículo, con el precio por pieza ya con su descuento. Compáralo con el precio de lista que regía ese día en la gráfica de arriba: así ves si los cambios de precio se notaron al vender."
  },
  {
   "clave": "ventasDelMes",
@@ -6755,11 +12146,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Pedidos no cancelados con fecha de este mes, sin IVA y en pesos. La flecha compara contra el mismo tramo del mes pasado (del día 1 al día de hoy), no contra el mes completo."
  },
  {
+  "clave": "ventasHistoricasImportadas",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Las ventas de los paneles de ventas de la hoja, traídas como pedidos ya entregados y marcados como históricos (cada venta en una sola partida). Con ellas cada cliente trae su historia de compras."
+ },
+ {
   "clave": "ventaSinClasificar",
   "modulos": [
    "analisis"
   ],
-  "texto": "Ventas de la hoja cuyo texto no cayó en ninguna regla de familia. Mientras más alto el porcentaje clasificado, más confiables son las gráficas por familia."
+  "texto": "Ventas que no cayeron en ninguna familia: textos de la hoja que ninguna regla atrapó y partidas del ERP sin familia en su categoría ni en su texto. El porcentaje clasificado es sobre el dinero del periodo; mientras más alto, más confiables las gráficas por familia. La lista «Sin clasificar» junta los textos de toda la historia de la hoja."
  },
  {
   "clave": "ventaSinUbicar",
@@ -6796,11 +12194,41 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo vendido la semana pasada (lunes a domingo), con IVA y en pesos, contra la semana anterior a esa. Si eres vendedor, solo cuenta lo de tus clientes."
  },
  {
+  "clave": "ventaTresAnios",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Lo que compró en esos mismos 3 años, con IVA. Con esto se decide quién está entre los que más compran."
+ },
+ {
   "clave": "verComo",
   "modulos": [
    "admin"
   ],
   "texto": "Dirección puede ver el ERP con los permisos de otro rol para revisar qué ve esa gente; lo que guarde mientras tanto es real y queda a su nombre. Dirección y sistemas también pueden abrir la sesión de una persona en otra pestaña, solo para ver: no deja guardar nada y queda registrado."
+ },
+ {
+  "clave": "verContenidoSubensambles",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Despliega lo que lleva cada subensamble, en gris. Ahí no se edita: se cambia en el propio subensamble, porque el cambio llega a todos los equipos que lo usan."
+ },
+ {
+  "clave": "versionCosteoImportacion",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "Cada cálculo es una versión. En borrador se puede volver a calcular (el borrador anterior se reemplaza); cerrado ya quedó. Dale clic para ver su detalle."
+ },
+ {
+  "clave": "verTodoElTaller",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Apagado, solo salen las personas que van a algún servicio en estas dos semanas. Prendido, sale también el resto de la gente activa de las áreas del taller, para ver quién está libre."
  },
  {
   "clave": "vigenciaCotizacion",
@@ -6813,6 +12241,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Días que vale la cotización desde su emisión. Si pasa la fecha “Vence” sin cerrarse, se marca Vencida en rojo."
  },
  {
+  "clave": "vigenciaPrecioSolicitud",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Hasta qué día sostiene el proveedor ese precio. Compras la pone al contestar (de entrada, 15 días); pasada la fecha, conviene confirmarlo antes de cerrar la venta."
+ },
+ {
   "clave": "visitasML",
   "modulos": [
    "ventas",
@@ -6821,6 +12256,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Cuántas veces se vio la publicación en los últimos 30 días, según Mercado Libre."
+ },
+ {
+  "clave": "vistaCalendario",
+  "modulos": [],
+  "texto": "Mes: la cuadrícula de lunes a domingo; en cada día caben 3 cosas y «+N más» dice cuántas no cupieron. Semana: siete columnas con todo lo de cada día. Lista: el mes día por día, sin cuadrícula (así abre en el celular)."
  },
  {
   "clave": "vistaPorCuadrilla",
@@ -6839,6 +12279,61 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Una columna por etapa (Corte, Pailería, Pintura…) con lo que se trabaja, lo pausado y lo que ya puede empezar. Sirve para ver cómo va cada área del taller."
  },
  {
+  "clave": "vistaPreviaCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Te enseña la hoja tal como la recibe el cliente, sin salir del editor; antes guarda lo último que escribiste. No la envía ni le cambia el estado. Con el freno de seguimientos no se abre si la cotización todavía no se envía."
+ },
+ {
+  "clave": "vistaTableroOportunidades",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Tablero: una columna por etapa, para arrastrar las tarjetas. Lista: todas en una tabla que se ordena y se descarga a CSV, incluidas las ganadas y perdidas de hace más de 60 días. Se queda la que elijas."
+ },
+ {
+  "clave": "volumenOrdenConsolidado",
+  "modulos": [
+   "importaciones"
+  ],
+  "texto": "En un consolidado, el volumen que da el forwarder para cada proveedor (m³ o su %). Con él se reparten los gastos que se capturan «por volumen»."
+ },
+ {
+  "clave": "volverPrecioLista",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Regresa el precio de la partida al de lista de hoy, convertido a la moneda de la cotización (y con IVA si la cotizas con IVA incluido)."
+ },
+ {
+  "clave": "whatsappSeguimientoCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Abre el chat con el contacto de la cotización, sin mensaje escrito. Abrirlo no cierra el seguimiento: cuando te conteste, anota qué pasó."
+ },
+ {
+  "clave": "yaDebioEmpezar",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Según el plan, esta etapa ya tenía que haber empezado y en el piso todavía no se inicia."
+ },
+ {
   "clave": "yaEsCliente",
   "modulos": [
    "ventas",
@@ -6853,6 +12348,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "analisis"
   ],
-  "texto": "Lugares que compraban en el periodo anterior y cayeron 30 % o más (o dejaron de comprar), con lo que se dejó de vender y los clientes que ya no compraron ahí, para llamarles."
+  "texto": "Lugares que compraban en el periodo anterior y cayeron 30 % o más (o dejaron de comprar). Salen hasta 8, los que más dejaron de vender primero, con los clientes que ya no compraron ahí para llamarles."
+ },
+ {
+  "clave": "zoomGantt",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Cuánto tiempo cabe en la pantalla: días, semanas o meses. Se queda como lo dejes para la próxima vez."
  }
 ];

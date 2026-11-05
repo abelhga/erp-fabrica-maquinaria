@@ -8,6 +8,7 @@ import { q } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { dinero } from "@/lib/formato";
 import { cant, enTrozos, NOMBRE_TIPO, rutaArticulo, type TipoArticulo } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Uso {
   id: string; clave: string; nombre: string; tipo: TipoArticulo; categoria: string | null; precio: number | null;
@@ -45,12 +46,12 @@ export function DondeSeUsa({ id, unidad }: { id: string; unidad: string }) {
   const columnas: Columna<Uso>[] = [
     { clave: "clave", titulo: "Clave", clase: "whitespace-nowrap font-medium cifra w-28" },
     { clave: "nombre", titulo: "Nombre", clase: "min-w-[260px]" },
-    { clave: "tipo", titulo: "Tipo", clase: "whitespace-nowrap", valor: (u) => NOMBRE_TIPO[u.tipo],
+    { clave: "tipo", titulo: "Tipo", clase: "whitespace-nowrap", valor: (u) => NOMBRE_TIPO[u.tipo], explica: GLOSARIO.tipoArticulo,
       celda: (u) => <Insignia tono={u.tipo === "subensamble" ? "marca" : "neutro"}>{NOMBRE_TIPO[u.tipo]}</Insignia> },
-    { clave: "nivel", titulo: "Cómo lo lleva", clase: "whitespace-nowrap text-tenue", valor: (u) => u.nivel,
+    { clave: "nivel", titulo: "Cómo lo lleva", clase: "whitespace-nowrap text-tenue", valor: (u) => u.nivel, explica: GLOSARIO.comoLoLleva,
       celda: (u) => (u.nivel === 1 ? <span className="text-texto">directo · {cant(u.cantidad)} {unidad}</span> : `dentro de un subensamble (nivel ${u.nivel})`) },
-    { clave: "costo_total", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (u) => u.costo_total ?? null, celda: (u) => dinero(u.costo_total) },
-    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, oculta: !vePrecios, valor: (u) => u.precio, celda: (u) => dinero(u.precio) },
+    { clave: "costo_total", titulo: "Costo", alinear: "der", sinBusqueda: true, oculta: !costos, valor: (u) => u.costo_total ?? null, celda: (u) => dinero(u.costo_total), explica: GLOSARIO.costoArticulo },
+    { clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, oculta: !vePrecios, valor: (u) => u.precio, celda: (u) => dinero(u.precio), explica: GLOSARIO.precioListaCatalogo },
   ];
 
   return (

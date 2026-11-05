@@ -12,6 +12,11 @@ import { ESTADO_OP } from "@/modulos/produccion/componentes/util";
 import type { EstadoOP } from "@/modulos/produccion/componentes/datos";
 import { GLOSARIO } from "@/tutorial/glosario";
 
+// Qué quiere decir el estado de la orden, para el modo tutorial (los mismos textos que en producción).
+const EXPLICA_ESTADO: Partial<Record<EstadoOP, string>> = {
+  planeada: GLOSARIO.opPlaneada, liberada: GLOSARIO.opLiberada, en_proceso: GLOSARIO.opEnProceso, terminada: GLOSARIO.opTerminada,
+};
+
 interface FilaPorSurtir {
   id: string; folio: string; estado: EstadoOP; equipo: string; pedido: string | null; cliente: string | null; para_stock: boolean;
   partidas: number; empieza: string | null; fecha_compromiso: string | null; previo: boolean;
@@ -40,13 +45,13 @@ export function PorSurtir() {
         ) : (
           <div className="overflow-x-auto">
             <table className="tabla">
-              <thead><tr><th>Orden</th><th>Equipo</th><th>Para</th><th className="text-right">Partidas</th><th>Empieza</th></tr></thead>
+              <thead><tr><th>Orden</th><th>Equipo</th><th>Para</th><th className="text-right" data-explain={GLOSARIO.partidasPorSurtir} data-explain-title="Partidas">Partidas</th><th>Empieza</th></tr></thead>
               <tbody>
                 {filas.map((o) => (
                   <tr key={o.id} className="cursor-pointer" onClick={() => ir(`/produccion/ordenes/${o.id}`)}>
                     <td className="whitespace-nowrap">
                       <p className="font-medium cifra">{o.folio}</p>
-                      <Insignia tono={ESTADO_OP[o.estado]?.tono ?? "neutro"}>{ESTADO_OP[o.estado]?.texto ?? o.estado}</Insignia>
+                      <span data-explain={EXPLICA_ESTADO[o.estado]}><Insignia tono={ESTADO_OP[o.estado]?.tono ?? "neutro"}>{ESTADO_OP[o.estado]?.texto ?? o.estado}</Insignia></span>
                     </td>
                     <td className="max-w-[260px] truncate" title={o.equipo}>{o.equipo}</td>
                     <td className="text-tenue max-w-[220px] truncate">{o.para_stock ? "Para stock" : [o.pedido, o.cliente].filter(Boolean).join(" · ")}</td>

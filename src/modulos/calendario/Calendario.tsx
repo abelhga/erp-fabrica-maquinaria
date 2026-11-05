@@ -81,7 +81,8 @@ export default function Calendario() {
   return (
     <Pagina titulo="Calendario" descripcion="Todo lo que tiene fecha y te toca ver: entregas, lo que llega, servicios, preventivos, pagos, vacaciones y pendientes."
       acciones={
-        <div className="flex rounded-lg border border-borde bg-fondo p-0.5" role="group" aria-label="Vista">
+        <div className="flex rounded-lg border border-borde bg-fondo p-0.5" role="group" aria-label="Vista"
+          data-explain={GLOSARIO.vistaCalendario} data-explain-title="Mes, Semana o Lista">
           {VISTAS.map((v) => (
             <button key={v.valor} type="button" aria-pressed={vista === v.valor} onClick={() => poner({ vista: v.valor })}
               className={cn("h-8 rounded-md px-3 text-sm font-medium", vista === v.valor ? "bg-superficie shadow-sm text-texto" : "text-tenue hover:text-texto")}>
@@ -93,9 +94,11 @@ export default function Calendario() {
       <div className="tarjeta overflow-hidden">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 border-b border-borde">
           <div className="flex items-center gap-1">
-            <Boton variante="fantasma" tamano="icono" aria-label="Anterior" onClick={() => mover(-1)}><ChevronLeft className="h-4 w-4" /></Boton>
+            <Boton variante="fantasma" tamano="icono" aria-label="Anterior" onClick={() => mover(-1)}
+              data-explain={GLOSARIO.moverCalendario} data-explain-title="Anterior"><ChevronLeft className="h-4 w-4" /></Boton>
             <h2 className="font-semibold min-w-[11rem] text-center first-letter:uppercase cifra">{tituloDe(vista, ancla)}</h2>
-            <Boton variante="fantasma" tamano="icono" aria-label="Siguiente" onClick={() => mover(1)}><ChevronRight className="h-4 w-4" /></Boton>
+            <Boton variante="fantasma" tamano="icono" aria-label="Siguiente" onClick={() => mover(1)}
+              data-explain={GLOSARIO.moverCalendario} data-explain-title="Siguiente"><ChevronRight className="h-4 w-4" /></Boton>
           </div>
           <Boton variante="secundario" tamano="sm" onClick={() => poner({ dia: null })}>Hoy</Boton>
           {atrasados > 0 && (
@@ -175,6 +178,7 @@ function Mes({ desde, hasta, mes, hoy, mapa, alAbrir }: {
             className={cn("min-h-[72px] sm:min-h-[112px] border-b border-r border-borde/60 p-1 sm:p-1.5 flex flex-col gap-1 cursor-pointer hover:bg-marca-suave/30 min-w-0",
               (otroMes || finde) && "bg-fondo/50")}>
             <button type="button" onClick={(ev) => { ev.stopPropagation(); alAbrir(d); }} aria-label={`Ver ${diaLargo.format(deIso(d))}`}
+              data-explain={GLOSARIO.diaCalendario} data-explain-title="Ver el día"
               className={cn("self-start text-xs cifra rounded-full", d === hoy ? "h-5 w-5 bg-marca text-white grid place-items-center font-semibold" : otroMes ? "text-tenue/60" : "text-tenue")}>
               {Number(d.slice(8))}
             </button>
@@ -202,7 +206,7 @@ function Semana({ desde, hoy, mapa, alAbrir }: { desde: string; hoy: string; map
         const lista = mapa.get(d) ?? [];
         return (
           <div key={d} className={cn("min-w-0 p-2 flex flex-col gap-1 sm:min-h-[320px]", diaSemana(d) >= 5 && "bg-fondo/50")}>
-            <button type="button" onClick={() => alAbrir(d)}
+            <button type="button" onClick={() => alAbrir(d)} data-explain={GLOSARIO.diaCalendario} data-explain-title="Ver el día"
               className={cn("self-start text-xs font-medium rounded-md px-1.5 py-0.5 first-letter:uppercase", d === hoy ? "bg-marca text-white" : "text-tenue hover:text-texto")}>
               {diaCorto.format(deIso(d))}
             </button>

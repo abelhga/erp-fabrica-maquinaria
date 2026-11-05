@@ -112,15 +112,15 @@ export default function UsoErp() {
     { clave: "dias_activos", titulo: "Días que lo usó", explica: GLOSARIO.diasActivosErp, alinear: "der",
       celda: (u) => <span className="cifra whitespace-nowrap">{u.dias_activos}{u.ant.dias_activos > 0 && <span className="text-tenue text-xs"> · antes {u.ant.dias_activos}</span>}</span> },
     { clave: "minutos", titulo: "Tiempo activo", explica: GLOSARIO.tiempoActivoErp, alinear: "der", celda: (u) => <span className="cifra">{tiempo(u.minutos)}</span> },
-    { clave: "vistas", titulo: "Pantallas abiertas", alinear: "der", valor: (u) => u.vistas,
+    { clave: "vistas", titulo: "Pantallas abiertas", explica: GLOSARIO.pantallasAbiertasErp, alinear: "der", valor: (u) => u.vistas,
       celda: (u) => u.vistas ? <span className="cifra">{numero(u.vistas)}<span className="text-tenue text-xs"> · {u.pantallas} {u.pantallas === 1 ? "distinta" : "distintas"}</span></span> : <span className="text-tenue">—</span> },
     { clave: "cambios", titulo: "Cambios", explica: GLOSARIO.cambiosErp, alinear: "der",
       celda: (u) => <span className="cifra whitespace-nowrap">{numero(u.cambios)}{u.ant.cambios > 0 && <span className="text-tenue text-xs"> · antes {numero(u.ant.cambios)}</span>}</span> },
-    { clave: "consultas_ia", titulo: "IA", alinear: "der", clase: "cifra" },
+    { clave: "consultas_ia", titulo: "IA", explica: GLOSARIO.consultasIaErp, alinear: "der", clase: "cifra" },
     { clave: "costo_ia_usd", titulo: "Costo IA", explica: GLOSARIO.costoIa, alinear: "der", celda: (u) => <span className="cifra">{usd(u.costo_ia_usd)}</span> },
-    { clave: "pendientes_vencidos", titulo: "Pendientes vencidos", alinear: "der",
+    { clave: "pendientes_vencidos", titulo: "Pendientes vencidos", explica: GLOSARIO.pendientesVencidosUso, alinear: "der",
       celda: (u) => u.pendientes_vencidos ? <span className="cifra text-peligro font-medium">{u.pendientes_vencidos}</span> : <span className="text-tenue">—</span> },
-    { clave: "avisos_sin_leer", titulo: "Avisos sin leer", alinear: "der", clase: "cifra" },
+    { clave: "avisos_sin_leer", titulo: "Avisos sin leer", explica: GLOSARIO.avisosSinLeerUso, alinear: "der", clase: "cifra" },
   ];
 
   return (
@@ -129,24 +129,27 @@ export default function UsoErp() {
         <div className="space-y-5">
           {/* Los filtros, en una sola fila arriba de todo: cambian todas las gráficas y la tabla. */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <Filtro<Periodo> valor={periodo} alCambiar={setPeriodo} opciones={[{ valor: "7", texto: "7 días" }, { valor: "30", texto: "30 días" }, { valor: "90", texto: "90 días" }]} />
-            <Seleccion value={rol} onChange={(e) => setRol(e.target.value)} aria-label="Rol" className="w-auto h-8 text-sm">
+            <Filtro<Periodo> valor={periodo} alCambiar={setPeriodo} opciones={[
+              { valor: "7", texto: "7 días", explica: GLOSARIO.periodoUsoErp }, { valor: "30", texto: "30 días", explica: GLOSARIO.periodoUsoErp },
+              { valor: "90", texto: "90 días", explica: GLOSARIO.periodoUsoErp }]} />
+            <Seleccion value={rol} onChange={(e) => setRol(e.target.value)} aria-label="Rol" className="w-auto h-8 text-sm"
+              data-explain={GLOSARIO.filtroRolUsoErp} data-explain-title="Rol">
               <option value="">Todos los roles</option>
               {roles.map((r) => <option key={r} value={r}>{NOMBRE_ROL[r] ?? r}</option>)}
             </Seleccion>
-            <span className="flex items-center gap-2 text-xs text-tenue">Medir
+            <span className="flex items-center gap-2 text-xs text-tenue" data-explain={GLOSARIO.medidaUsoErp} data-explain-title="Medir">Medir
               <Filtro<Metrica> valor={metrica} alCambiar={setMetrica} opciones={METRICAS} /></span>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={comparar} onChange={(e) => setComparar(e.target.checked)} />
+            <label className="flex items-center gap-2 text-sm" data-explain={GLOSARIO.compararPeriodoUsoErp} data-explain-title="Comparar"><input type="checkbox" checked={comparar} onChange={(e) => setComparar(e.target.checked)} />
               Comparar con {fecha(t.periodo.ant_desde).slice(0, 6)} – {fecha(t.periodo.ant_hasta).slice(0, 6)}</label>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <Kpi titulo="Personas que lo usaron" icono={Users} valor={`${personas.length - sinUso.length} de ${personas.length}`}
               detalle={`Antes ${activosAnt}${sinUso.length ? ` · ${sinUso.length} sin usarlo` : ""}`} tono={sinUso.length ? "aviso" : "ok"}
-              alClic={sinUso.length ? () => setVista("sin_uso") : undefined} explica={GLOSARIO.diasActivosErp} />
+              alClic={sinUso.length ? () => setVista("sin_uso") : undefined} explica={GLOSARIO.personasActivasErp} />
             <Kpi titulo="Tiempo activo" icono={Clock} valor={tiempo(suma((u) => u.minutos))} detalle={cambio(suma((u) => u.minutos), suma((u) => u.minutos, true))} explica={GLOSARIO.tiempoActivoErp} />
             <Kpi titulo="Cambios registrados" icono={PencilLine} valor={numero(suma((u) => u.cambios))} detalle={cambio(suma((u) => u.cambios), suma((u) => u.cambios, true))} explica={GLOSARIO.cambiosErp} />
-            <Kpi titulo="Consultas a la IA" icono={Bot} valor={numero(suma((u) => u.consultas_ia))} detalle={cambio(suma((u) => u.consultas_ia), suma((u) => u.consultas_ia, true))} />
+            <Kpi titulo="Consultas a la IA" icono={Bot} valor={numero(suma((u) => u.consultas_ia))} detalle={cambio(suma((u) => u.consultas_ia), suma((u) => u.consultas_ia, true))} explica={GLOSARIO.consultasIaErp} />
             <Kpi titulo="Costo de la IA" icono={CircleDollarSign} valor={usd(costoIa)} tono="neutro"
               detalle={`≈ ${dinero(costoIa * (t.ia.tc_usd || 0))} · ${cambio(costoIa, costoIaAnt)}`} explica={GLOSARIO.costoIa} />
           </div>
@@ -158,7 +161,7 @@ export default function UsoErp() {
               <div className="px-5 pb-5"><Tendencia dias={t.por_dia} anteriores={t.por_dia_ant} metrica={metrica} comparar={comparar} /></div>
             </Tarjeta>
             <Tarjeta>
-              <EncabezadoTarjeta titulo={`${etiquetaPorPersona(metrica)} por persona`} descripcion={comparar ? "Cada quien contra sí mismo: la barra gris es el periodo anterior." : "De más a menos."} />
+              <EncabezadoTarjeta titulo={`${etiquetaPorPersona(metrica)} por persona`} descripcion={comparar ? "Cada quien contra sí mismo: la barra gris es el periodo anterior." : "De más a menos."} explica={GLOSARIO.comparativoPersonaUsoErp} />
               <div className="px-5 pb-5"><Comparativo personas={personas} metrica={metrica} comparar={comparar} /></div>
             </Tarjeta>
           </div>
@@ -186,9 +189,9 @@ export default function UsoErp() {
           <TablaDatos filas={filas} columnas={columnas} cargando={uso.isLoading} error={uso.error} claveFila={(u) => u.id}
             alClicFila={setAbierto} exportarComo="uso-del-erp" placeholder="Buscar persona o rol…"
             filtros={<Filtro<Vista> valor={vista} alCambiar={setVista} opciones={[
-              { valor: "personas", texto: "Personas", cuenta: personas.length },
-              { valor: "sin_uso", texto: "Sin usarlo", cuenta: sinUso.length },
-              { valor: "todos", texto: "Todas las cuentas", cuenta: todos.filter(conRol).length },
+              { valor: "personas", texto: "Personas", cuenta: personas.length, explica: GLOSARIO.filtroPersonasUso },
+              { valor: "sin_uso", texto: "Sin usarlo", cuenta: sinUso.length, explica: GLOSARIO.filtroSinUsoErp },
+              { valor: "todos", texto: "Todas las cuentas", cuenta: todos.filter(conRol).length, explica: GLOSARIO.filtroTodasCuentasUso },
             ]} />}
             vacio={{ icono: Activity, titulo: vista === "sin_uso" ? "Todos lo usaron en el periodo" : "Sin cuentas", texto: undefined }} />
           <p className="text-xs text-tenue">El tiempo activo y las pantallas se cuentan desde el 5 de noviembre de 2026; los cambios y las consultas a la IA traen su historia de antes. El costo de la IA es un estimado con los precios de Configuración; lo que factura el proveedor manda. «Todas las cuentas» incluye las desactivadas y las de la TV y la tablet del taller.</p>
@@ -213,11 +216,11 @@ function DetalleUso({ u, desde, hasta, alCerrar }: { u: UsoUsuario | null; desde
       {!u ? null : detalle.isLoading || !d ? <Cargando filas={5} /> : (
         <div className="space-y-6">
           <div className="flex flex-wrap gap-2 text-sm">
-            <Insignia tono="info">{u.dias_activos} {u.dias_activos === 1 ? "día" : "días"} con uso</Insignia>
-            <Insignia tono="neutro">{tiempo(u.minutos)} activo</Insignia>
-            <Insignia tono="neutro">{numero(u.cambios)} cambios</Insignia>
-            <Insignia tono="neutro">{numero(u.consultas_ia)} consultas a la IA · {usd(u.costo_ia_usd)}</Insignia>
-            {u.pendientes_abiertos > 0 && <Insignia tono={u.pendientes_vencidos ? "peligro" : "neutro"}>{u.pendientes_abiertos} pendientes abiertos{u.pendientes_vencidos ? `, ${u.pendientes_vencidos} vencidos` : ""}</Insignia>}
+            <span data-explain={GLOSARIO.diasActivosErp} data-explain-title="Días con uso"><Insignia tono="info">{u.dias_activos} {u.dias_activos === 1 ? "día" : "días"} con uso</Insignia></span>
+            <span data-explain={GLOSARIO.tiempoActivoErp} data-explain-title="Tiempo activo"><Insignia tono="neutro">{tiempo(u.minutos)} activo</Insignia></span>
+            <span data-explain={GLOSARIO.cambiosErp} data-explain-title="Cambios"><Insignia tono="neutro">{numero(u.cambios)} cambios</Insignia></span>
+            <span data-explain={GLOSARIO.consultasIaErp} data-explain-title="Consultas a la IA"><Insignia tono="neutro">{numero(u.consultas_ia)} consultas a la IA · {usd(u.costo_ia_usd)}</Insignia></span>
+            {u.pendientes_abiertos > 0 && <span data-explain={GLOSARIO.pendientesVencidosUso} data-explain-title="Pendientes"><Insignia tono={u.pendientes_vencidos ? "peligro" : "neutro"}>{u.pendientes_abiertos} pendientes abiertos{u.pendientes_vencidos ? `, ${u.pendientes_vencidos} vencidos` : ""}</Insignia></span>}
           </div>
 
           <section className="space-y-2" data-explain={GLOSARIO.tiempoActivoErp} data-explain-title="Tiempo activo por día">
@@ -251,7 +254,7 @@ function DetalleUso({ u, desde, hasta, alCerrar }: { u: UsoUsuario | null; desde
           </section>
 
           <section className="space-y-2">
-            <h4 className="font-medium">Pantallas que más usa</h4>
+            <h4 className="font-medium" data-explain={GLOSARIO.pantallasQueMasUsa} data-explain-title="Pantallas que más usa">Pantallas que más usa</h4>
             {d.pantallas.length === 0 ? <p className="text-sm text-tenue">Todavía no hay pantallas registradas en este periodo.</p> : (
               <table className="tabla rounded-xl border border-borde overflow-hidden">
                 <thead><tr><th>Pantalla</th><th className="text-right">Tiempo activo</th><th className="text-right">Veces</th><th className="text-right">Días</th><th>Última vez</th></tr></thead>
@@ -266,7 +269,7 @@ function DetalleUso({ u, desde, hasta, alCerrar }: { u: UsoUsuario | null; desde
           </section>
 
           <section className="space-y-2">
-            <h4 className="font-medium">En qué hizo cambios</h4>
+            <h4 className="font-medium" data-explain={GLOSARIO.cambiosErp} data-explain-title="En qué hizo cambios">En qué hizo cambios</h4>
             {d.cambios.length === 0 ? <p className="text-sm text-tenue">Sin cambios registrados en este periodo.</p> : (
               <table className="tabla rounded-xl border border-borde overflow-hidden">
                 <thead><tr><th>Qué</th><th className="text-right">Altas</th><th className="text-right">Cambios</th><th className="text-right">Bajas</th></tr></thead>
@@ -282,7 +285,7 @@ function DetalleUso({ u, desde, hasta, alCerrar }: { u: UsoUsuario | null; desde
 
           <div className="grid gap-6 sm:grid-cols-2">
             <section className="space-y-2">
-              <h4 className="font-medium">Para qué usa la IA</h4>
+              <h4 className="font-medium" data-explain={GLOSARIO.consultasIaErp} data-explain-title="Para qué usa la IA">Para qué usa la IA</h4>
               {d.ia.length === 0 ? <p className="text-sm text-tenue">No la usó en este periodo.</p> : (
                 <ul className="text-sm space-y-1">{d.ia.map((x) => <li key={x.modo} className="flex justify-between gap-3"><span>{MODO_IA[x.modo] ?? x.modo}</span><span className="cifra">{x.n} · {usd(x.costo_usd)}</span></li>)}</ul>
               )}

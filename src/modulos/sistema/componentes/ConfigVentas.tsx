@@ -78,7 +78,7 @@ function Cartera({ inicial, editable }: { inicial: Propiedad; editable: boolean 
         <Campo etiqueta="Días desde el último seguimiento" ayuda="Una llamada o visita registrada también lo conserva.">
           <Entrada type="number" min="1" value={f.dias} onChange={(e) => setF({ ...f, dias: e.target.value })} className="cifra w-28 block" />
         </Campo>
-        <label className="flex items-start gap-2 text-sm pb-6">
+        <label className="flex items-start gap-2 text-sm pb-6" data-explain={GLOSARIO.reglaCarteraEncendida} data-explain-title="Regla encendida">
           <input type="checkbox" className="mt-0.5 h-4 w-4" checked={f.activa} onChange={(e) => setF({ ...f, activa: e.target.checked })} />
           <span><b>Regla encendida</b><span className="block text-xs text-tenue">Enciéndela después de revisar la vista previa con los vendedores.</span></span>
         </label>
@@ -116,7 +116,7 @@ function EnvioGratis({ inicial, editable }: { inicial: { desde_neto?: number; ex
   const guardar = useGuardarConfig("Regla de envío gratis guardada");
   const agregar = () => { const p = nueva.trim().toLowerCase(); if (p && !palabras.includes(p)) setPalabras([...palabras, p]); setNueva(""); };
   return (
-    <TarjetaForm titulo="Envío gratis" descripcion="La regla del BUSCADOR: desde cierto monto con IVA, salvo productos pesados." editable={editable} quien="sistemas o dirección"
+    <TarjetaForm titulo="Envío gratis" explica={GLOSARIO.reglaEnvioGratis} descripcion="La regla del BUSCADOR: desde cierto monto con IVA, salvo productos pesados." editable={editable} quien="sistemas o dirección"
       guardando={guardar.isPending} alGuardar={() => guardar.mutate({ clave: "envio_gratis", valor: { ...inicial, desde_neto: Number(desde), excluir_palabras: palabras } })}>
       <Campo etiqueta="Desde (con IVA)" ayuda={`Hoy: envío gratis desde ${dinero(Number(desde) || 0)}.`}>
         <Entrada type="number" step="100" min="0" value={desde} onChange={(e) => setDesde(e.target.value)} className="cifra w-40 block" />
@@ -144,7 +144,7 @@ function MesesTope({ inicial, editable }: { inicial: number; editable: boolean }
   const [v, setV] = useState(String(inicial));
   const guardar = useGuardarConfig("Tope de meses guardado");
   return (
-    <TarjetaForm titulo="Meses con tarjeta" descripcion="Monto máximo que el banco deja diferir por transacción." editable={editable} quien="sistemas o dirección"
+    <TarjetaForm titulo="Meses con tarjeta" explica={GLOSARIO.topeMesesTarjeta} descripcion="Monto máximo que el banco deja diferir por transacción." editable={editable} quien="sistemas o dirección"
       guardando={guardar.isPending} alGuardar={() => guardar.mutate({ clave: "meses_tope", valor: Number(v) })}>
       <Campo etiqueta="Tope por transacción" ayuda={`Arriba de ${dinero(Number(v) || 0)} el cotizador no ofrece meses.`}>
         <Entrada type="number" step="1000" min="0" value={v} onChange={(e) => setV(e.target.value)} className="cifra w-40 block" />
@@ -161,7 +161,7 @@ function TextosComerciales({ editable }: { editable: boolean }) {
     { exito: "Texto agregado", invalidar: [["textos_comerciales"]] });
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Textos comerciales" descripcion="Las opciones que el vendedor elige en la cotización (pestaña PoliticaDePago de la hoja). Se guarda al salir del campo." />
+      <EncabezadoTarjeta titulo="Textos comerciales" explica={GLOSARIO.textosComerciales} descripcion="Las opciones que el vendedor elige en la cotización (pestaña PoliticaDePago de la hoja). Se guarda al salir del campo." />
       <div className="px-5 pb-5 space-y-4">
         {!editable && <SoloLectura quien="gerencia de ventas, sistemas o dirección" />}
         {textos.isLoading ? <Cargando /> : (
@@ -174,7 +174,7 @@ function TextosComerciales({ editable }: { editable: boolean }) {
                     <p className="font-medium text-sm">{t.titulo}</p><p className="text-xs text-tenue">{t.ayuda}</p>
                   </div>
                   <table className="tabla">
-                    <thead><tr><th className="w-14">Orden</th><th>Texto</th><th className="w-16 !text-center" title="Por defecto">Def.</th><th className="w-16 !text-center">Activo</th></tr></thead>
+                    <thead><tr><th className="w-14">Orden</th><th>Texto</th><th className="w-16 !text-center" title="Por defecto" data-explain={GLOSARIO.textoPorDefectoCotizacion} data-explain-title="Por defecto">Def.</th><th className="w-16 !text-center">Activo</th></tr></thead>
                     <tbody>
                       {lista.length === 0 && <tr><td colSpan={4} className="text-tenue text-xs">Sin opciones todavía.</td></tr>}
                       {lista.map((x) => (
@@ -214,12 +214,12 @@ function PlanesMeses({ editable }: { editable: boolean }) {
     { invalidar: [["planes_meses"]] });
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Planes de meses" descripcion="Mensualidad = total ÷ (1 − tasa) ÷ meses. La tasa es la comisión del banco con IVA que paga el cliente." />
+      <EncabezadoTarjeta titulo="Planes de meses" explica={GLOSARIO.mesesConTarjeta} descripcion="Mensualidad = total ÷ (1 − tasa) ÷ meses. La tasa es la comisión del banco con IVA que paga el cliente." />
       <div className="px-5 pb-5 space-y-3">
         {!editable && <SoloLectura quien="gerencia de ventas o dirección (mueve lo que paga el cliente)" />}
         {planes.isLoading ? <Cargando /> : (
           <table className="tabla">
-            <thead><tr><th className="w-16">Meses</th><th>Leyenda en la cotización</th><th className="w-28 !text-right">Tasa %</th><th className="w-16 !text-center">Activo</th></tr></thead>
+            <thead><tr><th className="w-16">Meses</th><th>Leyenda en la cotización</th><th className="w-28 !text-right" data-explain={GLOSARIO.tasaPlanMeses} data-explain-title="Tasa">Tasa %</th><th className="w-16 !text-center">Activo</th></tr></thead>
             <tbody>
               {(planes.data ?? []).map((p) => (
                 <tr key={p.meses} className={p.activo ? "" : "opacity-60"}>
@@ -251,7 +251,7 @@ function Canales({ editable }: { editable: boolean }) {
         {canales.isLoading ? <Cargando /> : (
           <div className="overflow-x-auto">
             <table className="tabla">
-              <thead><tr><th>Canal</th><th className="!text-right">Comisión %</th><th className="!text-right">Cuota fija</th><th className="!text-right">Umbral</th><th className="!text-right">Envío</th></tr></thead>
+              <thead><tr><th>Canal</th><th className="!text-right" data-explain={GLOSARIO.comisionCanal} data-explain-title="Comisión">Comisión %</th><th className="!text-right" data-explain={GLOSARIO.cuotaFijaCanal} data-explain-title="Cuota fija">Cuota fija</th><th className="!text-right" data-explain={GLOSARIO.cuotaFijaCanal} data-explain-title="Umbral">Umbral</th><th className="!text-right" data-explain={GLOSARIO.envioCanal} data-explain-title="Envío">Envío</th></tr></thead>
               <tbody>
                 {[...(canales.data ?? [])].sort((a, b) => orden.indexOf(a.canal) - orden.indexOf(b.canal)).map((c) => (
                   <tr key={c.canal}>

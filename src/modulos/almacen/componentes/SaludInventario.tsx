@@ -112,7 +112,7 @@ function MapaSalud({ d, alElegir, sel }: { d: Salud; alElegir: (s: Seleccion) =>
       <EncabezadoTarjeta titulo="Salud del inventario hoy" explica={GLOSARIO.saludInventario}
         descripcion={`${numero(d.totales.con_existencia)} artículos con existencia${d.totales.valor_stock != null ? ` · ${dineroCompacto(d.totales.valor_stock)}` : ""} · según cuánto alcanza contra lo que sale`}
         acciones={d.con_costos ? (
-          <div className="flex rounded-lg border border-borde p-0.5 text-xs">
+          <div className="flex rounded-lg border border-borde p-0.5 text-xs" data-explain={GLOSARIO.saludPorValorArticulos} data-explain-title="Por valor o por artículos">
             {(["valor", "articulos"] as const).map((x) => (
               <button key={x} type="button" onClick={() => setPor(x)} className={cn("rounded-md px-2.5 py-1", por === x ? "bg-marca-suave text-marca-texto" : "text-tenue")}>
                 {x === "valor" ? "Por valor" : "Por artículos"}</button>
@@ -130,7 +130,7 @@ function MapaSalud({ d, alElegir, sel }: { d: Salud; alElegir: (s: Seleccion) =>
             const pct = med(c) / total;
             if (pct <= 0) return null;
             return (
-              <button key={c.clase} type="button" title={`${c.nombre}: ${porcentaje(pct, 1)}`}
+              <button key={c.clase} type="button" title={`${c.nombre}: ${porcentaje(pct, 1)}`} data-explain={c.explica} data-explain-title={c.nombre}
                 onClick={() => alElegir({ grupo: "salud", valor: c.clase, titulo: c.nombre })}
                 className={cn("h-full border-r-2 border-superficie last:border-r-0 transition-opacity hover:opacity-80",
                   sel && !(sel.grupo === "salud" && sel.valor === c.clase) && "opacity-40")}
@@ -265,11 +265,11 @@ function ListaSeleccion({ sel, conCostos, alCerrar }: { sel: NonNullable<Selecci
   const cols: Columna<FilaLista>[] = [
     { clave: "nombre", titulo: "Artículo", clase: "min-w-[220px]", valor: (x) => `${x.nombre} ${x.clave} ${x.categoria}`,
       celda: (x) => <div><p>{x.nombre}</p><p className="text-xs text-tenue">{x.clave} · {x.categoria}{x.es_importado ? " · importado" : ""}</p></div> },
-    { clave: "disponible", titulo: "Disponible", alinear: "der", sinBusqueda: true, valor: (x) => x.disponible,
+    { clave: "disponible", titulo: "Disponible", alinear: "der", sinBusqueda: true, valor: (x) => x.disponible, explica: GLOSARIO.disponibleReabasto,
       celda: (x) => <span className="cifra whitespace-nowrap">{numero(x.disponible)} <span className="text-xs text-tenue">{x.unidad}</span></span> },
     { clave: "demanda_mensual", titulo: "Sale al mes", alinear: "der", sinBusqueda: true, valor: (x) => x.demanda_mensual, explica: GLOSARIO.demandaMensual,
       celda: (x) => x.demanda_mensual > 0 ? <span className="cifra">{numero(x.demanda_mensual)}</span> : <span className="text-tenue">—</span> },
-    { clave: "cobertura_meses", titulo: "Alcanza", alinear: "der", sinBusqueda: true, valor: (x) => x.cobertura_meses ?? -1,
+    { clave: "cobertura_meses", titulo: "Alcanza", alinear: "der", sinBusqueda: true, valor: (x) => x.cobertura_meses ?? -1, explica: GLOSARIO.alcanzaMesesSalud,
       celda: (x) => x.cobertura_meses == null ? <span className="text-tenue">—</span> : <span className="cifra">{numero(x.cobertura_meses)} meses</span> },
     { clave: "meses_12", titulo: "Meses con salida", alinear: "der", sinBusqueda: true, valor: (x) => x.meses_12, celda: (x) => <span className="cifra">{x.meses_12} de 12</span> },
     { clave: "cv", titulo: "Variación", alinear: "der", sinBusqueda: true, valor: (x) => x.cv ?? -1, explica: GLOSARIO.matrizAbcXyz,

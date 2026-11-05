@@ -79,14 +79,17 @@ export function ResumenIA({ area = "direccion", conClaude = true }: { area?: Are
           </div>
           <div className="flex items-center gap-2 text-xs text-tenue">
             {analizando
-              ? <Insignia tono="marca"><Sparkles className="h-3 w-3 animate-pulse" />La IA está analizando…</Insignia>
+              ? <span data-explain={GLOSARIO.iaAnalizando} data-explain-title="La IA está analizando"><Insignia tono="marca"><Sparkles className="h-3 w-3 animate-pulse" />La IA está analizando…</Insignia></span>
               : datos && (datos.simulado
                 ? <span data-explain={GLOSARIO.avisosDeReglas} data-explain-title="Sin IA"><Insignia tono="neutro">Reglas de la base · sin IA</Insignia></span>
-                : <Insignia tono="marca"><Sparkles className="h-3 w-3" />IA · {hace(datos.generado_en)}</Insignia>)}
-            <button onClick={actualizar} disabled={r.isFetching} title="Volver a analizar"
-              className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo disabled:opacity-50">
-              <RefreshCw className={cn("h-4 w-4", r.isFetching && "animate-spin")} />
-            </button>
+                : <span data-explain={GLOSARIO.iaRedacto} data-explain-title="Hecho por la IA"><Insignia tono="marca"><Sparkles className="h-3 w-3" />IA · {hace(datos.generado_en)}</Insignia></span>)}
+            {/* El botón se deshabilita mientras carga: la explicación va en el envoltorio para que no se pierda. */}
+            <span data-explain={GLOSARIO.botonVolverAnalizar} data-explain-title="Volver a analizar">
+              <button onClick={actualizar} disabled={r.isFetching} title="Volver a analizar"
+                className="h-8 w-8 grid place-items-center rounded-lg hover:bg-fondo disabled:opacity-50">
+                <RefreshCw className={cn("h-4 w-4", r.isFetching && "animate-spin")} />
+              </button>
+            </span>
           </div>
         </div>
 

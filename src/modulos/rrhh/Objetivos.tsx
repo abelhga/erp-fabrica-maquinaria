@@ -126,8 +126,8 @@ function Evaluaciones({ mes, ver, abrir }: { mes: string; ver: string | null; ab
       celda: (e) => (
         <div className="flex flex-wrap gap-1">
           <Insignia tono={ESTADOS_EVAL[e.estado].tono}>{ESTADOS_EVAL[e.estado].texto}</Insignia>
-          {e.impugnaciones_pendientes > 0 && <Insignia tono="aviso"><Flag className="h-3 w-3" /> {e.impugnaciones_pendientes}</Insignia>}
-          {e.ajustes_pendientes > 0 && <Insignia tono="info">Ajuste por autorizar</Insignia>}
+          {e.impugnaciones_pendientes > 0 && <span data-explain={GLOSARIO.impugnacion} data-explain-title="Impugnaciones por resolver"><Insignia tono="aviso"><Flag className="h-3 w-3" /> {e.impugnaciones_pendientes}</Insignia></span>}
+          {e.ajustes_pendientes > 0 && <span data-explain={GLOSARIO.ajusteObjetivo} data-explain-title="Ajuste por autorizar"><Insignia tono="info">Ajuste por autorizar</Insignia></span>}
         </div>
       ),
     },
@@ -161,7 +161,7 @@ function Evaluaciones({ mes, ver, abrir }: { mes: string; ver: string | null; ab
   return (
     <div className="space-y-4">
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
-        <Kpi titulo="Personas evaluadas" valor={numero(todas.length)} icono={Users} detalle={nombreMes(mes)} />
+        <Kpi titulo="Personas evaluadas" valor={numero(todas.length)} icono={Users} detalle={nombreMes(mes)} explica={GLOSARIO.evaluacionMes} />
         <Kpi titulo="Por calificar" valor={numero(cuenta("borrador"))} icono={ClipboardCheck} tono={cuenta("borrador") ? "aviso" : "neutro"} explica={GLOSARIO.flujoEvaluacion}
           detalle="Las califica su jefe directo" alClic={() => setEstado("borrador")} />
         <Kpi titulo="Por revisar o aprobar" valor={numero(cuenta("calificada") + cuenta("revisada"))} icono={ListChecks} tono="info" explica={GLOSARIO.flujoEvaluacion}
@@ -197,7 +197,7 @@ function Evaluaciones({ mes, ver, abrir }: { mes: string; ver: string | null; ab
 
       <Lateral abierto={!!abierta} alCambiar={(v) => !v && abrir(null)} ancho="max-w-3xl"
         titulo={abierta?.empleado_nombre ?? ""}
-        subtitulo={abierta && <span>{abierta.puesto_nombre} · <span className="first-letter:uppercase">{nombreMes(abierta.mes)}</span> · <Insignia tono={ESTADOS_EVAL[abierta.estado].tono}>{ESTADOS_EVAL[abierta.estado].texto}</Insignia></span>}>
+        subtitulo={abierta && <span>{abierta.puesto_nombre} · <span className="first-letter:uppercase">{nombreMes(abierta.mes)}</span> · <span data-explain={GLOSARIO.flujoEvaluacion} data-explain-title={ESTADOS_EVAL[abierta.estado].texto}><Insignia tono={ESTADOS_EVAL[abierta.estado].tono}>{ESTADOS_EVAL[abierta.estado].texto}</Insignia></span></span>}>
         {abierta && <PanelEvaluacion evaluacion={abierta} />}
       </Lateral>
 
@@ -263,8 +263,8 @@ function Plantillas({ mes }: { mes: string }) {
                 </div>
                 {esRrhh && (
                   <div className="flex gap-1 shrink-0">
-                    {actual && <Boton variante="fantasma" tamano="sm" onClick={() => setEditor({ puesto: p.nombre, plantilla: { ...actual, lineas } })}><Pencil className="h-3.5 w-3.5" /> Editar</Boton>}
-                    <Boton variante="secundario" tamano="sm" onClick={() => setEditor({
+                    {actual && <Boton variante="fantasma" tamano="sm" onClick={() => setEditor({ puesto: p.nombre, plantilla: { ...actual, lineas } })} data-explain={GLOSARIO.botonEditarPlantilla}><Pencil className="h-3.5 w-3.5" /> Editar</Boton>}
+                    <Boton variante="secundario" tamano="sm" data-explain={actual ? GLOSARIO.botonNuevaVersionPlantilla : GLOSARIO.plantillaPuesto} onClick={() => setEditor({
                       puesto: p.nombre,
                       plantilla: { puesto_id: p.id, desde: `${mesDe(hoyISO(), 1)}-01`, notas: actual?.notas ?? "", lineas: lineas.map(({ id: _id, ...l }) => l) },
                     })}><Copy className="h-3.5 w-3.5" /> {actual ? "Nueva versión" : "Crear"}</Boton>
@@ -282,13 +282,13 @@ function Plantillas({ mes }: { mes: string }) {
                             <p className="font-medium text-sm">{i?.nombre}</p>
                             <p className="text-xs text-tenue">{l.texto ?? reglaCorta({ ...l, unidad: i?.unidad })}</p>
                           </td>
-                          <td className="w-28"><Insignia tono={FUENTES[(i?.fuente ?? "manual") as Fuente].tono}>{FUENTES[(i?.fuente ?? "manual") as Fuente].texto}</Insignia></td>
-                          <td className="text-right cifra font-medium w-14">{numero(l.peso)}</td>
+                          <td className="w-28"><span data-explain={GLOSARIO.fuenteIndicador} data-explain-title="De dónde sale"><Insignia tono={FUENTES[(i?.fuente ?? "manual") as Fuente].tono}>{FUENTES[(i?.fuente ?? "manual") as Fuente].texto}</Insignia></span></td>
+                          <td className="text-right cifra font-medium w-14" data-explain={GLOSARIO.pesoIndicador} data-explain-title="Peso">{numero(l.peso)}</td>
                         </tr>
                       );
                     })}
                   </tbody>
-                  <tfoot><tr><td colSpan={2} className="text-xs text-tenue">{actual.notas}</td><td className="text-right cifra font-semibold">{numero(lineas.reduce((s, l) => s + Number(l.peso), 0))}</td></tr></tfoot>
+                  <tfoot><tr><td colSpan={2} className="text-xs text-tenue">{actual.notas}</td><td className="text-right cifra font-semibold" data-explain={GLOSARIO.plantillaPuesto} data-explain-title="Suma de los pesos">{numero(lineas.reduce((s, l) => s + Number(l.peso), 0))}</td></tr></tfoot>
                 </table>
               ) : <Vacio className="py-8" icono={Target} titulo="Sin objetivos" texto={esRrhh ? "Crea la plantilla del puesto: indicadores, peso y regla." : "RRHH todavía no define los objetivos de este puesto."} />}
             </div>
@@ -319,7 +319,7 @@ function EditorPlantilla({ inicial, puesto, indicadores, areas, alCerrar }: {
       titulo={`${inicial.id ? "Editar" : "Nueva versión"}: ${puesto}`}
       descripcion={inicial.id ? "Si ya se calificó a alguien con esta plantilla, la base no deja cambiarla: crea una versión nueva." : "La versión anterior termina el mes antes de que empiece esta."}
       pie={<>
-        <span className={cn("mr-auto text-sm font-medium cifra", suma === 100 ? "text-ok" : "text-peligro")}>Suman {numero(suma)} {suma === 100 ? "✓" : `— ${suma > 100 ? "sobran" : "faltan"} ${numero(Math.abs(100 - suma))}`}</span>
+        <span className={cn("mr-auto text-sm font-medium cifra", suma === 100 ? "text-ok" : "text-peligro")} data-explain={GLOSARIO.pesoIndicador} data-explain-title="Suma de los pesos">Suman {numero(suma)} {suma === 100 ? "✓" : `— ${suma > 100 ? "sobran" : "faltan"} ${numero(Math.abs(100 - suma))}`}</span>
         <Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton>
         <Boton cargando={guardar.isPending} disabled={suma !== 100 || lineas.length === 0} onClick={() => guardar.mutate(undefined)}>Guardar</Boton>
       </>}>
@@ -343,7 +343,7 @@ function EditorPlantilla({ inicial, puesto, indicadores, areas, alCerrar }: {
                   </Seleccion>
                   <Entrada value={l.texto ?? ""} onChange={(e) => cambiar(i, { texto: e.target.value })} placeholder="Cómo lo lee la persona: «1 entrega tarde = −10»" />
                   {indicador?.checklist === "limpieza" && (
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1" data-explain={GLOSARIO.areasLimpiezaPlantilla} data-explain-title="Áreas de limpieza">
                       {areas.map((a) => {
                         const sel = l.parametros?.areas?.includes(a.id);
                         return (
@@ -354,16 +354,16 @@ function EditorPlantilla({ inicial, puesto, indicadores, areas, alCerrar }: {
                     </div>
                   )}
                 </div>
-                <label className="text-xs text-tenue">Peso
+                <label className="text-xs text-tenue" data-explain={GLOSARIO.pesoIndicador} data-explain-title="Peso">Peso
                   <Entrada className="mt-1" type="number" min={0.5} max={100} step="0.5" value={l.peso} onChange={(e) => cambiar(i, { peso: Number(e.target.value) })} />
                 </label>
                 <div className="space-y-2">
-                  <Seleccion value={l.regla} onChange={(e) => cambiar(i, { regla: e.target.value as Regla })} aria-label="Regla" title={REGLAS[l.regla].ayuda}>
+                  <Seleccion value={l.regla} onChange={(e) => cambiar(i, { regla: e.target.value as Regla })} aria-label="Regla" title={REGLAS[l.regla].ayuda} data-explain={GLOSARIO.reglaIndicador} data-explain-title="Regla">
                     {(Object.keys(REGLAS) as Regla[]).map((r) => <option key={r} value={r}>{REGLAS[r].texto}</option>)}
                   </Seleccion>
                   <ParametrosRegla l={l} cambiar={(c) => cambiar(i, c)} />
                 </div>
-                <Boton type="button" variante="fantasma" tamano="icono" onClick={() => setLineas((ls) => ls.filter((_, j) => j !== i))} aria-label="Quitar"><Trash2 className="h-4 w-4" /></Boton>
+                <Boton type="button" variante="fantasma" tamano="icono" onClick={() => setLineas((ls) => ls.filter((_, j) => j !== i))} aria-label="Quitar" data-explain={GLOSARIO.botonQuitarIndicador} data-explain-title="Quitar indicador"><Trash2 className="h-4 w-4" /></Boton>
               </div>
             );
           })}
@@ -436,7 +436,7 @@ function Personas() {
     { clave: "hasta", titulo: "Hasta", valor: (a) => a.hasta, celda: (a) => (a.hasta ? fecha(a.hasta) : <Insignia tono="ok">Vigente</Insignia>) },
     {
       clave: "acciones", titulo: "", sinBusqueda: true,
-      celda: (a) => !a.hasta && <Boton variante="fantasma" tamano="sm" onClick={(ev) => { ev.stopPropagation(); setTerminar(a); }}>Terminar</Boton>,
+      celda: (a) => !a.hasta && <Boton variante="fantasma" tamano="sm" onClick={(ev) => { ev.stopPropagation(); setTerminar(a); }} data-explain={GLOSARIO.botonTerminarAsignacion}>Terminar</Boton>,
     },
   ];
   return (
@@ -447,7 +447,7 @@ function Personas() {
       </p>
       <TablaDatos filas={asignaciones.data} columnas={columnas} cargando={asignaciones.isLoading} error={asignaciones.error} claveFila={(a) => a.id}
         exportarComo="puestos-y-jefes" placeholder="Buscar persona, puesto o jefe…"
-        filtros={<Boton tamano="sm" onClick={() => setNueva(true)}><UserCog className="h-4 w-4" /> Asignar puesto</Boton>}
+        filtros={<Boton tamano="sm" onClick={() => setNueva(true)} data-explain={GLOSARIO.botonAsignarPuesto}><UserCog className="h-4 w-4" /> Asignar puesto</Boton>}
         vacio={{ icono: UserCog, titulo: "Nadie tiene puesto con objetivos", texto: "Asigna a cada persona su puesto y su jefe directo; el día 1 se arma su evaluación del mes." }} />
       {nueva && <DialogoAsignar alCerrar={() => setNueva(false)} empleados={(empleados.data ?? []).filter((e) => e.activo)} puestos={puestos} perfiles={perfiles.data ?? []} />}
       {terminar && <DialogoTerminar a={terminar} alCerrar={() => setTerminar(null)} />}

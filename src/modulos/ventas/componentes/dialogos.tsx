@@ -10,6 +10,7 @@ import { mensajeError, q } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { toast } from "sonner";
 import { RFC_VALIDO, normalizarRfc, useFuentes } from "../comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
  * Pide un motivo antes de algo que cierra una puerta (rechazar, perder,
@@ -133,13 +134,13 @@ export function DialogoCliente({ abierto, alCambiar, nombreInicial = "", alCrear
         </>)}
         <Campo etiqueta="Giro"><Entrada value={f.giro} onChange={cambiar("giro")} placeholder="Concretera, agregados, molino…" /></Campo>
         <Campo etiqueta="¿Cómo llegó?">
-          <Seleccion value={f.fuente_id} onChange={cambiar("fuente_id")}>
+          <Seleccion value={f.fuente_id} onChange={cambiar("fuente_id")} data-explain={GLOSARIO.fuenteCliente} data-explain-title="¿Cómo llegó?">
             <option value="">—</option>
             {fuentes.data?.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
           </Seleccion>
         </Campo>
         {puede("ventas", 3) && (
-          <label className="sm:col-span-2 flex items-center gap-2 text-sm">
+          <label className="sm:col-span-2 flex items-center gap-2 text-sm" data-explain={GLOSARIO.clienteQuedaAMiNombre} data-explain-title="Queda a mi nombre">
             <input type="checkbox" checked={f.propio} onChange={(e) => setF((x) => ({ ...x, propio: e.target.checked }))} />
             Queda a mi nombre (si no, sin dueño)
           </label>
@@ -163,7 +164,8 @@ export function ElegirCliente({ valor, alCambiar, alNuevo, deshabilitado }: {
     <div className="flex gap-2">
       <SelectorCliente className="flex-1 min-w-0" valor={valor} alCambiar={alCambiar} deshabilitado={deshabilitado} />
       {!deshabilitado && (
-        <Boton type="button" variante="secundario" onClick={alNuevo} title="Dar de alta un cliente nuevo"><UserPlus className="h-4 w-4" /><span className="hidden sm:inline">Nuevo</span></Boton>
+        <Boton type="button" variante="secundario" onClick={alNuevo} title="Dar de alta un cliente nuevo"
+          data-explain={GLOSARIO.botonNuevoClienteRapido} data-explain-title="Nuevo cliente"><UserPlus className="h-4 w-4" /><span className="hidden sm:inline">Nuevo</span></Boton>
       )}
     </div>
   );

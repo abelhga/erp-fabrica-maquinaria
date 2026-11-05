@@ -7,14 +7,16 @@ import { cn } from "@/lib/utilidades";
 import {
   ESTADO_SOL, SEMAFORO, abierta, cuando, horas, marcaModelo, queSePide, useFotosSolicitud, type Solicitud,
 } from "./datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /** Estado + semáforo + urgencia, en una línea. */
 export function InsigniasSolicitud({ s, sinEstado }: { s: Solicitud; sinEstado?: boolean }) {
   return (
     <span className="inline-flex flex-wrap items-center gap-1">
-      {s.urgente && abierta(s) && <Insignia tono="peligro"><Siren className="h-3 w-3" />Cliente esperando</Insignia>}
-      {s.semaforo && s.semaforo !== "a_tiempo" && <Insignia tono={SEMAFORO[s.semaforo].tono} punto>{SEMAFORO[s.semaforo].texto}</Insignia>}
-      {!sinEstado && <Insignia tono={ESTADO_SOL[s.estado].tono}>{ESTADO_SOL[s.estado].texto}</Insignia>}
+      {/* Insignia no reenvía atributos: cada una va en su envoltorio para que el modo tutorial la explique. */}
+      {s.urgente && abierta(s) && <span className="inline-flex" data-explain={GLOSARIO.solicitudUrgente} data-explain-title="Cliente esperando"><Insignia tono="peligro"><Siren className="h-3 w-3" />Cliente esperando</Insignia></span>}
+      {s.semaforo && s.semaforo !== "a_tiempo" && <span className="inline-flex" data-explain={GLOSARIO.semaforoSolicitud} data-explain-title={SEMAFORO[s.semaforo].texto}><Insignia tono={SEMAFORO[s.semaforo].tono} punto>{SEMAFORO[s.semaforo].texto}</Insignia></span>}
+      {!sinEstado && <span className="inline-flex" data-explain={GLOSARIO.estadoSolicitud} data-explain-title={ESTADO_SOL[s.estado].texto}><Insignia tono={ESTADO_SOL[s.estado].tono}>{ESTADO_SOL[s.estado].texto}</Insignia></span>}
     </span>
   );
 }
@@ -23,7 +25,8 @@ export function InsigniasSolicitud({ s, sinEstado }: { s: Solicitud; sinEstado?:
 export function PuntoSemaforo({ s }: { s: Solicitud }) {
   if (!s.semaforo) return <span className="block h-2.5 w-2.5 rounded-full bg-borde" aria-hidden />;
   return <span className={cn("block h-2.5 w-2.5 rounded-full", SEMAFORO[s.semaforo].punto, s.semaforo === "vencida" && "animate-pulse")}
-    title={SEMAFORO[s.semaforo].texto} aria-label={SEMAFORO[s.semaforo].texto} />;
+    title={SEMAFORO[s.semaforo].texto} aria-label={SEMAFORO[s.semaforo].texto}
+    data-explain={GLOSARIO.semaforoSolicitud} data-explain-title={SEMAFORO[s.semaforo].texto} />;
 }
 
 /** Qué se pide, con marca y modelo y cuántas. */
@@ -101,7 +104,7 @@ export function LineaTiempo({ s }: { s: Solicitud }) {
     pasos.push({ icono: XCircle, tono: "text-tenue", texto: <>Cancelada por {s.cancelada_por_nombre ?? "quien la pidió"} {cuando(s.cancelada_en)}{s.motivo_cancelacion ? ` · ${s.motivo_cancelacion}` : ""}</> });
   }
   return (
-    <ol className="space-y-1.5 text-sm">
+    <ol className="space-y-1.5 text-sm" data-explain={GLOSARIO.lineaTiempoSolicitud} data-explain-title="Por dónde va">
       {pasos.map((p, i) => (
         <li key={i} className="flex gap-2"><p.icono className={cn("h-4 w-4 mt-0.5 shrink-0 text-tenue", p.tono)} /><span>{p.texto}</span></li>
       ))}
@@ -119,12 +122,12 @@ export function RespuestaVenta({ s }: { s: Solicitud }) {
   return (
     <div className="rounded-lg border border-ok/30 bg-ok-suave/60 px-3 py-2.5 text-sm space-y-1">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <span className="text-tenue">Precio de lista</span>
+        <span className="text-tenue" data-explain={GLOSARIO.precioListaCatalogo}>Precio de lista</span>
         <span className="text-lg font-semibold cifra">{dinero(precio)} <span className="text-xs font-normal text-tenue">+ IVA</span></span>
       </div>
       <div className="flex flex-wrap justify-between gap-x-4 text-tenue">
         <span>Entrega: <b className="text-texto">{s.tiempo_entrega_dias != null ? `${s.tiempo_entrega_dias} días hábiles` : "por confirmar"}</b></span>
-        {s.vigencia_hasta && <span>Precio válido al {fecha(s.vigencia_hasta)}</span>}
+        {s.vigencia_hasta && <span data-explain={GLOSARIO.vigenciaPrecioSolicitud} data-explain-title="Precio válido">Precio válido al {fecha(s.vigencia_hasta)}</span>}
       </div>
       {s.clave && <p className="text-xs text-tenue">Ya está en el catálogo como <span className="cifra">{s.clave}</span>: el buscador del cotizador lo encuentra.</p>}
       {s.respuesta && <p className="text-texto">“{s.respuesta}”</p>}

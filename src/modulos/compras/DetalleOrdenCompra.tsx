@@ -75,7 +75,10 @@ function NuevaOrden() {
         )}
         <div className="flex gap-2">
           <Boton variante="secundario" onClick={() => ir("/compras/ordenes")}>Cancelar</Boton>
-          <Boton disabled={!prov} onClick={() => crear.mutate(undefined)} cargando={crear.isPending}>Crear orden en borrador</Boton>
+          {/* Se deshabilita sin proveedor: la explicación va en el envoltorio para que no se pierda. */}
+          <span className="inline-flex" data-explain={GLOSARIO.crearOrdenBorrador} data-explain-title="Crear orden en borrador">
+            <Boton disabled={!prov} onClick={() => crear.mutate(undefined)} cargando={crear.isPending}>Crear orden en borrador</Boton>
+          </span>
         </div>
       </Tarjeta>
     </Pagina>
@@ -164,15 +167,24 @@ function Detalle({ id }: { id: string }) {
           </>}
           acciones={<>
             <Boton variante="fantasma" onClick={() => ir("/compras/ordenes")}><ArrowLeft className="h-4 w-4" /> Órdenes</Boton>
-            {verDinero && <Boton variante="secundario" onClick={() => window.print()} disabled={!lineas.data?.length}><Printer className="h-4 w-4" /> Imprimir</Boton>}
-            {compra && (o.es_importacion || o.moneda !== "MXN") && o.estado !== "cancelada" && <Boton asChild variante="secundario"><Link to={`/importaciones/oc/${o.id}/imprimir`}><Globe2 className="h-4 w-4" /> OC y contrato para aduana</Link></Boton>}
-            {compra && borrador && <Boton variante="fantasma" onClick={() => { if (confirm(`¿Eliminar el borrador ${o.folio}?`)) borrar.mutate(undefined); }}><Trash2 className="h-4 w-4" /> Eliminar</Boton>}
-            {compra && o.estado === "enviada" && !recibido && <Boton variante="secundario" onClick={() => setCancelando(true)}><Ban className="h-4 w-4" /> Cancelar</Boton>}
+            {/* Imprimir, Por correo y Enviar se deshabilitan sin partidas: su explicación va en el envoltorio para que no se pierda. */}
+            {verDinero && <span className="inline-flex" data-explain={GLOSARIO.imprimirOrdenCompra} data-explain-title="Imprimir">
+              <Boton variante="secundario" onClick={() => window.print()} disabled={!lineas.data?.length}><Printer className="h-4 w-4" /> Imprimir</Boton>
+            </span>}
+            {compra && (o.es_importacion || o.moneda !== "MXN") && o.estado !== "cancelada" && <Boton asChild variante="secundario" data-explain={GLOSARIO.ocContratoAduana} data-explain-title="OC y contrato para aduana"><Link to={`/importaciones/oc/${o.id}/imprimir`}><Globe2 className="h-4 w-4" /> OC y contrato para aduana</Link></Boton>}
+            {compra && borrador && <Boton variante="fantasma" onClick={() => { if (confirm(`¿Eliminar el borrador ${o.folio}?`)) borrar.mutate(undefined); }}
+              data-explain={GLOSARIO.eliminarBorradorOrden} data-explain-title="Eliminar borrador"><Trash2 className="h-4 w-4" /> Eliminar</Boton>}
+            {compra && o.estado === "enviada" && !recibido && <Boton variante="secundario" onClick={() => setCancelando(true)}
+              data-explain={GLOSARIO.cancelarOrdenCompra} data-explain-title="Cancelar la orden"><Ban className="h-4 w-4" /> Cancelar</Boton>}
             {/* El PDF sale de la misma hoja que se imprime, así que pide ver el dinero. */}
             {compra && verDinero && ["borrador", "enviada", "parcial"].includes(o.estado) && (
-              <Boton variante="secundario" onClick={() => setPorCorreo(true)} disabled={!lineas.data?.length}><Mail className="h-4 w-4" /> Por correo</Boton>
+              <span className="inline-flex" data-explain={GLOSARIO.ordenPorCorreo} data-explain-title="Por correo">
+                <Boton variante="secundario" onClick={() => setPorCorreo(true)} disabled={!lineas.data?.length}><Mail className="h-4 w-4" /> Por correo</Boton>
+              </span>
             )}
-            {compra && borrador && <Boton onClick={() => enviar.mutate(undefined)} cargando={enviar.isPending} disabled={!lineas.data?.length}><Send className="h-4 w-4" /> Enviar al proveedor</Boton>}
+            {compra && borrador && <span className="inline-flex" data-explain={GLOSARIO.enviarOrdenCompra} data-explain-title="Enviar al proveedor">
+              <Boton onClick={() => enviar.mutate(undefined)} cargando={enviar.isPending} disabled={!lineas.data?.length}><Send className="h-4 w-4" /> Enviar al proveedor</Boton>
+            </span>}
             {puede("inventario", 2) && (o.estado === "enviada" || o.estado === "parcial") && (
               <Boton onClick={() => setRecibiendo(true)} data-explain={GLOSARIO.recibirOrden}><PackageCheck className="h-4 w-4" /> Recibir</Boton>
             )}
@@ -181,7 +193,7 @@ function Detalle({ id }: { id: string }) {
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] items-start">
             <div className="space-y-5">
               <Tarjeta className="overflow-hidden">
-                <EncabezadoTarjeta titulo="Partidas" descripcion={editable ? "Cantidad y costo se guardan con Enter. El costo sugerido es el vigente del artículo." : undefined} />
+                <EncabezadoTarjeta titulo="Partidas" explica={GLOSARIO.partidasOrdenCompra} descripcion={editable ? "Cantidad y costo se guardan con Enter. El costo sugerido es el vigente del artículo." : undefined} />
                 {lineas.isLoading ? <Cargando /> : (
                   <div className="overflow-x-auto">
                     <table className="tabla">
@@ -213,9 +225,9 @@ function Detalle({ id }: { id: string }) {
                                 <td className="text-right">
                                   {editable ? <CeldaEditable valor={Number(l.costo_unitario)} alGuardar={(v) => v >= 0 && editarLinea.mutate({ linea: l.id, cambios: { costo_unitario: v } })} etiqueta={`Costo de ${l.nombre}`} />
                                     : <span className="cifra">{dinero(l.costo_unitario, m)}</span>}
-                                  {Number(l.costo_unitario) === 0 ? <p className="text-[11px] text-peligro">sin costo</p>
+                                  {Number(l.costo_unitario) === 0 ? <p className="text-[11px] text-peligro" data-explain={GLOSARIO.partidaSinCosto} data-explain-title="Sin costo">sin costo</p>
                                     : dif != null && Math.abs(dif) >= 0.005 && <p className={cn("text-[11px] cifra", dif > 0.1 ? "text-peligro" : dif > 0 ? "text-aviso" : "text-ok")}
-                                      title={`Costo vigente ${dinero(vig, m)}`}>{dif > 0 ? "▲" : "▼"} {porcentaje(Math.abs(dif))} vs. vigente</p>}
+                                      title={`Costo vigente ${dinero(vig, m)}`} data-explain={GLOSARIO.costoContraVigente} data-explain-title="Contra el costo vigente">{dif > 0 ? "▲" : "▼"} {porcentaje(Math.abs(dif))} vs. vigente</p>}
                                 </td>
                               )}
                               {verDinero && <td className="text-right cifra">{dinero(l.importe, m)}</td>}
@@ -226,6 +238,7 @@ function Detalle({ id }: { id: string }) {
                                 </td>
                               )}
                               {editable && <td><button className="p-1 rounded text-tenue hover:text-peligro hover:bg-fondo" aria-label={`Quitar ${l.nombre}`}
+                                data-explain={GLOSARIO.quitarPartidaOrden} data-explain-title="Quitar partida"
                                 onClick={() => quitarLinea.mutate(l.id)}><Trash2 className="h-4 w-4" /></button></td>}
                               {cambiable && <td>{Number(l.recibido) === 0 && (
                                 <button className="p-1 rounded text-tenue hover:text-marca-texto hover:bg-fondo" aria-label={`Cambiar ${l.nombre}`} title="Cambiar partida"
@@ -239,7 +252,7 @@ function Detalle({ id }: { id: string }) {
                   </div>
                 )}
                 {editable && (
-                  <div className="p-3 border-t border-borde">
+                  <div className="p-3 border-t border-borde" data-explain={GLOSARIO.agregarPartidaOrden} data-explain-title="Agregar artículo">
                     <BuscadorArticulo alElegir={(a) => agregar.mutate(a.id)} tipos={["componente", "materia_prima", "servicio"]} mostrarPrecio={false}
                       placeholder="Agregar artículo: escribe nombre o clave y Enter…" />
                   </div>
@@ -250,7 +263,7 @@ function Detalle({ id }: { id: string }) {
                       <dt className="text-tenue">Subtotal</dt><dd className="text-right cifra">{dinero(o.subtotal, m)}</dd>
                       <dt className="text-tenue">IVA {Math.round(Number(o.tasa_iva) * 100)} %</dt><dd className="text-right cifra">{dinero(o.iva, m)}</dd>
                       <dt className="font-semibold">Total</dt><dd className="text-right cifra font-semibold">{dinero(o.total, m)}</dd>
-                      {o.moneda !== "MXN" && <><dt className="text-tenue text-xs">En pesos (TC {numero(o.tipo_cambio)})</dt><dd className="text-right cifra text-xs text-tenue">{dinero(Number(o.total) * Number(o.tipo_cambio))}</dd></>}
+                      {o.moneda !== "MXN" && <><dt className="text-tenue text-xs" data-explain={GLOSARIO.tipoCambio} data-explain-title="Tipo de cambio">En pesos (TC {numero(o.tipo_cambio)})</dt><dd className="text-right cifra text-xs text-tenue">{dinero(Number(o.total) * Number(o.tipo_cambio))}</dd></>}
                     </dl>
                   </div>
                 )}
@@ -260,7 +273,7 @@ function Detalle({ id }: { id: string }) {
 
               {(recepciones.data?.length ?? 0) > 0 && (
                 <Tarjeta className="overflow-hidden">
-                  <EncabezadoTarjeta titulo="Recepciones en almacén" descripcion="Cada entrada, con quién la recibió y a qué almacén" />
+                  <EncabezadoTarjeta titulo="Recepciones en almacén" explica={GLOSARIO.recepcionesOrden} descripcion="Cada entrada, con quién la recibió y a qué almacén" />
                   <table className="tabla">
                     <tbody>
                       {recepciones.data!.map((r) => (
@@ -280,7 +293,7 @@ function Detalle({ id }: { id: string }) {
 
             <div className="space-y-5">
               <Tarjeta>
-                <EncabezadoTarjeta titulo="Datos de la orden" />
+                <EncabezadoTarjeta titulo="Datos de la orden" explica={GLOSARIO.datosOrdenCompra} />
                 <div className="px-5 pb-5 space-y-3 text-sm">
                   <Dato etiqueta="Proveedor">
                     {editable ? <SelectorProveedor valor={{ id: o.proveedor_id, nombre: o.proveedor }} alCambiar={(p) => actualizar.mutate({ proveedor_id: p.id, moneda: p.moneda, tipo_cambio: tc.data?.[p.moneda] ?? 1 })} />
@@ -294,7 +307,7 @@ function Detalle({ id }: { id: string }) {
                         </Seleccion>
                       ) : o.moneda}
                     </Dato>
-                    <Dato etiqueta="Tipo de cambio">
+                    <Dato etiqueta="Tipo de cambio" explica={GLOSARIO.tipoCambio}>
                       {editable && o.moneda !== "MXN" ? <CeldaEditable valor={Number(o.tipo_cambio)} ancho="w-full" alGuardar={(v) => v > 0 && actualizar.mutate({ tipo_cambio: v })} etiqueta="Tipo de cambio" />
                         : <span className="cifra">{o.moneda === "MXN" ? "—" : numero(o.tipo_cambio)}</span>}
                     </Dato>
@@ -309,13 +322,13 @@ function Detalle({ id }: { id: string }) {
                     {compra && o.estado !== "cancelada" ? <CampoTexto valor={o.condiciones} alGuardar={(v) => actualizar.mutate({ condiciones: v })} placeholder="Crédito a 30 días" /> : (o.condiciones ?? "—")}
                   </Dato>
                   {editable && verDinero && (
-                    <Dato etiqueta="IVA">
+                    <Dato etiqueta="IVA" explica={GLOSARIO.ivaOrdenCompra}>
                       <Seleccion value={String(Number(o.tasa_iva))} onChange={(e) => actualizar.mutate({ tasa_iva: Number(e.target.value) })}>
                         <option value="0.16">16 %</option><option value="0.08">8 % (frontera)</option><option value="0">0 % (importación / exento)</option>
                       </Seleccion>
                     </Dato>
                   )}
-                  {!borrador && <Dato etiqueta="Factura del proveedor">
+                  {!borrador && <Dato etiqueta="Factura del proveedor" explica={GLOSARIO.facturaDeLaOrden}>
                     {o.factura_proveedor ?? <span className="text-tenue">se captura al recibir</span>}
                     {verDinero && (facturas.data?.length ? facturas.data.map((x) => (
                       <p key={x.movimiento_id} className="text-xs text-ok" data-explain={GLOSARIO.facturaDeLaOrden} data-explain-title="Registrada en finanzas">

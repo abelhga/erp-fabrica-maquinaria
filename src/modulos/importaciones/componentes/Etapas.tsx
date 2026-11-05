@@ -51,7 +51,7 @@ export function Etapas({ e }: { e: Embarque }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] items-start">
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Etapas" descripcion={captura ? "Fecha real de cada paso. Enter guarda; las fechas futuras no se aceptan (para eso está el ETA)." : "Fecha real de cada paso"} />
+        <EncabezadoTarjeta titulo="Etapas" explica={GLOSARIO.etapasEmbarque} descripcion={captura ? "Fecha real de cada paso. Enter guarda; las fechas futuras no se aceptan (para eso está el ETA)." : "Fecha real de cada paso"} />
         <ol className="px-5 pb-5">
           {aplican.map((t, i) => {
             const ev = porTipo.get(t.tipo);
@@ -70,6 +70,7 @@ export function Etapas({ e }: { e: Embarque }) {
                       <span className="flex items-center gap-1.5 text-sm">
                         <span className="cifra">{fecha(ev.fecha)}</span>
                         {captura && <button className="p-1 rounded text-tenue hover:text-texto hover:bg-fondo" aria-label={`Corregir fecha de ${t.nombre}`}
+                          data-explain={GLOSARIO.botonCorregirFechaEtapa} data-explain-title="Corregir la fecha"
                           onClick={() => setEditando(t.tipo)}><Pencil className="h-3.5 w-3.5" /></button>}
                       </span>
                     )}
@@ -94,10 +95,11 @@ export function Etapas({ e }: { e: Embarque }) {
         etiqueta="¿Por qué se quita?" sugerencias={["Me equivoqué de embarque", "Todavía no pasa", "Se registró dos veces"]}
         textoBoton="Quitar" cargando={quitar.isPending} alConfirmar={(motivo) => quitando && quitar.mutate({ tipo: quitando.tipo, motivo })} />
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Historia" descripcion="Cambios de ETA y notas" />
+        <EncabezadoTarjeta titulo="Historia" explica={GLOSARIO.historiaEmbarque} descripcion="Cambios de ETA y notas" />
         {captura && (
           <form className="px-5 pb-3 flex gap-2" onSubmit={(ev: FormEvent) => { ev.preventDefault(); if (nota.trim()) registrar.mutate({ tipo: "nota", fecha: hoyISO(), detalle: nota.trim() }, { onSuccess: () => setNota("") }); }}>
-            <input className="campo" value={nota} onChange={(ev) => setNota(ev.target.value)} placeholder="Nota: el agente pide la carta 3.1.8 corregida…" aria-label="Nota" />
+            <input className="campo" value={nota} onChange={(ev) => setNota(ev.target.value)} placeholder="Nota: el agente pide la carta 3.1.8 corregida…" aria-label="Nota"
+              data-explain={GLOSARIO.notaEmbarque} data-explain-title="Nota" />
             <Boton type="submit" variante="secundario" disabled={!nota.trim()}><StickyNote className="h-4 w-4" /></Boton>
           </form>
         )}
@@ -126,7 +128,7 @@ function CapturaFecha({ inicial, etiqueta, alGuardar, alCancelar, alQuitar, carg
   return (
     <form className="mt-1.5 flex flex-wrap items-center gap-2" onSubmit={(ev) => { ev.preventDefault(); if (f) alGuardar(f); }}>
       <input type="date" className="campo h-8 w-40" value={f} max={hoyISO()} onChange={(ev) => setF(ev.target.value)} aria-label={`Fecha de ${etiqueta}`} />
-      <Boton type="submit" tamano="sm" variante="secundario" cargando={cargando}>Registrar</Boton>
+      <Boton type="submit" tamano="sm" variante="secundario" cargando={cargando} data-explain={GLOSARIO.botonRegistrarEtapaEmbarque}>Registrar</Boton>
       {alCancelar && <Boton type="button" tamano="sm" variante="fantasma" onClick={alCancelar}>Cancelar</Boton>}
       {alQuitar && <span data-explain={GLOSARIO.quitarEtapaEmbarque} data-explain-title="Quitar este paso">
         <Boton type="button" tamano="sm" variante="fantasma" className="text-peligro" onClick={alQuitar}><Trash2 className="h-3.5 w-3.5" />Quitar este paso</Boton></span>}

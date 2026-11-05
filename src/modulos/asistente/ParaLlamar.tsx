@@ -105,7 +105,7 @@ export default function ParaLlamar() {
       {lista.error ? <ErrorCarga error={lista.error} /> : lista.isLoading ? <Cargando filas={8} /> : (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-            <button onClick={() => setFiltro("todas")}
+            <button onClick={() => setFiltro("todas")} data-explain={GLOSARIO.listaParaLlamar} data-explain-title="Todas"
               className={cn("tarjeta p-4 text-left transition hover:border-marca/40", filtro === "todas" && "ring-2 ring-marca/50 border-marca/50")}>
               <p className="text-sm text-tenue flex items-center gap-2"><PhoneCall className="h-4 w-4 text-marca" />Todas</p>
               <p className="text-2xl font-semibold cifra mt-1">{numero(pendientes.length)}</p>
@@ -153,7 +153,7 @@ export default function ParaLlamar() {
                         <p className="text-xs text-tenue">{o.vendedor ?? "Sin vendedor (libre)"}{o.contacto && ` · ${o.contacto}`}</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <Insignia tono={M.tono}><M.icono className="h-3 w-3" />{M.texto}</Insignia>
+                        <span data-explain={EXPLICA[o.motivo]} data-explain-title={M.texto}><Insignia tono={M.tono}><M.icono className="h-3 w-3" />{M.texto}</Insignia></span>
                         <p className="text-sm font-semibold cifra mt-1" data-explain={GLOSARIO.enJuego} data-explain-title="Valor estimado">{dinero(o.valor_estimado)}</p>
                       </div>
                     </div>
@@ -171,14 +171,14 @@ export default function ParaLlamar() {
                         alTerminar={() => setPorConfirmar((p) => { const { [o.cliente_id]: _, ...resto } = p; return resto; })} />
                     ) : (
                       <div className="flex flex-wrap gap-2 mt-auto">
-                        <Boton tamano="sm" onClick={() => setRedactando(o)}><Sparkles className="h-3.5 w-3.5" />Redactar mensaje</Boton>
+                        <Boton tamano="sm" onClick={() => setRedactando(o)} data-explain={GLOSARIO.redactarMensajeCliente} data-explain-title="Mensaje con IA"><Sparkles className="h-3.5 w-3.5" />Redactar mensaje</Boton>
                         {wa && (
-                          <Boton tamano="sm" variante="secundario" asChild>
+                          <Boton tamano="sm" variante="secundario" asChild data-explain={GLOSARIO.contactoParaLlamar} data-explain-title="WhatsApp">
                             <a href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer" onClick={() => marcar(o, "whatsapp")}><MessageCircle className="h-3.5 w-3.5" />WhatsApp</a>
                           </Boton>
                         )}
                         {o.telefono && (
-                          <Boton tamano="sm" variante="fantasma" asChild>
+                          <Boton tamano="sm" variante="fantasma" asChild data-explain={GLOSARIO.contactoParaLlamar} data-explain-title="Llamar">
                             <a href={`tel:${o.telefono.replace(/\s/g, "")}`} onClick={() => marcar(o, "llamada")}><PhoneCall className="h-3.5 w-3.5" />{o.telefono}</a>
                           </Boton>
                         )}
@@ -202,7 +202,7 @@ function EstadoSeguimiento({ s }: { s: Seguimiento }) {
   const toca = s.siguiente !== "esperar" && (s.siguiente_el ?? "") <= hoyISO();
   return (
     <div className={cn("rounded-lg border px-3 py-2 text-sm flex flex-wrap items-center gap-x-3 gap-y-1",
-      toca ? "border-aviso/40 bg-aviso-suave" : "border-borde bg-fondo")}>
+      toca ? "border-aviso/40 bg-aviso-suave" : "border-borde bg-fondo")} data-explain={GLOSARIO.enSeguimiento} data-explain-title="En seguimiento">
       <span><b>{s.ultimo_quien ?? "Alguien"}</b> {s.ultimo_canal === "llamada" ? "le llamó" : "le escribió"} {s.ultimo_canal && CANAL[s.ultimo_canal]} {hace(s.ultimo_en)}</span>
       <span className="text-tenue">intento {s.intentos} de 3</span>
       {s.siguiente && (
@@ -223,7 +223,7 @@ function ConfirmarIntento({ o, canal, alTerminar }: { o: Oportunidad; canal: Can
   return (
     <div className="mt-auto rounded-lg border border-marca/40 bg-marca-suave/60 px-3 py-2 flex flex-wrap items-center gap-2 text-sm">
       <span className="font-medium mr-auto">{canal === "llamada" ? "¿Sí le llamaste?" : "¿Sí le escribiste?"}</span>
-      <Boton tamano="sm" onClick={() => registrar.mutate(undefined)} cargando={registrar.isPending}><Check className="h-3.5 w-3.5" />Sí, {canal === "llamada" ? "le llamé" : "le escribí"}</Boton>
+      <Boton tamano="sm" onClick={() => registrar.mutate(undefined)} cargando={registrar.isPending} data-explain={GLOSARIO.confirmarIntentoCliente}><Check className="h-3.5 w-3.5" />Sí, {canal === "llamada" ? "le llamé" : "le escribí"}</Boton>
       <Boton tamano="sm" variante="fantasma" onClick={alTerminar}><X className="h-3.5 w-3.5" />No</Boton>
     </div>
   );
@@ -236,7 +236,7 @@ function Resultado({ o }: { o: Oportunidad }) {
     exito: (op) => (op ? `Oportunidad creada en Contactado: ${o.cliente}` : `${o.cliente} sale de la lista`), invalidar: INVALIDAR,
   });
   return (
-    <MenuAcciones disparador={<Boton tamano="sm" variante="secundario" cargando={cerrar.isPending}>¿Cómo terminó?</Boton>}>
+    <MenuAcciones disparador={<Boton tamano="sm" variante="secundario" cargando={cerrar.isPending} data-explain={GLOSARIO.comoTerminoSeguimientoCliente}>¿Cómo terminó?</Boton>}>
       <OpcionMenu icono={ThumbsUp} alElegir={() => cerrar.mutate({ resultado: "interesa" })}>Le interesa · crear oportunidad</OpcionMenu>
       <OpcionMenu icono={CalendarClock} alElegir={() => cerrar.mutate({ resultado: "no_por_ahora" })}>No por ahora · volver en 90 días</OpcionMenu>
       <OpcionMenu icono={Hourglass} alElegir={() => cerrar.mutate({ resultado: "sin_respuesta" })}>No contesta · volver en 90 días</OpcionMenu>
@@ -268,11 +268,11 @@ function Redactar({ o, alCerrar, alEnviar }: { o: Oportunidad; alCerrar: () => v
             <Copy className="h-4 w-4" />Copiar
           </Boton>
           {canal === "whatsapp" && wa && (
-            <Boton asChild><a href={`https://wa.me/${wa}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noreferrer"
+            <Boton asChild data-explain={GLOSARIO.contactoParaLlamar} data-explain-title="Abrir en WhatsApp"><a href={`https://wa.me/${wa}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noreferrer"
               onClick={() => { alEnviar("whatsapp"); alCerrar(); }}><MessageCircle className="h-4 w-4" />Abrir en WhatsApp</a></Boton>
           )}
           {canal === "correo" && o.correo && (
-            <Boton asChild><a href={`mailto:${o.correo}?subject=${encodeURIComponent(borrador.data?.asunto ?? "")}&body=${encodeURIComponent(mensaje)}`}
+            <Boton asChild data-explain={GLOSARIO.contactoParaLlamar} data-explain-title="Abrir correo"><a href={`mailto:${o.correo}?subject=${encodeURIComponent(borrador.data?.asunto ?? "")}&body=${encodeURIComponent(mensaje)}`}
               onClick={() => { alEnviar("correo"); alCerrar(); }}>Abrir correo</a></Boton>
           )}
         </div>

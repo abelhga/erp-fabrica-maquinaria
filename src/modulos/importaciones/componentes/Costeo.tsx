@@ -17,6 +17,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { dinero, fechaYHora, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { CLAVE_EMBARQUES, type Embarque, type Moneda } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Costeo {
   id: string; tipo: "preliminar" | "final"; version: number; estado: "borrador" | "cerrado"; valor_mxn: number; gastos_mxn: number;
@@ -63,7 +64,7 @@ export function Costeo({ e }: { e: Embarque }) {
   return (
     <div className="space-y-5">
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Costo puesto en planta"
+        <EncabezadoTarjeta titulo="Costo puesto en planta" explica={GLOSARIO.costoPuestoEnPlanta}
           descripcion="Mercancía al TC real de los pagos + gastos sin IVA, repartidos por valor (o por volumen en un consolidado). El preliminar sale con el pedimento; el final, con la cuenta de gastos, cambia el costo del catálogo."
           acciones={calcula && (
             <div className="flex flex-col sm:flex-row gap-2">
@@ -84,7 +85,7 @@ export function Costeo({ e }: { e: Embarque }) {
           <div className="px-5 pb-5 space-y-4">
             <div className="flex flex-wrap gap-2">
               {costeos.data.map((c) => (
-                <button key={c.id} onClick={() => setElegido(c.id)}
+                <button key={c.id} onClick={() => setElegido(c.id)} data-explain={GLOSARIO.versionCosteoImportacion} data-explain-title={`${c.tipo === "final" ? "Final" : "Preliminar"} v${c.version}`}
                   className={cn("rounded-lg border px-3 py-1.5 text-sm text-left", c.id === actual?.id ? "border-marca bg-marca-suave" : "border-borde hover:bg-fondo")}>
                   <span className="font-medium capitalize">{c.tipo} v{c.version}</span>{" "}
                   <Insignia tono={c.estado === "cerrado" ? "ok" : "aviso"}>{c.estado === "cerrado" ? "cerrado" : "borrador"}</Insignia>
@@ -95,10 +96,10 @@ export function Costeo({ e }: { e: Embarque }) {
             {actual && (
               <>
                 <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-                  <Dato titulo="Mercancía (TC real)" valor={dinero(actual.valor_mxn)} />
+                  <Dato titulo="Mercancía (TC real)" valor={dinero(actual.valor_mxn)} explica={GLOSARIO.tcReal} />
                   <Dato titulo="Gastos sin IVA" valor={dinero(actual.gastos_mxn)} />
-                  <Dato titulo="Factor" valor={numero(Number(actual.factor))} detalle={`por cada $1 de mercancía, ${dinero(Number(actual.factor))} de indirectos`} />
-                  <Dato titulo="IVA acreditable (fuera)" valor={dinero(actual.iva_acreditable)} />
+                  <Dato titulo="Factor" explica={GLOSARIO.factorCosteoImportacion} valor={numero(Number(actual.factor))} detalle={`por cada $1 de mercancía, ${dinero(Number(actual.factor))} de indirectos`} />
+                  <Dato titulo="IVA acreditable (fuera)" valor={dinero(actual.iva_acreditable)} explica={GLOSARIO.ivaAcreditable} />
                 </div>
                 {actual.estado === "borrador" && cierra && (
                   <div className="flex flex-wrap items-center gap-3 rounded-lg bg-fondo px-4 py-3">
@@ -107,7 +108,7 @@ export function Costeo({ e }: { e: Embarque }) {
                         ? "Al cerrarlo, el costo de estos artículos en el catálogo pasa a ser el puesto en planta (en pesos, con historial) y sus precios se recalculan."
                         : "El preliminar no cambia el catálogo: sirve para valuar la entrada a almacén y para ver el costo antes de la cuenta de gastos."}
                     </p>
-                    <Boton onClick={() => setCerrando(actual)}><Lock className="h-4 w-4" /> Cerrar {actual.tipo}</Boton>
+                    <Boton onClick={() => setCerrando(actual)} data-explain={GLOSARIO.botonCerrarCosteoImportacion}><Lock className="h-4 w-4" /> Cerrar {actual.tipo}</Boton>
                   </div>
                 )}
                 {actual.estado === "cerrado" && actual.tipo === "final" && (
@@ -122,7 +123,7 @@ export function Costeo({ e }: { e: Embarque }) {
       {actual && (
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px] items-start">
           <Tarjeta className="overflow-hidden">
-            <EncabezadoTarjeta titulo="Por partida" descripcion="Costo unitario sin IVA. “Antes” es el del catálogo al calcular." />
+            <EncabezadoTarjeta titulo="Por partida" explica={GLOSARIO.costeoPorPartida} descripcion="Costo unitario sin IVA. “Antes” es el del catálogo al calcular." />
             {lineas.isLoading ? <Cargando /> : (
               <div className="overflow-x-auto">
                 <table className="tabla">
@@ -155,7 +156,7 @@ export function Costeo({ e }: { e: Embarque }) {
             )}
           </Tarjeta>
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Gastos que entraron" descripcion={actual.tipo === "final" ? "Sin los estimados: manda la cuenta de gastos." : "Incluye estimados."} />
+            <EncabezadoTarjeta titulo="Gastos que entraron" explica={GLOSARIO.gastosQueEntraronCosteo} descripcion={actual.tipo === "final" ? "Sin los estimados: manda la cuenta de gastos." : "Incluye estimados."} />
             <ul className="divide-y divide-borde border-t border-borde">
               {actual.gastos.map((g, i) => (
                 <li key={i} className="px-5 py-2 flex items-start gap-2 text-sm">
@@ -181,9 +182,9 @@ export function Costeo({ e }: { e: Embarque }) {
   );
 }
 
-function Dato({ titulo, valor, detalle }: { titulo: string; valor: string; detalle?: string }) {
+function Dato({ titulo, valor, detalle, explica }: { titulo: string; valor: string; detalle?: string; explica?: string }) {
   return (
-    <div className="rounded-lg border border-borde p-3">
+    <div className="rounded-lg border border-borde p-3" data-explain={explica} data-explain-title={explica ? titulo : undefined}>
       <p className="text-xs text-tenue">{titulo}</p>
       <p className="text-lg font-semibold cifra">{valor}</p>
       {detalle && <p className="text-[11px] text-tenue">{detalle}</p>}

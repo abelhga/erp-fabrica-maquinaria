@@ -62,7 +62,7 @@ export function Historial({ id }: { id: string }) {
       </Tarjeta>
       {puede("ventas") && (
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Ventas de este artículo" descripcion="Precio unitario neto de descuento en cada pedido, para compararlo con el de lista de ese momento" />
+          <EncabezadoTarjeta titulo="Ventas de este artículo" explica={GLOSARIO.ventasDelArticulo} descripcion="Precio unitario neto de descuento en cada pedido, para compararlo con el de lista de ese momento" />
           {vendidas.length === 0 ? (
             <p className="px-5 pb-5 text-sm text-tenue">No hay pedidos con este artículo todavía.</p>
           ) : (
