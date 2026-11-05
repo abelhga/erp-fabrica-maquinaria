@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { SERIE, TooltipGrafica, ejeProps, Leyenda } from "@/components/graficas/comunes";
-import { fecha, numero } from "@/lib/formato";
+import { fecha, numero, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { MENU } from "@/navegacion";
 
@@ -83,7 +83,12 @@ export interface CeldaUso { u: string; dia: string; minutos: number; cambios: nu
  * Persona × día: qué tan intenso fue cada día (un solo tono, de claro a oscuro). Deja ver quién lo usa
  * diario, quién solo algunos días y quién lo dejó de usar.
  */
-export function MapaCalor({ personas, celdas, dias, metrica }: { personas: { id: string; nombre: string }[]; celdas: CeldaUso[]; dias: string[]; metrica: Metrica }) {
+export function MapaCalor({ personas, celdas, dias, metrica, vivo }: {
+  personas: { id: string; nombre: string }[]; celdas: CeldaUso[]; dias: string[]; metrica: Metrica;
+  /** Quién hizo algo ahorita (por persona, cuántas veces): enciende su cuadro de hoy. */
+  vivo?: Record<string, { k: number; tipo: "cambio" | "vista" }>;
+}) {
+  const hoy = hoyISO();
   const [sobre, setSobre] = useState<{ nombre: string; dia: string; c: CeldaUso | undefined } | null>(null);
   const valor = (c: CeldaUso | undefined) => !c ? 0 : metrica === "minutos" ? c.minutos : metrica === "cambios" ? c.cambios
     : metrica === "ia" || metrica === "costo" ? c.ia : c.minutos + c.cambios + c.ia;
@@ -104,7 +109,10 @@ export function MapaCalor({ personas, celdas, dias, metrica }: { personas: { id:
                 <td className="pr-2 text-xs whitespace-nowrap max-w-[150px] truncate">{p.nombre.split(" ").slice(0, 3).join(" ")}</td>
                 {dias.map((d) => {
                   const c = idx.get(`${p.id}|${d}`);
-                  return <td key={d} className={cn("h-4 w-4 rounded-[3px] p-0", sobre?.nombre === p.nombre && sobre.dia === d && "ring-2 ring-texto/40")}
+                  // La llave cambia con cada aviso: React vuelve a montar la celda y la animación corre otra vez.
+                  const v = d === hoy ? vivo?.[p.id] : undefined;
+                  return <td key={v ? `${d}-${v.k}` : d} className={cn("h-4 w-4 rounded-[3px] p-0", sobre?.nombre === p.nombre && sobre.dia === d && "ring-2 ring-texto/40",
+                      v && (v.tipo === "cambio" ? "uso-destello" : "uso-destello-suave"))}
                     style={{ background: tono(valor(c)) }} onMouseEnter={() => setSobre({ nombre: p.nombre, dia: d, c })} />;
                 })}
               </tr>

@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Activity, Bot, CircleDollarSign, Clock, PencilLine, Users } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
@@ -67,6 +67,33 @@ export function nombrePantalla(ruta: string) {
 }
 
 /** «+12 %», «−30 %» o «nuevo» contra el periodo anterior. */
+/**
+ * Lo que pasa ahorita: la base difunde «quién hizo algo» por el canal privado «uso-en-vivo» (249) y
+ * aquí se enciende su cuadro de hoy. Solo llega quién y si fue un cambio o una pantalla, nunca el
+ * registro. Las cifras se recargan unos segundos después, juntando lo que llegue.
+ */
+export type Vivo = Record<string, { k: number; tipo: "cambio" | "vista" }>;
+function useUsoEnVivo(activo: boolean) {
+  const qc = useQueryClient();
+  const [vivo, setVivo] = useState<Vivo>({});
+  const [conectado, setConectado] = useState(false);
+  useEffect(() => {
+    if (!activo) { setConectado(false); return; }
+    let espera: ReturnType<typeof setTimeout> | undefined;
+    const canal = supabase.channel("uso-en-vivo", { config: { private: true } })
+      .on("broadcast", { event: "actividad" }, ({ payload }) => {
+        const { u, tipo } = payload as { u: string; tipo: "cambio" | "vista" };
+        if (!u) return;
+        setVivo((v) => ({ ...v, [u]: { k: (v[u]?.k ?? 0) + 1, tipo } }));
+        clearTimeout(espera);
+        espera = setTimeout(() => qc.invalidateQueries({ queryKey: ["uso_tablero"] }), 5000);
+      })
+      .subscribe((estado) => setConectado(estado === "SUBSCRIBED"));
+    return () => { clearTimeout(espera); supabase.removeChannel(canal); };
+  }, [activo, qc]);
+  return { vivo, conectado };
+}
+
 function cambio(ahora: number, antes: number) {
   if (!antes) return ahora ? "nuevo en el periodo" : "igual";
   const p = Math.round(((ahora - antes) / antes) * 100);
@@ -81,6 +108,7 @@ export default function UsoErp() {
   const [comparar, setComparar] = useState(true);
   const [abierto, setAbierto] = useState<UsoUsuario | null>(null);
   const { desde, hasta } = rango(periodo);
+  const { vivo, conectado } = useUsoEnVivo(true);
   const uso = useQuery({
     queryKey: ["uso_tablero", desde, hasta],
     queryFn: () => q<Tablero>(supabase.rpc("uso_tablero", { p_desde: desde, p_hasta: hasta })),
@@ -168,10 +196,12 @@ export default function UsoErp() {
 
           <Tarjeta>
             <EncabezadoTarjeta titulo="Día por día de cada persona" descripcion={`Más oscuro, más ${metrica === "minutos" ? "tiempo activo" : metrica === "cambios" ? "cambios" : metrica === "personas" ? "actividad" : "consultas a la IA"}. Quién lo usa diario, quién a ratos y quién lo dejó.`}
-              explica={GLOSARIO.mapaCalorUsoErp} />
+              explica={GLOSARIO.mapaCalorUsoErp}
+              acciones={conectado ? <span className="inline-flex items-center gap-1.5 text-xs text-tenue" data-explain={GLOSARIO.usoEnVivo} data-explain-title="En vivo">
+                <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ok opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-ok" /></span>En vivo</span> : undefined} />
             <div className="px-5 pb-5">
               {conUso.length === 0 ? <p className="text-sm text-tenue">Nadie lo usó en el periodo con este filtro.</p>
-                : <MapaCalor personas={conUso.slice(0, 25)} celdas={t.calor.filter((c) => ids.has(c.u))} dias={dias} metrica={metrica} />}
+                : <MapaCalor personas={conUso.slice(0, 25)} celdas={t.calor.filter((c) => ids.has(c.u))} dias={dias} metrica={metrica} vivo={vivo} />}
             </div>
           </Tarjeta>
 
