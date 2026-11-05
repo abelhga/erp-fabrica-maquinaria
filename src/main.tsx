@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import { ProveedorSesion } from "./lib/sesion";
 import { ProveedorTutorial } from "./tutorial/preferencia";
 import { App } from "./App";
+import { RastreoUso } from "./lib/uso";
 import { aplicarTema, temaInicial } from "./lib/tema";
 // La fuente va dentro de la app: la TV del taller no debe depender de Google Fonts.
 import "@fontsource-variable/inter";
@@ -27,6 +28,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <ProveedorSesion>
           <ProveedorTutorial>
             <App />
+            <RastreoUso />
             <Toaster richColors position="top-right" closeButton />
           </ProveedorTutorial>
         </ProveedorSesion>

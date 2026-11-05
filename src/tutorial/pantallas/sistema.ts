@@ -12,6 +12,11 @@ export const SISTEMA: Record<string, AyudaPantalla> = {
     "Arriba, el indicador de precios compara los precios de equipo del ERP contra «Nuevo Costeo»: si alguno sale distinto, revísalo antes de cotizarlo. «Lo que se leyó» cuenta lo que trajo la última importación y «Para revisar» lista lo que hay que limpiar.",
     "«Subensambles escondidos» propone grupos de piezas que se repiten idénticos en varios equipos; quien edita listas de materiales puede convertirlos en subensamble o descartarlos, y el costo no cambia. La reimportación se corre desde una computadora (instrucciones abajo) y no duplica nada; las existencias de arranque se cargaron una sola vez.",
   ],
+  "/sistema/uso": [
+    "Quién usa el ERP, cuánto y en qué. Es para dirección y sistemas: sirve para acompañar a quien se está quedando en la hoja, en el papel o en WhatsApp, y para ver qué pantallas de verdad se usan.",
+    "Escoge el periodo (7, 30 o 90 días). Arriba, cuántas personas lo usaron, el tiempo activo de todas, los cambios que registraron y las consultas a la IA. «Sin usarlo» junta las cuentas activas que no hicieron nada en el periodo. Dale clic a una persona para ver su tiempo y sus cambios por día, las pantallas que más usa, en qué registra cambios, para qué usa la IA y a qué horas trabaja en el ERP.",
+    "El tiempo activo cuenta solo los minutos en que la persona estuvo moviéndose en el ERP con la pestaña a la vista; dejarlo abierto no suma. No se guarda qué datos vio, solo qué pantalla. La TV y la tablet del taller salen en «Todas las cuentas». El tiempo y las pantallas se cuentan desde el 5 de noviembre de 2026; los cambios y la IA traen su historia de antes.",
+  ],
   "/sistema/bitacora": [
     "Aquí queda quién cambió qué y cuándo en el ERP: altas, cambios y bajas de pedidos, clientes, usuarios, permisos, configuración y lo demás. Nada se borra de aquí.",
     "Filtra por qué se cambió, quién, el tipo de acción y las fechas. La columna «Registro» dice de qué es cada cambio; en las listas de materiales, el equipo, el artículo y la cantidad, y en el material de una orden, la OP, el artículo y cuánto lleva. Dale clic a un renglón para ver el antes y el después de cada dato (los artículos, órdenes y personas salen con su nombre), la historia completa de ese registro y, si existe, un enlace para abrirlo. El CSV baja lo que ves.",
