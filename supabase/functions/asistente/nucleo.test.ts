@@ -215,6 +215,65 @@ describe.skipIf(!hayBase)("asistente contra la base local", () => {
     }
   });
 
+  it("«Por revisar»: la IA lee el porqué y su veredicto lo guarda la base; la propuesta solo trae campos de captura", async () => {
+    const { default: pg } = await import("pg");
+    const { execSync } = await import("node:child_process");
+    const SERVICIO = process.env.SUPABASE_SERVICE_ROLE_KEY ?? (execSync("npx supabase status -o env", { encoding: "utf8" })
+      .match(/^SERVICE_ROLE_KEY="?([^"\n]+)"?$/m) ?? [])[1];
+    const db = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres" });
+    await db.connect();
+    const yo = (await db.query("select id from auth.users where email = 'isaac@hegamex.com'")).rows[0].id;
+    const antes = (await db.query("select valor from configuracion where clave = 'revision_nocturna'")).rows[0].valor;
+    let cot = "", h = "", cli = "";
+    try {
+      await db.query(`update configuracion set valor = valor || '{"cuestionar_bien_asi": true}' where clave = 'revision_nocturna'`);
+      cli = (await db.query("insert into clientes (nombre, vendedor_id) values ('Cliente prueba-ia', $1) returning id", [yo])).rows[0].id;
+      cot = (await db.query("insert into cotizaciones (cliente_id, vendedor_id) values ($1, $2) returning id", [cli, yo])).rows[0].id;
+      h = (await db.query(`insert into revision_hallazgos (origen, modulo, tabla, registro_id, titulo, detalle, para, responsables, huella)
+        values ('claude', 'ventas', 'cotizaciones', $1, 'Cotización sin tiempo de entrega prueba-ia', 'No dice cuándo.', 'responsable', array[$2::uuid], 'prueba-ia-' || $1)
+        returning id`, [cot, yo])).rows[0].id;
+      const pedir = (cuerpo: object, f?: Pick<Anthropic, "beta">) => atender(new Request("http://x/", {
+        method: "POST", headers: { Authorization: `Bearer ${isaac.token}` }, body: JSON.stringify({ hallazgo_id: h, ...cuerpo }),
+      }), { supabaseUrl: URL_SB, supabaseAnonKey: ANON, serviceKey: SERVICIO, ...(f ? { crearAnthropic: () => f } : {}) });
+      const responde = (x: object) => claudeFalso([{ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(x), citations: null }] as Anthropic.Beta.BetaContentBlock[] }]);
+
+      // Sin un turno de la persona esperando, la IA no se llama.
+      expect((await pedir({ modo: "bien_asi" }, responde({ veredicto: "acepta", texto: "ok" }).falso)).status).toBe(400);
+      await isaac.db.rpc("revision_bien_asi", { p_hallazgo: h, p_texto: "El cliente está decidiendo el equipo" });
+      const p1 = responde({ veredicto: "pregunta", texto: "¿Y si se pone «Se confirma al recibir el anticipo»?" });
+      const r1 = await pedir({ modo: "bien_asi" }, p1.falso);
+      expect(await r1.json()).toMatchObject({ veredicto: "pregunta", preguntas: 1 });
+      const enviado = JSON.stringify(p1.recibido[0]);
+      expect(enviado).toContain("El cliente está decidiendo el equipo");
+      expect(enviado).toContain("prueba-ia");
+      await isaac.db.rpc("revision_bien_asi", { p_hallazgo: h, p_texto: "Sí, lo puedo poner así" });
+      expect(await (await pedir({ modo: "bien_asi" }, responde({ veredicto: "acepta", texto: "Gracias" }).falso)).json()).toMatchObject({ veredicto: "acepta" });
+      expect((await db.query("select estado, cerrado_por from revision_hallazgos where id = $1", [h])).rows[0]).toMatchObject({ estado: "bien_asi", cerrado_por: yo });
+
+      // Ayúdame a corregirlo: lo que la IA propone de más (el total) no llega a la propuesta.
+      await db.query("update revision_hallazgos set estado = 'abierto', cerrado_en = null, cerrado_por = null where id = $1", [h]);
+      const p2 = responde({ explicacion: "Falta el tiempo de entrega", que_hacer: "", cambios: [
+        { tabla: "cotizaciones", id: cot, campo: "tiempo_entrega", valor: "Se confirma al recibir el anticipo" },
+        { tabla: "cotizaciones", id: cot, campo: "total", valor: "1" }] });
+      const r2 = await (await pedir({ modo: "ayuda_corregir", instruccion: "no sé el tiempo" }, p2.falso)).json();
+      expect(r2.cambios).toHaveLength(1);
+      expect(r2.cambios[0]).toMatchObject({ campo: "tiempo_entrega", antes_texto: "(vacío)" });
+      expect(JSON.stringify(p2.recibido[0])).toContain("no sé el tiempo");
+      expect(JSON.stringify(p2.recibido[0])).not.toMatch(/"subtotal"|"total"/);
+      // Almacén no tiene ese hallazgo.
+      const alm = await sesion("almacen@hegamex.com");
+      const r3 = await atender(new Request("http://x/", { method: "POST", headers: { Authorization: `Bearer ${alm.token}` },
+        body: JSON.stringify({ modo: "ayuda_corregir", hallazgo_id: h }) }), { supabaseUrl: URL_SB, supabaseAnonKey: ANON, serviceKey: SERVICIO });
+      expect(r3.status).toBe(403);
+    } finally {
+      await db.query("update configuracion set valor = $1 where clave = 'revision_nocturna'", [antes]);
+      if (h) await db.query("delete from revision_hallazgos where id = $1", [h]);
+      if (cot) await db.query("delete from cotizaciones where id = $1", [cot]);
+      if (cli) await db.query("delete from clientes where id = $1", [cli]);
+      await db.end();
+    }
+  }, 60_000);   // `supabase status` tarda
+
   it("almacén no lee el libro de ventas aunque Claude lo pida", async () => {
     const alm = await sesion("almacen@hegamex.com");
     const r = await ejecutarHerramienta(alm.db, "consultar", {

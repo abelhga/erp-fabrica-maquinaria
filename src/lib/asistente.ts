@@ -174,3 +174,16 @@ export async function pedirSugerenciasMejora(forzar = false): Promise<Sugerencia
   if (fin.tipo === "error") throw new Error(fin.mensaje);
   return fin;
 }
+
+/** «Está bien así»: la IA lee el porqué (ya anotado con revision_bien_asi) y acepta, pregunta o lo escala a dirección. */
+export async function revisarPorque(hallazgo_id: string) {
+  return (await llamar({ modo: "bien_asi", hallazgo_id })).json() as
+    Promise<{ veredicto: "acepta" | "pregunta" | "no_convence"; texto: string; preguntas: number; simulado?: boolean }>;
+}
+
+export interface CambioPropuesto { tabla: string; id: string; campo: string; etiqueta: string; antes_texto: string; despues_texto: string }
+/** «Ayúdame a corregirlo»: la IA propone el cambio de captura; no se aplica hasta que la persona lo acepta. */
+export async function ayudaCorregir(hallazgo_id: string, instruccion: string) {
+  return (await llamar({ modo: "ayuda_corregir", hallazgo_id, instruccion })).json() as
+    Promise<{ propuesta_id: string | null; cambios: CambioPropuesto[]; explicacion: string; que_hacer: string; simulado?: boolean }>;
+}

@@ -24,6 +24,8 @@ createServer(async (req, res) => {
     supabaseUrl: process.env.VITE_SUPABASE_URL ?? env.VITE_SUPABASE_URL,
     supabaseAnonKey: process.env.VITE_SUPABASE_ANON_KEY ?? env.VITE_SUPABASE_ANON_KEY,
     anthropicKey: process.env.ANTHROPIC_API_KEY || undefined,
+    // Solo para «Por revisar»: la llave de servicio local sale de `npx supabase status`.
+    serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || undefined,
   });
   res.writeHead(r.status, Object.fromEntries(r.headers));
   if (r.body) for await (const trozo of r.body as unknown as AsyncIterable<Uint8Array>) res.write(trozo);

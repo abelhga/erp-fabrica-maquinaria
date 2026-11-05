@@ -5,6 +5,8 @@ declare
   v_com uuid; v_com2 uuid; v_ven uuid; v_prov uuid; v_corr bigint; h uuid; h2 uuid; p uuid; v_ok boolean; v_msg text;
   c_el int; a_el uuid; a_eq uuid; v_op uuid; v_vence date;
 begin
+  -- Aquí se prueba la revisión; que la IA cuestione el «Está bien así» lo prueba 246.
+  update configuracion set valor = valor || '{"cuestionar_bien_asi": false}' where clave = 'revision_nocturna';
   v_com := pg_temp.usuario('com210@hegamex.com', '{compras}');
   v_com2 := pg_temp.usuario('com2210@hegamex.com', '{compras}');
   v_ven := pg_temp.usuario('ven210@hegamex.com', '{ventas}');

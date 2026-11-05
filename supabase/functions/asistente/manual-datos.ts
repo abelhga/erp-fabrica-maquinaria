@@ -724,9 +724,11 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Cada madrugada el ERP revisa lo que se capturó y te deja aquí lo que parece un error en algo tuyo: un artículo o un cliente dado de alta dos veces, un pago capturado dos veces, una compra que ya debió llegar y no se recibió, un costo muy distinto al de la última compra, etapas que se terminaron sin pasar por la terminal. Si sale algo, a las 6 de la mañana te llega un aviso.",
    "Lo urgente (un pago repetido, una compra con un cero de más, una compra muy atrasada) también te llega a Pendientes, para el siguiente día hábil: ahí se pone rojo si se vence y cuenta para tu cumplimiento. Contestarlo en cualquiera de los dos lados cierra el otro; si no era error, «Está bien así» lo cancela y no cuenta para nadie.",
-   "Contesta cada uno: «Ya lo corregí» si lo arreglaste, «Está bien así» si no es error (escribe por qué y no vuelve a salir algo igual), o «Corrígelo» cuando el ERP puede hacer la corrección por ti con tus permisos. «Abrir» te lleva al registro. Lo que se arregla solo (una compra que por fin se recibe) se cierra sin que hagas nada.",
+   "Contesta cada uno: «Ya lo corregí» si lo arreglaste, «Está bien así» si no es error, o «Corrígelo» cuando el ERP puede hacer la corrección por ti con tus permisos. «Abrir» te lleva al registro. Lo que se arregla solo (una compra que por fin se recibe) se cierra sin que hagas nada.",
+   "«Está bien así» pide siempre el porqué. Si dirección lo tiene prendido, la IA lo lee: si es una razón de verdad (son dos sucursales, el proveedor cambió la fecha) se cierra; si suena a costumbre (dejar vacío un dato porque «todavía no se sabe»), te pregunta, hasta 3 veces. Si al final no queda claro, se queda abierto con «Lo ve dirección» y le llega con la conversación.",
+   "«Ayúdame a corregirlo» sale cuando la corrección es un dato de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida). La IA te propone el cambio exacto, con cómo está y cómo quedaría; puedes decirle algo que deba saber («el tiempo es de 45 días hábiles»). Nada se aplica hasta que eliges «Aplicar a mi nombre»: se hace con tus permisos, como si lo capturaras a mano, y queda en la bitácora. Precios, dinero, existencias y permisos nunca se cambian así.",
    "Lo que dice «Regla» lo encontró una regla fija; lo que dice «IA» (con destellos ✦) lo señaló la IA al leer lo de ayer. Ninguno cambia nada sin que tú lo digas. En «Contestado» ves lo que ya respondiste.",
-   "Dirección ve además los patrones (consumos que se disparan, ajustes a la baja que se repiten, gastos iguales en caja chica), que nunca le llegan a la persona; todo lo abierto con a quién le toca; lo que la IA leyó anoche de cada módulo; los consejos que recibió cada quien y si les sirvieron; y puede apagar la revisión, la IA, los consejos o cada regla."
+   "Dirección ve además los patrones (consumos que se disparan, ajustes a la baja que se repiten, gastos iguales en caja chica), que nunca le llegan a la persona; todo lo abierto con a quién le toca; lo que la IA leyó anoche de cada módulo; los consejos que recibió cada quien y si les sirvieron; y puede apagar la revisión, la IA, los consejos, que la IA cuestione el «Está bien así» o cada regla. En «Contestado» puede ver lo que cada quien platicó con la IA."
   ]
  },
  {
@@ -995,9 +997,10 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   ],
   "nivel": 3,
   "texto": [
-   "Quién usa el ERP, cuánto y en qué. Es para dirección y sistemas: sirve para acompañar a quien se está quedando en la hoja, en el papel o en WhatsApp, y para ver qué pantallas de verdad se usan.",
-   "Escoge el periodo (7, 30 o 90 días). Arriba, cuántas personas lo usaron, el tiempo activo de todas, los cambios que registraron y las consultas a la IA. «Sin usarlo» junta las cuentas activas que no hicieron nada en el periodo. Dale clic a una persona para ver su tiempo y sus cambios por día, las pantallas que más usa, en qué registra cambios, para qué usa la IA y a qué horas trabaja en el ERP.",
-   "El tiempo activo cuenta solo los minutos en que la persona estuvo moviéndose en el ERP con la pestaña a la vista; dejarlo abierto no suma. No se guarda qué datos vio, solo qué pantalla. La TV y la tablet del taller salen en «Todas las cuentas». El tiempo y las pantallas se cuentan desde el 5 de noviembre de 2026; los cambios y la IA traen su historia de antes."
+   "Quién usa el ERP, cuánto, en qué y cuánto cuesta la IA. Es para dirección y sistemas: sirve para acompañar a quien se está quedando en la hoja, en el papel o en WhatsApp, ver qué pantallas de verdad se usan y cuidar el gasto de la IA.",
+   "Arriba están los filtros, que cambian todo: el periodo (7, 30 o 90 días), el rol, qué medir (tiempo activo, cambios, consultas a la IA, costo de la IA o personas activas) y «Comparar» con el periodo anterior del mismo largo. Los indicadores dicen cuánto subió o bajó cada cosa contra ese periodo.",
+   "Las gráficas: la medida día por día contra el periodo anterior (línea punteada); cada persona contra sí misma (barra gris = antes); el mapa de calor, un cuadro por persona y día, más oscuro entre más uso; en qué secciones del ERP se le va el tiempo a cada quien; y en qué se va el costo de la IA (resúmenes, preguntas, documentos, revisión nocturna…). Abajo, la tabla por persona; «Sin usarlo» junta las cuentas activas que no hicieron nada. Dale clic a una persona para ver su detalle por día, sus pantallas, en qué registra cambios, para qué usa la IA y cuánto costó, y a qué horas trabaja.",
+   "El tiempo activo cuenta solo los minutos en que la persona estuvo moviéndose en el ERP con la pestaña a la vista; dejarlo abierto no suma. No se guarda qué datos vio, solo qué pantalla. El costo de la IA es un estimado con los precios de Configuración; lo que factura el proveedor manda. El tiempo y las pantallas se cuentan desde el 5 de noviembre de 2026; los cambios y la IA traen su historia de antes."
   ]
  },
  {
@@ -1082,7 +1085,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "El editor de la cotización: la plantilla de la hoja, pero cada versión se guarda y no pisa la anterior. Se guarda solo mientras escribes; arriba dice “Guardado” con la hora.",
    "Agrega partidas escribiendo parte del nombre o la clave y Enter: precio de lista, descripción y foto se llenan solos (clic en la foto para pegar otra liga o subir una). Para fletes, instalación o servicios usa “Partida libre”; con “Flete con Skydropx” cotizas el envío con el código postal del cliente y los bultos de las partidas, y se agrega la partida de flete con su precio (no se genera guía ni se cobra); si algo no tiene precio, “Pedir precio a compras” y aquí ves cuando contestan. Clic en una partida muestra su ficha de venta: precio mínimo, existencia y entrega.",
-   "Si un precio queda abajo del mínimo, la partida se marca en rojo y la cotización pasa a “Por autorizar”: pide la autorización a la gerencia antes de enviarla. Ya enviada no se edita; para cambiarla saca una nueva versión: te pregunta si la actual ya no vale (queda rechazada, o cancelada si no se envió) o si sigue vigente.",
+   "Si un precio queda abajo del mínimo, la partida se marca en rojo y la cotización pasa a “Por autorizar”: pide la autorización a la gerencia antes de enviarla. El tiempo de entrega es obligatorio para enviarla; junto al campo están los atajos «Inmediata (en existencia)» y «Se confirma al recibir el anticipo», además del que estima el ERP con la carga del taller. Ya enviada no se edita; para cambiarla saca una nueva versión: te pregunta si la actual ya no vale (queda rechazada, o cancelada si no se envió) o si sigue vigente.",
    "El botón principal cambia según el estado: Enviar (por WhatsApp, por correo o PDF; la deja como enviada y agenda preguntar qué pasó en 3 días hábiles; con más de 10 seguimientos vencidos no deja enviar, ni sacar el PDF o la vista previa de una cotización que todavía no envías, hasta ponerte al día), Convertir a pedido (eliges partidas y fecha compromiso) o Nueva versión. En el menú “···” están imprimir, duplicar y marcar rechazada con su motivo. “Vista previa” te enseña la hoja tal como la recibe el cliente sin salir del editor. Si el equipo tiene más fotos, salen en miniatura bajo la partida y en la hoja de fotos al final del PDF; pasa el mouse por una y con la × la quitas de esta cotización.",
    "«Por correo» (en Enviar o en el menú “···”) manda la cotización desde tu propio Gmail con el PDF adjunto: el mismo que sale en Imprimir. Propone el correo del contacto y los demás contactos del cliente con correo; puedes cambiar el asunto y el mensaje. Las respuestas te llegan a tu Gmail, como siempre. La primera vez te pide conectar tu Gmail. Si la cotización no se puede enviar (precios abajo del mínimo sin autorizar, seguimientos vencidos), te dice por qué y no sale nada. Ya mandada queda como enviada, con su seguimiento, y en la bitácora del cliente queda a qué correo se fue.",
    "Si el cliente no quiere factura, marca «Sin IVA (no lleva factura)»: el precio de cada partida queda igual sin IVA y el total es el subtotal. Si los precios traían IVA incluido, se les quita. En la hoja impresa solo sale el total (sin renglón de IVA) y el pedido sale sin IVA. Se cambia mientras la cotización no se haya enviado; ya enviada, saca una nueva versión.",
@@ -2263,6 +2266,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Lo que cuesta hacer lo que se vende: el material de lo vendido, los sueldos de la gente de Producción y las compras del taller que no se quedan en el equipo (consumibles, gases, reparaciones)."
+ },
+ {
+  "clave": "costoIa",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Lo que cuesta la IA del ERP, estimado con los tokens de cada consulta (lo que lee y lo que escribe) y los precios por millón de tokens que están en Configuración → «precios_ia», en dólares y su equivalente en pesos al tipo de cambio del día. Incluye la revisión nocturna (que va por lotes, a mitad de precio), que no es de nadie en particular. Lo que factura el proveedor es lo que manda; si cambian los precios, se cambian en Configuración y todo se recalcula."
  },
  {
   "clave": "costoMasViejo",
@@ -4244,6 +4254,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Fallas: correctivos reportados en el periodo y cuántos pararon la máquina. Horas fuera de servicio: el tiempo que las máquinas estuvieron paradas dentro del periodo. Tiempo de reparación: de que se reporta la falla a que se cierra (MTTR). Preventivos a tiempo: los hechos antes de su fecha."
  },
  {
+  "clave": "mapaCalorUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Un renglón por persona y un cuadro por día. Entre más oscuro, más uso ese día según la medida que escojas. Los huecos dicen quién deja de usar el ERP algunos días o quién ya no lo usa."
+ },
+ {
   "clave": "maquinaCritica",
   "modulos": [
    "servicio",
@@ -4428,6 +4445,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Lo dice la factura. De contado (PUE): ya se pagó o se paga al momento. A crédito (PPD): se paga después; si no se registra, es una cuenta por pagar que no sale en Pagos a proveedores."
+ },
+ {
+  "clave": "mezclaUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "De todo el tiempo activo de cada persona (o, si todavía no hay tiempo, de las pantallas que abrió), qué parte es de cada sección del menú: Ventas, Almacén, Producción… Cada sección conserva su color en todas las personas."
  },
  {
   "clave": "minutosDeshacer",
@@ -5709,9 +5733,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Almacén revisó la existencia física del material de la orden, no solo lo que dice el sistema."
  },
  {
+  "clave": "revisionAyudaCorregir",
+  "modulos": [],
+  "texto": "La IA lee lo que se señaló y el registro y te propone el cambio exacto (por ejemplo, escribir el tiempo de entrega que falta). Nada se aplica hasta que lo aceptas, y se hace a tu nombre con tus permisos, como si lo capturaras a mano: queda en la bitácora. Solo cambia datos de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida); nunca precios, dinero, existencias ni permisos. Si el dato correcto solo lo sabes tú, te lo pide."
+ },
+ {
   "clave": "revisionBienAsi",
   "modulos": [],
-  "texto": "Dices que no es un error. No vuelve a salir, y si escribes por qué, la revisión lo toma en cuenta para no señalar algo igual."
+  "texto": "Dices que no es un error, y escribes por qué (es obligatorio: sin el porqué no se sabe si era falsa alarma o costumbre). Si dirección lo tiene prendido, la IA lee tu porqué y, si algo no queda claro, te pregunta hasta 3 veces aquí mismo. Si queda claro, se cierra y no vuelve a salir; si no, se queda abierto y lo ve dirección con la conversación."
  },
  {
   "clave": "revisionClaude",
@@ -5722,6 +5751,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "clave": "revisionCorrigelo",
   "modulos": [],
   "texto": "El ERP hace la corrección por ti, con tus permisos, como si la hicieras a mano. Solo sale cuando la corrección es segura (inhabilitar el artículo repetido y quedarse con el que ya existía; ligar tu cuenta a tu ficha). Si algo lo impide, te dice qué hacer primero."
+ },
+ {
+  "clave": "revisionEscalado",
+  "modulos": [],
+  "texto": "Contestaste «Está bien así», la IA hizo sus preguntas y el porqué no quedó claro. Se queda abierto y dirección lo ve con la conversación para decidir. Si mientras lo corriges, contesta «Ya lo corregí»."
  },
  {
   "clave": "revisionGravedad",
@@ -6280,6 +6314,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El tema con el que abre el ERP para todos. Cada persona puede cambiarlo con el botón de la luna o el sol (arriba a la derecha); lo que escoja se queda en su navegador y manda sobre este."
  },
  {
+  "clave": "tendenciaUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "La medida que escojas arriba (tiempo, cambios, consultas o costo de la IA, o cuántas personas lo usaron), día por día. La línea punteada es el periodo anterior del mismo largo, alineado por día: el primer día contra el primer día, y así."
+ },
+ {
   "clave": "ticketPromedio",
   "modulos": [
    "analisis"
@@ -6292,6 +6333,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "admin"
   ],
   "texto": "Los minutos en que la persona estuvo trabajando en el ERP: un minuto cuenta si la pestaña estaba a la vista y movió el mouse, tecleó o tocó la pantalla en los últimos dos minutos. Dejar el ERP abierto sin usarlo no suma. Se cuenta desde el 5 de noviembre de 2026."
+ },
+ {
+  "clave": "tiempoEntregaCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cuándo recibe el cliente. Es obligatorio para enviar la cotización: sin él no se puede mandar por WhatsApp ni por correo. Escoge uno del catálogo, escribe otro, usa el que estima el ERP con la carga del taller («Usar … días hábiles»), o los atajos: «Inmediata (en existencia)» si ya está en almacén, o «Se confirma al recibir el anticipo» si todavía no se sabe."
  },
  {
   "clave": "tiempoProveedor",

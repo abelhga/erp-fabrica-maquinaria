@@ -39,7 +39,7 @@ begin
 
   -- Cotización de Isaac: folio automático (provisional hasta la primera partida, ver 99), totales con IVA.
   perform pg_temp.como(v_isaac);
-  insert into cotizaciones (cliente_id) values (v_cli_isaac) returning id into v_cot;
+  insert into cotizaciones (cliente_id, tiempo_entrega) values (v_cli_isaac, '45 días hábiles') returning id into v_cot;
   select folio into v_txt from cotizaciones where id = v_cot;
   assert v_txt ~ '^BORRADOR-', format('folio provisional con formato inesperado: %s', v_txt);
   insert into cotizacion_lineas (cotizacion_id, orden, articulo_id, titulo, cantidad, precio_unitario, precio_lista)
@@ -81,6 +81,14 @@ begin
   perform pg_temp.como(v_gerente);
   perform autorizar_cotizacion(v_cot);
   perform pg_temp.como(v_isaac);
+  -- Sin tiempo de entrega no se envía (245).
+  update cotizaciones set tiempo_entrega = '  ' where id = v_cot;
+  begin
+    update cotizaciones set estado = 'enviada' where id = v_cot;
+    assert false, 'se envió una cotización sin tiempo de entrega';
+  exception when check_violation then null;
+  end;
+  update cotizaciones set tiempo_entrega = 'Se confirma al recibir el anticipo' where id = v_cot;
   update cotizaciones set estado = 'enviada' where id = v_cot;
   assert (select enviada_en from cotizaciones where id = v_cot) is not null, 'fecha de envío';
 

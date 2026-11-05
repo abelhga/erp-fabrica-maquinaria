@@ -8,6 +8,8 @@ declare
   v_prov uuid; v_corr bigint; v_corr2 bigint; h_art uuid; h_cli uuid; h_pago uuid; h_caja uuid; h_t uuid; h uuid;
   v_et int; v_op uuid; v_operacion uuid; v_emp uuid; v_oc uuid; v_ok boolean; v_msg text; v_n int; v_cons uuid;
 begin
+  -- Aquí se prueba la revisión; que la IA cuestione el «Está bien así» lo prueba 246.
+  update configuracion set valor = valor || '{"cuestionar_bien_asi": false}' where clave = 'revision_nocturna';
   v_dir := pg_temp.usuario('dir209@hegamex.com', '{direccion}');
   v_com := pg_temp.usuario('com209@hegamex.com', '{compras}');
   v_ven := pg_temp.usuario('ven209@hegamex.com', '{ventas}');
