@@ -40,6 +40,25 @@ qué y foto, etiquetas QR/NFC (213); terminal con play y pausa, y criticidad cal
 
 ## Para hacer
 
+- **Gráficas que faltan pasar a analíticas** (auditoría del 5 nov; almacén, mantenimiento y uso del
+  ERP ya están). En orden de lo que ayudan a decidir:
+  1. Cobranza: cobrado contra facturado por mes (el dato ya llega) y DSO por mes (SQL nuevo:
+     saldo por cobrar a fin de mes); antigüedad de saldos mes a mes.
+  2. Cumplimiento de entregas (Análisis › Entregas y Producción › Métricas): % a tiempo por
+     semana/mes como gráfica de control con meta 90 % (datos ya existen).
+  3. Capacidad: carga acumulada contra capacidad acumulada y flujo acumulado entra/sale con el
+     backlog (datos ya existen).
+  4. Embudo del tablero: conversión entre etapas y días en cada etapa (SQL: historia de etapas).
+  5. Planeación: avance acumulado contra meta con proyección a diciembre y desviación por mes.
+  6. Producción: horas de espera contra horas de trabajo por etapa (cuello de botella; `espera_h`,
+     `trabajo_h` ya llegan).
+  7. Proveedor: cumplimiento y variación del tiempo de entrega; índice de precios contra INPC.
+  8. Resultados por año como composición (costo, gastos, impuestos, utilidad) y Precios vs
+     ventas como dispersión índice de precio contra unidades (el monto mezcla precio y volumen).
+  Reglas rotas a corregir de paso: colores por posición en el tablero (canales y almacenes cambian
+  de color si cambia el orden), `SERIE` fuera de orden en Resultados y Precios vs ventas, colores de
+  etapa en hex que no cambian con el modo oscuro, y `$` armado a mano en costeo/Graficas.
+
 - **Correo con Gmail, segunda etapa: leer.** Mandar (217) y los correos de importaciones (225:
   hilos ligados al embarque y la IA que propone en qué va) ya están. Falta:
   - Ventas y compras: ver en la cotización o la OC si el cliente o el proveedor contestó (el hilo
