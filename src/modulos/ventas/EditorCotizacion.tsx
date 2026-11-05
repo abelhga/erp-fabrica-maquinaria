@@ -248,6 +248,7 @@ function Editor({ id }: { id: string }) {
 
   // ---------------------------------------------------------------- acciones
   const [dlg, setDlg] = useState<null | "enviar" | "correo" | "convertir" | "rechazar" | "autorizacion" | "cliente" | "flete" | "version">(null);
+  const [marcarEntrega, setMarcarEntrega] = useState(false);
   const [nombreCliente, setNombreCliente] = useState("");
 
   const agregar = useAccion(
@@ -464,6 +465,17 @@ function Editor({ id }: { id: string }) {
   // deja pasar es la autorización vigente, igual que en convertir_a_pedido().
   const preciosEnRegla = bajoMinimo.length === 0 || !!c.autorizada_por;
   const puedeEnviar = editable && (c.estado === "borrador" || c.estado === "autorizada") && preciosEnRegla && lineas.some((l) => !l.opcional);
+  // Sin tiempo de entrega no se envía (la base tampoco la deja): se avisa antes de que salga por WhatsApp o correo.
+  const faltaEntrega = !c.tiempo_entrega?.trim() && !["enviada", "aceptada"].includes(c.estado);
+  const antesDeEnviar = (dialogo: "enviar" | "correo") => {
+    if (faltaEntrega) {
+      setMarcarEntrega(true);
+      toast.error("Escribe el tiempo de entrega antes de enviarla. Si todavía no se sabe: «Se confirma al recibir el anticipo».");
+      document.getElementById("tiempo-entrega")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    setDlg(dialogo);
+  };
   const puedeConvertir = ["borrador", "autorizada", "enviada"].includes(c.estado) && preciosEnRegla && (propia || esGerente) && lineas.length > 0;
 
   const indicador = (
@@ -479,7 +491,7 @@ function Editor({ id }: { id: string }) {
   const principal = (tamano?: "sm") => {
     if (c.estado === "por_autorizar" && esGerente) return <Boton tamano={tamano} onClick={() => autorizar.mutate(undefined)} cargando={autorizar.isPending}><ShieldCheck className="h-4 w-4" />Autorizar precios</Boton>;
     if (c.estado === "por_autorizar") return <Boton tamano={tamano} variante={c.autorizacion_pedida_en ? "secundario" : "primario"} onClick={() => setDlg("autorizacion")}><ShieldCheck className="h-4 w-4" />{c.autorizacion_pedida_en ? "Autorización pedida" : "Pedir autorización"}</Boton>;
-    if (puedeEnviar) return <Boton tamano={tamano} onClick={() => setDlg("enviar")}><Send className="h-4 w-4" />Enviar</Boton>;
+    if (puedeEnviar) return <Boton tamano={tamano} onClick={() => antesDeEnviar("enviar")}><Send className="h-4 w-4" />Enviar</Boton>;
     if (c.estado === "enviada" && puedeConvertir) return <Boton tamano={tamano} variante="exito" onClick={() => setDlg("convertir")}><PackageCheck className="h-4 w-4" />Convertir a pedido</Boton>;
     if (c.estado === "aceptada" && pedido.data?.[0]) return <Boton tamano={tamano} asChild variante="secundario"><Link to={`/ventas/pedidos/${pedido.data[0].id}`}><Truck className="h-4 w-4" />Ver pedido {pedido.data[0].folio}</Link></Boton>;
     if (["rechazada", "cancelada", "vencida"].includes(c.estado)) return <Boton tamano={tamano} onClick={pedirNuevaVersion} cargando={nuevaVersion.isPending}><CopyPlus className="h-4 w-4" />Nueva versión</Boton>;
@@ -491,8 +503,8 @@ function Editor({ id }: { id: string }) {
     <MenuAcciones disparador={<Boton variante="secundario" tamano="icono" aria-label="Más acciones"><MoreHorizontal className="h-4 w-4" /></Boton>}>
       <OpcionMenu icono={Eye} alElegir={abrirVista}>Vista previa</OpcionMenu>
       <OpcionMenu icono={Printer} alElegir={abrirPdf}>Imprimir / PDF</OpcionMenu>
-      <OpcionMenu icono={MessageCircle} alElegir={() => setDlg("enviar")} deshabilitado={!["enviada", "aceptada"].includes(c.estado) && !puedeEnviar}>Compartir por WhatsApp</OpcionMenu>
-      <OpcionMenu icono={Mail} alElegir={() => setDlg("correo")} deshabilitado={!["enviada", "aceptada"].includes(c.estado) && !puedeEnviar}>Mandar por correo</OpcionMenu>
+      <OpcionMenu icono={MessageCircle} alElegir={() => antesDeEnviar("enviar")} deshabilitado={!["enviada", "aceptada"].includes(c.estado) && !puedeEnviar}>Compartir por WhatsApp</OpcionMenu>
+      <OpcionMenu icono={Mail} alElegir={() => antesDeEnviar("correo")} deshabilitado={!["enviada", "aceptada"].includes(c.estado) && !puedeEnviar}>Mandar por correo</OpcionMenu>
       <SeparadorMenu />
       <OpcionMenu icono={CopyPlus} alElegir={pedirNuevaVersion}>Nueva versión ({c.folio.replace(/-v\d+$/, "")}-v…)</OpcionMenu>
       <OpcionMenu icono={Copy} alElegir={() => duplicar.mutate(undefined)}>Duplicar con folio nuevo</OpcionMenu>
@@ -783,10 +795,22 @@ function Editor({ id }: { id: string }) {
                 <span className="text-sm font-medium">Pago</span>
                 <SelectorTexto valor={c.condiciones_pago} opciones={textosDe("pago")} deshabilitado={!editable} alCambiar={(v) => editarEnc({ condiciones_pago: v })} />
               </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">Tiempo de entrega</span>
-                <SelectorTexto valor={c.tiempo_entrega} opciones={textosDe("entrega")} deshabilitado={!editable} alCambiar={(v) => editarEnc({ tiempo_entrega: v })} />
-              </label>
+              <div id="tiempo-entrega" className={cn("space-y-1.5 rounded-lg", marcarEntrega && faltaEntrega && "ring-2 ring-peligro/50 p-2 -m-2")}
+                data-explain={GLOSARIO.tiempoEntregaCotizacion} data-explain-title="Tiempo de entrega">
+                <label className="block space-y-1.5">
+                  <span className="text-sm font-medium">Tiempo de entrega <span className="text-peligro">*</span></span>
+                  <SelectorTexto valor={c.tiempo_entrega} opciones={textosDe("entrega")} deshabilitado={!editable} alCambiar={(v) => editarEnc({ tiempo_entrega: v })} />
+                </label>
+                {editable && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {["Inmediata (en existencia)", "Se confirma al recibir el anticipo"].filter((t) => t !== c.tiempo_entrega).map((t) => (
+                      <button key={t} type="button" onClick={() => editarEnc({ tiempo_entrega: t })}
+                        className="rounded-full border border-borde px-2.5 py-0.5 text-xs text-tenue hover:text-texto hover:border-marca">{t}</button>
+                    ))}
+                  </div>
+                )}
+                {marcarEntrega && faltaEntrega && <p className="text-xs text-peligro">Obligatorio para enviarla.</p>}
+              </div>
               <div className="md:col-span-2 -mt-1">
                 <EntregaRealista e={estimacion.data} prometido={c.tiempo_entrega} editable={editable} alUsar={(v) => editarEnc({ tiempo_entrega: v })} />
               </div>
