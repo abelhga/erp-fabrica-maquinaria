@@ -724,9 +724,11 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Cada madrugada el ERP revisa lo que se capturó y te deja aquí lo que parece un error en algo tuyo: un artículo o un cliente dado de alta dos veces, un pago capturado dos veces, una compra que ya debió llegar y no se recibió, un costo muy distinto al de la última compra, etapas que se terminaron sin pasar por la terminal. Si sale algo, a las 6 de la mañana te llega un aviso.",
    "Lo urgente (un pago repetido, una compra con un cero de más, una compra muy atrasada) también te llega a Pendientes, para el siguiente día hábil: ahí se pone rojo si se vence y cuenta para tu cumplimiento. Contestarlo en cualquiera de los dos lados cierra el otro; si no era error, «Está bien así» lo cancela y no cuenta para nadie.",
-   "Contesta cada uno: «Ya lo corregí» si lo arreglaste, «Está bien así» si no es error (escribe por qué y no vuelve a salir algo igual), o «Corrígelo» cuando el ERP puede hacer la corrección por ti con tus permisos. «Abrir» te lleva al registro. Lo que se arregla solo (una compra que por fin se recibe) se cierra sin que hagas nada.",
+   "Contesta cada uno: «Ya lo corregí» si lo arreglaste, «Está bien así» si no es error, o «Corrígelo» cuando el ERP puede hacer la corrección por ti con tus permisos. «Abrir» te lleva al registro. Lo que se arregla solo (una compra que por fin se recibe) se cierra sin que hagas nada.",
+   "«Está bien así» pide siempre el porqué. Si dirección lo tiene prendido, la IA lo lee: si es una razón de verdad (son dos sucursales, el proveedor cambió la fecha) se cierra; si suena a costumbre (dejar vacío un dato porque «todavía no se sabe»), te pregunta, hasta 3 veces. Si al final no queda claro, se queda abierto con «Lo ve dirección» y le llega con la conversación.",
+   "«Ayúdame a corregirlo» sale cuando la corrección es un dato de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida). La IA te propone el cambio exacto, con cómo está y cómo quedaría; puedes decirle algo que deba saber («el tiempo es de 45 días hábiles»). Nada se aplica hasta que eliges «Aplicar a mi nombre»: se hace con tus permisos, como si lo capturaras a mano, y queda en la bitácora. Precios, dinero, existencias y permisos nunca se cambian así.",
    "Lo que dice «Regla» lo encontró una regla fija; lo que dice «IA» (con destellos ✦) lo señaló la IA al leer lo de ayer. Ninguno cambia nada sin que tú lo digas. En «Contestado» ves lo que ya respondiste.",
-   "Dirección ve además los patrones (consumos que se disparan, ajustes a la baja que se repiten, gastos iguales en caja chica), que nunca le llegan a la persona; todo lo abierto con a quién le toca; lo que la IA leyó anoche de cada módulo; los consejos que recibió cada quien y si les sirvieron; y puede apagar la revisión, la IA, los consejos o cada regla."
+   "Dirección ve además los patrones (consumos que se disparan, ajustes a la baja que se repiten, gastos iguales en caja chica), que nunca le llegan a la persona; todo lo abierto con a quién le toca; lo que la IA leyó anoche de cada módulo; los consejos que recibió cada quien y si les sirvieron; y puede apagar la revisión, la IA, los consejos, que la IA cuestione el «Está bien así» o cada regla. En «Contestado» puede ver lo que cada quien platicó con la IA."
   ]
  },
  {
@@ -5731,9 +5733,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Almacén revisó la existencia física del material de la orden, no solo lo que dice el sistema."
  },
  {
+  "clave": "revisionAyudaCorregir",
+  "modulos": [],
+  "texto": "La IA lee lo que se señaló y el registro y te propone el cambio exacto (por ejemplo, escribir el tiempo de entrega que falta). Nada se aplica hasta que lo aceptas, y se hace a tu nombre con tus permisos, como si lo capturaras a mano: queda en la bitácora. Solo cambia datos de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida); nunca precios, dinero, existencias ni permisos. Si el dato correcto solo lo sabes tú, te lo pide."
+ },
+ {
   "clave": "revisionBienAsi",
   "modulos": [],
-  "texto": "Dices que no es un error. No vuelve a salir, y si escribes por qué, la revisión lo toma en cuenta para no señalar algo igual."
+  "texto": "Dices que no es un error, y escribes por qué (es obligatorio: sin el porqué no se sabe si era falsa alarma o costumbre). Si dirección lo tiene prendido, la IA lee tu porqué y, si algo no queda claro, te pregunta hasta 3 veces aquí mismo. Si queda claro, se cierra y no vuelve a salir; si no, se queda abierto y lo ve dirección con la conversación."
  },
  {
   "clave": "revisionClaude",
@@ -5744,6 +5751,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "clave": "revisionCorrigelo",
   "modulos": [],
   "texto": "El ERP hace la corrección por ti, con tus permisos, como si la hicieras a mano. Solo sale cuando la corrección es segura (inhabilitar el artículo repetido y quedarse con el que ya existía; ligar tu cuenta a tu ficha). Si algo lo impide, te dice qué hacer primero."
+ },
+ {
+  "clave": "revisionEscalado",
+  "modulos": [],
+  "texto": "Contestaste «Está bien así», la IA hizo sus preguntas y el porqué no quedó claro. Se queda abierto y dirección lo ve con la conversación para decidir. Si mientras lo corriges, contesta «Ya lo corregí»."
  },
  {
   "clave": "revisionGravedad",

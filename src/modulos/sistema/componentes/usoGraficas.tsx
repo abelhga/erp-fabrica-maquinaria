@@ -165,7 +165,7 @@ export const MODO_IA: Record<string, string> = {
   chat: "Preguntas al asistente", resumen: "Resumen diario de cada área", semana: "«Tu semana»", redactar: "Mensajes a clientes",
   mensaje_seguimiento: "Mensajes de seguimiento", mensaje_lead: "Mensajes a leads", respuesta_ml: "Respuestas de Mercado Libre",
   pulir_descripcion: "Descripciones del catálogo", leer_documento: "Leer documentos de importación", leer_correos_embarque: "Leer correos de embarques",
-  sugerir_mejoras: "Ideas de mejora", nocturna: "Revisión nocturna",
+  sugerir_mejoras: "Ideas de mejora", nocturna: "Revisión nocturna", bien_asi: "Revisar «Está bien así»", ayuda_corregir: "«Ayúdame a corregirlo»",
 };
 
 /** En qué se va el dinero de la IA: una barra por uso, de mayor a menor. */

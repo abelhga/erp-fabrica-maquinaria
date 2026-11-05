@@ -16,6 +16,8 @@ export interface Entorno {
   supabaseAnonKey: string;
   /** Sin llave el asistente responde en modo demostración con los hallazgos de la base. */
   anthropicKey?: string;
+  /** Solo para guardar lo que decide la IA en «Por revisar» (revision_dialogo_ia, revision_propuesta_guardar). */
+  serviceKey?: string;
   /** Para las pruebas: un cliente de Anthropic falso. */
   crearAnthropic?: () => Pick<Anthropic, "beta">;
 }
@@ -1755,6 +1757,156 @@ export function mejorasSinIA(d: DatosMejoras): Sugerencias {
 const json = (cuerpo: unknown, status = 200) =>
   new Response(JSON.stringify(cuerpo), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 
+// -----------------------------------------------------------------------------
+// «Por revisar»: la IA lee el porqué de un «Está bien así» (y pregunta si no convence) y propone
+// la corrección de un dato de captura. Lo que decide lo guarda la base con la llave de servicio
+// (revision_dialogo_ia, revision_propuesta_guardar), que revisa todo otra vez: la IA propone, la base dispone.
+// -----------------------------------------------------------------------------
+export interface ContextoPorque {
+  hallazgo: { titulo: string; detalle: string; evidencia: unknown[]; modulo: string; origen: string; regla: string | null; creado_en: string };
+  dialogo: { rol: "persona" | "ia"; texto: string; veredicto: string | null }[];
+  preguntas: number;
+}
+export type Veredicto = "acepta" | "pregunta" | "no_convence";
+const MAX_PREGUNTAS = 3;
+
+const ESQUEMA_PORQUE = {
+  type: "object",
+  properties: {
+    veredicto: { type: "string", enum: ["acepta", "pregunta", "no_convence"] },
+    texto: { type: "string", description: "La pregunta; o una frase de cierre si acepta; o una línea para dirección si no convence" },
+  },
+  required: ["veredicto", "texto"],
+  additionalProperties: false,
+};
+
+const REGLAS_PORQUE =
+  "Revisas, en el ERP de Hegamex (fábrica de maquinaria en México), las respuestas «Está bien así» a lo que la revisión de la " +
+  "madrugada señaló. Decide si el porqué tiene sentido de negocio o si es una costumbre que deja la información mal.\n\n" +
+  "Acepta («acepta») cuando el porqué responde a lo que se señaló con un hecho concreto: son personas o sucursales distintas, el precio " +
+  "sí cambió y se sabe por qué, el equipo sí lleva esa cantidad, el proveedor avisó otra fecha, ya se corrigió de otra forma. No exijas " +
+  "pruebas ni perfección: si es razonable, acepta. No se trata de ganar la discusión.\n\n" +
+  "No aceptes cuando el porqué es una mala práctica aunque suene lógica: dejar vacío un dato porque «todavía no se sabe» cuando hay una " +
+  "forma correcta de capturarlo (el tiempo de entrega de una cotización se escribe aunque sea «Se confirma al recibir el anticipo» o un " +
+  "estimado; una fecha que cambió se actualiza), «así lo hacemos siempre», «luego lo arreglo», «se lo dije por teléfono» en lugar de " +
+  "dejarlo escrito, o algo que no contesta lo señalado. Entonces haz UNA pregunta («pregunta»): corta (una o dos frases), concreta, " +
+  "que le ayude a ver qué faltaría o qué conviene capturar. Tono de compañero, de tú, sin regañar ni acusar.\n\n" +
+  "«no_convence» solo cuando ya no puedes preguntar y sigue sin tener sentido; en texto, una línea para dirección que diga qué falta, " +
+  "sin juicios sobre la persona. Con «acepta», el texto es una frase corta de cierre («Tiene sentido, gracias.»).\n" +
+  "No inventes reglas de la empresa que no estén aquí. Español de México.";
+
+export async function revisarPorque(opts: { anthropic: Pick<Anthropic, "beta">; perfil: Perfil; config: Config; datos: ContextoPorque }) {
+  const { datos } = opts;
+  const quedan = Math.max(0, MAX_PREGUNTAS - datos.preguntas);
+  const conversacion = datos.dialogo.map((d) => `${d.rol === "ia" ? "Tú" : opts.perfil.nombre || "La persona"}: ${d.texto}`).join("\n");
+  const flujo = opts.anthropic.beta.messages.stream({
+    model: opts.config.modelo,
+    max_tokens: 2000,
+    betas: BETAS,
+    fallbacks: "default",
+    output_config: { effort: "low", format: { type: "json_schema", schema: ESQUEMA_PORQUE } },
+    system: [{ type: "text", text: REGLAS_PORQUE, cache_control: { type: "ephemeral" } }, { type: "text", text: contextoPersona(opts.perfil) }],
+    messages: [{
+      role: "user",
+      content: "Lo que señaló la revisión:\n```json\n" + JSON.stringify(datos.hallazgo).slice(0, 6000) + "\n```\n" +
+        "La conversación hasta ahora (lo primero es su porqué):\n" + conversacion.slice(-6000) + "\n\n" +
+        (quedan > 0 ? `Te quedan ${quedan} pregunta(s) de ${MAX_PREGUNTAS}.` : "Ya hiciste tus 3 preguntas: decide «acepta» o «no_convence»."),
+    }],
+  });
+  const r = await flujo.finalMessage();
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("La IA no quiso revisar esta respuesta.");
+  const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
+  if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("La IA no terminó de leer tu respuesta; intenta de nuevo.");
+  const salida = JSON.parse(bloque.text) as { veredicto: Veredicto; texto: string };
+  // La base también lo hace; aquí para no guardar una cuarta pregunta que nadie verá.
+  const veredicto: Veredicto = salida.veredicto === "pregunta" && quedan === 0 ? "no_convence" : salida.veredicto;
+  return { veredicto, texto: salida.texto.trim(), modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens,
+    cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
+}
+
+/** Sin la llave de la IA (local): una pregunta de ejemplo y luego acepta, para poder probar la pantalla. */
+export function porqueSinIA(d: ContextoPorque): { veredicto: Veredicto; texto: string } {
+  return d.preguntas === 0
+    ? { veredicto: "pregunta", texto: "Modo demostración: ¿qué tendría que pasar para que esto quede capturado completo la próxima vez?" }
+    : { veredicto: "acepta", texto: "Modo demostración: se acepta tu respuesta." };
+}
+
+export interface ContextoAyuda {
+  hallazgo: { titulo: string; detalle: string; evidencia: unknown[]; modulo: string; origen: string; regla: string | null };
+  registro: { tabla: string; valores: Record<string, unknown> };
+  partidas: { tabla: string; filas: Record<string, unknown>[] }[];
+  campos: { tabla: string; campo: string; etiqueta: string; tipo: string; solo_si_esta_vacio: boolean }[];
+  opciones: Record<string, { id: string | number; nombre: string }[]>;
+  hoy: string;
+}
+export interface CambioPropuesto { tabla: string; id: string; campo: string; valor: string }
+
+const ESQUEMA_AYUDA = {
+  type: "object",
+  properties: {
+    explicacion: { type: "string" },
+    cambios: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { tabla: { type: "string" }, id: { type: "string" }, campo: { type: "string" }, valor: { type: "string" } },
+        required: ["tabla", "id", "campo", "valor"],
+        additionalProperties: false,
+      },
+    },
+    que_hacer: { type: "string", description: "Lo que la persona tiene que hacer a mano, o vacío" },
+  },
+  required: ["explicacion", "cambios", "que_hacer"],
+  additionalProperties: false,
+};
+
+const REGLAS_AYUDA =
+  "Ayudas a corregir en el ERP de Hegamex (fábrica de maquinaria en México) lo que la revisión de la madrugada señaló. Propón el " +
+  "cambio mínimo que lo corrige usando SOLO los campos de la lista `campos`, en el registro o en sus partidas, con el `id` que viene en " +
+  "los datos. Los valores van como texto: fechas AAAA-MM-DD, números con punto, y para contacto_id o categoria_id el id de `opciones`. " +
+  "Un campo con solo_si_esta_vacio solo se llena si hoy está vacío.\n" +
+  "No inventes datos. Si el valor correcto solo lo sabe la persona (la fecha real, la cantidad real, el tiempo de entrega acordado) y " +
+  "no está en el hallazgo, el registro ni lo que escribió, no lo adivines: deja `cambios` vacío y en `que_hacer` di qué dato falta y que " +
+  "lo escriba en «Algo que la IA deba saber». Excepción: un tiempo de entrega que de verdad no se sabe se puede escribir «Se confirma al " +
+  "recibir el anticipo».\n" +
+  "Si se corrige con algo que no está en la lista (precios, existencias, juntar clientes, una salida o un ajuste, cambiar de cliente), " +
+  "deja `cambios` vacío y explica en `que_hacer` qué hacer a mano y en qué pantalla.\n" +
+  "`explicacion`: una o dos frases, de tú, de por qué el cambio corrige lo señalado. Español de México.";
+
+export async function proponerCorreccion(opts: {
+  anthropic: Pick<Anthropic, "beta">; perfil: Perfil; config: Config; datos: ContextoAyuda; instruccion: string;
+}) {
+  const flujo = opts.anthropic.beta.messages.stream({
+    model: opts.config.modelo,
+    max_tokens: 3000,
+    betas: BETAS,
+    fallbacks: "default",
+    output_config: { effort: "low", format: { type: "json_schema", schema: ESQUEMA_AYUDA } },
+    system: [{ type: "text", text: REGLAS_AYUDA, cache_control: { type: "ephemeral" } }, { type: "text", text: contextoPersona(opts.perfil) }],
+    messages: [{
+      role: "user",
+      content: "Los datos:\n```json\n" + JSON.stringify(opts.datos).slice(0, 14000) + "\n```\n" +
+        `Algo que la IA deba saber (lo escribió la persona): ${opts.instruccion || "(nada)"}`,
+    }],
+  });
+  const r = await flujo.finalMessage();
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("La IA no quiso proponer esta corrección.");
+  const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
+  if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("No salió la propuesta; intenta de nuevo.");
+  const salida = JSON.parse(bloque.text) as { explicacion: string; cambios: CambioPropuesto[]; que_hacer: string };
+  return { ...salida, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens,
+    cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
+}
+
+/** Sin la llave de la IA (local): llena el tiempo de entrega si es eso lo que falta, para poder probar la pantalla. */
+export function correccionSinIA(d: ContextoAyuda): { explicacion: string; cambios: CambioPropuesto[]; que_hacer: string } {
+  const v = d.registro.valores;
+  if (d.registro.tabla === "cotizaciones" && !v.tiempo_entrega)
+    return { explicacion: "Modo demostración: la cotización no tiene tiempo de entrega.", que_hacer: "",
+      cambios: [{ tabla: "cotizaciones", id: String(v.id), campo: "tiempo_entrega", valor: "Se confirma al recibir el anticipo" }] };
+  return { explicacion: "Modo demostración: sin la IA no hay propuesta.", cambios: [], que_hacer: "Ábrelo y corrígelo a mano." };
+}
+
 export async function atender(req: Request, entorno: Entorno): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "Solo POST" }, 405);
@@ -1774,7 +1926,6 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
     db.rpc("puede", { p_modulo: "asistente", p_nivel: 1 }),
     db.from("configuracion").select("valor").eq("clave", "asistente").maybeSingle(),
   ]);
-  if (!puede) return json({ error: "Tu rol no tiene acceso al asistente." }, 403);
   const perfil: Perfil = { id: u.user.id, nombre: (perfilFila as { nombre?: string } | null)?.nombre ?? "", roles: (roles as string[] | null) ?? [] };
   const valor = ((cfg as { valor?: Record<string, unknown> } | null)?.valor ?? {}) as Record<string, string>;
   const config: Config = { modelo: valor.modelo || "claude-opus-5-5", esfuerzo: (valor.esfuerzo as Config["esfuerzo"]) || "medium" };
@@ -1782,6 +1933,9 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
   let cuerpo: Record<string, unknown>;
   try { cuerpo = await req.json(); } catch { return json({ error: "Cuerpo inválido" }, 400); }
   const modo = texto(cuerpo.modo);
+  // «Por revisar» es de todos los que reciben hallazgos, tengan o no el asistente: quién contesta qué lo decide la base.
+  const deRevision = modo === "bien_asi" || modo === "ayuda_corregir";
+  if (!puede && !deRevision) return json({ error: "Tu rol no tiene acceso al asistente." }, 403);
   const area: Area = AREAS.includes(cuerpo.area as Area) ? (cuerpo.area as Area) : "direccion";
 
   const anthropic = entorno.crearAnthropic?.() ?? (entorno.anthropicKey ? new Anthropic({ apiKey: entorno.anthropicKey }) : null);
@@ -1793,7 +1947,8 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
     }).then(() => undefined);
 
   // Cupo: solo cuenta lo que cuesta. El modo demostración no gasta nada.
-  if (anthropic && !((modo === "resumen" || modo === "semana" || modo === "sugerir_mejoras") && cuerpo.forzar !== true)) {
+  // Revisar un porqué tampoco: sin cupo, la persona se quedaría sin poder contestar «Está bien así».
+  if (anthropic && modo !== "bien_asi" && !((modo === "resumen" || modo === "semana" || modo === "sugerir_mejoras") && cuerpo.forzar !== true)) {
     const { data: cupo } = await db.rpc("asistente_cupo");
     if (typeof cupo === "number" && cupo <= 0)
       return json({ error: "Ya usaste tus consultas de hoy. Mañana se renuevan; si te hacen falta más, pídelo a sistemas." }, 429);
@@ -1893,6 +2048,40 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
         },
       });
       return new Response(flujoSSE, { headers: { ...CORS, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" } });
+    }
+
+    if (deRevision) {
+      if (!esUuid(cuerpo.hallazgo_id)) return json({ error: "Falta el hallazgo" }, 400);
+      if (!entorno.serviceKey) return json({ error: "A la función del asistente le falta la llave de servicio." }, 500);
+      const servicio = createClient(entorno.supabaseUrl, entorno.serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+      const hallazgo = cuerpo.hallazgo_id as string;
+      const fallo = (e: { message: string; code?: string }) => json({ error: e.message }, e.code === "42501" ? 403 : 400);
+
+      if (modo === "bien_asi") {
+        const c = await db.rpc("revision_dialogo_contexto", { p_hallazgo: hallazgo });
+        if (c.error) return fallo(c.error);
+        const datos = c.data as ContextoPorque;
+        const r = anthropic ? await revisarPorque({ anthropic, perfil, config, datos }) : { ...porqueSinIA(datos), modelo: null };
+        if (anthropic) await registrar(r);
+        const g = await servicio.rpc("revision_dialogo_ia", { p_hallazgo: hallazgo, p_usuario: perfil.id, p_texto: r.texto,
+          p_veredicto: r.veredicto, p_modelo: r.modelo });
+        if (g.error) return fallo(g.error);
+        return json({ ...(g.data as Record<string, unknown>), simulado: !anthropic });
+      }
+
+      const c = await db.rpc("revision_ayuda_contexto", { p_hallazgo: hallazgo });
+      if (c.error) return fallo(c.error);
+      const datos = c.data as ContextoAyuda;
+      const instruccion = texto(cuerpo.instruccion).slice(0, 600);
+      const r = anthropic ? await proponerCorreccion({ anthropic, perfil, config, datos, instruccion }) : { ...correccionSinIA(datos), modelo: null };
+      if (anthropic) await registrar(r);
+      if (!r.cambios.length) return json({ propuesta_id: null, cambios: [], explicacion: r.explicacion, que_hacer: r.que_hacer, simulado: !anthropic });
+      const g = await servicio.rpc("revision_propuesta_guardar", { p_hallazgo: hallazgo, p_usuario: perfil.id, p_cambios: r.cambios,
+        p_explicacion: r.explicacion, p_modelo: r.modelo });
+      if (g.error) return fallo(g.error);
+      const p = g.data as { id: string | null; cambios: unknown[] };
+      return json({ propuesta_id: p.id, cambios: p.cambios, explicacion: r.explicacion, simulado: !anthropic,
+        que_hacer: p.id ? r.que_hacer : r.que_hacer || "Lo que propuso la IA no se puede cambiar desde aquí: ábrelo y corrígelo a mano." });
     }
 
     if (modo === "redactar") {
