@@ -2265,6 +2265,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que cuesta hacer lo que se vende: el material de lo vendido, los sueldos de la gente de Producción y las compras del taller que no se quedan en el equipo (consumibles, gases, reparaciones)."
  },
  {
+  "clave": "costoIa",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Lo que cuesta la IA del ERP, estimado con los tokens de cada consulta (lo que lee y lo que escribe) y los precios por millón de tokens que están en Configuración → «precios_ia», en dólares y su equivalente en pesos al tipo de cambio del día. Incluye la revisión nocturna (que va por lotes, a mitad de precio), que no es de nadie en particular. Lo que factura el proveedor es lo que manda; si cambian los precios, se cambian en Configuración y todo se recalcula."
+ },
+ {
   "clave": "costoMasViejo",
   "modulos": [
    "costeo",
@@ -4244,6 +4251,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Fallas: correctivos reportados en el periodo y cuántos pararon la máquina. Horas fuera de servicio: el tiempo que las máquinas estuvieron paradas dentro del periodo. Tiempo de reparación: de que se reporta la falla a que se cierra (MTTR). Preventivos a tiempo: los hechos antes de su fecha."
  },
  {
+  "clave": "mapaCalorUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Un renglón por persona y un cuadro por día. Entre más oscuro, más uso ese día según la medida que escojas. Los huecos dicen quién deja de usar el ERP algunos días o quién ya no lo usa."
+ },
+ {
   "clave": "maquinaCritica",
   "modulos": [
    "servicio",
@@ -4428,6 +4442,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Lo dice la factura. De contado (PUE): ya se pagó o se paga al momento. A crédito (PPD): se paga después; si no se registra, es una cuenta por pagar que no sale en Pagos a proveedores."
+ },
+ {
+  "clave": "mezclaUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "De todo el tiempo activo de cada persona (o, si todavía no hay tiempo, de las pantallas que abrió), qué parte es de cada sección del menú: Ventas, Almacén, Producción… Cada sección conserva su color en todas las personas."
  },
  {
   "clave": "minutosDeshacer",
@@ -6278,6 +6299,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "admin"
   ],
   "texto": "El tema con el que abre el ERP para todos. Cada persona puede cambiarlo con el botón de la luna o el sol (arriba a la derecha); lo que escoja se queda en su navegador y manda sobre este."
+ },
+ {
+  "clave": "tendenciaUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "La medida que escojas arriba (tiempo, cambios, consultas o costo de la IA, o cuántas personas lo usaron), día por día. La línea punteada es el periodo anterior del mismo largo, alineado por día: el primer día contra el primer día, y así."
  },
  {
   "clave": "ticketPromedio",

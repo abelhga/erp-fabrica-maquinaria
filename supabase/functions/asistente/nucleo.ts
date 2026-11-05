@@ -511,7 +511,7 @@ export async function conversar(opts: {
   while (mensajes.length && mensajes[0].role !== "user") mensajes.shift();
   if (!mensajes.length) throw new ErrorHerramienta("No hay pregunta.");
 
-  const uso = { modelo: config.modelo, entrada: 0, salida: 0, cache: 0, herramientas: [] as string[] };
+  const uso = { modelo: config.modelo, entrada: 0, salida: 0, cache: 0, escritura: 0, herramientas: [] as string[] };
   for (let vuelta = 0; vuelta < MAX_VUELTAS; vuelta++) {
     const flujo = anthropic.beta.messages.stream({
       model: config.modelo,
@@ -529,6 +529,7 @@ export async function conversar(opts: {
     uso.entrada += r.usage.input_tokens;
     uso.salida += r.usage.output_tokens;
     uso.cache += r.usage.cache_read_input_tokens ?? 0;
+    uso.escritura += r.usage.cache_creation_input_tokens ?? 0;
 
     if (r.stop_reason === "refusal") {
       emitir({ tipo: "texto", texto: "\n\nNo puedo ayudar con eso. Si crees que es un error, pregúntalo de otra forma." });
@@ -642,7 +643,7 @@ export async function resumir(opts: { anthropic: Pick<Anthropic, "beta">; db: Su
   const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
   if (!bloque) throw new ErrorHerramienta("La IA no devolvió el resumen.");
   const resumen = JSON.parse(bloque.text) as Resumen;
-  return { resumen, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+  return { resumen, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
 }
 
 /** Sin llave de Claude, el resumen se arma con los mismos hallazgos de la base. */
@@ -703,7 +704,7 @@ export async function resumirSemana(opts: { anthropic: Pick<Anthropic, "beta">; 
   const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
   if (!bloque) throw new ErrorHerramienta("La IA no devolvió el resumen.");
   const resumen = JSON.parse(bloque.text) as Resumen;
-  return { resumen, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+  return { resumen, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
 }
 
 const pesos = (n: number) => "$" + Math.round(n).toLocaleString("es-MX");
@@ -786,7 +787,7 @@ export async function redactar(opts: {
   const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
   if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("No salió el mensaje; intenta de nuevo.");
   return { ...(JSON.parse(bloque.text) as { asunto: string; mensaje: string }), modelo: r.model,
-    entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+    entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
 }
 
 // -----------------------------------------------------------------------------
@@ -851,7 +852,7 @@ export async function redactarLead(opts: {
   const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
   if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("No salió el mensaje; intenta de nuevo.");
   return { ...(JSON.parse(bloque.text) as { asunto: string; mensaje: string }), modelo: r.model,
-    entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+    entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
 }
 
 /** Sin la llave de la IA: una plantilla con lo que busca el lead. */
@@ -949,7 +950,7 @@ export async function redactarSeguimiento(opts: { anthropic: Pick<Anthropic, "be
   const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
   if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("No salió el mensaje; intenta de nuevo.");
   return { ...(JSON.parse(bloque.text) as { mensaje: string; consejo: string }), modelo: r.model,
-    entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+    entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
 }
 
 /** Sin llave: una plantilla con lo que sí sabemos (equipo, folio, contacto, si no ha contestado). */
@@ -1064,7 +1065,7 @@ export async function redactarRespuestaML(opts: { anthropic: Pick<Anthropic, "be
   if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("No salió la respuesta; intenta de nuevo.");
   const x = JSON.parse(bloque.text) as { respuesta: string; usados: string[]; falta: string };
   return { ...x, respuesta: limpiarRespuestaML(x.respuesta), modelo: r.model,
-    entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+    entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
 }
 
 /** Lo que ML castiga aunque se le haya pedido a Claude que no lo ponga: se quita antes de mostrarla. */
@@ -1129,7 +1130,7 @@ export async function pulirDescripcion(opts: {
   if (!bloque || r.stop_reason === "max_tokens") throw new ErrorHerramienta("No salió el texto corregido; intenta de nuevo.");
   const salida = JSON.parse(bloque.text) as { texto: string; dudas: string[] };
   return { texto: salida.texto.trim(), dudas: salida.dudas, modelo: r.model,
-    entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+    entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
 }
 
 /** Sin Claude (pruebas locales): solo limpia espacios y viñetas, para que la pantalla funcione igual. */
@@ -1414,7 +1415,7 @@ export async function leerDocumento(opts: {
   if (errores.length) {
     throw new ErrorHerramienta(`La IA devolvió datos que no cumplen el formato (${errores.slice(0, 3).join("; ")}). No se guardó nada: intenta de nuevo o captúralo a mano.`);
   }
-  return { campos: campos as Record<string, unknown>, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+  return { campos: campos as Record<string, unknown>, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
 }
 
 // -----------------------------------------------------------------------------
@@ -1541,7 +1542,7 @@ export async function leerCorreosEmbarque(opts: { anthropic: Pick<Anthropic, "be
     p.advertencias = [...p.advertencias as string[], ...futuras.map((x) => `«${x.tipo}» viene con fecha futura (${x.fecha}): eso es lo esperado, no lo que pasó.`)];
   }
   return { propuesta: p, correos: leidos.length, fuera, hasta: leidos.at(-1)?.enviado_en ?? null,
-    modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+    modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
 }
 
 /** Sin llave: una propuesta de ejemplo con la forma real, marcada como tal (no se guarda). */
@@ -1712,7 +1713,7 @@ export async function sugerirMejoras(opts: { anthropic: Pick<Anthropic, "beta">;
   const sugerencias = JSON.parse(bloque.text) as Sugerencias;
   const fallas = validarEsquema(sugerencias, esquema as Esquema);
   if (fallas.length) throw new ErrorHerramienta("Las sugerencias llegaron incompletas; intenta de nuevo.");
-  return { sugerencias, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0 };
+  return { sugerencias, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
 }
 
 /** Sin llave de Claude: lo que las reglas ya ven en los mismos datos, sin interpretación. */
@@ -1784,10 +1785,11 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
   const area: Area = AREAS.includes(cuerpo.area as Area) ? (cuerpo.area as Area) : "direccion";
 
   const anthropic = entorno.crearAnthropic?.() ?? (entorno.anthropicKey ? new Anthropic({ apiKey: entorno.anthropicKey }) : null);
-  const registrar = (r: { modelo?: string; entrada?: number; salida?: number; cache?: number; herramientas?: string[]; error?: string }) =>
+  const registrar = (r: { modelo?: string; entrada?: number; salida?: number; cache?: number; escritura?: number; herramientas?: string[]; error?: string }) =>
     db.from("asistente_uso").insert({
       modo, area: modo === "resumen" ? area : null, modelo: r.modelo ?? null, entrada_tokens: r.entrada ?? null,
-      salida_tokens: r.salida ?? null, cache_tokens: r.cache ?? null, herramientas: r.herramientas ?? null, error: r.error ?? null,
+      salida_tokens: r.salida ?? null, cache_tokens: r.cache ?? null, cache_escritura_tokens: r.escritura ?? null,
+      herramientas: r.herramientas ?? null, error: r.error ?? null,
     }).then(() => undefined);
 
   // Cupo: solo cuenta lo que cuesta. El modo demostración no gasta nada.
