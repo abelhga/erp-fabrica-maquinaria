@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Activity, Bot, CircleDollarSign, Clock, PencilLine, Users } from "lucide-react";
@@ -21,6 +21,7 @@ import {
   Comparativo, CostoPorUso, MapaCalor, METRICAS, MezclaSecciones, MODO_IA, Tendencia, dePersona, etiquetaPorPersona, tiempo, usd,
   type CeldaUso, type DiaUso, type Metrica,
 } from "./componentes/usoGraficas";
+import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 interface UsoUsuario {
@@ -72,24 +73,38 @@ export function nombrePantalla(ruta: string) {
  * aquí se enciende su cuadro de hoy. Solo llega quién y si fue un cambio o una pantalla, nunca el
  * registro. Las cifras se recargan unos segundos después, juntando lo que llegue.
  */
-export type Vivo = Record<string, { k: number; tipo: "cambio" | "vista" }>;
-function useUsoEnVivo(activo: boolean) {
+export type Vivo = Record<string, { k: number; tipo: "cambio" | "vista"; rapido?: boolean }>;
+/** «accion»: un destello por cada guardado. «renglon»: uno por cada renglón de bitácora que dejó (a prueba). */
+type ModoDestello = "accion" | "renglon";
+const LLAVE_MODO = "uso_vivo_modo";
+const leerModo = (): ModoDestello => { try { return localStorage.getItem(LLAVE_MODO) === "renglon" ? "renglon" : "accion"; } catch { return "accion"; } };
+// Entre destello y destello de una misma acción; con más de 60 renglones se corta para no parpadear un minuto.
+const PASO_MS = 170, TOPE_RENGLONES = 60;
+
+function useUsoEnVivo(activo: boolean, modo: ModoDestello) {
   const qc = useQueryClient();
   const [vivo, setVivo] = useState<Vivo>({});
   const [conectado, setConectado] = useState(false);
+  const modoRef = useRef(modo);
+  modoRef.current = modo;
   useEffect(() => {
     if (!activo) { setConectado(false); return; }
     let espera: ReturnType<typeof setTimeout> | undefined;
+    const pendientes: ReturnType<typeof setTimeout>[] = [];
+    const destellar = (u: string, tipo: "cambio" | "vista", rapido: boolean) =>
+      setVivo((v) => ({ ...v, [u]: { k: (v[u]?.k ?? 0) + 1, tipo, rapido } }));
     const canal = supabase.channel("uso-en-vivo", { config: { private: true } })
       .on("broadcast", { event: "actividad" }, ({ payload }) => {
-        const { u, tipo } = payload as { u: string; tipo: "cambio" | "vista" };
+        const { u, tipo, n } = payload as { u: string; tipo: "cambio" | "vista"; n?: number };
         if (!u) return;
-        setVivo((v) => ({ ...v, [u]: { k: (v[u]?.k ?? 0) + 1, tipo } }));
+        const veces = modoRef.current === "renglon" && tipo === "cambio" ? Math.min(Math.max(1, n ?? 1), TOPE_RENGLONES) : 1;
+        if (veces === 1) destellar(u, tipo, false);
+        else for (let i = 0; i < veces; i++) pendientes.push(setTimeout(() => destellar(u, tipo, true), i * PASO_MS));
         clearTimeout(espera);
         espera = setTimeout(() => qc.invalidateQueries({ queryKey: ["uso_tablero"] }), 5000);
       })
       .subscribe((estado) => setConectado(estado === "SUBSCRIBED"));
-    return () => { clearTimeout(espera); supabase.removeChannel(canal); };
+    return () => { clearTimeout(espera); pendientes.forEach(clearTimeout); supabase.removeChannel(canal); };
   }, [activo, qc]);
   return { vivo, conectado };
 }
@@ -108,7 +123,9 @@ export default function UsoErp() {
   const [comparar, setComparar] = useState(true);
   const [abierto, setAbierto] = useState<UsoUsuario | null>(null);
   const { desde, hasta } = rango(periodo);
-  const { vivo, conectado } = useUsoEnVivo(true);
+  const [modoDestello, setModoDestello] = useState<ModoDestello>(leerModo);
+  const cambiarModo = (m: ModoDestello) => { setModoDestello(m); try { localStorage.setItem(LLAVE_MODO, m); } catch { /* modo privado */ } };
+  const { vivo, conectado } = useUsoEnVivo(true, modoDestello);
   const uso = useQuery({
     queryKey: ["uso_tablero", desde, hasta],
     queryFn: () => q<Tablero>(supabase.rpc("uso_tablero", { p_desde: desde, p_hasta: hasta })),
@@ -197,8 +214,17 @@ export default function UsoErp() {
           <Tarjeta>
             <EncabezadoTarjeta titulo="Día por día de cada persona" descripcion={`Más oscuro, más ${metrica === "minutos" ? "tiempo activo" : metrica === "cambios" ? "cambios" : metrica === "personas" ? "actividad" : "consultas a la IA"}. Quién lo usa diario, quién a ratos y quién lo dejó.`}
               explica={GLOSARIO.mapaCalorUsoErp}
-              acciones={conectado ? <span className="inline-flex items-center gap-1.5 text-xs text-tenue" data-explain={GLOSARIO.usoEnVivo} data-explain-title="En vivo">
-                <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ok opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-ok" /></span>En vivo</span> : undefined} />
+              acciones={<div className="flex items-center gap-3">
+                <div className="flex rounded-lg border border-borde p-0.5 text-xs" data-explain={GLOSARIO.modoDestelloUso} data-explain-title="Destello">
+                  {(["accion", "renglon"] as const).map((m) => (
+                    <button key={m} type="button" onClick={() => cambiarModo(m)} aria-pressed={modoDestello === m}
+                      className={cn("rounded-md px-2 py-0.5", modoDestello === m ? "bg-marca-suave text-marca-texto" : "text-tenue")}>
+                      {m === "accion" ? "Por acción" : "Por renglón"}</button>
+                  ))}
+                </div>
+                {conectado && <span className="inline-flex items-center gap-1.5 text-xs text-tenue" data-explain={GLOSARIO.usoEnVivo} data-explain-title="En vivo">
+                <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ok opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-ok" /></span>En vivo</span>}
+              </div>} />
             <div className="px-5 pb-5">
               {conUso.length === 0 ? <p className="text-sm text-tenue">Nadie lo usó en el periodo con este filtro.</p>
                 : <MapaCalor personas={conUso.slice(0, 25)} celdas={t.calor.filter((c) => ids.has(c.u))} dias={dias} metrica={metrica} vivo={vivo} />}

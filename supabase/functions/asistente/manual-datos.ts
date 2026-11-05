@@ -10516,6 +10516,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "«Está en el catálogo»: busca y elige el artículo que ya existe. «Dar de alta»: si no existe, se crea aquí como componente con la clave que sigue, y el vendedor ya lo encuentra en su buscador."
  },
  {
+  "clave": "modoDestelloUso",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Cómo destella el cuadro de hoy. «Por acción»: una vez por cada guardado, aunque escriba muchos renglones. «Por renglón»: un pulso por cada renglón de la bitácora (una orden con 40 partidas son 40 pulsos seguidos, hasta 60). Se recuerda en este navegador."
+ },
+ {
   "clave": "modoLeads",
   "modulos": [
    "ventas",

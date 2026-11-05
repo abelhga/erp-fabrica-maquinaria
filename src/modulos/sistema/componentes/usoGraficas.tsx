@@ -86,7 +86,7 @@ export interface CeldaUso { u: string; dia: string; minutos: number; cambios: nu
 export function MapaCalor({ personas, celdas, dias, metrica, vivo }: {
   personas: { id: string; nombre: string }[]; celdas: CeldaUso[]; dias: string[]; metrica: Metrica;
   /** Quién hizo algo ahorita (por persona, cuántas veces): enciende su cuadro de hoy. */
-  vivo?: Record<string, { k: number; tipo: "cambio" | "vista" }>;
+  vivo?: Record<string, { k: number; tipo: "cambio" | "vista"; rapido?: boolean }>;
 }) {
   const hoy = hoyISO();
   const [sobre, setSobre] = useState<{ nombre: string; dia: string; c: CeldaUso | undefined } | null>(null);
@@ -112,7 +112,7 @@ export function MapaCalor({ personas, celdas, dias, metrica, vivo }: {
                   // La llave cambia con cada aviso: React vuelve a montar la celda y la animación corre otra vez.
                   const v = d === hoy ? vivo?.[p.id] : undefined;
                   return <td key={v ? `${d}-${v.k}` : d} className={cn("h-4 w-4 rounded-[3px] p-0", sobre?.nombre === p.nombre && sobre.dia === d && "ring-2 ring-texto/40",
-                      v && (v.tipo === "cambio" ? "uso-destello" : "uso-destello-suave"))}
+                      v && (v.rapido ? "uso-destello-rapido" : v.tipo === "cambio" ? "uso-destello" : "uso-destello-suave"))}
                     style={{ background: tono(valor(c)) }} onMouseEnter={() => setSobre({ nombre: p.nombre, dia: d, c })} />;
                 })}
               </tr>
