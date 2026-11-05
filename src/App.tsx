@@ -62,6 +62,7 @@ const NumerosSerie = p(() => import("./modulos/produccion/NumerosSerie"));
 const Usuarios = p(() => import("./modulos/sistema/Usuarios"));
 const Importar = p(() => import("./modulos/sistema/Importar"));
 const Bitacora = p(() => import("./modulos/sistema/Bitacora"));
+const UsoErp = p(() => import("./modulos/sistema/UsoErp"));
 const Configuracion = p(() => import("./modulos/sistema/Configuracion"));
 const ParaLlamar = p(() => import("./modulos/asistente/ParaLlamar"));
 const Semana = p(() => import("./modulos/asistente/Semana"));
@@ -238,6 +239,7 @@ export function App() {
           <Route path="sistema/usuarios" element={<Con m="admin" n={3}><Usuarios /></Con>} />
           <Route path="sistema/importar" element={<Con m="admin" n={3}><Importar /></Con>} />
           <Route path="sistema/bitacora" element={<Con m="admin"><Bitacora /></Con>} />
+          <Route path="sistema/uso" element={<Con m="admin" n={3}><UsoErp /></Con>} />
           <Route path="sistema/configuracion" element={<Con m="admin" n={3}><Configuracion /></Con>} />
           <Route path="importaciones" element={<Con m="importaciones"><Embarques /></Con>} />
           <Route path="importaciones/dinero" element={<Con m="importaciones"><Embarques /></Con>} />

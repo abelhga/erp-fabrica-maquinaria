@@ -5,7 +5,7 @@ import { FileX,
   Ship,
   type LucideIcon,
 } from "lucide-react";
-import { Award, Banknote, Coins, Hash, ListChecks, Target, Waypoints } from "lucide-react";
+import { Activity, Award, Banknote, Coins, Hash, ListChecks, Target, Waypoints } from "lucide-react";
 import { AlertTriangle, CalendarDays, CalendarRange, Hand, Wrench } from "lucide-react";
 import { BookOpen, Calendar, Inbox, MessageSquareQuote, PackageCheck, ScanSearch, Store, Undo2 } from "lucide-react";
 import { GanttChart, Gauge, HardHat, Lightbulb, Map as MapaIcono } from "lucide-react";
@@ -133,6 +133,7 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/sistema/usuarios", texto: "Usuarios y permisos", icono: ShieldCheck, modulo: "admin", nivel: 3 },
       { ruta: "/sistema/importar", texto: "Importar de Sheets", icono: Download, modulo: "admin", nivel: 3 },
       { ruta: "/sistema/bitacora", texto: "Bitácora", icono: History, modulo: "admin" },
+      { ruta: "/sistema/uso", texto: "Uso del ERP", icono: Activity, modulo: "admin", nivel: 3 },
       { ruta: "/sistema/configuracion", texto: "Configuración", icono: Settings, modulo: "admin", nivel: 3 },
     ],
   },

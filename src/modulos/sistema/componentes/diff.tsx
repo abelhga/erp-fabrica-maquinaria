@@ -12,6 +12,11 @@ export const TABLAS: Record<string, string> = {
   perfiles: "Usuarios", usuario_roles: "Roles de usuario", permisos_rol: "Permisos por rol", invitaciones: "Invitaciones",
   configuracion: "Configuración", etapas: "Etapas del taller", tipos_cambio: "Tipos de cambio", textos_comerciales: "Textos comerciales",
   planes_meses: "Planes de meses", canales: "Canales de venta", simulacion_rol: "Ver como otro rol",
+  leads: "Leads", lead_intentos: "Intentos con leads", pendientes: "Pendientes", cotizacion_lineas: "Partidas de cotización",
+  pedido_lineas: "Partidas de pedido", oportunidades: "Oportunidades", actividades: "Llamadas y notas de clientes",
+  movimientos_inventario: "Movimientos de inventario", reservas: "Material apartado", conteos: "Conteos físicos", conteo_lineas: "Artículos contados",
+  embarques: "Embarques", embarque_eventos: "Etapas de embarques", embarque_saldos: "Dinero por recuperar de embarques",
+  op_operaciones: "Etapas de órdenes de producción", caja_chica: "Caja chica",
 };
 export const nombreTabla = (t: string) => TABLAS[t] ?? t.replace(/_/g, " ");
 

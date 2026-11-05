@@ -988,6 +988,19 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   ]
  },
  {
+  "ruta": "/sistema/uso",
+  "nombre": "Uso del ERP",
+  "modulos": [
+   "admin"
+  ],
+  "nivel": 3,
+  "texto": [
+   "Quién usa el ERP, cuánto y en qué. Es para dirección y sistemas: sirve para acompañar a quien se está quedando en la hoja, en el papel o en WhatsApp, y para ver qué pantallas de verdad se usan.",
+   "Escoge el periodo (7, 30 o 90 días). Arriba, cuántas personas lo usaron, el tiempo activo de todas, los cambios que registraron y las consultas a la IA. «Sin usarlo» junta las cuentas activas que no hicieron nada en el periodo. Dale clic a una persona para ver su tiempo y sus cambios por día, las pantallas que más usa, en qué registra cambios, para qué usa la IA y a qué horas trabaja en el ERP.",
+   "El tiempo activo cuenta solo los minutos en que la persona estuvo moviéndose en el ERP con la pestaña a la vista; dejarlo abierto no suma. No se guarda qué datos vio, solo qué pantalla. La TV y la tablet del taller salen en «Todas las cuentas». El tiempo y las pantallas se cuentan desde el 5 de noviembre de 2026; los cambios y la IA traen su historia de antes."
+  ]
+ },
+ {
   "ruta": "/sistema/usuarios",
   "nombre": "Usuarios y permisos",
   "modulos": [
@@ -1727,6 +1740,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Mover a alguien que está trabajando, o meterlo a una etapa en proceso, cambia sus horas de verdad: su tiempo donde estaba se cierra en ese momento y el nuevo empieza a contar. Por eso se confirma. Es lo mismo que marcar «Sale» y «Se une» en la terminal, y la terminal lo ve al instante."
+ },
+ {
+  "clave": "cambiosErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Las altas, cambios y bajas que la persona registró en el periodo, los mismos de la Bitácora: una cotización, un surtido, un pendiente cerrado, una partida corregida…"
  },
  {
   "clave": "cambiosSugeridosML",
@@ -2635,6 +2655,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Si la fecha del preventivo cae en sábado, domingo, feriado de ley o un descanso de la empresa, pasa al siguiente día que el taller trabaja (según el horario que pone la gerencia de producción). En los planes por mes, si ese día ya es del mes siguiente, se adelanta al último día hábil del mes, para que ningún mes se salte."
+ },
+ {
+  "clave": "diasActivosErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Los días del periodo en que la persona hizo algo en el ERP: abrió una pantalla, registró un cambio o le preguntó a la IA."
  },
  {
   "clave": "diasAtraso",
@@ -3858,6 +3885,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Cuántas horas le dedicó la persona de mantenimiento a esta orden (no cuánto estuvo parada la máquina). Si le dieron play en la terminal, se llenan solas con sus tramos; quien cierra puede escribir otra cifra si alguien olvidó darle play. Con ellas sale la mano de obra y qué parte del trabajo de mantenimiento es preventivo."
+ },
+ {
+  "clave": "horasUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "En qué horas del día abre pantallas y registra cambios. Sirve para ver si captura al momento o deja todo para el final del día."
  },
  {
   "clave": "horometro",
@@ -6253,6 +6287,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Venta entre número de operaciones (facturas o pedidos). Dice si ahí se venden equipos grandes o refacciones sueltas."
  },
  {
+  "clave": "tiempoActivoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Los minutos en que la persona estuvo trabajando en el ERP: un minuto cuenta si la pestaña estaba a la vista y movió el mouse, tecleó o tocó la pantalla en los últimos dos minutos. Dejar el ERP abierto sin usarlo no suma. Se cuenta desde el 5 de noviembre de 2026."
+ },
+ {
   "clave": "tiempoProveedor",
   "modulos": [
    "importaciones"
@@ -6417,6 +6458,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Fecha del último pedido del cliente (o de la última venta en el libro de la hoja, si es más reciente). De clientes de otro vendedor no se muestra."
+ },
+ {
+  "clave": "ultimoUsoErp",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "La última vez que la persona hizo algo en el ERP (abrir una pantalla, un cambio o una consulta a la IA). No es lo mismo que el último inicio de sesión: la sesión dura semanas sin volver a entrar."
  },
  {
   "clave": "usadoEnEquipos",

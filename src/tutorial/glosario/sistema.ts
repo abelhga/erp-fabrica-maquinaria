@@ -1,4 +1,9 @@
 export const SISTEMA = {
+  tiempoActivoErp: "Los minutos en que la persona estuvo trabajando en el ERP: un minuto cuenta si la pestaña estaba a la vista y movió el mouse, tecleó o tocó la pantalla en los últimos dos minutos. Dejar el ERP abierto sin usarlo no suma. Se cuenta desde el 5 de noviembre de 2026.",
+  diasActivosErp: "Los días del periodo en que la persona hizo algo en el ERP: abrió una pantalla, registró un cambio o le preguntó a la IA.",
+  ultimoUsoErp: "La última vez que la persona hizo algo en el ERP (abrir una pantalla, un cambio o una consulta a la IA). No es lo mismo que el último inicio de sesión: la sesión dura semanas sin volver a entrar.",
+  cambiosErp: "Las altas, cambios y bajas que la persona registró en el periodo, los mismos de la Bitácora: una cotización, un surtido, un pendiente cerrado, una partida corregida…",
+  horasUsoErp: "En qué horas del día abre pantallas y registra cambios. Sirve para ver si captura al momento o deja todo para el final del día.",
   temaPorDefecto: "El tema con el que abre el ERP para todos. Cada persona puede cambiarlo con el botón de la luna o el sol (arriba a la derecha); lo que escoja se queda en su navegador y manda sobre este.",
   rolUsuario: "El puesto de la persona dentro del ERP (Ventas, Almacén, RR. HH.…). Cada rol trae sus permisos por módulo; alguien puede tener varios y vale el nivel más alto. «Espera rol» = entró, pero todavía no puede ver nada.",
   nivelPermiso: "Lo que un rol puede hacer en un módulo: 1 ver, 2 capturar (ver y registrar), 3 administrar (aprobar, borrar, configurar). Un guion = sin acceso: ni lo ve en el menú ni la base le entrega esos datos.",
