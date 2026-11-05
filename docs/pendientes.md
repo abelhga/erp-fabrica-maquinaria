@@ -60,6 +60,9 @@ qué y foto, etiquetas QR/NFC (213); terminal con play y pausa, y criticidad cal
 
 ## Para revisar en unos días
 
+- **«Está bien así» con la IA (246):** en una o dos semanas, leer en «Contestado» qué aceptó y qué
+  escaló la IA. Si escala razones buenas, aflojar `REGLAS_PORQUE` en el asistente; si deja pasar
+  costumbres, apretarlo. Ver también si «Ayúdame a corregirlo» propone cosas que no se pueden aplicar.
 - **Revisión nocturna:** cuántos hallazgos contestan y cuántos son «Está bien así» (si una regla
   saca puro «bien así», ajustarla). Los primeros consejos salen el lunes 2 nov.
 - **Candado al surtir de más:** revisar cada semana las solicitudes de cambio a ingeniería y lo
