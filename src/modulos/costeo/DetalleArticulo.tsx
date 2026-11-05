@@ -115,7 +115,7 @@ function Encabezado({ a }: { a: ArticuloCatalogo }) {
               <Cifra etiqueta="Costo actualizado" valor={a.costo_actualizado_en ? hace(a.costo_actualizado_en) : fab && a.costo_mas_viejo ? hace(a.costo_mas_viejo) : "—"}
                 detalle={fab ? "su costo más viejo" : a.proveedor ?? undefined} explica={fab ? GLOSARIO.costoMasViejo : GLOSARIO.costoViejo} />
               <Cifra etiqueta={fab ? "Piezas sin costo" : "Tiempo de entrega"} valor={fab ? numero(a.sin_costo ?? 0) : a.tiempo_entrega_dias != null ? `${a.tiempo_entrega_dias} días` : "—"}
-                tono={fab && (a.sin_costo ?? 0) > 0 ? "aviso" : undefined} explica={fab ? GLOSARIO.piezasSinCosto : undefined} />
+                tono={fab && (a.sin_costo ?? 0) > 0 ? "aviso" : undefined} explica={fab ? GLOSARIO.piezasSinCosto : GLOSARIO.tiempoEntregaArticulo} />
             </>}
             {fab ? <Cifra etiqueta="Horas hombre" valor={numero(a.horas)} detalle="con las de sus subensambles" explica={GLOSARIO.horasTotalesFabricado} />
               : <Cifra etiqueta="Existencia en planta" valor={`${numero(a.existencia ?? 0)}`} detalle={a.unidad} explica={GLOSARIO.enPlanta} />}
@@ -123,7 +123,7 @@ function Encabezado({ a }: { a: ArticuloCatalogo }) {
         ) : (
           <>
             {fab ? <Cifra etiqueta="Líneas de material" valor={numero(a.lineas_bom)} explica={GLOSARIO.lineasLista} /> : <Cifra etiqueta="Existencia en planta" valor={numero(a.existencia ?? 0)} detalle={a.unidad} explica={GLOSARIO.enPlanta} />}
-            {!fab && <Cifra etiqueta="Tiempo de entrega" valor={a.tiempo_entrega_dias != null ? `${a.tiempo_entrega_dias} días` : "—"} />}
+            {!fab && <Cifra etiqueta="Tiempo de entrega" valor={a.tiempo_entrega_dias != null ? `${a.tiempo_entrega_dias} días` : "—"} explica={GLOSARIO.tiempoEntregaArticulo} />}
             {a.usado_en > 0 && <Cifra etiqueta="Se usa en" explica={GLOSARIO.usadoEnListas} valor={numero(a.usado_en)} detalle={a.usado_en === 1 ? "lista de materiales" : "listas de materiales"} />}
           </>
         )}
@@ -181,7 +181,7 @@ export default function DetalleArticulo() {
           {fab && !a.activo && <span data-explain={GLOSARIO.articuloInhabilitado} data-explain-title="Inhabilitado"><Insignia tono="aviso" punto>Inhabilitado</Insignia></span>}
           {a.categoria && <span data-explain={a.tipo === "equipo" ? GLOSARIO.tipoEquipo : undefined} data-explain-title={a.tipo === "equipo" ? "Tipo de equipo" : undefined}><Insignia>{a.categoria}</Insignia></span>}
           {a.medida_especial && <span data-explain={GLOSARIO.medidaEspecial}><Insignia tono="info">medida especial</Insignia></span>}
-          {a.es_importado && <Insignia tono="info">importado</Insignia>}
+          {a.es_importado && <span data-explain={GLOSARIO.articuloImportado} data-explain-title="Importado"><Insignia tono="info">importado</Insignia></span>}
           {!a.se_vende && <span data-explain={GLOSARIO.noSeVendeSuelto}><Insignia>no se vende suelto</Insignia></span>}
           {costos && fab && (a.sin_costo ?? 0) > 0 && <span data-explain={GLOSARIO.piezasSinCosto}><Insignia tono="peligro" punto>{a.sin_costo} {a.sin_costo === 1 ? "pieza" : "piezas"} sin costo</Insignia></span>}
           {costos && a.costo_mas_viejo && esCostoViejo(a.costo_mas_viejo) && fab && <span data-explain={GLOSARIO.costoViejo}><Insignia tono="aviso" punto>costo más viejo: {fecha(a.costo_mas_viejo)}</Insignia></span>}

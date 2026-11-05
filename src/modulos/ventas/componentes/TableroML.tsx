@@ -72,27 +72,28 @@ export function TableroPublicaciones({ puedeActualizar, puedeCambiar, puedeAutom
     { valor: "revisar", texto: "Por revisar", explica: GLOSARIO.senalesPublicacionML },
     { valor: "precio", texto: "Precio", cuenta: cuenta("precio"), explica: GLOSARIO.precioSugeridoML },
     { valor: "stock", texto: "Existencia", cuenta: cuenta("stock"), explica: GLOSARIO.existenciaPublicableML },
-    { valor: "fotos", texto: "Pocas fotos", cuenta: cuenta("fotos") },
-    { valor: "no_vende", texto: "Visitas sin ventas", cuenta: cuenta("no_vende") },
-    { valor: "sin_ligar", texto: "Sin ligar", cuenta: cuenta("sin_ligar") },
+    { valor: "fotos", texto: "Pocas fotos", cuenta: cuenta("fotos"), explica: GLOSARIO.pocasFotosML },
+    { valor: "no_vende", texto: "Visitas sin ventas", cuenta: cuenta("no_vende"), explica: GLOSARIO.visitasSinVentasML },
+    { valor: "sin_ligar", texto: "Sin ligar", cuenta: cuenta("sin_ligar"), explica: GLOSARIO.sinLigarTableroML },
     { valor: "todas", texto: "Todas", cuenta: datos.data?.length },
   ];
   const ultima = datos.data?.reduce<string | null>((m, x) => (!m || x.actualizado_en > m ? x.actualizado_en : m), null);
 
   const columnas: Columna<FilaTablero>[] = [
     {
-      clave: "titulo", titulo: "Publicación",
+      clave: "titulo", titulo: "Publicación", explica: GLOSARIO.senalesPublicacionML,
       celda: (f) => (
         <div className="min-w-[240px] max-w-[340px]">
           <p className="flex items-center gap-1.5">
             {f.imagen_url ? <img src={f.imagen_url} alt="" className="h-8 w-8 rounded object-contain border border-borde bg-fondo shrink-0" loading="lazy" />
               : <span className="h-8 w-8 rounded border border-borde bg-fondo flex items-center justify-center shrink-0"><ImageOff className="h-3.5 w-3.5 text-tenue" /></span>}
             <span className="truncate">{f.titulo}</span>
-            {f.permalink && <a href={f.permalink} target="_blank" rel="noreferrer" className="text-tenue hover:text-marca-texto shrink-0" aria-label="Ver en Mercado Libre"><ExternalLink className="h-3.5 w-3.5" /></a>}
+            {f.permalink && <a href={f.permalink} target="_blank" rel="noreferrer" className="text-tenue hover:text-marca-texto shrink-0" aria-label="Ver en Mercado Libre"
+              data-explain={GLOSARIO.abrirEnMercadoLibre} data-explain-title="Ver en Mercado Libre"><ExternalLink className="h-3.5 w-3.5" /></a>}
           </p>
           <p className="text-xs text-tenue truncate">{f.categoria ? `${f.categoria} · ` : ""}{f.item_id}{f.clave ? ` · ${f.clave}` : ""}{f.piezas && Number(f.piezas) !== 1 ? ` · ${numero(Number(f.piezas))} por venta` : ""}
             {f.logistica ? ` · ${LOGISTICA[f.logistica] ?? f.logistica}` : ""}{f.envio_gratis ? " · envío gratis" : ""}</p>
-          <div className="mt-1 flex flex-wrap gap-1">{senales(f).map((s) => <Insignia key={s.clave} tono={s.tono}>{s.texto}</Insignia>)}</div>
+          <div className="mt-1 flex flex-wrap gap-1" data-explain={GLOSARIO.senalesPublicacionML} data-explain-title="Qué revisar">{senales(f).map((s) => <Insignia key={s.clave} tono={s.tono}>{s.texto}</Insignia>)}</div>
         </div>
       ),
       valor: (f) => `${f.titulo} ${f.item_id} ${f.clave ?? ""} ${f.articulo ?? ""}`,
@@ -128,9 +129,9 @@ export function TableroPublicaciones({ puedeActualizar, puedeCambiar, puedeAutom
     },
     { clave: "visitas_30d", titulo: "Visitas", alinear: "der", sinBusqueda: true, valor: (f) => f.visitas_30d ?? 0, explica: GLOSARIO.visitasML,
       celda: (f) => <span className="cifra">{f.visitas_30d != null ? numero(f.visitas_30d) : "—"}</span> },
-    { clave: "preguntas_30d", titulo: "Preguntas", alinear: "der", sinBusqueda: true, valor: (f) => f.preguntas_30d,
+    { clave: "preguntas_30d", titulo: "Preguntas", alinear: "der", sinBusqueda: true, valor: (f) => f.preguntas_30d, explica: GLOSARIO.preguntas30dML,
       celda: (f) => <span className="cifra whitespace-nowrap">{numero(f.preguntas_30d)}{f.sin_contestar > 0 && <span className="text-aviso"> · {f.sin_contestar} sin contestar</span>}</span> },
-    { clave: "ventas_30d", titulo: "Ventas", alinear: "der", sinBusqueda: true, valor: (f) => f.ventas_30d,
+    { clave: "ventas_30d", titulo: "Ventas", alinear: "der", sinBusqueda: true, valor: (f) => f.ventas_30d, explica: GLOSARIO.ventas30dML,
       celda: (f) => <span className="cifra whitespace-nowrap">{numero(f.ventas_30d)}{Number(f.unidades_30d) > f.ventas_30d && <span className="text-xs text-tenue"> · {numero(Number(f.unidades_30d))} u.</span>}</span> },
     { clave: "conversion", titulo: "Conversión", alinear: "der", sinBusqueda: true, explica: GLOSARIO.conversionML,
       valor: (f) => (f.visitas_30d ? f.ventas_30d / f.visitas_30d : -1),
@@ -143,7 +144,7 @@ export function TableroPublicaciones({ puedeActualizar, puedeCambiar, puedeAutom
     return (
       <div className="tarjeta">
         <Vacio icono={Store} titulo="Todavía no se han traído las publicaciones" texto="«Traer de Mercado Libre» lee cada publicación (precio, existencia, visitas y fotos) y la cruza con el catálogo. No cambia nada en Mercado Libre."
-          accion={puedeActualizar ? <Boton onClick={traer} cargando={trayendo}><RefreshCw className="h-4 w-4" /> Traer de Mercado Libre</Boton> : undefined} />
+          accion={puedeActualizar ? <Boton onClick={traer} cargando={trayendo} data-explain={GLOSARIO.botonTraerPublicacionesML}><RefreshCw className="h-4 w-4" /> Traer de Mercado Libre</Boton> : undefined} />
       </div>
     );
   }
@@ -152,7 +153,7 @@ export function TableroPublicaciones({ puedeActualizar, puedeCambiar, puedeAutom
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-tenue">
         <span>Últimos 30 días{ultima && ` · actualizado ${hace(ultima)}`}. Traer solo lee; lo único que cambia algo en Mercado Libre es «Cambios sugeridos».</span>
         <div className="flex flex-wrap gap-2">
-          {puedeActualizar && <Boton variante="secundario" tamano="sm" onClick={traer} cargando={trayendo}><RefreshCw className="h-3.5 w-3.5" /> Traer de Mercado Libre</Boton>}
+          {puedeActualizar && <Boton variante="secundario" tamano="sm" onClick={traer} cargando={trayendo} data-explain={GLOSARIO.botonTraerPublicacionesML}><RefreshCw className="h-3.5 w-3.5" /> Traer de Mercado Libre</Boton>}
           {puedeCambiar && <BotonCambiosML />}
         </div>
       </div>
@@ -204,14 +205,14 @@ export function ReputacionML() {
           <EncabezadoTarjeta titulo="Reputación en Mercado Libre" descripcion={`Como la reporta ML · actualizada ${hace(rep.data!.actualizado_en)}`} explica={GLOSARIO.reputacionML} />
           <div className="px-5 pb-5 space-y-4">
             <div className="flex flex-wrap items-center gap-4">
-              <div className="flex gap-1" aria-label={`Termómetro ${nivel?.texto ?? "sin dato"}`}>
+              <div className="flex gap-1" aria-label={`Termómetro ${nivel?.texto ?? "sin dato"}`} data-explain={GLOSARIO.reputacionML} data-explain-title="Termómetro">
                 {["1_red", "2_orange", "3_yellow", "4_light_green", "5_green"].map((k) => (
                   <span key={k} className={cn("h-3 w-10 rounded-full", d.level_id === k ? COLOR[k].clase : "bg-borde")} />
                 ))}
               </div>
               <p className="font-semibold">{nivel?.texto ?? "Sin termómetro"}{d.power_seller_status ? ` · ${LIDER[d.power_seller_status] ?? d.power_seller_status}` : ""}</p>
             </div>
-            <dl className="grid gap-3 sm:grid-cols-4">
+            <dl className="grid gap-3 sm:grid-cols-4" data-explain={GLOSARIO.metricasReputacionML} data-explain-title="Lo que mueve la reputación">
               {Object.entries(d.metrics ?? {}).filter(([k]) => k in METRICA).map(([k, m]) => (
                 <div key={k} className="rounded-lg border border-borde p-3">
                   <dt className="text-xs text-tenue">{METRICA[k]}{m.period ? ` · ${m.period.replace("days", "días").replace("months", "meses")}` : ""}</dt>
@@ -242,7 +243,7 @@ export function ReputacionML() {
                     <p className="font-medium">{c.folio} · {c.tipo === "reclamo" ? "Reclamo" : c.tipo === "devolucion" ? "Devolución" : "Cancelación"} · {c.motivo}</p>
                     <p className="text-xs text-tenue">{c.publicacion ?? "—"} · venta {c.venta_ml ?? c.pedido}{c.responsable ? ` · atiende ${c.responsable}` : ""}</p>
                   </div>
-                  {c.fecha_limite && <Insignia tono={vence! < 0 ? "peligro" : vence! < 24 ? "aviso" : "neutro"}>{vence! < 0 ? "venció" : "vence"} {fechaYHora(c.fecha_limite)}</Insignia>}
+                  {c.fecha_limite && <span data-explain={GLOSARIO.venceDevolucion} data-explain-title="Fecha límite"><Insignia tono={vence! < 0 ? "peligro" : vence! < 24 ? "aviso" : "neutro"}>{vence! < 0 ? "venció" : "vence"} {fechaYHora(c.fecha_limite)}</Insignia></span>}
                 </li>
               );
             })}

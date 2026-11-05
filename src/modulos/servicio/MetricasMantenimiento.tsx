@@ -58,7 +58,8 @@ export default function MetricasMantenimiento() {
   const a = useRpc<Analitica>("mantenimiento_analitica", { p_desde: desde, p_hasta: hasta }, { clave: ["mantenimiento_analitica", desde, hasta] });
   return (
     <Pagina titulo="Métricas de mantenimiento" ancho="max-w-[1500px]" descripcion={`Del ${fecha(desde)} al ${fecha(hasta)} · máquinas y herramienta`}
-      acciones={<Filtro opciones={PERIODOS} valor={periodo} alCambiar={(v) => setParams(v === "90" ? {} : { periodo: v }, { replace: true })} />}>
+      acciones={<span className="inline-flex" data-explain={GLOSARIO.periodoMetricasMto} data-explain-title="Periodo">
+        <Filtro opciones={PERIODOS} valor={periodo} alCambiar={(v) => setParams(v === "90" ? {} : { periodo: v }, { replace: true })} /></span>}>
       {m.error ? <ErrorCarga error={m.error} /> : m.isLoading || !m.data ? <Cargando filas={8} /> : <Contenido d={m.data} a={a.data} />}
     </Pagina>
   );
@@ -76,13 +77,13 @@ function Contenido({ d, a }: { d: Datos; a?: Analitica }) {
       celda: (x) => x.criticidad ? <Insignia tono={x.criticidad.includes("alta") ? "peligro" : "neutro"}>{CRITICIDAD[x.criticidad]}</Insignia> : <span className="text-tenue">—</span> },
     { clave: "disponibilidad", titulo: "Disponibilidad", alinear: "der", valor: (x) => x.disponibilidad, explica: GLOSARIO.disponibilidadMaquina,
       celda: (x) => <span className={cn("cifra font-medium", tonoDisp(x.disponibilidad) === "peligro" ? "text-peligro" : tonoDisp(x.disponibilidad) === "aviso" ? "text-aviso" : "")}>{porcentaje(x.disponibilidad, 1)}</span> },
-    { clave: "fallas", titulo: "Fallas", alinear: "der", valor: (x) => x.fallas, celda: (x) => <span className="cifra">{numero(x.fallas)}</span> },
+    { clave: "fallas", titulo: "Fallas", alinear: "der", valor: (x) => x.fallas, explica: GLOSARIO.fallasMaquinaPeriodo, celda: (x) => <span className="cifra">{numero(x.fallas)}</span> },
     { clave: "horas_fuera", titulo: "Horas parada", alinear: "der", valor: (x) => x.horas_fuera, explica: GLOSARIO.horasParadaLaborales, celda: (x) => <span className="cifra">{numero(x.horas_fuera)}</span> },
     { clave: "mtbf_h", titulo: "MTBF", alinear: "der", valor: (x) => x.mtbf_h ?? Infinity, explica: GLOSARIO.mtbf, celda: (x) => <span className="cifra">{x.mtbf_h == null ? "Sin fallas" : `${numero(x.mtbf_h)} h`}</span> },
     { clave: "mttr_h", titulo: "MTTR", alinear: "der", valor: (x) => x.mttr_h ?? -1, explica: GLOSARIO.mttr, celda: (x) => <span className="cifra">{x.mttr_h == null ? "—" : `${numero(x.mttr_h)} h`}</span> },
     { clave: "prev_programados", titulo: "Preventivos a tiempo", alinear: "der", valor: (x) => x.prev_programados ? x.prev_a_tiempo / x.prev_programados : -1, explica: GLOSARIO.cumplimientoPreventivo,
       celda: (x) => x.prev_programados ? <span className="cifra">{numero(x.prev_a_tiempo)} de {numero(x.prev_programados)}</span> : <span className="text-tenue">—</span> },
-    ...(d.con_costos ? [{ clave: "costo", titulo: "Costo", alinear: "der" as const, valor: (x: Maquina) => x.costo ?? 0, celda: (x: Maquina) => <span className="cifra">{x.costo ? dinero(x.costo) : "—"}</span> }] : []),
+    ...(d.con_costos ? [{ clave: "costo", titulo: "Costo", alinear: "der" as const, explica: GLOSARIO.costoMantenimientoPeriodo, valor: (x: Maquina) => x.costo ?? 0, celda: (x: Maquina) => <span className="cifra">{x.costo ? dinero(x.costo) : "—"}</span> }] : []),
   ];
 
   return (
@@ -130,7 +131,7 @@ function Contenido({ d, a }: { d: Datos; a?: Analitica }) {
       </div>
 
       <Tarjeta>
-        <EncabezadoTarjeta titulo="Por máquina" descripcion="Ordenadas por horas paradas; clic en una para abrir su ficha" />
+        <EncabezadoTarjeta titulo="Por máquina" descripcion="Ordenadas por horas paradas; clic en una para abrir su ficha" explica={GLOSARIO.tablaMetricasPorMaquina} />
         <div className="px-3 pb-3">
           <TablaDatos filas={d.maquinas} columnas={colMaq} claveFila={(x) => x.id} exportarComo="metricas-mantenimiento" placeholder="Buscar máquina…" />
         </div>
@@ -162,7 +163,8 @@ function Contenido({ d, a }: { d: Datos; a?: Analitica }) {
               <li key={x.id} className="py-2">
                 <div className="flex justify-between gap-2">
                   <span className="truncate"><b className="cifra">{x.folio}</b> · {x.maquina}</span>
-                  <span className={cn("cifra text-xs whitespace-nowrap", x.dias > 7 && "text-peligro font-medium")}>{numero(x.dias)} d</span>
+                  <span className={cn("cifra text-xs whitespace-nowrap", x.dias > 7 && "text-peligro font-medium")} data-explain={GLOSARIO.backlogMantenimiento}
+                    data-explain-title="Días abierta">{numero(x.dias)} d</span>
                 </div>
                 <p className="text-xs text-tenue truncate">{x.tipo === "preventivo" ? `Preventivo${x.vence ? ` · vence ${fecha(x.vence)}` : ""}` : x.detiene ? "Falla · máquina parada" : "Falla"}{x.falla ? ` · ${x.falla}` : ""}</p>
               </li>
@@ -170,7 +172,7 @@ function Contenido({ d, a }: { d: Datos; a?: Analitica }) {
           </ul>
         </Tarjeta>
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Horas del técnico" descripcion="Órdenes cerradas en el periodo, por quién las atendió" />
+          <EncabezadoTarjeta titulo="Horas del técnico" descripcion="Órdenes cerradas en el periodo, por quién las atendió" explica={GLOSARIO.horasTecnicoMto} />
           <ul className="px-5 pb-4 divide-y divide-borde text-sm">
             {d.tecnicos.length === 0 && <li className="py-6 text-center text-tenue">Sin órdenes cerradas en el periodo.</li>}
             {d.tecnicos.map((x) => (
@@ -179,7 +181,7 @@ function Contenido({ d, a }: { d: Datos; a?: Analitica }) {
                 <span className="cifra whitespace-nowrap">{numero(x.horas)} h <span className="text-tenue text-xs">· {numero(x.preventivas)} prev · {numero(x.correctivas)} fallas</span></span>
               </li>
             ))}
-            {d.con_costos && r.costo != null && <li className="pt-3 flex justify-between font-medium"><span>Costo del periodo</span><span className="cifra">{dinero(r.costo)}</span></li>}
+            {d.con_costos && r.costo != null && <li className="pt-3 flex justify-between font-medium"><span data-explain={GLOSARIO.costoMantenimientoPeriodo} data-explain-title="Costo del periodo">Costo del periodo</span><span className="cifra">{dinero(r.costo)}</span></li>}
           </ul>
         </Tarjeta>
       </div>

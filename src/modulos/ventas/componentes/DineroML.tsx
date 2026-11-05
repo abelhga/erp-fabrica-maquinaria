@@ -53,13 +53,13 @@ export function TarjetaMercadoLibre({ pedidoId }: { pedidoId: string }) {
   return (
     <Tarjeta>
       <EncabezadoTarjeta titulo="Mercado Libre" explica={GLOSARIO.dineroML}
-        acciones={<a href={enMLweb(v.order_id)} target="_blank" rel="noreferrer" className="text-sm text-marca-texto inline-flex items-center gap-1">Ver en ML<ExternalLink className="h-3.5 w-3.5" /></a>} />
+        acciones={<a href={enMLweb(v.order_id)} target="_blank" rel="noreferrer" className="text-sm text-marca-texto inline-flex items-center gap-1" data-explain={GLOSARIO.abrirEnMercadoLibre}>Ver en ML<ExternalLink className="h-3.5 w-3.5" /></a>} />
       <div className="px-4 pb-4 space-y-3 text-sm">
         <div className="flex flex-wrap items-center gap-2" data-explain={GLOSARIO.envioML} data-explain-title="Envío en Mercado Libre">
           <Truck className="h-4 w-4 text-tenue" />
           {env ? <Insignia tono={env.tono}>{env.texto}</Insignia> : <span className="text-tenue">Sin envío de ML</span>}
           {v.envio_sub && SUB[v.envio_sub] && <span className="text-xs text-tenue">{SUB[v.envio_sub]}</span>}
-          {v.full_ml && <Insignia tono="marca">Full</Insignia>}
+          {v.full_ml && <span data-explain={GLOSARIO.ventaFullML} data-explain-title="Full"><Insignia tono="marca">Full</Insignia></span>}
           {v.guia && <span className="text-xs text-tenue cifra">guía {v.guia}</span>}
         </div>
         {(pagos.data ?? []).map((d) => (
@@ -69,12 +69,12 @@ export function TarjetaMercadoLibre({ pedidoId }: { pedidoId: string }) {
               <span className="cifra font-semibold">{dinero(d.total)}</span>
             </div>
             <dl className="px-3 py-2 space-y-1 text-[13px]">
-              <Renglon t="Comisión de Mercado Libre" v={d.comision} />
-              <Renglon t="Envío (lo pagamos nosotros)" v={d.envio} />
+              <Renglon t="Comisión de Mercado Libre" v={d.comision} explica={GLOSARIO.seQuedoML} />
+              <Renglon t="Envío (lo pagamos nosotros)" v={d.envio} explica={GLOSARIO.seQuedoML} />
               <Renglon t="Retención de IVA" v={d.retencion_iva} explica={GLOSARIO.retencionesML} />
               <Renglon t="Retención de ISR" v={d.retencion_isr} explica={GLOSARIO.retencionesML} />
               {d.otros > 0 && <Renglon t="Otros cargos" v={d.otros} />}
-              {d.reembolsado > 0 && <Renglon t="Reembolsado al comprador" v={d.reembolsado} />}
+              {d.reembolsado > 0 && <Renglon t="Reembolsado al comprador" v={d.reembolsado} explica={GLOSARIO.reembolsadoML} />}
             </dl>
             <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-borde bg-fondo/60 rounded-b-lg" data-explain={GLOSARIO.netoML} data-explain-title="Llega a Mercado Pago">
               <span>
@@ -130,21 +130,22 @@ export function DineroMercadoLibre() {
     { clave: "folio", titulo: "Pedido", valor: (d) => d.folio ?? d.order_id,
       celda: (d) => d.pedido_id ? <Link to={`/ventas/pedidos/${d.pedido_id}`} className="text-marca-texto hover:underline cifra">{d.folio}</Link> : <span className="cifra">{d.order_id}</span> },
     { clave: "total", titulo: "Pagó el comprador", alinear: "der", sinBusqueda: true, celda: (d) => <span className="cifra">{dinero(d.total)}</span> },
-    { clave: "comision", titulo: "Comisión", alinear: "der", sinBusqueda: true, celda: (d) => <span className="cifra">{dinero(d.comision)}</span> },
-    { clave: "envio", titulo: "Envío", alinear: "der", sinBusqueda: true, celda: (d) => <span className="cifra">{dinero(d.envio)}</span> },
+    { clave: "comision", titulo: "Comisión", alinear: "der", sinBusqueda: true, explica: GLOSARIO.seQuedoML, celda: (d) => <span className="cifra">{dinero(d.comision)}</span> },
+    { clave: "envio", titulo: "Envío", alinear: "der", sinBusqueda: true, explica: GLOSARIO.seQuedoML, celda: (d) => <span className="cifra">{dinero(d.envio)}</span> },
     { clave: "retencion_iva", titulo: "Ret. IVA", alinear: "der", sinBusqueda: true, explica: GLOSARIO.retencionesML, celda: (d) => <span className="cifra">{dinero(d.retencion_iva)}</span> },
     { clave: "retencion_isr", titulo: "Ret. ISR", alinear: "der", sinBusqueda: true, explica: GLOSARIO.retencionesML, celda: (d) => <span className="cifra">{dinero(d.retencion_isr)}</span> },
-    { clave: "reembolsado", titulo: "Reembolsado", alinear: "der", sinBusqueda: true, celda: (d) => <span className="cifra">{d.reembolsado ? dinero(d.reembolsado) : "—"}</span> },
+    { clave: "reembolsado", titulo: "Reembolsado", alinear: "der", sinBusqueda: true, explica: GLOSARIO.reembolsadoML, celda: (d) => <span className="cifra">{d.reembolsado ? dinero(d.reembolsado) : "—"}</span> },
     { clave: "neto", titulo: "Llega a MP", alinear: "der", sinBusqueda: true, explica: GLOSARIO.netoML, celda: (d) => <span className="cifra font-medium">{d.neto != null ? dinero(d.neto) : "—"}</span> },
-    { clave: "libera_en", titulo: "Disponible", valor: (d) => d.libera_en ?? "",
+    { clave: "libera_en", titulo: "Disponible", valor: (d) => d.libera_en ?? "", explica: GLOSARIO.netoML,
       celda: (d) => d.disponible ? <Insignia tono="ok">Ya</Insignia> : <span className="cifra text-tenue">{fecha(d.libera_en)}</span> },
   ];
   return (
     <div className="space-y-4">
       <Filtro opciones={meses} valor={mes} alCambiar={setMes} />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi titulo="Pagaron los compradores" icono={HandCoins} tono="marca" valor={dinero(suma((d) => d.total - d.reembolsado))} detalle={`${filas.length} ${filas.length === 1 ? "pago" : "pagos"}`} />
-        <Kpi titulo="Se quedó Mercado Libre" icono={Receipt} tono="aviso" valor={dinero(suma((d) => d.comision + d.envio + d.otros))}
+        <Kpi titulo="Pagaron los compradores" icono={HandCoins} tono="marca" valor={dinero(suma((d) => d.total - d.reembolsado))} detalle={`${filas.length} ${filas.length === 1 ? "pago" : "pagos"}`}
+          explica={GLOSARIO.pagaronCompradoresML} />
+        <Kpi titulo="Se quedó Mercado Libre" icono={Receipt} tono="aviso" valor={dinero(suma((d) => d.comision + d.envio + d.otros))} explica={GLOSARIO.seQuedoML}
           detalle={`Comisiones ${dinero(suma((d) => d.comision))} · envíos ${dinero(suma((d) => d.envio))}`} />
         <Kpi titulo="Retenciones" icono={Landmark} tono="info" valor={dinero(suma((d) => d.retencion_iva + d.retencion_isr))} explica={GLOSARIO.retencionesML}
           detalle={`IVA ${dinero(suma((d) => d.retencion_iva))} · ISR ${dinero(suma((d) => d.retencion_isr))}`} />

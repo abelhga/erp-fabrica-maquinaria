@@ -128,7 +128,7 @@ function CapturaFecha({ inicial, etiqueta, alGuardar, alCancelar, alQuitar, carg
   return (
     <form className="mt-1.5 flex flex-wrap items-center gap-2" onSubmit={(ev) => { ev.preventDefault(); if (f) alGuardar(f); }}>
       <input type="date" className="campo h-8 w-40" value={f} max={hoyISO()} onChange={(ev) => setF(ev.target.value)} aria-label={`Fecha de ${etiqueta}`} />
-      <Boton type="submit" tamano="sm" variante="secundario" cargando={cargando} data-explain={GLOSARIO.botonRegistrarEtapaEmbarque}>Registrar</Boton>
+      <span data-explain={GLOSARIO.botonRegistrarEtapaEmbarque} data-explain-title="Registrar"><Boton type="submit" tamano="sm" variante="secundario" cargando={cargando}>Registrar</Boton></span>
       {alCancelar && <Boton type="button" tamano="sm" variante="fantasma" onClick={alCancelar}>Cancelar</Boton>}
       {alQuitar && <span data-explain={GLOSARIO.quitarEtapaEmbarque} data-explain-title="Quitar este paso">
         <Boton type="button" tamano="sm" variante="fantasma" className="text-peligro" onClick={alQuitar}><Trash2 className="h-3.5 w-3.5" />Quitar este paso</Boton></span>}

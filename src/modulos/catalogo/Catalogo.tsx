@@ -55,7 +55,8 @@ function CambiarFoto({ a, alCambiar }: { a: Articulo; alCambiar: (url: string | 
         <Link2 className="h-4 w-4 text-tenue shrink-0" />
         <input className="campo h-9 flex-1 text-sm" value={liga} onChange={(e) => setLiga(e.target.value)} placeholder="o pega la liga (Drive o https://…) y Enter" />
       </form>
-      {a.imagen_url && <button type="button" className="text-sm text-peligro hover:underline" onClick={() => poner.mutate(null)}>Quitar</button>}
+      {a.imagen_url && <button type="button" className="text-sm text-peligro hover:underline" onClick={() => poner.mutate(null)}
+        data-explain={GLOSARIO.botonQuitarFotoCatalogo} data-explain-title="Quitar foto">Quitar</button>}
     </div>
   );
 }
@@ -103,10 +104,10 @@ export default function Catalogo() {
   const cuenta = (p: (a: Articulo) => boolean) => cat.data?.filter(p).length;
   const opciones: { valor: FiltroCat; texto: string; cuenta?: number; explica?: string }[] = [
     { valor: "todos", texto: "Todo", cuenta: cat.data?.length },
-    { valor: "equipo", texto: "Equipos", cuenta: cuenta((a) => a.tipo === "equipo") },
-    { valor: "componente", texto: "Componentes", cuenta: cuenta((a) => a.tipo === "componente") },
+    { valor: "equipo", texto: "Equipos", cuenta: cuenta((a) => a.tipo === "equipo"), explica: GLOSARIO.tipoCatalogoVenta },
+    { valor: "componente", texto: "Componentes", cuenta: cuenta((a) => a.tipo === "componente"), explica: GLOSARIO.tipoCatalogoVenta },
     { valor: "con_existencia", texto: "Con existencia", cuenta: cuenta((a) => (a.existencia ?? 0) > 0), explica: GLOSARIO.enPlanta },
-    { valor: "sin_foto", texto: "Sin foto", cuenta: cuenta((a) => !a.imagen_url) },
+    { valor: "sin_foto", texto: "Sin foto", cuenta: cuenta((a) => !a.imagen_url), explica: GLOSARIO.fotoCatalogo },
   ];
 
   const columnas: Columna<Articulo>[] = [
@@ -117,7 +118,7 @@ export default function Catalogo() {
       celda: (a) => (
         <div className="min-w-[240px]">
           {a.nombre}
-          {a.tipo === "equipo" && <Insignia className="ml-2 align-middle">Equipo</Insignia>}
+          {a.tipo === "equipo" && <span data-explain={GLOSARIO.tipoCatalogoVenta} data-explain-title="Equipo"><Insignia className="ml-2 align-middle">Equipo</Insignia></span>}
           {a.descripcion && <p className="text-xs text-tenue line-clamp-1">{a.descripcion}</p>}
         </div>
       ),
@@ -131,7 +132,8 @@ export default function Catalogo() {
     },
     {
       clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (a) => a.precio, explica: GLOSARIO.precioListaCatalogo,
-      celda: (a) => a.precio != null ? <span className="cifra">{dinero(a.precio)}</span> : <span className="text-tenue">Pregunta a ventas</span>,
+      celda: (a) => a.precio != null ? <span className="cifra">{dinero(a.precio)}</span>
+        : <span className="text-tenue" data-explain={GLOSARIO.sinPrecioListaCatalogo} data-explain-title="Sin precio de lista">Pregunta a ventas</span>,
     },
   ];
 
@@ -152,7 +154,7 @@ export default function Catalogo() {
             <Foto key={abierto.imagen_url ?? abierto.id} url={abierto.imagen_url} grande />
             {puede("catalogo", 2) && <CambiarFoto a={abierto} alCambiar={(url) => setAbierto({ ...abierto, imagen_url: url })} />}
             <dl className="grid grid-cols-2 gap-4">
-              <div data-explain={GLOSARIO.precioListaCatalogo} data-explain-title="Precio de lista">
+              <div data-explain={abierto.precio != null ? GLOSARIO.precioListaCatalogo : GLOSARIO.sinPrecioListaCatalogo} data-explain-title="Precio de lista">
                 <dt className="text-xs text-tenue">Precio de lista</dt>
                 <dd className="text-xl font-semibold cifra">{abierto.precio != null ? dinero(abierto.precio) : "Pregunta a ventas"}</dd>
               </div>
@@ -160,7 +162,7 @@ export default function Catalogo() {
                 <dt className="text-xs text-tenue">Existencia en planta</dt>
                 <dd className="text-xl font-semibold cifra">{numero(abierto.existencia ?? 0)} <span className="text-sm font-normal text-tenue">{abierto.unidad}</span></dd>
               </div>
-              <div><dt className="text-xs text-tenue">Tipo</dt><dd>{abierto.tipo === "equipo" ? "Equipo" : "Componente"}</dd></div>
+              <div data-explain={GLOSARIO.tipoCatalogoVenta} data-explain-title="Tipo"><dt className="text-xs text-tenue">Tipo</dt><dd>{abierto.tipo === "equipo" ? "Equipo" : "Componente"}</dd></div>
               <div><dt className="text-xs text-tenue">Categoría</dt><dd>{abierto.categoria ?? "—"}</dd></div>
             </dl>
             <div>

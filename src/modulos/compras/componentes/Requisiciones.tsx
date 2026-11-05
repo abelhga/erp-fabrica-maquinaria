@@ -115,7 +115,7 @@ export function Requisiciones() {
               {r.notas_requisicion && <p className="text-sm text-tenue truncate max-w-[420px]">{r.notas_requisicion}</p>}
               <p className="ml-auto text-xs text-tenue">
                 {r.solicitante ?? "—"} · {hace(r.creado_en)}
-                {r.necesaria_para && <> · <span className={cn(urgente && "text-peligro font-medium")} data-explain={GLOSARIO.origenRequisicion} data-explain-title="Para cuándo">para el {fecha(r.necesaria_para)}</span></>}
+                {r.necesaria_para && <> · <span className={cn(urgente && "text-peligro font-medium")} data-explain={GLOSARIO.fechaNecesariaRequisicion} data-explain-title="Para cuándo">para el {fecha(r.necesaria_para)}</span></>}
               </p>
             </div>
             <div className="overflow-x-auto">

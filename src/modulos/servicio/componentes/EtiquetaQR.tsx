@@ -6,6 +6,7 @@ import { Nfc, Printer } from "lucide-react";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import type { Maquina } from "../datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
  * La liga que va en el QR y en la etiqueta NFC de cada máquina: abre «Reportar falla» con la
@@ -60,11 +61,11 @@ export function DialogoEtiqueta({ m, alCerrar }: { m: Pick<Maquina, "id" | "nume
     <Dialogo abierto alCambiar={(v) => !v && alCerrar()} titulo={`Etiqueta de ${m.numero}`}
       descripcion="Pégala en la máquina: quien vea una falla la escanea con la cámara del celular y le sale «Reportar falla» con esta máquina ya elegida."
       pie={<>
-        {nfcDisponible() && <Boton variante="secundario" cargando={grabando} onClick={grabarNfc}><Nfc className="h-4 w-4" />Grabar en etiqueta NFC</Boton>}
-        <Boton onClick={() => window.open(`/servicio/etiquetas?ids=${m.id}`, "_blank")}><Printer className="h-4 w-4" />Imprimir</Boton>
+        {nfcDisponible() && <Boton variante="secundario" cargando={grabando} onClick={grabarNfc} data-explain={GLOSARIO.botonGrabarNfc}><Nfc className="h-4 w-4" />Grabar en etiqueta NFC</Boton>}
+        <Boton onClick={() => window.open(`/servicio/etiquetas?ids=${m.id}`, "_blank")} data-explain={GLOSARIO.botonImprimirEtiqueta}><Printer className="h-4 w-4" />Imprimir</Boton>
       </>}>
       <div className="space-y-3">
-        <Etiqueta m={m} />
+        <div data-explain={GLOSARIO.etiquetaQR} data-explain-title="Etiqueta QR"><Etiqueta m={m} /></div>
         <p className="text-xs text-tenue">
           Para NFC: en un celular Android con Chrome sale el botón para grabarla aquí mismo. En otros, graba esta liga con una app
           como NFC Tools: <span className="cifra break-all select-all">{urlReporte(m.id)}</span>

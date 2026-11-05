@@ -99,13 +99,13 @@ export default function Cobranza() {
     },
     { clave: "cliente", titulo: "Cliente", clase: "max-w-[200px]", celda: (f) => <span className="block truncate" title={f.cliente}>{f.cliente}</span> },
     { clave: "vendedor", titulo: "Vendedor", valor: (f) => f.vendedor ?? "—", celda: (f) => <span className="whitespace-nowrap" title={f.vendedor ?? undefined}>{corto(f.vendedor)}</span> },
-    { clave: "estado", titulo: "Estado", valor: (f) => ESTADO_PEDIDO[f.estado]?.texto ?? f.estado, celda: (f) => <Insignia tono={ESTADO_PEDIDO[f.estado]?.tono}>{ESTADO_PEDIDO[f.estado]?.texto ?? f.estado}</Insignia> },
+    { clave: "estado", titulo: "Estado", explica: GLOSARIO.estadoPedido, valor: (f) => ESTADO_PEDIDO[f.estado]?.texto ?? f.estado, celda: (f) => <Insignia tono={ESTADO_PEDIDO[f.estado]?.tono}>{ESTADO_PEDIDO[f.estado]?.texto ?? f.estado}</Insignia> },
     { clave: "total", titulo: "Total", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.total_mxn), celda: (f) => enMoneda(f.total, f.moneda) },
     {
       clave: "cobrado", titulo: "Cobrado", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.cobrado),
       celda: (f) => <div><p>{enMoneda(f.cobrado, f.moneda)}</p>{f.ultimo_cobro && <p className="text-xs text-tenue">último {fecha(f.ultimo_cobro).slice(0, 6)}</p>}</div>,
     },
-    { clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.saldo_mxn), celda: (f) => <b>{enMoneda(f.saldo, f.moneda)}</b> },
+    { clave: "saldo", titulo: "Saldo", explica: GLOSARIO.saldoPedido, alinear: "der", sinBusqueda: true, valor: (f) => Number(f.saldo_mxn), celda: (f) => <b>{enMoneda(f.saldo, f.moneda)}</b> },
     {
       clave: "dias", titulo: "Antigüedad", explica: GLOSARIO.antiguedadCobranza, sinBusqueda: true, valor: (f) => f.dias,
       celda: (f) => Number(f.saldo) > 0.009 ? <Insignia tono={tonoRango(f.rango)}>{f.dias} días</Insignia> : <Insignia tono="ok">Pagado</Insignia>,
@@ -120,14 +120,14 @@ export default function Cobranza() {
       celda: (g) => g.rangos[r.valor] ? <span className={r.valor === "90+" ? "text-peligro" : r.valor === "61-90" ? "text-aviso" : ""}>{dinero(g.rangos[r.valor])}</span> : <span className="text-tenue">—</span>,
     })),
     { clave: "total", titulo: "Saldo total", alinear: "der", sinBusqueda: true, celda: (g) => <b>{dinero(g.total)}</b> },
-    { clave: "mas_antiguo", titulo: "Más antiguo", alinear: "der", sinBusqueda: true, celda: (g) => `${g.mas_antiguo} días` },
+    { clave: "mas_antiguo", titulo: "Más antiguo", explica: GLOSARIO.masAntiguoCobranza, alinear: "der", sinBusqueda: true, celda: (g) => `${g.mas_antiguo} días` },
   ];
 
   return (
     <Pagina titulo="Cobranza" descripcion="Lo que nos deben los clientes (pedidos y lo que ya se debía en la hoja), desde cuándo, y lo que se ha cobrado mes a mes."
       acciones={<>
         <TipoCambioDia />
-        {puede("finanzas", 2) && <Boton variante="secundario" onClick={() => setComplementos(true)}><Upload className="h-4 w-4" /> Subir complementos de pago</Boton>}
+        {puede("finanzas", 2) && <Boton variante="secundario" data-explain={GLOSARIO.complementoPago} onClick={() => setComplementos(true)}><Upload className="h-4 w-4" /> Subir complementos de pago</Boton>}
       </>}>
       <SubirComplementos abierto={complementos} alCambiar={setComplementos} />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -147,7 +147,7 @@ export default function Cobranza() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Tarjeta className="lg:col-span-2 flex flex-col">
           <EncabezadoTarjeta titulo="Cobrado por mes" explica={GLOSARIO.cobradoPorMes} descripcion="Cobros registrados y pagos de la hoja, en pesos (los de dólares al tipo de cambio del pedido)"
-            acciones={<span className="text-sm text-tenue">Promedio: <b className="text-texto cifra">{dinero(promedio)}</b></span>} />
+            acciones={<span className="text-sm text-tenue" data-explain={GLOSARIO.promedioCobradoMes} data-explain-title="Promedio por mes">Promedio: <b className="text-texto cifra">{dinero(promedio)}</b></span>} />
           <div className="flex-1 min-h-[240px] px-2 pb-3">
             <ResponsiveContainer>
               <BarChart data={grafica} margin={{ top: 8, right: 12, left: 4, bottom: 0 }}>
@@ -161,7 +161,7 @@ export default function Cobranza() {
           </div>
         </Tarjeta>
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Los más atrasados" descripcion="Por dónde empezar a llamar" />
+          <EncabezadoTarjeta titulo="Los más atrasados" explica={GLOSARIO.masAtrasadosCobranza} descripcion="Por dónde empezar a llamar" />
           <ul className="px-3 pb-3 space-y-1">
             {masViejos.length === 0 && (deHoja > 0
               ? <li className="px-2 py-6 text-sm text-tenue text-center">Ningún pedido del ERP debe todavía. Lo que se debe viene de la hoja:{" "}
@@ -187,9 +187,9 @@ export default function Cobranza() {
 
       <Pestanas value={vista} onValueChange={setVista}>
         <ListaPestanas opciones={[
-          { valor: "pedidos", texto: "Por pedido" },
-          { valor: "clientes", texto: "Por cliente", cuenta: clientes.length },
-          { valor: "vendedores", texto: "Por vendedor", cuenta: vendedores.length },
+          { valor: "pedidos", texto: "Por pedido", explica: GLOSARIO.pestanaCobranzaPorPedido },
+          { valor: "clientes", texto: "Por cliente", cuenta: clientes.length, explica: GLOSARIO.pestanaCobranzaPorCliente },
+          { valor: "vendedores", texto: "Por vendedor", cuenta: vendedores.length, explica: GLOSARIO.pestanaCobranzaPorVendedor },
           { valor: "arranque", texto: "Saldos de arranque (hoja)", explica: GLOSARIO.saldoArranque },
         ]} />
         <ContenidoPestana value="pedidos" className="pt-4">
@@ -201,12 +201,12 @@ export default function Cobranza() {
               <div className="flex flex-wrap items-center gap-2">
                 <Filtro valor={conSaldo} alCambiar={setConSaldo} opciones={[
                   { valor: "saldo", texto: "Con saldo", cuenta: pendientes.length },
-                  { valor: "sin_factura", texto: "Sin facturar", cuenta: todas.filter((f) => !f.facturado).length },
+                  { valor: "sin_factura", texto: "Sin facturar", cuenta: todas.filter((f) => !f.facturado).length, explica: GLOSARIO.filtroSinFacturarCobranza },
                   { valor: "todos", texto: "Todos" },
                 ]} />
                 <Filtro valor={rango} alCambiar={setRango} opciones={[{ valor: "todos", texto: "Cualquier antigüedad" }, ...RANGOS.map((r) => ({ valor: r.valor, texto: r.valor === "90+" ? "+90" : r.valor.replace("-", "–") }))]} />
                 {filtro && (
-                  <button onClick={() => setFiltro(null)} className="h-8 inline-flex items-center gap-1 rounded-full bg-marca-suave text-marca-texto px-3 text-xs font-medium">
+                  <button onClick={() => setFiltro(null)} data-explain={GLOSARIO.quitarFiltroCobranza} data-explain-title="Quitar filtro" className="h-8 inline-flex items-center gap-1 rounded-full bg-marca-suave text-marca-texto px-3 text-xs font-medium">
                     {filtro.tipo === "cliente" ? "Cliente" : "Vendedor"}: {filtro.nombre} <X className="h-3.5 w-3.5" />
                   </button>
                 )}

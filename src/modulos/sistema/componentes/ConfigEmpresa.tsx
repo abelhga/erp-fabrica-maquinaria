@@ -147,7 +147,7 @@ function Iva({ inicial, editable, actualizado }: { inicial: number; editable: bo
   const [v, setV] = useState(String(Math.round(inicial * 10000) / 100));
   const guardar = useGuardarConfig("Tasa de IVA guardada");
   return (
-    <TarjetaForm titulo="IVA" descripcion="Tasa general para cotizaciones y pedidos nuevos (los ya hechos no cambian)." editable={editable} quien="sistemas o dirección"
+    <TarjetaForm titulo="IVA" explica={GLOSARIO.tasaIvaEmpresa} descripcion="Tasa general para cotizaciones y pedidos nuevos (los ya hechos no cambian)." editable={editable} quien="sistemas o dirección"
       guardando={guardar.isPending} pie={actualizado && `Cambiado el ${fecha(actualizado)}`}
       alGuardar={() => guardar.mutate({ clave: "iva", valor: Number(v) / 100 })}>
       <Campo etiqueta="Tasa (%)" ayuda="16 % general; 8 % en la región fronteriza.">

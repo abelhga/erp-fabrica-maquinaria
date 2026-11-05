@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabase";
 import { fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { CLAVE, useProduccionEnVivo, useTablero, type OrdenTablero } from "./componentes/datos";
-import { BarraAvance, ChipEtapa, InsigniaCompromiso } from "./componentes/piezas";
+import { BarraAvance, ChipEtapa, EXPLICA_ESTADO_OP, InsigniaCompromiso } from "./componentes/piezas";
 import { DialogoDesdePedido, DialogoOrdenStock } from "./componentes/DialogosCrear";
 import { ESTADO_OP, abreviarEquipo, textoDias } from "./componentes/util";
 import { GLOSARIO } from "@/tutorial/glosario";
@@ -28,9 +28,10 @@ const PASA: Record<FiltroOrdenes, (o: OrdenTablero) => boolean> = {
   faltantes: (o) => o.materiales_faltantes > 0,
 };
 
-function Paso({ hecho, texto, titulo }: { hecho: boolean; texto: string; titulo: string }) {
+function Paso({ hecho, texto, titulo, explica }: { hecho: boolean; texto: string; titulo: string; explica: string }) {
   return (
-    <span className={hecho ? "inline-flex items-center gap-0.5 text-ok" : "inline-flex items-center gap-0.5 text-tenue/70"} title={`${titulo}: ${hecho ? "hecho" : "pendiente"}`}>
+    <span className={hecho ? "inline-flex items-center gap-0.5 text-ok" : "inline-flex items-center gap-0.5 text-tenue/70"} title={`${titulo}: ${hecho ? "hecho" : "pendiente"}`}
+          data-explain={explica} data-explain-title={`${titulo}: ${hecho ? "hecho" : "pendiente"}`}>
       {hecho ? <Check className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}{texto}
     </span>
   );
@@ -66,12 +67,14 @@ export default function Ordenes() {
 
   const columnas = useMemo<Columna<OrdenTablero>[]>(() => [
     {
-      clave: "folio", titulo: "Orden", valor: (o) => `${o.folio} ${o.numero_serie ?? ""}`,
+      clave: "folio", titulo: "Orden", valor: (o) => `${o.folio} ${o.numero_serie ?? ""}`, explica: GLOSARIO.ordenProduccion,
       celda: (o) => (
         <div className="whitespace-nowrap">
-          <p className="font-medium cifra flex items-center gap-1">{o.folio}{o.prioridad === 1 && <Flame className="h-3.5 w-3.5 text-peligro" aria-label="Urgente" />}</p>
+          <p className="font-medium cifra flex items-center gap-1">{o.folio}{o.prioridad === 1 && (
+            <span className="inline-flex" data-explain={GLOSARIO.prioridadOrden} data-explain-title="Urgente"><Flame className="h-3.5 w-3.5 text-peligro" aria-label="Urgente" /></span>
+          )}</p>
           <p className="text-xs text-tenue cifra">{o.numero_serie ?? "sin serie"}</p>
-          <Insignia tono={ESTADO_OP[o.estado].tono} className="mt-1">{ESTADO_OP[o.estado].texto}</Insignia>
+          <span className="inline-flex mt-1" data-explain={EXPLICA_ESTADO_OP[o.estado]}><Insignia tono={ESTADO_OP[o.estado].tono}>{ESTADO_OP[o.estado].texto}</Insignia></span>
         </div>
       ),
     },
@@ -88,7 +91,7 @@ export default function Ordenes() {
       clave: "cliente", titulo: "Pedido y cliente", valor: (o) => (o.para_stock ? "Para stock" : `${o.pedido_folio ?? ""} ${o.cliente ?? ""}`),
       celda: (o) => (
         <div className="max-w-[170px]">
-          {o.para_stock ? <p className="text-tenue">Para stock</p> : <>
+          {o.para_stock ? <p className="text-tenue" data-explain={GLOSARIO.paraStock} data-explain-title="Para stock">Para stock</p> : <>
             {o.pedido_folio && <p className="font-medium cifra whitespace-nowrap">{o.pedido_folio}</p>}
             <p className={cn("truncate", o.pedido_folio && "text-xs text-tenue")}>{o.cliente ?? "—"}</p>
           </>}
@@ -111,7 +114,7 @@ export default function Ordenes() {
       clave: "avance", titulo: "Avance y etapa", valor: (o) => Number(o.avance), sinBusqueda: true, explica: GLOSARIO.avanceOrden,
       celda: (o) => (
         <div className="w-40 space-y-1">
-          <div className="flex flex-wrap gap-x-2 gap-y-0.5">{o.etapas_activas.length ? o.etapas_activas.map((e) => <ChipEtapa key={e.id} nombre={e.estado === "pausada" ? `${e.nombre} (pausada)` : e.nombre} color={e.color} estado={e.estado} />)
+          <div className="flex flex-wrap gap-x-2 gap-y-0.5" data-explain={GLOSARIO.chipEtapaOrden} data-explain-title="Etapa">{o.etapas_activas.length ? o.etapas_activas.map((e) => <ChipEtapa key={e.id} nombre={e.estado === "pausada" ? `${e.nombre} (pausada)` : e.nombre} color={e.color} estado={e.estado} />)
             : o.siguiente_etapa && o.estado !== "terminada" ? <ChipEtapa nombre={`Sigue: ${o.siguiente_etapa}`} color={o.siguiente_etapa_color} className="text-tenue" /> : null}</div>
           <div className="flex items-center gap-2"><BarraAvance valor={o.avance} /><span className="text-xs cifra w-9 text-right">{o.avance}%</span></div>
         </div>
@@ -124,14 +127,18 @@ export default function Ordenes() {
         <div className="space-y-1 min-w-[140px]">
           {o.estado === "terminada" ? null : o.materiales_faltantes > 0 ? (
             <div>
-              <Insignia tono={o.faltantes_sin_pedir > 0 ? "peligro" : "aviso"}>{o.materiales_faltantes} con faltante</Insignia>
+              <span className="inline-flex" data-explain={GLOSARIO.faltanteMaterial} data-explain-title="Con faltante">
+                <Insignia tono={o.faltantes_sin_pedir > 0 ? "peligro" : "aviso"}>{o.materiales_faltantes} con faltante</Insignia>
+              </span>
               <p className="text-xs text-tenue mt-0.5">{o.faltantes_sin_pedir > 0 ? `${o.faltantes_sin_pedir} sin pedir a compras` : "Todo pedido a compras"}</p>
             </div>
-          ) : o.material_apartado ? <Insignia tono="ok">Material completo</Insignia> : <span className="text-xs text-tenue">Sin apartar</span>}
+          ) : o.material_apartado
+            ? <span className="inline-flex" data-explain={GLOSARIO.materialCompletoOrden}><Insignia tono="ok">Material completo</Insignia></span>
+            : <span className="text-xs text-tenue">Sin apartar</span>}
           <div className="flex gap-2 text-xs">
-            <Paso hecho={o.revisada_ingenieria} texto="Ing." titulo="Ingeniería revisó" />
-            <Paso hecho={o.material_apartado} texto="Apartado" titulo="Material apartado" />
-            <Paso hecho={o.revisada_almacen} texto="Alm." titulo="Almacén revisó" />
+            <Paso hecho={o.revisada_ingenieria} texto="Ing." titulo="Ingeniería revisó" explica={GLOSARIO.revisionIngenieria} />
+            <Paso hecho={o.material_apartado} texto="Apartado" titulo="Material apartado" explica={GLOSARIO.pasoApartarMaterial} />
+            <Paso hecho={o.revisada_almacen} texto="Alm." titulo="Almacén revisó" explica={GLOSARIO.revisionAlmacen} />
           </div>
         </div>
       ),
@@ -147,10 +154,13 @@ export default function Ordenes() {
       descripcion="Cada orden con su lista de materiales congelada, lo apartado, lo que falta y en qué etapa va."
       ancho="max-w-[1500px]"
       acciones={crea && <>
-        <Boton variante="secundario" onClick={() => cambiar("nueva", "stock")}><PackagePlus className="h-4 w-4" />Orden para stock</Boton>
-        <Boton onClick={() => cambiar("nueva", "pedido")}>
+        <Boton variante="secundario" onClick={() => cambiar("nueva", "stock")} data-explain={GLOSARIO.botonOrdenParaStock} data-explain-title="Orden para stock">
+          <PackagePlus className="h-4 w-4" />Orden para stock
+        </Boton>
+        <Boton onClick={() => cambiar("nueva", "pedido")} data-explain={GLOSARIO.botonNuevaOrdenTablero} data-explain-title="Crear órdenes desde pedido">
           <FilePlus2 className="h-4 w-4" />Crear órdenes desde pedido
-          {!!porProducir.data && <span className="ml-1 rounded-full bg-white/25 px-1.5 text-xs cifra">{porProducir.data}</span>}
+          {!!porProducir.data && <span className="ml-1 rounded-full bg-white/25 px-1.5 text-xs cifra"
+            data-explain={GLOSARIO.pedidosPorProducir} data-explain-title="Pedidos por producir">{porProducir.data}</span>}
         </Boton>
       </>}
     >
@@ -169,13 +179,13 @@ export default function Ordenes() {
             valor={filtro}
             alCambiar={(v) => cambiar("filtro", v === "abiertas" ? null : v)}
             opciones={[
-              { valor: "abiertas", texto: "Abiertas", cuenta: cuenta("abiertas") },
-              { valor: "planeada", texto: "Planeadas", cuenta: cuenta("planeada") },
-              { valor: "liberada", texto: "Liberadas", cuenta: cuenta("liberada") },
-              { valor: "en_proceso", texto: "En proceso", cuenta: cuenta("en_proceso") },
-              { valor: "terminada", texto: "Terminadas", cuenta: cuenta("terminada") },
-              { valor: "atrasadas", texto: "Atrasadas", cuenta: cuenta("atrasadas") },
-              { valor: "faltantes", texto: "Con faltantes", cuenta: cuenta("faltantes") },
+              { valor: "abiertas", texto: "Abiertas", cuenta: cuenta("abiertas"), explica: GLOSARIO.filtroOpAbiertas },
+              { valor: "planeada", texto: "Planeadas", cuenta: cuenta("planeada"), explica: GLOSARIO.opPlaneada },
+              { valor: "liberada", texto: "Liberadas", cuenta: cuenta("liberada"), explica: GLOSARIO.opLiberada },
+              { valor: "en_proceso", texto: "En proceso", cuenta: cuenta("en_proceso"), explica: GLOSARIO.opEnProceso },
+              { valor: "terminada", texto: "Terminadas", cuenta: cuenta("terminada"), explica: GLOSARIO.opTerminada },
+              { valor: "atrasadas", texto: "Atrasadas", cuenta: cuenta("atrasadas"), explica: GLOSARIO.ordenAtrasada },
+              { valor: "faltantes", texto: "Con faltantes", cuenta: cuenta("faltantes"), explica: GLOSARIO.faltanteMaterial },
             ]}
           />
         }

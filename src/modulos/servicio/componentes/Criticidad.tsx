@@ -48,7 +48,8 @@ export function TarjetaCriticidad({ m, alEditar }: { m: Maquina; alEditar?: () =
         descripcion={d?.completa ? `${d.puntos} de ${d.maximo} puntos · se calcula sola` : "Falta calificar si se para y el riesgo"}
         acciones={<div className="flex items-center gap-2">
           {m.criticidad && <Insignia tono={CRITICIDAD[m.criticidad].tono}>{CRITICIDAD[m.criticidad].texto}</Insignia>}
-          {alEditar && <Boton variante="fantasma" tamano="sm" onClick={alEditar} aria-label="Calificar"><Pencil className="h-3.5 w-3.5" /></Boton>}
+          {alEditar && <Boton variante="fantasma" tamano="sm" onClick={alEditar} aria-label="Calificar"
+            data-explain={GLOSARIO.botonCalificarCriticidad} data-explain-title="Calificar"><Pencil className="h-3.5 w-3.5" /></Boton>}
         </div>} />
       <div className="px-5 pb-4">
         {f.isLoading || !d ? <Cargando filas={3} /> : (

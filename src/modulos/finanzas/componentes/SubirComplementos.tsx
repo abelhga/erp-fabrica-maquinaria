@@ -98,7 +98,7 @@ export function SubirComplementos({ abierto, alCambiar }: { abierto: boolean; al
             {a.error && <p className="text-aviso">{a.error}</p>}
             {a.resultados?.map((r) => (
               <p key={r.uuid} className="flex flex-wrap items-center gap-2 pl-6">
-                <Insignia tono={ESTADO[r.estado]?.tono ?? "neutro"}>{ESTADO[r.estado]?.texto ?? r.estado}</Insignia>
+                <span data-explain={GLOSARIO.resultadoComplementoPago} data-explain-title="Qué pasó con esta factura"><Insignia tono={ESTADO[r.estado]?.tono ?? "neutro"}>{ESTADO[r.estado]?.texto ?? r.estado}</Insignia></span>
                 <span>Factura {r.factura ?? r.uuid.slice(0, 8)}</span>
                 <span className="cifra">{dinero(r.monto)}</span>
                 {r.estado === "sin_factura" && <span className="text-xs text-tenue">Regístrala en su pedido (con su XML) y vuelve a subir este complemento.</span>}

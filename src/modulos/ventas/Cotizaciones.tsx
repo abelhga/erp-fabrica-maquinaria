@@ -176,7 +176,7 @@ export default function Cotizaciones() {
             accion: puede("ventas", 2) ? <Boton onClick={() => ir("/ventas/cotizaciones/nueva")}><Plus className="h-4 w-4" />Nueva cotización</Boton> : undefined,
           }}
           pie={visibles.length > 0 && (
-            <p className="text-sm text-tenue text-right" data-explain={GLOSARIO.totalCotizacion} data-explain-title="Suma sin IVA">
+            <p className="text-sm text-tenue text-right" data-explain={GLOSARIO.sumaCotizacionesSinIva} data-explain-title="Suma sin IVA">
               {visibles.length} cotizaciones · <b className="text-texto cifra">{dinero(sumaNeto)}</b> sin IVA (en pesos)
             </p>
           )}

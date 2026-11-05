@@ -107,11 +107,12 @@ export function DialogoLead({ abierto, alCambiar }: { abierto: boolean; alCambia
         </div>
 
         {cliente ? (
-          <div className="flex items-start gap-2 rounded-lg border border-ok/30 bg-ok-suave px-3 py-2 text-sm">
+          <div className="flex items-start gap-2 rounded-lg border border-ok/30 bg-ok-suave px-3 py-2 text-sm" data-explain={GLOSARIO.yaEsCliente} data-explain-title="Ya es cliente">
             <UserCheck className="h-4 w-4 mt-0.5 text-ok shrink-0" />
             <span className="flex-1"><b>{cliente.nombre}</b>{cliente.ciudad && <span className="text-tenue"> · {cliente.ciudad}</span>}
               <span className="block text-xs text-tenue">{cliente.vigente && cliente.vendedor ? `Su vendedor: ${cliente.vendedor}` : "Sin vendedor vigente: sigue la regla de siempre."}</span></span>
-            <button type="button" className="text-tenue hover:text-texto" onClick={() => setCliente(null)} aria-label="No es este cliente"><X className="h-4 w-4" /></button>
+            <button type="button" className="text-tenue hover:text-texto" onClick={() => setCliente(null)} aria-label="No es este cliente"
+              data-explain={GLOSARIO.noEsEsteClienteLead} data-explain-title="No es este cliente"><X className="h-4 w-4" /></button>
           </div>
         ) : (coincidencias.data?.length ?? 0) > 0 && (
           <div className="rounded-lg border border-borde" data-explain={GLOSARIO.yaEsCliente} data-explain-title="¿Ya es cliente?">
@@ -135,12 +136,12 @@ export function DialogoLead({ abierto, alCambiar }: { abierto: boolean; alCambia
           <Campo etiqueta="Ciudad"><Entrada value={f.ciudad} onChange={cambia("ciudad")} /></Campo>
           <Campo etiqueta="Estado"><Entrada value={f.estado_mx} onChange={cambia("estado_mx")} /></Campo>
           <Campo etiqueta="Línea">
-            <Seleccion value={f.linea} onChange={cambia("linea")}>
+            <Seleccion value={f.linea} onChange={cambia("linea")} data-explain={GLOSARIO.lineaLead} data-explain-title="Línea">
               {(Object.keys(LINEA) as Linea[]).map((l) => <option key={l} value={l}>{LINEA[l]}</option>)}
             </Seleccion>
           </Campo>
           <Campo etiqueta="¿Cómo llegó?">
-            <Seleccion value={f.fuente_id} onChange={cambia("fuente_id")}>
+            <Seleccion value={f.fuente_id} onChange={cambia("fuente_id")} data-explain={GLOSARIO.fuenteCliente} data-explain-title="¿Cómo llegó?">
               <option value="">Llamada a recepción</option>
               {(fuentes.data ?? []).filter((x) => x.nombre !== "Llamada a recepción").map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
             </Seleccion>
@@ -150,7 +151,7 @@ export function DialogoLead({ abierto, alCambiar }: { abierto: boolean; alCambia
 
         {escoger ? (
           <Campo etiqueta="¿A quién se lo pasas? *">
-            <Seleccion value={f.vendedor_id} onChange={cambia("vendedor_id")}>
+            <Seleccion value={f.vendedor_id} onChange={cambia("vendedor_id")} data-explain={GLOSARIO.modoLeads} data-explain-title="¿A quién se lo pasas?">
               <option value="">Escoge un vendedor…</option>
               {(vendedores.data ?? []).map((v) => <option key={v.id} value={v.id}>{v.nombre}</option>)}
             </Seleccion>

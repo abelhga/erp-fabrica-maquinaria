@@ -45,7 +45,7 @@ export function PorSurtir() {
         ) : (
           <div className="overflow-x-auto">
             <table className="tabla">
-              <thead><tr><th>Orden</th><th>Equipo</th><th>Para</th><th className="text-right" data-explain={GLOSARIO.partidasPorSurtir} data-explain-title="Partidas">Partidas</th><th>Empieza</th></tr></thead>
+              <thead><tr><th>Orden</th><th>Equipo</th><th>Para</th><th className="text-right" data-explain={GLOSARIO.partidasPorSurtir} data-explain-title="Partidas">Partidas</th><th data-explain={GLOSARIO.porSurtirAlmacen} data-explain-title="Empieza">Empieza</th></tr></thead>
               <tbody>
                 {filas.map((o) => (
                   <tr key={o.id} className="cursor-pointer" onClick={() => ir(`/produccion/ordenes/${o.id}`)}>

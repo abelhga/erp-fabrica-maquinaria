@@ -120,7 +120,7 @@ export function Invitaciones({ usuarios }: { usuarios: { id: string; nombre: str
                     <p className="text-xs text-tenue">{i.correo} · invitó {quien(i.invitado_por)} el {fecha(i.creado_en)}</p>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {i.roles.length ? i.roles.map((r) => <Insignia key={r} tono={r === "pantalla" ? "info" : "marca"}>{NOMBRE_ROL[r]}</Insignia>) : <Insignia>Sin rol</Insignia>}
+                    {i.roles.length ? i.roles.map((r) => <Insignia key={r} tono={r === "pantalla" ? "info" : "marca"}>{NOMBRE_ROL[r]}</Insignia>) : <span data-explain={GLOSARIO.invitacionSinRol} data-explain-title="Sin rol"><Insignia>Sin rol</Insignia></span>}
                   </div>
                   <Boton variante="fantasma" tamano="icono" aria-label={`Cancelar invitación de ${i.correo}`} onClick={() => borrar.mutate(i.correo)}
                     data-explain={GLOSARIO.botonCancelarInvitacion} data-explain-title="Cancelar invitación">

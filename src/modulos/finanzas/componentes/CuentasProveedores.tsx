@@ -48,7 +48,7 @@ export function CuentasProveedores({ cuentas, cargando, error, alAbrir, vistaIni
       celda: (f) => <b className={Number(f.saldo) < -1 ? "text-info" : ""}>{dinero(f.saldo)}</b> },
     { clave: "vencido", titulo: "Vencido", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.vencido), explica: GLOSARIO.vencePago,
       celda: (f) => Number(f.vencido) > 1 ? <span className="text-peligro font-medium">{dinero(f.vencido)}</span> : <span className="text-tenue">—</span> },
-    { clave: "proximo_vence", titulo: "Próximo vencimiento", sinBusqueda: true, valor: (f) => f.proximo_vence ?? "9999",
+    { clave: "proximo_vence", titulo: "Próximo vencimiento", explica: GLOSARIO.vencePago, sinBusqueda: true, valor: (f) => f.proximo_vence ?? "9999",
       celda: (f) => f.proximo_vence ? <Vencimiento vence={f.proximo_vence} /> : <span className="text-tenue">—</span> },
     { clave: "ultima_compra", titulo: "Última compra", sinBusqueda: true, celda: (f) => <span className="whitespace-nowrap">{fecha(f.ultima_compra)}</span> },
     { clave: "ultimo_pago", titulo: "Último pago", sinBusqueda: true, valor: (f) => f.ultimo_pago,
@@ -59,9 +59,9 @@ export function CuentasProveedores({ cuentas, cargando, error, alAbrir, vistaIni
     <TablaDatos filas={filas} columnas={columnas} cargando={cargando} error={error} claveFila={(f) => f.proveedor_llave}
       alClicFila={(f) => alAbrir(f.proveedor_llave)} exportarComo="cuentas-proveedores" placeholder="Buscar proveedor o categoría…"
       filtros={<Filtro valor={vista} alCambiar={setVista} opciones={[
-        { valor: "debemos", texto: "Les debemos", cuenta: debemos.length },
-        { valor: "socios", texto: "Socios y bancos", cuenta: socios.length },
-        { valor: "favor", texto: "A nuestro favor", cuenta: favor.length },
+        { valor: "debemos", texto: "Les debemos", cuenta: debemos.length, explica: GLOSARIO.saldoProveedor },
+        { valor: "socios", texto: "Socios y bancos", cuenta: socios.length, explica: GLOSARIO.sociosBancos },
+        { valor: "favor", texto: "A nuestro favor", cuenta: favor.length, explica: GLOSARIO.filtroAFavorProveedor },
         { valor: "todos", texto: "Todos", cuenta: cuentas.length },
       ]} />}
       pie={filas.length > 0 && <div className="flex justify-end gap-6 text-sm"><span className="text-tenue">Saldo de lo que se ve:</span><b className="cifra">{dinero(suma(filas))}</b></div>}
@@ -146,12 +146,12 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
   return (
     <Lateral abierto={!!cuenta} alCambiar={(v) => !v && alCerrar()} titulo={cuenta?.nombre ?? ""}
       acciones={editable && cuenta?.proveedor_id && (
-        <Boton variante="secundario" onClick={() => alRegistrarCompra({ id: cuenta.proveedor_id!, nombre: cuenta.nombre })}><FilePlus2 className="h-4 w-4" /> Compra</Boton>
+        <Boton variante="secundario" data-explain={GLOSARIO.botonRegistrarCompraGasto} data-explain-title="Registrar compra o gasto" onClick={() => alRegistrarCompra({ id: cuenta.proveedor_id!, nombre: cuenta.nombre })}><FilePlus2 className="h-4 w-4" /> Compra</Boton>
       )}
       subtitulo={cuenta && <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span>Saldo <b className="cifra text-texto">{dinero(cuenta.saldo)}</b></span>
         {Number(cuenta.vencido) > 1 && <span className="text-peligro">Vencido {dinero(cuenta.vencido)}</span>}
-        {cuenta.tipo_acreedor !== "proveedor" && <Insignia tono="info">{TIPO_ACREEDOR[cuenta.tipo_acreedor]}</Insignia>}
+        {cuenta.tipo_acreedor !== "proveedor" && <span data-explain={GLOSARIO.sociosBancos} data-explain-title={TIPO_ACREEDOR[cuenta.tipo_acreedor]}><Insignia tono="info">{TIPO_ACREEDOR[cuenta.tipo_acreedor]}</Insignia></span>}
         {cuenta.proveedor_id && prov.data && <Credito proveedorId={cuenta.proveedor_id} dias={prov.data.dias_credito} editable={editable} />}
       </div>}>
       {cuenta && editable && !cuenta.proveedor_id && (
@@ -166,7 +166,7 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
       )}
       {cuenta && editable && cuenta.proveedor_id && (pagando
         ? <RegistrarPagoProveedor cuenta={cuenta} vencido={Number(cuenta.vencido)} facturas={facturas} banco={prov.data?.datos_bancarios ?? null} alTerminar={() => setPagando(false)} />
-        : Number(cuenta.saldo) > 0.5 && <Boton className="mb-5 w-full sm:w-auto" onClick={() => setPagando(true)}><Wallet className="h-4 w-4" /> Registrar pago</Boton>)}
+        : Number(cuenta.saldo) > 0.5 && <Boton className="mb-5 w-full sm:w-auto" data-explain={GLOSARIO.botonRegistrarPagoProveedor} onClick={() => setPagando(true)}><Wallet className="h-4 w-4" /> Registrar pago</Boton>)}
 
       {facturas.length > 0 && (
         <div className="mb-5">
@@ -190,7 +190,7 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
         </div>
       )}
 
-      <p className="etiqueta mb-1">Movimientos</p>
+      <p className="etiqueta mb-1" data-explain={GLOSARIO.movimientosProveedor}>Movimientos</p>
       {erp.isLoading || hoja.isLoading ? <Cargando filas={6} /> : (
         <div className="divide-y divide-borde">
           {renglones.length === 0 && <p className="py-2 text-sm text-tenue">Sin movimientos todavía.</p>}
@@ -227,15 +227,16 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
               )}
               {editable && m.erp ? (
                 <button type="button" onClick={() => { if (confirm(`¿Borrar ${m.tipo.toLowerCase()} de ${dinero(m.monto)} del ${fecha(m.fecha)}?`)) borrar.mutate(m.erp!.id); }}
-                  className="shrink-0 p-1 rounded text-tenue hover:text-peligro hover:bg-fondo" aria-label="Borrar movimiento" title="Borrar (mal capturado)">
+                  className="shrink-0 p-1 rounded text-tenue hover:text-peligro hover:bg-fondo" aria-label="Borrar movimiento" title="Borrar (mal capturado)"
+                  data-explain={GLOSARIO.botonBorrarMovimientoProveedor} data-explain-title="Borrar movimiento">
                   <Trash2 className="h-4 w-4" />
                 </button>
               ) : editable && m.repetida && m.hojaId ? (
                 <button type="button" onClick={() => desmarcar.mutate(m.hojaId!)} className="shrink-0 p-1 rounded text-tenue hover:text-texto hover:bg-fondo"
-                  aria-label="Vuelve a contar" title="Deshacer: vuelve a contar en el saldo"><Undo2 className="h-4 w-4" /></button>
+                  aria-label="Vuelve a contar" title="Deshacer: vuelve a contar en el saldo" data-explain={GLOSARIO.renglonHojaNoCuenta} data-explain-title="Que vuelva a contar"><Undo2 className="h-4 w-4" /></button>
               ) : editable && m.hojaId && (m.tipo === "Compra" || m.tipo === "Pago") ? (
                 <button type="button" onClick={() => setNoCuenta(m)} className="shrink-0 p-1 rounded text-tenue hover:text-peligro hover:bg-fondo"
-                  aria-label="No cuenta" title="Está repetido o la factura se canceló: que no cuente"><Ban className="h-4 w-4" /></button>
+                  aria-label="No cuenta" title="Está repetido o la factura se canceló: que no cuente" data-explain={GLOSARIO.renglonHojaNoCuenta} data-explain-title="Que no cuente"><Ban className="h-4 w-4" /></button>
               ) : editable && <span className="w-6 shrink-0" />}
             </div>
           ))}
@@ -298,8 +299,8 @@ function RegistrarPagoProveedor({ cuenta, vencido, facturas, banco, alTerminar }
         <div className="flex flex-wrap gap-2">
           <Entrada autoFocus type="number" step="0.01" min="0" value={f.monto} onChange={(e) => setF({ ...f, monto: e.target.value })}
             className="cifra flex-1 min-w-[140px]" placeholder={saldo.toFixed(2)} required />
-          {vencido > 1 && vencido < saldo - 0.5 && <Boton type="button" variante="secundario" onClick={() => setF({ ...f, monto: vencido.toFixed(2) })}>Lo vencido</Boton>}
-          <Boton type="button" variante="secundario" onClick={() => setF({ ...f, monto: saldo.toFixed(2) })}>Todo</Boton>
+          {vencido > 1 && vencido < saldo - 0.5 && <Boton type="button" variante="secundario" data-explain={GLOSARIO.botonesMontoPagoProveedor} onClick={() => setF({ ...f, monto: vencido.toFixed(2) })}>Lo vencido</Boton>}
+          <Boton type="button" variante="secundario" data-explain={GLOSARIO.botonesMontoPagoProveedor} onClick={() => setF({ ...f, monto: saldo.toFixed(2) })}>Todo</Boton>
         </div>
       </Campo>
       {demas && (
@@ -310,7 +311,7 @@ function RegistrarPagoProveedor({ cuenta, vencido, facturas, banco, alTerminar }
       )}
       {conFolio.length > 0 && (
         <Campo etiqueta="Factura que paga" className="sm:col-span-2" ayuda={f.factura ? undefined : "Si no eliges, se aplica a las que vencen primero."}>
-          <Seleccion value={f.factura} onChange={(e) => {
+          <Seleccion value={f.factura} data-explain={GLOSARIO.facturasPendientes} data-explain-title="Factura que paga" onChange={(e) => {
             const x = conFolio.find((c) => c.factura === e.target.value);
             setF({ ...f, factura: e.target.value, monto: x ? Number(x.restante).toFixed(2) : f.monto });
           }}>

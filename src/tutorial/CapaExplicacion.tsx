@@ -47,15 +47,30 @@ export function CapaExplicacion() {
       window.clearTimeout(temporizador.current);
       setBurbuja(null);
     };
+    const esTactil = (e: Event) => e instanceof PointerEvent && e.pointerType === "touch";
     const alEntrar = (e: Event) => {
+      if (esTactil(e)) return;
       const el = explicable(e.target);
       if (el && el !== actual.current) mostrar(el);
       else if (!el && actual.current) ocultar();
     };
-    const alSalir = (e: PointerEvent | FocusEvent) => { if (!explicable(e.relatedTarget)) ocultar(); };
+    // Con el dedo el navegador avisa «salió» en cuanto se levanta, y eso cerraba el globo antes de
+    // que apareciera (en el celular solo salía dejando el dedo encima). En táctil: un toque lo abre
+    // al instante y se queda hasta tocar otra cosa o desplazar.
+    const alSalir = (e: PointerEvent | FocusEvent) => { if (!esTactil(e) && !explicable(e.relatedTarget)) ocultar(); };
+    const alTocar = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+      const el = explicable(e.target);
+      const texto = el?.getAttribute("data-explain");
+      if (!el || !texto) { ocultar(); return; }
+      window.clearTimeout(temporizador.current);
+      actual.current = el;
+      setBurbuja({ texto, titulo: el.getAttribute("data-explain-title"), rect: el.getBoundingClientRect(), el });
+    };
     const alTecla = (e: KeyboardEvent) => { if (e.key === "Escape") ocultar(); };
     document.addEventListener("pointerover", alEntrar);
     document.addEventListener("pointerout", alSalir);
+    document.addEventListener("pointerup", alTocar);
     document.addEventListener("focusin", alEntrar);
     document.addEventListener("focusout", alSalir);
     document.addEventListener("keydown", alTecla);
@@ -65,6 +80,7 @@ export function CapaExplicacion() {
       window.clearTimeout(temporizador.current);
       document.removeEventListener("pointerover", alEntrar);
       document.removeEventListener("pointerout", alSalir);
+      document.removeEventListener("pointerup", alTocar);
       document.removeEventListener("focusin", alEntrar);
       document.removeEventListener("focusout", alSalir);
       document.removeEventListener("keydown", alTecla);

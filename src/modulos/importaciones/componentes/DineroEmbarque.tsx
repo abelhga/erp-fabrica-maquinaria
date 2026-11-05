@@ -98,7 +98,7 @@ export function DineroEmbarque({ e }: { e: Embarque }) {
                       {p.comprobante
                         ? <button className="text-xs text-marca-texto hover:underline inline-flex items-center gap-1" onClick={() => abrirArchivo(p.comprobante!).catch((x) => toast.error(mensajeError(x)))}><ExternalLink className="h-3.5 w-3.5" /> Ver</button>
                         : p.estado === "programado" ? <span className="text-xs text-tenue">—</span>
-                        : capturaPagos ? <label className="text-xs text-aviso inline-flex items-center gap-1 cursor-pointer hover:underline"><Upload className="h-3.5 w-3.5" /> Falta: subir
+                        : capturaPagos ? <label className="text-xs text-aviso inline-flex items-center gap-1 cursor-pointer hover:underline" data-explain={GLOSARIO.comprobantePagoImportacion} data-explain-title="Falta el comprobante"><Upload className="h-3.5 w-3.5" /> Falta: subir
                             <input type="file" className="hidden" accept="application/pdf,image/*" onChange={(ev) => comprobante(p, ev.target.files?.[0])} /></label>
                         : <span className="text-xs text-aviso">Falta</span>}
                     </td>

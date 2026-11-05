@@ -103,7 +103,8 @@ export default function SemanaPagina() {
                   {r.data?.puntos.map((p, i) => {
                     const t = TONOS[p.tono] ?? TONOS.info;
                     return (
-                      <Link key={i} to={p.ruta || "/"} style={{ animationDelay: `${i * 60}ms` }}
+                      <Link key={i} to={p.ruta || "/"} style={{ animationDelay: `${i * 60}ms` }} data-explain={GLOSARIO.tarjetasDelResumen}
+                        data-explain-title={{ riesgo: "Riesgo", atencion: "Atención", bueno: "Va bien", info: "Para saber" }[p.tono]}
                         className="group rounded-xl border border-borde bg-superficie/60 p-3.5 hover:border-marca/40 hover:shadow-sm transition flex gap-3 animate-entrar">
                         <div className={cn("h-8 w-8 shrink-0 rounded-lg grid place-items-center", t.clase)}><t.icono className="h-4 w-4" /></div>
                         <div className="min-w-0 flex-1">

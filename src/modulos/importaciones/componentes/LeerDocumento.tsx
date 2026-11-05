@@ -115,9 +115,9 @@ export function LeerDocumento({ abierto, alCambiar, embarque, tipoInicial }: {
       descripcion={resultado ? "Revisa lo que leyó junto al archivo. Corrige lo que haga falta: nada se guarda hasta que confirmes." : `${embarque.folio} · ${embarque.descripcion}`}
       pie={resultado ? <>
         <Boton variante="secundario" onClick={() => { setResultado(null); }}>Leer otro</Boton>
-        <Boton onClick={confirmar} cargando={guardando} disabled={!!resultado.simulado || (tipo === "factura" && embarque.ordenes.length > 1 && !orden)}>
+        <span data-explain={GLOSARIO.botonConfirmarDocumentoLeido} data-explain-title="Confirmar y guardar"><Boton onClick={confirmar} cargando={guardando} disabled={!!resultado.simulado || (tipo === "factura" && embarque.ordenes.length > 1 && !orden)}>
           Confirmar y guardar
-        </Boton>
+        </Boton></span>
       </> : <>
         <Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
         <Boton onClick={leer} cargando={leyendo} disabled={!archivo}><Sparkles className="h-4 w-4" /> Leer con IA</Boton>

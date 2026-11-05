@@ -39,12 +39,14 @@ export function ActivoArticulo({ a, forma }: { a: Art; forma: "interruptor" | "b
     <span onClick={forma === "interruptor" ? (e) => e.stopPropagation() : undefined} className="contents">
       {forma === "interruptor" ? (
         <Interruptor activo={a.activo} alCambiar={cambiar} cargando={fijar.isPending}
-          aria-label={`${a.clave} ${a.activo ? "activo" : "inhabilitado"}`} title={a.activo ? "Activo: clic para inhabilitar" : "Inhabilitado: clic para reactivar"} />
+          aria-label={`${a.clave} ${a.activo ? "activo" : "inhabilitado"}`} title={a.activo ? "Activo: clic para inhabilitar" : "Inhabilitado: clic para reactivar"}
+          data-explain={GLOSARIO.articuloInhabilitado} data-explain-title={a.activo ? "Activo: clic para inhabilitar" : "Inhabilitado: clic para reactivar"} />
       ) : a.activo ? (
         <Boton variante="fantasma" onClick={() => cambiar(false)} data-explain={GLOSARIO.articuloInhabilitado} data-explain-title="Inhabilitar">
           <Ban className="h-4 w-4" /> Inhabilitar</Boton>
       ) : (
-        <Boton variante="secundario" onClick={() => cambiar(true)} cargando={fijar.isPending}><RotateCcw className="h-4 w-4" /> Reactivar</Boton>
+        <Boton variante="secundario" onClick={() => cambiar(true)} cargando={fijar.isPending} data-explain={GLOSARIO.articuloInhabilitado} data-explain-title="Reactivar">
+          <RotateCcw className="h-4 w-4" /> Reactivar</Boton>
       )}
       {confirmar && <Confirmar a={a} cargando={fijar.isPending} alCerrar={() => setConfirmar(false)} alConfirmar={() => fijar.mutate(false)} />}
     </span>

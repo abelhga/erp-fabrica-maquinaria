@@ -25,7 +25,8 @@ export function BotonRepetida({ factura }: { factura: FacturaPendiente }) {
     { exito: "Marcada como repetida: ya no cuenta en el saldo", invalidar: INVALIDAR_PROVEEDORES, alTerminar: () => setAbierto(false) });
   if (!factura.hoja_id) return null;
   return <>
-    <button type="button" onClick={() => setAbierto(true)} className="inline-flex items-center gap-1 text-xs text-marca-texto hover:underline">
+    <button type="button" onClick={() => setAbierto(true)} className="inline-flex items-center gap-1 text-xs text-marca-texto hover:underline"
+      data-explain={GLOSARIO.compraRepetidaHoja} data-explain-title="Estaba repetida">
       <CopyX className="h-3.5 w-3.5" />Estaba repetida</button>
     <DialogoMotivo abierto={abierto} alCambiar={setAbierto} titulo={`Factura ${factura.factura ?? "sin número"} de ${dinero(factura.monto)}`}
       descripcion={<>La del {fecha(factura.fecha)} está dos veces en la hoja y la otra ya se pagó. Al marcarla deja de contar en el saldo; no es un pago y no sale en el historial de pagos.</>}

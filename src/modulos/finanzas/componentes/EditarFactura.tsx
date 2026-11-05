@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { limpiarUuid, uuidValido } from "@/lib/cfdi";
 import type { QueryKey } from "@tanstack/react-query";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface FacturaEditable { id: string; folio: string; uuid_sat: string | null; fecha: string; total: number }
 
@@ -33,7 +34,7 @@ export function EditarFactura({ factura, alCerrar, invalidar }: { factura: Factu
       pie={<>
         {quitar
           ? <Boton variante="peligro" onClick={() => borrar.mutate(undefined)} cargando={borrar.isPending}>Sí, quitarla</Boton>
-          : <Boton variante="fantasma" className="mr-auto text-peligro" onClick={() => setQuitar(true)}><Trash2 className="h-4 w-4" />Quitar factura</Boton>}
+          : <Boton variante="fantasma" className="mr-auto text-peligro" data-explain={GLOSARIO.botonQuitarFacturaPedido} onClick={() => setQuitar(true)}><Trash2 className="h-4 w-4" />Quitar factura</Boton>}
         <Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton>
         <Boton type="submit" form="editar-factura" cargando={guardar.isPending} disabled={!f.folio.trim() || !(Number(f.total) > 0)}>Guardar</Boton>
       </>}>

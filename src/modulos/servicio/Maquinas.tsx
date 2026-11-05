@@ -70,31 +70,34 @@ export default function Maquinas() {
     ) },
     { clave: "etapa", titulo: "Área", celda: (m) => m.etapa ? <span className="inline-flex items-center gap-1.5 whitespace-nowrap"><span className="h-2 w-2 rounded-full" style={{ background: m.etapa_color ?? undefined }} />{m.etapa}</span> : <span className="text-tenue">{m.ubicacion ?? "—"}</span> },
     { clave: "estado", titulo: "Estado", valor: (m) => ESTADO_MAQUINA[m.estado].texto, explica: GLOSARIO.estadoMaquina, celda: (m) => (
-      <div><InsigniaMaquina estado={m.estado} />
+      <div><InsigniaMaquina estado={m.estado} explica={GLOSARIO.estadoMaquina} />
         {m.orden_falla && m.orden_tipo === "correctivo" && <p className="text-[11px] text-tenue mt-0.5 max-w-[240px] truncate" title={m.orden_falla}>{m.orden_falla} · {hace(m.orden_desde)}</p>}
         {m.estado === "baja" && m.motivo_baja && <p className="text-[11px] text-tenue mt-0.5 max-w-[240px] truncate" title={m.motivo_baja}>{m.baja_en ? `${fecha(m.baja_en)} · ` : ""}{m.motivo_baja}</p>}</div>
     ) },
     { clave: "preventivo_fecha", titulo: "Preventivo", explica: GLOSARIO.situacionPreventivo, valor: (m) => m.preventivo_fecha ?? (m.preventivo_horas != null ? `h${m.preventivo_horas}` : null), celda: (m) => m.preventivo ? (
-      <div className="whitespace-nowrap"><Insignia tono={SITUACION[m.preventivo_situacion ?? "al_dia"].tono}>{SITUACION[m.preventivo_situacion ?? "al_dia"].texto}</Insignia>
+      <div className="whitespace-nowrap"><span className="inline-flex" data-explain={GLOSARIO.situacionPreventivo} data-explain-title={SITUACION[m.preventivo_situacion ?? "al_dia"].texto}>
+        <Insignia tono={SITUACION[m.preventivo_situacion ?? "al_dia"].tono}>{SITUACION[m.preventivo_situacion ?? "al_dia"].texto}</Insignia></span>
         <p className="text-[11px] text-tenue mt-0.5">{m.preventivo_fecha ? fecha(m.preventivo_fecha) : `a las ${horas(m.preventivo_horas)}`}</p></div>
     ) : <span className="text-tenue">—</span> },
     { clave: "fallas_12m", titulo: "Último año", alinear: "der", explica: GLOSARIO.fallasUltimoAnio, celda: (m) => m.fallas_12m || m.horas_paro_12m ? (
       <span className="whitespace-nowrap">{m.fallas_12m} {m.fallas_12m === 1 ? "falla" : "fallas"}
         <span className="block text-[11px] text-tenue">{m.horas_paro_12m ? `${horas(m.horas_paro_12m)} parada` : "sin paro"}</span></span>
     ) : <span className="text-tenue">Sin fallas</span> },
-    { clave: "prestada_a", titulo: "La tiene", celda: (m) => m.prestada_a ? <span className="text-sm whitespace-nowrap">{m.prestada_a}<span className="block text-[11px] text-tenue">{hace(m.prestada_desde)}</span></span> : <span className="text-tenue">—</span> },
+    { clave: "prestada_a", titulo: "La tiene", explica: GLOSARIO.resguardo, celda: (m) => m.prestada_a ? <span className="text-sm whitespace-nowrap">{m.prestada_a}<span className="block text-[11px] text-tenue">{hace(m.prestada_desde)}</span></span> : <span className="text-tenue">—</span> },
   ];
 
   const colOrdenes: Columna<OrdenMto>[] = [
     { clave: "folio", titulo: "Folio", celda: (o) => <span className="cifra font-medium whitespace-nowrap">{o.folio}</span> },
     { clave: "maquina", titulo: "Máquina", valor: (o) => `${o.numero} ${o.maquina}`, celda: (o) => <span className="whitespace-nowrap">{o.numero} · {o.maquina}</span> },
-    { clave: "tipo", titulo: "Tipo", explica: GLOSARIO.ordenMantenimiento, celda: (o) => <Insignia tono={o.tipo === "preventivo" ? "info" : "neutro"}>{o.tipo === "preventivo" ? "Preventivo" : "Falla"}</Insignia> },
+    { clave: "tipo", titulo: "Tipo", explica: GLOSARIO.tipoOrdenMto, celda: (o) => <Insignia tono={o.tipo === "preventivo" ? "info" : "neutro"}>{o.tipo === "preventivo" ? "Preventivo" : "Falla"}</Insignia> },
     { clave: "falla", titulo: "Qué tiene", celda: (o) => <span className="text-sm line-clamp-2 max-w-[340px]">{o.diagnostico ?? o.falla}</span> },
     { clave: "reportado_en", titulo: "Desde", celda: (o) => <span className="whitespace-nowrap text-sm">{hace(o.reportado_en)}<span className="block text-[11px] text-tenue">{o.reportado_por_nombre}</span></span> },
-    { clave: "estado", titulo: "Estado", valor: (o) => ESTADO_MTO[o.estado].texto, celda: (o) => (
-      <div className="flex flex-wrap gap-1"><InsigniaMto estado={o.estado} />{o.detiene && <Insignia tono="peligro">Parada</Insignia>}{o.vencida && <Insignia tono="peligro">Vencido</Insignia>}</div>
+    { clave: "estado", titulo: "Estado", valor: (o) => ESTADO_MTO[o.estado].texto, explica: GLOSARIO.estadoOrdenMto, celda: (o) => (
+      <div className="flex flex-wrap gap-1"><InsigniaMto estado={o.estado} explica={GLOSARIO.estadoOrdenMto} />
+        {o.detiene && <span className="inline-flex" data-explain={GLOSARIO.estadoMaquina} data-explain-title="Máquina parada"><Insignia tono="peligro">Parada</Insignia></span>}
+        {o.vencida && <span className="inline-flex" data-explain={GLOSARIO.situacionPreventivo} data-explain-title="Vencido"><Insignia tono="peligro">Vencido</Insignia></span>}</div>
     ) },
-    { clave: "refacciones_pendientes", titulo: "Refacciones", alinear: "der", celda: (o) => o.refacciones ? `${o.refacciones - o.refacciones_pendientes}/${o.refacciones}` : "—" },
+    { clave: "refacciones_pendientes", titulo: "Refacciones", alinear: "der", explica: GLOSARIO.refaccionesEntregadasOrden, celda: (o) => o.refacciones ? `${o.refacciones - o.refacciones_pendientes}/${o.refacciones}` : "—" },
   ];
 
   const colPlanes: Columna<Plan>[] = [
@@ -107,7 +110,7 @@ export default function Maquinas() {
         {x.cada_horas != null && <span className="block text-[11px] text-tenue">lleva {horas(x.horas_actuales)}</span>}</span>
     ) },
     { clave: "situacion", titulo: "Situación", explica: GLOSARIO.situacionPreventivo, valor: (x) => SITUACION[x.situacion].texto, celda: (x) => (
-      <div><Insignia tono={SITUACION[x.situacion].tono}>{SITUACION[x.situacion].texto}</Insignia>
+      <div><span className="inline-flex" data-explain={GLOSARIO.situacionPreventivo} data-explain-title={SITUACION[x.situacion].texto}><Insignia tono={SITUACION[x.situacion].tono}>{SITUACION[x.situacion].texto}</Insignia></span>
         {x.orden_folio && <p className="text-[11px] text-tenue mt-0.5 whitespace-nowrap">{x.orden_folio}</p>}</div>
     ) },
   ];
@@ -119,23 +122,23 @@ export default function Maquinas() {
       ancho="max-w-[1500px]"
       acciones={<>
         {/* No va en el menú: es la herramienta de quien repara, a un toque desde su lista. */}
-        {p.personal && <span data-explain={GLOSARIO.tramoMantenimiento}><EnlaceBoton a="/servicio/terminal" variante="primario"><Play className="h-4 w-4" />Terminal</EnlaceBoton></span>}
-        {p.pedir && <EnlaceBoton a="/servicio/reportar?volver=/servicio/maquinas" variante="peligro"><AlertTriangle className="h-4 w-4" />Reportar falla</EnlaceBoton>}
-        <EnlaceBoton a="/servicio/resguardos"><Hand className="h-4 w-4" />Resguardos</EnlaceBoton>
+        {p.personal && <EnlaceBoton a="/servicio/terminal" variante="primario" explica={GLOSARIO.botonTerminalMantenimiento}><Play className="h-4 w-4" />Terminal</EnlaceBoton>}
+        {p.pedir && <EnlaceBoton a="/servicio/reportar?volver=/servicio/maquinas" variante="peligro" explica={GLOSARIO.botonReportarFallaMaquina}><AlertTriangle className="h-4 w-4" />Reportar falla</EnlaceBoton>}
+        <EnlaceBoton a="/servicio/resguardos" explica={GLOSARIO.botonIrResguardos}><Hand className="h-4 w-4" />Resguardos</EnlaceBoton>
         {/* Las etiquetas de lo que está en la lista de abajo (todas, o las del filtro elegido). */}
-        {p.gerencia && <span data-explain={GLOSARIO.etiquetaQR}><EnlaceBoton a={vista === "todas" || vista === "bajas" ? "/servicio/etiquetas" : `/servicio/etiquetas?ids=${filtradas.map((m) => m.id).join(",")}`}>
-          <QrCode className="h-4 w-4" />Etiquetas QR</EnlaceBoton></span>}
-        {p.gerencia && <Boton onClick={() => setNueva(true)}><Plus className="h-4 w-4" />Nueva máquina</Boton>}
+        {p.gerencia && <EnlaceBoton a={vista === "todas" || vista === "bajas" ? "/servicio/etiquetas" : `/servicio/etiquetas?ids=${filtradas.map((m) => m.id).join(",")}`}
+          explica={GLOSARIO.botonEtiquetasQR}><QrCode className="h-4 w-4" />Etiquetas QR</EnlaceBoton>}
+        {p.gerencia && <Boton onClick={() => setNueva(true)} data-explain={GLOSARIO.botonNuevaMaquina}><Plus className="h-4 w-4" />Nueva máquina</Boton>}
       </>}
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi titulo="Paradas" valor={numero(paradas.length)} icono={AlertOctagon} tono={paradas.length ? "peligro" : "ok"} explica={GLOSARIO.estadoMaquina}
+        <Kpi titulo="Paradas" valor={numero(paradas.length)} icono={AlertOctagon} tono={paradas.length ? "peligro" : "ok"} explica={GLOSARIO.kpiMaquinasParadas}
              detalle={paradas.length ? paradas.map((m) => m.numero).join(", ") : "Todo operando"} alClic={() => { cambiarPestana("maquinas"); setVista("problemas"); }} />
-        <Kpi titulo="Con falla reportada" valor={numero(conFalla.length)} icono={Wrench} tono={conFalla.length ? "aviso" : "ok"} explica={GLOSARIO.estadoMaquina}
+        <Kpi titulo="Con falla reportada" valor={numero(conFalla.length)} icono={Wrench} tono={conFalla.length ? "aviso" : "ok"} explica={GLOSARIO.kpiMaquinasConFalla}
              detalle="Todavía trabajan, pero alguien vio algo" alClic={() => cambiarPestana("ordenes")} />
-        <Kpi titulo="Preventivos vencidos" valor={numero(vencidos.length)} icono={CalendarCheck} tono={vencidos.length ? "aviso" : "ok"} explica={GLOSARIO.situacionPreventivo}
+        <Kpi titulo="Preventivos vencidos" valor={numero(vencidos.length)} icono={CalendarCheck} tono={vencidos.length ? "aviso" : "ok"} explica={GLOSARIO.kpiPreventivosVencidos}
              detalle={`${(planes.data ?? []).length} planes activos`} alClic={() => cambiarPestana("preventivos")} />
-        <Kpi titulo="Herramienta prestada" valor={numero(prestadas.length)} icono={Hand} tono="marca" explica={GLOSARIO.resguardo}
+        <Kpi titulo="Herramienta prestada" valor={numero(prestadas.length)} icono={Hand} tono="marca" explica={GLOSARIO.kpiHerramientaPrestada}
              detalle="Quién la tiene y desde cuándo" alClic={() => ir("/servicio/resguardos")} />
       </div>
 
@@ -151,9 +154,9 @@ export default function Maquinas() {
             placeholder="Número, nombre, marca…"
             filtros={<Filtro<Vista> valor={vista} alCambiar={setVista} opciones={[
               { valor: "todas", texto: "Todas", cuenta: activas.length },
-              { valor: "problemas", texto: "Con algo pendiente", cuenta: activas.filter((m) => m.estado !== "operando" || m.preventivo_situacion === "vencido").length },
-              { valor: "herramienta", texto: "Herramienta", cuenta: activas.filter((m) => m.tipo === "herramienta" || m.prestable).length },
-              { valor: "prestadas", texto: "Prestadas", cuenta: prestadas.length },
+              { valor: "problemas", texto: "Con algo pendiente", cuenta: activas.filter((m) => m.estado !== "operando" || m.preventivo_situacion === "vencido").length, explica: GLOSARIO.filtroMaquinasConPendiente },
+              { valor: "herramienta", texto: "Herramienta", cuenta: activas.filter((m) => m.tipo === "herramienta" || m.prestable).length, explica: GLOSARIO.filtroMaquinasHerramienta },
+              { valor: "prestadas", texto: "Prestadas", cuenta: prestadas.length, explica: GLOSARIO.filtroMaquinasPrestadas },
               { valor: "bajas", texto: "Dadas de baja", cuenta: bajas.length, explica: GLOSARIO.maquinaDeBaja },
             ]} />}
             vacio={{ icono: Wrench, titulo: vista === "todas" ? "Todavía no hay máquinas en el catálogo" : vista === "bajas" ? "Nada dado de baja" : "Nada aquí",

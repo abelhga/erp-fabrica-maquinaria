@@ -86,7 +86,8 @@ export function DialogoProveedor({ abierto, alCambiar, proveedor, alGuardar, ini
         <Campo etiqueta="Categoría" ayuda="Rodamientos, acero, bandas, motores…"><Entrada {...texto("categoria")} /></Campo>
         <Campo etiqueta="País"><Entrada value={d.pais} onChange={(e) => pon("pais", e.target.value)} /></Campo>
         <Campo etiqueta="Moneda">
-          <Seleccion value={d.moneda} onChange={(e) => pon("moneda", e.target.value as Datos["moneda"])}>
+          <Seleccion value={d.moneda} onChange={(e) => pon("moneda", e.target.value as Datos["moneda"])}
+            data-explain={GLOSARIO.monedaProveedor} data-explain-title="Moneda">
             <option value="MXN">MXN</option><option value="USD">USD</option><option value="EUR">EUR</option>
           </Seleccion>
         </Campo>

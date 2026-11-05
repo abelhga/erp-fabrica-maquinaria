@@ -83,7 +83,7 @@ export function FormulaEnPalabras({ d }: { d: Desglose }) {
         {d.politica.compensar_isr
           ? <>La utilidad de {pct(d.utilidad)} es <b className="text-texto">neta después de ISR</b>: para que quede {pct(d.utilidad)} libre, antes de un ISR de {pct(d.isr)} hay que cobrar {pct(d.utilidad_compensada)} del precio. </>
           : <>La utilidad de {pct(d.utilidad)} es sobre el precio de venta, sin compensar ISR. </>}
-        Cada peso de costo se vende en <b className="text-texto cifra">{d.factor ? `${cant(Math.round(d.factor * 1000) / 1000)} pesos` : "—"}</b> antes del redondeo.
+        Cada peso de costo se vende en <b className="text-texto cifra" data-explain={GLOSARIO.precioEntreCosto} data-explain-title="Precio entre costo">{d.factor ? `${cant(Math.round(d.factor * 1000) / 1000)} pesos` : "—"}</b> antes del redondeo.
         {d.margen_propio != null && <> Este artículo tiene utilidad propia de {pct(d.margen_propio)} (no la de su política).</>}
       </p>
     </div>
@@ -122,7 +122,7 @@ export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
             descripcion="Piezas sin costo cuentan como $0 y bajan el precio sin avisar; un costo de hace meses ya no es el de hoy." />
           <div className="px-5 pb-5 grid gap-5 md:grid-cols-2">
             <div>
-              <p className="etiqueta mb-2 flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5 text-peligro" /> Sin costo ({hojas.sin.length})</p>
+              <p className="etiqueta mb-2 flex items-center gap-1.5" data-explain={GLOSARIO.piezasSinCosto} data-explain-title="Piezas sin costo"><AlertTriangle className="h-3.5 w-3.5 text-peligro" /> Sin costo ({hojas.sin.length})</p>
               {hojas.sin.length === 0
                 ? <p className="text-sm text-tenue flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-ok" /> Todas las piezas tienen costo.</p>
                 : <ul className="space-y-1">{hojas.sin.map((h) => (
@@ -133,7 +133,7 @@ export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
                   </ul>}
             </div>
             <div>
-              <p className="etiqueta mb-2 flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-aviso" /> Costos de más de 6 meses</p>
+              <p className="etiqueta mb-2 flex items-center gap-1.5" data-explain={GLOSARIO.costoViejo} data-explain-title="Costo viejo"><Clock className="h-3.5 w-3.5 text-aviso" /> Costos de más de 6 meses</p>
               {hojas.viejos.length === 0
                 ? <p className="text-sm text-tenue flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-ok" /> Ningún costo tiene más de 6 meses.</p>
                 : <ul className="space-y-1">{hojas.viejos.map((h) => (
@@ -155,12 +155,12 @@ export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
         <Tarjeta className="lg:col-span-3">
           <EncabezadoTarjeta titulo="Costo" explica={GLOSARIO.costoArticulo} />
           <div className="px-5 pb-5 text-sm">
-            {fab && <Renglon etiqueta="Material" detalle="Lista de materiales, incluidos sus subensambles" valor={dinero(articulo.costo_material)} />}
-            {fab && <Renglon signo="+" etiqueta="Mano de obra" detalle={`${numero(articulo.horas)} h a la tarifa de cada etapa`} valor={dinero(articulo.costo_mano_obra)} />}
+            {fab && <Renglon etiqueta={<span data-explain={GLOSARIO.costoMaterialFabricado} data-explain-title="Material">Material</span>} detalle="Lista de materiales, incluidos sus subensambles" valor={dinero(articulo.costo_material)} />}
+            {fab && <Renglon signo="+" etiqueta={<span data-explain={GLOSARIO.manoObraTotal} data-explain-title="Mano de obra">Mano de obra</span>} detalle={`${numero(articulo.horas)} h a la tarifa de cada etapa`} valor={dinero(articulo.costo_mano_obra)} />}
             <Renglon signo={fab ? "=" : undefined} fuerte={fab} etiqueta="Costo" valor={dinero(articulo.costo_total)} />
             {vePrecios && (
               <div className="flex items-baseline gap-3 mt-3 rounded-lg bg-marca-suave px-3 py-3">
-                <span className="flex-1 font-semibold text-marca-texto">Precio de lista sin IVA</span>
+                <span className="flex-1 font-semibold text-marca-texto" data-explain={GLOSARIO.precioListaCatalogo} data-explain-title="Precio de lista">Precio de lista sin IVA</span>
                 <span className="text-2xl font-semibold cifra">{dinero(articulo.precio)}</span>
               </div>
             )}
@@ -181,28 +181,28 @@ export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
       <Tarjeta className="lg:col-span-3">
         <EncabezadoTarjeta titulo="De dónde sale el precio" explica={GLOSARIO.formulaPrecio} descripcion={<>Política <b className="text-texto">{x.politica.nombre}</b> · utilidad {pct(x.utilidad)} · ISR de compensación {pct(x.isr)}</>} />
         <div className="px-5 pb-5 text-sm">
-          {fab && <Renglon etiqueta="Material" detalle="Lista de materiales, incluidos sus subensambles" valor={dinero(x.costo_material)} />}
-          {fab && <Renglon signo="+" etiqueta="Mano de obra" detalle={`${numero(x.horas)} h a la tarifa de cada etapa`} valor={dinero(x.costo_mano_obra)} />}
+          {fab && <Renglon etiqueta={<span data-explain={GLOSARIO.costoMaterialFabricado} data-explain-title="Material">Material</span>} detalle="Lista de materiales, incluidos sus subensambles" valor={dinero(x.costo_material)} />}
+          {fab && <Renglon signo="+" etiqueta={<span data-explain={GLOSARIO.manoObraTotal} data-explain-title="Mano de obra">Mano de obra</span>} detalle={`${numero(x.horas)} h a la tarifa de cada etapa`} valor={dinero(x.costo_mano_obra)} />}
           <Renglon signo={fab ? "=" : undefined} fuerte={fab} etiqueta="Costo" valor={dinero(x.costo)} />
-          {x.recargos_costo.length > 0 && <p className="etiqueta mt-3 mb-0.5 pl-7">Recargos sobre el costo</p>}
+          {x.recargos_costo.length > 0 && <p className="etiqueta mt-3 mb-0.5 pl-7" data-explain={GLOSARIO.recargosCosto} data-explain-title="Recargos sobre el costo">Recargos sobre el costo</p>}
           {x.recargos_costo.map((r) => <Renglon key={r.nombre} signo="+" sangria etiqueta={<>{r.nombre} <span className="text-tenue">{pct(r.pct)}</span></>} valor={dinero(r.monto)} />)}
-          {medida && <Renglon signo="+" sangria etiqueta={<>Medida especial <span className="text-tenue">{pct(x.politica.pct_medida_especial)}</span></>} valor={dinero(x.monto_medida_especial)} />}
+          {medida && <Renglon signo="+" sangria etiqueta={<span data-explain={GLOSARIO.recargoMedidaEspecial} data-explain-title="Medida especial">Medida especial <span className="text-tenue">{pct(x.politica.pct_medida_especial)}</span></span>} valor={dinero(x.monto_medida_especial)} />}
           {(x.recargos_costo.length > 0 || medida) && <Renglon signo="=" fuerte etiqueta="Costo con recargos" valor={dinero(x.base)} />}
 
           {x.precio_sin_redondeo != null && (
             <>
-              <p className="etiqueta mt-3 mb-0.5 pl-7">Sobre el precio de {dinero(x.precio_sin_redondeo)}</p>
+              <p className="etiqueta mt-3 mb-0.5 pl-7" data-explain={GLOSARIO.recargosPrecio} data-explain-title="Recargos sobre el precio">Sobre el precio de {dinero(x.precio_sin_redondeo)}</p>
               {x.recargos_precio.map((r) => <Renglon key={r.nombre} signo="+" sangria etiqueta={<>{r.nombre} <span className="text-tenue">{pct(r.pct)}</span></>} valor={dinero(r.monto)} />)}
-              <Renglon signo="+" sangria etiqueta={<>Utilidad <span className="text-tenue">{pct(x.utilidad_compensada)} del precio</span></>}
+              <Renglon signo="+" sangria etiqueta={<span data-explain={x.politica.compensar_isr ? GLOSARIO.isrCompensacion : GLOSARIO.utilidadPolitica} data-explain-title="Utilidad">Utilidad <span className="text-tenue">{pct(x.utilidad_compensada)} del precio</span></span>}
                 detalle={x.politica.compensar_isr ? <>{dinero(x.isr_monto)} de ISR y {dinero(x.utilidad_antes_isr - x.isr_monto)} libres ({pct(x.utilidad)})</> : undefined}
                 valor={dinero(x.utilidad_antes_isr)} />
               <Renglon signo="=" fuerte etiqueta="Precio sin redondear" valor={dinero(x.precio_sin_redondeo)} />
-              <Renglon signo="+" etiqueta={<>Redondeo hacia arriba <span className="text-tenue">al {multiploTexto(x.multiplo_redondeo)}</span></>}
+              <Renglon signo="+" etiqueta={<span data-explain={GLOSARIO.redondeoPrecio} data-explain-title="Redondeo">Redondeo hacia arriba <span className="text-tenue">al {multiploTexto(x.multiplo_redondeo)}</span></span>}
                 valor={dinero((x.precio_redondeado ?? 0) - x.precio_sin_redondeo)} tono="tenue" />
             </>
           )}
           <div className="flex items-baseline gap-3 mt-2 rounded-lg bg-marca-suave px-3 py-3">
-            <span className="flex-1 font-semibold text-marca-texto">Precio de lista sin IVA</span>
+            <span className="flex-1 font-semibold text-marca-texto" data-explain={GLOSARIO.precioListaCatalogo} data-explain-title="Precio de lista">Precio de lista sin IVA</span>
             <span className="text-2xl font-semibold cifra">{dinero(x.precio_lista)}</span>
           </div>
           {x.precio_fijo != null && <p className="text-xs text-aviso mt-2" data-explain={GLOSARIO.precioFijo}>Precio fijo capturado a mano: manda sobre la fórmula.</p>}
@@ -211,7 +211,7 @@ export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
 
       <div className="lg:col-span-2 space-y-4">
         <Tarjeta>
-          <EncabezadoTarjeta titulo="La fórmula, con estos números" />
+          <EncabezadoTarjeta titulo="La fórmula, con estos números" explica={GLOSARIO.formulaConNumeros} />
           <div className="px-5 pb-5"><FormulaEnPalabras d={x} /></div>
         </Tarjeta>
         {x.precio_lista != null && (
@@ -223,7 +223,7 @@ export function CostoPrecio({ articulo }: { articulo: ArticuloCatalogo }) {
               <Renglon signo="=" fuerte etiqueta="Utilidad bruta" valor={dinero(x.utilidad_bruta)} />
               {x.politica.compensar_isr && <Renglon signo="−" etiqueta={<>ISR <span className="text-tenue">{pct(x.isr)}</span></>} valor={dinero((x.utilidad_bruta ?? 0) - (x.utilidad_neta ?? 0))} />}
               <Renglon signo="=" fuerte etiqueta="Utilidad neta" valor={<>{dinero(x.utilidad_neta)} <span className="text-tenue font-normal">· {pct(x.pct_neto)}</span></>} />
-              <p className="text-xs text-tenue mt-2">El vendedor puede bajar hasta {pct(x.politica.descuento_maximo)} sin autorización ({dinero((x.precio_lista ?? 0) * (1 - x.politica.descuento_maximo))}).</p>
+              <p className="text-xs text-tenue mt-2" data-explain={GLOSARIO.descuentoMaximoPolitica} data-explain-title="Descuento máximo">El vendedor puede bajar hasta {pct(x.politica.descuento_maximo)} sin autorización ({dinero((x.precio_lista ?? 0) * (1 - x.politica.descuento_maximo))}).</p>
             </div>
           </Tarjeta>
         )}

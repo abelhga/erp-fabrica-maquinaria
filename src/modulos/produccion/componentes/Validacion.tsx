@@ -3,6 +3,14 @@ import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/utilidades";
 import { fechaYHora } from "@/lib/formato";
 import type { PasoValidacion } from "./datos";
+import { GLOSARIO } from "@/tutorial/glosario";
+
+// El globo va en el paso completo y no en su botón: el botón se deshabilita justo cuando más
+// hace falta saber por qué (liberar sin la revisión de ingeniería), y deshabilitado no recibe el mouse.
+const EXPLICA: Record<PasoValidacion["paso"], string> = {
+  ingenieria: GLOSARIO.revisionIngenieria, apartado: GLOSARIO.pasoApartarMaterial, faltantes: GLOSARIO.pasoPedirFaltantes,
+  almacen: GLOSARIO.revisionAlmacen, liberada: GLOSARIO.pasoLiberarOrden,
+};
 
 const ESTILO: Record<PasoValidacion["estado"], { icono: typeof CheckCircle2; clase: string; texto: string }> = {
   hecho: { icono: CheckCircle2, clase: "text-ok", texto: "Hecho" },
@@ -24,7 +32,7 @@ export function PasosValidacion({ pasos, acciones }: { pasos: PasoValidacion[]; 
         const e = ESTILO[p.estado];
         const a = acciones[p.paso];
         return (
-          <li key={p.paso} className="bg-superficie p-4 flex flex-col gap-2 min-w-0">
+          <li key={p.paso} className="bg-superficie p-4 flex flex-col gap-2 min-w-0" data-explain={EXPLICA[p.paso]} data-explain-title={p.titulo}>
             <div className="flex items-center gap-2">
               <span className={cn("h-6 w-6 rounded-full text-xs font-semibold flex items-center justify-center shrink-0",
                 p.estado === "hecho" ? "bg-ok text-white" : p.estado === "parcial" ? "bg-aviso text-white" : "bg-fondo text-tenue border border-borde")}>

@@ -40,6 +40,27 @@ qué y foto, etiquetas QR/NFC (213); terminal con play y pausa, y criticidad cal
 
 ## Para hacer
 
+- **Lo que encontró la revisión del tutorial (5 nov) y no era del tutorial.** Los agentes solo podían
+  agregar explicaciones, así que esto quedó sin tocar. Verificar en el código antes de corregir.
+  - Posibles errores de lógica: «Iniciar»/«Reanudar» desde el detalle de la orden no anota a nadie
+    (no cuenta horas hombre) y borra la cuadrilla planeada (`avanzar_operacion`); el contador «Sin
+    facturar» de Cobranza cuenta pedidos cancelados que la lista quita; «Reemplazar» en los
+    documentos del embarque agrega otro renglón en vez de reemplazar; recibir herramienta dañada
+    dice que no se vuelve a prestar sin revisar, pero `prestar_herramienta` sí la deja prestar;
+    Comisiones dice que la diferencia «va como ajuste del mes siguiente» y nada crea ese ajuste.
+  - Textos en pantalla que no dicen lo que hace el código: recibir OC («10 % arriba de lo
+    pendiente», revisa contra lo pedido); proveedor «es importación (6 meses de cobertura)», depende
+    de cada artículo; ficha de componente «al tipo de cambio de hoy» (usa el de costeo); IVA de
+    Configuración (la cotización nueva no lo lee); tope de meses con tarjeta (nada lo hace cumplir);
+    diálogo de permisos y pie de Bitácora («Costos da márgenes», ya no desde la 117); «Mezcla por
+    canal» del tablero (ML ya está conectado); «Herramientas lean» de Métricas de producción (Kaizen
+    y A3 ya existen); vacíos de «Por empacar» y de «Sin clasificar» en Producto × región; textos de
+    bono del Checklist sin comprobar contra la plantilla de cada puesto.
+  - Para que los globos lleguen a todo: el buscador de artículos y las celdas editables (componentes
+    compartidos) no reenvían `data-explain`; /servicio/reportar y las etiquetas viven fuera del marco
+    sin la capa de globos; las tarjetas de saldo de paquetería son botones apagados para ventas.
+  - Ventas › Leads: la configuración dice que la cambian «la gerencia de ventas o dirección», pero
+    marketing también tiene leads nivel 3. Decidir si marketing debe poder.
 - **Gráficas y métricas:** la hoja de ruta completa (54 propuestas verificadas contra el SQL, en tres
   olas, con mis 5 primeras) está en [`docs/graficas-hoja-de-ruta.md`](graficas-hoja-de-ruta.md).
   Antes que gráficas nuevas, revisar las **cifras que hoy dicen otra cosa** que lista ahí (p. ej.

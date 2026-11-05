@@ -108,7 +108,8 @@ export default function Planeacion() {
             <p className="text-sm font-medium" data-explain={GLOSARIO.escenarioMeta}>Escenario</p>
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span>Crecer</span>
-              <Entrada className="w-20 cifra" type="number" step="1" value={crec} onChange={(e) => setCrec(e.target.value)} aria-label="Crecimiento en porcentaje" />
+              <Entrada className="w-20 cifra" type="number" step="1" value={crec} onChange={(e) => setCrec(e.target.value)} aria-label="Crecimiento en porcentaje"
+                data-explain={GLOSARIO.escenarioMeta} data-explain-title="Crecer" />
               <span>% sobre {anio - 1} =</span>
               <b className="cifra">{dinero(d.meta_propuesta)}</b>
               {esDireccion && d.meta_propuesta != null && d.meta_propuesta > 0 && (
@@ -230,7 +231,7 @@ function TablaMeses({ meses, acumulado }: { meses: MesPlan[]; acumulado?: boolea
   return (
     <div className="overflow-x-auto px-1 pb-2">
       <table className="tabla text-xs">
-        <thead><tr><th>Mes</th><th className="text-right">Peso</th><th className="text-right">{acumulado ? "Meta acumulada" : "Meta"}</th><th className="text-right">{acumulado ? "Vendido acumulado" : "Vendido"}</th><th className="text-right">Diferencia</th></tr></thead>
+        <thead><tr><th>Mes</th><th className="text-right" data-explain={GLOSARIO.estacionalidadVenta} data-explain-title="Peso del mes">Peso</th><th className="text-right">{acumulado ? "Meta acumulada" : "Meta"}</th><th className="text-right">{acumulado ? "Vendido acumulado" : "Vendido"}</th><th className="text-right">Diferencia</th></tr></thead>
         <tbody>
           {meses.map((m) => {
             const meta = acumulado ? m.meta_acumulada : m.meta;

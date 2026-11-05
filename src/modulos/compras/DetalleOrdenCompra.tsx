@@ -338,7 +338,7 @@ function Detalle({ id }: { id: string }) {
                       <p className="text-xs text-tenue" data-explain={GLOSARIO.facturaDeLaOrden} data-explain-title="Factura en finanzas">Finanzas aún no registra su factura</p>
                     ))}
                   </Dato>}
-                  <Dato etiqueta="Notas para el proveedor">
+                  <Dato etiqueta="Notas para el proveedor" explica={GLOSARIO.notasOrdenCompra}>
                     {compra && o.estado !== "cancelada" ? <CampoTexto valor={o.notas} multilinea alGuardar={(v) => actualizar.mutate({ notas: v })} placeholder="Entregar en planta Atotonilco, horario…" />
                       : <p className="whitespace-pre-line">{o.notas ?? "—"}</p>}
                   </Dato>

@@ -98,7 +98,7 @@ export function ResumenIA({ area = "direccion", conClaude = true }: { area?: Are
           {datos?.puntos.map((p, i) => {
             const t = TONOS[p.tono] ?? TONOS.info;
             return (
-              <Link key={i} to={p.ruta || "/"}
+              <Link key={i} to={p.ruta || "/"} data-explain={GLOSARIO.tarjetasDelResumen} data-explain-title={t.texto}
                 className="group rounded-xl border border-borde bg-superficie/60 p-3.5 hover:border-marca/40 hover:shadow-sm transition flex gap-3 animate-entrar"
                 style={{ animationDelay: `${i * 60}ms` }}>
                 <div className={cn("h-8 w-8 shrink-0 rounded-lg grid place-items-center", t.clase)} title={t.texto}><t.icono className="h-4 w-4" /></div>

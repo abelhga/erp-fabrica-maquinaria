@@ -4,6 +4,7 @@ import { SERIE, ejeProps, Leyenda } from "@/components/graficas/comunes";
 import { Filtro } from "@/components/datos/TablaDatos";
 import { dinero, dineroCompacto, fecha, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 const mesCorto = (t: number) => { const d = new Date(t); return `${MESES[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`; };
@@ -12,8 +13,10 @@ const mesCorto = (t: number) => { const d = new Date(t); return `${MESES[d.getMo
 const ejePesos = (v: number) => (Math.abs(v) < 10_000 ? "$" + v.toLocaleString("es-MX", { maximumFractionDigits: Math.abs(v) < 100 ? 2 : 0 }) : dineroCompacto(v));
 
 type Rango = "12m" | "36m" | "todo";
-const RANGOS: { valor: Rango; texto: string }[] = [
-  { valor: "12m", texto: "12 meses" }, { valor: "36m", texto: "3 años" }, { valor: "todo", texto: "Todo" },
+const RANGOS: { valor: Rango; texto: string; explica: string }[] = [
+  { valor: "12m", texto: "12 meses", explica: GLOSARIO.rangoGraficaCosteo },
+  { valor: "36m", texto: "3 años", explica: GLOSARIO.rangoGraficaCosteo },
+  { valor: "todo", texto: "Todo", explica: GLOSARIO.rangoGraficaCosteo },
 ];
 function desdeRango(r: Rango) {
   if (r === "todo") return -Infinity;
@@ -119,7 +122,8 @@ export function GraficaCosteo({ puntos, conMargenes = true, conPrecios = true }:
         ]} />
         <div className="flex items-center gap-3">
           <Filtro opciones={RANGOS} valor={rango} alCambiar={setRango} />
-          <button className="text-xs text-marca-texto hover:underline" onClick={() => setVerTabla((v) => !v)}>
+          <button className="text-xs text-marca-texto hover:underline" onClick={() => setVerTabla((v) => !v)}
+            data-explain={GLOSARIO.botonVerGraficaTabla} data-explain-title={verTabla ? "Ver gráfica" : "Ver tabla"}>
             {verTabla ? "Ver gráfica" : "Ver tabla"}
           </button>
         </div>

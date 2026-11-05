@@ -215,7 +215,7 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
 
             {articulo && modo === "traspaso" && (
               <div className="space-y-1.5">
-                <span className="text-sm font-medium">Entra a</span>
+                <span className="text-sm font-medium" data-explain={GLOSARIO.traspaso} data-explain-title="Entra a">Entra a</span>
                 <div className="flex flex-wrap gap-1.5">
                   {(almacenes.data ?? []).filter((a) => a.id !== almacen).map((a) => (
                     <button key={a.id} type="button" onClick={() => setDestino(a.id)}
@@ -243,7 +243,7 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
               </label>
             </div>
             {pideRecibe && (
-              <label className="block space-y-1.5" data-explain={GLOSARIO.quienRecibe} data-explain-title="¿Quién lo recibe?">
+              <label className="block space-y-1.5" data-explain={GLOSARIO.quienRecibioMaterialAlmacen} data-explain-title="¿Quién lo recibe?">
                 <span className="text-sm font-medium">¿Quién lo recibe?</span>
                 <input className="campo h-11" list="recibe-consumo" value={recibe} onChange={(e) => setRecibe(e.target.value)} placeholder="Escribe o elige un nombre" />
                 <datalist id="recibe-consumo">{(personal.data ?? []).map((p) => <option key={p.id} value={p.nombre} />)}</datalist>

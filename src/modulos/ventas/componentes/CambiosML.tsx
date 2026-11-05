@@ -90,7 +90,7 @@ export function DialogoCambiosML({ abierto, alCambiar }: { abierto: boolean; alC
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{c.titulo ?? c.item_id}</p>
                     <p className="text-xs text-tenue">{c.item_id} · {c.motivo}</p>
-                    {c.por_que_no && <p className="text-xs text-tenue">No se haría solo: {c.por_que_no}</p>}
+                    {c.por_que_no && <p className="text-xs text-tenue" data-explain={GLOSARIO.automaticoML} data-explain-title="Por qué no se haría solo">No se haría solo: {c.por_que_no}</p>}
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-xs text-tenue">{c.campo === "precio" ? "Precio" : "Existencia"}</p>
@@ -128,9 +128,9 @@ export function AutomaticoML({ puedeCambiar }: { puedeCambiar: boolean }) {
     <div className="flex items-start justify-between gap-3 py-2">
       <div><p className="text-sm font-medium">{texto}</p><p className="text-xs text-tenue">{regla}</p></div>
       {puedeCambiar ? (
-        <Interruptor activo={a[campo]} cargando={fijar.isPending} aria-label={`${texto} solo`}
+        <Interruptor activo={a[campo]} cargando={fijar.isPending} aria-label={`${texto} solo`} data-explain={GLOSARIO.automaticoML} data-explain-title={`${texto}: corregir solo`}
           alCambiar={(v) => fijar.mutate({ precio: a.precio, existencia: a.existencia, [campo]: v })} />
-      ) : <Insignia tono={a[campo] ? "ok" : "neutro"}>{a[campo] ? "Prendido" : "Apagado"}</Insignia>}
+      ) : <span data-explain={GLOSARIO.automaticoML} data-explain-title={`${texto}: corregir solo`}><Insignia tono={a[campo] ? "ok" : "neutro"}>{a[campo] ? "Prendido" : "Apagado"}</Insignia></span>}
     </div>
   );
   return (
@@ -139,7 +139,7 @@ export function AutomaticoML({ puedeCambiar }: { puedeCambiar: boolean }) {
       <div className="px-5 pb-4 divide-y divide-borde">
         {fila("precio", "Precio", "Si la comisión y el envío los dio ML, la publicación está activa y el cambio es de 15 % o menos.")}
         {fila("existencia", "Existencia", "Nunca la deja en 0 ni la sube si el artículo está en otra publicación activa.")}
-        <p className="pt-2 text-xs text-tenue flex items-center gap-1.5">
+        <p className="pt-2 text-xs text-tenue flex items-center gap-1.5" data-explain={GLOSARIO.ultimaVueltaML} data-explain-title="Última vuelta">
           <Bot className="h-3.5 w-3.5" />
           {u ? (u.error ? <span className="text-peligro">Última vuelta {hace(u.en)}: {u.error}</span>
             : <>Última vuelta {hace(u.en)}: {numero(u.aplicados ?? 0)} cambiados{u.omitidos ? `, ${numero(u.omitidos)} sin tocar` : ""}{u.errores ? `, ${numero(u.errores)} con error` : ""}{u.pendientes ? `, ${numero(u.pendientes)} para la siguiente` : ""}</>)
@@ -176,7 +176,7 @@ export function HistorialCambiosML() {
                   <span className="cifra text-tenue">{valor(h.campo, h.antes)} → {valor(h.campo, h.despues)}</span></p>
                 <p className="text-xs text-tenue">{fechaYHora(h.creado_en)} · {h.origen === "automatico" ? "automático" : h.usuario?.nombre ?? "—"}{h.detalle ? ` · ${h.detalle}` : ""}</p>
               </div>
-              <Insignia tono={h.estado === "aplicado" ? "ok" : h.estado === "omitido" ? "aviso" : "peligro"}>{h.estado === "aplicado" ? "Cambiado" : h.estado === "omitido" ? "Sin tocar" : "Error"}</Insignia>
+              <span data-explain={GLOSARIO.historialCambiosML} data-explain-title="Cómo quedó"><Insignia tono={h.estado === "aplicado" ? "ok" : h.estado === "omitido" ? "aviso" : "peligro"}>{h.estado === "aplicado" ? "Cambiado" : h.estado === "omitido" ? "Sin tocar" : "Error"}</Insignia></span>
             </li>
           ))}
         </ul>

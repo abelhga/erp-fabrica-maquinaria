@@ -157,11 +157,15 @@ function VistaSemana({ semana }: { semana: Semana }) {
           ? <span data-explain={GLOSARIO.nominaPagada} data-explain-title="Pagada"><Insignia tono="ok"><Banknote className="h-3 w-3" /> Pagada el {fecha(semana.pagada_el)}{semana.pagada_cuenta && `, de ${semana.pagada_cuenta}`}{semana.pagada_monto != null && ` · ${dinero(semana.pagada_monto)}`}</Insignia></span>
           : <span data-explain={GLOSARIO.nominaPagada} data-explain-title="Pago de la semana"><Insignia tono="neutro">Sin pago registrado</Insignia></span>)}
         <div className="ml-auto flex flex-wrap gap-2">
-          <Boton variante="secundario" disabled={!datos.length} onClick={() => exportarCsv(semana, datos)}><Download className="h-4 w-4" /> Exportar CSV</Boton>
+          {/* Estos dos se deshabilitan (sin renglones, semana sin terminar) y un botón deshabilitado no recibe
+              el mouse: el globo va en el span que lo envuelve, así se explica también cuando no se puede. */}
+          <span className="inline-flex" data-explain={GLOSARIO.botonExportarCsvNomina} data-explain-title="Exportar CSV">
+            <Boton variante="secundario" disabled={!datos.length} onClick={() => exportarCsv(semana, datos)}><Download className="h-4 w-4" /> Exportar CSV</Boton></span>
           {cerrada && !semana.pagada_el && puede("finanzas", 2) && <Boton onClick={() => setDialogo("pagar")} data-explain={GLOSARIO.botonRegistrarPagoNomina}><Banknote className="h-4 w-4" /> Registrar pago</Boton>}
           {!cerrada && puede("nomina", 2) && <Boton variante="secundario" onClick={() => setDialogo("concepto")} data-explain={GLOSARIO.botonAgregarConceptoNomina}><Plus className="h-4 w-4" /> Agregar concepto</Boton>}
           {!cerrada && puede("nomina", 3) && (
-            <Boton disabled={!terminada} title={!terminada ? "Se cierra cuando termina la semana" : undefined} onClick={() => setDialogo("cerrar")}><Lock className="h-4 w-4" /> Cerrar semana</Boton>
+            <span className="inline-flex" data-explain={GLOSARIO.cerrarSemana} data-explain-title="Cerrar semana">
+              <Boton disabled={!terminada} title={!terminada ? "Se cierra cuando termina la semana" : undefined} onClick={() => setDialogo("cerrar")}><Lock className="h-4 w-4" /> Cerrar semana</Boton></span>
           )}
         </div>
       </div>

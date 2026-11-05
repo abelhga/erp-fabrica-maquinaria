@@ -174,7 +174,7 @@ export function PanelContestar({ s, alCerrar }: { s: Solicitud; alCerrar: () => 
         )}
 
         <div className="space-y-1.5">
-          <span className="text-sm font-medium">Proveedor</span>
+          <span className="text-sm font-medium" data-explain={GLOSARIO.proveedorSolicitudPrecio}>Proveedor</span>
           <SelectorProveedor valor={proveedor} alCambiar={(p) => { setProveedor(p); if (costo == null) setMoneda(p.moneda); if (entrega == null && p.dias_entrega != null) setEntrega(p.dias_entrega); }} />
         </div>
 
@@ -203,7 +203,8 @@ export function PanelContestar({ s, alCerrar }: { s: Solicitud; alCerrar: () => 
               data-explain={GLOSARIO.vigenciaPrecioSolicitud} data-explain-title="Precio válido hasta" />
           </Campo>
           <Campo etiqueta="Nota para quien lo pidió" ayuda="La lee el vendedor: nada de costos aquí.">
-            <Entrada value={respuesta} onChange={(e) => setRespuesta(e.target.value)} placeholder="Mínimo 10 piezas, llega por paquetería…" />
+            <Entrada value={respuesta} onChange={(e) => setRespuesta(e.target.value)} placeholder="Mínimo 10 piezas, llega por paquetería…"
+              data-explain={GLOSARIO.notaParaVendedorSolicitud} data-explain-title="Nota para quien lo pidió" />
           </Campo>
         </div>
 

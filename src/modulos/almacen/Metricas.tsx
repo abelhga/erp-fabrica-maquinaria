@@ -256,7 +256,7 @@ function Contenido({ d }: { d: Datos }) {
           <div className="overflow-x-auto pb-3">
             {pivote.filas.length === 0 ? <p className="px-5 py-6 text-center text-sm text-tenue">No salieron consumibles en el periodo.</p> : (
               <table className="tabla">
-                <thead><tr><th><span data-explain={GLOSARIO.quienRecibe}>Quién lo recibió</span></th>{pivote.cats.map((c) => <th key={c} className="text-right">{c}</th>)}<th className="text-right">Renglones</th>
+                <thead><tr><th><span data-explain={GLOSARIO.quienRecibioMaterialAlmacen} data-explain-title="Quién lo recibió">Quién lo recibió</span></th>{pivote.cats.map((c) => <th key={c} className="text-right">{c}</th>)}<th className="text-right">Renglones</th>
                   {d.con_costos && <th className="text-right">Valor</th>}</tr></thead>
                 <tbody>
                   {pivote.filas.map((f) => (

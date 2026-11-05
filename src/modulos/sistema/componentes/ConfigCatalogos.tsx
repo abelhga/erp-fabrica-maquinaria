@@ -169,7 +169,7 @@ export function ConfigTaller() {
         {etapas.isLoading ? <Cargando /> : (
           <div className="overflow-x-auto">
             <table className="tabla">
-              <thead><tr><th className="w-16">Color</th><th>Etapa</th><th className="w-24 !text-right" data-explain={GLOSARIO.ordenEtapaTaller} data-explain-title="Orden">Orden</th><th className="w-36 !text-right" data-explain={GLOSARIO.capacidadEtapa} data-explain-title="Capacidad h/semana">Capacidad h/semana</th><th className="w-24 !text-center" data-explain={GLOSARIO.etapaEnParalelo} data-explain-title="En paralelo">En paralelo</th><th className="w-20 !text-center" data-explain={GLOSARIO.etapaActivaTaller} data-explain-title="Activa">Activa</th></tr></thead>
+              <thead><tr><th className="w-16" data-explain={GLOSARIO.colorEtapaTaller} data-explain-title="Color">Color</th><th>Etapa</th><th className="w-24 !text-right" data-explain={GLOSARIO.ordenEtapaTaller} data-explain-title="Orden">Orden</th><th className="w-36 !text-right" data-explain={GLOSARIO.capacidadEtapa} data-explain-title="Capacidad h/semana">Capacidad h/semana</th><th className="w-24 !text-center" data-explain={GLOSARIO.etapaEnParalelo} data-explain-title="En paralelo">En paralelo</th><th className="w-20 !text-center" data-explain={GLOSARIO.etapaActivaTaller} data-explain-title="Activa">Activa</th></tr></thead>
               <tbody>
                 {(etapas.data ?? []).map((e) => (
                   <tr key={e.id} className={e.activa ? "" : "opacity-60"}>

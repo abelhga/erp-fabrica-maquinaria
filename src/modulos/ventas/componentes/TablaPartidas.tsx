@@ -126,7 +126,7 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
       <div ref={cont} className="text-sm">
         <div className={cn("grid gap-x-2 px-3 py-2 border-y border-borde bg-fondo/60 text-xs font-medium uppercase tracking-wide text-tenue", columnas)}>
           <span /><span>#</span><span>Artículo y descripción</span><span className="text-right">Cant.</span>
-          <span className="text-right" data-explain={GLOSARIO.precioLista} data-explain-title="Precio unitario">P. unitario</span>
+          <span className="text-right" data-explain={GLOSARIO.precioUnitarioPartidaCotizacion} data-explain-title="Precio unitario">P. unitario</span>
           <span className="text-right" data-explain={GLOSARIO.descuentoPartidaCotizacion} data-explain-title="Descuento">Desc.</span>
           <span className="text-right" data-explain={GLOSARIO.importePartidaCotizacion} data-explain-title="Importe">Importe</span><span />
         </div>
@@ -219,7 +219,7 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
                   alCambiar={(n) => acciones.editar(l.id, { cantidad: n })} alEnter={() => saltar("cantidad", i)} />
               </label>
               <label className="space-y-1">
-                <span className="text-[11px] text-tenue" data-explain={GLOSARIO.precioLista} data-explain-title="Precio unitario">P. unitario</span>
+                <span className="text-[11px] text-tenue" data-explain={GLOSARIO.precioUnitarioPartidaCotizacion} data-explain-title="Precio unitario">P. unitario</span>
                 <CampoNumero valor={Number(l.precio_unitario)} min={0} deshabilitado={!editable}
                   className={cn(l.bajo_minimo && !sucias.has(l.id) && "[&_input]:border-peligro [&_input]:text-peligro")}
                   alCambiar={(n) => acciones.editar(l.id, { precio_unitario: n })} />

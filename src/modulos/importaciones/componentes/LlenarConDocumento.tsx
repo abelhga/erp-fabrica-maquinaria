@@ -160,9 +160,9 @@ export function LlenarConDocumento({ leido, alLeer, alQuitar, llenados }: {
         <Seleccion className="w-auto h-9" value={tipo} onChange={(e) => setTipo(e.target.value as TipoAlta)} disabled={leyendo} aria-label="Qué documento es">
           {Object.entries(TIPOS_ALTA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </Seleccion>
-        <Boton type="button" variante="secundario" onClick={() => entrada.current?.click()} cargando={leyendo} data-explain={GLOSARIO.botonLlenarEmbarqueConDocumento}>
+        <span data-explain={GLOSARIO.botonLlenarEmbarqueConDocumento} data-explain-title="Subir y leer"><Boton type="button" variante="secundario" onClick={() => entrada.current?.click()} cargando={leyendo}>
           {!leyendo && <FileUp className="h-4 w-4" />}{leyendo ? "Leyendo…" : "Subir y leer"}
-        </Boton>
+        </Boton></span>
         <input ref={entrada} type="file" accept="application/pdf,image/jpeg,image/png" className="hidden" aria-label="Documento para llenar el embarque"
           onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) leer(f); }} />
       </div>

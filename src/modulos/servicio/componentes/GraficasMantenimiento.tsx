@@ -6,6 +6,7 @@ import { Bar, BarChart, CartesianGrid, ComposedChart, LabelList, Line, LineChart
 import { useNavigate } from "react-router-dom";
 import { Leyenda, SERIE, TooltipGrafica, ejeProps } from "@/components/graficas/comunes";
 import { fecha, numero, porcentaje } from "@/lib/formato";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface Analitica {
   semanas: { semana: string; horas: number; fuera: number; disponibilidad: number | null; con_registro: boolean; fallas: number; prev_a_tiempo: number; prev_tarde: number }[];
@@ -42,7 +43,8 @@ export function DisponibilidadSemanal({ a }: { a: Analitica }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <div className="px-3 pt-2"><Leyenda series={[{ nombre: "Fallas", color: SERIE(2) }, { nombre: "Preventivo a tiempo", color: SERIE(3) }, { nombre: "Preventivo tarde", color: SERIE(4) }]} /></div>
+      <div className="px-3 pt-2" data-explain={GLOSARIO.cumplimientoPreventivo} data-explain-title="Preventivo a tiempo o tarde">
+        <Leyenda series={[{ nombre: "Fallas", color: SERIE(2) }, { nombre: "Preventivo a tiempo", color: SERIE(3) }, { nombre: "Preventivo tarde", color: SERIE(4) }]} /></div>
       <div className="h-32 pt-1">
         <ResponsiveContainer>
           <BarChart data={datos} margin={{ top: 4, right: 16, left: 4, bottom: 0 }} syncId="mant" barGap={2}>
@@ -76,7 +78,7 @@ export function ParetoParos({ maquinas }: { maquinas: MaquinaGraf[] }) {
   const vitales = datos.findIndex((x) => x.acumulado >= 0.8) + 1;
   return (
     <div className="px-2 pb-3">
-      <p className="px-3 pb-2 text-sm"><b className="cifra">{vitales}</b> {vitales === 1 ? "máquina junta" : "máquinas juntan"} el 80 % de las <b className="cifra">{numero(total)}</b> horas paradas.</p>
+      <p className="px-3 pb-2 text-sm" data-explain={GLOSARIO.paretoFallas} data-explain-title="Regla 80/20"><b className="cifra">{vitales}</b> {vitales === 1 ? "máquina junta" : "máquinas juntan"} el 80 % de las <b className="cifra">{numero(total)}</b> horas paradas.</p>
       <div className="px-3"><Leyenda series={[{ nombre: "Parte de las horas paradas", color: SERIE(1) }, { nombre: "Acumulado", color: SERIE(2) }]} /></div>
       <div className="h-56 pt-1">
         <ResponsiveContainer>
@@ -179,7 +181,7 @@ export function CargaPreventivos({ a }: { a: Analitica }) {
   return (
     <div className="px-2 pb-3">
       <p className="px-3 pb-2 text-sm"><b className="cifra">{numero(datos.reduce((s, d) => s + d.total, 0))}</b> preventivos en 8 semanas, unas <b className="cifra">{numero(horas)} h</b> de técnico. La semana más cargada es la del {pico.semana ? corta(pico.semana) : "—"} ({numero(pico.horas)} h).</p>
-      <div className="px-3"><Leyenda series={CRIT.map((c) => ({ nombre: c.nombre, color: c.color }))} /></div>
+      <div className="px-3" data-explain={GLOSARIO.criticidadMaquina} data-explain-title="Colores por criticidad"><Leyenda series={CRIT.map((c) => ({ nombre: c.nombre, color: c.color }))} /></div>
       <div className="h-56 pt-1">
         <ResponsiveContainer>
           <BarChart data={datos} margin={{ top: 18, right: 12, left: 4, bottom: 0 }}>
@@ -212,7 +214,7 @@ export function AntiguedadAbierto({ a }: { a: Analitica }) {
   if (!datos.some((x) => x.preventivo + x.falla + x.falla_parada > 0)) return null;
   return (
     <div className="px-2 pb-2">
-      <div className="px-3"><Leyenda series={TIPOS.map((t, i) => ({ nombre: t.nombre, color: SERIE(i + 1) }))} /></div>
+      <div className="px-3" data-explain={GLOSARIO.antiguedadOrdenesMto} data-explain-title="Antigüedad de lo abierto"><Leyenda series={TIPOS.map((t, i) => ({ nombre: t.nombre, color: SERIE(i + 1) }))} /></div>
       <div className="h-40 pt-1">
         <ResponsiveContainer>
           <BarChart data={datos} layout="vertical" margin={{ top: 4, right: 16, left: 4, bottom: 0 }} barCategoryGap={4}>

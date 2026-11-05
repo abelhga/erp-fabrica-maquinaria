@@ -10,6 +10,7 @@ import { hoyISO, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { CampoNumero } from "@/modulos/ventas/componentes/campos";
 import { CLAVE, TIPOS, TIPOS_PEDIDO, medidas, usePaqueterias, type TipoEnvio } from "./datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface PorEnviar {
   pedido_linea_id: string; orden: number; articulo_id: string; clave: string; titulo: string; articulo_tipo: string; unidad: string;
@@ -82,7 +83,7 @@ export function DialogoPedirEnvio({ pedido, abierto, alCambiar, alCrear }: {
       pie={<><Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
         <Boton onClick={() => crear.mutate(undefined)} cargando={crear.isPending} disabled={lineas.length === 0}>Pedir envío</Boton></>}>
       <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (lineas.length) crear.mutate(undefined); }}>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" data-explain={GLOSARIO.tipoDeEnvio} data-explain-title="Cómo va">
           {tipos.map((t) => (
             <button key={t} type="button" onClick={() => setTipo(t)} title={TIPOS[t].ayuda}
               className={cn("rounded-lg border px-3 py-2 text-left text-sm transition",
@@ -94,7 +95,7 @@ export function DialogoPedirEnvio({ pedido, abierto, alCambiar, alCrear }: {
         <p className="text-xs text-tenue -mt-2">{TIPOS[tipo].ayuda}</p>
 
         <section className="space-y-2">
-          <p className="etiqueta">Qué va</p>
+          <p className="etiqueta" data-explain={GLOSARIO.partidasPorEnviarPedido} data-explain-title="Qué va">Qué va</p>
           {partidas.isLoading ? <p className="text-sm text-tenue">Cargando partidas…</p>
             : (partidas.data ?? []).length === 0 ? <p className="text-sm text-tenue">Este pedido no tiene partidas que se empaquen (solo servicios o partidas libres).</p>
             : (partidas.data ?? []).map((p) => (
@@ -112,7 +113,7 @@ export function DialogoPedirEnvio({ pedido, abierto, alCambiar, alCrear }: {
               </div>
             ))}
           {lineas.length > 0 && (tipo === "paqueteria" || tipo === "flete") && (
-            <p className="flex items-center gap-1.5 text-sm text-tenue"><Package className="h-4 w-4" />
+            <p className="flex items-center gap-1.5 text-sm text-tenue" data-explain={GLOSARIO.bultosEnvio} data-explain-title="Bultos"><Package className="h-4 w-4" />
               ≈ <b className="cifra text-texto">{resumen.bultos}</b> {resumen.bultos === 1 ? "bulto" : "bultos"}{resumen.kg > 0 && <> · <b className="cifra text-texto">{numero(resumen.kg)} kg</b></>}
               {resumen.sin > 0 && <span className="text-aviso"> · {resumen.sin} sin medidas</span>}</p>
           )}
@@ -128,13 +129,13 @@ export function DialogoPedirEnvio({ pedido, abierto, alCambiar, alCrear }: {
             </Campo>
           )}
           <Campo etiqueta={tipo === "recoge" ? "¿Cuándo pasan por él?" : "Recolección"} ayuda={tipo === "recoge" ? "Almacén lo ve en “Hoy salen o recogen”." : "Si ya se sabe cuándo pasa la paquetería."}>
-            <Entrada type="date" value={fecha} min={hoyISO()} onChange={(e) => setFecha(e.target.value)} />
+            <Entrada type="date" value={fecha} min={hoyISO()} onChange={(e) => setFecha(e.target.value)} data-explain={GLOSARIO.recoleccion} data-explain-title="Recolección" />
           </Campo>
         </div>
 
         {conDestino && (
           <section className="space-y-2 rounded-xl border border-borde bg-fondo/60 p-3">
-            <p className="flex items-center gap-1.5 text-sm font-medium"><MapPin className="h-4 w-4 text-tenue" />Destino</p>
+            <p className="flex items-center gap-1.5 text-sm font-medium" data-explain={GLOSARIO.destinoDelEnvio} data-explain-title="Destino"><MapPin className="h-4 w-4 text-tenue" />Destino</p>
             {(contactos.data?.length ?? 0) > 1 && (
               <Seleccion value={contacto} onChange={(e) => { setContacto(e.target.value); setDestino(null); }} aria-label="Contacto">
                 {contactos.data!.map((c) => <option key={c.id} value={c.id}>{c.nombre}{c.principal ? " (principal)" : ""}</option>)}

@@ -181,7 +181,7 @@ export default function UsoErp() {
               <div className="px-5 pb-5"><MezclaSecciones personas={conUso.slice(0, 15)} filas={t.secciones.filter((x) => ids.has(x.u))} /></div>
             </Tarjeta>
             <Tarjeta>
-              <EncabezadoTarjeta titulo="En qué se va el costo de la IA" descripcion={`${usd(costoIa)} en el periodo (≈ ${dinero(costoIa * (t.ia.tc_usd || 0))}); es un estimado con los precios de Configuración.`} explica={GLOSARIO.costoIa} />
+              <EncabezadoTarjeta titulo="En qué se va el costo de la IA" descripcion={`${usd(costoIa)} en el periodo (≈ ${dinero(costoIa * (t.ia.tc_usd || 0))}); es un estimado con la tarifa de la API guardada en el ERP.`} explica={GLOSARIO.costoIa} />
               <div className="px-5 pb-5"><CostoPorUso usos={usosIa} /></div>
             </Tarjeta>
           </div>
@@ -194,7 +194,7 @@ export default function UsoErp() {
               { valor: "todos", texto: "Todas las cuentas", cuenta: todos.filter(conRol).length, explica: GLOSARIO.filtroTodasCuentasUso },
             ]} />}
             vacio={{ icono: Activity, titulo: vista === "sin_uso" ? "Todos lo usaron en el periodo" : "Sin cuentas", texto: undefined }} />
-          <p className="text-xs text-tenue">El tiempo activo y las pantallas se cuentan desde el 5 de noviembre de 2026; los cambios y las consultas a la IA traen su historia de antes. El costo de la IA es un estimado con los precios de Configuración; lo que factura el proveedor manda. «Todas las cuentas» incluye las desactivadas y las de la TV y la tablet del taller.</p>
+          <p className="text-xs text-tenue">El tiempo activo y las pantallas se cuentan desde el 5 de noviembre de 2026; los cambios y las consultas a la IA traen su historia de antes. El costo de la IA es un estimado con la tarifa de la API guardada en el ERP; lo que factura el proveedor manda. «Todas las cuentas» incluye las desactivadas y las de la TV y la tablet del taller.</p>
         </div>
       )}
       <DetalleUso u={abierto} desde={desde} hasta={hasta} alCerrar={() => setAbierto(null)} />

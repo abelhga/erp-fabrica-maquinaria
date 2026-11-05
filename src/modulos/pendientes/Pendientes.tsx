@@ -386,7 +386,7 @@ function Equipo({ todos, alAbrir }: { todos: Pendiente[]; alAbrir: (id: string) 
               })}
             </div>
           )}
-          <h3 className="text-sm font-semibold pt-2" data-explain={GLOSARIO.pendientesATiempo} data-explain-title="Cerrados">
+          <h3 className="text-sm font-semibold pt-2" data-explain={GLOSARIO.pendientesCerradosPeriodo} data-explain-title="Lo que cerró">
             Lo que cerró en {dias} días ({cerrados.length})</h3>
           {cerrados.length === 0 ? <p className="text-sm text-tenue">No cerró nada en el periodo.</p> : (
             <div className="tarjeta divide-y divide-borde">
@@ -402,7 +402,8 @@ function Equipo({ todos, alAbrir }: { todos: Pendiente[]; alAbrir: (id: string) 
                         ? <span className="block text-xs mt-0.5">Respuesta: <span className="text-texto">“{p.nota_cierre}”</span></span>
                         : <span className="block text-xs text-tenue mt-0.5">Lo cerró sin dejar respuesta.</span>}
                     </span>
-                    {p.vence ? <Insignia tono={tarde ? "peligro" : "ok"}>{tarde ? `Tarde (era para ${fecha(p.vence)})` : "A tiempo"}</Insignia>
+                    {p.vence ? <span data-explain={GLOSARIO.pendientesATiempo} data-explain-title={tarde ? "Tarde" : "A tiempo"}>
+                      <Insignia tono={tarde ? "peligro" : "ok"}>{tarde ? `Tarde (era para ${fecha(p.vence)})` : "A tiempo"}</Insignia></span>
                       : <Insignia tono="neutro">Sin fecha</Insignia>}
                   </button>
                 );

@@ -165,7 +165,7 @@ function DialogoRetiro({ f, dias, alCerrar }: { f: FilaAhorro; dias: number; alC
           <Campo etiqueta="Se le entrega el"><Entrada type="date" min={minimo} max={hoyISO()} value={v.entrega} onChange={(e) => setV({ ...v, entrega: e.target.value })} /></Campo>
         </div>
         <Campo etiqueta="Sale de la cuenta" ayuda="Queda en Pagos hechos de finanzas; si es caja chica, también en su libro.">
-          <span data-explain={GLOSARIO.cuentaNomina} className="block"><SelectorCuenta soloDinero valor={v.cuenta} alCambiar={(c) => setV({ ...v, cuenta: c })} /></span>
+          <span data-explain={GLOSARIO.cuentaNomina} className="block"><SelectorCuenta soloDinero explica={GLOSARIO.cuentaNomina} valor={v.cuenta} alCambiar={(c) => setV({ ...v, cuenta: c })} /></span>
         </Campo>
         <Campo etiqueta="Nota (opcional)"><Entrada value={v.nota} onChange={(e) => setV({ ...v, nota: e.target.value })} placeholder="Para inscripción escolar…" /></Campo>
       </form>
@@ -252,7 +252,7 @@ export function DialogoAbonar({ p, semanas, alCerrar }: { p: PrestamoAbono; sema
               </Campo>}
         </div>
         {modo === "efectivo" && <Campo etiqueta="Entra a la cuenta" ayuda="Si lo recibes en efectivo y se queda en la caja chica, elige caja chica: entra a su libro.">
-          <span data-explain={GLOSARIO.cuentaNomina} className="block"><SelectorCuenta soloDinero valor={v.cuenta} alCambiar={(c) => setV({ ...v, cuenta: c })} /></span>
+          <span data-explain={GLOSARIO.cuentaNomina} className="block"><SelectorCuenta soloDinero explica={GLOSARIO.cuentaNomina} valor={v.cuenta} alCambiar={(c) => setV({ ...v, cuenta: c })} /></span>
         </Campo>}
         {modo === "efectivo" && <Campo etiqueta="Nota (opcional)"><Entrada value={v.nota} onChange={(e) => setV({ ...v, nota: e.target.value })} placeholder="Abonó de su aguinaldo…" /></Campo>}
         <p className="text-xs text-tenue">{modo === "efectivo"

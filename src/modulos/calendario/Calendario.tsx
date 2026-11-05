@@ -100,7 +100,7 @@ export default function Calendario() {
             <Boton variante="fantasma" tamano="icono" aria-label="Siguiente" onClick={() => mover(1)}
               data-explain={GLOSARIO.moverCalendario} data-explain-title="Siguiente"><ChevronRight className="h-4 w-4" /></Boton>
           </div>
-          <Boton variante="secundario" tamano="sm" onClick={() => poner({ dia: null })}>Hoy</Boton>
+          <Boton variante="secundario" tamano="sm" onClick={() => poner({ dia: null })} data-explain={GLOSARIO.moverCalendario} data-explain-title="Hoy">Hoy</Boton>
           {atrasados > 0 && (
             <span className="text-sm font-medium text-peligro" data-explain={GLOSARIO.atrasadoCalendario} data-explain-title="Atrasado">
               {atrasados} {atrasados === 1 ? "atrasado" : "atrasados"}

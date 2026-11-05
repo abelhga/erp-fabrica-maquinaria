@@ -94,24 +94,25 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
 
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Material"
+      <EncabezadoTarjeta titulo="Material" explica={GLOSARIO.listaMaterialOrden}
         descripcion={<span className="flex flex-wrap gap-x-3 gap-y-1">
           <span>{vigentes.length} partidas</span>
-          {conFaltante > 0 ? <span className="text-peligro font-medium">{conFaltante} con faltante</span> : lista.length > 0 && <span className="text-ok">Nada falta</span>}
-          <span>{porSurtir} por surtir</span>
-          {fuera > 0 && <span>{fuera} agregadas o fuera de lista</span>}
+          {conFaltante > 0 ? <span className="text-peligro font-medium" data-explain={GLOSARIO.faltanteMaterial}>{conFaltante} con faltante</span> : lista.length > 0 && <span className="text-ok">Nada falta</span>}
+          <span data-explain={GLOSARIO.partidasPorSurtir}>{porSurtir} por surtir</span>
+          {fuera > 0 && <span data-explain={GLOSARIO.materialAgregadoOrden}>{fuera} agregadas o fuera de lista</span>}
           {quitadas > 0 && <span data-explain={GLOSARIO.materialQuitado}>{quitadas} {quitadas === 1 ? "quitada o reemplazada" : "quitadas o reemplazadas"}</span>}
           {delTaller > 0 && <span data-explain={GLOSARIO.consumibleTaller}>{delTaller} {delTaller === 1 ? "consumible" : "consumibles"} del taller</span>}
         </span>}
         acciones={<div className="flex flex-wrap justify-end gap-2">
           {acciones}
-          {editable && <Boton tamano="sm" variante="secundario" onClick={() => setAgregando(true)}><Plus className="h-3.5 w-3.5" />Agregar material</Boton>}
+          {editable && <Boton tamano="sm" variante="secundario" onClick={() => setAgregando(true)}
+            data-explain={GLOSARIO.botonAgregarMaterialOrden} data-explain-title="Agregar material"><Plus className="h-3.5 w-3.5" />Agregar material</Boton>}
         </div>} />
       <div className="px-5 pb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
         <Filtro<Vista> valor={vista} alCambiar={setVista} opciones={[
           { valor: "todo", texto: "Todo", cuenta: lista.length },
-          { valor: "falta", texto: "Lo que falta", cuenta: conFaltante },
-          { valor: "por_surtir", texto: "Por surtir", cuenta: porSurtir },
+          { valor: "falta", texto: "Lo que falta", cuenta: conFaltante, explica: GLOSARIO.faltanteMaterial },
+          { valor: "por_surtir", texto: "Por surtir", cuenta: porSurtir, explica: GLOSARIO.partidasPorSurtir },
         ]} />
         <span className="flex items-center gap-2 text-xs text-tenue" data-explain={GLOSARIO.agruparMaterial} data-explain-title="Agrupar por">
           Agrupar por
@@ -131,12 +132,12 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
             <thead>
               <tr>
                 <th>Material</th>
-                <th className="text-right">Requerido</th>
-                <th className="text-right" data-explain={GLOSARIO.apartadoOrden}>Apartado</th>
-                <th className="text-right" data-explain={GLOSARIO.surtidoOrden}>Surtido</th>
-                <th className="text-right" data-explain={GLOSARIO.faltanteMaterial}>Falta</th>
-                <th className="text-right" title="Lo que se pidió a compras para esta orden" data-explain={GLOSARIO.pedidoACompras}>Pedido</th>
-                <th className="text-right" title="Existencia en planta menos lo apartado para cualquier orden" data-explain={GLOSARIO.disponiblePlanta}>Disponible</th>
+                <th className="text-right" data-explain={GLOSARIO.requeridoOrden} data-explain-title="Requerido"><span>Requerido</span></th>
+                <th className="text-right" data-explain={GLOSARIO.apartadoOrden} data-explain-title="Apartado"><span>Apartado</span></th>
+                <th className="text-right" data-explain={GLOSARIO.surtidoOrden} data-explain-title="Surtido"><span>Surtido</span></th>
+                <th className="text-right" data-explain={GLOSARIO.faltanteMaterial} data-explain-title="Falta"><span>Falta</span></th>
+                <th className="text-right" title="Lo que se pidió a compras para esta orden" data-explain={GLOSARIO.pedidoACompras} data-explain-title="Pedido"><span>Pedido</span></th>
+                <th className="text-right" title="Existencia en planta menos lo apartado para cualquier orden" data-explain={GLOSARIO.disponiblePlanta} data-explain-title="Disponible"><span>Disponible</span></th>
                 {editable && <th className="w-20"><span className="sr-only">Cambiar</span></th>}
               </tr>
             </thead>
@@ -157,7 +158,8 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
                           <span>{m.clave}</span>
                           {agrupar === "categoria" ? <span>· {grupoRuta(m.ruta, equipo)}</span> : m.categoria && <span>· {m.categoria}</span>}
                           {m.reemplaza_a_nombre ? <span data-explain={GLOSARIO.materialQuitado}><Insignia tono="info">Reemplaza a {m.reemplaza_a_nombre}</Insignia></span>
-                            : m.agregado && <Insignia tono={m.requerido === 0 ? "aviso" : "info"}>{m.requerido === 0 ? "Fuera de lista" : "Agregado"}</Insignia>}
+                            : m.agregado && <span className="inline-flex" data-explain={m.requerido === 0 ? GLOSARIO.fueraDeLista : GLOSARIO.materialAgregadoOrden}>
+                                <Insignia tono={m.requerido === 0 ? "aviso" : "info"}>{m.requerido === 0 ? "Fuera de lista" : "Agregado"}</Insignia></span>}
                           {m.del_taller && <span data-explain={GLOSARIO.consumibleTaller}><Insignia tono="neutro">Del taller</Insignia></span>}
                           {m.notas && <span className="italic truncate">{m.notas}</span>}
                         </p>
@@ -176,8 +178,10 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
                       {editable && (
                         <td className="whitespace-nowrap text-right">
                           <button type="button" className="p-1.5 text-tenue hover:text-marca-texto" title="Reemplazar por otro material" aria-label={`Reemplazar ${m.nombre}`}
+                                  data-explain={GLOSARIO.botonReemplazarMaterial} data-explain-title="Reemplazar"
                                   onClick={() => setReemplazando(m)}><ArrowLeftRight className="h-4 w-4" /></button>
                           <button type="button" className="p-1.5 text-tenue hover:text-peligro" title="Quitar de esta orden (queda tachado)" aria-label={`Quitar ${m.nombre}`}
+                                  data-explain={GLOSARIO.materialQuitado} data-explain-title="Quitar de esta orden"
                                   onClick={() => setQuitando(m)}><Trash2 className="h-4 w-4" /></button>
                         </td>
                       )}
@@ -241,7 +245,8 @@ function FilaQuitada({ m, equipo, editable, alReponer, reponiendo }: {
       <td colSpan={5} />
       {editable && (
         <td className="whitespace-nowrap text-right">
-          {!m.reemplazado_por && <Boton tamano="sm" variante="fantasma" cargando={reponiendo} onClick={alReponer} title="Volver a ponerlo con la cantidad que llevaba">
+          {!m.reemplazado_por && <Boton tamano="sm" variante="fantasma" cargando={reponiendo} onClick={alReponer} title="Volver a ponerlo con la cantidad que llevaba"
+            data-explain={GLOSARIO.botonReponerMaterial} data-explain-title="Volver">
             <RotateCcw className="h-3.5 w-3.5" />Volver</Boton>}
         </td>
       )}
@@ -518,8 +523,10 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
       {pendientes.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 mb-2">
           {previo
-            ? <Boton tamano="sm" variante="fantasma" onClick={() => llenarTodos((m) => m.por_surtir)}>Llenar con todo lo que falta</Boton>
-            : <Boton tamano="sm" variante="fantasma" onClick={() => llenarTodos((m) => Math.min(m.apartado, m.por_surtir))}>Llenar con lo apartado</Boton>}
+            ? <Boton tamano="sm" variante="fantasma" onClick={() => llenarTodos((m) => m.por_surtir)}
+                data-explain={GLOSARIO.botonLlenarConFaltante} data-explain-title="Llenar con todo lo que falta">Llenar con todo lo que falta</Boton>
+            : <Boton tamano="sm" variante="fantasma" onClick={() => llenarTodos((m) => Math.min(m.apartado, m.por_surtir))}
+                data-explain={GLOSARIO.botonLlenarConApartado} data-explain-title="Llenar con lo apartado">Llenar con lo apartado</Boton>}
           <Boton tamano="sm" variante="fantasma" onClick={() => setCant({})}>Limpiar</Boton>
           <CajaBuscar valor={buscar} alCambiar={setBuscar} className="w-full sm:w-64 sm:ml-auto" />
         </div>
@@ -531,7 +538,11 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
       {visibles.length > 0 && (
         <div className="overflow-x-auto -mx-5 px-5">
           <table className="tabla">
-            <thead><tr><th>Material</th><th className="text-right">Por surtir</th><th className="text-right">Apartado</th><th className="text-right w-32">{previo ? "Ya se entregó" : "Sale"}</th>{!previo && <th className="w-56">De</th>}</tr></thead>
+            <thead><tr><th>Material</th>
+              <th className="text-right" data-explain={GLOSARIO.llenarSurtido} data-explain-title="Por surtir"><span>Por surtir</span></th>
+              <th className="text-right" data-explain={GLOSARIO.apartadoOrden} data-explain-title="Apartado"><span>Apartado</span></th>
+              <th className="text-right w-32">{previo ? "Ya se entregó" : "Sale"}</th>
+              {!previo && <th className="w-56" data-explain={GLOSARIO.almacenDeSalidaSurtir} data-explain-title="De qué almacén"><span>De</span></th>}</tr></thead>
             <tbody>
               {visibles.map((m, i) => (
                 <Fragment key={m.id}>
@@ -552,6 +563,7 @@ export function DialogoSurtir({ abierto, alCambiar, ordenId, folio, material, cr
                   </td>
                   <td className="text-right cifra">{m.apartado > 0
                     ? <button type="button" className="rounded px-1 hover:bg-marca-suave hover:text-marca-texto" title="Llenar con lo apartado"
+                              data-explain={GLOSARIO.llenarSurtido} data-explain-title="Tocar para llenar"
                               onClick={() => llenar(m, Math.min(m.apartado, m.por_surtir))}>{cifra(m.apartado)}</button>
                     : "—"}</td>
                   <td className="text-right">

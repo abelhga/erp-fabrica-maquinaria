@@ -81,7 +81,7 @@ export function Historial() {
       celda: (m) => <CantidadConSigno n={Number(m.cantidad)} unidad={m.unidad} /> },
     { clave: "referencia", titulo: "Referencia", clase: "whitespace-nowrap px-2 text-xs", explica: GLOSARIO.referenciaMovimiento, celda: (m) => m.referencia ?? <span className="text-tenue">—</span> },
     { clave: "motivo", titulo: "Motivo", clase: "max-w-[200px] truncate text-tenue text-xs px-2", celda: (m) => <span title={m.motivo ?? ""}>{m.motivo ?? "—"}</span> },
-    { clave: "recibio", titulo: "Recibió", clase: "whitespace-nowrap text-xs px-2", explica: GLOSARIO.quienRecibe, celda: (m) => m.recibio ?? <span className="text-tenue">—</span> },
+    { clave: "recibio", titulo: "Recibió", clase: "whitespace-nowrap text-xs px-2", explica: GLOSARIO.quienRecibioMaterialAlmacen, celda: (m) => m.recibio ?? <span className="text-tenue">—</span> },
     { clave: "usuario", titulo: "Quién", clase: "whitespace-nowrap text-xs px-2", explica: GLOSARIO.quienCapturoMovimiento },
     { clave: "valor", titulo: "Valor", alinear: "der", sinBusqueda: true, oculta: !verCostos, explica: GLOSARIO.valorMovimientoInventario,
       valor: (m) => (m.costo_unitario == null ? null : Math.round(Number(m.cantidad) * Number(m.costo_unitario) * 100) / 100),

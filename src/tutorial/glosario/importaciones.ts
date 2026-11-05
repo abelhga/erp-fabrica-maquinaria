@@ -24,7 +24,7 @@ export const IMPORTACIONES = {
   eir: "El comprobante de que el contenedor vacío se devolvió a la naviera. Sin él no se recupera la garantía.",
   correosEmbarque: "Los correos de los hilos de Gmail ligados a este embarque, guardados en el ERP sin lo citado de correos anteriores. Traen montos: solo los ve quien ve el dinero de importaciones.",
   hiloCorreo: "Una conversación de Gmail (el correo y todas sus respuestas). Se liga desde el Gmail de quien lo busca, y solo esa persona lo pone al día con «Traer lo nuevo», porque es su cuenta.",
-  propuestaCorreos: "Lo que la IA encontró al leer todos los correos del embarque: fechas de etapas que ya pasaron, ETA, datos y documentos que llegaron, cada uno con el correo de donde salió. Es una propuesta: nada cambia hasta que la revisas y la aplicas.",
+  propuestaCorreos: "Lo que la IA encontró al leer los correos del embarque: fechas de etapas que ya pasaron, ETA, datos y documentos que llegaron, cada uno con el correo de donde salió. Es una propuesta: nada cambia hasta que la revisas y la aplicas.",
   pendientesCorreos: "Lo que alguien pidió en los correos y todavía no se contesta o entrega, con quién lo debe. Es para que lo veas; no se guarda como pendiente del ERP.",
 
   // Tablero de embarques
@@ -101,18 +101,21 @@ export const IMPORTACIONES = {
   versionCosteoImportacion: "Cada cálculo es una versión. En borrador se puede volver a calcular (el borrador anterior se reemplaza); cerrado ya quedó. Dale clic para ver su detalle.",
   factorCosteoImportacion: "Cuánto se suma de gastos por cada peso de mercancía: los gastos sin IVA entre el valor de la mercancía. Un factor de 0.25 quiere decir $0.25 de gastos por cada $1.",
   botonCerrarCosteoImportacion: "Cierra esta versión. El final pone el costo puesto en planta a los artículos del catálogo (con historial y el folio del embarque), sus precios se recalculan y se avisa a compras e ingeniería; el preliminar solo queda de referencia. Si cambió algo desde que se calculó, te pide recalcular.",
+  botonCalcularCosteoImportacion: "El preliminar se puede calcular en cuanto se registra el pedimento pagado e incluye los gastos estimados; el final, en cuanto se registra la cuenta de gastos, y va sin estimados. Volver a calcular reemplaza el borrador de ese tipo. Calcular no cambia el catálogo: eso pasa al cerrar el final.",
   costeoPorPartida: "El costo de cada partida: su valor en pesos, los gastos que le tocaron y el costo unitario sin IVA. «Antes» es el costo que tenía en el catálogo al calcular; la flecha dice cuánto sube o baja.",
   gastosQueEntraronCosteo: "La foto de los gastos que usó este cálculo y cómo se repartió cada uno. El final no lleva estimados. Si después llega otro gasto, sale un aviso para calcular otra versión del final.",
 
   // Correos y lectura con IA
-  botonLeerCorreosIA: "La IA lee todos los correos ligados a este embarque y te propone fechas de etapas, ETA, datos y documentos que llegaron, cada uno con el correo de donde salió. Nada cambia hasta que lo revisas y lo aplicas.",
+  botonLeerCorreosIA: "La IA lee los correos ligados a este embarque (si son demasiados, deja fuera los más viejos y te avisa) y te propone fechas de etapas, ETA, datos y documentos que llegaron, cada uno con el correo de donde salió. Nada cambia hasta que lo revisas y lo aplicas.",
   ligarHiloGmail: "Busca en tu Gmail (como lo harías allá: BL, referencia del agente, PI o proveedor) y liga el hilo a este embarque. Sus correos se guardan aquí sin lo citado, para que los vea quien ve el dinero de importaciones.",
   botonConectarGmailLectura: "Te lleva a Google para conectar tu Gmail una sola vez, con permiso de leer, para poder buscar y ligar hilos. Deja marcadas las dos casillas que te pide.",
   botonTraerLoNuevoHilo: "Trae los correos nuevos de este hilo desde tu Gmail. Solo te sale si tú lo ligaste, porque es tu cuenta.",
   botonQuitarHilo: "Quita el hilo de este embarque y borra los correos que se guardaron de él. En Gmail no se toca nada.",
+  botonAplicarPropuestaCorreos: "Aplica lo que dejaste marcado, igual que si lo capturaras a mano: las fechas como etapas, la ETA y los datos al embarque (el cambio de ETA queda en la historia) y los documentos pendientes como recibidos. Si algo no se puede, como una fecha futura, no se aplica nada y te dice por qué.",
   botonDescartarPropuestaCorreos: "Descarta lo que propuso la IA sin aplicar nada. Puedes volver a leer los correos cuando quieras.",
   montosCorreos: "Importes que se mencionan en los correos (fletes, saldos, cargos). Solo se muestran: para que cuenten hay que capturarlos como pago, gasto o saldo por recuperar.",
   tipoDocumentoLeerIA: "Dile a la IA qué documento es para que sepa qué datos buscar. Abajo dice qué pasa con cada tipo al guardarlo.",
+  botonConfirmarDocumentoLeido: "Guarda el archivo en su casilla del embarque y los datos como los dejaste; abajo dice qué pasa con este tipo de documento. Si es una factura y el embarque trae varias órdenes, primero elige de cuál es.",
   conceptoEntraComoGasto: "Marca los conceptos de la cuenta de gastos que entran como gasto del costeo. Los impuestos y el anticipo no se pueden marcar: los impuestos ya vienen en el pedimento y el anticipo no es gasto.",
   botonLlenarEmbarqueConDocumento: "Sube el BL (o la PI, la factura o el packing list) y la IA llena el alta. Lo que llenó queda marcado para que lo revises; el archivo se guarda en el expediente al dar de alta.",
   quitarDocumentoAlta: "Quita el documento del alta: lo que ya llenó se queda en el formulario, pero el archivo ya no se guarda.",

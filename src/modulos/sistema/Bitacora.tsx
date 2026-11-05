@@ -76,7 +76,7 @@ export default function Bitacora() {
     { clave: "en", titulo: "Cuándo", sinBusqueda: true, celda: (r) => <span className="whitespace-nowrap" title={hace(r.en)}>{fechaYHora(r.en)}</span> },
     { clave: "usuario", titulo: "Quién", explica: GLOSARIO.bitacoraSistema, valor: (r) => r.usuario ?? "Sistema", celda: (r) => r.usuario ?? <span className="text-tenue">Sistema</span> },
     { clave: "accion", titulo: "Acción", explica: GLOSARIO.accionBitacora, valor: (r) => ACCIONES[r.accion].texto, celda: (r) => <Insignia tono={ACCIONES[r.accion].tono}>{ACCIONES[r.accion].texto}</Insignia> },
-    { clave: "tabla", titulo: "Qué", valor: (r) => nombreTabla(r.tabla), celda: (r) => <span className="whitespace-nowrap">{nombreTabla(r.tabla)}</span> },
+    { clave: "tabla", titulo: "Qué", explica: GLOSARIO.filtroQueBitacora, valor: (r) => nombreTabla(r.tabla), celda: (r) => <span className="whitespace-nowrap">{nombreTabla(r.tabla)}</span> },
     {
       clave: "registro", titulo: "Registro", explica: GLOSARIO.registroBitacora, valor: (r) => r.etiqueta ?? etiquetaDeCambios(r.cambios) ?? r.registro_id,
       celda: (r) => <span className="block max-w-[260px] truncate">{r.etiqueta ?? etiquetaDeCambios(r.cambios) ?? <span className="text-tenue font-mono text-xs">{r.registro_id.slice(0, 18)}</span>}</span>,
@@ -101,7 +101,7 @@ export default function Bitacora() {
   return (
     <Pagina titulo="Bitácora" descripcion="Quién cambió qué y cuándo. Nada se borra de aquí.">
       <div className="tarjeta p-3 grid gap-2 grid-cols-2 md:grid-cols-[1.4fr_1.2fr_1fr_1fr_1fr_auto] items-end">
-        <label className="space-y-1 col-span-2 md:col-span-1">
+        <label className="space-y-1 col-span-2 md:col-span-1" data-explain={GLOSARIO.filtroQueBitacora} data-explain-title="Qué">
           <span className="etiqueta">Qué</span>
           <Seleccion value={tabla} onChange={(e) => setTabla(e.target.value)}>
             <option value="">Todo</option>
@@ -171,7 +171,7 @@ function Detalle({ registro: r, nombres, alCerrar }: { registro: Registro | null
       subtitulo={r && <span>{r.etiqueta ?? etiquetaDeCambios(r.cambios) ?? r.registro_id} · {r.usuario ?? "Sistema"} · {fechaYHora(r.en)}</span>}>
       {r && (
         <div className="space-y-6">
-          {puedeIr && <Link to={ruta!} className="inline-flex items-center gap-1 text-sm text-marca-texto"><ExternalLink className="h-3.5 w-3.5" /> Abrir el registro</Link>}
+          {puedeIr && <Link to={ruta!} className="inline-flex items-center gap-1 text-sm text-marca-texto" data-explain={GLOSARIO.enlaceAbrirRegistroBitacora}><ExternalLink className="h-3.5 w-3.5" /> Abrir el registro</Link>}
           {filas.length === 0 ? <p className="text-sm text-tenue">Este movimiento no guardó el detalle de los datos (se registró antes de que la bitácora guardara las altas).</p> : (
             <table className="tabla rounded-xl border border-borde overflow-hidden">
               <thead>

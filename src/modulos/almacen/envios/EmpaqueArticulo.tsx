@@ -9,6 +9,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { fecha, numero } from "@/lib/formato";
 import { CampoNumero } from "@/modulos/ventas/componentes/campos";
 import { CLAVE } from "./datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 interface Empaque {
   paquete_kg: number | null; paquete_largo_cm: number | null; paquete_ancho_cm: number | null; paquete_alto_cm: number | null;
@@ -43,7 +44,7 @@ export function EmpaqueArticulo({ articuloId }: { articuloId: string }) {
   const tiene = d?.paquete_kg != null;
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Empaque para envío"
+      <EncabezadoTarjeta titulo="Empaque para envío" explica={GLOSARIO.empaqueArticuloEnvio}
         descripcion={tiene ? `Medido${d?.medido ? ` por ${d.medido.nombre}` : ""}${d?.paquete_medido_en ? ` el ${fecha(d.paquete_medido_en)}` : ""}` : "Sin peso ni medidas todavía"}
         acciones={editable && !editando && <Boton variante="secundario" tamano="sm" onClick={() => setEditando(true)}><Pencil className="h-3.5 w-3.5" />{tiene ? "Corregir" : "Capturar"}</Boton>} />
       <div className="px-5 pb-5">
@@ -69,7 +70,7 @@ export function EmpaqueArticulo({ articuloId }: { articuloId: string }) {
               <span className="text-xl font-semibold cifra">{numero(d!.paquete_kg)} kg</span></span>
             <span className="cifra">{numero(d!.paquete_largo_cm)} × {numero(d!.paquete_ancho_cm)} × {numero(d!.paquete_alto_cm)} cm</span>
             <span className="text-sm text-tenue">{Number(d!.paquete_piezas) === 1 ? "1 pieza por paquete" : `${numero(d!.paquete_piezas)} piezas por paquete`}
-              {" · "}volumétrico <span className="cifra">{numero(Math.round(Number(d!.paquete_largo_cm) * Number(d!.paquete_ancho_cm) * Number(d!.paquete_alto_cm) / 500) / 10)} kg</span></span>
+              {" · "}<span data-explain={GLOSARIO.pesoVolumetricoEnvio} data-explain-title="Peso volumétrico">volumétrico <span className="cifra">{numero(Math.round(Number(d!.paquete_largo_cm) * Number(d!.paquete_ancho_cm) * Number(d!.paquete_alto_cm) / 500) / 10)} kg</span></span></span>
           </div>
         ) : (
           <p className="text-sm text-tenue">

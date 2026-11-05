@@ -506,7 +506,7 @@ function Reglas() {
         <div className="divide-y divide-borde border-t border-borde">
           {fila("Revisión nocturna", "Si la apagas, no corre nada: ni reglas ni IA.", v.activa, "activa", GLOSARIO.revisionNocturnaActiva)}
           {fila("Que la IA lea lo de ayer", "Además de las reglas, la IA lee lo capturado por módulo y señala lo que una regla no ve. Sin costos de artículos, sueldos ni datos personales.", v.claude, "claude", GLOSARIO.revisionClaude)}
-          {fila("Que la IA cuestione el «Está bien así»", "Cada «Está bien así» lleva su porqué. Prendido, la IA lo lee y, si no le convence, pregunta hasta 3 veces; si sigue sin convencer, se queda abierto y te llega con la conversación. Lo que contesta dirección no pasa por la IA.", v.cuestionar_bien_asi ?? false, "cuestionar_bien_asi", GLOSARIO.revisionBienAsi)}
+          {fila("Que la IA cuestione el «Está bien así»", "Cada «Está bien así» lleva su porqué. Prendido, la IA lo lee y, si no le convence, pregunta hasta 3 veces; si sigue sin convencer, se queda abierto y te llega con la conversación. Lo que contesta dirección no pasa por la IA.", v.cuestionar_bien_asi ?? false, "cuestionar_bien_asi", GLOSARIO.revisionCuestionarBienAsi)}
           {fila("Consejos de los lunes", "Hasta tres consejos para cada persona con sus propios números (cómo vende, cómo usa el ERP).", v.consejos, "consejos", GLOSARIO.consejoSemana)}
         </div>
       </Tarjeta>

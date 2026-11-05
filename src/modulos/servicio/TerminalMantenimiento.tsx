@@ -86,12 +86,13 @@ export default function TerminalMantenimiento() {
             <p className="font-semibold leading-tight"><span className="cifra">{o.numero}</span> · {o.maquina}</p>
             <p className="text-sm text-tenue line-clamp-2">{o.diagnostico ?? o.falla}</p>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
-              <Insignia tono={o.tipo === "preventivo" ? "info" : "neutro"}>{o.tipo === "preventivo" ? "Preventivo" : "Falla"}</Insignia>
-              {o.detiene && <Insignia tono="peligro">Parada</Insignia>}
-              {o.vencida && <Insignia tono="peligro">Vencido {o.vence ? fecha(o.vence) : ""}</Insignia>}
+              <span className="inline-flex" data-explain={GLOSARIO.tipoOrdenMto} data-explain-title={o.tipo === "preventivo" ? "Preventivo" : "Falla"}>
+                <Insignia tono={o.tipo === "preventivo" ? "info" : "neutro"}>{o.tipo === "preventivo" ? "Preventivo" : "Falla"}</Insignia></span>
+              {o.detiene && <span className="inline-flex" data-explain={GLOSARIO.estadoMaquina} data-explain-title="Máquina parada"><Insignia tono="peligro">Parada</Insignia></span>}
+              {o.vencida && <span className="inline-flex" data-explain={GLOSARIO.situacionPreventivo} data-explain-title="Vencido"><Insignia tono="peligro">Vencido {o.vence ? fecha(o.vence) : ""}</Insignia></span>}
               {!o.vencida && o.vence && o.estado === "pendiente" && <span className="text-tenue">Toca {fecha(o.vence)}</span>}
               {o.criticidad && <span data-explain={GLOSARIO.criticidadMaquina}><Insignia tono={CRITICIDAD[o.criticidad].tono}>Criticidad {CRITICIDAD[o.criticidad].texto.toLowerCase()}</Insignia></span>}
-              {o.puntos > 0 && <span className="text-tenue cifra">Checklist {o.puntos_revisados}/{o.puntos}</span>}
+              {o.puntos > 0 && <span className="text-tenue cifra" data-explain={GLOSARIO.checklistMantenimiento} data-explain-title="Checklist">Checklist {o.puntos_revisados}/{o.puntos}</span>}
               {!!o.horas_tramos && <span className="text-tenue" data-explain={GLOSARIO.tramoMantenimiento}>Llevan {horas(o.horas_tramos)}</span>}
               {o.etapa && <span className="text-tenue">{o.etapa}</span>}
             </div>
@@ -101,15 +102,16 @@ export default function TerminalMantenimiento() {
             {!o.yo_en_play && o.ultima_pausa && (
               <p className="mt-1.5 text-xs text-tenue">Pausada {hace(o.ultima_pausa)}{o.ultima_pausa_motivo ? ` · ${o.ultima_pausa_motivo}` : ""}</p>
             )}
-            {otros.length > 0 && <p className="mt-1 text-xs text-marca-texto">En play: {otros.join(", ")}</p>}
+            {otros.length > 0 && <p className="mt-1 text-xs text-marca-texto"><span data-explain={GLOSARIO.otrosEnPlayMto} data-explain-title="En play">En play: {otros.join(", ")}</span></p>}
           </button>
           {p.personal && (o.yo_en_play ? (
-            <Boton tamano="lg" variante="secundario" className="shrink-0 h-14 w-28" onClick={() => setPausando(pausando === o.id ? null : o.id)} aria-label={`Pausar ${o.numero}`}>
+            <Boton tamano="lg" variante="secundario" className="shrink-0 h-14 w-28" onClick={() => setPausando(pausando === o.id ? null : o.id)} aria-label={`Pausar ${o.numero}`}
+                   data-explain={GLOSARIO.botonPausaMto} data-explain-title="Pausa">
               <Pause className="h-5 w-5" />Pausa
             </Boton>
           ) : (
             <Boton tamano="lg" variante="exito" className="shrink-0 h-14 w-28" cargando={play.isPending && play.variables?.id === o.id}
-                   onClick={() => play.mutate(o)} aria-label={`Play ${o.numero}`}>
+                   onClick={() => play.mutate(o)} aria-label={`Play ${o.numero}`} data-explain={GLOSARIO.botonPlayMto} data-explain-title="Play">
               <Play className="h-5 w-5" />Play
             </Boton>
           ))}
@@ -138,7 +140,7 @@ export default function TerminalMantenimiento() {
     <Pagina titulo="Terminal de mantenimiento" ancho="max-w-3xl"
       descripcion="Dale play a la máquina que vas a trabajar y pausa cuando la dejes. Al cerrar la orden, las horas salen solas."
       acciones={<>
-        {p.pedir && <EnlaceBoton a="/servicio/reportar?volver=/servicio/terminal" variante="peligro"><AlertTriangle className="h-4 w-4" />Reportar falla</EnlaceBoton>}
+        {p.pedir && <EnlaceBoton a="/servicio/reportar?volver=/servicio/terminal" variante="peligro" explica={GLOSARIO.botonReportarFallaMaquina}><AlertTriangle className="h-4 w-4" />Reportar falla</EnlaceBoton>}
         <EnlaceBoton a="/servicio/maquinas"><Wrench className="h-4 w-4" />Máquinas</EnlaceBoton>
       </>}>
       <div className="relative">
@@ -152,9 +154,9 @@ export default function TerminalMantenimiento() {
       ) : (
         <div className="space-y-6">
           {grupo("Trabajando ahora", Play, grupos.enPlay, GLOSARIO.tramoMantenimiento)}
-          {grupo("En pausa", Pause, grupos.pausadas)}
-          {grupo("Preventivos por hacer", CalendarCheck, grupos.preventivos, GLOSARIO.situacionPreventivo)}
-          {grupo("Fallas reportadas", AlertTriangle, grupos.fallas)}
+          {grupo("En pausa", Pause, grupos.pausadas, GLOSARIO.grupoEnPausaMto)}
+          {grupo("Preventivos por hacer", CalendarCheck, grupos.preventivos, GLOSARIO.grupoPreventivosPorHacer)}
+          {grupo("Fallas reportadas", AlertTriangle, grupos.fallas, GLOSARIO.grupoFallasPorAtender)}
         </div>
       )}
       <LateralMantenimiento id={abierta} alCerrar={() => setAbierta(null)} />

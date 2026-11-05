@@ -70,13 +70,13 @@ export default function Leads() {
   const abierto = todos.find((l) => l.id === abiertoId) ?? null;
 
   const opciones: { valor: Vista; texto: string; cuenta?: number; explica?: string }[] = [
-    ...(gerencia ? [{ valor: "abiertos" as Vista, texto: "Abiertos", cuenta: cuenta("abiertos") }] : []),
+    ...(gerencia ? [{ valor: "abiertos" as Vista, texto: "Abiertos", cuenta: cuenta("abiertos"), explica: GLOSARIO.filtroLeadsAbiertos }] : []),
     ...(vende || gerencia ? [{ valor: "por_tomar" as Vista, texto: modo === "gerente" ? "Por asignar" : "Por tomar", cuenta: cuenta("por_tomar"), explica: GLOSARIO.modoLeads }] : []),
-    ...(vende ? [{ valor: "mios" as Vista, texto: "Míos", cuenta: cuenta("mios") }] : []),
+    ...(vende ? [{ valor: "mios" as Vista, texto: "Míos", cuenta: cuenta("mios"), explica: GLOSARIO.filtroLeadsMios }] : []),
     ...(vende || gerencia ? [{ valor: "sin_contactar" as Vista, texto: "Sin contactar", cuenta: cuenta("sin_contactar"), explica: GLOSARIO.sinContactarLead }] : []),
     ...(puede("leads", 2) || gerencia ? [{ valor: "incompletos" as Vista, texto: "Incompletos", cuenta: cuenta("incompletos"), explica: GLOSARIO.leadCompleto }] : []),
-    { valor: "registre", texto: "Los que registré", cuenta: cuenta("registre") },
-    { valor: "cerrados", texto: "Atendidos" },
+    { valor: "registre", texto: "Los que registré", cuenta: cuenta("registre"), explica: GLOSARIO.filtroLeadsRegistre },
+    { valor: "cerrados", texto: "Atendidos", explica: GLOSARIO.filtroLeadsAtendidos },
     { valor: "todos", texto: "Todos" },
   ];
 
@@ -86,13 +86,13 @@ export default function Leads() {
       celda: (l) => <span><b className="font-medium">{l.nombre}</b>
         <span className="block text-xs text-tenue">{l.cliente_nombre ? <>Cliente: {l.cliente_nombre}</> : l.empresa ?? l.telefono ?? l.correo}</span></span> },
     { clave: "interes", titulo: "Qué busca", clase: "max-w-[340px]", celda: (l) => <span><span className="line-clamp-2">{l.interes}</span>
-      {l.faltan.length > 0 && (l.estado === "nuevo" || l.estado === "asignado") && <span className="block text-[11px] text-aviso">Falta {l.faltan.join(", ")}</span>}</span> },
+      {l.faltan.length > 0 && (l.estado === "nuevo" || l.estado === "asignado") && <span className="block text-[11px] text-aviso" data-explain={GLOSARIO.leadCompleto} data-explain-title="Le falta algo">Falta {l.faltan.join(", ")}</span>}</span> },
     { clave: "estado", titulo: "En qué va", explica: GLOSARIO.estadoLead, valor: (l) => estadoLead(l, modo).texto,
       celda: (l) => { const e = estadoLead(l, modo); return <span title={l.motivo_descarte ?? undefined}><Insignia tono={e.tono}>{e.texto}</Insignia></span>; } },
     { clave: "intentos", titulo: "Intentos", explica: GLOSARIO.intentoLead, oculta: !gerencia && !vende, alinear: "der", valor: (l) => l.intentos,
       celda: (l) => l.estado !== "asignado" ? <span className="text-tenue">—</span> : l.contesto ? <Insignia tono="ok">Contestó</Insignia>
         : l.intentos ? <span className="whitespace-nowrap text-sm">{textoIntento(l.ultimo_canal, l.ultimo_resultado).largo}<span className="block text-[11px] text-tenue">{hace(l.ultimo_intento)}{l.intentos > 1 ? ` · ${l.intentos} intentos` : ""}</span></span>
-        : <span className="text-sm text-aviso">Ninguno</span> },
+        : <span className="text-sm text-aviso" data-explain={GLOSARIO.sinContactarLead} data-explain-title="Sin contactar">Ninguno</span> },
     { clave: "capturo", titulo: "Lo registró", clase: "whitespace-nowrap text-tenue", oculta: !gerencia && !vende },
   ];
 
@@ -101,8 +101,8 @@ export default function Leads() {
       descripcion={vende || gerencia ? "Gente interesada que llamó o escribió y todavía no es oportunidad. Tómalo, llámale y vuélvelo oportunidad, o descártalo con el motivo."
         : "Registra a quien llama interesado y aquí ves en qué quedó cada uno: quién lo tomó y si ya se volvió oportunidad."}
       acciones={<>
-        {gerencia && <Boton variante="secundario" onClick={() => setConfig(true)}><Settings2 className="h-4 w-4" />A quién le llega</Boton>}
-        {puede("leads", 2) && <Boton onClick={() => setNuevo(true)}><Plus className="h-4 w-4" />Registrar lead</Boton>}
+        {gerencia && <Boton variante="secundario" onClick={() => setConfig(true)} data-explain={GLOSARIO.botonRepartoLeads}><Settings2 className="h-4 w-4" />A quién le llega</Boton>}
+        {puede("leads", 2) && <Boton onClick={() => setNuevo(true)} data-explain={GLOSARIO.botonRegistrarLead}><Plus className="h-4 w-4" />Registrar lead</Boton>}
       </>}>
       <TablaDatos filas={todos.filter((l) => pasa(l, vista))} columnas={columnas} cargando={leads.isLoading} error={leads.error}
         claveFila={(l) => l.id} alClicFila={(l) => abrir(l.id)} placeholder="Buscar nombre, empresa, teléfono o qué busca…" exportarComo="leads"
@@ -183,10 +183,10 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
         <span data-explain={GLOSARIO.estadoLead} data-explain-title="En qué va"><Insignia tono={e.tono}>{e.texto}</Insignia></span></span>}>
       <div className="space-y-5">
         <div className="flex flex-wrap gap-2">
-          {l.telefono && <Boton asChild tamano="sm" variante="secundario"><a href={`tel:${l.telefono.replace(/[^\d+]/g, "")}`}><Phone className="h-3.5 w-3.5" />{l.telefono}</a></Boton>}
+          {l.telefono && <Boton asChild tamano="sm" variante="secundario"><a data-explain={GLOSARIO.contactoDirectoLead} data-explain-title="Llamar" href={`tel:${l.telefono.replace(/[^\d+]/g, "")}`}><Phone className="h-3.5 w-3.5" />{l.telefono}</a></Boton>}
           {/* Sin texto ya escrito: el mismo saludo para todos los leads hizo que WhatsApp le bloqueara la cuenta a un vendedor. */}
-          {l.telefono && <Boton asChild tamano="sm" variante="secundario"><a href={enlaceWhatsApp(l.telefono, "")} target="_blank" rel="noreferrer"><MessageCircle className="h-3.5 w-3.5" />WhatsApp</a></Boton>}
-          {l.correo && <Boton asChild tamano="sm" variante="secundario"><a href={`mailto:${l.correo}`}><Mail className="h-3.5 w-3.5" />{l.correo}</a></Boton>}
+          {l.telefono && <Boton asChild tamano="sm" variante="secundario"><a data-explain={GLOSARIO.contactoDirectoLead} href={enlaceWhatsApp(l.telefono, "")} target="_blank" rel="noreferrer"><MessageCircle className="h-3.5 w-3.5" />WhatsApp</a></Boton>}
+          {l.correo && <Boton asChild tamano="sm" variante="secundario"><a data-explain={GLOSARIO.contactoDirectoLead} data-explain-title="Escribir correo" href={`mailto:${l.correo}`}><Mail className="h-3.5 w-3.5" />{l.correo}</a></Boton>}
           {puedeAtender && (l.telefono || l.correo) && (
             <span data-explain={GLOSARIO.mensajeIALead} data-explain-title="Mensaje con IA">
               <Boton tamano="sm" onClick={() => setRedactar(true)}><Sparkles className="h-3.5 w-3.5" />Mensaje con IA</Boton></span>
@@ -196,7 +196,7 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
         <dl className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2"><Dato etiqueta="Qué busca">{l.interes}</Dato></div>
           <Dato etiqueta="Dónde">{[l.ciudad, l.estado_mx].filter(Boolean).join(", ") || "—"}</Dato>
-          <Dato etiqueta="Línea · cómo llegó">{LINEA[l.linea]} · {l.fuente ?? "—"}</Dato>
+          <div data-explain={GLOSARIO.lineaLead} data-explain-title="Línea"><Dato etiqueta="Línea · cómo llegó">{LINEA[l.linea]} · {l.fuente ?? "—"}</Dato></div>
           {l.notas && <div className="sm:col-span-2"><Dato etiqueta="Notas"><span className="whitespace-pre-line">{l.notas}</span></Dato></div>}
           <Dato etiqueta="Lo registró">{l.capturo ?? "—"} · {fecha(l.creado_en)} ({hace(l.creado_en)})</Dato>
           {l.vendedor && <Dato etiqueta="Lo tiene">{l.vendedor}{l.como_se_asigno && <span className="text-tenue"> · {COMO[l.como_se_asigno]}</span>}
@@ -212,12 +212,12 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
         {puedeTomar && (
           <div className="rounded-lg border border-aviso/30 bg-aviso-suave p-3 flex items-center gap-3">
             <p className="flex-1 text-sm">Nadie lo ha tomado. El primero que lo toma se lo queda.</p>
-            <Boton onClick={() => tomar.mutate(l.id)} cargando={tomar.isPending}><Hand className="h-4 w-4" />Tomarlo</Boton>
+            <Boton onClick={() => tomar.mutate(l.id)} cargando={tomar.isPending} data-explain={GLOSARIO.botonTomarLead}><Hand className="h-4 w-4" />Tomarlo</Boton>
           </div>
         )}
 
         {gerencia && abierto && (
-          <div className="space-y-1.5">
+          <div className="space-y-1.5" data-explain={GLOSARIO.asignarLead} data-explain-title={l.vendedor ? "Pasárselo a otro vendedor" : "Asignarlo"}>
             <p className="text-xs font-medium text-tenue">{l.vendedor ? "Pasárselo a otro vendedor" : "Asignarlo"}</p>
             <div className="flex gap-2">
               <Seleccion value={para} onChange={(ev) => setPara(ev.target.value)} aria-label="Vendedor">
@@ -288,7 +288,7 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
 
         {puedeDescartar && (
           <div className="flex justify-end">
-            <Boton variante="fantasma" tamano="sm" onClick={() => setDescartar(true)}><X className="h-3.5 w-3.5" />Descartar</Boton>
+            <Boton variante="fantasma" tamano="sm" onClick={() => setDescartar(true)} data-explain={GLOSARIO.botonDescartarLead}><X className="h-3.5 w-3.5" />Descartar</Boton>
           </div>
         )}
       </div>

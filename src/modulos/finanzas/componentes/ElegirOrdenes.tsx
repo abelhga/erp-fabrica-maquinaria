@@ -52,9 +52,9 @@ export function ElegirOrdenes({ ordenes, elegidas, alCambiar }: {
               <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <b>{o.folio}</b>
                 <span className="text-tenue">{fecha(o.fecha)} · {ESTADO[o.estado]}</span>
-                {o.casa_folio && <Insignia tono="ok">Casa el folio</Insignia>}
-                {o.casa_total && !o.casa_folio && <Insignia tono="info">Mismo total</Insignia>}
-                {o.facturada && <Insignia tono="neutro">Ya tiene otra factura</Insignia>}
+                {o.casa_folio && <span data-explain={GLOSARIO.coincidenciaOrdenFactura} data-explain-title="Casa el folio"><Insignia tono="ok">Casa el folio</Insignia></span>}
+                {o.casa_total && !o.casa_folio && <span data-explain={GLOSARIO.coincidenciaOrdenFactura} data-explain-title="Mismo total"><Insignia tono="info">Mismo total</Insignia></span>}
+                {o.facturada && <span data-explain={GLOSARIO.coincidenciaOrdenFactura} data-explain-title="Ya tiene otra factura"><Insignia tono="neutro">Ya tiene otra factura</Insignia></span>}
                 {o.sin_articulo > 0 && <span data-explain={GLOSARIO.partidaSinArticulo} data-explain-title="Partida sin artículo">
                   <Insignia tono="aviso">{o.sin_articulo} de {o.partidas} sin artículo</Insignia></span>}
               </span>

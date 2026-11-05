@@ -68,14 +68,14 @@ export function Costeo({ e }: { e: Embarque }) {
           descripcion="Mercancía al TC real de los pagos + gastos sin IVA, repartidos por valor (o por volumen en un consolidado). El preliminar sale con el pedimento; el final, con la cuenta de gastos, cambia el costo del catálogo."
           acciones={calcula && (
             <div className="flex flex-col sm:flex-row gap-2">
-              <Boton variante="secundario" tamano="sm" disabled={!tienePedimento} title={tienePedimento ? undefined : "Primero el pedimento"}
+              <span className="flex flex-col" data-explain={GLOSARIO.botonCalcularCosteoImportacion} data-explain-title="Calcular preliminar"><Boton variante="secundario" tamano="sm" disabled={!tienePedimento} title={tienePedimento ? undefined : "Primero el pedimento"}
                 cargando={calcular.isPending && calcular.variables === "preliminar"} onClick={() => calcular.mutate("preliminar")}>
                 <Calculator className="h-4 w-4" /> Preliminar
-              </Boton>
-              <Boton tamano="sm" disabled={!tieneCG} title={tieneCG ? undefined : "Primero la cuenta de gastos"}
+              </Boton></span>
+              <span className="flex flex-col" data-explain={GLOSARIO.botonCalcularCosteoImportacion} data-explain-title="Calcular final"><Boton tamano="sm" disabled={!tieneCG} title={tieneCG ? undefined : "Primero la cuenta de gastos"}
                 cargando={calcular.isPending && calcular.variables === "final"} onClick={() => calcular.mutate("final")}>
                 <Calculator className="h-4 w-4" /> Final
-              </Boton>
+              </Boton></span>
             </div>
           )} />
         {!costeos.data?.length ? (
@@ -97,7 +97,7 @@ export function Costeo({ e }: { e: Embarque }) {
               <>
                 <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
                   <Dato titulo="Mercancía (TC real)" valor={dinero(actual.valor_mxn)} explica={GLOSARIO.tcReal} />
-                  <Dato titulo="Gastos sin IVA" valor={dinero(actual.gastos_mxn)} />
+                  <Dato titulo="Gastos sin IVA" valor={dinero(actual.gastos_mxn)} explica={GLOSARIO.gastosEImpuestosEmbarque} />
                   <Dato titulo="Factor" explica={GLOSARIO.factorCosteoImportacion} valor={numero(Number(actual.factor))} detalle={`por cada $1 de mercancía, ${dinero(Number(actual.factor))} de indirectos`} />
                   <Dato titulo="IVA acreditable (fuera)" valor={dinero(actual.iva_acreditable)} explica={GLOSARIO.ivaAcreditable} />
                 </div>

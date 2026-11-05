@@ -119,10 +119,12 @@ export function DialogoSkydropx({ envio, abierto, alCambiar }: { envio: Envio; a
       <Boton onClick={() => setPaso("confirmar")} disabled={!elegida}>Generar guía{elegida ? ` · ${dinero(elegida.total)}` : ""}</Boton></>
   ) : paso === "confirmar" ? (
     <><Boton variante="secundario" onClick={() => setPaso("tarifas")} disabled={!!ocupado}>Elegir otra</Boton>
-      <Boton variante="exito" onClick={() => generar("generar")} cargando={ocupado === "generar"}><Check className="h-4 w-4" />Sí, generar y pagar</Boton></>
+      <Boton variante="exito" onClick={() => generar("generar")} cargando={ocupado === "generar"}
+        data-explain={GLOSARIO.botonGenerarGuiaSkydropx} data-explain-title="Generar y pagar"><Check className="h-4 w-4" />Sí, generar y pagar</Boton></>
   ) : (
     <><Boton variante="secundario" onClick={() => alCambiar(false)}>Cerrar</Boton>
-      <Boton onClick={() => generar("revisar")} cargando={ocupado === "revisar"}><RefreshCw className="h-4 w-4" />Revisar guía</Boton></>
+      <Boton onClick={() => generar("revisar")} cargando={ocupado === "revisar"}
+        data-explain={GLOSARIO.botonRevisarGuiaSkydropx} data-explain-title="Revisar guía"><RefreshCw className="h-4 w-4" />Revisar guía</Boton></>
   );
 
   return (
@@ -146,7 +148,7 @@ export function DialogoSkydropx({ envio, abierto, alCambiar }: { envio: Envio; a
           )}
           {prellenado.data?.texto && !prellenado.data.capturado && (
             <div className="rounded-lg border border-borde bg-fondo px-3 py-2 text-sm">
-              <p className="etiqueta mb-0.5">Lo que dice el pedido</p>
+              <p className="etiqueta mb-0.5" data-explain={GLOSARIO.destinoPedidoSkydropx} data-explain-title="Lo que dice el pedido">Lo que dice el pedido</p>
               <p className="whitespace-pre-line">{prellenado.data.texto}</p>
             </div>
           )}
@@ -167,7 +169,7 @@ export function DialogoSkydropx({ envio, abierto, alCambiar }: { envio: Envio; a
           <datalist id="sky-municipios">{(municipios.data ?? []).map((x) => <option key={x.nombre} value={x.nombre} />)}</datalist>
 
           <section className="space-y-2">
-            <p className="text-sm font-medium">Bultos <span className="font-normal text-tenue">· peso en kg y medidas en cm de la caja ya armada</span></p>
+            <p className="text-sm font-medium" data-explain={GLOSARIO.medidasBultosEnvio} data-explain-title="Bultos">Bultos <span className="font-normal text-tenue">· peso en kg y medidas en cm de la caja ya armada</span></p>
             {bultos.length === 0 ? <p className="text-sm text-peligro">El envío no tiene bultos: pide a almacén que los capture al empacar o regístralo a mano.</p> : (
               <div className="space-y-2">
                 <div className="grid grid-cols-[1.5rem_repeat(4,minmax(0,1fr))] gap-2 text-xs text-tenue">
@@ -195,7 +197,8 @@ export function DialogoSkydropx({ envio, abierto, alCambiar }: { envio: Envio; a
       ) : (
         <div className="space-y-2">
           {!completa && <p className="text-xs text-tenue">Algunas paqueterías no alcanzaron a contestar; si no ves la que buscas, vuelve a cotizar.</p>}
-          <ul className="divide-y divide-borde rounded-xl border border-borde" role="radiogroup" aria-label="Tarifas">
+          <ul className="divide-y divide-borde rounded-xl border border-borde" role="radiogroup" aria-label="Tarifas"
+            data-explain={GLOSARIO.tarifasGuiaSkydropx} data-explain-title="Tarifas">
             {tarifas.map((t, i) => (
               <li key={t.id}>
                 <button type="button" role="radio" aria-checked={elegida?.id === t.id} onClick={() => setElegida(t)}

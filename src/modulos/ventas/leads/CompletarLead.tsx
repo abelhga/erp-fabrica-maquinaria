@@ -26,7 +26,7 @@ export function CompletarLead({ lead: l, invalidar }: { lead: Lead; invalidar: Q
         {!l.cliente_id && (
           <div className="flex gap-1.5 sm:col-span-2">
             <Entrada value={f.empresa} onChange={cambia("empresa")} aria-label="Empresa" placeholder="Empresa" />
-            <Boton type="button" variante="secundario" tamano="sm" onClick={() => setF({ ...f, empresa: "Particular" })}>Es particular</Boton>
+            <Boton type="button" variante="secundario" tamano="sm" onClick={() => setF({ ...f, empresa: "Particular" })} data-explain={GLOSARIO.botonLeadParticular}>Es particular</Boton>
           </div>
         )}
         {!l.cliente_id && <Entrada value={f.ciudad} onChange={cambia("ciudad")} aria-label="Ciudad" placeholder="Ciudad" />}

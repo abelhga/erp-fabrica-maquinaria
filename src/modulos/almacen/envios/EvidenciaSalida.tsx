@@ -5,6 +5,7 @@ import { cn } from "@/lib/utilidades";
 import { useSesion } from "@/lib/sesion";
 import { Galeria, Miniatura, SubirArchivo } from "./Archivos";
 import { estadoEnvio, useArchivos, useLineas, useUrlsFirmadas, vigentes, type Envio } from "./datos";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 /**
  * La evidencia de salida de un envío: fotos del paquete, check list palomeado,
@@ -31,7 +32,7 @@ export function EvidenciaSalida({ envio, className, titulo = true }: { envio: En
         <div className="flex flex-wrap items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-ok" />
           <span className="font-medium cifra">{envio.folio}</span>
-          <Insignia tono={estadoEnvio(envio).tono}>{estadoEnvio(envio).texto}</Insignia>
+          <span data-explain={GLOSARIO.estadoEnvio} data-explain-title="Estado del envío"><Insignia tono={estadoEnvio(envio).tono}>{estadoEnvio(envio).texto}</Insignia></span>
           <span className="text-sm text-tenue">{envio.tipo_nombre}{envio.paqueteria ? ` · ${envio.paqueteria}` : ""}</span>
         </div>
       )}
@@ -62,7 +63,7 @@ export function EvidenciaSalida({ envio, className, titulo = true }: { envio: En
             )}
           </dl>
           {series.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2" data-explain={GLOSARIO.serieEquipoEmpaque} data-explain-title="Número de serie">
               {series.map((s) => (
                 <span key={s.serie} className="inline-flex items-center gap-1.5 rounded-lg border border-borde bg-fondo px-2.5 py-1 text-sm">
                   <Hash className="h-3.5 w-3.5 text-tenue" /><b className="cifra">{s.serie}</b>
@@ -73,10 +74,12 @@ export function EvidenciaSalida({ envio, className, titulo = true }: { envio: En
           )}
           <Galeria archivos={fotos} vacio="Sin fotos." retirar={retirar} />
           {almacen && enAlmacen && vigentes(fotos).length < 6 && (
-            <SubirArchivo tipo="empaque" envioId={envio.id} texto="Agregar foto del paquete" maximo={6 - vigentes(fotos).length} />
+            <div data-explain={GLOSARIO.botonAgregarFotoEmpaque} data-explain-title="Agregar foto del paquete">
+              <SubirArchivo tipo="empaque" envioId={envio.id} texto="Agregar foto del paquete" maximo={6 - vigentes(fotos).length} />
+            </div>
           )}
           {(envio.checklist?.length ?? 0) > 0 && (
-            <ul className="grid gap-1 sm:grid-cols-2 text-sm">
+            <ul className="grid gap-1 sm:grid-cols-2 text-sm" data-explain={GLOSARIO.checklistSalidaEnvio} data-explain-title="Check list de salida">
               {envio.checklist!.map((c) => (
                 <li key={c.id} className="flex items-start gap-1.5"><CheckCircle2 className="h-4 w-4 mt-0.5 text-ok shrink-0" />{c.texto}</li>
               ))}

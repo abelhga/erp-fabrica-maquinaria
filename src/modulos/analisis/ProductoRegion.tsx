@@ -225,7 +225,8 @@ export default function ProductoRegion() {
               <h3 className="font-semibold" data-explain={GLOSARIO.mapaFamilia}>{familiaElegida ? `Dónde se vende: ${familiaElegida.nombre}` : "Dónde se vende cada familia"}</h3>
               <p className="text-sm text-tenue mt-0.5">{familiaElegida ? `Venta de esa familia por estado en ${periodo.etiqueta}.` : "Elige una familia en la matriz o aquí."}</p>
             </div>
-            <Seleccion className="w-auto h-8 text-xs" value={familia ?? ""} onChange={(e) => poner("familia", e.target.value || null)} aria-label="Familia">
+            <Seleccion className="w-auto h-8 text-xs" value={familia ?? ""} onChange={(e) => poner("familia", e.target.value || null)} aria-label="Familia"
+              data-explain={GLOSARIO.mapaFamilia} data-explain-title="Elegir familia">
               <option value="">Elegir familia…</option>
               {filas.filter((f) => f.clave !== "sin_clasificar").map((f) => <option key={f.clave} value={f.clave}>{f.nombre}</option>)}
             </Seleccion>

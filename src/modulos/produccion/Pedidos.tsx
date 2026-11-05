@@ -51,6 +51,7 @@ const deML = (p: PedidoPlanta) => p.canal === "mercadolibre" && p.equipos === 0 
 const CLAVE_PED = ["v_pedidos_produccion"];
 const EXPLICA_ESTADO_OP: Partial<Record<keyof typeof ESTADO_OP, string>> = {
   planeada: GLOSARIO.opPlaneada, liberada: GLOSARIO.opLiberada, en_proceso: GLOSARIO.opEnProceso, terminada: GLOSARIO.opTerminada,
+  entregada: GLOSARIO.opEntregada, cancelada: GLOSARIO.opCancelada,
 };
 
 export default function PedidosPlanta() {

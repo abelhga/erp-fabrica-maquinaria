@@ -98,7 +98,7 @@ export function Ordenes({ e }: { e: Embarque }) {
             ))}
           </select>
           <Boton variante="secundario" disabled={!elegida} cargando={ligar.isPending} onClick={() => ligar.mutate(elegida)}>Ligar</Boton>
-          <Boton asChild variante="fantasma"><Link to="/compras/ordenes/nueva">Nueva orden</Link></Boton>
+          <Boton asChild variante="fantasma" data-explain={GLOSARIO.botonNuevaOrdenCompra}><Link to="/compras/ordenes/nueva">Nueva orden</Link></Boton>
         </div>
       )}
     </Tarjeta>

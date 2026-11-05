@@ -508,7 +508,7 @@ function Editor({ id }: { id: string }) {
       <OpcionMenu icono={Mail} alElegir={() => antesDeEnviar("correo")} deshabilitado={!["enviada", "aceptada"].includes(c.estado) && !puedeEnviar}>Mandar por correo</OpcionMenu>
       <SeparadorMenu />
       <OpcionMenu icono={CopyPlus} alElegir={pedirNuevaVersion}><span data-explain={GLOSARIO.nuevaVersion}>Nueva versión ({c.folio.replace(/-v\d+$/, "")}-v…)</span></OpcionMenu>
-      <OpcionMenu icono={Copy} alElegir={() => duplicar.mutate(undefined)}><span data-explain={GLOSARIO.nuevaVersion}>Duplicar con folio nuevo</span></OpcionMenu>
+      <OpcionMenu icono={Copy} alElegir={() => duplicar.mutate(undefined)}><span data-explain={GLOSARIO.duplicarCotizacion}>Duplicar con folio nuevo</span></OpcionMenu>
       <OpcionMenu icono={PackageCheck} alElegir={() => setDlg("convertir")} deshabilitado={!puedeConvertir}>Convertir a pedido</OpcionMenu>
       <OpcionMenu icono={ThumbsDown} alElegir={() => setDlg("rechazar")} deshabilitado={["aceptada", "rechazada", "cancelada"].includes(c.estado) || !(propia || esGerente)}>Marcar rechazada…</OpcionMenu>
       {c.estado === "borrador" && (propia || esGerente) && (

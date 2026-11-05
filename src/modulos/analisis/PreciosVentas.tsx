@@ -69,10 +69,12 @@ export default function PreciosVentas() {
   return (
     <Pagina titulo="Precios vs ventas" descripcion="Cómo se movieron costo y precio de cada familia de equipos, y qué se vendió en esos meses."
       acciones={<>
-        <Seleccion value={familia} onChange={(e) => setFamilia(e.target.value)} className="w-64">
+        <Seleccion value={familia} onChange={(e) => setFamilia(e.target.value)} className="w-64"
+          data-explain={GLOSARIO.familiaPreciosVentas} data-explain-title="Familia">
           {(familias.data ?? []).map((f) => <option key={f.familia} value={f.familia}>{f.familia} ({f.equipos})</option>)}
         </Seleccion>
-        <Seleccion value={desde} onChange={(e) => setDesde(e.target.value)} className="w-36">
+        <Seleccion value={desde} onChange={(e) => setDesde(e.target.value)} className="w-36"
+          data-explain={GLOSARIO.periodoPreciosVentas} data-explain-title="Desde">
           {["2019-01-01", "2021-01-01", "2023-01-01", "2025-01-01"].map((d) => <option key={d} value={d}>Desde {d.slice(0, 4)}</option>)}
         </Seleccion>
       </>}>
@@ -82,7 +84,7 @@ export default function PreciosVentas() {
             <Kpi titulo="Costo hoy vs. inicio del periodo" icono={TrendingUp} explica={GLOSARIO.indiceCostoFamilia} tono={ultimo && Number(ultimo.indice_costo) > 100 ? "aviso" : "ok"}
               valor={ultimo ? `${Number(ultimo.indice_costo) >= 100 ? "+" : ""}${(Number(ultimo.indice_costo) - 100).toFixed(1)}%` : "—"}
               detalle={`Promedio encadenado de ${numero(ultimo?.equipos)} equipos`} />
-            <Kpi titulo="Vendido en el periodo" icono={TrendingUp} tono="marca" valor={dineroCompacto(total)}
+            <Kpi titulo="Vendido en el periodo" icono={TrendingUp} tono="marca" valor={dineroCompacto(total)} explica={GLOSARIO.vendidoFamiliaPeriodo}
               detalle={`${numero((datos.data ?? []).reduce((s, p) => s + p.ventas_num, 0))} ventas de la familia`} />
             <Kpi titulo="Relación costo ↔ ventas" icono={TrendingUp} tono="info" explica={GLOSARIO.relacionCostoVentas}
               valor={relacion.r == null ? "—" : relacion.r.toFixed(2)}
@@ -108,7 +110,7 @@ export default function PreciosVentas() {
           </Tarjeta>
 
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Ventas de la familia" descripcion="Importe con IVA por mes. Antes del arranque: libro de ventas de la hoja (ventas desde $40,000 clasificadas por descripción); después: pedidos del ERP." />
+            <EncabezadoTarjeta titulo="Ventas de la familia" explica={GLOSARIO.vendidoFamiliaPeriodo} descripcion="Importe con IVA por mes. Antes del arranque: libro de ventas de la hoja (ventas desde $40,000 clasificadas por descripción); después: pedidos del ERP." />
             <div className="h-56 px-2 pb-3">
               <ResponsiveContainer>
                 <BarChart data={serie} margin={{ top: 8, right: 16, left: 4, bottom: 0 }} syncId="pv">

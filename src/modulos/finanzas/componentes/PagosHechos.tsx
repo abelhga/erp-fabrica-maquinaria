@@ -73,7 +73,7 @@ export function PagosHechos({ alAbrirProveedor }: { alAbrirProveedor: (llave: st
   const columnas: Columna<Pago>[] = [
     { clave: "fecha", titulo: "Fecha", clase: "whitespace-nowrap cifra", valor: (p) => p.fecha, celda: (p) => fecha(p.fecha) },
     { clave: "proveedor", titulo: "Proveedor", clase: "min-w-[200px]", valor: (p) => p.proveedor,
-      celda: (p) => <span>{p.proveedor ?? "—"}{p.tipo_acreedor !== "proveedor" && <Insignia className="ml-2">{TIPO_ACREEDOR[p.tipo_acreedor]}</Insignia>}</span> },
+      celda: (p) => <span>{p.proveedor ?? "—"}{p.tipo_acreedor !== "proveedor" && <span data-explain={GLOSARIO.sociosBancos} data-explain-title={TIPO_ACREEDOR[p.tipo_acreedor]}><Insignia className="ml-2">{TIPO_ACREEDOR[p.tipo_acreedor]}</Insignia></span>}</span> },
     { clave: "cuenta_nombre", titulo: "Cuenta", clase: "whitespace-nowrap", valor: (p) => p.cuenta_nombre ?? "" },
     { clave: "referencia", titulo: "Factura / referencia", clase: "max-w-[260px] truncate", valor: (p) => [p.referencia, p.descripcion].filter(Boolean).join(" · "),
       celda: (p) => <span title={p.descripcion ?? undefined}>{p.referencia ?? <span className="text-tenue">{p.descripcion ?? "—"}</span>}</span> },
@@ -96,12 +96,14 @@ export function PagosHechos({ alAbrirProveedor }: { alAbrirProveedor: (llave: st
           <Entrada type="date" className="h-8 w-36 text-xs" value={desde} max={hasta || undefined} onChange={(e) => setDesde(e.target.value)} aria-label="Desde" />a
           <Entrada type="date" className="h-8 w-36 text-xs" value={hasta} min={desde || undefined} onChange={(e) => setHasta(e.target.value)} aria-label="Hasta" />
         </span>}
-        <Seleccion value={cuenta} onChange={(e) => setCuenta(e.target.value)} className="h-8 w-auto text-xs" aria-label="Cuenta">
+        <Seleccion value={cuenta} onChange={(e) => setCuenta(e.target.value)} className="h-8 w-auto text-xs" aria-label="Cuenta"
+          data-explain={GLOSARIO.cuentaDinero} data-explain-title="Cuenta">
           <option value="">Todas las cuentas</option>
           {(cuentas.data ?? []).map((c) => <option key={c.clave} value={c.clave}>{c.nombre}</option>)}
           <option value="sin">Sin cuenta (órdenes de compra)</option>
         </Seleccion>
-        <Seleccion value={tipo} onChange={(e) => setTipo(e.target.value as typeof tipo)} className="h-8 w-auto text-xs" aria-label="A quién">
+        <Seleccion value={tipo} onChange={(e) => setTipo(e.target.value as typeof tipo)} className="h-8 w-auto text-xs" aria-label="A quién"
+          data-explain={GLOSARIO.sociosBancos} data-explain-title="A quién se pagó">
           <option value="proveedores">Solo proveedores</option>
           <option value="nomina">Nómina e impuestos</option>
           <option value="socios">Socios y bancos</option>

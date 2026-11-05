@@ -26,11 +26,10 @@ import { SISTEMA } from "./sistema";
  * se explica donde está la cosa, no en un párrafo que hay que leer antes.
  */
 export interface Ayuda { resumen: string; pasos?: string[]; detalle?: string[] }
-/** Una lista de párrafos todavía se acepta mientras se migran las secciones: el primero hace de resumen. */
-export type AyudaPantalla = Ayuda | string[];
+export type AyudaPantalla = Ayuda;
 
 export function normalizarAyuda(a: AyudaPantalla): Ayuda {
-  return Array.isArray(a) ? { resumen: a[0] ?? "", detalle: a.slice(1) } : a;
+  return a;
 }
 
 /** Todo el texto en orden, para el manual del asistente y las pruebas. */

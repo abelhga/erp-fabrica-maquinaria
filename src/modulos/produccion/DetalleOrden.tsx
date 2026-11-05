@@ -15,7 +15,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { fecha, fechaYHora } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { CLAVE, consulta, useEventos, useProduccionEnVivo, useTablero, type EstadoOP, type EstadoOperacion, type MaterialOP, type OrdenTablero, type PasoValidacion } from "./componentes/datos";
-import { BarraAvance, IconoEvento, InsigniaCompromiso } from "./componentes/piezas";
+import { BarraAvance, EXPLICA_ESTADO_ETAPA, EXPLICA_ESTADO_OP, IconoEvento, InsigniaCompromiso } from "./componentes/piezas";
 import { PasosValidacion, type AccionPaso } from "./componentes/Validacion";
 import { DialogoSurtir, MaterialOrden } from "./componentes/MaterialOrden";
 import { DialogoAgregarEtapa, DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, DialogoEnEspera, DialogoReabrir, DialogoRegresarStock, type OrdenBasica } from "./componentes/DialogosOrden";
@@ -180,25 +180,31 @@ export default function DetalleOrden() {
       titulo={<span className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <Link to="/produccion/ordenes" className="text-tenue hover:text-texto" aria-label="Volver a órdenes"><ArrowLeft className="h-5 w-5" /></Link>
         <span className="cifra">{o.folio}</span>
-        <Insignia tono={ESTADO_OP[o.estado].tono} className="text-sm">{ESTADO_OP[o.estado].texto}</Insignia>
-        {o.prioridad !== 2 && <Insignia tono={PRIORIDAD[o.prioridad].tono} className="text-sm">{PRIORIDAD[o.prioridad].texto}</Insignia>}
-        {t?.pausada && !o.en_espera_motivo && <Insignia tono="aviso" className="text-sm">Pausada</Insignia>}
+        <span className="inline-flex" data-explain={EXPLICA_ESTADO_OP[o.estado]}><Insignia tono={ESTADO_OP[o.estado].tono} className="text-sm">{ESTADO_OP[o.estado].texto}</Insignia></span>
+        {o.prioridad !== 2 && <span className="inline-flex" data-explain={GLOSARIO.prioridadOrden}><Insignia tono={PRIORIDAD[o.prioridad].tono} className="text-sm">{PRIORIDAD[o.prioridad].texto}</Insignia></span>}
+        {t?.pausada && !o.en_espera_motivo && <span className="inline-flex" data-explain={GLOSARIO.etapaPausada}><Insignia tono="aviso" className="text-sm">Pausada</Insignia></span>}
         {o.en_espera_motivo && <span data-explain={GLOSARIO.ordenEnEspera}><Insignia tono="aviso" className="text-sm"><Hourglass className="h-3.5 w-3.5" />En espera</Insignia></span>}
       </span>}
       descripcion={<>{o.articulo.nombre}{o.cantidad > 1 && ` × ${o.cantidad}`}</>}
       acciones={<>
-        {p.solicitar && <Boton variante="secundario" onClick={() => setDialogo("cambio")}><MessageSquarePlus className="h-4 w-4" />Solicitar cambio a ingeniería</Boton>}
-        {p.gerencia && o.estado !== "entregada" && o.estado !== "cancelada" && <Boton variante="secundario" onClick={() => setDialogo("editar")}><Pencil className="h-4 w-4" />Editar</Boton>}
+        {p.solicitar && <Boton variante="secundario" onClick={() => setDialogo("cambio")} data-explain={GLOSARIO.solicitudCambio} data-explain-title="Solicitar cambio a ingeniería">
+          <MessageSquarePlus className="h-4 w-4" />Solicitar cambio a ingeniería</Boton>}
+        {p.gerencia && o.estado !== "entregada" && o.estado !== "cancelada" && <Boton variante="secundario" onClick={() => setDialogo("editar")}
+          data-explain={GLOSARIO.botonEditarOrden} data-explain-title="Editar"><Pencil className="h-4 w-4" />Editar</Boton>}
         {puedeRegresar && !cancelado && (
           <Boton variante="secundario" onClick={() => setDialogo("stock")} data-explain={GLOSARIO.regresarStock} data-explain-title="Regresar a stock">
             <Undo2 className="h-4 w-4" />Regresar a stock
           </Boton>
         )}
-        {o.estado === "terminada" && (p.gerencia || p.almacen) && <Boton onClick={() => entregar.mutate(undefined)} cargando={entregar.isPending}><Truck className="h-4 w-4" />Marcar entregada</Boton>}
+        {o.estado === "terminada" && (p.gerencia || p.almacen) && <Boton onClick={() => entregar.mutate(undefined)} cargando={entregar.isPending}
+          data-explain={GLOSARIO.botonEntregarOrden} data-explain-title="Marcar entregada"><Truck className="h-4 w-4" />Marcar entregada</Boton>}
         {p.gerencia && abierta && (o.en_espera_motivo
-          ? <Boton onClick={() => reactivar.mutate(undefined)} cargando={reactivar.isPending}><Play className="h-4 w-4" />Reactivar</Boton>
-          : <Boton variante="secundario" onClick={() => setDialogo("espera")}><Hourglass className="h-4 w-4" />Poner en espera</Boton>)}
-        {p.gerencia && abierta && <Boton variante="fantasma" className="text-peligro" onClick={() => setDialogo("cancelar")}><Ban className="h-4 w-4" />Cancelar</Boton>}
+          ? <Boton onClick={() => reactivar.mutate(undefined)} cargando={reactivar.isPending} data-explain={GLOSARIO.botonReactivarOrden} data-explain-title="Reactivar">
+              <Play className="h-4 w-4" />Reactivar</Boton>
+          : <Boton variante="secundario" onClick={() => setDialogo("espera")} data-explain={GLOSARIO.botonPonerEnEspera} data-explain-title="Poner en espera">
+              <Hourglass className="h-4 w-4" />Poner en espera</Boton>)}
+        {p.gerencia && abierta && <Boton variante="fantasma" className="text-peligro" onClick={() => setDialogo("cancelar")}
+          data-explain={GLOSARIO.botonCancelarOrden} data-explain-title="Cancelar la orden"><Ban className="h-4 w-4" />Cancelar</Boton>}
       </>}
     >
       {o.en_espera_motivo && abierta && (
@@ -225,7 +231,8 @@ export default function DetalleOrden() {
             <span className="flex flex-wrap items-center gap-2">
               <span className="text-tenue">Sin serie</span>
               {puede("produccion", 2) && o.cantidad === 1 && o.estado !== "cancelada" && (
-                <Boton variante="secundario" className="h-7 text-xs" cargando={asignarSerie.isPending} onClick={() => asignarSerie.mutate(undefined)}>Asignar</Boton>
+                <Boton variante="secundario" className="h-7 text-xs" cargando={asignarSerie.isPending} onClick={() => asignarSerie.mutate(undefined)}
+                       data-explain={GLOSARIO.botonAsignarSerie} data-explain-title="Asignar número de serie">Asignar</Boton>
               )}
             </span>
           )}
@@ -246,7 +253,7 @@ export default function DetalleOrden() {
             <span className="block text-sm text-tenue truncate">{ped?.cliente}</span>
           </Link>
         ) : (
-          <Dato titulo={o.pedido_id ? "Pedido y cliente" : "Destino"}>
+          <Dato titulo={o.pedido_id ? "Pedido y cliente" : "Destino"} explica={o.pedido_id ? undefined : GLOSARIO.paraStock}>
             {o.pedido_id ? (
               <>
                 {ped?.folio}
@@ -282,17 +289,17 @@ export default function DetalleOrden() {
           <MaterialOrden ordenId={id} equipo={o.articulo.nombre} material={material.data} cargando={material.isLoading} error={material.error}
             editable={abierta && p.ing}
             acciones={abierta && p.almacen && (
-              <Boton tamano="sm" onClick={() => setDialogo("surtir")}><PackageOpen className="h-3.5 w-3.5" />Surtir</Boton>
+              <Boton tamano="sm" onClick={() => setDialogo("surtir")} data-explain={GLOSARIO.botonSurtirOrden} data-explain-title="Surtir"><PackageOpen className="h-3.5 w-3.5" />Surtir</Boton>
             )} />
         </div>}
 
         <div className="grid gap-4 lg:grid-cols-3 2xl:grid-cols-1 items-start">
           {veFabricacion && <Tarjeta>
-            <EncabezadoTarjeta titulo="Planos" descripcion="Con qué revisión se fabrica esta orden" />
+            <EncabezadoTarjeta titulo="Planos" descripcion="Con qué revisión se fabrica esta orden" explica={GLOSARIO.planosOrden} />
             <div className="px-5 pb-5"><PlanosOrden ordenId={id} /></div>
           </Tarjeta>}
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Etapas" explica={veFabricacion ? GLOSARIO.horasHombre : undefined}
+            <EncabezadoTarjeta titulo="Etapas" explica={veFabricacion ? GLOSARIO.horasHombre : GLOSARIO.etapasDeOrden}
               descripcion={veFabricacion ? "Horas estimadas del costeo contra las horas hombre reales, y quién la trabajó" : "En qué va cada etapa del taller"}
               acciones={p.gerencia && !["entregada", "cancelada"].includes(o.estado) && (
                 <span data-explain={GLOSARIO.agregarEtapa} data-explain-title="Agregar etapa">
@@ -307,7 +314,7 @@ export default function DetalleOrden() {
                     <span className="h-3 w-3 rounded-full shrink-0" style={{ background: x.etapa.color }} />
                     <span className="font-medium text-sm flex-1">{x.etapa.nombre}</span>
                     {veFabricacion && <span className="text-xs text-tenue cifra">{horas(x.horas_estimadas)}</span>}
-                    <Insignia tono={ESTADO_OPERACION[x.estado].tono}>{ESTADO_OPERACION[x.estado].texto}</Insignia>
+                    <span className="inline-flex" data-explain={EXPLICA_ESTADO_ETAPA[x.estado]}><Insignia tono={ESTADO_OPERACION[x.estado].tono}>{ESTADO_OPERACION[x.estado].texto}</Insignia></span>
                   </div>
                   <div className="flex items-center gap-2 pl-5 mt-1">
                     <p className="text-xs text-tenue flex-1 min-w-0 truncate">
@@ -315,10 +322,10 @@ export default function DetalleOrden() {
                     </p>
                     {p.taller && enTaller && !o.en_espera_motivo && x.estado !== "terminada" && (
                       <div className="flex gap-1">
-                        {x.estado === "pendiente" && <MiniAccion icono={Play} texto="Iniciar" alClic={() => avanzar.mutate({ op: x.id, accion: "inicio" })} />}
-                        {x.estado === "en_proceso" && <MiniAccion icono={Pause} texto="Pausar" alClic={() => avanzar.mutate({ op: x.id, accion: "pausa" })} />}
-                        {x.estado === "pausada" && <MiniAccion icono={PlayCircle} texto="Reanudar" alClic={() => avanzar.mutate({ op: x.id, accion: "reanudar" })} />}
-                        <MiniAccion icono={CheckCircle2} texto="Terminar" alClic={() => terminar.mutate({ op: x.id, etapa: x.etapa.nombre })} />
+                        {x.estado === "pendiente" && <MiniAccion icono={Play} texto="Iniciar" explica={GLOSARIO.iniciarEtapaDesdeOrden} alClic={() => avanzar.mutate({ op: x.id, accion: "inicio" })} />}
+                        {x.estado === "en_proceso" && <MiniAccion icono={Pause} texto="Pausar" explica={GLOSARIO.botonPausarEtapa} alClic={() => avanzar.mutate({ op: x.id, accion: "pausa" })} />}
+                        {x.estado === "pausada" && <MiniAccion icono={PlayCircle} texto="Reanudar" explica={GLOSARIO.iniciarEtapaDesdeOrden} alClic={() => avanzar.mutate({ op: x.id, accion: "reanudar" })} />}
+                        <MiniAccion icono={CheckCircle2} texto="Terminar" explica={GLOSARIO.botonTerminarEtapa} alClic={() => terminar.mutate({ op: x.id, etapa: x.etapa.nombre })} />
                       </div>
                     )}
                     {p.gerencia && x.estado === "terminada" && !["entregada", "cancelada"].includes(o.estado) && (
@@ -345,15 +352,17 @@ export default function DetalleOrden() {
                 <div key={s.id} className="rounded-lg border border-borde p-3 text-sm">
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-medium">{s.articulo?.nombre}</p>
-                    <Insignia tono={s.estado === "pendiente" ? "aviso" : s.estado === "aplicada" ? "ok" : "neutro"}>
-                      {s.estado === "pendiente" ? "Pendiente" : s.estado === "aplicada" ? "Aplicada" : "Descartada"}
-                    </Insignia>
+                    <span className="inline-flex" data-explain={GLOSARIO.estadoSolicitudCambio}>
+                      <Insignia tono={s.estado === "pendiente" ? "aviso" : s.estado === "aplicada" ? "ok" : "neutro"}>
+                        {s.estado === "pendiente" ? "Pendiente" : s.estado === "aplicada" ? "Aplicada" : "Descartada"}
+                      </Insignia>
+                    </span>
                   </div>
                   <p className="mt-1">{s.descripcion}</p>
                   <p className="text-xs text-tenue mt-1">{s.solicitante?.nombre} · {fechaYHora(s.solicitado_en)}</p>
                   {s.estado !== "pendiente" && <p className="text-xs text-tenue">{s.resolvio?.nombre} · {fechaYHora(s.resuelto_en)}{s.respuesta && ` · ${s.respuesta}`}</p>}
                   {s.estado === "pendiente" && p.resolver && (
-                    <div className="flex gap-2 mt-2">
+                    <div className="flex gap-2 mt-2" data-explain={GLOSARIO.resolverSolicitudOrden} data-explain-title="Resolver la solicitud">
                       <Boton tamano="sm" variante="exito" onClick={() => resolver.mutate({ id: s.id, estado: "aplicada" })}>Ya se corrigió</Boton>
                       <Boton tamano="sm" variante="secundario" onClick={() => resolver.mutate({ id: s.id, estado: "descartada" })}>Descartar</Boton>
                     </div>
@@ -364,7 +373,7 @@ export default function DetalleOrden() {
           </Tarjeta>
 
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Línea de tiempo" descripcion="Quién hizo qué y cuándo" />
+            <EncabezadoTarjeta titulo="Línea de tiempo" descripcion="Quién hizo qué y cuándo" explica={GLOSARIO.lineaTiempoOrden} />
             <ol className="px-5 pb-4 space-y-0 max-h-[560px] overflow-y-auto">
               {(eventos.data ?? []).map((e, i) => (
                 <li key={e.id} className="relative flex gap-3 pb-3">
@@ -418,9 +427,9 @@ function Dato({ titulo, children, explica }: { titulo: string; children: React.R
   );
 }
 
-function MiniAccion({ icono: I, texto, alClic }: { icono: typeof Play; texto: string; alClic: () => void }) {
+function MiniAccion({ icono: I, texto, alClic, explica }: { icono: typeof Play; texto: string; alClic: () => void; explica?: string }) {
   return (
-    <button type="button" onClick={alClic} title={texto} aria-label={texto}
+    <button type="button" onClick={alClic} title={texto} aria-label={texto} data-explain={explica} data-explain-title={explica ? texto : undefined}
             className="h-7 w-7 rounded-md border border-borde flex items-center justify-center text-tenue hover:text-texto hover:bg-fondo">
       <I className="h-3.5 w-3.5" />
     </button>
@@ -458,7 +467,8 @@ function PartidasSurtido({ evento }: { evento: number }) {
   });
   return (
     <div className="mt-0.5">
-      <button type="button" className="text-xs text-marca-texto hover:underline" aria-expanded={abierto} onClick={() => setAbierto((v) => !v)}>
+      <button type="button" className="text-xs text-marca-texto hover:underline" aria-expanded={abierto} onClick={() => setAbierto((v) => !v)}
+              data-explain={GLOSARIO.verPartidasSurtido} data-explain-title="Ver partidas">
         {abierto ? "Ocultar partidas" : "Ver partidas"}
       </button>
       {abierto && (partidas.isLoading ? <p className="text-xs text-tenue">Cargando…</p> : partidas.error ? <ErrorCarga error={partidas.error} /> : (

@@ -1,7 +1,7 @@
 // Análisis de ventas: lo ven dirección y la gerencia de ventas. Solo venta, clientes y metas;
 // nada de costos ni márgenes.
 export const ANALISIS = {
-  ventaAnalisis: "Importe con IVA de lo vendido, con la misma regla que el tablero de inicio: hasta el arranque del ERP, el libro de ventas de la hoja; desde entonces, los pedidos del ERP sin los cancelados.",
+  ventaAnalisis: "Importe con IVA de lo vendido, con la misma regla que el tablero de inicio: hasta el arranque del ERP, el libro de ventas de la hoja; desde entonces, los pedidos del ERP sin los cancelados. Las de Mercado Libre sin pedido salen de lo que pagó el comprador.",
   periodoAnalisis: "El periodo se queda al cambiar de pestaña y va en la liga, así que puedes mandarla tal cual. Si es de un año o menos se compara contra el mismo tramo del año anterior; si es más largo, contra el tramo de la misma duración justo antes.",
   crecimientoVenta: "Cambio de la venta contra el periodo anterior. Gris: casi igual (±5 %). «Nuevo»: antes no había venta ahí.",
   participacionVenta: "Qué parte de la venta total del periodo es de esa región, familia o cliente.",
@@ -9,14 +9,14 @@ export const ANALISIS = {
   concentracionTop3: "Qué parte de la venta juntan los 3 estados (o municipios) que más vendieron. Muy alto quiere decir que dependes de pocos lugares.",
   escalaCuantiles: "Cada tono junta un número parecido de regiones (o de celdas): así un estado muy grande no deja a los demás en el mismo color pálido. Gris: sin venta.",
   zonasFrias: "Lugares que compraban en el periodo anterior y cayeron 30 % o más (o dejaron de comprar). Salen hasta 8, los que más dejaron de vender primero, con los clientes que ya no compraron ahí para llamarles.",
-  ventaSinUbicar: "Venta de clientes cuyo estado o ciudad no se reconoció: cuenta en el total pero no sale en el mapa. Se arregla en «Ubicaciones por revisar».",
+  ventaSinUbicar: "Venta de clientes cuyo estado o ciudad no se reconoció: cuenta en el total pero no sale en el mapa. Se arregla en «Ubicaciones por revisar». En todo el país también junta las ventas de Mercado Libre sin pedido, que no traen cliente.",
   exportacionVenta: "Venta a clientes fuera de México: cuenta en el total, pero no sale en el mapa.",
   ventaMovil12: "Cada punto suma los 12 meses que terminan ahí. Quita la estacionalidad y deja ver si la venta va para arriba o para abajo.",
   crecimientoMovil: "Los 12 meses que terminan en cada mes contra los 12 anteriores. Azul creció, rojo cayó.",
   estacionalidadVenta: "Qué meses pesan más en la venta del año. La meta de cada mes se reparte con lo que pesó ese mes en los últimos 3 años completos.",
   familiaProducto: "Tipo de producto de cada venta. En las ventas de la hoja sale del texto, con las reglas de familia; en los pedidos del ERP, de la categoría del artículo (si la categoría no tiene familia, de las mismas reglas sobre el texto de la partida).",
   reglaFamilia: "Un patrón de texto que, si aparece en la descripción de una venta de la hoja (en minúsculas y sin acentos), la manda a una familia. Si dos reglas atrapan la misma venta, gana la de orden más bajo. Solo dirección las cambia.",
-  ventaSinClasificar: "Ventas que no cayeron en ninguna familia: textos de la hoja que ninguna regla atrapó y partidas del ERP sin familia en su categoría ni en su texto. El porcentaje clasificado es sobre el dinero del periodo; mientras más alto, más confiables las gráficas por familia. La lista «Sin clasificar» junta los textos de toda la historia de la hoja.",
+  ventaSinClasificar: "Ventas que no cayeron en ninguna familia: textos de la hoja que ninguna regla atrapó y partidas del ERP sin familia en su categoría ni en su texto; también las de Mercado Libre sin pedido, que no dicen qué se vendió. El porcentaje clasificado es sobre el dinero del periodo; mientras más alto, más confiables las gráficas por familia. La lista «Sin clasificar» junta los textos de toda la historia de la hoja.",
   indiceRegional: "Peso de la familia en el estado entre su peso en todo el país. Mayor a 1: ahí se vende más de esa familia que en el resto; resaltado de 1.25 para arriba.",
   paretoClientes: "Clientes ordenados del que más compró al que menos, y qué parte de la venta juntan. El punto marca cuántos clientes hacen el 80 % de la venta.",
   clientesNuevosRecurrentes: "Nuevo: su primera compra fue ese año (en la cifra de arriba, dentro del periodo). Recurrente: ya había comprado antes.",
@@ -24,7 +24,7 @@ export const ANALISIS = {
   segmentoCliente: "Grupo según qué tan reciente fue su última compra, qué tan seguido compran y cuánto: campeones, nuevos, leales, ocasionales, en riesgo, dormidos y perdidos. Se calcula al último día del periodo. Pasa el mouse por cada uno para ver su regla y dale clic para ver quiénes son.",
   metaAnual: "La meta de venta del año, con IVA. La captura dirección; el escenario calcula una meta creciendo el porcentaje que escribas sobre el cierre del año anterior.",
   ritmoNecesario: "Lo que falta para la meta entre los meses que quedan. Si sale una insignia «×1.3 el ritmo», hay que vender 1.3 veces el promedio mensual que lleva el año.",
-  metaPorEstado: "La sugerida reparte la meta del año con lo que pesó cada estado en los 3 años completos anteriores. Dirección puede escribir otra (se guarda con Enter o al salir de la casilla); vacía regresa a la sugerida. Solo se puede ya capturada la meta del año.",
+  metaPorEstado: "La sugerida reparte la meta del año con lo que pesó cada estado en los 3 años completos anteriores. Dirección puede escribir otra (se guarda con Enter o al salir de la casilla); vacía regresa a la sugerida. Solo se puede cuando ya está capturada la meta del año.",
   motivoUbicacion: "Por resolver: el estado o la ciudad no se reconocieron. Por confirmar: se ligó por parecido, a una ciudad de otro estado o adivinando el estado por la ciudad. Falta el dato en la ficha: no hay ciudad escrita y se arregla en el cliente. Por aproximación: el nombre corto o largo de un solo municipio.",
   correccionUbicacion: "Corregir una combinación de estado y ciudad escritos ubica a todos los clientes que la escribieron igual, también a los que se den de alta después. Se puede deshacer en «Corregidas por dirección».",
 
@@ -36,7 +36,7 @@ export const ANALISIS = {
   pestanaPlaneacion: "La meta del año repartida por mes y por estado contra lo vendido, y a qué ritmo hay que vender lo que falta. El año se elige con las flechas.",
   pestanaEntregas: "Si cumplimos las fechas prometidas: pedidos a tiempo, días de atraso y cada orden del taller con la fecha a la que sale de verdad.",
   pestanaCapacidadTaller: "Si se promete más de lo que el taller saca: lo prometido para cada mes contra lo que cabe, y lo que entra contra lo que sale.",
-  pestanaUbicacionesRevisar: "Ciudades y estados de clientes que no se reconocieron y por eso no salen en el mapa. Lo que dirección corrige aquí se queda para los clientes que vengan después.",
+  pestanaUbicacionesRevisar: "Ciudades y estados de clientes que no se reconocieron o se ubicaron con duda; lo que no se ubica no sale en el mapa. Lo que dirección corrige aquí se queda para los clientes que vengan después.",
   periodoEsteAnio: "Del 1 de enero a hoy, contra el mismo tramo del año pasado.",
   periodoDoceMeses: "Los 12 meses que terminan hoy, contra los 12 meses anteriores a esos. Sirve para comparar sin que importe en qué mes del año vas.",
   periodoAnioAnterior: "El año pasado completo, de enero a diciembre, contra el año antes de ese.",
@@ -46,21 +46,21 @@ export const ANALISIS = {
 
   // --- Mapa de ventas ---
   clientesQueCompraron: "Cuántos clientes distintos compraron en el periodo. Un cliente con varias compras cuenta una vez.",
-  operacionesVenta: "Cuántas ventas distintas hubo: cada factura o venta del libro de la hoja y cada pedido del ERP cuentan una vez, tengan las partidas que tengan.",
+  operacionesVenta: "Cuántas ventas distintas hubo: cada factura o venta del libro de la hoja y cada pedido del ERP cuentan una vez, tengan las partidas que tengan. Cada venta de Mercado Libre sin pedido cuenta aparte.",
   claveInegi: "La clave oficial del INEGI del estado o del municipio. Sirve para cruzar estos datos con otras bases o mapas.",
-  mapaVentasComoLeer: "El tono de cada lugar dice cuánto tiene de lo que elegiste (venta, clientes, ticket o crecimiento); gris es sin venta. Pasa el mouse para ver sus números y, en el país, dale clic a un estado para ver sus municipios.",
+  mapaVentasComoLeer: "El tono de cada lugar dice cuánto tiene de lo que elegiste (venta, clientes, ticket o crecimiento); la leyenda de abajo dice qué es cada tono, incluido el de «Sin venta». Pasa el mouse para ver sus números y, en el país, dale clic a un estado para ver sus municipios.",
   botonVolverPaisMapa: "Regresa al mapa de todo el país, con el mismo periodo y la misma medida.",
   ventaPerdidaZona: "Lo que se dejó de vender ahí: lo del periodo anterior menos lo de este.",
   clientesDejaronComprar: "Clientes de ese lugar que compraron en el periodo anterior y en este nada, con lo que compraban y su vendedor. Salen hasta 6, los que más compraban primero; clic para abrir su ficha.",
-  botonAQuienLlamar: "Abre «A quién llamar»: los clientes que conviene buscar, cada uno con su motivo (le toca comprar, refacciones, reactivar o una cotización por vencer) y su contacto a la mano.",
+  botonAQuienLlamar: "Abre «A quién llamar hoy»: los clientes que conviene buscar, cada uno con su motivo (le toca comprar, refacciones, reactivar o una cotización por vencer) y su contacto a la mano.",
 
   // --- Clientes ---
-  topClientesPeriodo: "Los clientes que más compraron en el periodo. La primera cifra chica es lo que pesa cada uno en la venta; la segunda, lo que juntan del primero hasta él. «Ver 15» muestra más; clic en uno para abrir su ficha.",
+  topClientesPeriodo: "Los clientes que más compraron en el periodo. La primera cifra chica es lo que pesa cada uno en la venta; la segunda, lo que juntan del primero hasta él. Si hay más de 10, «Ver 15» muestra más; clic en uno para abrir su ficha.",
   segmentoCampeones: "Compraron en el último año, 3 o más veces en 3 años, y están en el 20 % que más compró en esos 3 años.",
   segmentoNuevos: "Su primera compra fue en los últimos 12 meses.",
   segmentoLeales: "Compraron en el último año y 2 o más veces en 3 años.",
   segmentoOcasionales: "Compraron en el último año, una sola vez en 3 años.",
-  segmentoEnRiesgo: "Su última compra fue hace 12 a 24 meses y compraban seguido (2 o más veces en 3 años) o mucho (más que la mitad de los clientes).",
+  segmentoEnRiesgo: "Su última compra fue hace 12 a 24 meses y compraban seguido (2 o más veces en 3 años) o mucho (en la mitad que más compró en esos 3 años).",
   segmentoDormidos: "Su última compra fue hace 12 a 24 meses; compraron una sola vez en 3 años y poco.",
   segmentoPerdidos: "Hace más de 2 años que no compran.",
   comprasTresAnios: "Cuántas compras distintas (facturas o pedidos) hizo en los 3 años antes del último día del periodo.",
@@ -78,10 +78,10 @@ export const ANALISIS = {
   mapaFamilia: "Cuánto se vendió de una familia en cada estado en el periodo; cada tono junta estados con venta parecida. Clic en un estado para ver qué más se vende ahí.",
   patronReglaFamilia: "El texto que se busca en la descripción de cada venta de la hoja, en minúsculas y sin acentos. Con | separas opciones: «molino|martillo» atrapa cualquiera de las dos. Al guardar se vuelven a clasificar todas las ventas de la hoja.",
   ordenReglaFamilia: "Si dos reglas atrapan la misma venta, gana la de número más bajo. De entrada es 50.",
-  pruebaReglaFamilia: "Lo que haría la regla antes de guardarla: a cuántas ventas de la hoja les pega, cuántas estaban sin clasificar y, ya con familia elegida, cuántas quedarían en otra. Si una regla de número más bajo ya atrapa alguna, esa no cambia.",
+  pruebaReglaFamilia: "Sale al escribir 3 letras o más: a cuántas ventas de la hoja les pega el patrón, cuántas estaban sin clasificar y, ya con familia elegida, cuántas cambiarían a esa familia. Esa cuenta no ve el orden: si una regla de número más bajo ya atrapa alguna, al guardar esa no cambia.",
   botonQuitarReglaFamilia: "Borra la regla y vuelve a clasificar todas las ventas de la hoja sin ella. No pide confirmación.",
   reglaDeFabrica: "Viene con el ERP y no se quita desde aquí. Para ganarle, agrega una regla con número de orden más bajo.",
-  botonUsarTextoRegla: "Copia este texto como patrón en el formulario de arriba, sin números ni medidas, para que lo ajustes y elijas la familia. No guarda nada.",
+  botonUsarTextoRegla: "Pone como patrón, en el formulario de arriba, hasta 3 palabras de este texto, sin números ni medidas, para que lo ajustes y elijas la familia. No guarda nada.",
 
   // --- Planeación ---
   campoMetaAnual: "Escribe la meta del año con IVA: acepta «32,000,000» o «32 M». Enter o Guardar la guarda; abajo ves cuánto es contra lo que cerró el año anterior.",
@@ -89,8 +89,8 @@ export const ANALISIS = {
   botonUsarEscenario: "Copia la meta del escenario en la casilla de la meta. Todavía no queda guardada: revísala y dale Guardar.",
   faltanteMeta: "La meta menos lo vendido en el año, nunca menos de cero. Abajo, los meses que quedan contando el que corre.",
   acumuladoMetaAnio: "Lo vendido sumado mes con mes contra la meta sumada igual. Si la línea de lo vendido va abajo de la de la meta, vas atrasado; arriba, adelantado.",
-  pesoEstadoTresAnios: "Qué parte de la venta de los 3 años completos anteriores fue de ese estado. Con eso se reparte la meta sugerida.",
-  avanceMetaEstado: "Lo vendido este año en el estado entre su meta: la que puso dirección o, si no hay, la sugerida. 100 % quiere decir que ya llegó.",
+  pesoEstadoTresAnios: "Qué parte de la venta con estado de los 3 años completos anteriores fue de ese estado. Con eso se reparte la meta sugerida.",
+  avanceMetaEstado: "Lo vendido en el estado en el año que ves, entre su meta: la que puso dirección o, si no hay, la sugerida. 100 % quiere decir que ya llegó.",
 
   // --- Entregas y capacidad del taller ---
   aTiempo: "Pedidos con fecha compromiso en el periodo que se entregaron ese día o antes. Se juzga lo entregado y lo que ya venció sin entregarse; lo que todavía puede llegar a tiempo no cuenta aún.",

@@ -99,7 +99,7 @@ npx tsx scripts/detectar-subensambles.ts`}</pre>
 
       {hist.data && hist.data.length > 1 && (
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Importaciones anteriores" />
+          <EncabezadoTarjeta titulo="Importaciones anteriores" explica={GLOSARIO.importacionesAnteriores} />
           <table className="tabla">
             <thead><tr><th>Fecha</th><th>Fuente</th><th className="text-right" data-explain={GLOSARIO.precioIgualHoja} data-explain-title="Precios iguales">Precios iguales</th></tr></thead>
             <tbody>

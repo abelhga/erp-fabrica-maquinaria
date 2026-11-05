@@ -171,7 +171,7 @@ export default function ParaLlamar() {
                         alTerminar={() => setPorConfirmar((p) => { const { [o.cliente_id]: _, ...resto } = p; return resto; })} />
                     ) : (
                       <div className="flex flex-wrap gap-2 mt-auto">
-                        <Boton tamano="sm" onClick={() => setRedactando(o)} data-explain={GLOSARIO.redactarMensajeCliente} data-explain-title="Mensaje con IA"><Sparkles className="h-3.5 w-3.5" />Redactar mensaje</Boton>
+                        <Boton tamano="sm" onClick={() => setRedactando(o)} data-explain={GLOSARIO.redactarMensajeCliente} data-explain-title="Redactar mensaje"><Sparkles className="h-3.5 w-3.5" />Redactar mensaje</Boton>
                         {wa && (
                           <Boton tamano="sm" variante="secundario" asChild data-explain={GLOSARIO.contactoParaLlamar} data-explain-title="WhatsApp">
                             <a href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer" onClick={() => marcar(o, "whatsapp")}><MessageCircle className="h-3.5 w-3.5" />WhatsApp</a>

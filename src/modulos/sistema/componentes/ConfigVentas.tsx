@@ -85,7 +85,7 @@ function Cartera({ inicial, editable }: { inicial: Propiedad; editable: boolean 
       </div>
       <div className="rounded-xl border border-borde overflow-hidden">
         <div className="px-3 py-2 bg-fondo/60 border-b border-borde flex flex-wrap items-baseline justify-between gap-2">
-          <p className="text-sm font-medium">Vista previa con la regla guardada</p>
+          <p className="text-sm font-medium" data-explain={GLOSARIO.vistaPreviaCartera} data-explain-title="Vista previa">Vista previa con la regla guardada</p>
           {cambiaParametros && <p className="text-xs text-aviso">Guarda los cambios para recalcularla.</p>}
         </div>
         {cartera.isLoading ? <Cargando filas={3} /> : (
@@ -245,7 +245,7 @@ function Canales({ editable }: { editable: boolean }) {
   const orden = Object.keys(NOMBRE_CANAL);
   return (
     <Tarjeta>
-      <EncabezadoTarjeta titulo="Canales y comisiones" descripcion="Precio en el canal = precio ÷ (1 − comisión), más la cuota fija abajo del umbral y el envío si se publica con envío." />
+      <EncabezadoTarjeta titulo="Canales y comisiones" explica={GLOSARIO.canalesComisionesConfig} descripcion="Precio en el canal = precio ÷ (1 − comisión), más la cuota fija abajo del umbral y el envío si se publica con envío." />
       <div className="px-5 pb-5 space-y-3">
         {!editable && <SoloLectura quien="gerencia de ventas o dirección (mueve los precios publicados)" />}
         {canales.isLoading ? <Cargando /> : (

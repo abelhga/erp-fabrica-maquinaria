@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { mensajeError } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { leerNumero, rutaArticulo, useTiposEquipo, type TipoArticulo } from "./comun";
+import { GLOSARIO } from "@/tutorial/glosario";
 
 const UNIDADES = ["pieza", "metro", "kilo", "litro", "juego", "tramo", "m2", "caja", "carga", "rollo", "servicio", "horas"];
 
@@ -84,7 +85,8 @@ export function NuevoArticulo({ abierto, alCambiar, tipo }: {
         <Boton type="submit" form="nuevo-articulo" cargando={guardando}>Crear y abrir</Boton>
       </>}>
       <form id="nuevo-articulo" onSubmit={crear} className="grid gap-4 sm:grid-cols-[140px_1fr]">
-        <Campo etiqueta="Clave"><Entrada value={clave} onChange={(e) => setClave(e.target.value)} className="cifra" /></Campo>
+        <Campo etiqueta="Clave"><Entrada value={clave} onChange={(e) => setClave(e.target.value)} className="cifra"
+          data-explain={GLOSARIO.claveSugerida} data-explain-title="Clave" /></Campo>
         <Campo etiqueta="Nombre">
           <Entrada autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)}
             placeholder={tipo === "equipo" ? 'Banda transportadora 18" x 20 m' : tipo === "subensamble" ? 'Cabezal motriz 18"' : "Chumacera de piso 1 7/16\" UCP-207"} />
@@ -92,7 +94,7 @@ export function NuevoArticulo({ abierto, alCambiar, tipo }: {
         {tipo === "componente" && (
           <>
             <Campo etiqueta="Tipo">
-              <Seleccion value={subtipo} onChange={(e) => setSubtipo(e.target.value as TipoArticulo)}>
+              <Seleccion value={subtipo} onChange={(e) => setSubtipo(e.target.value as TipoArticulo)} data-explain={GLOSARIO.tipoArticulo} data-explain-title="Tipo">
                 <option value="componente">Componente</option>
                 <option value="materia_prima">Materia prima</option>
                 <option value="servicio">Servicio</option>
@@ -111,7 +113,8 @@ export function NuevoArticulo({ abierto, alCambiar, tipo }: {
                   </Seleccion>
                 </Campo>
                 <Campo etiqueta="Costo (opcional)" ayuda="Sin IVA, por unidad. Queda en su historial.">
-                  <Entrada inputMode="decimal" value={costo} onChange={(e) => setCosto(e.target.value)} placeholder="0.00" className="cifra" />
+                  <Entrada inputMode="decimal" value={costo} onChange={(e) => setCosto(e.target.value)} placeholder="0.00" className="cifra"
+                    data-explain={GLOSARIO.costoAltaArticulo} data-explain-title="Costo" />
                 </Campo>
               </>
             )}
@@ -120,12 +123,12 @@ export function NuevoArticulo({ abierto, alCambiar, tipo }: {
         {tipo === "equipo" && (
           <>
             <Campo etiqueta="Tipo de equipo" className="sm:col-span-2" ayuda="Define su política de utilidad y recargos (pestaña Márgenes).">
-              <Seleccion value={categoria} onChange={(e) => setCategoria(e.target.value)}>
+              <Seleccion value={categoria} onChange={(e) => setCategoria(e.target.value)} data-explain={GLOSARIO.tipoEquipo} data-explain-title="Tipo de equipo">
                 <option value="">OTRO (política por defecto)</option>
                 {tipos.data?.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
               </Seleccion>
             </Campo>
-            <label className="sm:col-span-2 flex items-center gap-2 text-sm">
+            <label className="sm:col-span-2 flex items-center gap-2 text-sm" data-explain={GLOSARIO.medidaEspecial} data-explain-title="Medida especial">
               <input type="checkbox" checked={medida} onChange={(e) => setMedida(e.target.checked)} className="h-4 w-4 accent-[hsl(var(--marca))]" />
               Medida especial (suma el recargo de medida especial de su política)
             </label>

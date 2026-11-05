@@ -178,7 +178,7 @@ export default function DetalleProveedor() {
           <HistorialCambios tabla="proveedores" id={p.id} explica={GLOSARIO.quienCambioQue} />
 
           <Tarjeta className="overflow-hidden">
-            <EncabezadoTarjeta titulo="Órdenes de compra" descripcion="Las 50 más recientes" />
+            <EncabezadoTarjeta titulo="Órdenes de compra" descripcion="Las 50 más recientes" explica={GLOSARIO.ordenesDelProveedor} />
             {ordenes.isLoading ? <Cargando filas={3} /> : (ordenes.data?.length ?? 0) === 0 ? (
               <p className="px-5 pb-5 text-sm text-tenue">Sin órdenes todavía.</p>
             ) : (

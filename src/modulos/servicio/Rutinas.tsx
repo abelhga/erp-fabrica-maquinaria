@@ -56,9 +56,9 @@ export default function Rutinas() {
   const columnas: Columna<Rutina>[] = [
     { clave: "nombre", titulo: "Rutina", celda: (r) => <div className="min-w-[200px]"><p className="font-medium leading-tight">{r.nombre}</p>
       {r.categoria && <p className="text-xs text-tenue">{r.categoria}</p>}</div> },
-    { clave: "frecuencia", titulo: "Frecuencia", valor: (r) => (r.frecuencia ? FRECUENCIA[r.frecuencia] : "Por horas"),
+    { clave: "frecuencia", titulo: "Frecuencia", explica: GLOSARIO.frecuenciaRutina, valor: (r) => (r.frecuencia ? FRECUENCIA[r.frecuencia] : "Por horas"),
       celda: (r) => (r.frecuencia ? FRECUENCIA[r.frecuencia] : <span className="text-tenue">Por horas</span>) },
-    { clave: "num_puntos", titulo: "Puntos", alinear: "der", celda: (r) => <span className="cifra">{r.num_puntos}<span className="block text-[11px] text-tenue">{r.secciones} {r.secciones === 1 ? "sección" : "secciones"}</span></span> },
+    { clave: "num_puntos", titulo: "Puntos", alinear: "der", explica: GLOSARIO.puntosRutina, celda: (r) => <span className="cifra">{r.num_puntos}<span className="block text-[11px] text-tenue">{r.secciones} {r.secciones === 1 ? "sección" : "secciones"}</span></span> },
     { clave: "planes", titulo: "La usan", explica: GLOSARIO.rutinaEnUso, valor: (r) => r.planes, celda: (r) => r.maquinas.length ? (
       <span className="text-sm">{r.maquinas.slice(0, 4).map((m) => m.numero).join(", ")}{r.maquinas.length > 4 && ` y ${r.maquinas.length - 4} más`}</span>
     ) : <span className="text-tenue">Ningún plan</span> },
@@ -68,13 +68,13 @@ export default function Rutinas() {
     <Pagina
       titulo="Rutinas de mantenimiento"
       descripcion="La lista de puntos que se palomea en cada preventivo, por tipo de máquina y frecuencia."
-      acciones={p.gerencia && <Boton onClick={() => setAbierta(borrador(null))}><Plus className="h-4 w-4" />Nueva rutina</Boton>}
+      acciones={p.gerencia && <Boton onClick={() => setAbierta(borrador(null))} data-explain={GLOSARIO.botonNuevaRutina}><Plus className="h-4 w-4" />Nueva rutina</Boton>}
     >
       <TablaDatos filas={filas} columnas={columnas} cargando={lista.isLoading} error={lista.error} claveFila={(r) => r.id}
         alClicFila={(r) => setAbierta(borrador(r))} exportarComo="rutinas" placeholder="Rutina, categoría…"
         filtros={<Filtro<Vista> valor={vista} alCambiar={setVista} opciones={[
-          { valor: "activas", texto: "Activas", cuenta: (lista.data ?? []).filter((r) => r.activa).length },
-          { valor: "inactivas", texto: "Desactivadas", cuenta: (lista.data ?? []).filter((r) => !r.activa).length },
+          { valor: "activas", texto: "Activas", cuenta: (lista.data ?? []).filter((r) => r.activa).length, explica: GLOSARIO.rutinaMantenimiento },
+          { valor: "inactivas", texto: "Desactivadas", cuenta: (lista.data ?? []).filter((r) => !r.activa).length, explica: GLOSARIO.filtroRutinasDesactivadas },
         ]} />}
         vacio={{ icono: ListChecks, titulo: vista === "activas" ? "Todavía no hay rutinas" : "Ninguna desactivada",
                  texto: vista === "activas" ? "Una rutina es la lista de lo que se revisa en un preventivo (desconectar, soplar rejillas, revisar la tierra…). Hazla una vez y úsala en los planes de todas las máquinas de ese tipo." : undefined,
@@ -122,8 +122,8 @@ function EditorRutina({ inicial, soloVer, alCerrar, alDuplicar, nuevaLlave }: {
   return (
     <Lateral abierto alCambiar={(v) => !v && alCerrar()} ancho="max-w-3xl"
       titulo={soloVer ? f.nombre : f.id ? "Editar rutina" : "Nueva rutina"}
-      subtitulo={f.planes ? `La usan ${f.planes} ${f.planes === 1 ? "plan preventivo" : "planes preventivos"}` : "Ningún plan la usa todavía"}
-      acciones={!soloVer && f.id && <Boton variante="secundario" tamano="sm" onClick={alDuplicar}><Copy className="h-3.5 w-3.5" />Duplicar</Boton>}>
+      subtitulo={<span data-explain={GLOSARIO.rutinaEnUso} data-explain-title="La usan">{f.planes ? `La usan ${f.planes} ${f.planes === 1 ? "plan preventivo" : "planes preventivos"}` : "Ningún plan la usa todavía"}</span>}
+      acciones={!soloVer && f.id && <Boton variante="secundario" tamano="sm" onClick={alDuplicar} data-explain={GLOSARIO.botonDuplicarRutina}><Copy className="h-3.5 w-3.5" />Duplicar</Boton>}>
       <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (listo && !soloVer) guardar.mutate(); }}>
         <fieldset disabled={soloVer} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
@@ -133,7 +133,7 @@ function EditorRutina({ inicial, soloVer, alCerrar, alDuplicar, nuevaLlave }: {
               <datalist id="rutina-categorias">{(categorias.data ?? []).map((c) => <option key={c} value={c} />)}</datalist>
             </Campo>
             <Campo etiqueta="Frecuencia">
-              <Seleccion value={f.frecuencia} onChange={(e) => set("frecuencia", e.target.value)}>
+              <Seleccion value={f.frecuencia} onChange={(e) => set("frecuencia", e.target.value)} data-explain={soloVer ? undefined : GLOSARIO.frecuenciaRutina} data-explain-title="Frecuencia">
                 {Object.entries(FRECUENCIA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 <option value="">Por horas de uso</option>
               </Seleccion>
@@ -153,7 +153,8 @@ function EditorRutina({ inicial, soloVer, alCerrar, alDuplicar, nuevaLlave }: {
               {f.puntos.map((x, i) => (
                 <li key={x.k} className="grid grid-cols-[minmax(0,10rem)_1fr_auto] gap-1.5 items-center">
                   <Entrada list="rutina-secciones" value={x.seccion ?? ""} onChange={(e) => cambiarPunto(x.k, { seccion: e.target.value || null })}
-                    placeholder="Sección" aria-label={`Sección del punto ${i + 1}`} className="text-xs" />
+                    placeholder="Sección" aria-label={`Sección del punto ${i + 1}`} className="text-xs"
+                    data-explain={soloVer ? undefined : GLOSARIO.seccionPuntoRutina} data-explain-title="Sección" />
                   <Entrada ref={(el) => { textos.current[x.k] = el; }} value={x.texto} onChange={(e) => cambiarPunto(x.k, { texto: e.target.value })}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); agregarDespues(i); } }}
                     placeholder="Qué se revisa o se hace" aria-label={`Punto ${i + 1}`} />
@@ -161,17 +162,18 @@ function EditorRutina({ inicial, soloVer, alCerrar, alDuplicar, nuevaLlave }: {
                     <div className="flex">
                       <button type="button" onClick={() => mover(i, -1)} disabled={i === 0} className="p-1.5 rounded text-tenue hover:bg-fondo disabled:opacity-30" aria-label="Subir"><ArrowUp className="h-4 w-4" /></button>
                       <button type="button" onClick={() => mover(i, 1)} disabled={i === f.puntos.length - 1} className="p-1.5 rounded text-tenue hover:bg-fondo disabled:opacity-30" aria-label="Bajar"><ArrowDown className="h-4 w-4" /></button>
-                      <button type="button" onClick={() => quitar(x.k)} className="p-1.5 rounded text-tenue hover:bg-fondo hover:text-peligro" aria-label="Quitar"><Trash2 className="h-4 w-4" /></button>
+                      <button type="button" onClick={() => quitar(x.k)} className="p-1.5 rounded text-tenue hover:bg-fondo hover:text-peligro" aria-label="Quitar"
+                        data-explain={GLOSARIO.botonQuitarPuntoRutina} data-explain-title="Quitar punto"><Trash2 className="h-4 w-4" /></button>
                     </div>
                   )}
                 </li>
               ))}
             </ol>
-            {!soloVer && <Boton type="button" variante="secundario" tamano="sm" className="mt-2" onClick={() => agregarDespues(f.puntos.length - 1)}><Plus className="h-3.5 w-3.5" />Agregar punto</Boton>}
+            {!soloVer && <Boton type="button" variante="secundario" tamano="sm" className="mt-2" onClick={() => agregarDespues(f.puntos.length - 1)} data-explain={GLOSARIO.botonAgregarPuntoRutina}><Plus className="h-3.5 w-3.5" />Agregar punto</Boton>}
           </div>
 
           {f.id && !soloVer && (
-            <label className="flex items-start gap-2 text-sm cursor-pointer">
+            <label className="flex items-start gap-2 text-sm cursor-pointer" data-explain={GLOSARIO.casillaRutinaActiva} data-explain-title="Activa">
               <input type="checkbox" checked={f.activa} onChange={(e) => set("activa", e.target.checked)} className="accent-[hsl(var(--marca))] mt-0.5" />
               <span>Activa<span className="block text-xs text-tenue">Desactivada ya no sale para elegir en los planes. Solo se puede si ningún plan la usa.</span></span>
             </label>
