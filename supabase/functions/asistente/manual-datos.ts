@@ -1355,7 +1355,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 2: Dale clic a un renglón para ver el antes y el después de cada dato.",
    "La columna «Registro» dice de qué es cada cambio: el folio, el nombre o la clave. En las listas de materiales, el equipo, el artículo y la cantidad; en el material de una orden, la OP, el artículo y cuánto lleva. «Sistema», en «Quién», es un proceso automático del ERP, no una persona.",
    "En el detalle, los artículos, órdenes y personas salen con su nombre. Abajo está la historia de ese registro (sus últimos 50 cambios) y, si tiene pantalla, «Abrir el registro» te lleva a ella. El CSV baja lo que ves.",
-   "Se muestran los 500 cambios más recientes: para ir más atrás usa los filtros. Solo ves los cambios de lo que tu rol puede ver: sueldos y datos sensibles necesitan Recursos humanos nivel 3, y costos, el módulo de costos."
+   "Se muestran los 500 cambios más recientes: para ir más atrás usa los filtros. Solo ves los cambios de lo que tu rol puede ver: sueldos y datos sensibles necesitan Recursos humanos nivel 3; los costos, el módulo de Costos; las políticas de precio, el de Márgenes, y los cambios del costo de un artículo y del historial de costeo, los dos."
   ]
  },
  {
@@ -1657,7 +1657,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "«Cambios sugeridos» corrige desde aquí el precio y la existencia que no cuadran: ves el antes y el después, palomeas y das «Mandar … a Mercado Libre». Antes de mandar se vuelve a leer cada publicación: si alguien la cambió en Mercado Libre, esa no se toca.",
    "Abajo, «Corregir solo» lo hace cada hora con lo seguro si gerencia de ventas o dirección lo prende (viene apagado), y «Cambios hechos desde el ERP» dice qué se cambió, quién y qué contestó Mercado Libre.",
    "«Reputación» muestra el termómetro de la cuenta y lo que lo mueve (reclamos, demoras, cancelaciones), y los reclamos abiertos con su fecha límite.",
-   "En «Dinero» está cada pago de Mercado Libre del mes, tal cual lo da Mercado Pago: lo que pagó el comprador, la comisión, el envío que pagamos, las retenciones de IVA e ISR y lo que llega a Mercado Pago, con el día en que queda disponible.",
+   "En «Dinero» está cada pago de Mercado Libre del mes, como lo da Mercado Pago: lo que pagó el comprador, la comisión, el envío que pagamos, las retenciones de IVA e ISR y lo que llega a Mercado Pago, con el día en que queda disponible. Si un pago se reembolsó, lo que llega y lo que se quedó Mercado Libre ya traen descontado lo que se devolvió; los intentos de pago rechazados o cancelados no salen.",
    "En «Dinero», arriba van los totales del mes; abajo puedes bajarlo a Excel para conciliar la cuenta de Mercado Pago."
   ]
  },
@@ -4587,7 +4587,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "importaciones"
   ],
-  "texto": "Sube el archivo (PDF, imagen, Word o Excel) sin leerlo con la IA: queda en su casilla y pasa a recibido. Si ya tenía uno, el nuevo se agrega como otro renglón del mismo documento y el anterior se queda."
+  "texto": "Sube el archivo (PDF, imagen, Word o Excel) sin leerlo con la IA: queda en su casilla y pasa a recibido. Si ya tenía uno, el botón dice «Agregar otro»: el nuevo entra como otro renglón del mismo documento y el anterior se queda como estaba."
  },
  {
   "clave": "botonSubirFotosEquipo",
@@ -5465,12 +5465,12 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
  {
   "clave": "cobradoSemana",
   "modulos": [],
-  "texto": "Lo que se cobró la semana pasada de pedidos del ERP, en pesos (los de dólares, al tipo de cambio del pedido), contra la semana anterior. Verde si subió."
+  "texto": "Lo que se cobró la semana pasada, en pesos: cobros de pedidos (los de dólares, al tipo de cambio del pedido), pagos de la hoja y lo cobrado aquí de saldos de la hoja, contra la semana anterior. Es la misma cuenta que «Cobrado por mes» en Cobranza. Verde si subió."
  },
  {
   "clave": "cobranzaAntiguedadTablero",
   "modulos": [],
-  "texto": "Lo que deben los clientes en pedidos del ERP, agrupado por días desde la fecha del pedido: 0 a 30, 31 a 60, 61 a 90 y más de 90. Lo que se debía en la hoja no entra en las barras: su total va arriba, en la descripción."
+  "texto": "Lo que deben los clientes, agrupado por días: 0 a 30, 31 a 60, 61 a 90 y más de 90. Los pedidos del ERP cuentan desde la fecha del pedido; lo que se debía en la hoja, desde la venta (los pagos tapan las ventas más viejas, así que lo que falta es lo más reciente). Lo de la hoja se reparte igual que en Cobranza, y lo de más de 90 días es lo que sale en rojo en «Por cobrar»."
  },
  {
   "clave": "cobroSaldoHoja",
@@ -6217,12 +6217,12 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
  {
   "clave": "cotizacionesVivas",
   "modulos": [],
-  "texto": "Cotizaciones abiertas (de borrador a enviada) que todavía no vencen. El monto es lo ya enviado y vigente, sin IVA. El cierre es qué parte de las cotizaciones de los últimos 90 días que ya se cerraron se ganó."
+  "texto": "Cotizaciones abiertas (de borrador a enviada) que todavía no vencen. Cada cotización cuenta una vez aunque tenga varias versiones. El monto es lo ya enviado y vigente, sin IVA, con la última versión enviada de cada una. El cierre es qué parte de las cotizaciones de los últimos 90 días que ya se cerraron se ganó; la versión que diste de baja al sacar otra no cuenta como perdida."
  },
  {
   "clave": "cotizadoVivo",
   "modulos": [],
-  "texto": "Total con IVA, en pesos, de las cotizaciones enviadas o autorizadas que siguen vigentes: lo que está en la calle esperando respuesta. Abajo, el cierre de 90 días y las que esperan autorización de precio."
+  "texto": "Total con IVA, en pesos, de las cotizaciones enviadas o autorizadas que siguen vigentes: lo que está en la calle esperando respuesta. Cada cotización cuenta una vez aunque tenga varias versiones, con el total de la última. Abajo, el cierre de 90 días (la versión que se dio de baja al sacar otra no cuenta como perdida) y las que esperan autorización de precio."
  },
  {
   "clave": "cotizarSkydropx",
@@ -7549,7 +7549,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cuánto lleva esperando respuesta. Se pone en ámbar pasada media hora y en rojo pasada una hora."
+  "texto": "Cuánto lleva esperando respuesta, en horas de reloj (cuentan también la noche y el fin de semana). Se pone en ámbar pasada media hora y en rojo pasada una hora."
  },
  {
   "clave": "esperaRol",
@@ -9520,7 +9520,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Empieza (o sigue) la etapa desde aquí, sin anotar quién la trabaja: así no cuentan horas hombre y se borra la cuadrilla que estaba anotada. Para que cuenten, hazlo en la terminal eligiendo a la gente."
+  "texto": "Empieza (o sigue) la etapa desde aquí, sin anotar quién la trabaja: así no cuentan horas hombre. La cuadrilla planeada se queda; para que cuenten sus horas, iníciala en la terminal con su gente."
  },
  {
   "clave": "instruccionIA",
@@ -10714,7 +10714,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Lo que de verdad llega a la cuenta de Mercado Pago: lo que pagó el comprador menos la comisión, el envío que pagamos y las retenciones. Mercado Pago lo deja disponible unos días después (la fecha sale junto)."
+  "texto": "Lo que de verdad llega a la cuenta de Mercado Pago: lo que pagó el comprador menos la comisión, el envío que pagamos y las retenciones. Si el pago se reembolsó, también se resta lo que se le regresó al comprador y se suma lo que Mercado Libre devolvió de sus cargos; si no devolvió nada, sale en negativo: es lo que se perdió. Mercado Pago lo deja disponible unos días después (la fecha sale junto)."
  },
  {
   "clave": "nivelPermiso",
@@ -12528,7 +12528,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "importaciones"
   ],
-  "texto": "La suma del siguiente pago programado de cada orden con fecha en los próximos 30 días. Incluye los que ya pasaron de su fecha y siguen sin registrarse como pagados."
+  "texto": "La suma del siguiente pago programado de cada orden en dólares con fecha en los próximos 30 días. Incluye los que ya pasaron de su fecha y siguen sin registrarse como pagados."
  },
  {
   "clave": "promedioAprobado",
@@ -13992,7 +13992,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Lo que se quedó Mercado Libre de cada pago: su comisión (según la categoría y el tipo de publicación), lo que nos descontó por el envío (el envío gratis lo paga la cuenta) y otros cargos. Sale tal cual del desglose de Mercado Pago. Las retenciones van aparte: son impuestos."
+  "texto": "Lo que se quedó Mercado Libre de cada pago: su comisión (según la categoría y el tipo de publicación), lo que nos descontó por el envío (el envío gratis lo paga la cuenta) y otros cargos. Sale del desglose de Mercado Pago; si el pago se reembolsó, ya sin lo que Mercado Libre devolvió de esos cargos. Las retenciones van aparte: son impuestos."
  },
  {
   "clave": "serialSiguiente",
@@ -14722,7 +14722,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cuánto se tardan en contestar las preguntas de Mercado Libre (la mediana de los últimos 30 días) y qué parte se contestó en menos de una hora. Es lo que mide el bono de tiempo de respuesta y lo que ML toma en cuenta para la reputación."
+  "texto": "Cuánto se tardan en contestar las preguntas de Mercado Libre (la mediana de los últimos 30 días) y qué parte se contestó en menos de una hora, contando horas de reloj: lo que llega de noche cuenta desde que llegó. El bono de tiempo de respuesta se mide distinto: solo cuenta las horas del horario de trabajo y su plazo es de 2 horas (o el que diga la plantilla de tu puesto), así que una pregunta de la noche contestada temprano no te cuenta en contra."
  },
  {
   "clave": "tiempoRespuestaPrecio",
@@ -15353,7 +15353,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "costeo",
    "margenes"
   ],
-  "texto": "Cada pedido que trajo este artículo, con el precio por pieza ya con su descuento. Compáralo con el precio de lista que regía ese día en la gráfica de arriba: así ves si los cambios de precio se notaron al vender."
+  "texto": "Cada pedido que trajo este artículo (sin los cancelados), con el precio por pieza ya con su descuento. Compáralo con el precio de lista que regía ese día en la gráfica de arriba: así ves si los cambios de precio se notaron al vender."
  },
  {
   "clave": "ventasDelMes",
@@ -15390,6 +15390,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Si las ventas de Mercado Libre entran solas como pedidos (con su envío). Apagado, las ventas no entran al ERP, pero las preguntas y los reclamos sí. Lo prende o apaga dirección; al prenderlo, «Traer lo pendiente» puede traer las ventas desde una fecha."
+ },
+ {
+  "clave": "ventasPorMesInicio",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Lo vendido cada mes en pedidos sin cancelar, sin IVA y en pesos, apilado por línea: Maquinaria, Refacciones u Otros (fletes, servicios, instalaciones). Cuenta los pedidos capturados en el ERP y los que se trajeron de los paneles de vendedores de la hoja. No cuenta el libro de ventas de la hoja ni las ventas de Mercado Libre que solo llegaron como pago de Mercado Pago, porque no vienen separadas por línea. Si eres vendedor, solo ves tus pedidos y los que compartes. Por eso no cuadra con el tablero de dirección en los mismos meses: allá las cifras van con IVA, entran esas dos y no entran los pedidos de los paneles. El «Año» de junto sale de los mismos pedidos, del 1 de enero a hoy."
  },
  {
   "clave": "ventasResultados",

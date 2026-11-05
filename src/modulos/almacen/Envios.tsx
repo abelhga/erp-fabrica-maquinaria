@@ -28,7 +28,7 @@ const PESTANAS: { valor: Pestana; texto: string; filtro: (e: Envio, hoy: string)
   { valor: "cotizar", texto: "Por cotizar y guía", filtro: (e) => e.falta_guia,
     vacio: { titulo: "Nada por cotizar", texto: "Los envíos que se piden desde un pedido llegan aquí con peso, medidas y destino ya llenos." } },
   { valor: "empacar", texto: "Por empacar", filtro: (e) => e.falta_empaque,
-    vacio: { titulo: "Nada por empacar", texto: "Cuando un envío tenga guía o fecha de recolección, aparece aquí para empacarlo con fotos y check list." } },
+    vacio: { titulo: "Nada por empacar", texto: "Cuando se pida un envío por paquetería, flete, a Full o que pase a recoger el cliente, aparece aquí para empacarlo con fotos y check list, aunque todavía no tenga guía." } },
   { valor: "hoy", texto: "Hoy salen o recogen", filtro: (e, hoy) => e.abierto && (e.listo_para_salir || (e.fecha_recoleccion != null && e.fecha_recoleccion <= hoy)),
     vacio: { titulo: "Hoy no sale nada", texto: "Aquí aparece lo que ya está empacado y con guía (listo para que pasen por él) y lo que tiene recolección para hoy." } },
   { valor: "camino", texto: "En camino", filtro: (e) => e.estado === "enviado",

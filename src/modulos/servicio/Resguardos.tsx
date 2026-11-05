@@ -210,7 +210,7 @@ function DialogoDevolver({ r, alCerrar }: { r: Resguardo; alCerrar: () => void }
           ))}
         </div>
         {estado !== "bien" && (
-          <Campo etiqueta="¿Qué le pasó o qué le falta?" ayuda="Se reporta como falla para que no se preste otra vez sin revisarla.">
+          <Campo etiqueta="¿Qué le pasó o qué le falta?" ayuda="Se reporta como falla en su ficha para que mantenimiento la revise.">
             <AreaTexto rows={2} value={notas} onChange={(e) => setNotas(e.target.value)} autoFocus />
           </Campo>
         )}

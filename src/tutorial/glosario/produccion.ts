@@ -163,7 +163,7 @@ export const PRODUCCION = {
   etapaPendiente: "Pendiente: la etapa todavía no empieza en el taller.",
   etapaEnProceso: "En proceso: el taller ya la empezó y no la ha pausado ni terminado.",
   etapaTerminada: "Terminada: el taller la marcó como acabada. Si fue por error, la gerencia de producción la reabre con «Reabrir».",
-  iniciarEtapaDesdeOrden: "Empieza (o sigue) la etapa desde aquí, sin anotar quién la trabaja: así no cuentan horas hombre y se borra la cuadrilla que estaba anotada. Para que cuenten, hazlo en la terminal eligiendo a la gente.",
+  iniciarEtapaDesdeOrden: "Empieza (o sigue) la etapa desde aquí, sin anotar quién la trabaja: así no cuentan horas hombre. La cuadrilla planeada se queda; para que cuenten sus horas, iníciala en la terminal con su gente.",
   botonIniciarEtapa: "Empieza la etapa: eliges quiénes la trabajan (vienen marcados los que planeó la gerencia) y desde ese momento cuentan sus horas hombre.",
   botonPausarEtapa: "Detiene la etapa cuando la dejan (falta material, los mueven a otra orden): se cierra el tiempo de todos los que la trabajaban, pero su cuadrilla queda anotada para reanudar.",
   botonReanudarEtapa: "Sigue con una etapa pausada: eliges quiénes la trabajan (viene marcada la cuadrilla de antes) y su tiempo vuelve a contar.",

@@ -219,7 +219,7 @@ function InicioPorArea() {
           <div className="grid gap-4 lg:grid-cols-3">
             {conGrafica && (
               <Tarjeta className="lg:col-span-2">
-                <EncabezadoTarjeta titulo="Ventas por mes" descripcion="Pedidos sin IVA, por línea" explica={GLOSARIO.lineaVenta}
+                <EncabezadoTarjeta titulo="Ventas por mes" descripcion="Pedidos del ERP y de los paneles de la hoja, sin IVA, por línea. No incluye el libro de ventas ni las ventas de Mercado Libre sin pedido" explica={GLOSARIO.ventasPorMesInicio}
                   acciones={i.ventas && <span className="text-sm text-tenue">Año: <b className="text-texto cifra">{dinero(i.ventas.anio)}</b></span>} />
                 <div className="px-5"><Leyenda series={LINEAS.map((l, k) => ({ nombre: l.nombre, color: SERIE(k + 1) }))} /></div>
                 <div className="h-64 px-2 pb-3 pt-2">

@@ -67,7 +67,7 @@ export const SISTEMA: Record<string, Ayuda> = {
     detalle: [
       "La columna «Registro» dice de qué es cada cambio: el folio, el nombre o la clave. En las listas de materiales, el equipo, el artículo y la cantidad; en el material de una orden, la OP, el artículo y cuánto lleva. «Sistema», en «Quién», es un proceso automático del ERP, no una persona.",
       "En el detalle, los artículos, órdenes y personas salen con su nombre. Abajo está la historia de ese registro (sus últimos 50 cambios) y, si tiene pantalla, «Abrir el registro» te lleva a ella. El CSV baja lo que ves.",
-      "Se muestran los 500 cambios más recientes: para ir más atrás usa los filtros. Solo ves los cambios de lo que tu rol puede ver: sueldos y datos sensibles necesitan Recursos humanos nivel 3, y costos, el módulo de costos.",
+      "Se muestran los 500 cambios más recientes: para ir más atrás usa los filtros. Solo ves los cambios de lo que tu rol puede ver: sueldos y datos sensibles necesitan Recursos humanos nivel 3; los costos, el módulo de Costos; las políticas de precio, el de Márgenes, y los cambios del costo de un artículo y del historial de costeo, los dos.",
     ],
   },
   "/sistema/configuracion": {

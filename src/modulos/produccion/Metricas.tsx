@@ -220,14 +220,14 @@ function Contenido({ m }: { m: Metricas }) {
           </ul>
         </Tarjeta>
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Herramientas lean" descripcion="Se irán habilitando conforme el equipo de ingeniería de procesos las use" explica={GLOSARIO.herramientasLean} />
+          <EncabezadoTarjeta titulo="Herramientas lean" descripcion="Kaizen y A3 ya se trabajan en Producción → Mejoras; las demás se irán habilitando conforme el equipo las use" explica={GLOSARIO.herramientasLean} />
           <div className="px-5 pb-5 text-sm space-y-2" data-explain={GLOSARIO.herramientasLean} data-explain-title="Herramientas lean">
-            {[["5S", "auditorías por área con su calificación y fotos"], ["Kaizen", "registro de mejoras: problema, idea, responsable y resultado"],
-              ["A3", "solución de problemas en una hoja, ligada a la orden o la máquina"], ["OEE", "disponibilidad, rendimiento y calidad del plasma y las máquinas clave"],
+            {[["5S", "auditorías por área con su calificación y fotos"], ["Kaizen", "ya en Mejoras: problema, idea, responsable y resultado"],
+              ["A3", "ya en Mejoras: las mejoras grandes, con causa raíz y plan"], ["OEE", "disponibilidad, rendimiento y calidad del plasma y las máquinas clave"],
               ["SMED", "tiempos de cambio de modelo o de herramienta"]].map(([t, d]) => (
               <p key={t} className="flex gap-2"><Lightbulb className="h-4 w-4 text-tenue shrink-0 mt-0.5" /><span><b>{t}</b> <span className="text-tenue">· {d}</span></span></p>
             ))}
-            <p className="text-tenue pt-1">Dile a sistemas cuál quieren empezar a usar.</p>
+            <p className="text-tenue pt-1">Dile a sistemas cuál de las demás quieren empezar a usar.</p>
           </div>
         </Tarjeta>
       </div>

@@ -146,7 +146,7 @@ function MesesTope({ inicial, editable }: { inicial: number; editable: boolean }
   return (
     <TarjetaForm titulo="Meses con tarjeta" explica={GLOSARIO.topeMesesTarjeta} descripcion="Monto máximo que el banco deja diferir por transacción." editable={editable} quien="sistemas o dirección"
       guardando={guardar.isPending} alGuardar={() => guardar.mutate({ clave: "meses_tope", valor: Number(v) })}>
-      <Campo etiqueta="Tope por transacción" ayuda={`Arriba de ${dinero(Number(v) || 0)} el cotizador no ofrece meses.`}>
+      <Campo etiqueta="Tope por transacción" ayuda={`Si la cotización lleva meses, sale impreso: «El monto máximo a diferir por transacción es de ${dinero(Number(v) || 0)} MXN».`}>
         <Entrada type="number" step="1000" min="0" value={v} onChange={(e) => setV(e.target.value)} className="cifra w-40 block" />
       </Campo>
     </TarjetaForm>

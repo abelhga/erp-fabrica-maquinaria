@@ -310,7 +310,7 @@ export function TableroDireccion() {
                     <Fila key={c.canal} etiqueta={CANALES[c.canal] ?? c.canal} valor={c.monto} max={d.canales![0].monto} color={SERIE(i + 1)}
                       sub={`${dineroCompacto(c.monto)} · ${porcentaje(c.monto / d.canales!.reduce((s, x) => s + x.monto, 0), 0)}`} />
                   ))}
-                <p className="text-xs text-tenue pt-1">Mercado Libre y sitio web se conectan en la siguiente fase; hoy se registran como pedidos.</p>
+                <p className="text-xs text-tenue pt-1">Las ventas de Mercado Libre entran solas como pedidos si la cuenta está conectada y en Configuración → Integraciones está prendido que entren; las del sitio web todavía se capturan a mano como pedido con su canal.</p>
               </div>
             </Tarjeta>
           )}
@@ -362,7 +362,7 @@ export function TableroDireccion() {
         )}
         {d.cobranza && aging && (
           <Tarjeta>
-            <EncabezadoTarjeta titulo="Cobranza por antigüedad" descripcion={`Pedidos del ERP · más ${dineroCompacto(d.cobranza.arranque)} de saldo de arranque (hoja)`}
+            <EncabezadoTarjeta titulo="Cobranza por antigüedad" descripcion={`Pedidos del ERP y ${dineroCompacto(d.cobranza.arranque)} de saldo de la hoja (por fecha de venta)`}
               explica={GLOSARIO.cobranzaAntiguedadTablero} acciones={<button className="text-sm text-marca-texto" onClick={() => ir("/finanzas/cobranza")}>Cobranza</button>} />
             <div className="h-40 px-2">
               <ResponsiveContainer>
