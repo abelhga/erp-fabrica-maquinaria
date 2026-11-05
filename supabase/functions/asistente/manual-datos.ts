@@ -995,9 +995,10 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   ],
   "nivel": 3,
   "texto": [
-   "Quién usa el ERP, cuánto y en qué. Es para dirección y sistemas: sirve para acompañar a quien se está quedando en la hoja, en el papel o en WhatsApp, y para ver qué pantallas de verdad se usan.",
-   "Escoge el periodo (7, 30 o 90 días). Arriba, cuántas personas lo usaron, el tiempo activo de todas, los cambios que registraron y las consultas a la IA. «Sin usarlo» junta las cuentas activas que no hicieron nada en el periodo. Dale clic a una persona para ver su tiempo y sus cambios por día, las pantallas que más usa, en qué registra cambios, para qué usa la IA y a qué horas trabaja en el ERP.",
-   "El tiempo activo cuenta solo los minutos en que la persona estuvo moviéndose en el ERP con la pestaña a la vista; dejarlo abierto no suma. No se guarda qué datos vio, solo qué pantalla. La TV y la tablet del taller salen en «Todas las cuentas». El tiempo y las pantallas se cuentan desde el 5 de noviembre de 2026; los cambios y la IA traen su historia de antes."
+   "Quién usa el ERP, cuánto, en qué y cuánto cuesta la IA. Es para dirección y sistemas: sirve para acompañar a quien se está quedando en la hoja, en el papel o en WhatsApp, ver qué pantallas de verdad se usan y cuidar el gasto de la IA.",
+   "Arriba están los filtros, que cambian todo: el periodo (7, 30 o 90 días), el rol, qué medir (tiempo activo, cambios, consultas a la IA, costo de la IA o personas activas) y «Comparar» con el periodo anterior del mismo largo. Los indicadores dicen cuánto subió o bajó cada cosa contra ese periodo.",
+   "Las gráficas: la medida día por día contra el periodo anterior (línea punteada); cada persona contra sí misma (barra gris = antes); el mapa de calor, un cuadro por persona y día, más oscuro entre más uso; en qué secciones del ERP se le va el tiempo a cada quien; y en qué se va el costo de la IA (resúmenes, preguntas, documentos, revisión nocturna…). Abajo, la tabla por persona; «Sin usarlo» junta las cuentas activas que no hicieron nada. Dale clic a una persona para ver su detalle por día, sus pantallas, en qué registra cambios, para qué usa la IA y cuánto costó, y a qué horas trabaja.",
+   "El tiempo activo cuenta solo los minutos en que la persona estuvo moviéndose en el ERP con la pestaña a la vista; dejarlo abierto no suma. No se guarda qué datos vio, solo qué pantalla. El costo de la IA es un estimado con los precios de Configuración; lo que factura el proveedor manda. El tiempo y las pantallas se cuentan desde el 5 de noviembre de 2026; los cambios y la IA traen su historia de antes."
   ]
  },
  {
