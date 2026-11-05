@@ -36,7 +36,7 @@ export function MatrizPermisos() {
   });
 
   function cambiar(p: Permiso) {
-    // Dar costos a un rol que no los tenía abre los márgenes a toda esa gente: se confirma.
+    // Dar costos a un rol que no los tenía abre lo que cuesta cada equipo a toda esa gente: se confirma.
     if (p.modulo === "costos" && p.nivel > 0 && nivel(p.rol, "costos") === 0) setConfirmar(p);
     else guardar.mutate(p);
   }
@@ -109,14 +109,14 @@ export function MatrizPermisos() {
       </p>
 
       <Dialogo abierto={!!confirmar} alCambiar={(v) => !v && setConfirmar(null)} titulo="¿Dar acceso a costos?"
-        descripcion={confirmar && `${NOMBRE_ROL[confirmar.rol]} pasará a ver costos y márgenes.`}
+        descripcion={confirmar && `${NOMBRE_ROL[confirmar.rol]} pasará a ver costos.`}
         pie={<>
           <Boton variante="secundario" onClick={() => setConfirmar(null)}>Cancelar</Boton>
           <Boton variante="peligro" cargando={guardar.isPending} onClick={() => confirmar && guardar.mutate(confirmar)}>Sí, dar acceso</Boton>
         </>}>
         <p className="text-sm">
-          Toda persona con el rol <b>{confirmar && NOMBRE_ROL[confirmar.rol]}</b> verá lo que cuesta fabricar cada equipo, el costo de cada
-          componente y la utilidad de cada precio. Es la información que hoy se filtra cuando alguien comparte la hoja de costeo.
+          Toda persona con el rol <b>{confirmar && NOMBRE_ROL[confirmar.rol]}</b> verá lo que cuesta fabricar cada equipo y el costo de cada
+          componente. La utilidad y las políticas de precio no: esas son del módulo Márgenes. Es la información que hoy se filtra cuando alguien comparte la hoja de costeo.
         </p>
       </Dialogo>
     </div>

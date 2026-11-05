@@ -39,7 +39,7 @@ export const IMPORTACIONES = {
   estadoDocumentoImportacion: "Pendiente: todavía no llega. Recibido: ya está (subir el archivo lo marca solo). Con observaciones: llegó con algo que corregir y sigue contando como pendiente. Aceptado: revisado y bueno. No aplica: este embarque no lo necesita.",
 
   // Dinero de todas las importaciones
-  programadoTreintaDiasImportacion: "La suma del siguiente pago programado de cada orden con fecha en los próximos 30 días. Incluye los que ya pasaron de su fecha y siguen sin registrarse como pagados.",
+  programadoTreintaDiasImportacion: "La suma del siguiente pago programado de cada orden en dólares con fecha en los próximos 30 días. Incluye los que ya pasaron de su fecha y siguen sin registrarse como pagados.",
   pagosQueVienenImportacion: "Cada orden de compra que va en un embarque y todavía tiene saldo con el proveedor: lo pagado, lo que falta y su próximo pago programado. Lo que sigue en producción no tiene fecha hasta que el proveedor avisa que está listo.",
   aproximadoPesosHoyImportacion: "Lo que falta, pasado a pesos con el tipo de cambio de hoy. Es aproximado: lo que cueste de verdad depende del tipo de cambio del día en que se pague.",
   proximoPagoImportacion: "El siguiente pago programado a ese proveedor por esa orden, con su monto. En rojo si la fecha ya pasó y no se ha registrado como pagado.",
@@ -71,7 +71,7 @@ export const IMPORTACIONES = {
   notaEmbarque: "Escribe algo que deba saber quien vea el embarque (lo que pidió el agente, un acuerdo con el proveedor) y da Enter. Queda en la historia con tu nombre y la fecha.",
   listaDocumentosEmbarque: "Lo que necesita este embarque, según su modalidad y su incoterm (la póliza de seguro, por ejemplo, solo en CIF o CIP). Cada uno dice quién lo debe y en qué va; subir el archivo lo marca como recibido. Los que traen precios solo los abre quien ve el dinero.",
   documentoConPrecios: "Este documento trae precios o montos: solo lo abre quien ve el dinero de importaciones. Tú ves que llegó, pero no puedes abrirlo.",
-  botonSubirDocumentoEmbarque: "Sube el archivo (PDF, imagen, Word o Excel) sin leerlo con la IA: queda en su casilla y pasa a recibido. Si ya tenía uno, el nuevo se agrega como otro renglón del mismo documento y el anterior se queda.",
+  botonSubirDocumentoEmbarque: "Sube el archivo (PDF, imagen, Word o Excel) sin leerlo con la IA: queda en su casilla y pasa a recibido. Si ya tenía uno, el botón dice «Agregar otro»: el nuevo entra como otro renglón del mismo documento y el anterior se queda como estaba.",
   agregarOtroDocumentoEmbarque: "Para un documento que no está en la lista (una carta de no previo, el DODA, otro): elige el tipo y luego «Elegir archivo». Entra ya como recibido.",
   ordenesEmbarque: "Las órdenes de compra que viajan en este embarque: un BL puede traer varias facturas y un consolidado, varios proveedores. De ellas salen lo que se le debe a cada proveedor, el tope de los pagos y las partidas del costeo.",
   facturaProveedorEmbarque: "El número de la factura comercial (commercial invoice) del proveedor para esta orden. Se guarda al salir del campo o con Enter; también se llena sola al leer la factura con la IA.",

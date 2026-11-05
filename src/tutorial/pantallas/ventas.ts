@@ -250,7 +250,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
       "«Cambios sugeridos» corrige desde aquí el precio y la existencia que no cuadran: ves el antes y el después, palomeas y das «Mandar … a Mercado Libre». Antes de mandar se vuelve a leer cada publicación: si alguien la cambió en Mercado Libre, esa no se toca.",
       "Abajo, «Corregir solo» lo hace cada hora con lo seguro si gerencia de ventas o dirección lo prende (viene apagado), y «Cambios hechos desde el ERP» dice qué se cambió, quién y qué contestó Mercado Libre.",
       "«Reputación» muestra el termómetro de la cuenta y lo que lo mueve (reclamos, demoras, cancelaciones), y los reclamos abiertos con su fecha límite.",
-      "En «Dinero» está cada pago de Mercado Libre del mes, tal cual lo da Mercado Pago: lo que pagó el comprador, la comisión, el envío que pagamos, las retenciones de IVA e ISR y lo que llega a Mercado Pago, con el día en que queda disponible.",
+      "En «Dinero» está cada pago de Mercado Libre del mes, como lo da Mercado Pago: lo que pagó el comprador, la comisión, el envío que pagamos, las retenciones de IVA e ISR y lo que llega a Mercado Pago, con el día en que queda disponible. Si un pago se reembolsó, lo que llega y lo que se quedó Mercado Libre ya traen descontado lo que se devolvió; los intentos de pago rechazados o cancelados no salen.",
       "En «Dinero», arriba van los totales del mes; abajo puedes bajarlo a Excel para conciliar la cuenta de Mercado Pago.",
     ],
   },

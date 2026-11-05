@@ -121,9 +121,10 @@ export function Documentos({ e }: { e: Embarque }) {
                     )}
                     {captura && (
                       <label className={cn("inline-flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-medium hover:bg-fondo cursor-pointer", subiendo === d.id && "opacity-50 pointer-events-none")}
-                        data-explain={GLOSARIO.botonSubirDocumentoEmbarque} data-explain-title={d.archivo ? "Reemplazar" : "Subir"}>
-                        <Upload className="h-3.5 w-3.5" /> {d.archivo ? "Reemplazar" : "Subir"}
-                        <input type="file" className="hidden" accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx" onChange={(ev) => subir({ tipo: d.tipo }, ev.target.files?.[0])} />
+                        data-explain={GLOSARIO.botonSubirDocumentoEmbarque} data-explain-title={d.archivo ? "Agregar otro" : "Subir"}>
+                        {/* Con archivo no se reemplaza: registrar_documento_importacion solo llena una casilla vacía del tipo y si no hay, agrega otro renglón. */}
+                        <Upload className="h-3.5 w-3.5" /> {d.archivo ? "Agregar otro" : "Subir"}
+                        <input type="file" className="hidden" accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx" onChange={(ev) => subir({ id: d.id, tipo: d.tipo }, ev.target.files?.[0])} />
                       </label>
                     )}
                     {captura && d.estado === "pendiente" && d.ultimo_seguimiento !== hoyISO() && (

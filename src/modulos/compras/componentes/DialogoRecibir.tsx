@@ -88,14 +88,16 @@ export function DialogoRecibir({ abierto, alCambiar, ocId, folio, lineas }: {
         <div className="rounded-lg border border-borde divide-y divide-borde">
           {pendientes.map((l) => {
             const n = Number((cant[l.id] ?? "").replace(",", ".")) || 0;
-            const demas = n > Number(l.pendiente) * 1.1 + 0.0005;
+            // La misma cuenta que la base: lo ya recibido más lo que llega contra 110 % de lo
+            // pedido. Comparar contra lo pendiente marcaba en rojo recepciones que sí pasan.
+            const demas = Number(l.recibido) + n > Number(l.cantidad) * 1.1 + 0.0005;
             const elegido = ligar[l.id];
             return (
               <div key={l.id} className="grid gap-2 p-3 sm:grid-cols-[1fr_110px_150px] sm:items-center">
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate" title={l.nombre}>{l.nombre}</p>
                   <p className="text-xs text-tenue">{l.clave ?? (elegido ? elegido.clave : "Sin artículo")} · pedido {numero(l.cantidad)} · ya llegó {numero(l.recibido)} · faltan <b>{numero(l.pendiente)}</b> {l.unidad}</p>
-                  {demas && <p className="text-xs text-peligro">Más de 10 % arriba de lo pendiente: la base no lo deja pasar.</p>}
+                  {demas && <p className="text-xs text-peligro">Más de 10 % arriba de lo pedido: la base no lo deja pasar.</p>}
                   {!l.articulo_id && (elegido ? (
                     <p className="mt-1 flex items-center gap-1.5 text-xs text-marca-texto">
                       <Link2 className="h-3.5 w-3.5 shrink-0" />

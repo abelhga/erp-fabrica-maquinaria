@@ -54,7 +54,7 @@ export const COSTEO = {
   parametrosCopia: "La medida que tendrá la copia: con ella se recalculan sus cantidades y horas; lo que no cambies queda como en el original. Si el nombre trae la medida («20 m»), se ajusta solo mientras no lo cambies a mano.",
   listasDondeVaDirecto: "Los equipos y subensambles que llevan esta pieza en su propia lista (no dentro de un subensamble). Ninguna viene marcada: elige en cuáles cambiarla. Si eliges un subensamble, el cambio llega a todos los equipos que lo usan.",
   comoLoLleva: "Directo: va en la lista de ese equipo o subensamble, con la cantidad que ves. Dentro de un subensamble: lo lleva a través de uno; nivel 2 es un subensamble del equipo, nivel 3 un subensamble dentro de otro.",
-  ventasDelArticulo: "Cada pedido que trajo este artículo, con el precio por pieza ya con su descuento. Compáralo con el precio de lista que regía ese día en la gráfica de arriba: así ves si los cambios de precio se notaron al vender.",
+  ventasDelArticulo: "Cada pedido que trajo este artículo (sin los cancelados), con el precio por pieza ya con su descuento. Compáralo con el precio de lista que regía ese día en la gráfica de arriba: así ves si los cambios de precio se notaron al vender.",
 
   // --- Solo para quien ve costos ---
   costoArticulo: "Lo que nos cuesta. En lo que se compra, el último costo capturado (si está en dólares o euros, convertido a pesos con el tipo de cambio del costeo). En lo que se fabrica, el material de su lista más la mano de obra de sus horas.",

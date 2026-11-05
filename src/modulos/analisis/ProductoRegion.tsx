@@ -329,10 +329,10 @@ function ReglasFamilia({ esDireccion, familias }: { esDireccion: boolean; famili
       <section className="space-y-3 min-w-0">
         <div>
           <h3 className="font-semibold" data-explain={GLOSARIO.ventaSinClasificar}>Sin clasificar</h3>
-          <p className="text-sm text-tenue">Textos de venta que no cayeron en ninguna regla, de más a menos dinero.{esDireccion && " «Usar» pone el texto como patrón arriba."}</p>
+          <p className="text-sm text-tenue">Textos de venta de la hoja que no cayeron en ninguna regla (toda la historia), de más a menos dinero.{esDireccion && " «Usar» pone el texto como patrón arriba."}</p>
         </div>
         <TablaDatos filas={cola.data} cargando={cola.isLoading} error={cola.error} claveFila={(x) => x.texto} compacta limite={30} exportarComo="ventas-sin-clasificar"
-          vacio={{ icono: Tags, titulo: "Todo está clasificado", texto: "Cada venta del periodo cayó en una familia." }}
+          vacio={{ icono: Tags, titulo: "Todo está clasificado", texto: "Todos los textos de venta de la hoja, de toda la historia, cayeron en una familia." }}
           columnas={[
             { clave: "ejemplo", titulo: "Texto de la venta", celda: (x) => <span className="text-xs">{x.ejemplo}</span> },
             { clave: "ventas", titulo: "Ventas", alinear: "der", sinBusqueda: true },

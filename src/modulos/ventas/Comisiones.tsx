@@ -160,7 +160,9 @@ export default function Comisiones() {
                 {difiere && (
                   <p className="mx-5 mb-3 rounded-lg bg-aviso-suave px-3 py-2 text-xs" data-explain={GLOSARIO.comisionPagada} data-explain-title="Comisión pagada">
                     Se pagaron <b className="cifra">{dinero(pago!.total)}</b>{pago!.referencia ? ` (${pago!.referencia})` : ""}; con los pedidos de hoy el cálculo
-                    da <b className="cifra">{dinero(f.total)}</b>. La diferencia va como ajuste del mes siguiente.
+                    da <b className="cifra">{dinero(f.total)}</b>. La diferencia no se mueve sola: si hay que pagarla o descontarla,{" "}
+                    {/* El vendedor y finanzas también ven este aviso, pero solo dirección y la gerencia capturan ajustes. */}
+                    {puedeAjustar ? "agrégala como ajuste en el mes siguiente." : "la gerencia de ventas o dirección la agrega como ajuste en el mes siguiente."}
                   </p>
                 )}
                 <div className="px-5 py-3 border-t border-borde bg-fondo/50 rounded-b-xl flex items-center justify-between">

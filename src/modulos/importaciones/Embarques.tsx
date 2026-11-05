@@ -384,7 +384,8 @@ function VistaDinero({ embarques, dinero: filas }: { embarques: Embarque[]; dine
   ];
   const totalUsd = (porPagar.data ?? []).filter((f) => f.moneda === "USD").reduce((s, f) => s + Number(f.saldo), 0);
   const totalMxn = (porPagar.data ?? []).reduce((s, f) => s + Number(f.saldo_mxn), 0);
-  const en30 = (porPagar.data ?? []).filter((f) => f.proximo_pago && (new Date(f.proximo_pago + "T12:00:00").getTime() - Date.now()) / 86_400_000 <= 30)
+  // Solo dólares: proximo_monto viene en la moneda de la orden y el KPI se pinta en USD, como «Por pagar a proveedores».
+  const en30 = (porPagar.data ?? []).filter((f) => f.moneda === "USD" && f.proximo_pago && (new Date(f.proximo_pago + "T12:00:00").getTime() - Date.now()) / 86_400_000 <= 30)
     .reduce((s, f) => s + Number(f.proximo_monto ?? 0), 0);
   const recuperar = (saldos.data ?? []).reduce((s, f) => s + Number(f.monto) * Number(f.tipo_cambio), 0);
 

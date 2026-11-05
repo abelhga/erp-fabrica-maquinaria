@@ -142,7 +142,7 @@ export default function Bitacora() {
         vacio={{ icono: History, titulo: hayFiltros ? "Nada con esos filtros" : "Sin cambios registrados", texto: hayFiltros ? "Prueba con otras fechas o quita filtros." : "Cada alta, cambio o baja en el ERP queda aquí con quién la hizo." }}
       />
       <p className="text-xs text-tenue flex items-center gap-1.5">
-        <Lock className="h-3.5 w-3.5" /> Solo ves los cambios de lo que tu rol puede ver: sueldos y datos sensibles solo con Recursos humanos nivel 3; costos y márgenes solo con Costos.
+        <Lock className="h-3.5 w-3.5" /> Solo ves los cambios de lo que tu rol puede ver: sueldos y datos sensibles solo con Recursos humanos nivel 3; costos solo con Costos; políticas de precio y márgenes solo con Márgenes, y el costo de un artículo y el historial de costeo, con los dos.
       </p>
 
       <Detalle registro={abierto} nombres={nombres} alCerrar={() => setAbierto(null)} />

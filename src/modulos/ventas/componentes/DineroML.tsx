@@ -83,7 +83,8 @@ export function TarjetaMercadoLibre({ pedidoId }: { pedidoId: string }) {
                   {d.disponible ? "Ya disponible" : d.libera_en ? `Disponible el ${fecha(d.libera_en)}` : ""}
                 </span>
               </span>
-              <span className="cifra font-semibold text-ok">{d.neto != null ? dinero(d.neto) : "—"}</span>
+              {/* Un reembolso sin cargos devueltos deja el neto en negativo: es pérdida, no dinero que llega. */}
+              <span className={cn("cifra font-semibold", (d.neto ?? 0) < 0 ? "text-peligro" : "text-ok")}>{d.neto != null ? dinero(d.neto) : "—"}</span>
             </div>
             {!d.completo && <p className="px-3 pb-2 text-xs text-aviso">Mercado Pago no dio el desglose de este pago: falta lo que se retuvo.</p>}
           </div>

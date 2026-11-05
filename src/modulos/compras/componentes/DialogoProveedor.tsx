@@ -93,7 +93,7 @@ export function DialogoProveedor({ abierto, alCambiar, proveedor, alGuardar, ini
         </Campo>
         <label className="flex items-center gap-2 text-sm sm:mt-7" data-explain={GLOSARIO.proveedorImportacion} data-explain-title="Es importación">
           <input type="checkbox" className="accent-[hsl(var(--marca))]" checked={d.es_importacion} onChange={(e) => pon("es_importacion", e.target.checked)} />
-          Es importación (sus artículos piden 6 meses de cobertura)
+          Es importación (sus órdenes traen contrato para aduana)
         </label>
         </>}
         <Campo etiqueta="Días de crédito"><Entrada inputMode="numeric" value={String(d.dias_credito)} onChange={(e) => pon("dias_credito", Number(e.target.value.replace(/\D/g, "")) || 0)}

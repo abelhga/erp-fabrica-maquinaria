@@ -173,7 +173,7 @@ export function TableroPublicaciones({ puedeActualizar, puedeCambiar, puedeAutom
 interface Reputacion {
   level_id?: string; power_seller_status?: string | null;
   transactions?: { total?: number; completed?: number; canceled?: number; ratings?: { positive?: number; negative?: number; neutral?: number } };
-  metrics?: Record<string, { period?: string; rate?: number; value?: number }>;
+  metrics?: Record<string, { period?: string; rate?: number; value?: number; completed?: number }>;
 }
 interface Reclamo {
   id: string; folio: string; tipo: string; estado: string; motivo: string; fecha_limite: string | null; responsable: string | null;
@@ -216,7 +216,7 @@ export function ReputacionML() {
               {Object.entries(d.metrics ?? {}).filter(([k]) => k in METRICA).map(([k, m]) => (
                 <div key={k} className="rounded-lg border border-borde p-3">
                   <dt className="text-xs text-tenue">{METRICA[k]}{m.period ? ` · ${m.period.replace("days", "días").replace("months", "meses")}` : ""}</dt>
-                  <dd className="text-lg font-semibold cifra">{k === "sales" ? numero(m.value ?? 0) : porcentaje(m.rate ?? 0)}
+                  <dd className="text-lg font-semibold cifra">{k === "sales" ? numero(m.completed ?? m.value ?? 0) : porcentaje(m.rate ?? 0)}
                     {k !== "sales" && m.value != null && <span className="text-xs font-normal text-tenue"> · {numero(m.value)}</span>}</dd>
                 </div>
               ))}

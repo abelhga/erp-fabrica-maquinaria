@@ -207,7 +207,7 @@ function CostoComponente({ a }: { a: ArticuloCatalogo }) {
           {a.costo_capturado ? (
             <div>
               <p className="text-3xl font-semibold cifra">{enMoneda(a.costo_capturado, a.moneda_costo)}</p>
-              {a.moneda_costo && a.moneda_costo !== "MXN" && <p className="text-sm text-tenue cifra" data-explain={GLOSARIO.tipoCambioCosteo} data-explain-title="En pesos">≈ {dinero(a.costo_total)} al tipo de cambio de hoy</p>}
+              {a.moneda_costo && a.moneda_costo !== "MXN" && <p className="text-sm text-tenue cifra" data-explain={GLOSARIO.tipoCambioCosteo} data-explain-title="En pesos">≈ {dinero(a.costo_total)} al tipo de cambio de costeo</p>}
               <p className="text-sm mt-1 flex items-center gap-2 flex-wrap">
                 <span className="text-tenue">Actualizado el {fecha(a.costo_actualizado_en)}</span>
                 {viejo && <span data-explain={GLOSARIO.costoViejo} data-explain-title="Costo viejo"><Insignia tono="aviso" punto>{hace(a.costo_actualizado_en)}: conviene confirmarlo</Insignia></span>}

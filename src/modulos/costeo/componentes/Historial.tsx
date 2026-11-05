@@ -31,11 +31,13 @@ export function Historial({ id }: { id: string }) {
     },
   });
   // Ventas del artículo: el precio al que de verdad se vendió, para ponerlo junto al de lista.
+  // Un pedido cancelado conserva sus líneas, pero nunca se vendió: si entrara aquí mostraría
+  // precios que nadie pagó y además se comería el tope de 200 renglones.
   const ventas = useQuery({
     queryKey: ["costeo", "ventas-de", id],
     enabled: puede("ventas"),
     queryFn: () => q<{ id: string; cantidad: number; precio_unitario: number; descuento_pct: number; pedido: { id: string; folio: string; fecha: string | null; creado_en: string } | null }[]>(
-      supabase.from("pedido_lineas").select("id, cantidad, precio_unitario, descuento_pct, pedido:pedidos(id, folio, fecha, creado_en)").eq("articulo_id", id).limit(200) as unknown as
+      supabase.from("pedido_lineas").select("id, cantidad, precio_unitario, descuento_pct, pedido:pedidos!inner(id, folio, fecha, creado_en)").eq("articulo_id", id).neq("pedido.estado", "cancelado").limit(200) as unknown as
         PromiseLike<{ data: never[] | null; error: { message: string } | null }>),
     retry: false,
   });
@@ -64,7 +66,7 @@ export function Historial({ id }: { id: string }) {
         <Tarjeta>
           <EncabezadoTarjeta titulo="Ventas de este artículo" explica={GLOSARIO.ventasDelArticulo} descripcion="Precio unitario neto de descuento en cada pedido, para compararlo con el de lista de ese momento" />
           {vendidas.length === 0 ? (
-            <p className="px-5 pb-5 text-sm text-tenue">No hay pedidos con este artículo todavía.</p>
+            <p className="px-5 pb-5 text-sm text-tenue">No hay pedidos sin cancelar con este artículo todavía.</p>
           ) : (
             <div className="overflow-x-auto max-h-80">
               <table className="tabla">
