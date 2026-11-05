@@ -10074,7 +10074,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "Un renglón por persona (hasta 25, las de más uso primero) y un cuadro por día. Entre más oscuro, más de la medida que escojas ese día (con «Costo de la IA» cuenta las consultas). Los huecos dicen quién deja de usar el ERP algunos días o quién ya no lo usa."
+  "texto": "Un renglón por persona (hasta 25, las de más uso primero) y un cuadro por día. Entre más oscuro, más de la medida que escojas ese día (con «Costo de la IA» cuenta las consultas). Los huecos dicen quién deja de usar el ERP algunos días o quién ya no lo usa. El cuadro de hoy se enciende en el momento en que alguien registra un cambio (destello fuerte) o usa una pantalla (suave)."
  },
  {
   "clave": "mapaFamilia",
@@ -15139,6 +15139,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "margenes"
   ],
   "texto": "Pone un subensamble que ya existe como una línea de 1 pieza. Si marcaste líneas, las quita y deja el subensamble en su lugar; si no son idénticas a las suyas te avisa antes, porque la lista del equipo ya no queda igual. Un cambio en el subensamble llega a todos los equipos que lo usan."
+ },
+ {
+  "clave": "usoEnVivo",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "La pantalla está escuchando lo que pasa ahorita: cada vez que alguien registra un cambio o usa una pantalla, su cuadro de hoy en el mapa se enciende, sin recargar. Solo llega quién fue y si fue un cambio o una pantalla; las cifras se ponen al día unos segundos después."
  },
  {
   "clave": "utilidadNeta",
