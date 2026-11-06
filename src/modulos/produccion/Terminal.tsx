@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, Clock, HardHat, LayoutGrid, Lightbulb, Loader2, LogOut, Minus, Moon, PackageX, Pause, Play, PlayCircle, Plus, UserPlus, Users, X,
+  AlertTriangle, ArrowLeft, ArrowRightLeft, CheckCircle2, ChevronDown, Clock, Cog, HardHat, HelpCircle, Hourglass, LayoutGrid, Lightbulb, Loader2, LogOut, Minus, Moon,
+  PackageX, Pause, PenLine, Play, PlayCircle, Plus, RotateCcw, UserPlus, Users, X,
 } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { supabase } from "@/lib/supabase";
@@ -13,7 +14,7 @@ import {
   CLAVE, cuandoAbre, useAsignaciones, useCuadrillas, useEtapas, useHorarioAhora, useHorasTaller, usePersonalPiso, usePiso, useProduccionEnVivo,
   type Etapa, type OperacionPiso, type PersonaPiso,
 } from "./componentes/datos";
-import { abreviarEquipo, folioCorto, haceRato, textoDias, tintaSobre, tonoCompromiso } from "./componentes/util";
+import { MOTIVOS_PAUSA, abreviarEquipo, folioCorto, haceRato, textoDias, tintaSobre, tonoCompromiso } from "./componentes/util";
 import { AvanceEtapa } from "./componentes/AvanceEtapa";
 import { DialogoIdea } from "./componentes/mejoras";
 import { useSesion } from "@/lib/sesion";
@@ -28,6 +29,13 @@ const leer = (k: string) => { try { return localStorage.getItem(k); } catch { re
 const guardar = (k: string, v: string | null) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch { /* modo privado */ } };
 
 type Accion = "inicio" | "pausa" | "reanudar" | "fin" | "problema";
+// Por qué se deja una etapa: un toque, para que el Pareto de horas detenidas salga de lo que pasa
+// en el piso y no de una nota que nadie escribe. Mismas claves que el check de op_eventos.motivo.
+type Motivo = "material" | "etapa_anterior" | "maquina" | "ingenieria" | "calidad" | "prioridad" | "otro";
+const MOTIVOS: { clave: Motivo; icono: typeof Play }[] = [
+  { clave: "material", icono: PackageX }, { clave: "etapa_anterior", icono: Hourglass }, { clave: "maquina", icono: Cog },
+  { clave: "ingenieria", icono: PenLine }, { clave: "calidad", icono: RotateCcw }, { clave: "prioridad", icono: ArrowRightLeft }, { clave: "otro", icono: HelpCircle },
+];
 /** Quiénes trabajan una etapa: personas con nombre más las que no se sabe quiénes son. */
 interface Cuadrilla { empleados: string[]; sinNombre: number }
 const ACCIONES: Record<Accion, { texto: string; verbo: string; hecho: string; icono: typeof Play; clase: string }> = {
@@ -83,9 +91,9 @@ export default function Terminal() {
 
   const qc = useQueryClient();
   const marcar = useMutation({
-    mutationFn: (a: { op: OperacionPiso; accion: Accion; nota: string; cuadrilla?: Cuadrilla }) =>
+    mutationFn: (a: { op: OperacionPiso; accion: Accion; nota: string; cuadrilla?: Cuadrilla; motivo?: Motivo }) =>
       q(supabase.rpc("avanzar_operacion", { p_operacion: a.op.id, p_accion: a.accion, p_nota: a.nota || null, p_responsable: nombre || null,
-        p_empleados: a.cuadrilla?.empleados ?? null, p_sin_nombre: a.cuadrilla?.sinNombre ?? 0 })),
+        p_empleados: a.cuadrilla?.empleados ?? null, p_sin_nombre: a.cuadrilla?.sinNombre ?? 0, p_motivo: a.motivo ?? null })),
     onSuccess: (_, a) => {
       // La cuadrilla se recuerda por etapa: mañana suele ser la misma gente.
       if (a.cuadrilla) guardar(LS.cuadrilla + a.op.etapa_id, JSON.stringify(a.cuadrilla));
@@ -204,7 +212,7 @@ export default function Terminal() {
       )}
       {pendiente && nombre && !eligiendoNombre && (
         <Confirmar p={pendiente} nombre={nombre} cargando={marcar.isPending} alCambiarNombre={() => setEligiendoNombre(true)}
-                   alCancelar={() => setPendiente(null)} alConfirmar={(nota, cuadrilla) => marcar.mutate({ ...pendiente, nota, cuadrilla })} />
+                   alCancelar={() => setPendiente(null)} alConfirmar={(nota, cuadrilla, motivo) => marcar.mutate({ ...pendiente, nota, cuadrilla, motivo })} />
       )}
       {aviso && (
         <div role="status" aria-live="assertive" onClick={() => setAviso(null)}
@@ -379,10 +387,13 @@ function ElegirNombre({ actual, recientes, alElegir, alCerrar }: { actual: strin
 
 function Confirmar({ p, nombre, cargando, alConfirmar, alCancelar, alCambiarNombre }: {
   p: { op: OperacionPiso; accion: Accion }; nombre: string; cargando: boolean;
-  alConfirmar: (nota: string, cuadrilla?: Cuadrilla) => void; alCancelar: () => void; alCambiarNombre: () => void;
+  alConfirmar: (nota: string, cuadrilla?: Cuadrilla, motivo?: Motivo) => void; alCancelar: () => void; alCambiarNombre: () => void;
 }) {
   const [nota, setNota] = useState("");
+  // Al pausar el motivo es obligatorio; «Otro» deja escribir una nota antes de pausar.
+  const [motivo, setMotivo] = useState<Motivo | null>(null);
   const A = ACCIONES[p.accion];
+  const pausa = p.accion === "pausa";
   const obligatoria = p.accion === "problema";
   const conCuadrilla = p.accion === "inicio" || p.accion === "reanudar";
   const personal = usePersonalPiso();
@@ -415,16 +426,35 @@ function Confirmar({ p, nombre, cargando, alConfirmar, alCancelar, alCambiarNomb
           <ElegirPersonas etapaId={p.op.etapa_id} personal={personal.data ?? []} cargando={personal.isLoading} valor={elegidos} alCambiar={setCuadrilla} />
         </div>
       )}
+      {pausa && (
+        <div className="mb-5" data-explain={GLOSARIO.motivoPausa} data-explain-title="¿Por qué la dejan?">
+          <p className="font-medium mb-2">¿Por qué la dejan?</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {MOTIVOS.map((m) => (
+              <button key={m.clave} type="button" disabled={cargando}
+                      onClick={() => { if (m.clave === "otro") setMotivo("otro"); else alConfirmar(nota.trim(), undefined, m.clave); }}
+                      className={cn("min-h-[64px] rounded-xl border-2 px-4 text-left text-xl font-semibold flex items-center gap-3 active:scale-[0.98] transition disabled:opacity-50",
+                        motivo === m.clave ? "border-aviso bg-aviso-suave" : "border-borde bg-superficie")}>
+                <m.icono className="h-7 w-7 shrink-0 text-aviso" /><span>{MOTIVOS_PAUSA[m.clave]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {(!pausa || motivo === "otro") && <>
       <label className="block font-medium mb-2" htmlFor="nota-piso">{obligatoria ? "¿Cuál es el problema?" : "Nota (opcional)"}</label>
-      <textarea id="nota-piso" value={nota} onChange={(e) => setNota(e.target.value)} rows={3} autoFocus={obligatoria}
+      <textarea id="nota-piso" value={nota} onChange={(e) => setNota(e.target.value)} rows={3} autoFocus={obligatoria || pausa}
                 className="w-full rounded-xl border-2 border-borde bg-superficie p-3 text-xl focus:outline-none focus:border-marca"
-                placeholder={obligatoria ? "Falta lámina, la máquina no prende…" : ""} />
+                placeholder={obligatoria ? "Falta lámina, la máquina no prende…" : pausa ? "¿Qué pasó?" : ""} />
+      </>}
       <div className="grid grid-cols-2 gap-3 mt-5">
-        <button onClick={alCancelar} className="min-h-[64px] rounded-xl border-2 border-borde bg-superficie text-xl font-semibold">Cancelar</button>
-        <button onClick={() => alConfirmar(nota.trim(), conCuadrilla ? elegidos : undefined)} disabled={cargando || (obligatoria && !nota.trim()) || (conCuadrilla && cuantos === 0)}
+        <button onClick={alCancelar} className={cn("min-h-[64px] rounded-xl border-2 border-borde bg-superficie text-xl font-semibold", pausa && motivo !== "otro" && "col-span-2")}>Cancelar</button>
+        {(!pausa || motivo === "otro") &&
+        <button onClick={() => alConfirmar(nota.trim(), conCuadrilla ? elegidos : undefined, pausa ? motivo ?? undefined : undefined)}
+                disabled={cargando || (obligatoria && !nota.trim()) || (conCuadrilla && cuantos === 0)}
                 className={cn("min-h-[64px] rounded-xl text-xl font-bold flex items-center justify-center gap-2 disabled:opacity-40", A.clase)}>
           {cargando ? <Loader2 className="h-7 w-7 animate-spin" /> : <A.icono className="h-7 w-7" />}{A.texto}
-        </button>
+        </button>}
       </div>
     </Modal>
   );

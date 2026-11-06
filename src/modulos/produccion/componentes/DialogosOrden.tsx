@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { CLAVE, useEtapas, type MaterialOP } from "./datos";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { CAUSAS_ESPERA } from "./util";
 
 export interface OrdenBasica {
   id: string; folio: string; numero_serie: string | null; prioridad: number; fecha_compromiso: string | null; notas: string | null;
@@ -72,7 +73,9 @@ export function DialogoCancelar({ abierto, alCambiar, o }: { abierto: boolean; a
  */
 export function DialogoEnEspera({ abierto, alCambiar, o }: { abierto: boolean; alCambiar: (v: boolean) => void; o: OrdenBasica }) {
   const [motivo, setMotivo] = useState("Cliente ausente: dio anticipo, se fabrica cuando regrese");
-  const poner = useAccion(() => q(supabase.rpc("poner_en_espera", { p_op: o.id, p_motivo: motivo })), {
+  // La causa de lista es la que se cuenta en Métricas; el texto dice el caso.
+  const [causa, setCausa] = useState("cliente");
+  const poner = useAccion(() => q(supabase.rpc("poner_en_espera", { p_op: o.id, p_motivo: motivo, p_causa: causa })), {
     exito: `${o.folio} en espera`, invalidar: [CLAVE], alTerminar: () => alCambiar(false),
   });
   return (
@@ -80,9 +83,18 @@ export function DialogoEnEspera({ abierto, alCambiar, o }: { abierto: boolean; a
              descripcion="Deja de contar en la carga del taller y en los tiempos de entrega, no sale atrasada y no se puede trabajar en la terminal. Lo que estaba en proceso se pausa. Se reactiva con un clic."
              pie={<><Boton variante="secundario" onClick={() => alCambiar(false)}>No</Boton>
                <Boton onClick={() => poner.mutate(undefined)} disabled={motivo.trim().length < 5} cargando={poner.isPending}>Poner en espera</Boton></>}>
-      <Campo etiqueta="¿Por qué?">
-        <AreaTexto value={motivo} onChange={(e) => setMotivo(e.target.value)} autoFocus />
-      </Campo>
+      <div className="space-y-3">
+        <span className="block" data-explain={GLOSARIO.ordenEnEspera} data-explain-title="Causa">
+          <Campo etiqueta="Causa">
+            <Seleccion value={causa} onChange={(e) => setCausa(e.target.value)}>
+              {Object.entries(CAUSAS_ESPERA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </Seleccion>
+          </Campo>
+        </span>
+        <Campo etiqueta="¿Por qué?">
+          <AreaTexto value={motivo} onChange={(e) => setMotivo(e.target.value)} autoFocus />
+        </Campo>
+      </div>
     </Dialogo>
   );
 }
