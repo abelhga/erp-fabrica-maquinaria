@@ -114,7 +114,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Pasado ese tiempo, o si lo registró otra persona, no lo vuelvas a capturar al revés: pide un ajuste. Lo surtido a una orden, lo recibido de una compra, las entregas de pedidos y los envíos se corrigen desde su propia pantalla.",
    "Historial filtra por tipo, almacén, persona y fechas (al abrir, los últimos 30 días) y se baja a Excel. «Recibió» es quién se llevó el material; «Quién» es quién lo registró. Registrar solo sale si tu puesto captura almacén; Historial, si capturas almacén o tienes permiso de costos.",
    "En Ajustes pides una corrección cuando lo del estante no cuadra, y la gerencia la aprueba o la rechaza; hasta entonces la existencia no cambia.",
-   "En Conteos físicos abres un conteo por almacén con «Empezar a contar», capturas cada artículo en cuanto lo cuentas (Enter guarda y baja al siguiente) y, al cerrarlo, cada diferencia se vuelve un ajuste por autorizar."
+   "En Conteos físicos abres un conteo por almacén: eliges qué contar (lo que piden las órdenes de producción, lo que salió en los últimos 30 días, unas claves o todo el almacén) y si va a ciegas, y le das «Empezar a contar». Capturas cada artículo en cuanto lo cuentas (Enter guarda y baja al siguiente) y, al cerrarlo, cada diferencia se vuelve un ajuste por autorizar."
   ]
  },
  {
@@ -5996,7 +5996,15 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "Cuántos artículos de la lista ya capturaste. La lista trae lo que el sistema dice que hay en este almacén más lo que agregaste; lo que no captures no se ajusta al cerrar."
+  "texto": "Cuántos artículos de la lista ya capturaste. En un conteo de todo el almacén la lista trae lo que el sistema dice que hay ahí; en uno con lista, solo lo que se pidió contar. En los dos entra lo que agregaste, y lo que no captures no se ajusta al cerrar."
+ },
+ {
+  "clave": "conteoACiegas",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Quien cuenta no ve lo que dice el sistema hasta capturar lo contado: así el número esperado no contagia el conteo. En cuanto capturas, aparecen lo que decía el sistema y la diferencia."
  },
  {
   "clave": "conteoFisico",
@@ -10861,6 +10869,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Artículo que solo se usa dentro de un equipo: no se cotiza por separado."
  },
  {
+  "clave": "notaConteo",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Qué revisar en ese artículo al contarlo, por ejemplo si también hay que buscarlo en otro almacén."
+ },
+ {
   "clave": "notaEmbarque",
   "modulos": [
    "importaciones"
@@ -12836,6 +12852,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Cuántos puntos tiene el checklist y en cuántas secciones están agrupados (Seguridad, Limpieza…)."
+ },
+ {
+  "clave": "queContarConteo",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Qué trae la lista del conteo. Lo que piden las órdenes de producción: el material que las órdenes abiertas todavía no reciben o que está apartado, si hay en este almacén. Lo que salió en los últimos 30 días: lo que tuvo salidas de este almacén. Pegar claves: solo las que escribas. Todo el almacén: todo lo que el sistema dice que hay ahí, para un conteo general."
  },
  {
   "clave": "quePasoCotizacion",

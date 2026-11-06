@@ -34,7 +34,7 @@ export const ALMACEN: Record<string, AyudaPantalla> = {
       "Pasado ese tiempo, o si lo registró otra persona, no lo vuelvas a capturar al revés: pide un ajuste. Lo surtido a una orden, lo recibido de una compra, las entregas de pedidos y los envíos se corrigen desde su propia pantalla.",
       "Historial filtra por tipo, almacén, persona y fechas (al abrir, los últimos 30 días) y se baja a Excel. «Recibió» es quién se llevó el material; «Quién» es quién lo registró. Registrar solo sale si tu puesto captura almacén; Historial, si capturas almacén o tienes permiso de costos.",
       "En Ajustes pides una corrección cuando lo del estante no cuadra, y la gerencia la aprueba o la rechaza; hasta entonces la existencia no cambia.",
-      "En Conteos físicos abres un conteo por almacén con «Empezar a contar», capturas cada artículo en cuanto lo cuentas (Enter guarda y baja al siguiente) y, al cerrarlo, cada diferencia se vuelve un ajuste por autorizar.",
+      "En Conteos físicos abres un conteo por almacén: eliges qué contar (lo que piden las órdenes de producción, lo que salió en los últimos 30 días, unas claves o todo el almacén) y si va a ciegas, y le das «Empezar a contar». Capturas cada artículo en cuanto lo cuentas (Enter guarda y baja al siguiente) y, al cerrarlo, cada diferencia se vuelve un ajuste por autorizar.",
     ],
   },
   "/almacen/reabasto": {
