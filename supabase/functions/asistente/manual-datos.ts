@@ -1033,7 +1033,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "«Ayúdame a corregirlo» sale cuando la corrección es un dato de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida). La IA te propone el cambio exacto, con cómo está y cómo quedaría; puedes decirle algo que deba saber («el tiempo es de 45 días hábiles»).",
    "Nada se aplica hasta que eliges «Aplicar a mi nombre»: se hace con tus permisos, como si lo capturaras a mano, y queda en la bitácora. Precios, dinero, existencias y permisos nunca se cambian así.",
    "Lo que dice «Regla» lo encontró una regla fija; lo que dice «IA» (con destellos ✦) lo señaló la IA al leer lo de ayer. Ninguno cambia nada sin que tú lo digas. En «Contestado» ves lo que ya respondiste.",
-   "Dirección abre en «Todo lo abierto», con a quién le toca cada cosa, y ve además «Patrones» (consumos que se disparan, ajustes a la baja que se repiten, gastos iguales en caja chica), que nunca le llegan a la persona.",
+   "Todos abren en «Para ti», con lo suyo. Dirección tiene además «Todo lo abierto», donde lo de otra persona dice «Le toca a …» y se filtra por persona con «De quién», y «Patrones» (consumos que se disparan, ajustes a la baja que se repiten, gastos iguales en caja chica), que nunca le llegan a la persona.",
    "En «Anoche» dirección ve lo que la IA leyó de cada módulo, y en «Consejos», los que recibió cada quien y si les sirvieron.",
    "En «Reglas», dirección puede apagar la revisión, la IA, los consejos, que la IA cuestione el «Está bien así» o cada regla, y correr las reglas en ese momento. En «Contestado» puede ver lo que cada quien platicó con la IA."
   ]
@@ -13542,6 +13542,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Prendido, la IA lee el porqué de cada «Está bien así» y, si no le convence, pregunta hasta 3 veces; si sigue sin quedar claro, se queda abierto y te llega con la conversación. Apagado, el porqué lo cierra sin preguntas. Lo que contestas tú nunca pasa por la IA, ni el porqué de una compra con costo muy distinto al anterior (ese costo no le llega)."
  },
  {
+  "clave": "revisionDeQuien",
+  "modulos": [],
+  "texto": "Filtra lo abierto: todo, lo tuyo, los patrones que solo ve dirección o lo que le toca a una persona (con cuántos tiene cada quien)."
+ },
+ {
   "clave": "revisionEscalado",
   "modulos": [],
   "texto": "Contestaste «Está bien así», la IA hizo sus preguntas y el porqué no quedó claro. Se queda abierto y dirección lo ve con la conversación para decidir. Si mientras tanto lo corriges, contesta «Ya lo corregí»."
@@ -13632,7 +13637,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
  {
   "clave": "revisionTodoAbierto",
   "modulos": [],
-  "texto": "Todo lo que la revisión encontró y nadie ha contestado, de todas las personas y con a quién le toca. Tú también lo puedes contestar desde aquí."
+  "texto": "Todo lo que la revisión encontró y nadie ha contestado, de todas las personas. Lo de otra persona dice en amarillo «Le toca a …»: es suyo, aunque tú también lo puedes contestar desde aquí. Con «De quién» ves solo lo tuyo, los patrones o lo de una persona."
  },
  {
   "clave": "revisionYaLoCorregi",

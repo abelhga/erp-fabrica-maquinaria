@@ -58,8 +58,10 @@ const claves = { abiertos: ["revision", "abiertos"], cerrados: ["revision", "cer
 export default function PorRevisar() {
   const { perfil, tieneRol } = useSesion();
   const dir = tieneRol("direccion");
-  // Dirección casi nunca captura lo que se revisa: abre en todo lo abierto.
-  const [vista, setVista] = useState(dir ? "todo" : "mios");
+  // Todos abren en lo suyo. Dirección abría en «Todo lo abierto» y lo de otras personas parecía
+  // suyo; ahí ahora se filtra por persona y cada tarjeta dice a quién le toca.
+  const [vista, setVista] = useState("mios");
+  const [deQuien, setDeQuien] = useState("todos");
   const abiertos = useQuery({
     queryKey: claves.abiertos,
     queryFn: () => q<Hallazgo[]>(supabase.from("revision_hallazgos").select("*").eq("estado", "abierto").order("creado_en", { ascending: false }).limit(500)),
@@ -98,9 +100,10 @@ export default function PorRevisar() {
               <ListaHallazgos consulta={abiertos} lista={patrones} yo={perfil?.id} conResponsables
                 vacio={{ titulo: "Sin patrones abiertos", texto: "Cuando la revisión vea algo que conviene preguntar, sale aquí con su evidencia." }} />
             </ContenidoPestana>
-            <ContenidoPestana value="todo" className="pt-4">
-              <ListaHallazgos consulta={abiertos} lista={todos} yo={perfil?.id} conResponsables
-                vacio={{ titulo: "Nada abierto", texto: "Todo lo que encontró la revisión ya se contestó." }} />
+            <ContenidoPestana value="todo" className="pt-4 space-y-3">
+              <FiltroDeQuien todos={todos} yo={perfil?.id} valor={deQuien} alCambiar={setDeQuien} />
+              <ListaHallazgos consulta={abiertos} lista={filtrarDeQuien(todos, deQuien, perfil?.id)} yo={perfil?.id} conResponsables
+                vacio={{ titulo: "Nada abierto con este filtro", texto: "Elige «Todos» o a otra persona para ver lo que le toca." }} />
             </ContenidoPestana>
             <ContenidoPestana value="anoche" className="pt-4"><Anoche /></ContenidoPestana>
             <ContenidoPestana value="consejos" className="pt-4"><ConsejosDeTodos /></ContenidoPestana>
@@ -110,6 +113,32 @@ export default function PorRevisar() {
         <ContenidoPestana value="contestado" className="pt-4"><Contestado activo={vista === "contestado"} /></ContenidoPestana>
       </Pestanas>
     </Pagina>
+  );
+}
+
+// «De quién» en Todo lo abierto: tuyos, solo dirección (patrones) o lo de una persona.
+function filtrarDeQuien(lista: Hallazgo[], valor: string, yo?: string) {
+  if (valor === "todos") return lista;
+  if (valor === "direccion") return lista.filter((h) => h.para === "direccion");
+  if (valor === "mios") return lista.filter((h) => h.para === "responsable" && !!yo && h.responsables.includes(yo));
+  return lista.filter((h) => h.para === "responsable" && h.responsables.includes(valor));
+}
+
+function FiltroDeQuien({ todos, yo, valor, alCambiar }: { todos: Hallazgo[]; yo?: string; valor: string; alCambiar: (v: string) => void }) {
+  const personas = [...new Set(todos.filter((h) => h.para === "responsable").flatMap((h) => h.responsables))].filter((id) => id !== yo);
+  const nombres = useNombres(personas);
+  const cuenta = (v: string) => filtrarDeQuien(todos, v, yo).length;
+  const otras = personas.map((id) => ({ id, nombre: nombres.get(id) ?? "…", n: cuenta(id) })).sort((a, b) => b.n - a.n || a.nombre.localeCompare(b.nombre));
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-sm" data-explain={GLOSARIO.revisionDeQuien} data-explain-title="De quién">
+      <span className="text-tenue">De quién:</span>
+      <select className="campo h-9 w-auto min-w-[220px]" value={valor} onChange={(e) => alCambiar(e.target.value)} aria-label="De quién">
+        <option value="todos">Todos ({todos.length})</option>
+        <option value="mios">Tuyos ({cuenta("mios")})</option>
+        <option value="direccion">Solo dirección ({cuenta("direccion")})</option>
+        {otras.map((o) => <option key={o.id} value={o.id}>{o.nombre} ({o.n})</option>)}
+      </select>
+    </div>
   );
 }
 
@@ -136,7 +165,8 @@ function ListaHallazgos({ consulta, lista, yo, conResponsables, vacio }: {
   return (
     <div className="space-y-3">
       {lista.map((h) => <TarjetaHallazgo key={h.id} h={h} yo={yo}
-        para={conResponsables ? (h.para === "direccion" ? "Solo dirección" : h.responsables.map((r) => nombres.get(r) ?? "…").join(", ")) : undefined} />)}
+        de_otro={conResponsables && h.para === "responsable" && !(yo && h.responsables.includes(yo))}
+        para={conResponsables ? (h.para === "direccion" ? "Solo dirección" : h.responsables.map((r) => (r === yo ? "ti" : nombres.get(r) ?? "…")).join(", ")) : undefined} />)}
     </div>
   );
 }
@@ -149,7 +179,7 @@ function useTablasCorregibles() {
   }).data ?? [];
 }
 
-export function TarjetaHallazgo({ h, para }: { h: Hallazgo; yo?: string; para?: string }) {
+export function TarjetaHallazgo({ h, para, de_otro }: { h: Hallazgo; yo?: string; para?: string; de_otro?: boolean }) {
   const { tieneRol } = useSesion();
   const dir = tieneRol("direccion");
   const [porque, setPorque] = useState(false);
@@ -171,7 +201,9 @@ export function TarjetaHallazgo({ h, para }: { h: Hallazgo; yo?: string; para?: 
         </span>
         {escalado && <span data-explain={GLOSARIO.revisionEscalado} data-explain-title="Lo ve dirección"><Insignia tono="info">Lo ve dirección</Insignia></span>}
         <span className="text-tenue">{MODULOS[h.modulo] ?? h.modulo} · {hace(h.creado_en)}</span>
-        {para && <span className="text-tenue" data-explain={GLOSARIO.revisionParaQuien} data-explain-title="Para quién">· Para: {para}</span>}
+        {para && (de_otro
+          ? <span data-explain={GLOSARIO.revisionParaQuien} data-explain-title="Para quién"><Insignia tono="aviso">Le toca a {para}</Insignia></span>
+          : <span className="text-tenue" data-explain={GLOSARIO.revisionParaQuien} data-explain-title="Para quién">· Para: {para}</span>)}
       </div>
       <div>
         <p className="font-medium">{h.titulo}</p>
