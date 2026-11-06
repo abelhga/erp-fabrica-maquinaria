@@ -11166,7 +11166,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "La venta a la que pertenece esta cotización. Sale sola: la tuya que el cliente ya tenía abierta sin cotizar, primero la que vino de un lead. Si es otro proyecto, elige «Una nueva al enviar» y al enviarla se abre otra. Solo puedes elegir oportunidades de este cliente que sean tuyas."
+  "texto": "La venta a la que pertenece esta cotización. Sale sola: la tuya que el cliente ya tenía abierta sin cotizar, primero la que vino de un lead. Si dice «Sola al enviar», al enviarla se liga a la que el cliente tenga abierta sin cotizar y, si no hay, se abre una. Si es otro proyecto, elige «Una nueva al enviar» y al enviarla se abre otra. Solo puedes elegir oportunidades de este cliente que sean tuyas."
  },
  {
   "clave": "opPlaneada",

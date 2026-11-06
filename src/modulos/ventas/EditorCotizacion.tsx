@@ -743,10 +743,13 @@ function Editor({ id }: { id: string }) {
                 <label className="space-y-1.5 sm:col-span-2">
                   <span className="text-sm font-medium" data-explain={GLOSARIO.oportunidadCotizacion} data-explain-title="Oportunidad">Oportunidad</span>
                   {/* Sin oportunidades también se muestra: así se ve que al enviarla se abrirá una. */}
-                  <select className="campo pr-8" value={c.oportunidad_id ?? "nueva"} disabled={!editable}
+                  {/* Sin oportunidad y sin «otro proyecto», la base todavía busca al enviarla la que el cliente
+                      tenga abierta sin cotizar: decir «Una nueva» ahí sería mentir, y no se podría elegir de verdad. */}
+                  <select className="campo pr-8" value={c.oportunidad_id ?? (c.oportunidad_nueva ? "nueva" : "")} disabled={!editable}
                     onChange={(e) => editarEnc(e.target.value === "nueva"
                       ? { oportunidad_id: null, oportunidad_nueva: true }
-                      : { oportunidad_id: e.target.value, oportunidad_nueva: false })}>
+                      : { oportunidad_id: e.target.value || null, oportunidad_nueva: false })}>
+                    {!c.oportunidad_id && !c.oportunidad_nueva && <option value="">Sola al enviar (abierta o nueva)</option>}
                     {(oportunidades.data ?? []).filter((o) => o.id === c.oportunidad_id || (o.etapa !== "ganada" && o.etapa !== "perdida")).map((o) => (
                       <option key={o.id} value={o.id}>{o.titulo} ({ETAPA[o.etapa]?.texto ?? o.etapa})</option>
                     ))}

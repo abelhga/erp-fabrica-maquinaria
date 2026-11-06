@@ -18,6 +18,10 @@
 --    gerencia sí puede cruzarlas). Antes un vendedor podía colgar su cotización de la oportunidad
 --    de otro por la API y el disparador, que se salta la RLS, se la movía a «Cotizado». En la nube
 --    hoy no hay ninguna cruzada (0 de otro cliente, 0 de otro vendedor).
+--    Se revisa al ligarla (alta o cambio de oportunidad), no en cada cambio, y una versión nueva
+--    hereda la de su familia sin revisarla otra vez.
+-- 4. Cambiar el cliente solo suelta la oportunidad antes de enviar la cotización, y juntar_clientes
+--    mueve las oportunidades primero: así juntar clientes no deja cotizaciones sin su oportunidad.
 -- =============================================================================
 
 alter table public.cotizaciones add column if not exists oportunidad_nueva boolean not null default false;
@@ -48,15 +52,27 @@ declare
   v_gerente boolean := auth.uid() is null or puede('ventas', 3);
   v_op uuid;
   v_op_cli uuid; v_op_ven uuid;
+  -- Antes de enviarla la oportunidad todavía se puede cambiar; ya enviada es historia.
+  v_por_enviar boolean := tg_op = 'INSERT' or old.estado in ('borrador', 'por_autorizar', 'autorizada');
 begin
-  -- Cambiar el cliente suelta la oportunidad del cliente anterior (antes lo hacía la pantalla).
+  -- Cambiar el cliente de una que no se ha enviado suelta la oportunidad del anterior (antes lo
+  -- hacía la pantalla), salvo que esa oportunidad ya sea del cliente nuevo (juntar clientes mueve
+  -- las oportunidades antes que las cotizaciones). Ya enviada no se toca: juntar clientes también
+  -- les cambia el cliente a enviadas y aceptadas (el 2 nov a 3 en la nube), y soltarla dejaba la
+  -- oportunidad en «Cotizado» sin su cotización y la venta aceptada sin oportunidad.
   if tg_op = 'UPDATE' and new.cliente_id is distinct from old.cliente_id
-     and new.oportunidad_id is not distinct from old.oportunidad_id then
+     and new.oportunidad_id is not distinct from old.oportunidad_id and v_por_enviar
+     and (select o.cliente_id from oportunidades o where o.id = new.oportunidad_id) is distinct from new.cliente_id then
     new.oportunidad_id := null; new.oportunidad_nueva := false;
   end if;
   if new.oportunidad_id is not null then
     new.oportunidad_nueva := false;
-    if tg_op = 'INSERT' or new.oportunidad_id is distinct from old.oportunidad_id or new.cliente_id is distinct from old.cliente_id then
+    -- Se revisa al ligarla, no al cambiar otra cosa. Una versión nueva hereda la oportunidad de su
+    -- familia: si después se reasignó la cotización o la oportunidad, la versión no se traba.
+    if (tg_op = 'INSERT' or new.oportunidad_id is distinct from old.oportunidad_id)
+       and not (tg_op = 'INSERT' and new.origen_id is not null and exists (
+         select 1 from cotizaciones x where (x.id = new.origen_id or x.origen_id = new.origen_id)
+           and x.oportunidad_id = new.oportunidad_id and x.vendedor_id = new.vendedor_id)) then
       select cliente_id, vendedor_id into v_op_cli, v_op_ven from oportunidades where id = new.oportunidad_id;
       if v_op_ven is distinct from new.vendedor_id and not v_gerente then
         raise exception 'Esa oportunidad es de otro vendedor: cotiza en una tuya o pide a la gerencia de ventas que te la pase'
@@ -66,7 +82,7 @@ begin
         raise exception 'Esa oportunidad es de otro cliente: elige una de este cliente o «Una nueva al enviar»' using errcode = '23514';
       end if;
     end if;
-  elsif new.cliente_id is not null and not new.oportunidad_nueva
+  elsif new.cliente_id is not null and not new.oportunidad_nueva and v_por_enviar
         and (tg_op = 'INSERT' or new.cliente_id is distinct from old.cliente_id) then
     new.oportunidad_id := oportunidad_para_cotizar(new.cliente_id, new.vendedor_id);
   end if;
@@ -164,3 +180,81 @@ begin
 end $$;
 revoke execute on function public.nueva_cotizacion(uuid, uuid, boolean) from public, anon;
 grant execute on function public.nueva_cotizacion(uuid, uuid, boolean) to authenticated;
+
+-- juntar_clientes de 227, igual, salvo que mueve las oportunidades antes que todo lo demás. El orden
+-- de pg_constraint no está garantizado (en la nube salen primero las oportunidades; en una base
+-- local, las cotizaciones) y con cotizaciones primero el borrador del repetido perdía su oportunidad.
+create or replace function public.juntar_clientes(p_repetido uuid, p_bueno uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  r clientes; b clientes; f record; k record; n int; v jsonb := '{}';
+  v_quien text := coalesce((select nombre from perfiles where id = auth.uid()), 'el sistema');
+  solo_digitos constant text := '[^0-9]';
+begin
+  if p_repetido = p_bueno then raise exception 'Es el mismo cliente'; end if;
+  select * into r from clientes where id = p_repetido for update;
+  select * into b from clientes where id = p_bueno for update;
+  if r.id is null or b.id is null then raise exception 'No existe uno de los dos clientes'; end if;
+  if not puede_juntar_clientes(p_repetido, p_bueno) then
+    raise exception 'Juntar clientes lo hace la gerencia de ventas, o tú si los dos son tuyos o libres' using errcode = '42501';
+  end if;
+  if nullif(r.rfc, '') is not null and nullif(b.rfc, '') is not null and upper(r.rfc) <> upper(b.rfc) then
+    raise exception 'Tienen RFC distinto (% y %): no son el mismo cliente. Si uno está mal, corrígelo primero', r.rfc, b.rfc using errcode = '23514';
+  end if;
+
+  -- Contactos: el que el bueno ya tiene (mismo teléfono o mismo nombre) solo le completa lo que le falta.
+  for k in select * from contactos where cliente_id = p_repetido loop
+    update contactos c set telefono = coalesce(c.telefono, k.telefono), whatsapp = coalesce(c.whatsapp, k.whatsapp),
+      correo = coalesce(c.correo, k.correo), puesto = coalesce(c.puesto, k.puesto), domicilio = coalesce(c.domicilio, k.domicilio)
+    where c.id = (select x.id from contactos x where x.cliente_id = p_bueno and (
+        (nullif(regexp_replace(coalesce(k.telefono, k.whatsapp, ''), solo_digitos, '', 'g'), '') is not null
+         and right(regexp_replace(coalesce(x.telefono, x.whatsapp, ''), solo_digitos, '', 'g'), 10)
+           = right(regexp_replace(coalesce(k.telefono, k.whatsapp, ''), solo_digitos, '', 'g'), 10))
+        or lower(trim(x.nombre)) = lower(trim(k.nombre))) limit 1);
+    if found then
+      delete from contactos where id = k.id;
+    else
+      -- En la hoja muchos venían como «Contacto»: el nombre de la persona era el del cliente repetido.
+      update contactos set cliente_id = p_bueno, principal = false,
+        nombre = case when lower(trim(nombre)) = 'contacto' then r.nombre else nombre end
+      where id = k.id;
+      v := v || jsonb_build_object('contactos', coalesce((v->>'contactos')::int, 0) + 1);
+    end if;
+  end loop;
+
+  -- Todo lo demás que apunta al repetido pasa al bueno.
+  for f in select cl.relname t, a.attname col from pg_constraint k2 join pg_class cl on cl.oid = k2.conrelid
+           join pg_attribute a on a.attrelid = k2.conrelid and a.attnum = k2.conkey[1]
+           where k2.confrelid = 'public.clientes'::regclass and k2.contype = 'f' and cl.relnamespace = 'public'::regnamespace
+             and cl.relname <> 'contactos'
+           -- Las oportunidades primero: así, cuando se mueve una cotización, su oportunidad ya es del
+           -- bueno y trg_cotizacion (254) no la suelta por creer que le cambiaron el cliente.
+           order by (cl.relname = 'oportunidades') desc, k2.oid loop
+    execute format('update public.%I set %I = $1 where %I = $2', f.t, f.col, f.col) using p_bueno, p_repetido;
+    get diagnostics n = row_count;
+    if n > 0 then v := v || jsonb_build_object(f.t, coalesce((v->>f.t)::int, 0) + n); end if;
+  end loop;
+  -- Los pendientes ligados al repetido (los pidió cualquiera): la regla de pendientes lo permite con la bandera.
+  perform set_config('hegamex.juntar', '1', true);
+  update pendientes set registro_id = p_bueno::text, ruta = replace(ruta, p_repetido::text, p_bueno::text)
+  where tabla = 'clientes' and registro_id = p_repetido::text;
+  perform set_config('hegamex.juntar', '0', true);
+
+  -- Lo que el bueno no tiene, lo toma del repetido; su nota dice con quién se juntó.
+  update clientes set
+    razon_social = coalesce(nullif(razon_social, ''), r.razon_social), rfc = coalesce(nullif(rfc, ''), r.rfc),
+    regimen_fiscal = coalesce(nullif(regimen_fiscal, ''), r.regimen_fiscal), cp_fiscal = coalesce(nullif(cp_fiscal, ''), r.cp_fiscal),
+    uso_cfdi = coalesce(nullif(uso_cfdi, ''), r.uso_cfdi), giro = coalesce(nullif(giro, ''), r.giro),
+    ciudad = coalesce(nullif(ciudad, ''), r.ciudad), estado = coalesce(nullif(estado, ''), r.estado),
+    cve_ent = coalesce(cve_ent, r.cve_ent), cvegeo = coalesce(cvegeo, r.cvegeo), ubicacion = coalesce(ubicacion, r.ubicacion),
+    fuente_id = coalesce(fuente_id, r.fuente_id), vendedor_id = coalesce(vendedor_id, r.vendedor_id),
+    es_distribuidor = es_distribuidor or r.es_distribuidor, dias_credito = greatest(dias_credito, r.dias_credito),
+    activo = activo or r.activo,
+    notas = concat_ws(E'\n', nullif(notas, ''), format('Se juntó con «%s» el %s (%s).', r.nombre, to_char(hoy_mx(), 'DD/MM/YYYY'), v_quien))
+  where id = p_bueno;
+
+  delete from clientes where id = p_repetido;
+  return v;
+end $$;
+revoke execute on function public.juntar_clientes(uuid, uuid) from public, anon;
+grant execute on function public.juntar_clientes(uuid, uuid) to authenticated;

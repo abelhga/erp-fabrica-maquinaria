@@ -36,7 +36,7 @@ export const VENTAS = {
   diasEnEtapa: "Días que lleva la oportunidad en su etapa actual; vuelve a cero cuando cambia de etapa. En el tablero, más de 14 días se pinta en ámbar: está atorada.",
   proximaTarea: "La tarea con fecha más cercana de esa oportunidad (una llamada, una visita…). En rojo si ya venció.",
   montoEstimado: "Lo que crees que vale la venta, sin IVA. Si estaba vacío cuando se envió la cotización (o la cotización abrió la oportunidad), toma el total sin IVA de esa cotización.",
-  oportunidadCotizacion: "La venta a la que pertenece esta cotización. Sale sola: la tuya que el cliente ya tenía abierta sin cotizar, primero la que vino de un lead. Si es otro proyecto, elige «Una nueva al enviar» y al enviarla se abre otra. Solo puedes elegir oportunidades de este cliente que sean tuyas.",
+  oportunidadCotizacion: "La venta a la que pertenece esta cotización. Sale sola: la tuya que el cliente ya tenía abierta sin cotizar, primero la que vino de un lead. Si dice «Sola al enviar», al enviarla se liga a la que el cliente tenga abierta sin cotizar y, si no hay, se abre una. Si es otro proyecto, elige «Una nueva al enviar» y al enviarla se abre otra. Solo puedes elegir oportunidades de este cliente que sean tuyas.",
   elegirOportunidad: "Este cliente tiene más de una oportunidad abierta, o una que ya se cotizó. Elige para cuál es la cotización; al enviarla, esa oportunidad se mueve sola. Si es algo distinto, «Es otro proyecto» abre una nueva al enviarla.",
   motivoPerdida: "Por qué se perdió (precio, tiempo de entrega, seguimiento…). Es obligatorio: sin eso no se sabe qué corregir.",
 

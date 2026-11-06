@@ -4,6 +4,7 @@
 do $$
 declare v_rec uuid; v_a uuid; v_b uuid; v_ger uuid; v_cli uuid; v_cli2 uuid; v_libre uuid; v_lead uuid; v_op_lead uuid; v_op_man uuid;
   v_op2 uuid; v_op_a uuid; c1 uuid; c2 uuid; c3 uuid; c4 uuid; c5 uuid; v_ok boolean; v_err text;
+  v_rep uuid; v_op_rep uuid; v_op_c1 uuid; c6 uuid; c7 uuid; c8 uuid;
 begin
   v_rec := pg_temp.usuario('rec254@hegamex.com', '{recepcion}');
   v_a := pg_temp.usuario('vena254@hegamex.com', '{ventas}');
@@ -109,4 +110,41 @@ begin
   perform pg_temp.como(v_rec);
   begin perform nueva_cotizacion(v_cli); v_ok := true; exception when insufficient_privilege then v_ok := false; end;
   assert not v_ok, 'recepción abrió una cotización';
+  -- 10. NO: B tampoco arranca una cotización en la oportunidad de A pasándole el cliente (por la
+  --     alta, no por un cambio), ni ve cuál tomaría la base para A.
+  perform pg_temp.como(v_b);
+  begin perform nueva_cotizacion(v_libre, v_op_a); v_ok := true;
+  exception when insufficient_privilege then v_ok := false; get stacked diagnostics v_err = message_text; end;
+  assert not v_ok and v_err like 'Esa oportunidad es de otro vendedor%', 'B arrancó con cliente y oportunidad de A';
+  assert oportunidad_para_cotizar(v_libre, v_a) is null, 'B ve la oportunidad que la base le tomaría a A';
+
+  -- 11. Juntar clientes: la ya enviada y el borrador conservan su oportunidad (antes se soltaban:
+  --     la oportunidad se quedaba en «Cotizado» sin su cotización).
+  perform pg_temp.como(v_a);
+  insert into clientes (nombre, vendedor_id) values ('Cribados del Norte (repetido) 254', v_a) returning id into v_rep;
+  insert into oportunidades (cliente_id, titulo, etapa, vendedor_id) values (v_rep, 'Criba 254', 'contactado', v_a) returning id into v_op_rep;
+  c6 := nueva_cotizacion(v_rep);
+  assert (select oportunidad_id = v_op_rep from cotizaciones where id = c6), 'el borrador del repetido no tomó su oportunidad';
+  c7 := nueva_cotizacion(v_rep, null, true);
+  insert into cotizacion_lineas (cotizacion_id, titulo, precio_unitario) values (c7, 'Criba grande 254', 400000);
+  update cotizaciones set tiempo_entrega = '5 semanas', estado = 'enviada' where id = c7;
+  select oportunidad_id into v_op_c1 from cotizaciones where id = c7;
+  perform pg_temp.como(v_ger);
+  perform juntar_clientes(v_rep, v_cli2);
+  assert (select oportunidad_id = v_op_rep and cliente_id = v_cli2 from cotizaciones where id = c6), 'juntar clientes soltó la oportunidad del borrador';
+  assert (select oportunidad_id = v_op_c1 and cliente_id = v_cli2 from cotizaciones where id = c7), 'juntar clientes soltó la oportunidad de la enviada';
+  --    Y a una ya enviada, cambiarle el cliente a mano tampoco le quita la suya.
+  update cotizaciones set cliente_id = v_cli where id = c7;
+  assert (select oportunidad_id = v_op_c1 from cotizaciones where id = c7), 'cambiar el cliente de una enviada le quitó la oportunidad';
+
+  -- 12. Una versión nueva hereda la oportunidad aunque la cotización se haya reasignado a otro vendedor.
+  update clientes set vendedor_id = v_b where id = v_cli2;
+  update cotizaciones set vendedor_id = v_b where id = c6;
+  perform pg_temp.como(v_b);
+  c8 := nueva_version_cotizacion(c6);
+  assert (select oportunidad_id = v_op_rep and vendedor_id = v_b from cotizaciones where id = c8), 'la versión nueva no heredó su oportunidad';
+  --     Pero ligar otra suya de A sigue sin poderse.
+  begin update cotizaciones set oportunidad_id = v_op_a where id = c8; v_ok := true;
+  exception when insufficient_privilege then v_ok := false; end;
+  assert not v_ok, 'B ligó su versión a otra oportunidad de A';
 end $$;
