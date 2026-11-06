@@ -4,6 +4,7 @@
 // Claude solo entra al final, a redactar el mensaje; enviarlo lo decide el vendedor.
 // Cada mensaje o llamada queda como intento (v_seguimiento_clientes): la tarjeta pasa
 // a "En seguimiento" con el siguiente paso, y se cierra con un resultado.
+// Arriba, «Regresar llamada»: lo que entró por el conmutador y nadie contestó (llamadas_por_regresar).
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarClock, Check, Copy, FileText, Hourglass, MessageCircle, PhoneCall, RefreshCcw, Sparkles, ThumbsDown, ThumbsUp, UserX, Wrench, X } from "lucide-react";
@@ -21,6 +22,7 @@ import { dinero, dineroCompacto, fecha, hace, hoyISO, numero } from "@/lib/forma
 import { cn, coincide } from "@/lib/utilidades";
 import { MenuAcciones, OpcionMenu } from "@/modulos/ventas/componentes/campos";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { RegresarLlamadas } from "@/modulos/ventas/componentes/Llamadas";
 
 interface Oportunidad {
   cliente_id: string; cliente: string; vendedor: string | null; motivo: Motivo; detalle: string;
@@ -102,6 +104,8 @@ export default function ParaLlamar() {
   return (
     <Pagina titulo="A quién llamar hoy"
       descripcion="Clientes con un motivo concreto para buscarlos, ordenados por lo que hay en juego. Sale del libro de ventas desde 2018 y de las cotizaciones vivas.">
+      {/* Primero lo que ya pidió el cliente: llamó y nadie le contestó. */}
+      <RegresarLlamadas verDuenio={puede("ventas", 3)} />
       {lista.error ? <ErrorCarga error={lista.error} /> : lista.isLoading ? <Cargando filas={8} /> : (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">

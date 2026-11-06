@@ -5,6 +5,11 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
 
 ## Por decidir o esperar a alguien
 
+- **Teléfono con IA, fase 1 (258):** falta en la nube aplicar la migración 258, desplegar la función
+  (`npx supabase functions deploy telefono --no-verify-jwt`), que dirección genere la llave en
+  Configuración → Integraciones → Teléfono y que el dueño ponga `ERP_URL` y `ERP_LLAVE` en Railway
+  (ver `docs/integracion-telefono.md`). Después, ligar en «Quién contesta» los nombres que no se
+  ligaron solos por el teléfono de su perfil.
 - **Conteo de lo que no cuadra con la hoja (Noemí, vence 5 y 6 nov):** 3 pendientes con 96
   renglones; el documento «Conteo de almacén: dudas al cerrar la hoja (29-oct)» tiene la misma
   lista para imprimir. Cuando se cierren los conteos:

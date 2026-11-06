@@ -15,8 +15,9 @@ import { fecha, fechaYHora, hace, numero } from "@/lib/formato";
 import { llamarML, URL_ML, type EstadoML, type ResultadoSincronizar } from "@/lib/mercadolibre";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { ConfigSkydropx } from "./ConfigSkydropx";
+import { ConfigTelefono } from "./ConfigTelefono";
 
-/** Mercado Libre (conectar la cuenta, a quién le llegan las ventas, si los avisos entran) y Skydropx (guías). */
+/** Mercado Libre (conectar la cuenta, a quién le llegan las ventas, si los avisos entran), Skydropx (guías) y el teléfono con IA. */
 export function ConfigIntegraciones() {
   const { tieneRol, puede } = useSesion();
   const direccion = tieneRol("direccion");
@@ -207,6 +208,7 @@ export function ConfigIntegraciones() {
       )}
 
       <ConfigSkydropx />
+      <ConfigTelefono />
     </div>
   );
 }

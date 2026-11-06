@@ -19,6 +19,8 @@ export const VENTAS: Record<string, AyudaPantalla> = {
       "«Redactar mensaje» arma un WhatsApp o un correo con el historial del cliente: lo escribe la IA si está conectada; si no, sale una plantilla. Revísalo y ajústalo. Enviarlo lo decides tú, con «Abrir en WhatsApp» o copiándolo.",
       "«¿Sí le escribiste?» lo registra con un toque (con Deshacer) y el cliente pasa a «En seguimiento», con el siguiente paso: llamar al día 3, último mensaje al día 10 y luego esperar una semana. Así nadie del equipo le vuelve a escribir sin saberlo.",
       "«¿Cómo terminó?» cierra el intento: si le interesa se crea la oportunidad; «no por ahora» o «no contesta» lo regresan a la lista en 90 días; «ya no compra» lo saca, con la razón. Tres intentos y una semana sin respuesta cuentan solos como «no contesta».",
+      "Arriba, cuando hay, sale «Regresar llamada»: las llamadas al conmutador de los últimos 7 días que nadie contestó, de tus clientes y tus leads (la gerencia ve las de todos). Cada una trae el teléfono para marcarle, cuándo llamó, el área y el resumen o el recado.",
+      "Al regresarla dale «Ya le regresé». Si el lead es tuyo, eliges «Contestó» (con lo que te dijo) o «No contestó» y queda como intento del lead; si es de un cliente, queda en su «Actividad». También se quita sola si anotas un intento en su lead o si vuelve a llamar y alguien lo atiende.",
     ],
   },
   "/ventas/oportunidades": {
@@ -177,6 +179,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
       "Si el mismo cliente está dos veces (uno con el nombre del contacto y otro con el de la empresa), «Juntar con otro» pasa todo al que se queda: pedidos, cotizaciones, oportunidades, saldo de la hoja, facturas y contactos (los que ya tiene no se repiten).",
       "Al juntar, lo que le falte al que se queda (RFC, régimen, ciudad, vendedor) lo toma del otro, y el otro se borra. Lo hacen la gerencia de ventas, o tú si los dos clientes son tuyos o libres.",
       "Si otro cliente tiene el mismo RFC, arriba sale el aviso con su botón «Juntar»; si es una sucursal, déjalo así.",
+      "Si el cliente ha llamado al conmutador, abajo de «Actividad» sale «Llamadas»: cuándo, quién contestó o «Nadie contestó», cuánto duró y de qué se habló. «Escuchar» abre la grabación mientras su enlace siga vigente. Si la atendió alguien del ERP, también queda en «Actividad» a su nombre.",
     ],
   },
   "/ventas/comisiones": {
@@ -205,7 +208,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
       "Lo usan recepción, los vendedores, la gerencia de ventas y marketing, que los ve todos para saber de dónde llegan y qué pasó con ellos.",
       "Al registrarlo pon también dónde está, su empresa (o «Particular») y qué busca con modelo o medida. Si se te pasó algo, al abrirlo te dice qué le falta y lo completas ahí; «Incompletos» junta los que tienen algo pendiente.",
       "Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es y dices «Es este», le llega directo a su vendedor.",
-      "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma a tiempo, se le avisa a la gerencia (mientras no haya gerente de ventas, a dirección).",
+      "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna (sin gerente de ventas, el aviso del lead nuevo le llega a dirección); o quien lo registra escoge al vendedor. Si nadie lo toma a tiempo, se le avisa a la gerencia (mientras no haya gerente de ventas, a dirección).",
       "Si un lead asignado pasa las horas que fijó la gerencia sin ningún intento anotado, se le avisa al vendedor y a la gerencia; con un intento («Le escribí», «No contestó», «No estaba» o «Contestó») ya no cuenta. Mientras no haya gerente de ventas, dirección recibe un resumen por vendedor en la mañana (desde las 9:00) y en la tarde (desde las 15:00) de cada día hábil, y al abrirlo llega a «Sin contactar» de ese vendedor (la etiqueta «De: …» se quita con la ×).",
       "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no. Elige primero por dónde fue: no viene marcado. «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo.",
       "«Crear oportunidad» se habilita hasta que contesta (o pide cotización). Si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta. Si no le interesa, se descarta con el motivo.",
@@ -213,6 +216,8 @@ export const VENTAS: Record<string, AyudaPantalla> = {
       "La columna «Intentos» dice lo último que hiciste y cuándo («Le escribiste por WhatsApp · hace 2 h»), y «Sin contactar» junta a los que todavía no les has escrito ni llamado.",
       "Ya convertido, «Cotizar» abre la cotización en la oportunidad del lead; al enviarla el lead dice «Cotizado».",
       "Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad.",
+      "Los leads que deja el conmutador con IA llegan solos: «Lo registró» dice «La IA del teléfono» y al abrirlo sale su llamada, con el resumen y la grabación. Si lo atendió un vendedor que recibe leads, es suyo; si ya es cliente con vendedor vigente, de su vendedor; si no, se reparte como cualquier otro, y cuando quien registra escoge al vendedor, se queda por asignar para la gerencia.",
+      "Recepción ve aquí arriba «Regresar llamada»: las llamadas que nadie contestó y que todavía no son de ningún vendedor. Cuando alguien toma su lead, pasa a ese vendedor.",
     ],
   },
   "/catalogo": {

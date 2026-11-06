@@ -20,11 +20,13 @@ import { DialogoLead } from "./leads/DialogoLead";
 import { ConfigLeads } from "./leads/ConfigLeads";
 import { RedactarLead } from "./leads/RedactarLead";
 import { CompletarLead } from "./leads/CompletarLead";
-import { CANAL_INTENTO, CLAVE_LEADS, MODOS, botonSinRespuesta, estadoLead, hace, textoIntento, useConfigLeads, useVendedoresLeads, type CanalIntento, type IntentoLead, type Lead, type ModoLeads, type ResultadoIntento } from "./leads/datos";
+import { ListaLlamadas, RegresarLlamadas, useLlamadas } from "./componentes/Llamadas";
+import { CANAL_INTENTO, CLAVE_LEADS, MODOS, botonSinRespuesta, estadoLead, hace, quienRegistro, textoIntento, useConfigLeads, useVendedoresLeads, type CanalIntento, type IntentoLead, type Lead, type ModoLeads, type ResultadoIntento } from "./leads/datos";
 
 type Vista = "abiertos" | "por_tomar" | "mios" | "sin_contactar" | "incompletos" | "registre" | "cerrados" | "todos";
 const COMO: Record<NonNullable<Lead["como_se_asigno"]>, string> = {
   cliente: "ya era su cliente", bandeja: "lo tomó de la bandeja", gerente: "se lo asignó la gerencia", recepcion: "se lo pasó quien lo registró",
+  llamada: "lo atendió por teléfono",
 };
 
 /**
@@ -97,7 +99,8 @@ export default function Leads() {
       celda: (l) => l.estado !== "asignado" ? <span className="text-tenue">—</span> : l.contesto ? <Insignia tono="ok">Contestó</Insignia>
         : l.intentos ? <span className="whitespace-nowrap text-sm">{textoIntento(l.ultimo_canal, l.ultimo_resultado).largo}<span className="block text-[11px] text-tenue">{hace(l.ultimo_intento)}{l.intentos > 1 ? ` · ${l.intentos} intentos` : ""}</span></span>
         : <span className="text-sm text-aviso" data-explain={GLOSARIO.sinContactarLead} data-explain-title="Sin contactar">Ninguno</span> },
-    { clave: "capturo", titulo: "Lo registró", clase: "whitespace-nowrap text-tenue", oculta: !gerencia && !vende },
+    { clave: "capturo", titulo: "Lo registró", clase: "whitespace-nowrap text-tenue", oculta: !gerencia && !vende, valor: (l) => quienRegistro(l) ?? "",
+      celda: (l) => quienRegistro(l) ?? "—" },
   ];
 
   return (
@@ -108,6 +111,8 @@ export default function Leads() {
         {gerencia && <Boton variante="secundario" onClick={() => setConfig(true)} data-explain={GLOSARIO.botonRepartoLeads}><Settings2 className="h-4 w-4" />A quién le llega</Boton>}
         {puede("leads", 2) && <Boton onClick={() => setNuevo(true)} data-explain={GLOSARIO.botonRegistrarLead}><Plus className="h-4 w-4" />Registrar lead</Boton>}
       </>}>
+      {/* Recepción no abre «A quién llamar hoy»: aquí ve las llamadas sin dueño que nadie contestó. */}
+      {!puede("ventas", 1) && <RegresarLlamadas ligar={false} />}
       <TablaDatos filas={todos.filter((l) => pasa(l, vista))} columnas={columnas} cargando={leads.isLoading} error={leads.error}
         claveFila={(l) => l.id} alClicFila={(l) => abrir(l.id)} placeholder="Buscar nombre, empresa, teléfono o qué busca…" exportarComo="leads"
         claseFila={(l) => (l.id === abiertoId ? "bg-marca-suave" : undefined)}
@@ -154,6 +159,7 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
   const [redactar, setRedactar] = useState(false);
   const ir = useNavigate();
   const vendedores = useVendedoresLeads(!!l && gerencia);
+  const llamadas = useLlamadas({ lead: l?.id });
   useEffect(() => setCanal(null), [l?.id]);
   const intentos = useQuery({
     queryKey: [...CLAVE_LEADS, l?.id, "intentos"], enabled: !!l,
@@ -214,7 +220,8 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
           <Dato etiqueta="Dónde">{[l.ciudad, l.estado_mx].filter(Boolean).join(", ") || "—"}</Dato>
           <div data-explain={GLOSARIO.lineaLead} data-explain-title="Línea"><Dato etiqueta="Línea · cómo llegó">{LINEA[l.linea]} · {l.fuente ?? "—"}</Dato></div>
           {l.notas && <div className="sm:col-span-2"><Dato etiqueta="Notas"><span className="whitespace-pre-line">{l.notas}</span></Dato></div>}
-          <Dato etiqueta="Lo registró">{l.capturo ?? "—"} · {fecha(l.creado_en)} ({hace(l.creado_en)})</Dato>
+          <div data-explain={l.llamada_id ? GLOSARIO.leadDelTelefono : undefined} data-explain-title={l.llamada_id ? "Entró por el teléfono" : undefined}>
+            <Dato etiqueta="Lo registró">{quienRegistro(l) ?? "—"} · {fecha(l.creado_en)} ({hace(l.creado_en)})</Dato></div>
           {l.vendedor && <Dato etiqueta="Lo tiene">{l.vendedor}{l.como_se_asigno && <span className="text-tenue"> · {COMO[l.como_se_asigno]}</span>}
             {l.asignado_en && <span className="block text-xs text-tenue">{hace(l.asignado_en)}</span>}</Dato>}
           {l.estado === "descartado" && <div className="sm:col-span-2"><Dato etiqueta="Por qué se descartó">{l.motivo_descarte}</Dato></div>}
@@ -228,6 +235,13 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
             </div>
           )}
         </dl>
+
+        {(llamadas.data ?? []).length > 0 && (
+          <div className="space-y-1" data-explain={GLOSARIO.llamadasCliente} data-explain-title="Su llamada">
+            <p className="text-sm font-medium">{llamadas.data!.length === 1 ? "Su llamada" : "Sus llamadas"}</p>
+            <ListaLlamadas llamadas={llamadas.data!} />
+          </div>
+        )}
 
         {puedeCompletar && <CompletarLead key={l.id} lead={l} invalidar={invalidar} />}
 

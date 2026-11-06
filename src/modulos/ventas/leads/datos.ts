@@ -12,12 +12,14 @@ export interface Lead {
   id: string; nombre: string; empresa: string | null; telefono: string | null; correo: string | null;
   ciudad: string | null; estado_mx: string | null; interes: string; linea: Linea; fuente: string | null; notas: string | null;
   cliente_id: string | null; cliente_nombre: string | null; estado: EstadoLead; vendedor_id: string | null; vendedor: string | null;
-  como_se_asigno: "cliente" | "bandeja" | "gerente" | "recepcion" | null; asignado_en: string | null; atendido_en: string | null;
+  como_se_asigno: "cliente" | "bandeja" | "gerente" | "recepcion" | "llamada" | null; asignado_en: string | null; atendido_en: string | null;
   oportunidad_id: string | null; etapa_oportunidad: EtapaOportunidad | null; motivo_descarte: string | null;
   capturado_por: string | null; capturo: string | null; creado_en: string;
   intentos: number; contesto: boolean; ultimo_intento: string | null; ultimo_resultado: ResultadoIntento | null; ultimo_canal: CanalIntento | null;
   /** Lo que le falta para que el vendedor lo atienda (la base lo calcula: es lo que mide «Leads capturados completos»). */
   faltan: string[];
+  /** La llamada del conmutador que lo dejó (lo capturó la IA: no tiene «capturo»). */
+  llamada_id: string | null;
 }
 
 /** Cada vez que el vendedor le llamó o escribió, y si le contestó. */
@@ -81,6 +83,9 @@ export function estadoLead(l: Pick<Lead, "estado" | "vendedor" | "etapa_oportuni
   const e = l.etapa_oportunidad ? ETAPA[l.etapa_oportunidad] : null;
   return { texto: `Oportunidad${e ? ` · ${e.texto}` : ""}`, tono: l.etapa_oportunidad === "perdida" ? "peligro" : l.etapa_oportunidad === "ganada" ? "ok" : "marca" };
 }
+
+/** Quién lo registró: una persona o, si entró por el conmutador, la IA. */
+export const quienRegistro = (l: Pick<Lead, "capturo" | "llamada_id">) => l.capturo ?? (l.llamada_id ? "La IA del teléfono" : null);
 
 /** "hace 12 min", "hace 3 h", "ayer": un lead se mide en horas, no en días. */
 export function hace(f: string | null | undefined) {
