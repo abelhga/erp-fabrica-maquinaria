@@ -1,6 +1,6 @@
 # Gráficas y métricas: hoja de ruta única
 
-Ya rehechas y fuera de esta lista: Métricas de almacén, Métricas de mantenimiento y Uso del ERP.
+Ya rehechas y fuera de esta lista: Métricas de almacén, Métricas de mantenimiento, Métricas de producción y Uso del ERP.
 
 ## 1. Lo que ya está bien
 
@@ -15,7 +15,7 @@ Ya rehechas y fuera de esta lista: Métricas de almacén, Métricas de mantenimi
 
 ## 2. Hoja de ruta
 
-54 propuestas. Cada renglón: **título** · pantalla · decisión · gráfica · datos · esfuerzo. ⏳ = hoy saldría casi vacía. † = de la primera auditoría, sin revisar contra el SQL: medir en la nube antes.
+51 propuestas. Cada renglón: **título** · pantalla · decisión · gráfica · datos · esfuerzo. ⏳ = hoy saldría casi vacía. † = de la primera auditoría, sin revisar contra el SQL: medir en la nube antes.
 
 ### Ola 1 · Los datos ya llegan
 
@@ -29,7 +29,6 @@ Ya rehechas y fuera de esta lista: Métricas de almacén, Métricas de mantenimi
 - **Envejecimiento del embudo** · Oportunidades · qué limpiar o reasignar · apiladas por etapa y días en ella, en número · `v_oportunidades` · chico
 - **Lo que se queda ML según el monto** · ML › Dinero · piso de ticket o paquete · dispersión, solo pagos aprobados · `v_ml_dinero` · chico
 - **Conversión por publicación** ⏳ hasta el 18 nov · ML › Publicaciones · a cuál meterle trabajo · funnel plot por franja de precio · `ml_tablero` · chico
-- **Espera contra trabajo por etapa** · Métricas de producción · dónde está el cuello · barras apiladas · `espera_h`, `trabajo_h` · chico
 - **Resultados por año como composición** † · Resultados · cómo cambia la estructura de costos · 100 % apilado con `COLOR` · chico
 - **Nuevos contra recurrentes en $** † · Clientes · si se crece con nuevos o con los de siempre · cohortes de ingreso · libro desde 2018 · medio
 - **% cobrado contra % avance** ⏳ · Cobranza · qué equipo no sale sin cobrar · dispersión; resaltados los terminados con saldo · `v_pedidos` · chico
@@ -54,7 +53,7 @@ Ya rehechas y fuera de esta lista: Métricas de almacén, Métricas de mantenimi
 - **¿Llego al escalón?** · Comisiones, tablero e Inicio de ventas, un componente · qué cerrar antes de fin de mes · bullet con proyección p25–p75 y las 3 cotizaciones que más acercan · `ritmo_comision()` · medio
 - **Curva de cierre** ⏳ hasta mediados de enero · Lo cotizado · hasta cuándo perseguir · ganado acumulado SERIE(1), perdido SERIE(2) tenue · `lo_cotizado` · medio
 - **Carga acumulada contra capacidad** · Análisis › Capacidad, Gantt y tablero · cuántas semanas de gente faltan por área · múltiplos por área en semanas: escalón contra diagonal; flujo con backlog · reemplaza `analisis_capacidad` · medio
-- **Trabajo atorado por etapa** · Gerencia de producción · a quién mandar a destrabar · puntos: días en el estado contra lo esperado · `lista_en`, `pausada_en` · medio
+- **Trabajo atorado por etapa** · Gerencia de producción · a quién mandar a destrabar · reutilizar `EdadTrabajo` (`produccion/componentes/GraficasProduccion.tsx`) con `produccion_analitica().edad` · chico
 - **Cierre del año con escenarios** · Tablero y Planeación · empujar el cierre o fijar la meta 2027 · mediana de 8 años, banda mín–máx, «en k de 8 se pasa la meta»; en Planeación, desviación mensual divergente · `pronostico_cierre()` · chico
 - **Puente de ventas: operaciones × ticket** · Tendencias · si se cayeron las operaciones o el ticket · cascada por familia; mezcla en múltiplos como detalle · `analisis_puente()` · medio
 - **Qué costo recotizar primero** · Precios de compra · el orden de recotización · cifra de $ con costo viejo y Pareto acumulado · envoltura de `almacen_clasificacion` · chico
@@ -72,12 +71,11 @@ Ya rehechas y fuera de esta lista: Métricas de almacén, Métricas de mantenimi
 - **Dólares de las próximas 13 semanas** · Importaciones › Dinero y Pagos · cuándo comprar dólares · apiladas programado / estimado · `embarque_pagos` · chico
 - **Entrega real de nacionales** ⏳ · Detalle de proveedor · qué días de entrega capturar · puntos por orden contra el dato del reabasto · `entrega_real_nacionales()` · medio
 - **Margen por hora del cuello** · Márgenes · qué empujar con el taller lleno · dispersión horas de cuello × (precio − material) · árbol de `estimar_entrega` · medio
-- **Horas reales contra costeo** ⏳ · Métricas de producción · qué horas recalibrar · puntos real ÷ estimado · `metricas_produccion` · chico
 - **Qué componente movió el costo** · Equipo › Historial · qué renegociar · divergentes en $ · `historial_costos` · medio
-- **Entregas a tiempo** ⏳ · Métricas de producción y Análisis › Entregas, un componente · si cambió de verdad · gráfica p con meta 90 % e histograma de retraso; funnel plot por familia cuando haya n · regla de `analisis_entregas` · chico
+- **Entregas a tiempo** ⏳ · Análisis › Entregas (la parte de producción ya está en Métricas de producción: `Cumplimiento`) · si cambió de verdad · gráfica p con meta 90 % e histograma de retraso; funnel plot por familia cuando haya n · regla de `analisis_entregas` · chico
 - **Gasto por categoría contra ventas** · Resultados · qué gasto recortar · puntos de crecimiento con línea en ventas · `gasto_categoria_por_mes()` · medio
 - **Cotizado vivo contra lo que falta** ⏳ · Tablero (en lugar del Embudo) y Planeación · cotizar más o cerrar · bullet faltante / cotizado / ponderado · `lo_cotizado` · chico
-- **Plazo real contra estándar por familia** ⏳ · Métricas de producción · qué `dias_fabricacion` corregir · mediana y P25–P75 en días hábiles · `metricas_produccion` · medio
+- **Plazo real contra estándar por familia** ⏳ (hoy 0 órdenes con liberación vista en el ERP: las de la hoja no tienen esa fecha) · Métricas de producción · qué `dias_fabricacion` corregir · mediana y P25–P75 en días hábiles · `produccion_analitica` · medio
 
 **Valor 2**
 - **Reembolsos ML** · Devoluciones · investigar o es ruido · gráfica p · rpc de conteos · chico
@@ -86,7 +84,6 @@ Ya rehechas y fuera de esta lista: Métricas de almacén, Métricas de mantenimi
 ### Ola 3 · Falta capturar el dato
 
 - **Embudo de leads** (3) · Leads · en qué paso se fuga y en qué fuente invertir · embudo con % entre pasos · **Capturar:** en el diálogo del lead, quitar «Llamada a recepción» por omisión y separar por dónde llegó de cómo se enteró · medio
-- **Horas detenidas por causa** (3) · Métricas de producción · qué causa atacar · Pareto · **Capturar:** causa de un toque al pausar en la terminal y al poner en espera · medio
 - **Conversión entre etapas** (3) · Oportunidades · **Capturar:** historia de etapas (`oportunidades` no tiene `auditar()`) · chico
 - **Qué motivo de «A quién llamar hoy» vende** (2) · Para llamar · recalibrar el puntaje · **Capturar:** foto diaria de la lista sugerida · medio
 
@@ -97,14 +94,14 @@ También destraban la Ola 2: saldo de bancos cada lunes (flujo), días de crédi
 - `finanzas/Resultados.tsx:86-88` y `:296`: SERIE fuera de orden; arreglar una vez en `COLOR`.
 - `analisis/PreciosVentas.tsx:119`: SERIE(3) en serie única; `:51-62` calcula en React.
 - `inicio/TableroDireccion.tsx:239`, `:249`: `var(--eje)` como serie; `:310`, `:346` color por posición; `:260` color de marca; `:330` hex.
-- Hex sueltos: `produccion/Metricas.tsx:84`, `produccion/componentes/CargaTaller.tsx:77`, `costeo/Margenes.tsx:377`.
+- Hex sueltos: `produccion/componentes/CargaTaller.tsx:77`, `costeo/Margenes.tsx:377`.
 - `costeo/componentes/Graficas.tsx:12`, `:201`, `:209`: $ armado a mano.
 - `compras/DetalleProveedor.tsx:129-146`: índice en área; va en línea.
 - Estado sin estado: `ventas/Comisiones.tsx:125`, `:136`; `produccion/Gerencia.tsx:113`, `:116`; `produccion/Gantt.tsx:277`; `produccion/Mejoras.tsx:89`, `:92-93`; `finanzas/Pagos.tsx:142-143`; `ventas/componentes/DineroML.tsx:146`; `rrhh/Objetivos.tsx:169-170`.
 - Signo pintado como estado: `costeo/Margenes.tsx:63-68`, `:82`; `rrhh/Prenomina.tsx:144`, `:207`, `:493-495` («+-5 %» en verde); `rrhh/componentes/AhorroPrestamos.tsx:205`.
 - `rrhh/componentes/comun.tsx:113-121`: `FONDO_TIPO` usa estado como categoría.
 
-Cifras que hoy dicen otra cosa: `TableroDireccion.tsx:277` (meta mal), `:214-215` (sin la hoja); `Inicio.tsx:179` (cuenta versiones), `:223` (sin libro ni ML); `Semana.tsx:140` (otro «cobrado»); `produccion/Metricas.tsx:132` (sin vencidas abiertas), `:136` (órdenes de la hoja); `DineroML.tsx:147` (suma reembolsadas); `TableroML.tsx:218` (debe leer `completed`); `MercadoLibre.tsx:68` (reloj contra horario); `Envios.tsx:93` (cuenta cancelados); `Embarques.tsx:395` (MXN como USD); `costeo/componentes/Historial.tsx:38` (incluye cancelados).
+Cifras que hoy dicen otra cosa: `TableroDireccion.tsx:277` (meta mal), `:214-215` (sin la hoja); `Inicio.tsx:179` (cuenta versiones), `:223` (sin libro ni ML); `Semana.tsx:140` (otro «cobrado»); `DineroML.tsx:147` (suma reembolsadas); `TableroML.tsx:218` (debe leer `completed`); `MercadoLibre.tsx:68` (reloj contra horario); `Envios.tsx:93` (cuenta cancelados); `Embarques.tsx:395` (MXN como USD); `costeo/componentes/Historial.tsx:38` (incluye cancelados).
 
 Ajusté dos colores de lo verificado: la curva de cierre pasa de SERIE(3)/(8) a SERIE(1)/(2), y los totales de la nómina, de `SERIE(0)` (no existe, `comunes.tsx:4`) a gris.
 

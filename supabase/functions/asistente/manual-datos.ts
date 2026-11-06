@@ -892,15 +892,21 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   ],
   "nivel": 1,
   "texto": [
-   "Los números de la planta para mejorar el proceso (lean): entregas a tiempo, cuánto tarda un equipo, dónde se espera, horas contra lo estimado y cómo andan las máquinas.",
-   "Paso 1: Elige arriba el periodo, de 30 días a 12 meses.",
-   "Paso 2: Revisa «Por etapa» para ver dónde se va el tiempo; cada tabla se descarga en CSV.",
-   "La usan ingeniería de procesos, la gerencia de producción y dirección. También dice qué parte del tiempo de un equipo en el taller se trabaja de verdad (la eficiencia del flujo).",
-   "Lo primero que ves, si hace falta, es cuánto se marcó en la terminal: las horas, los tiempos y la eficiencia del flujo salen solo de las etapas que el piso marcó con quién las trabajó. Las entregas a tiempo y los equipos terminados no dependen de eso.",
-   "«Por etapa» dice dónde se va el tiempo: cuánto espera cada área para empezar, cuánto se trabaja, las horas reales contra las del costeo, las pausas, los problemas y las etapas reabiertas. «Por equipo» compara las horas de cada modelo y «Por persona» las horas hombre de cada quien.",
-   "«Máquinas» junta las fallas y los preventivos del periodo, y «Problemas y retrabajo», lo que reportó el piso y las etapas que se reabrieron.",
-   "Quien además ve costos tiene la mano de obra real contra la estimada a la tarifa de cada oficio: la diferencia en rojo es lo que costó tardarse de más.",
-   "De las herramientas lean, kaizen y A3 ya se trabajan en Mejoras; 5S, OEE y SMED se irán habilitando conforme el equipo las use."
+   "Para mejorar el taller: si cumplimos las fechas, dónde se atora el trabajo, qué horas del costeo no cuadran y por qué se para el piso.",
+   "Paso 1: Elige el periodo arriba; «Dónde se atora» siempre es de hoy.",
+   "Paso 2: Empieza por «Cuánto creerle»: si un área casi no marca en la terminal, sus horas dicen poco.",
+   "Paso 3: Dale clic a un punto para abrir su orden.",
+   "La usan ingeniería de procesos, la gerencia de producción y dirección. Todo sale de lo que el piso marca en la terminal.",
+   "Arriba van los indicadores. Las entregas a tiempo cuentan también las vencidas que siguen sin terminar. El lead time y la eficiencia del flujo salen solo de órdenes liberadas en el ERP: las que se cargaron de la hoja no tienen esa fecha, por eso pueden salir en «—».",
+   "Cumplimiento: arriba lo que ya se juzgó (terminadas y vencidas sin terminar), abajo lo que viene según el plan, en días contra la fecha compromiso. Cuenta órdenes; las de un mismo pedido suelen moverse juntas.",
+   "Cuánto creerle: de las etapas terminadas, cuántas se marcaron con tiempo, cuántas se marcaron sin tiempo y cuántas se cerraron sin pasar por la terminal. Ahí ves a qué área capacitar.",
+   "Dónde se atora: cada punto es una etapa abierta y cuántas jornadas lleva esperando, en proceso o pausada. Un punto hueco empezó a contar cuando la orden llegó al ERP.",
+   "Espera contra trabajo: en promedio, cuánto esperó cada área para empezar, cuánto se trabajó y cuánto estuvo detenida; sale con 5 etapas por área.",
+   "Horas contra el costeo: cada punto es una etapa; 1× es lo estimado. Hueco es una proyección con el avance que dio el piso. Solo cuentan las etapas que la terminal vio desde que empezaron.",
+   "Horas detenidas por motivo: sale del motivo que el piso elige al pausar; «Nos movieron a otra orden» no cuenta como pérdida.",
+   "Flujo acumulado: si la franja de «en cola» de un área se ensancha, le llega más de lo que saca.",
+   "Abajo siguen las tablas por etapa, por equipo y por persona (cada una se descarga en CSV), los problemas y el retrabajo, con liga a Mejoras para volverlos kaizen, y las máquinas, con liga a Métricas de mantenimiento.",
+   "Quien además ve costos tiene lo que costó la diferencia de horas."
   ]
  },
  {
@@ -947,7 +953,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "En Etapas, el taller inicia, pausa, reanuda y termina cada una. Desde aquí no se anota quién la trabaja: para que cuenten las horas hombre, hazlo en la terminal. El avance sale de las horas de las etapas terminadas más lo que el piso reportó de las que van a medias.",
    "Si una se terminó por error, el aviso trae «Deshacer» (15 minutos para quien la terminó) y la gerencia tiene «Reabrir» en la etapa, con el motivo: regresa a pausada. Lo que pidas a ingeniería queda en la orden y en la línea de tiempo.",
    "Las etapas de la orden salen de las horas por etapa del equipo, y la orden se termina sola al acabar la última. Si al equipo le falta una (por ejemplo Detallado), la gerencia usa «Agregar etapa» con sus horas: queda pendiente para el taller y, si la orden ya estaba terminada, regresa a «en proceso».",
-   "Si el equipo se detiene sin cancelarse (el cliente dejó anticipo y no ha regresado), la gerencia usa «Poner en espera» con el motivo: deja de contar en la carga del taller y en los tiempos de entrega, no sale atrasada y la terminal no la muestra. «Reactivar» la regresa tal como estaba.",
+   "Si el equipo se detiene sin cancelarse (el cliente dejó anticipo y no ha regresado), la gerencia usa «Poner en espera» con la causa y el motivo: deja de contar en la carga del taller y en los tiempos de entrega, no sale atrasada y la terminal no la muestra. «Reactivar» la regresa tal como estaba.",
    "Si el cliente canceló su pedido, arriba sale un aviso: la orden sigue siendo de ese pedido. «Regresar a stock» (de la gerencia, con el motivo) la suelta: vuelve a «Para stock» con su avance, su serie y el material surtido, y se le puede dar a otro pedido con «Usar». También sirve si se le dio «Usar» a la orden equivocada.",
    "Abajo, «Plan del taller» es el Gantt de esta orden y de las demás de su pedido: cuándo empieza y termina cada etapa y si llega a la fecha compromiso (el rombo). Pasa el mouse por una barra para ver sus fechas; clic en otra orden la abre. Se recalcula solo con lo que se marca en el piso."
   ]
@@ -1003,7 +1009,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "La tablet de cada estación del taller: con botones grandes inicias, pausas, reanudas o terminas cada orden de tu etapa, o reportas un problema.",
    "Paso 1: Toca «Iniciar» en una orden y marca quiénes la trabajan.",
    "Paso 2: Usa «Se une» o «Sale» cuando alguien entra o se va, sin detener la etapa.",
-   "Paso 3: Al acabar toca «Terminar»; si dejan la orden a medias, «Pausar».",
+   "Paso 3: Al acabar toca «Terminar»; si dejan la orden a medias, «Pausar» y toca por qué.",
+   "Al pausar eliges con un toque por qué la dejan: falta material, esperan otra etapa o pieza, la máquina, una duda de ingeniería, retrabajo, los movieron a otra orden u otro. Con eso la gerencia ve qué detiene más al taller.",
    "La usan los encargados de piso. Sale lo que se trabaja en su etapa, en el orden de la cola que acomoda la gerencia en Cuadrillas o en el Gantt. Cada tarjeta dice primero la OP (la orden que se fabrica) y el equipo; abajo, más chico, el pedido y el cliente.",
    "Al iniciar o reanudar vienen marcados los que planeó la gerencia en Cuadrillas (en lo que no ha empezado dice «Le toca»); si no hay, la última cuadrilla de esa tablet. Primero sale la gente de esa etapa. Si alguien no está dado de alta o es un ayudante de paso, súmalo en «Sin nombre».",
    "Una persona no puede estar en dos etapas a la vez. Con eso salen las horas hombre de cada etapa: el tiempo de cada persona sumado. Se ven en el detalle de la orden contra las horas estimadas del costeo. Al pausar o terminar la etapa salen todos.",
@@ -1033,7 +1040,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "«Ayúdame a corregirlo» sale cuando la corrección es un dato de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida). La IA te propone el cambio exacto, con cómo está y cómo quedaría; puedes decirle algo que deba saber («el tiempo es de 45 días hábiles»).",
    "Nada se aplica hasta que eliges «Aplicar a mi nombre»: se hace con tus permisos, como si lo capturaras a mano, y queda en la bitácora. Precios, dinero, existencias y permisos nunca se cambian así.",
    "Lo que dice «Regla» lo encontró una regla fija; lo que dice «IA» (con destellos ✦) lo señaló la IA al leer lo de ayer. Ninguno cambia nada sin que tú lo digas. En «Contestado» ves lo que ya respondiste.",
-   "Dirección abre en «Todo lo abierto», con a quién le toca cada cosa, y ve además «Patrones» (consumos que se disparan, ajustes a la baja que se repiten, gastos iguales en caja chica), que nunca le llegan a la persona.",
+   "Todos abren en «Para ti», con lo suyo. Dirección tiene además «Todo lo abierto», donde lo de otra persona dice «Le toca a …» y se filtra por persona con «De quién», y «Patrones» (consumos que se disparan, ajustes a la baja que se repiten, gastos iguales en caja chica), que nunca le llegan a la persona.",
    "En «Anoche» dirección ve lo que la IA leyó de cada módulo, y en «Consejos», los que recibió cada quien y si les sirvieron.",
    "En «Reglas», dirección puede apagar la revisión, la IA, los consejos, que la IA cuestione el «Está bien así» o cada regla, y correr las reglas en ese momento. En «Contestado» puede ver lo que cada quien platicó con la IA."
   ]
@@ -3938,7 +3945,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Detiene la etapa cuando la dejan (falta material, los mueven a otra orden): se cierra el tiempo de todos los que la trabajaban, pero su cuadrilla queda anotada para reanudar."
+  "texto": "Detiene la etapa cuando la dejan: eliges con un toque por qué la dejan (falta material, esperan otra etapa, la máquina, una duda de ingeniería, retrabajo, los movieron a otra orden u otro). Se cierra el tiempo de todos los que la trabajaban, pero su cuadrilla queda anotada para reanudar. Con esos motivos sale en Métricas qué detiene más al taller."
  },
  {
   "clave": "botonPedirACompras",
@@ -5504,14 +5511,6 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Qué parte de toda la venta desde 2018 es de clientes ubicados hasta su municipio. Abajo, cuántos clientes lo están."
  },
  {
-  "clave": "coberturaTerminal",
-  "modulos": [
-   "produccion",
-   "procesos"
-  ],
-  "texto": "Qué parte de las etapas terminadas se marcó en la terminal con quién la trabajó. Las horas, los tiempos de espera y la eficiencia del flujo salen solo de esas; si la cobertura es baja, esos números dicen poco. Las entregas a tiempo y los terminados no dependen de esto."
- },
- {
   "clave": "coberturaXml",
   "modulos": [
    "rrhh",
@@ -6153,7 +6152,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "La mano de obra de las etapas marcadas a la tarifa de su oficio: lo real (horas hombre marcadas) contra lo estimado (horas del costeo). La diferencia en rojo es lo que costó tardarse de más."
+  "texto": "La mano de obra de las etapas con tiempo a la tarifa de su oficio: lo real (horas hombre marcadas) contra lo estimado (horas del costeo). La diferencia en rojo es lo que costó tardarse de más. En «Horas contra el costeo» es lo mismo por etapa: negativo si se tardó menos."
  },
  {
   "clave": "costoEnvioPaqueteria",
@@ -6879,6 +6878,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "En promedio, cuántos días después de lo prometido se entregaron los que llegaron tarde (los vencidos sin entregar cuentan hasta hoy)."
  },
  {
+  "clave": "diasContraCompromiso",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Cuántos días antes o después de su fecha compromiso se terminó cada orden, en días de calendario. Las vencidas que siguen sin terminar cuentan con los días que llevan pasadas. Las tres primeras columnas (antes y el día) son a tiempo. Cuenta órdenes: las de un mismo pedido suelen moverse juntas."
+ },
+ {
   "clave": "diasCredito",
   "modulos": [
    "rrhh",
@@ -7169,6 +7176,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuánto dura, en días o en horas. En días, termina a la hora de salida del taller del último día; en horas, cuenta seguidas desde que sale."
  },
  {
+  "clave": "edadTrabajo",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Cada punto es una etapa abierta hoy y cuántas jornadas del taller lleva en su estado: en proceso desde que empezó, pausada desde la última pausa y esperando desde que la etapa anterior terminó (ya le toca). Un punto hueco empezó a contar cuando la orden llegó al ERP o detrás de una etapa que se cerró sin la terminal: lleva al menos eso. Con folio salen las que llevan más de vez y media lo que deberían tardar con su gente. No depende del periodo."
+ },
+ {
   "clave": "editarConceptosRecargo",
   "modulos": [
    "costeo",
@@ -7189,7 +7204,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Del tiempo que las órdenes pasaron en el taller (de liberada a terminada), qué parte había alguien trabajándolas según la terminal. Lo demás es espera: material, cola, otra etapa ocupada. En talleres como el nuestro suele salir bajo (10 a 25 %); subirlo es reducir esperas, no trabajar más rápido."
+  "texto": "Del tiempo que las órdenes pasaron en el taller (de liberada a terminada), qué parte había alguien trabajándolas según la terminal. Lo demás es espera: material, cola, otra etapa ocupada. Solo de las órdenes liberadas en el ERP, igual que el lead time. En talleres como el nuestro suele salir bajo (10 a 25 %); subirlo es reducir esperas, no trabajar más rápido."
  },
  {
   "clave": "eir",
@@ -7399,7 +7414,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "De las órdenes que se terminaron en el periodo y tenían fecha compromiso, cuántas se terminaron ese día o antes. Abajo, lo mismo para los pedidos entregados (fecha de entrega contra compromiso). En lean es el OTD: lo primero que ve el cliente."
+  "texto": "De las órdenes juzgadas en el periodo (las que se terminaron y tenían fecha compromiso, más las vencidas que siguen sin terminar), cuántas se terminaron ese día o antes. Una vencida abierta ya es tarde aunque no haya salido. Abajo, lo mismo para los pedidos entregados (fecha de entrega contra compromiso). En lean es el OTD: lo primero que ve el cliente."
  },
  {
   "clave": "entregaSolicitudPrecio",
@@ -7557,7 +7572,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Órdenes de producción que se terminaron en el periodo. Es la salida del taller (throughput): cuánto produce de verdad por semana."
+  "texto": "Órdenes de producción que se terminaron en el periodo. Es la salida del taller (throughput): cuánto produce de verdad por semana. Abajo dice cuántas venían de la hoja: se cargaron ya terminadas, así que cuentan como salida pero no para los tiempos."
  },
  {
   "clave": "equiposTerminadosSemana",
@@ -7612,7 +7627,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "En promedio, cuántas horas pasaron desde que la etapa pudo empezar (la orden se liberó y terminó la etapa anterior) hasta que empezó. Es la cola de esa área."
+  "texto": "En promedio, cuántas horas pasaron desde que la etapa pudo empezar (la orden se liberó y terminó la etapa anterior) hasta que empezó. Es la cola de esa área. Solo cuenta cuando se sabe desde cuándo pudo empezar: si la etapa anterior se cerró sin pasar por la terminal, o si es la primera y la orden se cargó de la hoja, no entra."
  },
  {
   "clave": "esperandoMaterial",
@@ -7638,6 +7653,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "admin"
   ],
   "texto": "Entró con su cuenta de Google de la empresa, pero todavía no tiene rol: ve un aviso para que pida acceso y no puede ver nada. Dale clic y márcale su rol."
+ },
+ {
+  "clave": "esperaVsTrabajo",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "En promedio, por área, cuántas jornadas esperó cada etapa para empezar, cuántas hubo alguien trabajándola y cuántas estuvo detenida (empezada pero sin nadie). Las tres suman lo que tardó. El cuello de botella es donde se junta la espera, no donde se trabaja más. Sale con 5 etapas por área que la terminal vio completas."
  },
  {
   "clave": "estacionalidadVenta",
@@ -8671,6 +8694,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Para poner el flete en la cotización antes de que el cliente compre: con el código postal, estado, municipio y colonia, y los bultos que salen del empaque de cada artículo, cotizan todas las paqueterías de Skydropx a la vez. Al elegir una se agrega la partida de flete con lo que cobra la paquetería más el recargo fijo que puso envíos, redondeado hacia arriba; la puedes cambiar como cualquier partida. No genera guía ni cobra nada: la guía se hace hasta que haya pedido y envío."
  },
  {
+  "clave": "flujoAcumulado",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Por área, las horas del costeo de lo terminado (acumulado), lo que está en proceso y lo que está en cola, día por día. Si la franja de «en cola» se ensancha, al área le llega más de lo que saca. Lo ancho de en proceso y en cola es el trabajo abierto; con más de 90 días hábiles con terminal va por semana. Las etapas cerradas sin la terminal no entran, y las órdenes planeadas no están en la cola hasta que se liberan."
+ },
+ {
   "clave": "flujoEvaluacion",
   "modulos": [
    "rrhh",
@@ -9073,6 +9104,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Gráfica de control (tipo p): cada punto es la parte de las partidas surtidas a órdenes que salió fuera de su lista esa semana. La línea punteada es el promedio y las grises los límites a 3 desviaciones, más abiertos en semanas con pocas partidas. Un punto rojo arriba del límite es un cambio real que hay que investigar; lo que se mueve entre los límites es variación normal."
  },
  {
+  "clave": "graficaPCumplimiento",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "El porcentaje de órdenes a tiempo de cada mes con sus límites de control: un mes fuera de los límites es un cambio de verdad, no casualidad. Sale cuando hay 6 meses con al menos 5 órdenes con fecha."
+ },
+ {
   "clave": "grupoEnPausaMto",
   "modulos": [
    "servicio",
@@ -9153,14 +9192,6 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Prestada que ya pasó la fecha en que debía regresar, o que lleva más días fuera que el límite marcado."
- },
- {
-  "clave": "herramientasLean",
-  "modulos": [
-   "produccion",
-   "procesos"
-  ],
-  "texto": "Las herramientas que ingeniería de procesos irá usando conforme se capacite. Kaizen y A3 ya se trabajan en Producción → Mejoras; las demás se habilitan una por una, cuando el equipo las vaya a usar."
  },
  {
   "clave": "hiloCorreo",
@@ -9263,6 +9294,22 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El horario del taller: qué días se trabaja y a qué hora se entra y se sale. Con él se cuentan las horas hombre (si se cuentan con el horario) y lo que da cada día en el plan del Gantt. Lo pone la gerencia de producción en Cuadrillas → Personal de piso. Si lo cambias, las horas ya marcadas se vuelven a contar con el horario nuevo. Los feriados de ley y los días de descanso de toda la empresa no se trabajan."
  },
  {
+  "clave": "horasContraCosteo",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Cada punto es una etapa: sus horas hombre contra las horas que trae el costeo para ella. 1× es lo estimado, 2× el doble y ½× la mitad; la franja gris es lo normal (de 0.8× a 1.25×). Relleno: terminada; hueco: todavía en proceso, proyectada con el avance que dio el piso. Solo cuentan las etapas que la terminal vio desde que empezaron. Si un área sale casi siempre arriba, sus horas del costeo están cortas."
+ },
+ {
+  "clave": "horasDetenidas",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Por motivo, las horas del taller que las etapas estuvieron pausadas (de la pausa a que se reanudó o se terminó). Las barras son la parte de las horas y la línea lo acumulado: pocos motivos suelen juntar casi todo. No cuentan las pausas sin motivo ni «Nos movieron a otra orden». Sale con 20 pausas con motivo."
+ },
+ {
   "clave": "horasDoblesTriples",
   "modulos": [
    "rrhh",
@@ -9331,12 +9378,20 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Horas que se suman por cada unidad del parámetro. El total de la etapa es horas fijas + esto × el valor del parámetro: una banda más larga pide más horas sin capturarlas aparte."
  },
  {
+  "clave": "horasProyectadas",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Lo que va a tardar la etapa si sigue al mismo paso: horas marcadas ÷ el avance que dio el piso (¼, ½, ¾). Solo con 10 % de avance o más."
+ },
+ {
   "clave": "horasRealesVsEstimadas",
   "modulos": [
    "produccion",
    "procesos"
   ],
-  "texto": "Horas hombre que se marcaron en la terminal contra las horas que trae el costeo para esas etapas. Solo cuenta las etapas que sí se marcaron con quién trabajó. Arriba de 100 % se tardó más de lo estimado (en ámbar arriba de 105 %, en rojo arriba de 120 %)."
+  "texto": "Horas hombre que se marcaron en la terminal contra las horas que trae el costeo para esas etapas. Solo cuentan las etapas con tiempo (al menos media hora y una décima parte de lo estimado) que la terminal vio desde que empezaron: una etapa que venía empezada de la hoja y se marcó solo el final saldría más rápida de lo que fue. Arriba de 100 % se tardó más de lo estimado (en ámbar arriba de 105 %, en rojo arriba de 120 %)."
  },
  {
   "clave": "horasServicio",
@@ -9345,6 +9400,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Las horas de taller que la cuadrilla pasa en el servicio, contadas con el horario del taller que pone la gerencia de producción: sin noches, fines de semana, feriados ni descansos; un día de tiempo extra sí cuenta. Se descuentan de la capacidad semanal del área de cada persona."
+ },
+ {
+  "clave": "horasSinEstimado",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Etapas con horas marcadas en la terminal pero sin horas en el costeo del equipo: o se trabajó algo que el costeo no trae, o al costeo le falta esa etapa."
  },
  {
   "clave": "horasTaller",
@@ -9882,7 +9945,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Cuánto tarda un equipo desde que se libera al taller hasta que se termina, en días de calendario. La mediana es el caso típico: no la mueven uno o dos equipos que se quedaron detenidos meses."
+  "texto": "Cuánto tarda un equipo desde que se libera al taller hasta que se termina, en días de calendario. Solo cuentan las órdenes que se liberaron en el ERP: las que se cargaron de la hoja no tienen esa fecha (su «liberada» sería el día de la carga), por eso sale «—» mientras no haya terminadas que se liberaron aquí. La mediana es el caso típico: no la mueven uno o dos equipos que se quedaron detenidos meses."
  },
  {
   "clave": "leerCotizacionProveedor",
@@ -10097,6 +10160,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "clave": "loQueImportaHoy",
   "modulos": [],
   "texto": "Resumen del día de tu área. En rojo los riesgos, en ámbar lo que pide atención, en verde lo que va bien. Si tu puesto tiene el Asistente y la IA está conectada, ella lo redacta con los datos del ERP; si no, salen los avisos calculados por reglas (dice “Reglas de la base · sin IA”). Cada tarjeta lleva a donde se atiende."
+ },
+ {
+  "clave": "loQueViene",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Las órdenes abiertas que todavía no se vencen: cuándo terminan según el plan del taller (la fila de cada área con su capacidad) contra su fecha compromiso. Si caen a la derecha, ya van tarde aunque falte para su fecha: es cuándo renegociar o cambiar la prioridad."
  },
  {
   "clave": "lote",
@@ -10533,7 +10604,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Una fila por modelo terminado en el periodo: cuántos salieron, las horas hombre por equipo contra las del costeo y cuántos días tardó en promedio de liberado a terminado."
+  "texto": "Una fila por modelo terminado en el periodo: cuántos salieron, las horas hombre por equipo contra las del costeo y cuántos días tardó en promedio de liberado a terminado. Las horas reales salen solo de los equipos con todas sus etapas marcadas en la terminal desde que empezaron («de 2» si fueron 2 de los terminados); si a uno le falta una etapa, dice «Sin marcar completo», porque sumar solo lo marcado lo haría ver más rápido de lo que fue."
  },
  {
   "clave": "metricasPorEtapa",
@@ -10688,6 +10759,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "Obligatorio: queda en el historial para saber a dónde fue cada cosa. Los botones de abajo lo llenan rápido; si ya escribiste algo, el botón lo pone adelante de tu texto."
+ },
+ {
+  "clave": "motivoPausa",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Por qué se dejó la etapa, con un toque en la terminal: falta material · esperando otra etapa o pieza · máquina o herramienta · duda o cambio de ingeniería · retrabajo o calidad · nos movieron a otra orden · otro. «Nos movieron a otra orden» no es pérdida: es la prioridad del taller."
  },
  {
   "clave": "motivoPerdida",
@@ -11098,7 +11177,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Una orden detenida sin cancelarla, casi siempre porque el cliente dejó anticipo y no ha regresado. Mientras está en espera no cuenta en la carga del taller ni en los tiempos de entrega que se prometen, no sale atrasada y no se puede trabajar en la terminal. La pone y la reactiva la gerencia de producción desde el detalle de la orden, con su motivo."
+  "texto": "Una orden detenida sin cancelarla, casi siempre porque el cliente dejó anticipo y no ha regresado. Mientras está en espera no cuenta en la carga del taller ni en los tiempos de entrega que se prometen, no sale atrasada y no se puede trabajar en la terminal. La pone y la reactiva la gerencia de producción desde el detalle de la orden, con su causa (cliente ausente, falta material, ingeniería, cambio de prioridad u otro) y el motivo escrito. Con la causa, Métricas cuenta qué detiene las órdenes."
  },
  {
   "clave": "ordenesAbiertasProveedor",
@@ -11492,7 +11571,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Aparta para esta orden lo que hay libre en planta de lo que le falta, hasta lo que necesita: sigue en el almacén, pero nadie más lo puede tomar. Lo que no alcanzó queda «Con faltantes»; «Volver a apartar» lo intenta otra vez cuando llega material."
+  "texto": "Aparta para esta orden lo que hay libre en planta de lo que le falta, hasta lo que necesita: sigue en el almacén, pero nadie más lo puede tomar. Lo que no alcanzó queda «Con faltantes»; «Volver a apartar» lo intenta otra vez cuando llega material. Pide la revisión de ingeniería primero: sin ella solo la gerencia de producción aparta, con el motivo, que queda en la orden. Si ingeniería baja o quita algo después, lo apartado de más se suelta solo."
  },
  {
   "clave": "pasoLiberarOrden",
@@ -13207,6 +13286,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "De qué es el cambio: el folio, el nombre o la clave. En listas de materiales dice el equipo, el artículo y la cantidad; en el material de una orden, la OP, el artículo y cuánto lleva."
  },
  {
+  "clave": "registroTerminal",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Cómo se cerró cada etapa terminada en el periodo. Con tiempo: se marcó en la terminal con gente y horas. Marcada sin tiempo: pasó por la terminal o por el detalle de la orden, pero con menos de media hora hombre (o menos de una décima de lo estimado): se inició y terminó casi al mismo tiempo, se terminó sin iniciar o se trabajó sin anotar a la gente. Cerrada sin marcar: se cerró sin pasar por la terminal (venía de la hoja o se cerró en bloque). Solo la primera sirve para horas y tiempos: antes de creerle a una cifra de un área, mira cuántas de sus etapas tienen tiempo."
+ },
+ {
   "clave": "reglaCarteraEncendida",
   "modulos": [
    "admin"
@@ -13542,6 +13629,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Prendido, la IA lee el porqué de cada «Está bien así» y, si no le convence, pregunta hasta 3 veces; si sigue sin quedar claro, se queda abierto y te llega con la conversación. Apagado, el porqué lo cierra sin preguntas. Lo que contestas tú nunca pasa por la IA, ni el porqué de una compra con costo muy distinto al anterior (ese costo no le llega)."
  },
  {
+  "clave": "revisionDeQuien",
+  "modulos": [],
+  "texto": "Filtra lo abierto: todo, lo tuyo, los patrones que solo ve dirección o lo que le toca a una persona (con cuántos tiene cada quien)."
+ },
+ {
   "clave": "revisionEscalado",
   "modulos": [],
   "texto": "Contestaste «Está bien así», la IA hizo sus preguntas y el porqué no quedó claro. Se queda abierto y dirección lo ve con la conversación para decidir. Si mientras tanto lo corriges, contesta «Ya lo corregí»."
@@ -13572,7 +13664,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Ingeniería confirmó que la lista de materiales y las cantidades de la orden están bien. Sin esto la orden no se puede liberar."
+  "texto": "Ingeniería confirmó que la lista de materiales y las cantidades de la orden están bien. Sin esto la orden no se puede liberar, y almacén no puede apartar su material (la gerencia de producción sí, con un motivo, si es urgente). Lo que lleva un día hábil sin revisar le sale a ingeniería en «Por revisar»."
  },
  {
   "clave": "revisionLectura",
@@ -13632,7 +13724,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
  {
   "clave": "revisionTodoAbierto",
   "modulos": [],
-  "texto": "Todo lo que la revisión encontró y nadie ha contestado, de todas las personas y con a quién le toca. Tú también lo puedes contestar desde aquí."
+  "texto": "Todo lo que la revisión encontró y nadie ha contestado, de todas las personas. Lo de otra persona dice en amarillo «Le toca a …»: es suyo, aunque tú también lo puedes contestar desde aquí. Con «De quién» ves solo lo tuyo, los patrones o lo de una persona."
  },
  {
   "clave": "revisionYaLoCorregi",

@@ -124,3 +124,13 @@ export function tintaSobre(hex: string) {
   const [r, g, b] = m.map((x) => parseInt(x, 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
   return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.4 ? "#111827" : "#ffffff";
 }
+
+// Motivo de pausa y causa de espera: las claves del check de op_eventos.motivo y
+// ordenes_produccion.en_espera_causa, con el texto que ve la gente.
+export const MOTIVOS_PAUSA: Record<string, string> = {
+  material: "Falta material", etapa_anterior: "Esperando otra etapa o pieza", maquina: "Máquina o herramienta",
+  ingenieria: "Duda o cambio de ingeniería", calidad: "Retrabajo o calidad", prioridad: "Nos movieron a otra orden", otro: "Otro",
+};
+export const CAUSAS_ESPERA: Record<string, string> = {
+  cliente: "Cliente ausente", material: "Falta material", ingenieria: "Ingeniería", prioridad: "Cambio de prioridad", otro: "Otro",
+};

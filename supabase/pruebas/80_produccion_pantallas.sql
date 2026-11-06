@@ -51,8 +51,8 @@ begin
   -- Validación paso a paso, con quién y cuándo.
   v_j := validacion_orden(v_op1);
   assert v_j->0->>'estado' = 'pendiente' and v_j->1->>'estado' = 'pendiente', 'al crear, todo pendiente';
-  perform apartar_material(v_op1);
-  perform apartar_material(v_op2);
+  perform apartar_material(v_op1, 'Prueba: gerencia aparta antes de la revisión');
+  perform apartar_material(v_op2, 'Prueba: gerencia aparta antes de la revisión');
   v_j := validacion_orden(v_op1);
   assert v_j->1->>'estado' = 'hecho', format('op1 apartó todo: %s', v_j->1);
   assert v_j->1->>'por' is not null, 'apartado con nombre de quién';
@@ -118,7 +118,7 @@ begin
   assert (select requerido from op_materiales where orden_id = v_op1 and articulo_id = v_tubo) = 10, 'el taller no cambió la lista';
   -- Al volver a apartar op2, encuentra los 4 m que se soltaron.
   perform pg_temp.como(v_gp);
-  perform apartar_material(v_op2);
+  perform apartar_material(v_op2, 'Prueba: gerencia aparta antes de la revisión');
   select apartado into v_num from v_op_material where orden_id = v_op2 and articulo_id = v_tubo;
   assert v_num = 4, format('op2 apartó los 4 m liberados, tiene %s', v_num);
 

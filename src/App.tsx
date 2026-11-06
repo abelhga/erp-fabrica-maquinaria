@@ -4,6 +4,7 @@ import { Loader2, Lock } from "lucide-react";
 import { useSesion, type Modulo } from "./lib/sesion";
 import { Shell } from "./components/layout/Shell";
 import { AvisoVerComo } from "./components/layout/VerComo";
+import { MotorRecorridos } from "./tutorial/recorridos/Motor";
 import { Entrar, SinAcceso, VOLVER_A } from "./paginas/Entrar";
 import { EsperandoVistaPrevia } from "./paginas/VistaPrevia";
 import { EN_VISTA_PREVIA } from "./lib/supabase";
@@ -113,9 +114,11 @@ function Con({ m, n = 1, children }: { m: Modulo; n?: number; children: ReactNod
   return <>{children}</>;
 }
 
-/** Pantallas completas, sin el menú (TV, terminal, hojas para imprimir): el aviso de "ver como" flota encima. */
+/** Pantallas completas, sin el menú (TV, terminal, hojas para imprimir): el aviso de "ver como" flota encima.
+ *  El motor de recorridos también va aquí: el de la terminal se empieza desde el birrete del ERP y,
+ *  sin esto, al entrar a la terminal (que no tiene el marco) la guía desaparecía. */
 function SinMarco() {
-  return <><Outlet /><AvisoVerComo flotante /></>;
+  return <><Outlet /><AvisoVerComo flotante /><MotorRecorridos /></>;
 }
 
 export function App() {
