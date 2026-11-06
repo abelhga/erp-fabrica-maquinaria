@@ -38,14 +38,14 @@ begin
   assert (select estado::text from pedidos_basicos() where id = v_ped) = 'en_produccion', 'pedido en producción';
 
   -- Apartar: la primera toma 14 m, la segunda solo encuentra 4 → faltan 10 (lo que la hoja escondía).
-  perform apartar_material(v_op1);
-  perform apartar_material(v_op2);
+  perform apartar_material(v_op1, 'Prueba: gerencia aparta antes de la revisión');
+  perform apartar_material(v_op2, 'Prueba: gerencia aparta antes de la revisión');
   select faltante into v_num from v_op_material where orden_id = v_op1 and articulo_id = v_tubo;
   assert v_num = 0, format('la primera orden no debería tener faltante de tubo (tiene %s)', v_num);
   select faltante into v_num from v_op_material where orden_id = v_op2 and articulo_id = v_tubo;
   assert v_num = 10, format('la segunda orden debe mostrar faltante de 10 m, muestra %s', v_num);
   -- Apartar otra vez no duplica.
-  perform apartar_material(v_op2);
+  perform apartar_material(v_op2, 'Prueba: gerencia aparta antes de la revisión');
   assert (select sum(cantidad) from reservas where articulo_id = v_tubo and estado = 'activa') = 18, 'no se aparta de más';
 
   -- Faltantes → requisición a compras; pedirla dos veces no duplica.

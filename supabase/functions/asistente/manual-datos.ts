@@ -11492,7 +11492,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Aparta para esta orden lo que hay libre en planta de lo que le falta, hasta lo que necesita: sigue en el almacén, pero nadie más lo puede tomar. Lo que no alcanzó queda «Con faltantes»; «Volver a apartar» lo intenta otra vez cuando llega material."
+  "texto": "Aparta para esta orden lo que hay libre en planta de lo que le falta, hasta lo que necesita: sigue en el almacén, pero nadie más lo puede tomar. Lo que no alcanzó queda «Con faltantes»; «Volver a apartar» lo intenta otra vez cuando llega material. Pide la revisión de ingeniería primero: sin ella solo la gerencia de producción aparta, con el motivo, que queda en la orden. Si ingeniería baja o quita algo después, lo apartado de más se suelta solo."
  },
  {
   "clave": "pasoLiberarOrden",
@@ -13577,7 +13577,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Ingeniería confirmó que la lista de materiales y las cantidades de la orden están bien. Sin esto la orden no se puede liberar."
+  "texto": "Ingeniería confirmó que la lista de materiales y las cantidades de la orden están bien. Sin esto la orden no se puede liberar, y almacén no puede apartar su material (la gerencia de producción sí, con un motivo, si es urgente). Lo que lleva un día hábil sin revisar le sale a ingeniería en «Por revisar»."
  },
  {
   "clave": "revisionLectura",

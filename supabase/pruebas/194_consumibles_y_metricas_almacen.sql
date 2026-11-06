@@ -20,7 +20,7 @@ begin
   insert into movimientos_inventario (tipo, articulo_id, almacen_id, cantidad)
   values ('inicial', v_tubo, v_pb, 30), ('inicial', v_disco, v_pb, 50), ('inicial', v_guante, v_pb, 10), ('inicial', v_polea, v_pb, 4);
 
-  insert into ordenes_produccion (articulo_id, cantidad, estado) values (v_eq, 1, 'liberada') returning id into v_op;
+  insert into ordenes_produccion (articulo_id, cantidad, estado, revisado_ingenieria_en) values (v_eq, 1, 'liberada', now()) returning id into v_op;
   insert into op_materiales (orden_id, articulo_id, requerido) values (v_op, v_tubo, 12), (v_op, v_disco, 3);
   -- Con el switch apagado el disco se aparta como cualquier material.
   update configuracion set valor = 'false' where clave = 'almacen_consumibles_taller';
@@ -117,7 +117,7 @@ begin
 
   -- 8. Apagar el switch: el disco vuelve a ser material de la orden. Lo entregado antes del ERP de un
   --    consumible, con el switch encendido, no se registra contra la orden.
-  insert into ordenes_produccion (articulo_id, cantidad, estado, creado_en) values (v_eq, 1, 'liberada', '2026-10-16') returning id into v_op2;
+  insert into ordenes_produccion (articulo_id, cantidad, estado, creado_en, revisado_ingenieria_en) values (v_eq, 1, 'liberada', '2026-10-16', now()) returning id into v_op2;
   insert into op_materiales (orden_id, articulo_id, requerido) values (v_op2, v_disco, 4);
   perform pg_temp.como(v_alm);
   begin perform surtir_material(v_op2, jsonb_build_array(jsonb_build_object('articulo_id', v_disco, 'cantidad', 4)), null, true); v_ok := true;

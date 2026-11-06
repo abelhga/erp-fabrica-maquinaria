@@ -7,6 +7,8 @@ import { Pagina } from "@/components/layout/Shell";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { PlanosOrden } from "@/components/planos/PlanosArticulo";
 import { Boton } from "@/components/ui/boton";
+import { Dialogo } from "@/components/ui/dialogo";
+import { AreaTexto, Campo } from "@/components/ui/campo";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando, ErrorCarga, Vacio } from "@/components/ui/estados";
 import { useSesion } from "@/lib/sesion";
@@ -105,13 +107,16 @@ export default function DetalleOrden() {
       .eq("orden_id", id).order("solicitado_en", { ascending: false })),
   });
 
-  const [dialogo, setDialogo] = useState<null | "editar" | "cancelar" | "surtir" | "cambio" | "espera" | "etapa" | "stock">(null);
+  const [dialogo, setDialogo] = useState<null | "editar" | "cancelar" | "surtir" | "cambio" | "espera" | "etapa" | "stock" | "apartar">(null);
+  const [motivoApartar, setMotivoApartar] = useState("");
   const abrir = (d: typeof dialogo) => (v: boolean) => setDialogo(v ? d : null);
 
   const inv = { invalidar: [CLAVE] };
   const revisar = useAccion((paso: "ingenieria" | "almacen") => q(supabase.rpc("revisar_orden", { p_op: id, p_paso: paso })), { ...inv, exito: "Revisión registrada" });
-  const apartar = useAccion(() => q<{ articulo_id: string }[]>(supabase.rpc("apartar_material", { p_op: id })), {
+  // Sin la revisión de ingeniería solo gerencia aparta, con motivo (la base lo exige y lo anota en la orden).
+  const apartar = useAccion((motivo?: string) => q<{ articulo_id: string }[]>(supabase.rpc("apartar_material", { p_op: id, p_motivo: motivo ?? null })), {
     ...inv, exito: (r) => (r.length === 0 ? "Material apartado: no falta nada" : `Material apartado; ${r.length} partida(s) con faltante`),
+    alTerminar: () => { setDialogo(null); setMotivoApartar(""); },
   });
   const pedir = useAccion(() => q<string | null>(supabase.rpc("pedir_faltantes", { p_op: id })), {
     ...inv, exito: (r) => (r ? "Faltantes enviados a compras como requisición" : "No había faltantes sin pedir"),
@@ -161,13 +166,15 @@ export default function DetalleOrden() {
     : puede("produccion", 2) ? `/produccion/pedidos?pedido=${o.pedido_id}` : null;
   const lista = material.data ?? [];
   const pasoDe = (k: PasoValidacion["paso"]) => pasos.data?.find((x) => x.paso === k);
+  const revisadaIng = pasoDe("ingenieria")?.estado === "hecho";
   const faltanSinPedir = lista.some((m) => m.faltante - m.pedido_a_compras > 0);
 
   const acciones: Partial<Record<PasoValidacion["paso"], AccionPaso | null>> = !abierta ? {} : {
     ingenieria: p.ing && pasoDe("ingenieria")?.estado === "pendiente" ? { texto: "Marcar revisada", alClic: () => revisar.mutate("ingenieria"), cargando: revisar.isPending } : null,
     apartado: p.apartar ? { texto: pasoDe("apartado")?.estado === "pendiente" ? "Apartar material" : "Volver a apartar", secundaria: pasoDe("apartado")?.estado !== "pendiente",
-                            alClic: () => apartar.mutate(undefined), cargando: apartar.isPending,
-                            deshabilitado: pasoDe("apartado")?.estado === "hecho" && "Ya está todo apartado o surtido" } : null,
+                            alClic: () => (revisadaIng ? apartar.mutate(undefined) : setDialogo("apartar")), cargando: apartar.isPending,
+                            deshabilitado: (pasoDe("apartado")?.estado === "hecho" && "Ya está todo apartado o surtido")
+                              || (!revisadaIng && !p.gerencia && "Falta que ingeniería revise la lista: la gerencia de producción puede apartarla antes si es urgente") } : null,
     faltantes: p.apartar && faltanSinPedir ? { texto: "Pedir a compras", alClic: () => pedir.mutate(undefined), cargando: pedir.isPending } : null,
     almacen: p.almacen && pasoDe("almacen")?.estado === "pendiente" ? { texto: "Marcar revisado", alClic: () => revisar.mutate("almacen"), cargando: revisar.isPending } : null,
     liberada: p.gerencia && o.estado === "planeada" ? { texto: "Liberar al taller", alClic: () => liberar.mutate(undefined), cargando: liberar.isPending,
@@ -404,6 +411,14 @@ export default function DetalleOrden() {
       )}
 
       {p.gerencia && <>
+        <Dialogo abierto={dialogo === "apartar"} alCambiar={abrir("apartar")} titulo="Apartar sin la revisión de ingeniería"
+          descripcion="Ingeniería todavía no revisa la lista de materiales: si la cambia, lo apartado de más se suelta solo y lo nuevo hay que volver a apartarlo."
+          pie={<><Boton variante="secundario" onClick={() => setDialogo(null)}>Esperar a ingeniería</Boton>
+            <Boton onClick={() => apartar.mutate(motivoApartar)} disabled={motivoApartar.trim().length < 5} cargando={apartar.isPending}>Apartar de todos modos</Boton></>}>
+          <Campo etiqueta="¿Por qué no puede esperar?" ayuda="Queda en la orden y en su línea de tiempo.">
+            <AreaTexto autoFocus value={motivoApartar} onChange={(e) => setMotivoApartar(e.target.value)} placeholder="Ej. el cliente recoge el lunes y el material es escaso" />
+          </Campo>
+        </Dialogo>
         <DialogoEditarOrden abierto={dialogo === "editar"} alCambiar={abrir("editar")} o={basica} />
         <DialogoCancelar abierto={dialogo === "cancelar"} alCambiar={abrir("cancelar")} o={basica} />
         <DialogoEnEspera abierto={dialogo === "espera"} alCambiar={abrir("espera")} o={basica} />
