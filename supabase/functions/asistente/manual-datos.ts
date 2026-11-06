@@ -1511,7 +1511,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Cada tarjeta trae la venta de maquinaria con su comisión, la barra hacia el siguiente escalón de meta, la venta de refacciones con su bono y los ajustes. Con crédito compartido, «Pedidos que cuentan este mes» dice qué parte te toca.",
    "La regla está abajo, en «Cómo se calcula»: el porcentaje de tu plan (2 % en los planes actuales) sobre la venta sin IVA de todo lo que no es refacción, más un bono fijo por el escalón de meta alcanzado y otro por el de refacciones.",
    "Los escalones no se suman: se paga el más alto. El plan dice si la venta cuenta por la fecha del pedido, de la factura o del cobro.",
-   "La gerencia o dirección agregan ajustes (bonos de Mercado Libre, correcciones) con «Ajuste», y finanzas la marca pagada con «Marcar pagada»: se guarda la foto del cálculo y el mismo mes no se paga dos veces."
+   "La gerencia o dirección agregan ajustes (bonos de Mercado Libre, correcciones) con «Ajuste», y finanzas la marca pagada con «Marcar pagada»: se guarda la foto del cálculo y el mismo mes no se paga dos veces.",
+   "«Recibo» abre el recibo del mes para imprimir y firmar: sirve antes de pagar (dice «Por pagar») y después (con la fecha y la referencia del pago)."
   ]
  },
  {
@@ -4338,6 +4339,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Registra que la herramienta regresó: cómo llegó (bien, dañada o incompleta) y, si quieres, una foto. Si llegó dañada o incompleta, se abre sola una orden de falla."
+ },
+ {
+  "clave": "botonReciboComision",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Abre el recibo de la comisión del mes en hoja carta, para imprimirlo y que el vendedor lo firme al recibir el pago: el total, de dónde sale (comisión, bonos y ajustes) y los pedidos que cuentan. Antes de pagar dice «Por pagar»; ya pagada trae la fecha y la referencia, con lo que se pagó ese día."
  },
  {
   "clave": "botonReciboRetiro",
