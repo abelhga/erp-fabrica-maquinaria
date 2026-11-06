@@ -81,7 +81,7 @@ export const SISTEMA = {
   pestanaConfigAlmacenes: "Los almacenes, cuáles cuentan para planta y los consumibles del taller.",
   pestanaConfigTaller: "Las etapas del taller (orden, color, capacidad por semana y cuáles van en paralelo) y el aprovechamiento con que se calcula la capacidad automática.",
   pestanaConfigTipoCambio: "El dólar y el euro del día, y su historial.",
-  pestanaConfigIntegraciones: "Mercado Libre (conectar la cuenta, quién la atiende y a nombre de quién quedan las ventas) y Skydropx (guías de paquetería).",
+  pestanaConfigIntegraciones: "Mercado Libre (conectar la cuenta, quién la atiende y a nombre de quién quedan las ventas), Skydropx (guías de paquetería) y el teléfono con IA (la llave del conmutador y quién contesta).",
   datosFiscalesEmpresa: "La razón social, el RFC y el domicilio fiscal salen en el encabezado de la cotización impresa y de la hoja de salida; el enlace de términos y condiciones, al pie de la cotización.",
   tasaIvaEmpresa: "La tasa de IVA con que nacen las cotizaciones y los pedidos nuevos: 16 % general, 8 % en la región fronteriza. Los que ya están hechos guardan su propia tasa y no cambian.",
   descansosEmpresa: "Días que la empresa no trabaja aunque caigan en día laboral (12 de diciembre, Semana Santa…). Se descuentan igual que los feriados al contar vacaciones y permisos.",
@@ -112,4 +112,8 @@ export const SISTEMA = {
   botonProbarSkydropx: "Revisa que el ERP pueda entrar a Skydropx: muestra el saldo de la cuenta y las direcciones dadas de alta allá, para que elijas la de la planta. No genera ni cobra nada.",
   origenSkydropx: "La dirección de la planta de donde salen los paquetes. Se elige de las que ya están dadas de alta en Skydropx, después de «Probar conexión». Sin ella no se puede cotizar ni generar guía.",
   empaqueSkydropx: "La clave del SAT del tipo de empaque que se declara en cada paquete de la guía. Si no se elige otra, va 4G (caja de cartón).",
+  conexionTelefono: "El conmutador con IA que contesta el teléfono (un sistema aparte) le avisa al ERP de cada llamada: quién llamó, quién contestó, el resumen y la grabación. Aquí se liga al cliente por los últimos 10 dígitos de su teléfono, deja su lead si la IA tomó uno, y lo que nadie contestó sale en «A quién llamar hoy». Sin conectar, el conmutador contesta igual, pero nada llega al ERP.",
+  ultimoAvisoTelefono: "Cuándo llegó la última llamada del conmutador. Si en horas de trabajo pasa mucho sin avisos, revisa en Railway las variables ERP_URL y ERP_LLAVE del conmutador. En rojo sale lo último que no se pudo guardar, por ejemplo un aviso con una llave que ya no es la vigente.",
+  llaveTelefono: "La contraseña con la que el conmutador entra al ERP. La genera dirección y se ve una sola vez: cópiala y pégala en Railway como ERP_LLAVE, sin mandarla por chat ni por correo. Generar otra deja sin servir la anterior en ese momento: mientras no pongas la nueva, las llamadas no entran y el conmutador las vuelve a mandar cuando ya tenga la nueva (hasta 3 días).",
+  directorioTelefono: "Los nombres de quienes contestan en el conmutador, cada uno ligado a su persona del ERP. Así la llamada que atendió queda a su nombre: la ve, el lead es suyo si recibe leads y queda en la actividad del cliente. Se llena solo con la primera llamada que atiende cada quien; si trae el mismo teléfono que su perfil, se liga solo. Los demás los liga dirección; al ligarlo, sus llamadas anteriores también quedan a su nombre (los leads ya repartidos no se mueven).",
 } satisfies Record<string, string>;

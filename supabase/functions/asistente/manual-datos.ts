@@ -1388,7 +1388,9 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "En «Integraciones», dirección conecta la cuenta de Mercado Libre (los pasos vienen ahí mismo), elige quiénes la atienden, si las ventas entran como pedidos y a nombre de quién quedan. Los avisos les llegan a quienes la atienden y también a la persona a cuyo nombre quedan las ventas; si no hay nadie, a una persona de dirección. Si eliges a alguien invitado que todavía no entra, le empiezan a llegar en cuanto entre.",
    "La tarjeta dice si los avisos de Mercado Libre están entrando; «Revisar ahora» vuelve a intentar lo que quedó pendiente. Mercado Libre solo avisa lo nuevo: «Traer lo pendiente» trae las preguntas sin contestar y los reclamos que ya estaban y, si las ventas entran como pedidos, las ventas desde la fecha que elijas.",
    "En la tarjeta de Skydropx, quien administra envíos prueba la conexión (muestra el saldo) y elige la dirección de la planta de las que ya están en Skydropx, la clave de carta porte, el tipo de empaque y el formato de la guía. Sin dirección y carta porte no se puede generar guía.",
-   "Ahí también pone el recargo que se le suma al flete cuando un vendedor lo cotiza en una cotización."
+   "Ahí también pone el recargo que se le suma al flete cuando un vendedor lo cotiza en una cotización.",
+   "La tarjeta «Teléfono (recepción con IA)» dice si el conmutador está mandando las llamadas y cuándo llegó la última. Para conectarlo, en Railway se ponen ERP_URL (la dirección que viene ahí, con su botón de copiar) y ERP_LLAVE, la llave que genera dirección con «Generar llave».",
+   "La llave se ve una sola vez: cópiala al momento. Generar otra deja sin servir la anterior. En «Quién contesta» dirección liga cada nombre del conmutador a su persona del ERP; los que traen el mismo teléfono que su perfil se ligan solos."
   ]
  },
  {
@@ -1493,7 +1495,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Al agregar un contacto, si su teléfono o correo ya está en otro cliente, te lo dice antes de guardar.",
    "Si el mismo cliente está dos veces (uno con el nombre del contacto y otro con el de la empresa), «Juntar con otro» pasa todo al que se queda: pedidos, cotizaciones, oportunidades, saldo de la hoja, facturas y contactos (los que ya tiene no se repiten).",
    "Al juntar, lo que le falte al que se queda (RFC, régimen, ciudad, vendedor) lo toma del otro, y el otro se borra. Lo hacen la gerencia de ventas, o tú si los dos clientes son tuyos o libres.",
-   "Si otro cliente tiene el mismo RFC, arriba sale el aviso con su botón «Juntar»; si es una sucursal, déjalo así."
+   "Si otro cliente tiene el mismo RFC, arriba sale el aviso con su botón «Juntar»; si es una sucursal, déjalo así.",
+   "Si el cliente ha llamado al conmutador, abajo de «Actividad» sale «Llamadas»: cuándo, quién contestó o «Nadie contestó», cuánto duró y de qué se habló. «Escuchar» abre la grabación mientras su enlace siga vigente. Si la atendió alguien del ERP, también queda en «Actividad» a su nombre."
   ]
  },
  {
@@ -1641,14 +1644,16 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Lo usan recepción, los vendedores, la gerencia de ventas y marketing, que los ve todos para saber de dónde llegan y qué pasó con ellos.",
    "Al registrarlo pon también dónde está, su empresa (o «Particular») y qué busca con modelo o medida. Si se te pasó algo, al abrirlo te dice qué le falta y lo completas ahí; «Incompletos» junta los que tienen algo pendiente.",
    "Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es y dices «Es este», le llega directo a su vendedor.",
-   "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma a tiempo, se le avisa a la gerencia (mientras no haya gerente de ventas, a dirección).",
+   "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna (sin gerente de ventas, el aviso del lead nuevo le llega a dirección); o quien lo registra escoge al vendedor. Si nadie lo toma a tiempo, se le avisa a la gerencia (mientras no haya gerente de ventas, a dirección).",
    "Si un lead asignado pasa las horas que fijó la gerencia sin ningún intento anotado, se le avisa al vendedor y a la gerencia; con un intento («Le escribí», «No contestó», «No estaba» o «Contestó») ya no cuenta. Mientras no haya gerente de ventas, dirección recibe un resumen por vendedor en la mañana (desde las 9:00) y en la tarde (desde las 15:00) de cada día hábil, y al abrirlo llega a «Sin contactar» de ese vendedor (la etiqueta «De: …» se quita con la ×).",
    "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no. Elige primero por dónde fue: no viene marcado. «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo.",
    "«Crear oportunidad» se habilita hasta que contesta (o pide cotización). Si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta. Si no le interesa, se descarta con el motivo.",
    "Para escribirle, «Mensaje con IA» te lo redacta con lo que busca y lo que le pidas en la caja de contexto. Cada uno sale distinto, porque WhatsApp bloquea a quien manda el mismo texto a muchos; al abrirlo en WhatsApp se anota «Le escribí».",
    "La columna «Intentos» dice lo último que hiciste y cuándo («Le escribiste por WhatsApp · hace 2 h»), y «Sin contactar» junta a los que todavía no les has escrito ni llamado.",
    "Ya convertido, «Cotizar» abre la cotización en la oportunidad del lead; al enviarla el lead dice «Cotizado».",
-   "Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad."
+   "Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad.",
+   "Los leads que deja el conmutador con IA llegan solos: «Lo registró» dice «La IA del teléfono» y al abrirlo sale su llamada, con el resumen y la grabación. Si lo atendió un vendedor que recibe leads, es suyo; si ya es cliente con vendedor vigente, de su vendedor; si no, se reparte como cualquier otro, y cuando quien registra escoge al vendedor, se queda por asignar para la gerencia.",
+   "Recepción ve aquí arriba «Regresar llamada»: las llamadas que nadie contestó y que todavía no son de ningún vendedor. Cuando alguien toma su lead, pasa a ese vendedor."
   ]
  },
  {
@@ -1719,7 +1724,9 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Los motivos de arriba son cotización por vencer (rojo), ya le toca (ámbar), refacciones (azul) y reactivar (gris). Pasa el mouse por cada uno para ver su regla.",
    "«Redactar mensaje» arma un WhatsApp o un correo con el historial del cliente: lo escribe la IA si está conectada; si no, sale una plantilla. Revísalo y ajústalo. Enviarlo lo decides tú, con «Abrir en WhatsApp» o copiándolo.",
    "«¿Sí le escribiste?» lo registra con un toque (con Deshacer) y el cliente pasa a «En seguimiento», con el siguiente paso: llamar al día 3, último mensaje al día 10 y luego esperar una semana. Así nadie del equipo le vuelve a escribir sin saberlo.",
-   "«¿Cómo terminó?» cierra el intento: si le interesa se crea la oportunidad; «no por ahora» o «no contesta» lo regresan a la lista en 90 días; «ya no compra» lo saca, con la razón. Tres intentos y una semana sin respuesta cuentan solos como «no contesta»."
+   "«¿Cómo terminó?» cierra el intento: si le interesa se crea la oportunidad; «no por ahora» o «no contesta» lo regresan a la lista en 90 días; «ya no compra» lo saca, con la razón. Tres intentos y una semana sin respuesta cuentan solos como «no contesta».",
+   "Arriba, cuando hay, sale «Regresar llamada»: las llamadas al conmutador de los últimos 7 días que nadie contestó, de tus clientes y tus leads (la gerencia ve las de todos). Cada una trae el teléfono para marcarle, cuándo llamó, el área y el resumen o el recado.",
+   "Al regresarla dale «Ya le regresé». Si el lead es tuyo, eliges «Contestó» (con lo que te dijo) o «No contestó» y queda como intento del lead; si es de un cliente, queda en su «Actividad». También se quita sola si anotas un intento en su lead o si vuelve a llamar y alguien lo atiende."
   ]
  },
  {
@@ -4860,6 +4867,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Regresa al mapa de todo el país, con el mismo periodo y la misma medida."
  },
  {
+  "clave": "botonYaLeRegrese",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Anota que ya le llamaste y la quita de la lista. Si el lead es tuyo, eliges «Contestó» (con lo que te dijo) o «No contestó», y queda también como intento del lead. Si es de un cliente, queda en su «Actividad». La nota es opcional, salvo con «Contestó»."
+ },
+ {
   "clave": "botonYaLoPediDocumento",
   "modulos": [
    "importaciones"
@@ -5919,6 +5936,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Con la cuenta de Mercado Libre conectada (y las ventas prendidas), cada venta pagada desde ese momento entra sola como pedido (a nombre de la persona elegida para las ventas de ML) y se pide su envío: si es Full sale de la bodega de Mercado Libre; si no, se surte en planta con la guía de Mercado Envíos. Una cancelación en ML cancela el pedido; los reclamos y devoluciones se abren solos con su hora límite, y las preguntas llegan con aviso."
+ },
+ {
+  "clave": "conexionTelefono",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "El conmutador con IA que contesta el teléfono (un sistema aparte) le avisa al ERP de cada llamada: quién llamó, quién contestó, el resumen y la grabación. Aquí se liga al cliente por los últimos 10 dígitos de su teléfono, deja su lead si la IA tomó uno, y lo que nadie contestó sale en «A quién llamar hoy». Sin conectar, el conmutador contesta igual, pero nada llega al ERP."
  },
  {
   "clave": "confiabilidadCosto",
@@ -7148,6 +7172,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Lo que pasó con el dinero de una venta de Mercado Libre, tal cual lo da Mercado Pago: lo que pagó el comprador, lo que se quedó Mercado Libre (su comisión y el envío que pagamos nosotros), las retenciones de impuestos y lo que llega a la cuenta de Mercado Pago, con la fecha en que queda disponible. El cobro del pedido entra solo, por Mercado Pago, en cuanto el pago se aprueba; si Mercado Libre le regresa el dinero al comprador, entra el reembolso en negativo."
+ },
+ {
+  "clave": "directorioTelefono",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Los nombres de quienes contestan en el conmutador, cada uno ligado a su persona del ERP. Así la llamada que atendió queda a su nombre: la ve, el lead es suyo si recibe leads y queda en la actividad del cliente. Se llena solo con la primera llamada que atiende cada quien; si trae el mismo teléfono que su perfil, se liga solo. Los demás los liga dirección; al ligarlo, sus llamadas anteriores también quedan a su nombre (los leads ya repartidos no se mueven)."
  },
  {
   "clave": "disponibilidadMaquina",
@@ -9190,6 +9221,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Tu cuenta de Gmail, conectada una vez para mandar cotizaciones y órdenes de compra desde el ERP. El correo sale de tu cuenta, así que lo ves en tus enviados y las respuestas te llegan a ti. Google te pide permiso de enviar y de leer: leer servirá para ligar al ERP las respuestas a lo que mandes desde aquí. Nadie más puede mandar desde tu cuenta."
  },
  {
+  "clave": "grabacionLlamada",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Abre la grabación de la llamada, que guarda el conmutador. El enlace vence después de un tiempo; vencido, ya no aparece."
+ },
+ {
   "clave": "graficaControlFueraLista",
   "modulos": [
    "inventario",
@@ -10029,6 +10070,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Un lead está completo cuando el vendedor tiene con qué atenderlo: dónde está (ciudad o estado), la empresa (o «Particular» si es una persona) y qué busca con modelo, medida o para qué («Cribadora V3», «Silo fijo para cemento», no solo «Informes»). Si ya es cliente, la empresa y el lugar salen de su ficha. Al abrir uno incompleto te dice qué le falta y lo completas ahí; lo puede completar quien lo registró, el vendedor que lo tiene o la gerencia, mientras siga abierto. «Incompletos» junta los que tienen algo pendiente. Para recepción es un objetivo: cuenta cómo están al revisar el mes, así que si lo completas antes, ya no cuenta."
  },
  {
+  "clave": "leadDelTelefono",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Los leads que deja el conmutador con IA llegan solos, registrados por «La IA del teléfono», con lo que pidió la persona y la nota «Entró por el teléfono (IA)». Si lo atendió alguien que recibe leads, es suyo («lo atendió por teléfono»); si ya es cliente con vendedor vigente, de su vendedor; si no, se reparte como cualquier otro. Cuando quien lo registra escoge al vendedor, como no lo registró nadie, se queda por asignar para la gerencia (mientras no haya gerente de ventas, para dirección)."
+ },
+ {
   "clave": "leadsDeHoyInicio",
   "modulos": [],
   "texto": "Los leads que tú registraste hoy. Abajo, de los que puedes ver, cuántos esperan vendedor y cuántos ya tienen vendedor pero no los ha atendido; se pinta en ámbar si alguno espera vendedor. Clic para abrir Leads."
@@ -10200,6 +10251,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Los equipos y subensambles que llevan esta pieza en su propia lista (no dentro de un subensamble). Ninguna viene marcada: elige en cuáles cambiarla. Si eliges un subensamble, el cambio llega a todos los equipos que lo usan."
  },
  {
+  "clave": "llamadasCliente",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Las llamadas que entraron por el conmutador con IA: cuándo, quién contestó (o «Nadie contestó»), cuánto duró, el área y un resumen de lo que se habló. «Escuchar» abre la grabación mientras su enlace siga vigente. Las ven el vendedor del cliente o del lead, quien la atendió, la gerencia de ventas y dirección; las que no son de nadie, también recepción. Si la atendió alguien del ERP y es de un cliente, también queda en «Actividad» a su nombre."
+ },
+ {
   "clave": "llaveBono",
   "modulos": [
    "rrhh",
@@ -10210,6 +10271,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Un indicador que funciona como candado: si en el mes llega a cierto número de incumplimientos (por ejemplo, días sin entregar el celular), el bono completo vale 0, sin importar lo demás."
+ },
+ {
+  "clave": "llaveTelefono",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "La contraseña con la que el conmutador entra al ERP. La genera dirección y se ve una sola vez: cópiala y pégala en Railway como ERP_LLAVE, sin mandarla por chat ni por correo. Generar otra deja sin servir la anterior en ese momento: mientras no pongas la nueva, las llamadas no entran y el conmutador las vuelve a mandar cuando ya tenga la nueva (hasta 3 días)."
  },
  {
   "clave": "llegadaPlanta",
@@ -10966,6 +11034,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "analisis"
   ],
   "texto": "Los 8 municipios del estado que más compraron en el periodo. Lo de clientes sin municipio no sale aquí."
+ },
+ {
+  "clave": "nadieContesto",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "La llamada terminó sin que ninguna persona la tomara: se intentó pasar a alguien y nadie contestó, o dejó recado. Si la IA la resolvió sola, sin pasarla a nadie, no cuenta como «nadie contestó»."
  },
  {
   "clave": "netoML",
@@ -12222,7 +12300,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "Mercado Libre (conectar la cuenta, quién la atiende y a nombre de quién quedan las ventas) y Skydropx (guías de paquetería)."
+  "texto": "Mercado Libre (conectar la cuenta, quién la atiende y a nombre de quién quedan las ventas), Skydropx (guías de paquetería) y el teléfono con IA (la llave del conmutador y quién contesta)."
  },
  {
   "clave": "pestanaConfigTaller",
@@ -13468,6 +13546,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Cuántos días antes se pide un retiro de ahorro, qué porcentaje de lo ahorrado pone la empresa y el interés moratorio de los préstamos. El interés solo cambia lo que dice el pagaré: la prenómina no cobra intereses."
+ },
+ {
+  "clave": "regresarLlamada",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Las llamadas de los últimos 7 días que nadie contestó y nadie ha regresado. Te salen si el cliente o el lead es tuyo; las que no son de nadie, a recepción y a la gerencia; la gerencia de ventas ve las de todos. Se quitan solas cuando alguien dice «Ya le regresé», cuando se anota un intento en su lead o cuando el mismo número vuelve a llamar y alguien lo atiende. Al dueño le llega un aviso cuando entra."
  },
  {
   "clave": "regresarStock",
@@ -15435,6 +15523,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "admin"
   ],
   "texto": "Cuándo llegó el último aviso de Mercado Libre (una venta, un reclamo o una pregunta que cambió). «Pendientes» son avisos que todavía no se procesan; si alguno falló, el error sale abajo en rojo."
+ },
+ {
+  "clave": "ultimoAvisoTelefono",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Cuándo llegó la última llamada del conmutador. Si en horas de trabajo pasa mucho sin avisos, revisa en Railway las variables ERP_URL y ERP_LLAVE del conmutador. En rojo sale lo último que no se pudo guardar, por ejemplo un aviso con una llave que ya no es la vigente."
  },
  {
   "clave": "ultimoPreventivoHecho",

@@ -92,6 +92,15 @@ transacción y se detiene si algo real depende de lo que iba a borrar).
    - Tope: `configuracion.revision_nocturna.tope_tokens_mes` (30 millones). Al llegar, esa noche
      solo corren las reglas y «Anoche» dice «Tope del mes».
 
+10. **Teléfono con IA** (función de borde `telefono`, migración 258):
+   ```bash
+   npx supabase functions deploy telefono --no-verify-jwt
+   ```
+   - El conmutador (hegamex-voz, en Railway) no tiene sesión del ERP: entra con la llave que
+     genera dirección en Configuración → Integraciones → Teléfono, y que va en Railway como
+     `ERP_LLAVE` (con `ERP_URL` = `https://<proyecto>.supabase.co/functions/v1/telefono`).
+   - El contrato entre los dos sistemas está en [`integracion-telefono.md`](integracion-telefono.md).
+
 ### Sin `supabase link`: por la API de administración
 
 Si no hay salida directa a Postgres (puerto 5432/6543), como en una sesión de Claude en la

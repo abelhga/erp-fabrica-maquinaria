@@ -19,6 +19,7 @@ import { useSesion } from "@/lib/sesion";
 import { dinero, dineroCompacto, fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { Actividades } from "./componentes/Actividades";
+import { ListaLlamadas, useLlamadas } from "./componentes/Llamadas";
 import type { Cartera } from "./componentes/Cartera";
 import {
   CANAL, ESTADO_COT, ESTADO_PEDIDO, ETAPA, RFC_VALIDO, dineroEn, enlaceWhatsApp, normalizarRfc, useFuentes, useVendedores,
@@ -144,14 +145,29 @@ export default function DetalleCliente() {
           <DatosFiscales c={c} editable={puedeEditar} esGerente={esGerente} />
           <Contactos clienteId={c.id} visibles={contactosVisibles} editable={puedeEditar} duenio={c.vendedor?.nombre} />
         </div>
-        <Tarjeta>
-          <EncabezadoTarjeta titulo="Actividad" descripcion="Llamadas, WhatsApp, visitas y tareas con fecha" explica={GLOSARIO.actividad} />
-          <div className="px-5 pb-5"><Actividades clienteId={c.id} puedeCapturar={puede("ventas", 2)} /></div>
-        </Tarjeta>
+        <div className="space-y-4 min-w-0">
+          <Tarjeta>
+            <EncabezadoTarjeta titulo="Actividad" descripcion="Llamadas, WhatsApp, visitas y tareas con fecha" explica={GLOSARIO.actividad} />
+            <div className="px-5 pb-5"><Actividades clienteId={c.id} puedeCapturar={puede("ventas", 2)} /></div>
+          </Tarjeta>
+          <LlamadasCliente clienteId={c.id} />
+        </div>
       </div>
 
       <Historia clienteId={c.id} />
     </Pagina>
+  );
+}
+
+/** Lo que entró por el conmutador. Sin llamadas no se muestra: la mayoría de los clientes nunca ha llamado. */
+function LlamadasCliente({ clienteId }: { clienteId: string }) {
+  const llamadas = useLlamadas({ cliente: clienteId });
+  if (!llamadas.data?.length) return null;
+  return (
+    <Tarjeta>
+      <EncabezadoTarjeta titulo="Llamadas" descripcion="Las que entraron por el conmutador: quién contestó, cuánto duró y de qué se habló" explica={GLOSARIO.llamadasCliente} />
+      <div className="px-5 pb-3 border-t border-borde"><ListaLlamadas llamadas={llamadas.data} /></div>
+    </Tarjeta>
   );
 }
 
