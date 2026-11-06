@@ -59,7 +59,7 @@ export type Moneda = "MXN" | "USD" | "EUR";
 // ---------------------------------------------------------------------------
 export interface Cotizacion {
   id: string; folio: string; version: number; origen_id: string | null; cliente_id: string | null; contacto_id: string | null;
-  atencion: string | null; empresa: string | null; oportunidad_id: string | null; vendedor_id: string; fecha: string;
+  atencion: string | null; empresa: string | null; oportunidad_id: string | null; oportunidad_nueva: boolean; vendedor_id: string; fecha: string;
   vigencia_dias: number; moneda: Moneda; tipo_cambio: number; tasa_iva: number; precios_con_iva: boolean; descuento_pct: number;
   leyenda_promocion: string | null; condiciones_pago: string | null; tiempo_entrega: string | null; notas: string[];
   plan_meses: number | null; logo_comarca_url: string | null; estado: EstadoCotizacion; requiere_autorizacion: boolean;
@@ -70,7 +70,7 @@ export interface Cotizacion {
 export interface Partida {
   id: string; cotizacion_id: string; orden: number; articulo_id: string | null; titulo: string; descripcion: string | null;
   imagen_url: string | null; imagenes_extra?: string[] | null; unidad: string; cantidad: number; precio_unitario: number; precio_lista: number | null;
-  descuento_pct: number; opcional: boolean; bajo_minimo: boolean; importe: number;
+  descuento_pct: number; opcional: boolean; bajo_minimo: boolean; libre_cara: boolean; importe: number;
 }
 export interface VCotizacion {
   id: string; folio: string; version: number; fecha: string; vence: string; estado: EstadoCotizacion; cliente_id: string | null;
@@ -174,6 +174,23 @@ export function telefonoWa(t: string | null | undefined) {
   if (!d) return "";
   return d.length === 10 ? "52" + d : d;
 }
+/** Por dónde salió una cotización (cotizacion_envios.canal). */
+export type CanalEnvio = "whatsapp" | "correo" | "en_persona" | "solo_marcada";
+
+/** La base guarda el número de WhatsApp en dígitos (con 52); para leerlo se vuelve «33 1234 5678». */
+function telefonoLegible(d: string) {
+  const diez = d.length === 12 && d.startsWith("52") ? d.slice(2) : d.length === 13 && d.startsWith("521") ? d.slice(3) : d;
+  return diez.length === 10 ? `${diez.slice(0, 2)} ${diez.slice(2, 6)} ${diez.slice(6)}` : `+${d}`;
+}
+
+/** «por WhatsApp a 33 1234 5678», «por correo a …», «en persona», «sin decir por dónde». */
+export function textoCanalEnvio(canal: CanalEnvio, destino: string | null | undefined) {
+  if (canal === "whatsapp") return destino ? `por WhatsApp a ${telefonoLegible(destino)}` : "por WhatsApp";
+  if (canal === "correo") return destino ? `por correo a ${destino}` : "por correo";
+  if (canal === "en_persona") return "en persona";
+  return "sin decir por dónde";
+}
+
 export function enlaceWhatsApp(telefono: string | null | undefined, texto: string) {
   const t = telefonoWa(telefono);
   return `https://wa.me/${t}?text=${encodeURIComponent(texto)}`;

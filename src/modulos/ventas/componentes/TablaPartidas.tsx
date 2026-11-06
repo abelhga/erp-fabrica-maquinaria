@@ -99,6 +99,7 @@ export function TablaPartidas({ lineas, moneda, editable, sucias, seleccion, alS
       {l.bajo_minimo && !sucias.has(l.id) && <span data-explain={GLOSARIO.bajoMinimo} data-explain-title="Bajo el mínimo"><Insignia tono="peligro" punto>Bajo el mínimo</Insignia></span>}
       {l.opcional && <span data-explain={GLOSARIO.partidaOpcional}><Insignia tono="info">Opcional · no suma</Insignia></span>}
       {!l.articulo_id && <span data-explain={GLOSARIO.partidaLibre}><Insignia>Partida libre</Insignia></span>}
+      {l.libre_cara && !sucias.has(l.id) && <span data-explain={GLOSARIO.partidaLibreCara} data-explain-title="Partida libre por autorizar"><Insignia tono="aviso" punto>Por autorizar</Insignia></span>}
       {l.articulo_id && !Number(l.precio_lista) && !pedida(l) && <span data-explain={GLOSARIO.solicitudPrecio} data-explain-title="Sin precio de lista"><Insignia tono="aviso">Sin precio de lista</Insignia></span>}
       {editable && acciones.pedirPrecio && sinPrecio(l) && !pedida(l) && (
         <button type="button" onClick={(e) => { e.stopPropagation(); acciones.pedirPrecio!(l); }} data-explain={GLOSARIO.solicitudPrecio} data-explain-title="Pedir precio a compras"

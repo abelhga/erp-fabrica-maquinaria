@@ -12,7 +12,7 @@ begin
   v_otro := pg_temp.usuario('otro199@hegamex.com', '{ventas}');
   v_ger := pg_temp.usuario('ger199@hegamex.com', '{gerente_ventas}');
   v_fin := pg_temp.usuario('fin199@hegamex.com', '{finanzas}');
-  insert into clientes (nombre, vendedor_id) values ('Concretos 199', v_ven) returning id into v_cli;
+  insert into clientes (nombre, vendedor_id, estado, fuente_id, publico_general) values ('Concretos 199', v_ven, 'Jalisco', 1, true) returning id into v_cli;  -- convertir los pide (256)
 
   perform pg_temp.como(v_ven);
   -- Ganada: se volvió pedido. $10,000 sin IVA.
@@ -33,7 +33,7 @@ begin
   c_negocia := nueva_cotizacion(v_cli);
   insert into cotizacion_lineas (cotizacion_id, titulo, precio_unitario) values (c_negocia, 'Cribadora 199', 2000);
   update cotizaciones set estado = 'enviada' where id = c_negocia;
-  perform registrar_seguimiento((select oportunidad_id from cotizaciones where id = c_negocia), 'negociacion', 'Pide 5 % menos');
+  perform registrar_seguimiento((select oportunidad_id from cotizaciones where id = c_negocia), 'negociacion', 'Pide 5 % menos', 'llamada');
   -- Sin enviar. $1,000.
   c_borrador := nueva_cotizacion(v_cli);
   insert into cotizacion_lineas (cotizacion_id, titulo, precio_unitario) values (c_borrador, 'Catarina 199', 1000);

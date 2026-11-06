@@ -1,7 +1,7 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Hand, Inbox, Mail, MessageCircle, Phone, Plus, Settings2, Sparkles, UserPlus, X } from "lucide-react";
+import { FilePlus, Hand, Inbox, Mail, MessageCircle, Phone, Plus, Settings2, Sparkles, UserPlus, X } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { SelectorCliente, type ClienteBreve } from "@/components/datos/SelectorCliente";
@@ -47,7 +47,11 @@ export default function Leads() {
   // Con la RLS cada quien recibe solo lo que le toca: recepción lo suyo, ventas la bandeja y lo suyo.
   const leads = useQuery({ queryKey: [...CLAVE_LEADS],
     queryFn: () => q<Lead[]>(supabase.from("v_leads").select("*").order("creado_en", { ascending: false }).limit(1000)) });
-  const todos = leads.data ?? [];
+  // ?vendedor= viene del resumen que recibe dirección («Juan Manuel: 75 leads sin ningún intento»).
+  const deVendedor = params.get("vendedor");
+  const todos = (leads.data ?? []).filter((l) => !deVendedor || l.vendedor_id === deVendedor);
+  const nombreVendedor = deVendedor ? (leads.data ?? []).find((l) => l.vendedor_id === deVendedor)?.vendedor ?? "un vendedor" : null;
+  const quitarVendedor = () => { const p = new URLSearchParams(params); p.delete("vendedor"); setParams(p, { replace: true }); };
   const yo = perfil?.id;
   const pasa = (l: Lead, v: Vista) =>
     v === "abiertos" ? l.estado === "nuevo" || l.estado === "asignado"
@@ -67,7 +71,7 @@ export default function Leads() {
   const cambiar = (v: Vista) => { const p = new URLSearchParams(params); p.set("filtro", v); setParams(p, { replace: true }); };
   const abiertoId = params.get("id");
   const abrir = (id: string | null) => { const p = new URLSearchParams(params); if (id) p.set("id", id); else p.delete("id"); setParams(p, { replace: true }); };
-  const abierto = todos.find((l) => l.id === abiertoId) ?? null;
+  const abierto = (leads.data ?? []).find((l) => l.id === abiertoId) ?? null;
 
   const opciones: { valor: Vista; texto: string; cuenta?: number; explica?: string }[] = [
     ...(gerencia ? [{ valor: "abiertos" as Vista, texto: "Abiertos", cuenta: cuenta("abiertos"), explica: GLOSARIO.filtroLeadsAbiertos }] : []),
@@ -109,6 +113,12 @@ export default function Leads() {
         claseFila={(l) => (l.id === abiertoId ? "bg-marca-suave" : undefined)}
         filtros={<>
           <Filtro<Vista> valor={vista} alCambiar={cambiar} opciones={opciones} />
+          {nombreVendedor && (
+            <button type="button" onClick={quitarVendedor} title="Quitar el filtro de vendedor"
+              className="inline-flex items-center gap-1 rounded-full border border-marca/40 bg-marca-suave px-2.5 py-1 text-xs font-medium text-marca-texto hover:bg-marca-suave/70">
+              De: {nombreVendedor}<X className="h-3.5 w-3.5" />
+            </button>
+          )}
           <span className="ml-auto text-xs text-tenue" data-explain={GLOSARIO.modoLeads} data-explain-title="¿A quién le llega?">
             {MODOS.find((m) => m.valor === modo)?.texto}</span>
         </>}
@@ -138,10 +148,13 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
   const [descartar, setDescartar] = useState(false);
   const [para, setPara] = useState("");
   const [cliente, setCliente] = useState<ClienteBreve | null>(null);
-  const [canal, setCanal] = useState<CanalIntento>("whatsapp");
+  // Sin preseleccionar: con WhatsApp puesto, 247 de 247 intentos de un mes quedaron como WhatsApp.
+  const [canal, setCanal] = useState<CanalIntento | null>(null);
   const [dijo, setDijo] = useState("");
   const [redactar, setRedactar] = useState(false);
+  const ir = useNavigate();
   const vendedores = useVendedoresLeads(!!l && gerencia);
+  useEffect(() => setCanal(null), [l?.id]);
   const intentos = useQuery({
     queryKey: [...CLAVE_LEADS, l?.id, "intentos"], enabled: !!l,
     queryFn: () => q<IntentoLead[]>(supabase.from("lead_intentos").select("id, canal, resultado, nota, en, usuario:perfiles(nombre)").eq("lead_id", l!.id).order("en", { ascending: false }).returns<IntentoLead[]>()),
@@ -160,7 +173,7 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
   const convertir = useAccion(async (a: { id: string; cliente: string | null }) => {
     await q(supabase.rpc("convertir_lead", { p_lead: a.id, p_cliente: a.cliente }));
     return q<{ cliente_id: string }>(supabase.from("leads").select("cliente_id").eq("id", a.id).single());
-  }, { exito: "Listo: ya es oportunidad de su cliente", invalidar: [...invalidar, ["v_oportunidades"], ["v_clientes"]], alTerminar: (r) => alConvertir(r.cliente_id) });
+  }, { exito: "Listo: ya es oportunidad. «Nueva cotización» en su ficha o «Cotizar» aquí la usan", invalidar: [...invalidar, ["v_oportunidades"], ["v_clientes"]], alTerminar: (r) => alConvertir(r.cliente_id) });
   const intento = useAccion(async (a: { id: string; resultado: ResultadoIntento }) => {
     await q(supabase.rpc("registrar_intento_lead", { p_lead: a.id, p_canal: canal, p_resultado: a.resultado, p_nota: a.resultado === "contesto" ? dijo : null }));
     return a.resultado;
@@ -174,6 +187,9 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
   const puedeTomar = l.estado === "nuevo" && modo === "bandeja" && puede("ventas", 2);
   const puedeAtender = l.estado === "asignado" && puede("ventas", 2) && (esMio || gerencia);
   const puedeDescartar = abierto && (gerencia || esMio || (l.capturado_por === perfil?.id && l.estado === "nuevo"));
+  // Cotizar aquí mismo usa la oportunidad del lead: así, al enviarla, quien lo registró ve «Cotizado».
+  const puedeCotizar = l.estado === "convertido" && !!l.oportunidad_id && puede("ventas", 2) && (esMio || puede("ventas", 3))
+    && !!l.etapa_oportunidad && ["prospecto", "contactado", "cotizado", "negociacion"].includes(l.etapa_oportunidad);
   const puedeCompletar = abierto && l.faltan.length > 0 && ((l.capturado_por === perfil?.id && puede("leads", 2)) || (esMio && puede("ventas", 2)) || gerencia);
   const e = estadoLead(l, modo);
 
@@ -202,8 +218,14 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
           {l.vendedor && <Dato etiqueta="Lo tiene">{l.vendedor}{l.como_se_asigno && <span className="text-tenue"> · {COMO[l.como_se_asigno]}</span>}
             {l.asignado_en && <span className="block text-xs text-tenue">{hace(l.asignado_en)}</span>}</Dato>}
           {l.estado === "descartado" && <div className="sm:col-span-2"><Dato etiqueta="Por qué se descartó">{l.motivo_descarte}</Dato></div>}
-          {l.estado === "convertido" && l.cliente_id && puede("ventas") && (
-            <div className="sm:col-span-2"><Link to={`/ventas/clientes/${l.cliente_id}`} className="text-sm text-marca-texto hover:underline">Ver cliente y su oportunidad →</Link></div>
+          {l.estado === "convertido" && (puedeCotizar || (l.cliente_id && puede("ventas"))) && (
+            <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
+              {puedeCotizar && (
+                <Boton tamano="sm" onClick={() => ir(`/ventas/cotizaciones/nueva?oportunidad=${l.oportunidad_id}`)} data-explain={GLOSARIO.botonCotizarLead}>
+                  <FilePlus className="h-3.5 w-3.5" />Cotizar</Boton>
+              )}
+              {l.cliente_id && puede("ventas") && <Link to={`/ventas/clientes/${l.cliente_id}`} className="text-sm text-marca-texto hover:underline">Ver cliente y su oportunidad →</Link>}
+            </div>
           )}
         </dl>
 
@@ -247,16 +269,17 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
             {puedeAtender && (
               <div className="rounded-lg border border-borde p-3 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Seleccion value={canal} onChange={(ev) => setCanal(ev.target.value as CanalIntento)} aria-label="Por dónde" className="w-auto">
+                  <Seleccion value={canal ?? ""} onChange={(ev) => setCanal(ev.target.value as CanalIntento)} aria-label="Por dónde" className="w-auto">
+                    <option value="" disabled>¿Por dónde?</option>
                     {Object.entries(CANAL_INTENTO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </Seleccion>
-                  <Boton variante="secundario" tamano="sm" cargando={intento.isPending && intento.variables?.resultado !== "contesto"}
-                    onClick={() => intento.mutate({ id: l.id, resultado: botonSinRespuesta(canal).resultado })}>{botonSinRespuesta(canal).texto}</Boton>
+                  <Boton variante="secundario" tamano="sm" disabled={!canal} cargando={intento.isPending && intento.variables?.resultado !== "contesto"}
+                    onClick={() => canal && intento.mutate({ id: l.id, resultado: botonSinRespuesta(canal).resultado })}>{canal ? botonSinRespuesta(canal).texto : "Sin respuesta"}</Boton>
                 </div>
                 <AreaTexto rows={2} value={dijo} onChange={(ev) => setDijo(ev.target.value)} aria-label="Qué te dijo"
                   placeholder="Si contestó: qué te dijo (qué busca, para cuándo, si pidió cotización)" />
                 <div className="flex justify-end">
-                  <Boton tamano="sm" disabled={dijo.trim().length < 5} cargando={intento.isPending && intento.variables?.resultado === "contesto"}
+                  <Boton tamano="sm" disabled={!canal || dijo.trim().length < 5} cargando={intento.isPending && intento.variables?.resultado === "contesto"}
                     onClick={() => intento.mutate({ id: l.id, resultado: "contesto" })}>Contestó</Boton>
                 </div>
               </div>

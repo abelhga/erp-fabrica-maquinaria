@@ -139,9 +139,9 @@ describe.skipIf(!hayBase)("Gmail contra la base local", () => {
     await c.query("delete from public.correo_cuentas where usuario_id = $1", [isaac]);
     const cli = await c.query("insert into public.clientes (nombre, vendedor_id) values ('Granos Gmail 217', $1) returning id", [isaac]);
     const con = await c.query("insert into public.contactos (cliente_id, nombre, correo) values ($1, 'Rosa', 'rosa@granos.mx') returning id", [cli.rows[0].id]);
-    const q = await c.query("insert into public.cotizaciones (cliente_id, vendedor_id, contacto_id) values ($1, $2, $3) returning id", [cli.rows[0].id, isaac, con.rows[0].id]);
+    const q = await c.query("insert into public.cotizaciones (cliente_id, vendedor_id, contacto_id, tiempo_entrega) values ($1, $2, $3, '20 días hábiles') returning id", [cli.rows[0].id, isaac, con.rows[0].id]);
     cot = q.rows[0].id;
-    await c.query("insert into public.cotizacion_lineas (cotizacion_id, titulo, precio_unitario) values ($1, 'Cribadora V3', 100000)", [cot]);
+    await c.query("insert into public.cotizacion_lineas (cotizacion_id, titulo, precio_unitario) values ($1, 'Cribadora V3', 15000)", [cot]);   // abajo del tope de partida libre (256): no pide autorización
   });
 
   afterAll(async () => {
@@ -220,6 +220,9 @@ describe.skipIf(!hayBase)("Gmail contra la base local", () => {
     expect(e.rows[0]).toMatchObject({ de: "isaac.gmail@hegamex.com", para: ["rosa@granos.mx"], cc: ["jefe@granos.mx"], gmail_hilo: "hilo-217", adjunto: "Cotizacion prueba.pdf" });
     const a = await c.query("select count(*)::int n from public.actividades where tipo = 'correo' and descripcion like '%rosa@granos.mx' and usuario_id = $1 and cliente_id = (select cliente_id from public.cotizaciones where id = $2)", [isaac, cot]);
     expect(a.rows[0].n).toBe(1);
+    // Por dónde salió (257): un solo renglón, por correo, con el destinatario (sin la copia repetida).
+    const env = await c.query("select canal, destino, marco_enviada from public.cotizacion_envios where cotizacion_id = $1", [cot]);
+    expect(env.rows).toEqual([{ canal: "correo", destino: "rosa@granos.mx", marco_enviada: true }]);
   });
 
   it("si Google retiró el permiso, se pide reconectar y no queda nada a medias", async () => {

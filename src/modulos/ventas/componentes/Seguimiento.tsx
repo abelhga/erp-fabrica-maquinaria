@@ -49,6 +49,15 @@ export interface ParaAnotar {
   vence?: string | null; ultimo_que_paso?: string | null; ultimo_en?: string | null;
 }
 export type Resultado = "sigue" | "no_contesta" | "contactado" | "negociacion" | "pedido" | "perdida";
+/** Cómo va la venta para perderla por «No respondió» y para pedir decidir (lo calcula la base). */
+export interface EstadoSeguimiento {
+  no_contesto: number; no_contesto_pide: number; enviada: string; sin_respuesta_desde: string; dias_pide: number;
+  dias_no_contesta: number; puede_sin_respuesta: boolean; racha: number; decidir: boolean;
+}
+/** El motivo sugerido que la base solo acepta después de insistir. */
+const SIN_RESPUESTA = "No respondió";
+/** Por qué se le vuelve a buscar en esa fecha, cuando ya van varios seguidos sin avance. */
+const PORQUES_FECHA = ["Me pidió que le buscara en esa fecha", "Espera su presupuesto", "Lo decide su jefe o su socio", "Está fuera (vacaciones o viaje)"];
 
 const INVALIDAR = [["seguimientos"], ["v_oportunidades"], ["v_cotizaciones"], ["actividades"], ["calendario"], ["indicadores"]];
 
@@ -182,20 +191,30 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
   const [redactar, setRedactar] = useState(false);
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [texto, setTexto] = useState("");
-  const [canal, setCanal] = useState<(typeof CANALES)[number]["valor"]>("llamada");
+  // Sin preseleccionar: el que viajaba era el de la pantalla, no el de quien hablaba con el cliente.
+  const [canal, setCanal] = useState<(typeof CANALES)[number]["valor"] | null>(null);
   const [proxima, setProxima] = useState("");
   const [motivo, setMotivo] = useState("");
+  const [porque, setPorque] = useState("");
+  const [verFalta, setVerFalta] = useState(false);
   // Se limpia al cambiar de venta, no cada vez que la lista de atrás se recarga.
   const llave = objetivo?.oportunidad_id ?? null;
   useEffect(() => {
     if (!llave) return;
-    setResultado(resultadoInicial ?? null); setTexto(""); setCanal("llamada"); setProxima(""); setMotivo(""); setRedactar(false);
+    setResultado(resultadoInicial ?? null); setTexto(""); setCanal(null); setProxima(""); setMotivo(""); setPorque(""); setVerFalta(false); setRedactar(false);
   }, [llave, resultadoInicial]);
+  const estado = useQuery({
+    queryKey: ["seguimientos", "estado", llave], enabled: !!llave,
+    queryFn: () => q<EstadoSeguimiento>(supabase.rpc("estado_seguimiento", { p_oportunidad: llave })),
+  });
+  const est = estado.data;
+  // Igual que la base: un «No contestó» solo pide decidir cuando ya se podría perder por no respondió.
+  const decidir = !!est?.decidir && (resultado === "sigue" || (resultado === "no_contesta" && est.puede_sin_respuesta));
 
   const guardar = useAccion(
     () => q(supabase.rpc("registrar_seguimiento", {
       p_oportunidad: objetivo!.oportunidad_id, p_resultado: resultado, p_que_paso: texto.trim() || null, p_canal: canal,
-      p_proxima: proxima || null, p_motivo: resultado === "perdida" ? motivo.trim() : null,
+      p_proxima: proxima || null, p_motivo: resultado === "perdida" ? motivo.trim() : decidir ? porque.trim() : null,
     })),
     {
       exito: resultado === "perdida" ? "Anotado: la oportunidad quedó perdida" : resultado === "negociacion" ? "Anotado: pasó a Negociación" : "Seguimiento anotado",
@@ -206,7 +225,12 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
   const opciones = RESULTADOS.filter((r) => r.valor !== "contactado" || objetivo.etapa === "prospecto" || resultadoInicial === "contactado");
   const elegido = RESULTADOS.find((r) => r.valor === resultado);
   const textoValido = resultado === "no_contesta" || texto.trim().length >= 3;
-  const valido = !!resultado && resultado !== "pedido" && textoValido && (resultado !== "perdida" || motivo.trim().length >= 3);
+  // La base decide; esto solo evita mandar algo que ya sabemos que va a rechazar.
+  const sinRespuestaAntes = !!est && !est.puede_sin_respuesta;
+  const motivoSinRespuesta = resultado === "perdida" && motivo.trim().toLowerCase() === SIN_RESPUESTA.toLowerCase();
+  const valido = !!resultado && resultado !== "pedido" && textoValido && !!canal
+    && (resultado !== "perdida" || (motivo.trim().length >= 3 && !(motivoSinRespuesta && sinRespuestaAntes)))
+    && (!decidir || (!!proxima && porque.trim().length >= 3));
   const conFecha = resultado && !["perdida", "pedido"].includes(resultado);
   const enviar = () => { if (valido && !guardar.isPending) guardar.mutate(undefined); };
 
@@ -227,9 +251,10 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
           <div className="flex flex-wrap items-center gap-2 text-sm">
             {objetivo.telefono && <>
               <a className="inline-flex items-center gap-1 rounded-md border border-borde px-2 py-1 text-xs hover:bg-fondo" href={enlaceWhatsApp(objetivo.telefono, "")} target="_blank" rel="noopener noreferrer"
-                data-explain={GLOSARIO.whatsappSeguimientoCotizacion} data-explain-title="WhatsApp">
+                onClick={() => setCanal("whatsapp")} data-explain={GLOSARIO.whatsappSeguimientoCotizacion} data-explain-title="WhatsApp">
                 <MessageCircle className="h-3.5 w-3.5" />WhatsApp{objetivo.contacto ? ` a ${nombrePila(objetivo.contacto)}` : ""}</a>
-              <a className="inline-flex items-center gap-1 rounded-md border border-borde px-2 py-1 text-xs hover:bg-fondo" href={`tel:${objetivo.telefono}`}>
+              <a className="inline-flex items-center gap-1 rounded-md border border-borde px-2 py-1 text-xs hover:bg-fondo" href={`tel:${objetivo.telefono}`}
+                onClick={() => setCanal("llamada")}>
                 <Phone className="h-3.5 w-3.5" />Llamar</a>
             </>}
             {puede("asistente", 1) && !redactar && (
@@ -241,6 +266,13 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
           </div>
         )}
         {redactar && <div className="rounded-lg border border-borde p-3"><BorradorMensaje objetivo={objetivo} alt={32} /></div>}
+
+        {est?.decidir && (
+          <p className="flex gap-2 rounded-lg bg-aviso-suave px-3 py-2 text-xs" data-explain={GLOSARIO.decidirSeguimiento} data-explain-title="Toca decidir">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-aviso" />
+            <span>Ya van <b>{est.racha}</b> «Sigue en pie» o «No contestó» seguidos sin avance. Decide qué sigue: otra fecha con su porqué, Negociación o darla por perdida.{!est.puede_sin_respuesta && " Si ahora tampoco contesta, anota «No contestó» sin más."}</span>
+          </p>
+        )}
 
         <div className="space-y-1.5">
           <p className="text-sm font-medium" data-explain={GLOSARIO.resultadoSeguimiento} data-explain-title="Resultado">¿Cómo va?</p>
@@ -254,19 +286,36 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
               </button>
             ))}
           </div>
-          {elegido && <p className="text-xs text-tenue">{elegido.ayuda}</p>}
+          {elegido && <p className="text-xs text-tenue">{elegido.valor === "no_contesta" && est
+            ? `Se vuelve a intentar en ${est.dias_no_contesta} días hábiles (o la fecha que pongas). Esta venta lleva ${est.no_contesto === 1 ? "1 «No contestó»" : `${est.no_contesto} «No contestó»`}.`
+            : elegido.ayuda}</p>}
         </div>
 
         {resultado === "perdida" && (
           <div className="space-y-1.5">
             <p className="text-sm font-medium" data-explain={GLOSARIO.motivoPerdida}>¿Por qué se perdió?</p>
             <div className="flex flex-wrap gap-1.5">
-              {MOTIVOS_PERDIDA.map((m) => (
-                <button key={m} type="button" onClick={() => setMotivo(m)}
-                  className={cn("rounded-full border px-3 py-1 text-xs", motivo === m ? "border-peligro bg-peligro-suave text-peligro" : "border-borde text-tenue hover:text-texto hover:bg-fondo")}>{m}</button>
-              ))}
+              {MOTIVOS_PERDIDA.map((m) => {
+                // Antes de tiempo no se elige: explica qué falta (es explicable, por eso no va «disabled»).
+                const frenado = m === SIN_RESPUESTA && sinRespuestaAntes;
+                return (
+                  <button key={m} type="button" aria-disabled={frenado || undefined}
+                    onClick={() => (frenado ? setVerFalta(true) : setMotivo(m))}
+                    data-explain={frenado ? GLOSARIO.sinRespuestaSeguimiento : undefined} data-explain-title={frenado ? "Todavía no" : undefined}
+                    className={cn("rounded-full border px-3 py-1 text-xs", frenado ? "border-dashed border-borde text-tenue opacity-60"
+                      : motivo === m ? "border-peligro bg-peligro-suave text-peligro" : "border-borde text-tenue hover:text-texto hover:bg-fondo")}>{m}</button>
+                );
+              })}
             </div>
             <Entrada value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="U otro motivo" />
+            {est && sinRespuestaAntes && (verFalta || motivoSinRespuesta) && (
+              <div className="rounded-lg bg-aviso-suave px-3 py-2 text-xs space-y-2">
+                <p>Para darla por perdida porque no respondió {est.no_contesto_pide - est.no_contesto > 0
+                  ? <>falta anotar <b>{est.no_contesto_pide - est.no_contesto}</b> «No contestó» más en otro día, o esperar</> : "hay que esperar"} al <b>{fecha(est.sin_respuesta_desde)}</b> ({est.dias_pide} días hábiles desde que se envió). Si el cliente te dijo que no, elige lo que te dijo.</p>
+                <Boton tamano="sm" variante="secundario" onClick={() => { setResultado("no_contesta"); setMotivo(""); setVerFalta(false); }}>
+                  <PhoneOff className="h-4 w-4" />Anotar «No contestó»</Boton>
+              </div>
+            )}
           </div>
         )}
 
@@ -281,23 +330,38 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
               <p className="text-sm font-medium" data-explain={GLOSARIO.canalSeguimientoCotizacion}>¿Por dónde?</p>
               <div className="flex flex-wrap gap-1">
                 {CANALES.map((c) => (
-                  <button key={c.valor} type="button" onClick={() => setCanal(c.valor)}
+                  <button key={c.valor} type="button" onClick={() => setCanal(c.valor)} aria-pressed={canal === c.valor}
                     className={cn("inline-flex items-center gap-1.5 h-8 rounded-full px-3 text-xs font-medium border transition",
                       canal === c.valor ? "bg-marca text-white border-marca" : "border-borde text-tenue hover:text-texto hover:bg-fondo")}>
                     <c.icono className="h-3.5 w-3.5" />{c.texto}
                   </button>
                 ))}
               </div>
+              {!canal && <p className="text-xs text-tenue">Elige por dónde fue</p>}
             </div>
             {conFecha && (
               <div data-explain={GLOSARIO.siguienteSeguimientoCotizacion} data-explain-title="Siguiente seguimiento">
                 <Campo etiqueta="Siguiente seguimiento" className="sm:w-48"
-                  ayuda={proxima ? undefined : resultado === "no_contesta" ? "Vacío: en 2 días hábiles" : resultado === "contactado" ? "Vacío: sin fecha si no hay cotización" : "Vacío: en 3 días hábiles"}>
+                  ayuda={decidir ? `Obligatoria: ya van ${est!.racha} seguidos` : proxima ? undefined : resultado === "no_contesta" ? "Vacío: en 2 días hábiles" : resultado === "contactado" ? "Vacío: sin fecha si no hay cotización" : "Vacío: en 3 días hábiles"}>
                   <Entrada type="date" value={proxima} min={hoyMx()} onChange={(e) => setProxima(e.target.value)} />
                 </Campo>
               </div>
             )}
           </div>
+          {decidir && (
+            <div className="space-y-1.5" data-explain={GLOSARIO.decidirSeguimiento} data-explain-title="¿Por qué esa fecha?">
+              <Campo etiqueta="¿Por qué esa fecha?">
+                <Entrada value={porque} onChange={(e) => setPorque(e.target.value)} placeholder="Ej.: decide en enero"
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); enviar(); } }} />
+              </Campo>
+              <div className="flex flex-wrap gap-1.5">
+                {PORQUES_FECHA.map((p) => (
+                  <button key={p} type="button" onClick={() => setPorque(p)}
+                    className={cn("rounded-full border px-3 py-1 text-xs", porque === p ? "border-marca bg-marca-suave text-marca-texto" : "border-borde text-tenue hover:text-texto hover:bg-fondo")}>{p}</button>
+                ))}
+              </div>
+            </div>
+          )}
         </>}
       </div>
     </Dialogo>

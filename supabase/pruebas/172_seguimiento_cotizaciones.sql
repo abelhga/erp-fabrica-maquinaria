@@ -1,6 +1,10 @@
 -- Seguimiento de cotizaciones: enviar agenda uno a 3 días hábiles; solo se cierra diciendo qué
 -- pasó y el resultado mueve la oportunidad; Negociación sin qué pasó no entra; con más de 10
 -- vencidos no se envía otra cotización hasta que la gerencia libere; pedido o rechazo lo cierran.
+
+-- Esta prueba no es de partidas libres (256): sus «Cribadora…» sin artículo pedirían autorización.
+update configuracion set valor = valor || '{"desde": "2999-01-01"}' where clave = 'partidas_libres';
+
 do $$
 declare v_ven uuid; v_otro uuid; v_ger uuid; v_cli uuid; c1 uuid; c2 uuid; c3 uuid; v_op uuid; v_op3 uuid; v_s uuid;
   v_ok boolean; v_err text; v_n int; i int;
@@ -37,7 +41,7 @@ begin
   -- Otro vendedor no lo ve ni lo anota; la gerencia sí lo ve.
   perform pg_temp.como(v_otro);
   assert not exists (select 1 from v_seguimientos where id = v_s), 'otro vendedor vio el seguimiento';
-  begin perform registrar_seguimiento(v_op, 'sigue', 'Le marqué'); v_ok := true; exception when insufficient_privilege then v_ok := false; end;
+  begin perform registrar_seguimiento(v_op, 'sigue', 'Le marqué', 'llamada'); v_ok := true; exception when insufficient_privilege then v_ok := false; end;
   assert not v_ok, 'otro vendedor anotó el seguimiento';
   perform pg_temp.como(v_ger);
   assert exists (select 1 from v_seguimientos where id = v_s), 'la gerencia no ve el seguimiento';
@@ -50,7 +54,7 @@ begin
   assert not v_ok and v_err like '%anota qué pasó%', 'pasó a Negociación sin qué pasó: ' || coalesce(v_err, '');
 
   -- Sin qué pasó no se cierra; con «sigue» se anota y se agenda el siguiente.
-  begin perform registrar_seguimiento(v_op, 'sigue', '  '); v_ok := true; exception when check_violation then v_ok := false; end;
+  begin perform registrar_seguimiento(v_op, 'sigue', '  ', 'llamada'); v_ok := true; exception when check_violation then v_ok := false; end;
   assert not v_ok, 'cerró el seguimiento sin qué pasó';
   perform registrar_seguimiento(v_op, 'sigue', 'Lo está viendo con su socio', 'whatsapp');
   assert (select estado = 'hecho' and resultado = 'sigue' and actividad_id is not null from seguimientos_cotizacion where id = v_s), 'no se cerró como hecho';
@@ -84,7 +88,7 @@ begin
   insert into cotizacion_lineas (cotizacion_id, titulo, precio_unitario) values (c3, 'Colector de polvos', 29000);
   update cotizaciones set estado = 'enviada' where id = c3;
   select oportunidad_id into v_op3 from cotizaciones where id = c3;
-  begin perform registrar_seguimiento(v_op3, 'perdida', 'Compró en otro lado'); v_ok := true; exception when check_violation then v_ok := false; end;
+  begin perform registrar_seguimiento(v_op3, 'perdida', 'Compró en otro lado', 'llamada'); v_ok := true; exception when check_violation then v_ok := false; end;
   assert not v_ok, 'se perdió sin motivo';
   perform registrar_seguimiento(v_op3, 'perdida', 'Compró en otro lado', 'llamada', null, 'Precio');
   assert (select etapa = 'perdida' and motivo_perdida = 'Precio' from oportunidades where id = v_op3), 'no quedó perdida con su motivo';

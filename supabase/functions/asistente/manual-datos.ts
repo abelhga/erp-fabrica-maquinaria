@@ -611,7 +611,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "«Subir complementos de pago», arriba, registra cada pago en el pedido de su factura, aunque subas muchos a la vez, y no duplica lo que ya estaba.",
    "Si a una factura le falta el UUID o tiene un dato mal, corrígela con el lápiz en vez de registrarla otra vez: un folio o un UUID repetido no entra.",
    "La antigüedad corre desde la primera factura, o desde el pedido si aún no se factura; la de la hoja, desde la venta (los pagos tapan primero las ventas más viejas).",
-   "Los saldos en dólares se pasan a pesos con el tipo de cambio de hoy, que se ve arriba (finanzas y compras lo pueden capturar ahí)."
+   "Los saldos en dólares se pasan a pesos con el tipo de cambio de hoy, que se ve arriba (finanzas y compras lo pueden capturar ahí).",
+   "Te llega un aviso cuando un pedido de maquinaria con anticipo en sus condiciones de pago entra a producción sin ningún cobro registrado: o falta registrar el pago, o hay que hablarle al cliente."
   ]
  },
  {
@@ -1466,10 +1467,11 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "El directorio de clientes de todos los vendedores: de quién es cada cuenta y hasta cuándo, para no duplicarla ni pisarse.",
    "Paso 1: Antes de dar de alta uno, búscalo por nombre, razón social, RFC o ciudad.",
-   "Paso 2: Si no existe, dale «Nuevo cliente»; si existe, clic en su renglón abre su ficha.",
+   "Paso 2: Dale «Nuevo cliente»: mientras escribes nombre y teléfono te dice si ya existe; si sí, «Usar este».",
    "Todos ven que la cuenta existe y de quién es; teléfonos, historial y saldo solo los ven el dueño, la gerencia y cobranza.",
    "«Mis clientes» son los tuyos y «Libres» los que no tienen dueño. En «Vendedor dueño» ves hasta cuándo es suya la cuenta: en ámbar si le quedan menos de 30 días, en rojo si ya venció.",
-   "Con CSV te llevas la lista a Excel."
+   "Con CSV te llevas la lista a Excel.",
+   "Si das de alta a alguien que ya es cliente de otro vendedor (mismo teléfono, correo o nombre), o le cotizas a un cliente de otro, a ese vendedor y a la gerencia les llega un aviso. No se bloquea: es para que se pongan de acuerdo."
   ]
  },
  {
@@ -1483,10 +1485,12 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "La ficha del cliente: datos fiscales, contactos, seguimiento e historial completo de cotizaciones, pedidos, oportunidades y lo que compró antes del ERP.",
    "Paso 1: Si la cuenta está libre, dale «Hacerlo mío» para que quede a tu nombre.",
    "Paso 2: En «Actividad», anota cada llamada, WhatsApp o visita en una línea y Enter.",
-   "Paso 3: Dale «Nueva cotización» para cotizarle: sale ya ligada a este cliente.",
+   "Paso 3: Dale «Nueva cotización»: sale ligada a su oportunidad abierta; si tiene varias, eliges cuál.",
+   "«Nueva cotización» usa la oportunidad que el cliente tenía abierta sin cotizar (la del lead primero). Si tiene varias, o una ya cotizada, te pregunta para cuál es; «Es otro proyecto» abre una nueva al enviarla.",
    "Arriba ves de quién es la cuenta y hasta cuándo. Si es de otro vendedor solo ves eso: contactos, compras y saldo quedan privados. Si te buscó a ti, pídele a la gerencia que lo reasigne o que compartan el crédito.",
    "En «Actividad», si le pones fecha a una nota se vuelve tarea. Tus seguimientos alargan la vigencia de la cuenta a tu nombre.",
-   "Para facturar bien captura RFC, régimen, CP fiscal y uso de CFDI, o llénalos con la constancia de situación fiscal.",
+   "Para facturar bien captura RFC, régimen, CP fiscal y uso de CFDI, o llénalos con la constancia de situación fiscal; o marca «Público en general» si no pide factura a su nombre.",
+   "Al agregar un contacto, si su teléfono o correo ya está en otro cliente, te lo dice antes de guardar.",
    "Si el mismo cliente está dos veces (uno con el nombre del contacto y otro con el de la empresa), «Juntar con otro» pasa todo al que se queda: pedidos, cotizaciones, oportunidades, saldo de la hoja, facturas y contactos (los que ya tiene no se repiten).",
    "Al juntar, lo que le falte al que se queda (RFC, régimen, ciudad, vendedor) lo toma del otro, y el otro se borra. Lo hacen la gerencia de ventas, o tú si los dos clientes son tuyos o libres.",
    "Si otro cliente tiene el mismo RFC, arriba sale el aviso con su botón «Juntar»; si es una sucursal, déjalo así."
@@ -1525,9 +1529,10 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 3: En «Seguimiento», dale «¿Qué pasó?», escribe lo que dijo el cliente y Enter.",
    "Los vendedores ven las suyas; la gerencia de ventas ve las de todo el equipo y autoriza precios.",
    "«Solo vencidas» deja las que pasaron su vigencia sin cerrarse (renglones en rojo). Abajo ves cuánto suma lo filtrado en pesos y sin IVA; con CSV te la llevas a Excel.",
-   "Para la gerencia, «Por autorizar» es la cola de precios abajo del mínimo: primero las que el vendedor ya pidió, con su nota, cuántas partidas van bajo el mínimo y qué tanto abajo de lista. «Autorizar» deja al vendedor enviarla.",
+   "Para la gerencia, «Por autorizar» es la cola de precios abajo del mínimo y de partidas libres de $20,000 o más: primero las que el vendedor ya pidió, con su nota, cuántas partidas van bajo el mínimo y qué tanto abajo de lista. «Autorizar» deja al vendedor enviarla.",
    "«Seguimiento» es la lista de cotizaciones enviadas a las que toca preguntarles qué pasó: primero las vencidas, luego las de hoy y luego las que vienen. Cada cotización enviada aparece aquí 3 días hábiles después.",
-   "En «¿Qué pasó?» eliges cómo va (sigue en pie, no contestó, contactado, negociando, ya compró o se perdió) y escribes lo que dijo el cliente; Enter lo guarda y abre la siguiente. Si sigue viva, se agenda la próxima.",
+   "En «¿Qué pasó?» eliges cómo va (sigue en pie, no contestó, contactado, negociando, ya compró o se perdió), por dónde fue (no viene marcado) y escribes lo que dijo el cliente; Enter lo guarda y abre la siguiente. Si sigue viva, se agenda la próxima.",
+   "Para darla por perdida porque no respondió hacen falta 2 «No contestó» en días distintos o 10 días hábiles desde el envío; antes, la ventana te ofrece «No contestó». Al tercer «Sigue en pie» o «No contestó» seguido te pide decidir: otra fecha con su porqué, Negociación o perdida (si no contesta y aún no se puede perder, «No contestó» pasa sin más).",
    "El botón «Mensaje» (con destellos) de cada renglón, o «Redactar mensaje» dentro de «¿Qué pasó?», le pide a la IA el WhatsApp de seguimiento con lo que has anotado de esa venta: entre más detalle anotes, más a la medida sale.",
    "El mensaje lo revisas, lo cambias si quieres y lo abres en WhatsApp; no se manda solo.",
    "Con más de 10 seguimientos vencidos no puedes enviar cotizaciones nuevas hasta ponerte al día; el aviso de arriba te lo dice antes.",
@@ -1545,22 +1550,26 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "El editor de la cotización, con la plantilla de la hoja: agregas partidas, pones condiciones y la envías; cada versión se guarda sin pisar la anterior.",
    "Paso 1: Agrega partidas: escribe parte del nombre o la clave y Enter.",
    "Paso 2: Llena «Tiempo de entrega»: sin él no se puede enviar.",
-   "Paso 3: Dale «Enviar» y elige «Enviar por WhatsApp», «Por correo» o «Solo marcar enviada».",
+   "Paso 3: Dale «Enviar»: por WhatsApp, por correo, o «Solo marcar enviada» diciendo por dónde salió.",
    "Se guarda sola mientras escribes; arriba dice «Guardado» con la hora.",
+   "Arriba, «Oportunidad» dice a qué venta pertenece. Sale sola con la que el cliente tenía abierta; si cambias el cliente, toma la del nuevo. Si es otro proyecto, elige «Una nueva al enviar».",
    "Al agregar una partida, el precio de lista, la descripción y la foto se llenan solos (clic en la foto para pegar otra liga o subir una). Clic en una partida muestra su ficha de venta: precio mínimo, existencia y entrega.",
    "Para fletes, instalación o servicios usa «Partida libre». Con «Flete con Skydropx» cotizas el envío con el código postal del cliente y los bultos de las partidas, y se agrega la partida de flete con su precio (no se genera guía ni se cobra).",
+   "Una partida libre de $20,000 o más sin IVA que no es flete, instalación, puesta en marcha ni «manejo y entrega» pasa la cotización a «Por autorizar», igual que un precio abajo del mínimo.",
    "Si algo no tiene precio, «Pedir precio a compras» y aquí ves cuando contestan.",
    "Si un precio queda abajo del mínimo, la partida se marca en rojo y la cotización pasa a «Por autorizar»: pide la autorización a la gerencia con «Pedir autorización» antes de enviarla. La gerencia la da con «Autorizar precios».",
+   "Al convertirla en pedido, si al cliente le falta el RFC o la razón social (y no es «Público en general»), el estado o cómo llegó, te pide solo eso ahí mismo y se guarda en su ficha.",
    "Junto a «Tiempo de entrega» están los atajos «Inmediata (en existencia)» y «Se confirma al recibir el anticipo», además del que estima el ERP con la carga del taller.",
    "Abajo de «Tiempo de entrega» ves cuándo sale de verdad con el taller como está hoy: lo que tarda el equipo o lo que tarda la fila del taller, lo que sea más tarde. Con «Usar» lo pones en la cotización; si prometes menos días, se pone en amarillo. Al convertir a pedido, la fecha compromiso ya viene con esa fecha.",
    "El botón principal cambia según el estado: «Enviar», «Convertir a pedido» (eliges partidas y fecha compromiso) o «Nueva versión».",
-   "Enviar la deja como enviada y agenda preguntar qué pasó en 3 días hábiles. «Abrir PDF» solo abre la hoja: si la mandas por otro lado, dale después «Solo marcar enviada». Con más de 10 seguimientos vencidos no deja enviar, ni sacar el PDF o la vista previa de una cotización que todavía no envías, hasta ponerte al día.",
+   "Enviar la deja como enviada y agenda preguntar qué pasó en 3 días hábiles. «Abrir PDF» solo abre la hoja: si la mandas por otro lado, dale después «Solo marcar enviada» y di por dónde salió (WhatsApp desde tu celular, correo fuera del ERP, en persona, o solo marcarla). Con más de 10 seguimientos vencidos no deja enviar, ni sacar el PDF o la vista previa de una cotización que todavía no envías, hasta ponerte al día.",
+   "Ya enviada, arriba dice por dónde salió y a qué número o correo. Cada vez que la vuelves a compartir por WhatsApp o por correo también queda anotado, para saber cuáles sí le llegaron al cliente.",
    "Ya enviada no se edita; para cambiarla saca una nueva versión: te pregunta si la actual ya no vale (queda rechazada, o cancelada si no se envió) o si sigue vigente.",
-   "En el menú «···» están imprimir, duplicar y marcar rechazada con su motivo. «Vista previa» te enseña la hoja tal como la recibe el cliente sin salir del editor.",
+   "En el menú «···» están imprimir, duplicar y marcar rechazada con su motivo («No respondió», solo después de 2 «No contestó» en días distintos o 10 días hábiles desde el envío). «Vista previa» te enseña la hoja tal como la recibe el cliente sin salir del editor.",
    "Si el equipo tiene más fotos, salen en miniatura bajo la partida y en la hoja de fotos al final del PDF; pasa el mouse por una y con la × la quitas de esta cotización.",
    "«Por correo» (en Enviar) o «Mandar por correo» (en el menú «···») manda la cotización desde tu propio Gmail con el PDF adjunto: el mismo que sale en Imprimir. Propone el correo del contacto y los demás contactos del cliente con correo; puedes cambiar el asunto y el mensaje.",
-   "Las respuestas te llegan a tu Gmail, como siempre. La primera vez te pide conectar tu Gmail. Si la cotización no se puede enviar (precios abajo del mínimo sin autorizar, seguimientos vencidos), te dice por qué y no sale nada.",
-   "Ya mandada por correo queda como enviada, con su seguimiento, y en la bitácora del cliente queda a qué correo se fue.",
+   "Las respuestas te llegan a tu Gmail, como siempre. La primera vez te pide conectar tu Gmail. Si la cotización no se puede enviar (precios abajo del mínimo o partidas libres sin autorizar, seguimientos vencidos), te dice por qué y no sale nada.",
+   "Ya mandada por correo queda como enviada, con su seguimiento. Queda anotado que salió por correo y a quién, y en la bitácora del cliente también.",
    "Si el cliente no quiere factura, marca «Sin IVA (no lleva factura)»: el precio de cada partida queda igual sin IVA y el total es el subtotal. Si los precios traían IVA incluido, se les quita. En la hoja impresa solo sale el total (sin renglón de IVA) y el pedido sale sin IVA.",
    "«Sin IVA» se cambia mientras la cotización no se haya enviado; ya enviada, saca una nueva versión."
   ]
@@ -1575,7 +1584,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Se crea una cotización con las condiciones de pago, entrega y notas que la gerencia dejó por defecto, y en un momento se abre el editor.",
    "El folio se asigna cuando agregas la primera partida (o cuando la mandas a autorizar o la envías): si abres y sales sin capturar, no se gasta un folio y el borrador vacío se borra solo al día siguiente.",
-   "Si llegas desde un cliente o una oportunidad, la cotización ya sale ligada a ellos y con el contacto principal del cliente."
+   "Si llegas desde un cliente o una oportunidad, la cotización ya sale ligada a ellos y con el contacto principal del cliente. Desde un cliente se liga a la oportunidad que tenía abierta sin cotizar (la del lead primero); si tiene varias, antes te pregunta cuál."
   ]
  },
  {
@@ -1627,16 +1636,18 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Aquí se anota a quien llama o escribe interesado y todavía no es cliente ni oportunidad, para que no se pierda en un papel.",
    "Paso 1: Dale «Registrar lead», escribe quién es, cómo contactarlo y qué busca, y Enter.",
-   "Paso 2: Abre el lead y anota cada intento: «Le escribí», «No contestó» o «Contestó».",
+   "Paso 2: Abre el lead, elige por dónde fue y anota cada intento: «Le escribí», «No contestó» o «Contestó».",
    "Paso 3: Cuando conteste, dale «Crear oportunidad»; si no le interesa, «Descartar» con el motivo.",
    "Lo usan recepción, los vendedores, la gerencia de ventas y marketing, que los ve todos para saber de dónde llegan y qué pasó con ellos.",
    "Al registrarlo pon también dónde está, su empresa (o «Particular») y qué busca con modelo o medida. Si se te pasó algo, al abrirlo te dice qué le falta y lo completas ahí; «Incompletos» junta los que tienen algo pendiente.",
    "Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es y dices «Es este», le llega directo a su vendedor.",
-   "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma o nadie lo atiende a tiempo, se le avisa a la gerencia.",
-   "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no: «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo.",
+   "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma a tiempo, se le avisa a la gerencia (mientras no haya gerente de ventas, a dirección).",
+   "Si un lead asignado pasa las horas que fijó la gerencia sin ningún intento anotado, se le avisa al vendedor y a la gerencia; con un intento («Le escribí», «No contestó», «No estaba» o «Contestó») ya no cuenta. Mientras no haya gerente de ventas, dirección recibe un resumen por vendedor en la mañana (desde las 9:00) y en la tarde (desde las 15:00) de cada día hábil, y al abrirlo llega a «Sin contactar» de ese vendedor (la etiqueta «De: …» se quita con la ×).",
+   "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no. Elige primero por dónde fue: no viene marcado. «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo.",
    "«Crear oportunidad» se habilita hasta que contesta (o pide cotización). Si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta. Si no le interesa, se descarta con el motivo.",
    "Para escribirle, «Mensaje con IA» te lo redacta con lo que busca y lo que le pidas en la caja de contexto. Cada uno sale distinto, porque WhatsApp bloquea a quien manda el mismo texto a muchos; al abrirlo en WhatsApp se anota «Le escribí».",
    "La columna «Intentos» dice lo último que hiciste y cuándo («Le escribiste por WhatsApp · hace 2 h»), y «Sin contactar» junta a los que todavía no les has escrito ni llamado.",
+   "Ya convertido, «Cotizar» abre la cotización en la oportunidad del lead; al enviarla el lead dice «Cotizado».",
    "Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad."
   ]
  },
@@ -1683,12 +1694,12 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 2: Arrastra una tarjeta a otra columna para cambiarla de etapa.",
    "Paso 3: Dale clic a una tarjeta para editarla, sacar una cotización o anotar qué pasó.",
    "Los vendedores la usan para no soltar a nadie; la gerencia, para ver qué está atorado, y puede filtrar por vendedor.",
-   "Si sueltas una tarjeta en «Perdida» te pide el motivo. A «Negociación» (y de Prospecto a Contactado) no pasa solo con arrastrar: se abre «¿Qué pasó?», escribes lo que dijo el cliente y eso la mueve.",
+   "Si sueltas una tarjeta en «Perdida» te pide el motivo; «No respondió» se acepta cuando ya van 2 «No contestó» en días distintos o 10 días hábiles desde que se envió su cotización. A «Negociación» (y de Prospecto a Contactado) no pasa solo con arrastrar: se abre «¿Qué pasó?», escribes lo que dijo el cliente y eso la mueve.",
    "En el detalle de la derecha editas monto, probabilidad y cierre estimado, sacas una cotización y anotas qué pasó.",
    "Los días en ámbar dicen que lleva más de 14 en la misma etapa; la tarea en rojo, que ya venció. La etiqueta «Seguimiento» dice cuándo toca preguntarle al cliente qué pasó con su cotización (en rojo si ya venció); dale clic para anotarlo ahí mismo.",
    "Ganadas y perdidas se quedan 60 días en el tablero; después solo en la vista de lista, que también se descarga a CSV.",
    "No todo se mueve a mano: enviar una cotización pasa su oportunidad a «Cotizado» (y la crea si no existía) y le agenda su seguimiento a 3 días hábiles; convertirla en pedido la marca «Ganada», y rechazarla la cierra como «Perdida» si no tiene otra cotización viva.",
-   "Al anotar qué pasó, «Negociando» la pasa a Negociación y «Se perdió» la cierra con su motivo."
+   "Al anotar qué pasó, «Negociando» la pasa a Negociación y «Se perdió» la cierra con su motivo («No respondió», con la misma regla)."
   ]
  },
  {
@@ -1724,6 +1735,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 2: Para una venta de Mercado Libre, sitio web o mostrador, usa «Pedido sin cotización».",
    "Los renglones en rojo están atrasados: pasó su fecha compromiso. «Producción» muestra el avance del taller y «Saldo» lo que falta por cobrar (dice «pagado» en verde si ya se cobró todo).",
    "En «Pedido sin cotización» eliges cliente, canal y número de venta, y en el siguiente paso agregas las partidas con su precio de lista. Los servicios sin precio fijo, como «Servicio de paquetería», te piden el monto (sin IVA) al agregarlos.",
+   "En un pedido sin cotización, una partida escrita a mano de $20,000 o más sin IVA que no es flete, instalación, puesta en marcha ni «manejo y entrega» solo la captura la gerencia de ventas; si eres vendedor, cotízala y pide la autorización.",
    "Abajo ves el total y lo por cobrar de lo filtrado, en pesos, y aparte lo que tus clientes ya debían en la hoja (los pedidos que vienen de la hoja se cobran contra eso).",
    "Los pedidos ya entregados que vienen de las hojas no salen de entrada; actívalos con «Incluir históricos de los paneles».",
    "Los de la hoja que siguen en el taller sí salen siempre, con «en saldo de arranque» en la columna de saldo: su cobro se lleva en el saldo de arranque del cliente."
@@ -1746,6 +1758,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "En «Entregar» sacas todo o una parte de cada partida: lo demás queda por entregar. La foto de la hoja firmada la puedes subir después. Lo que sale se descuenta del inventario, y cada entrega sale en el recuadro de entregas con su hoja.",
    "Si te equivocaste, el aviso trae «Deshacer» por 15 minutos; después la reabre la gerencia de ventas con el motivo. Entregan almacén, el vendedor sus pedidos, la gerencia de ventas y dirección.",
    "Facturas y cobros los registra finanzas, y el saldo se recalcula solo; una factura ya registrada se corrige o se quita con su lápiz.",
+   "Si el pedido es de maquinaria, sus condiciones de pago dicen anticipo y entra a producción sin ningún cobro registrado, al vendedor y a finanzas les llega un aviso, una sola vez. No detiene al taller: si el cliente ya pagó, falta registrar el cobro.",
    "Si el pedido tiene equipos en el taller, «Plan del taller» enseña cuándo entra y sale cada uno de cada área y si llega a la fecha compromiso (el rombo verde llega, el rojo no). Es el plan de la planta: se mueve solo con lo que pasa en el piso. Clic en un equipo abre su orden.",
    "Si es una venta de Mercado Libre, el recuadro «Mercado Libre» dice cómo va su envío allá (lista para enviar, en camino, entregada) y el dinero: lo que pagó el comprador, lo que se quedó Mercado Libre, las retenciones y lo que llega a Mercado Pago.",
    "En una venta de Mercado Libre el cobro entra solo en cuanto se aprueba el pago, y el envío y el pedido avanzan solos con lo que dice Mercado Libre.",
@@ -2436,7 +2449,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "El vendedor ya terminó de capturar y pidió la autorización, con su nota: está esperando a la gerencia de ventas. «Todavía capturando» quiere decir que tiene precios abajo del mínimo pero aún no la pide."
+  "texto": "El vendedor ya terminó de capturar y pidió la autorización, con su nota: está esperando a la gerencia de ventas. «Todavía capturando» quiere decir que tiene precios abajo del mínimo o partidas libres de $20,000 o más pero aún no la pide."
  },
  {
   "clave": "autorizacionPrecios",
@@ -2446,7 +2459,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cuando hay partidas abajo del mínimo, terminas de capturar y das “Pedir autorización” (con una nota del porqué, si quieres). La gerencia de ventas la ve en su cola y autoriza. Si después cambias las partidas, el descuento, la moneda o el IVA, la autorización se pierde y hay que pedirla otra vez."
+  "texto": "Cuando hay partidas abajo del mínimo o partidas libres de $20,000 o más, terminas de capturar y das “Pedir autorización” (con una nota del porqué, si quieres). La gerencia de ventas la ve en su cola y autoriza. Si después cambias las partidas, el descuento, la moneda o el IVA, la autorización se pierde y hay que pedirla otra vez."
  },
  {
   "clave": "avanceCargaXml",
@@ -2801,7 +2814,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Aprueba los precios abajo del mínimo: la cotización queda Autorizada y el vendedor ya la puede enviar o convertir en pedido. Solo la gerencia de ventas autoriza. Si después le cambian partidas, descuento, moneda o IVA, la autorización se pierde."
+  "texto": "Aprueba los precios abajo del mínimo y las partidas libres de $20,000 o más: la cotización queda Autorizada y el vendedor ya la puede enviar o convertir en pedido. Solo la gerencia de ventas autoriza. Si después le cambian partidas, descuento, moneda o IVA, la autorización se pierde."
  },
  {
   "clave": "botonBasePersona",
@@ -3139,6 +3152,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Anota cuánto cobra la paquetería o el transportista, con IVA, y qué servicio, si lo cotizaste fuera del ERP. Si estaba «Por cotizar», pasa a «Cotizado»; se puede cambiar mientras no tenga guía."
  },
  {
+  "clave": "botonCotizarLead",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Abre una cotización ya ligada a la oportunidad de este lead. Al enviarla pasa a Cotizado y quien registró el lead lo ve."
+ },
+ {
   "clave": "botonCrearOrdenesFaltantes",
   "modulos": [
    "produccion",
@@ -3384,7 +3407,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Abre el envío: por WhatsApp con el mensaje ya armado, por correo desde tu Gmail con el PDF, o solo marcarla enviada. Al enviarla ya no se edita, su oportunidad pasa a Cotizado (si no había, se abre) y se agenda preguntar qué pasó en 3 días hábiles. Antes te pide el tiempo de entrega."
+  "texto": "Abre el envío: por WhatsApp con el mensaje ya armado, por correo desde tu Gmail con el PDF, o solo marcarla enviada diciendo por dónde la mandaste. Al enviarla ya no se edita, su oportunidad pasa a Cotizado (si no tenía, se liga a la que el cliente ya tenía abierta sin cotizar, o se abre una) y se agenda preguntar qué pasó en 3 días hábiles. Antes te pide el tiempo de entrega."
  },
  {
   "clave": "botonEnvioAFull",
@@ -3728,7 +3751,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Abre una cotización en borrador con las condiciones de pago, entrega y notas que dejó la gerencia. El folio se asigna cuando agregas la primera partida: si sales sin capturar, no se gasta."
+  "texto": "Abre una cotización en borrador con las condiciones de pago, entrega y notas que dejó la gerencia. El folio se asigna cuando agregas la primera partida: si sales sin capturar, no se gasta. Si vienes de un cliente que ya tiene una oportunidad abierta (la del lead, por ejemplo), sale ligada a ella; si tiene varias, te pregunta para cuál es o si es otro proyecto."
  },
  {
   "clave": "botonNuevaDevolucion",
@@ -3811,7 +3834,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Da de alta un cliente que no está en la lista, con su nombre y un teléfono. Búscalo primero: si ya existe y lo das de alta otra vez, queda repetido."
+  "texto": "Da de alta un cliente que no está en la lista, con su nombre y un teléfono. Mientras escribes, el ERP revisa si ya existe (mismo teléfono, sin importar lada ni espacios; mismo correo, RFC o nombre) y te ofrece usar ese."
  },
  {
   "clave": "botonNuevoComponente",
@@ -4997,6 +5020,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Escribe la meta del año con IVA: acepta «32,000,000» o «32 M». Enter o Guardar la guarda; abajo ves cuánto es contra lo que cerró el año anterior."
  },
  {
+  "clave": "canalEnvioCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Por dónde salió la cotización: por WhatsApp (con el número), por correo (a quién), en persona, o «solo marcada» si se marcó enviada sin decir por dónde. Cada vez que la vuelves a compartir desde aquí por WhatsApp o por correo también queda anotado (abrir el PDF no cuenta). Sirve para saber cuáles sí le llegaron al cliente."
+ },
+ {
   "clave": "canalesComisionesConfig",
   "modulos": [
    "admin"
@@ -5029,7 +5062,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Por dónde hablaste con el cliente. Lo que escribes queda en su historia con ese medio y cuenta como seguimiento para la vigencia de su cuenta."
+  "texto": "Por dónde hablaste con el cliente: llamada, WhatsApp, correo o visita. No viene marcado: elígelo cada vez (si le das «Llamar» o «WhatsApp» desde aquí, se marca solo). Lo que escribes queda en su historia con ese medio y cuenta como seguimiento para la vigencia de su cuenta."
  },
  {
   "clave": "canalVenta",
@@ -5459,6 +5492,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La clave que te propone el ERP: el siguiente número de la serie que más se usa en ese tipo. Puedes cambiarla; nunca te propone una que ya exista."
  },
  {
+  "clave": "clienteAjeno",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "El cliente es de la cartera de otro vendedor. Puedes cotizarle, no se bloquea, pero al dueño de la cuenta y a la gerencia les llega un aviso, una sola vez, para decidir si se reasigna o se comparte el crédito del pedido."
+ },
+ {
   "clave": "clienteLibre",
   "modulos": [
    "ventas",
@@ -5467,6 +5510,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Cliente sin vendedor dueño: cualquiera le puede cotizar o darle “Hacerlo mío”."
+ },
+ {
+  "clave": "clienteParecido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Ya hay un cliente con el mismo teléfono (se comparan los últimos 10 dígitos), correo, RFC o nombre. «Usar este» lo elige en lugar de crear otro. Si es de otro vendedor puedes cotizarle igual, pero a él y a la gerencia les llega un aviso para que se pongan de acuerdo. «Es otro, darlo de alta» lo crea de todos modos y anota a cuál se parecía."
  },
  {
   "clave": "clienteQuedaAMiNombre",
@@ -6082,7 +6135,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Un lead se vuelve oportunidad cuando ya te contestó: primero anotas en «Intentos de contacto» que contestó y qué te dijo, y entonces se habilita «Crear oportunidad». Si ya era cliente va a su cuenta; si no, eliges la empresa si ya existe o se da de alta como cliente nuevo con este contacto. Si su teléfono o correo ya es de otro cliente, no deja darlo de alta otra vez: te dice cuál es para que lo elijas. La oportunidad nace en Contactado, a nombre del vendedor que tiene el lead, con lo que te dijo, y quien registró el lead ve en qué etapa va."
+  "texto": "Un lead se vuelve oportunidad cuando ya te contestó: primero anotas en «Intentos de contacto» que contestó y qué te dijo, y entonces se habilita «Crear oportunidad». Si ya era cliente va a su cuenta; si no, eliges la empresa si ya existe o se da de alta como cliente nuevo con este contacto. Si su teléfono o correo ya es de otro cliente, no deja darlo de alta otra vez: te dice cuál es para que lo elijas. La oportunidad nace en Contactado, a nombre del vendedor que tiene el lead, con lo que te dijo, y quien registró el lead ve en qué etapa va. Para cotizarle, «Cotizar» aquí o «Nueva cotización» en la ficha del cliente usan esta misma oportunidad: al enviarla, el lead dice «Cotizado»."
  },
  {
   "clave": "convertirMonedaCotizacion",
@@ -6581,6 +6634,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que va impreso para el proveedor. En borrador compras cambia proveedor, moneda, tipo de cambio e IVA; la fecha de entrega, las condiciones y las notas se pueden corregir después (la fecha, hasta que llegue todo)."
  },
  {
+  "clave": "datosParaPedido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Para que el pedido se pueda facturar y para saber qué canal vende: RFC y razón social (o «Público en general» si no pide factura a su nombre), el estado y cómo llegó. Solo se piden los que le falten al cliente, y se guardan en su ficha. Al cotizar no se piden."
+ },
+ {
   "clave": "datosSensibles",
   "modulos": [
    "rrhh",
@@ -6591,6 +6654,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "CURP, RFC, NSS, salario, cuenta bancaria, domicilio, tipo de sangre, alergias, crédito Infonavit y si sus contratos están firmados. Solo los ven Recursos Humanos con nivel de administrar y dirección; cada cambio queda en la bitácora."
+ },
+ {
+  "clave": "decidirSeguimiento",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Al tercer «Sigue en pie» o «No contestó» seguido sin avance (sin pasar a Negociación ni mandar otra versión), «¿Qué pasó?» te pide decidir: le vuelves a buscar en una fecha que tú pones, con el porqué (por ejemplo, «decide en enero»), la pasas a Negociación o la das por perdida. Si no te contesta y todavía no se puede dar por perdida porque no respondió, «No contestó» se anota sin más. Así ninguna venta se queda dando vueltas sin que nadie decida."
  },
  {
   "clave": "deDondeSaleCapacidad",
@@ -7233,6 +7306,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Elige la etapa de esta estación. Cada botón dice cuántas órdenes se trabajan ahí (iniciadas o pausadas) y cuántas ya pueden empezar."
  },
  {
+  "clave": "elegirOportunidad",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Este cliente tiene más de una oportunidad abierta, o una que ya se cotizó. Elige para cuál es la cotización; al enviarla, esa oportunidad se mueve sola. Si es algo distinto, «Es otro proyecto» abre una nueva al enviarla."
+ },
+ {
   "clave": "eliminarBorradorOrden",
   "modulos": [
    "compras"
@@ -7268,7 +7351,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Las oportunidades abiertas por etapa: prospecto → contactado → cotizado → negociación. Al enviar una cotización, su oportunidad pasa sola a “cotizado” (y si no había, se abre); al convertirla en pedido, a “ganada”."
+  "texto": "Las oportunidades abiertas por etapa: prospecto → contactado → cotizado → negociación. Al enviar una cotización, su oportunidad pasa sola a “cotizado”. Si la cotización no trae oportunidad, se liga a la tuya que el cliente ya tenía abierta sin cotizar (primero la que vino de un lead); solo si no hay ninguna, o si dijiste que es otro proyecto, se abre una nueva. Al convertirla en pedido pasa a “ganada”."
  },
  {
   "clave": "empacarEnvio",
@@ -7704,7 +7787,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Borrador (se está capturando) → Por autorizar (tiene precios abajo del mínimo) → Autorizada (la gerencia ya los aprobó) → Enviada (ya la tiene el cliente) → Aceptada (se convirtió en pedido). También puede quedar Rechazada (con motivo), Vencida o Cancelada."
+  "texto": "Borrador (se está capturando) → Por autorizar (tiene precios abajo del mínimo o una partida libre de $20,000 o más) → Autorizada (la gerencia ya los aprobó) → Enviada (ya la tiene el cliente) → Aceptada (se convirtió en pedido). También puede quedar Rechazada (con motivo), Vencida o Cancelada."
  },
  {
   "clave": "estadoDevolucion",
@@ -7775,7 +7858,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Por tomar (o por asignar): nadie lo tiene todavía. Con…: ya tiene vendedor y está pendiente de que lo atienda. Oportunidad: el vendedor ya lo volvió oportunidad; junto sale en qué etapa va (cotizado, ganada, perdida…). Descartado: no se siguió, con su motivo. Si nadie lo toma o nadie lo atiende a tiempo, se avisa a la gerencia."
+  "texto": "Por tomar (o por asignar): nadie lo tiene todavía. Con…: ya tiene vendedor y está pendiente de que lo atienda. Oportunidad: el vendedor ya lo volvió oportunidad; junto sale en qué etapa va (cotizado, ganada, perdida…). Descartado: no se siguió, con su motivo. Si nadie lo toma a tiempo, o su vendedor no le anota ningún intento a tiempo, se avisa a la gerencia (mientras no haya gerente de ventas, a dirección)."
  },
  {
   "clave": "estadoMaquina",
@@ -9703,7 +9786,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cada vez que le llamas, le escribes o lo visitas, anótalo. Si le escribiste por WhatsApp o correo, «Le escribí»; si le llamaste y no contestó, «No contestó»; si fuiste y no estaba, «No estaba»; y cuando conteste, «Contestó» con lo que te dijo. Todo cuenta como intento, conteste o no, y en la lista se ve lo último que hiciste y cuándo. Mientras no conteste, sigue siendo lead (no se da de alta como cliente). Los leads que alguien tiene varios días sin ningún intento, o que se volvieron oportunidad y no se cotizan, le aparecen a dirección en «Por revisar»."
+  "texto": "Cada vez que le llamas, le escribes o lo visitas, anótalo. Elige siempre por dónde fue: no viene marcado. Si le escribiste por WhatsApp o correo, «Le escribí»; si le llamaste y no contestó, «No contestó»; si fuiste y no estaba, «No estaba»; y cuando conteste, «Contestó» con lo que te dijo. Todo cuenta como intento, conteste o no, y en la lista se ve lo último que hiciste y cuándo. Mientras no conteste, sigue siendo lead (no se da de alta como cliente). Con un intento anotado, el lead ya no cuenta como «sin atender» y deja de avisarse. Los leads que alguien tiene varios días sin ningún intento, o que se volvieron oportunidad y no se cotizan, le aparecen a dirección en «Por revisar»."
  },
  {
   "clave": "interruptorConsumiblesTaller",
@@ -10722,7 +10805,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Lo que crees que vale la venta, sin IVA. Si la oportunidad la abre una cotización enviada, toma el total sin IVA de esa cotización."
+  "texto": "Lo que crees que vale la venta, sin IVA. Si estaba vacío cuando se envió la cotización (o la cotización abrió la oportunidad), toma el total sin IVA de esa cotización."
  },
  {
   "clave": "montoMatriz",
@@ -10787,7 +10870,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Por qué se perdió (precio, tiempo de entrega, seguimiento…). Es obligatorio: sin eso no se sabe qué corregir."
+  "texto": "Por qué se perdió (precio, tiempo de entrega, compró con otro…). Es obligatorio: sin eso no se sabe qué corregir. «No respondió» se acepta cuando ya van 2 «No contestó» en días distintos o 10 días hábiles desde que se envió la cotización; mientras, anota «No contestó»."
  },
  {
   "clave": "motivoReactivar",
@@ -11145,6 +11228,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Liberada: la gerencia ya la pasó al taller, pero ninguna etapa ha empezado."
+ },
+ {
+  "clave": "oportunidadCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "La venta a la que pertenece esta cotización. Sale sola: la tuya que el cliente ya tenía abierta sin cotizar, primero la que vino de un lead. Si dice «Sola al enviar», al enviarla se liga a la que el cliente tenga abierta sin cotizar y, si no hay, se abre una. Si es otro proyecto, elige «Una nueva al enviar» y al enviarla se abre otra. Solo puedes elegir oportunidades de este cliente que sean tuyas."
  },
  {
   "clave": "opPlaneada",
@@ -11510,7 +11603,17 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Renglón escrito a mano que no viene del catálogo (flete, instalación, servicio). No tiene precio de lista ni precio mínimo."
+  "texto": "Renglón escrito a mano que no viene del catálogo (flete, instalación, un servicio). No tiene precio de lista. Si vale $20,000 o más sin IVA y no es flete, instalación, puesta en marcha ni «manejo y entrega» (se ve por cómo empieza su nombre), la gerencia de ventas la autoriza antes de enviar la cotización, igual que un precio abajo del mínimo."
+ },
+ {
+  "clave": "partidaLibreCara",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Partida escrita a mano de $20,000 o más sin IVA (cantidad por precio, ya con descuentos) que no es flete, instalación, puesta en marcha ni «manejo y entrega»: un montacargas, un tablero de control, un remolque. Cuenta cómo empieza su nombre: «Flete a Mérida» no la pide, «Montacargas y flete» sí. Como no tiene precio de lista contra qué compararla, la cotización pasa a «Por autorizar» y la autoriza la gerencia de ventas. Si es opcional no frena el envío, pero si el cliente la elige, el pedido lo hace la gerencia. Si es algo que se vende seguido, pide que lo den de alta en el catálogo."
  },
  {
   "clave": "partidaOpcional",
@@ -12908,6 +13011,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Una publicación de Mercado Libre que se vendió y el ERP no sabe qué artículo es (no tiene SKU, o su SKU no es una clave del catálogo). Su envío se pide igual, para que almacén vea el paquete en cuanto Mercado Libre imprime la guía, pero la caja no se cierra hasta que alguien diga qué artículo es: ventas en «Por ligar» o almacén con «Ligar artículo» en el envío. Se liga una sola vez: desde ese momento sus ventas entran con su artículo. Si Mercado Libre se lleva el paquete antes, el inventario se descuenta al ligarla. Para no tener que ligar, pon la clave del ERP como SKU en la publicación."
  },
  {
+  "clave": "publicoGeneral",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "El cliente no pide factura a su nombre: se le factura como público en general. Si después te da su RFC, captúralo en su ficha y deja de serlo."
+ },
+ {
   "clave": "puePpd",
   "modulos": [
    "rrhh",
@@ -13555,7 +13668,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cómo va la venta después de hablar con el cliente. Sigue en pie: lo está pensando; le vuelves a buscar en 3 días hábiles o la fecha que pongas. No contestó: se reintenta en 2. Negociando: pasa a Negociación. Ya compró: te lleva a convertir la cotización en pedido. Se perdió: con su motivo, la oportunidad y su cotización se cierran. Lo que escribes queda en la historia del cliente."
+  "texto": "Cómo va la venta después de hablar con el cliente. Sigue en pie: lo está pensando; le vuelves a buscar en 3 días hábiles o la fecha que pongas. No contestó: se reintenta en 2. Negociando: pasa a Negociación. Ya compró: te lleva a convertir la cotización en pedido. Se perdió: con su motivo, la oportunidad y su cotización se cierran; por «No respondió», solo después de 2 «No contestó» en días distintos o de 10 días hábiles desde el envío. Al tercer «Sigue en pie» o «No contestó» seguido te pide la fecha y su porqué, o pasarla a Negociación o a perdida («No contestó» solo cuando ya se puede perder porque no respondió). Lo que escribes queda en la historia del cliente."
  },
  {
   "clave": "resumenDineroPorEmbarque",
@@ -14260,7 +14373,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cuándo le vuelves a preguntar, de hoy a cuatro meses. Si lo dejas vacío se agenda solo: en 2 días hábiles si no contestó y en 3 si sigue en pie o negociando."
+  "texto": "Cuándo le vuelves a preguntar, de hoy a cuatro meses. Si lo dejas vacío se agenda solo: en 2 días hábiles si no contestó y en 3 si sigue en pie o negociando. Desde el tercer «Sigue en pie» o «No contestó» seguido, la fecha y su porqué son obligatorios (en «No contestó», solo cuando ya se puede perder porque no respondió)."
  },
  {
   "clave": "simuladorPrecios",
@@ -14376,6 +14489,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "compras"
   ],
   "texto": "Ni su costo ni el catálogo dicen a quién se le compra. Al crear las órdenes te pide elegir uno para estas partidas; si no, se quedan pendientes."
+ },
+ {
+  "clave": "sinRespuestaSeguimiento",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cuándo se puede dar por perdida una venta porque el cliente no respondió (eligiendo «No respondió» o escribiendo algo igual, como «no contesta» o «sin respuesta»): cuando ya anotaste 2 «No contestó» en días distintos, o cuando pasaron 10 días hábiles desde que enviaste la última versión de la cotización. Antes de eso, «No contestó» la vuelve a agendar en 2 días hábiles. Si el cliente sí te dijo que no, elige el motivo que te dio. Vale igual al arrastrar la tarjeta a Perdida o al marcar rechazada la cotización."
  },
  {
   "clave": "sinSalidaInventario",
@@ -14825,6 +14948,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "importaciones"
   ],
   "texto": "El tipo de cambio que de verdad nos costó: los pesos que salieron entre los dólares que se pagaron. Es el que pide el agente para demostrarlo ante la aduana."
+ },
+ {
+  "clave": "telefonoDeOtroCliente",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Ese teléfono o correo ya está en otro cliente. Si es el mismo cliente, ábrelo y júntalos; si es otra empresa de la misma persona, guárdalo así. Si el otro cliente es de otro vendedor, a él y a la gerencia les llega un aviso."
  },
  {
   "clave": "temaPorDefecto",

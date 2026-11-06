@@ -23,7 +23,7 @@ export function Dialogo({ abierto, alCambiar, titulo, descripcion, children, pie
             <D.Close className="rounded-md p-1 text-tenue hover:bg-fondo" aria-label="Cerrar"><X className="h-5 w-5" /></D.Close>
           </div>
           <div className="px-5 py-4 overflow-y-auto">{children}</div>
-          {pie && <div className="px-5 py-3 border-t border-borde flex justify-end gap-2 bg-fondo/50 rounded-b-xl">{pie}</div>}
+          {pie && <div className="px-5 py-3 border-t border-borde flex flex-wrap justify-end gap-2 bg-fondo/50 rounded-b-xl">{pie}</div>}
         </D.Content>
       </D.Portal>
     </D.Root>

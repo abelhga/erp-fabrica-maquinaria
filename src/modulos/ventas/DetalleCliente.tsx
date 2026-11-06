@@ -22,18 +22,19 @@ import { Actividades } from "./componentes/Actividades";
 import type { Cartera } from "./componentes/Cartera";
 import {
   CANAL, ESTADO_COT, ESTADO_PEDIDO, ETAPA, RFC_VALIDO, dineroEn, enlaceWhatsApp, normalizarRfc, useFuentes, useVendedores,
-  type Contacto, type VCotizacion, type VOportunidad, type VPedido, haceCuanto,
+  type Contacto, type EtapaOportunidad, type VCotizacion, type VOportunidad, type VPedido, haceCuanto,
 } from "./comun";
 import { Barra } from "./componentes/campos";
 import { JuntarClientes } from "./componentes/JuntarClientes";
 import { EXPLICA_ESTADO_PEDIDO } from "./componentes/EntregaPedido";
 import { GLOSARIO } from "@/tutorial/glosario";
+import type { ClienteParecido } from "./componentes/dialogos";
 
 interface Cliente {
   id: string; nombre: string; razon_social: string | null; rfc: string | null; regimen_fiscal: string | null; cp_fiscal: string | null;
   uso_cfdi: string | null; giro: string | null; ciudad: string | null; estado: string | null; pais: string; vendedor_id: string | null;
   fuente_id: number | null; es_distribuidor: boolean; dias_credito: number; notas: string | null; activo: boolean; creado_en: string;
-  vendedor: { nombre: string } | null;
+  publico_general: boolean; vendedor: { nombre: string } | null;
 }
 /** En las tarjetas de arriba un millón con centavos no cabe: desde $1 M se abrevia. */
 const corto = (n: number) => (Math.abs(Number(n)) >= 1_000_000 ? dineroCompacto(Number(n)) : dinero(Number(n)));
@@ -43,7 +44,6 @@ interface MovHoja { id: number; fecha: string; tipo: string; monto: number; desc
 export default function DetalleCliente() {
   const { id } = useParams();
   const { perfil, puede } = useSesion();
-  const ir = useNavigate();
   const esGerente = puede("ventas", 3);
 
   const cli = useQuery({
@@ -108,7 +108,7 @@ export default function DetalleCliente() {
       acciones={<>
         {!c.vendedor_id && puede("ventas", 2) && <Boton variante="secundario" onClick={() => tomar.mutate(undefined)} cargando={tomar.isPending} data-explain={GLOSARIO.botonHacerloMio}><Star className="h-4 w-4" />Hacerlo mío</Boton>}
         {puedeJuntar && <Boton variante="secundario" onClick={() => abrirJuntar(null)} data-explain={GLOSARIO.juntarClientes} data-explain-title="Juntar con otro cliente"><Merge className="h-4 w-4" />Juntar con otro</Boton>}
-        {puede("ventas", 2) && <Boton onClick={() => ir(`/ventas/cotizaciones/nueva?cliente=${c.id}`)} data-explain={GLOSARIO.botonNuevaCotizacion}><FilePlus className="h-4 w-4" />Nueva cotización</Boton>}
+        {puede("ventas", 2) && <NuevaCotizacion clienteId={c.id} />}
       </>}>
       {otrosRfc.length > 0 && (
         <div className="rounded-xl border border-aviso/40 bg-aviso-suave px-4 py-3 text-sm flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -167,7 +167,7 @@ function DatosFiscales({ c, editable, esGerente }: { c: Cliente; editable: boole
     () => q(supabase.from("clientes").update({
       nombre: f.nombre.trim(), razon_social: f.razon_social || null, rfc: rfc || null, regimen_fiscal: f.regimen_fiscal || null,
       cp_fiscal: f.cp_fiscal || null, uso_cfdi: f.uso_cfdi || null, giro: f.giro || null, ciudad: f.ciudad || null, estado: f.estado || null,
-      pais: f.pais || "México", fuente_id: f.fuente_id, es_distribuidor: f.es_distribuidor, dias_credito: f.dias_credito, notas: f.notas || null,
+      pais: f.pais || "México", fuente_id: f.fuente_id, es_distribuidor: f.es_distribuidor, publico_general: f.publico_general, dias_credito: f.dias_credito, notas: f.notas || null,
       ...(esGerente ? { vendedor_id: f.vendedor_id } : {}),
     }).eq("id", c.id)),
     { exito: "Datos guardados", invalidar: [["cliente_detalle", c.id], ["v_clientes"], ["v_cartera"]], alTerminar: () => setEditando(false) },
@@ -192,7 +192,8 @@ function DatosFiscales({ c, editable, esGerente }: { c: Cliente; editable: boole
         <div className="px-5 pb-4 grid sm:grid-cols-2 gap-x-6">
           <div>
             {fila("Razón social", c.razon_social)}
-            {fila("RFC", c.rfc && <span className="cifra">{c.rfc}</span>)}
+            {fila("RFC", c.rfc ? <span className="cifra">{c.rfc}</span>
+              : c.publico_general && <span data-explain={GLOSARIO.publicoGeneral} data-explain-title="Público en general">Público en general</span>)}
             {fila("Régimen fiscal", c.regimen_fiscal)}
             {fila("CP fiscal / Uso CFDI", [c.cp_fiscal, c.uso_cfdi].filter(Boolean).join(" · "))}
           </div>
@@ -218,6 +219,13 @@ function DatosFiscales({ c, editable, esGerente }: { c: Cliente; editable: boole
           ayuda={rfc && !rfcMalo ? "✓ Formato correcto" : undefined}>
           <Entrada value={f.rfc ?? ""} onChange={t("rfc")} className="uppercase" maxLength={15} />
         </Campo>
+        {/* Con un RFC de verdad la base la apaga sola: no tiene caso ofrecerla. */}
+        {!rfc || rfc.startsWith("XAXX") || rfc.startsWith("XEXX") ? (
+          <label className="sm:col-span-2 flex items-center gap-2 text-sm" data-explain={GLOSARIO.publicoGeneral} data-explain-title="Público en general">
+            <input type="checkbox" checked={f.publico_general} onChange={(e) => setF({ ...f, publico_general: e.target.checked })} />
+            Público en general (no pide factura a su nombre)
+          </label>
+        ) : null}
         <Campo etiqueta="Régimen fiscal"><Entrada value={f.regimen_fiscal ?? ""} onChange={t("regimen_fiscal")} placeholder="601 General de Ley Personas Morales" /></Campo>
         <Campo etiqueta="CP fiscal"><Entrada value={f.cp_fiscal ?? ""} onChange={t("cp_fiscal")} inputMode="numeric" maxLength={5} /></Campo>
         <Campo etiqueta="Uso de CFDI"><Entrada value={f.uso_cfdi ?? ""} onChange={t("uso_cfdi")} placeholder="G03 Gastos en general" /></Campo>
@@ -261,6 +269,19 @@ function Contactos({ clienteId, visibles, editable, duenio }: { clienteId: strin
     queryFn: () => q<Contacto[]>(supabase.from("contactos").select("*").eq("cliente_id", clienteId).order("principal", { ascending: false }).order("nombre")),
   });
   const [editar, setEditar] = useState<Partial<Contacto> | null>(null);
+  // Al salir de Teléfono, WhatsApp o Correo: ¿ya está en otro cliente? No bloquea; es para juntarlos
+  // o, si es de otro vendedor, saber que le llega un aviso (lo manda la base al guardar).
+  const [revisar, setRevisar] = useState<{ tel: string; correo: string } | null>(null);
+  useEffect(() => { if (!editar) setRevisar(null); }, [editar]);
+  const alSalir = () => editar && setRevisar({ tel: [editar.telefono, editar.whatsapp].find((x) => (x ?? "").replace(/\D/g, "").length >= 10) ?? "", correo: editar.correo?.includes("@") ? editar.correo.trim() : "" });
+  const otroCliente = useQuery({
+    queryKey: ["clientes_parecidos", "contacto", clienteId, revisar?.tel, revisar?.correo],
+    enabled: !!revisar && (!!revisar.tel || !!revisar.correo),
+    queryFn: () => q<ClienteParecido[]>(supabase.rpc("clientes_parecidos", {
+      p_nombre: "", p_telefono: revisar!.tel || null, p_correo: revisar!.correo || null, p_excluir: clienteId,
+    })),
+  });
+  const otros = revisar && (revisar.tel || revisar.correo) ? otroCliente.data ?? [] : [];
   const guardar = useAccion(
     async (x: Partial<Contacto>) => {
       const datos = { nombre: x.nombre?.trim(), puesto: x.puesto || null, telefono: x.telefono || null, whatsapp: x.whatsapp || null,
@@ -317,9 +338,20 @@ function Contactos({ clienteId, visibles, editable, duenio }: { clienteId: strin
           <form className="grid gap-3 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); if (editar.nombre?.trim()) guardar.mutate(editar); }}>
             <Campo etiqueta="Nombre"><Entrada autoFocus value={editar.nombre ?? ""} onChange={(e) => setEditar({ ...editar, nombre: e.target.value })} /></Campo>
             <Campo etiqueta="Puesto"><Entrada value={editar.puesto ?? ""} onChange={(e) => setEditar({ ...editar, puesto: e.target.value })} /></Campo>
-            <Campo etiqueta="Teléfono"><Entrada value={editar.telefono ?? ""} inputMode="tel" onChange={(e) => setEditar({ ...editar, telefono: e.target.value })} /></Campo>
-            <Campo etiqueta="WhatsApp"><Entrada value={editar.whatsapp ?? ""} inputMode="tel" onChange={(e) => setEditar({ ...editar, whatsapp: e.target.value })} /></Campo>
-            <Campo etiqueta="Correo" className="sm:col-span-2"><Entrada type="email" value={editar.correo ?? ""} onChange={(e) => setEditar({ ...editar, correo: e.target.value })} /></Campo>
+            <Campo etiqueta="Teléfono"><Entrada value={editar.telefono ?? ""} inputMode="tel" onBlur={alSalir} onChange={(e) => setEditar({ ...editar, telefono: e.target.value })} /></Campo>
+            <Campo etiqueta="WhatsApp"><Entrada value={editar.whatsapp ?? ""} inputMode="tel" onBlur={alSalir} onChange={(e) => setEditar({ ...editar, whatsapp: e.target.value })} /></Campo>
+            <Campo etiqueta="Correo" className="sm:col-span-2"><Entrada type="email" value={editar.correo ?? ""} onBlur={alSalir} onChange={(e) => setEditar({ ...editar, correo: e.target.value })} /></Campo>
+            {otros.length > 0 && (
+              <div className="sm:col-span-2 rounded-lg border border-aviso/40 bg-aviso-suave px-3 py-2 text-sm space-y-1" role="status"
+                data-explain={GLOSARIO.telefonoDeOtroCliente} data-explain-title="Ya está en otro cliente">
+                {otros.map((o) => (
+                  <p key={o.id} className="flex flex-wrap items-center gap-x-2">
+                    <span>{o.por === "correo" ? "Ese correo" : "Ese teléfono"} ya está en «{o.nombre}»{o.vendedor ? ` (de ${o.vendedor})` : ""}</span>
+                    <Link to={`/ventas/clientes/${o.id}`} className="text-marca-texto underline">Abrir</Link>
+                  </p>
+                ))}
+              </div>
+            )}
             <Campo etiqueta="Domicilio" className="sm:col-span-2"><Entrada value={editar.domicilio ?? ""} onChange={(e) => setEditar({ ...editar, domicilio: e.target.value })} /></Campo>
             <label className="sm:col-span-2 flex items-center gap-2 text-sm" data-explain={GLOSARIO.contactoPrincipal} data-explain-title="Contacto principal"><input type="checkbox" checked={!!editar.principal} onChange={(e) => setEditar({ ...editar, principal: e.target.checked })} /> Contacto principal (sale en las cotizaciones)</label>
             <button type="submit" className="hidden" />
@@ -396,5 +428,76 @@ function Historia({ clienteId }: { clienteId: string }) {
           vacio={{ icono: History, titulo: "Sin historial en la hoja", texto: "Aquí sale lo que el cliente compró y pagó según la BASE DE DATOS anterior al ERP (solo el dueño, la gerencia y cobranza)." }} />
       </ContenidoPestana>
     </Pestanas>
+  );
+}
+
+const ABIERTAS: EtapaOportunidad[] = ["prospecto", "contactado", "cotizado", "negociacion"];
+
+/** «Nueva cotización» desde la ficha: sale ligada a la oportunidad abierta del cliente (la del lead,
+ *  casi siempre). Antes solo pasaba el cliente y al enviar se abría otra oportunidad, y la del lead
+ *  se quedaba en «Contactado» para siempre. Con varias abiertas (o una ya cotizada) pregunta. */
+function NuevaCotizacion({ clienteId }: { clienteId: string }) {
+  const { perfil, puede } = useSesion();
+  const ir = useNavigate();
+  const esGerente = puede("ventas", 3);
+  const [abierto, setAbierto] = useState(false);
+  const ops = useQuery({
+    queryKey: ["v_oportunidades", "cliente", clienteId, "para_cotizar"],
+    queryFn: () => q<Pick<VOportunidad, "id" | "titulo" | "etapa" | "fuente" | "vendedor_id" | "vendedor" | "creado_en" | "cotizaciones">[]>(
+      supabase.from("v_oportunidades").select("id, titulo, etapa, fuente, vendedor_id, vendedor, creado_en, cotizaciones")
+        .eq("cliente_id", clienteId).in("etapa", ABIERTAS).order("creado_en", { ascending: false })),
+  });
+  // La misma que tomaría la base sola: así «Sugerida» no se recalcula aquí.
+  const sugerida = useQuery({
+    queryKey: ["oportunidad_para_cotizar", clienteId, perfil?.id], enabled: !!perfil?.id,
+    queryFn: () => q<string | null>(supabase.rpc("oportunidad_para_cotizar", { p_cliente: clienteId, p_vendedor: perfil!.id })),
+  });
+  const lista = (ops.data ?? []).filter((o) => o.vendedor_id === perfil?.id || esGerente);
+  const ids = lista.map((o) => o.id);
+  const deLead = useQuery({
+    queryKey: ["leads_de_oportunidades", ids], enabled: abierto && ids.length > 0,
+    queryFn: () => q<{ oportunidad_id: string }[]>(supabase.from("leads").select("oportunidad_id").in("oportunidad_id", ids)),
+  });
+  const vinoDeLead = new Set((deLead.data ?? []).map((l) => l.oportunidad_id));
+  const ordenadas = [...lista].sort((a, b) => Number(b.id === sugerida.data) - Number(a.id === sugerida.data)
+    || Number(vinoDeLead.has(b.id)) - Number(vinoDeLead.has(a.id)) || b.creado_en.localeCompare(a.creado_en));
+
+  const nueva = (params: string) => { setAbierto(false); ir(`/ventas/cotizaciones/nueva?${params}`); };
+  const alDarClic = () => {
+    if (!lista.length) nueva(`cliente=${clienteId}`);
+    else if (lista.length === 1 && (lista[0].etapa === "prospecto" || lista[0].etapa === "contactado")) nueva(`oportunidad=${lista[0].id}`);
+    else setAbierto(true);
+  };
+
+  return (
+    <>
+      <Boton onClick={alDarClic} cargando={ops.isLoading} data-explain={GLOSARIO.botonNuevaCotizacion}><FilePlus className="h-4 w-4" />Nueva cotización</Boton>
+      <Dialogo abierto={abierto} alCambiar={setAbierto} titulo="¿Para cuál oportunidad es?"
+        descripcion="Al enviar la cotización, la oportunidad que elijas se mueve sola.">
+        <div className="space-y-2" data-explain={GLOSARIO.elegirOportunidad} data-explain-title="¿Para cuál oportunidad es?">
+          {ordenadas.map((o, i) => (
+            <button key={o.id} type="button" autoFocus={i === 0} onClick={() => nueva(`oportunidad=${o.id}`)}
+              className="w-full text-left rounded-lg border border-borde px-3 py-2.5 hover:bg-fondo focus:outline-none focus-visible:ring-2 focus-visible:ring-marca">
+              <span className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{o.titulo}</span>
+                <Insignia tono={ETAPA[o.etapa].tono}>{ETAPA[o.etapa].texto}</Insignia>
+                {o.id === sugerida.data && <Insignia tono="marca">Sugerida</Insignia>}
+              </span>
+              <span className="block text-xs text-tenue mt-0.5">
+                {[vinoDeLead.has(o.id) ? `Vino de un lead${o.fuente ? " · " + o.fuente : ""}` : o.fuente,
+                  esGerente ? o.vendedor : null,
+                  o.cotizaciones ? `${o.cotizaciones} cotización${o.cotizaciones === 1 ? "" : "es"}` : "Sin cotizar",
+                  `abierta ${haceCuanto(o.creado_en)}`].filter(Boolean).join(" · ")}
+              </span>
+            </button>
+          ))}
+          <button type="button" onClick={() => nueva(`cliente=${clienteId}&nueva=1`)}
+            className="w-full text-left rounded-lg border border-dashed border-borde px-3 py-2.5 hover:bg-fondo focus:outline-none focus-visible:ring-2 focus-visible:ring-marca">
+            <span className="font-medium">Es otro proyecto: abrir una nueva</span>
+            <span className="block text-xs text-tenue mt-0.5">La oportunidad se abre al enviar la cotización.</span>
+          </button>
+        </div>
+      </Dialogo>
+    </>
   );
 }
