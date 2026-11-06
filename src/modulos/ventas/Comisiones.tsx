@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { BadgeCheck, ChevronLeft, ChevronRight, Info, Plus, Trash2, Trophy } from "lucide-react";
+import { BadgeCheck, ChevronLeft, ChevronRight, Info, Plus, Printer, Trash2, Trophy } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/insignia";
@@ -169,6 +169,11 @@ export default function Comisiones() {
                   <span className="text-sm font-medium">{f.pagado_en ? "Total pagado" : "Total a pagar"}</span>
                   <span className="flex items-center gap-3">
                     <span className="text-lg font-semibold cifra">{dinero(pago ? pago.total : f.total)}</span>
+                    <Link to={`/ventas/comisiones/recibo/${f.vendedor_id}/${mesTexto}`} target="_blank" rel="noopener"
+                          className="inline-flex items-center gap-1 rounded-md border border-borde px-2.5 py-1 text-sm hover:bg-fondo"
+                          data-explain={GLOSARIO.botonReciboComision} data-explain-title="Imprimir recibo">
+                      <Printer className="h-3.5 w-3.5" />Recibo
+                    </Link>
                     {puedePagar && !f.pagado_en && <Boton tamano="sm" variante="exito" onClick={() => setPagar(f)} data-explain={GLOSARIO.botonPagarComision}>Marcar pagada</Boton>}
                   </span>
                 </div>

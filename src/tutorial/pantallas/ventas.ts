@@ -181,6 +181,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
       "La regla está abajo, en «Cómo se calcula»: el porcentaje de tu plan (2 % en los planes actuales) sobre la venta sin IVA de todo lo que no es refacción, más un bono fijo por el escalón de meta alcanzado y otro por el de refacciones.",
       "Los escalones no se suman: se paga el más alto. El plan dice si la venta cuenta por la fecha del pedido, de la factura o del cobro.",
       "La gerencia o dirección agregan ajustes (bonos de Mercado Libre, correcciones) con «Ajuste», y finanzas la marca pagada con «Marcar pagada»: se guarda la foto del cálculo y el mismo mes no se paga dos veces.",
+      "«Recibo» abre el recibo del mes para imprimir y firmar: sirve antes de pagar (dice «Por pagar») y después (con la fecha y la referencia del pago).",
     ],
   },
   "/ventas/leads": {

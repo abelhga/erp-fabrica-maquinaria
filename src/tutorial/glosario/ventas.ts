@@ -151,6 +151,7 @@ export const VENTAS = {
   escalonesComision: "Cada renglón es un escalón: desde cuánto vendido en el mes, sin IVA, se gana ese bono fijo. Se paga solo el escalón más alto que se alcanzó, no la suma de todos.",
   botonAjusteComision: "Agrega un bono o un descuento a la comisión de este mes, con su concepto (un bono de Mercado Libre, una corrección…). Negativo descuenta. Lo hacen la gerencia de ventas y dirección.",
   botonQuitarAjusteComision: "Quita este ajuste de la comisión del mes. Ya no se puede cuando la comisión está pagada.",
+  botonReciboComision: "Abre el recibo de la comisión del mes en hoja carta, para imprimirlo y que el vendedor lo firme al recibir el pago: el total, de dónde sale (comisión, bonos y ajustes) y los pedidos que cuentan. Antes de pagar dice «Por pagar»; ya pagada trae la fecha y la referencia, con lo que se pagó ese día.",
   botonPagarComision: "Marca la comisión del mes como pagada, con la fecha y la referencia del pago. Se guarda el cálculo de ese momento: si después cambia un pedido del mes, la tarjeta te enseña la diferencia. El mismo mes no se paga dos veces.",
   botonNuevaDevolucion: "Registra una devolución, un reclamo o una cancelación: buscas la venta por su número de Mercado Libre o el folio del pedido, eliges qué es y anotas el motivo y el código. Con una devolución, almacén ya sabe que viene.",
   filtroDevolucionesPorVencer: "Las abiertas cuya hora límite (o fecha de llegada) ya pasó o vence en menos de un día. Empieza por aquí.",

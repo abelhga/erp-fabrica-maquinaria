@@ -52,6 +52,7 @@ const Objetivos = p(() => import("./modulos/rrhh/Objetivos"));
 const Checklist = p(() => import("./modulos/rrhh/Checklist"));
 const Prenomina = p(() => import("./modulos/rrhh/Prenomina"));
 const DocumentoNomina = p(() => import("./modulos/rrhh/DocumentoNomina"));
+const ReciboComision = p(() => import("./modulos/ventas/ReciboComision"));
 const MiDesempeno = p(() => import("./modulos/rrhh/MiDesempeno"));
 const Cobranza = p(() => import("./modulos/finanzas/Cobranza"));
 const Pagos = p(() => import("./modulos/finanzas/Pagos"));
@@ -168,6 +169,7 @@ export function App() {
           <Route path="/produccion/pedidos/:id/imprimir" element={<Con m="produccion"><ImprimirPedido /></Con>} />
           <Route path="/importaciones/oc/:id/imprimir" element={<Con m="compras" n={2}><ImprimirOCImportacion /></Con>} />
           <Route path="/rrhh/documento/:tipo/:id" element={<Con m="nomina"><DocumentoNomina /></Con>} />
+          <Route path="/ventas/comisiones/recibo/:vendedor/:mes" element={<Con m="ventas"><ReciboComision /></Con>} />
         </Route>
         <Route element={<Shell />}>
           <Route index element={<Inicio />} />
