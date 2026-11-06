@@ -4,7 +4,7 @@
 do $$
 declare v_a uuid; v_b uuid; v_ger uuid; v_dir uuid; v_alm uuid;
   v_cb uuid; v_ca uuid; v_nuevo uuid; v_cot uuid; v_cot2 uuid; v_l uuid; v_opc uuid; v_ped uuid; v_ped2 uuid;
-  v_ok boolean; v_msg text; v_par jsonb; v_cl record; v_ext uuid;
+  v_ok boolean; v_msg text; v_par jsonb; v_cl record; v_ext uuid; i int;
 begin
   v_a := pg_temp.usuario('vena256@hegamex.com', '{ventas}');
   v_b := pg_temp.usuario('venb256@hegamex.com', '{ventas}');
@@ -145,7 +145,7 @@ begin
   --    Un estado que no existe no cuenta; solo RFC sin razón social tampoco.
   begin perform convertir_a_pedido(v_cot, null, null, '{"rfc": "GSU160202AB1", "estado": "Narnia", "fuente_id": 2}'); v_ok := true;
   exception when check_violation then v_ok := false; v_msg := sqlerrm; end;
-  assert not v_ok and v_msg = 'Para hacer el pedido falta: RFC y razón social (o marca «Público en general»), el estado', 'mensaje 2: ' || coalesce(v_msg, 'pasó');
+  assert not v_ok and v_msg = 'Para hacer el pedido falta: la razón social, el estado', 'mensaje 2: ' || coalesce(v_msg, 'pasó');
   v_ped := convertir_a_pedido(v_cot, null, null, '{"publico_general": true, "estado": "Jalisco", "fuente_id": 2}');
   select * into v_cl from clientes where id = v_ca;
   assert v_ped is not null and v_cl.publico_general and v_cl.cve_ent = '14' and v_cl.fuente_id = 2 and v_cl.rfc is null, 'no guardó los datos del cliente';
@@ -175,4 +175,68 @@ begin
   insert into pedido_lineas (pedido_id, orden, titulo, unidad, cantidad, precio_unitario) values (v_ped2, 1, 'Flete a Mérida', 'servicio', 1, 25000);
   perform pg_temp.como(v_ger);
   insert into pedido_lineas (pedido_id, orden, titulo, unidad, cantidad, precio_unitario) values (v_ped2, 2, 'Generador TDK', 'pieza', 1, 176000);
+  --    El vendedor NO puede volver «Generador» un flete ya capturado, ni subirle la cantidad a una partida hasta cruzar el umbral.
+  perform pg_temp.como(v_a);
+  begin update pedido_lineas set titulo = 'Generador TDK' where pedido_id = v_ped2 and orden = 1; v_ok := true;
+  exception when insufficient_privilege then v_ok := false; end;
+  assert not v_ok, 'un flete se volvió generador en un pedido sin cotización';
+  insert into pedido_lineas (pedido_id, orden, titulo, unidad, cantidad, precio_unitario) values (v_ped2, 3, 'Tornillería', 'pieza', 1, 15000) returning id into v_l;
+  begin update pedido_lineas set cantidad = 10 where id = v_l; v_ok := true; exception when insufficient_privilege then v_ok := false; end;
+  assert not v_ok, 'subir la cantidad se brincó el umbral';
+  update pedido_lineas set titulo = 'Flete a Mérida, Yucatán' where pedido_id = v_ped2 and orden = 1;
+
+  -- 9. Cambiarle el nombre a una partida libre la mete o la saca de la regla (antes se quedaba sin
+  --    marcar y el envío se trababa sin poder pedir autorización); corregir una letra no la pierde.
+  assert partida_libre_exenta('SERVICIO DE INTALACION, PUESTA EN MARCHA, CAPACITACION') and partida_libre_exenta('Manejo y entrega de equipo.'),
+    'instalación mal escrita o «manejo y entrega» pidieron autorización';
+  assert not partida_libre_exenta('Montacargas y flete'), 'se exentó por llevar «flete» en medio';
+  v_cot := nueva_cotizacion(v_ca);
+  update cotizaciones set tiempo_entrega = '1 semana' where id = v_cot;
+  insert into cotizacion_lineas (cotizacion_id, orden, titulo, unidad, cantidad, precio_unitario) values (v_cot, 1, 'Flete a Mérida', 'servicio', 1, 45000)
+    returning id into v_l;
+  assert (select estado = 'borrador' from cotizaciones where id = v_cot), 'el flete pidió autorización';
+  update cotizacion_lineas set titulo = 'Montacargas CPD-20' where id = v_l;
+  assert (select libre_cara from cotizacion_lineas where id = v_l) and (select estado = 'por_autorizar' from cotizaciones where id = v_cot), 'renombrarla no la marcó';
+  perform pedir_autorizacion(v_cot, 'Montacargas de un tercero');
+  perform pg_temp.como(v_ger);
+  perform autorizar_cotizacion(v_cot);
+  perform pg_temp.como(v_a);
+  update cotizacion_lineas set titulo = 'Montacargas CPD-25' where id = v_l;
+  assert (select autorizada_por is not null and estado = 'autorizada' from cotizaciones where id = v_cot), 'corregir el nombre perdió la autorización';
+  --    Llamarla flete y luego otra vez montacargas sí la pierde: este rol NO debe poder enviarla así.
+  update cotizacion_lineas set titulo = 'Flete a Mérida' where id = v_l;
+  update cotizacion_lineas set titulo = 'Montacargas CPD-20' where id = v_l;
+  assert (select autorizada_por is null and estado = 'por_autorizar' from cotizaciones where id = v_cot), 'la autorización sobrevivió al cambio de partida';
+  begin update cotizaciones set estado = 'enviada' where id = v_cot; v_ok := true; exception when insufficient_privilege then v_ok := false; end;
+  assert not v_ok, 'se envió renombrada sin autorización';
+
+  -- 10. Opcional cara elegida al convertir: el vendedor NO puede (y el mensaje dice qué hacer); la gerencia sí.
+  v_cot := nueva_cotizacion(v_ca);
+  update cotizaciones set tiempo_entrega = '1 semana' where id = v_cot;
+  insert into cotizacion_lineas (cotizacion_id, orden, titulo, unidad, cantidad, precio_unitario, opcional) values
+    (v_cot, 1, 'Flete a Mérida', 'servicio', 1, 5000, false), (v_cot, 2, 'Generador TDK', 'pieza', 1, 176000, true);
+  begin perform convertir_a_pedido(v_cot, null, array(select id from cotizacion_lineas where cotizacion_id = v_cot)); v_ok := true;
+  exception when insufficient_privilege then v_ok := false; v_msg := sqlerrm; end;
+  assert not v_ok and v_msg like '%gerencia de ventas que haga el pedido%', 'opcional cara: ' || coalesce(v_msg, 'pasó');
+  perform pg_temp.como(v_ger);
+  v_ped := convertir_a_pedido(v_cot, null, array(select id from cotizacion_lineas where cotizacion_id = v_cot));
+  assert (select count(*) from pedido_lineas where pedido_id = v_ped) = 2, 'la gerencia no pudo hacer el pedido con la opcional';
+
+  -- 11. Con RFC y sin razón social solo pide la razón social; «Público en general» no la reemplaza.
+  perform pg_temp.como(v_a);
+  v_ext := alta_cliente('{"nombre": "Básculas del Golfo 256", "rfc": "BGO160202AB1", "estado": "Veracruz", "fuente_id": 2}', null);
+  assert cliente_falta_para_pedido(v_ext) = '{razon_social}', 'pidió algo más que la razón social: ' || cliente_falta_para_pedido(v_ext)::text;
+  v_cot := nueva_cotizacion(v_ext);
+  update cotizaciones set tiempo_entrega = '1 semana' where id = v_cot;
+  insert into cotizacion_lineas (cotizacion_id, orden, titulo, unidad, cantidad, precio_unitario) values (v_cot, 1, 'Flete a Veracruz', 'servicio', 1, 5000);
+  begin perform convertir_a_pedido(v_cot, null, null, '{"publico_general": true}'); v_ok := true; exception when check_violation then v_ok := false; v_msg := sqlerrm; end;
+  assert not v_ok and v_msg = 'Para hacer el pedido falta: la razón social', 'con RFC de verdad: ' || coalesce(v_msg, 'pasó');
+  perform convertir_a_pedido(v_cot, null, null, '{"razon_social": "Básculas del Golfo SA de CV"}');
+  assert (select razon_social = 'Básculas del Golfo SA de CV' and not publico_general from clientes where id = v_ext), 'no guardó la razón social';
+
+  -- 12. Con más de 5 parecidos, el del mismo teléfono va primero (antes se cortaba por id).
+  for i in 1..6 loop perform alta_cliente('{"nombre": "Molinos Repetidos 256"}', null, true); end loop;
+  perform alta_cliente('{"nombre": "Otra Razón 256"}', '{"telefono": "5551112222"}');
+  v_par := clientes_parecidos('Molinos Repetidos 256', '5551112222');
+  assert jsonb_array_length(v_par) = 5 and v_par->0->>'por' = 'teléfono', 'el del teléfono se perdió entre los del nombre: ' || v_par::text;
 end $$;

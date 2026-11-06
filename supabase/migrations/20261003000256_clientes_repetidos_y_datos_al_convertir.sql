@@ -82,6 +82,9 @@ begin
              'de_otro_vigente', x.vendedor_id <> auth.uid() and coalesce((select v.vigente from vigencia_cliente(x.id) v), false),
              'editable', cliente_visible(x.id)) order by x.peso, x.creado_en)
     from (
+     -- Primero uno por cliente (su mejor razón) y luego los 5 de más peso: con el límite junto al
+     -- distinct on salían los 5 primeros por id, y un nombre repetido podía tapar al del mismo teléfono.
+     select * from (
       select distinct on (c.id) c.id, c.nombre, c.vendedor_id, c.creado_en, m.por, m.peso
       from clientes c
       cross join lateral (
@@ -96,7 +99,7 @@ begin
       ) m
       where c.activo and c.id is distinct from p_excluir
       order by c.id, m.peso
-      limit 5
+     ) u order by u.peso, u.creado_en limit 5
     ) x left join perfiles p on p.id = x.vendedor_id), '[]'::jsonb);
 end $$;
 revoke execute on function public.clientes_parecidos(text, text, text, text, uuid) from public, anon;
@@ -244,11 +247,19 @@ begin
   return new;
 end $$;
 
+-- Los que ya tenían el RFC genérico (4 en la nube) no pasaron por el disparador: sin esto les
+-- pediría razón social al convertir.
+update public.clientes set publico_general = true where rfc in ('XAXX010101000', 'XEXX010101000') and not publico_general;
+
 -- security invoker: ventas ve todos los clientes, y solo dice qué falta, no el dato.
+-- «razon_social» aparte: en la nube 952 clientes tienen RFC de verdad y no razón social. Pedirles
+-- «RFC y razón social» los hacía reescribir un RFC que la base ignora, y marcar «Público en general»
+-- no servía (un RFC de verdad la apaga) y regresaba el mismo error.
 create or replace function public.cliente_falta_para_pedido(p_cliente uuid) returns text[]
 language sql stable set search_path = public as $$
   select array_remove(array[
-    case when not c.publico_general and (c.rfc is null or nullif(trim(c.razon_social), '') is null) then 'fiscal' end,
+    case when not c.publico_general and c.rfc is null then 'fiscal'
+         when not c.publico_general and nullif(trim(c.razon_social), '') is null then 'razon_social' end,
     case when c.cve_ent is null and coalesce(c.ubicacion, '') <> 'extranjero' then 'estado' end,
     case when c.fuente_id is null then 'fuente' end], null)
   from clientes c where c.id = p_cliente
@@ -267,9 +278,12 @@ on conflict (clave) do nothing;
 -- Las partidas libres solo se reconocen por el título: el menú las crea como «Flete a »,
 -- «Instalación y puesta en marcha», «Servicio de » y «Partida», y Skydropx como «Flete …».
 -- «Servicio de automatización» NO se exenta: es equipo de control, de lo más caro que se cotizó así.
+-- En la nube (30 días) 3 de las 11 que se habrían atorado eran flete o instalación con otro nombre:
+-- «SERVICIO DE INTALACION, PUESTA EN MARCHA…» ($147,104, sin la s) y dos «Manejo y entrega de
+-- equipo» ($50,000), que es como se escribe el flete en los pedidos de la hoja (PED-26-837).
 create or replace function public.partida_libre_exenta(p_titulo text) returns boolean
 language sql immutable parallel safe set search_path = public, extensions as $$
-  select sin_acentos(coalesce(p_titulo, '')) ~* '^\s*(servicio\s+(de\s+)?)?(flete|instal|puesta\s+en\s+marcha)'
+  select sin_acentos(coalesce(p_titulo, '')) ~* '^\s*(servicio\s+(de\s+)?)?(flete|ins?tal|puesta\s+en\s+marcha|manejo\s+y\s+entrega)'
 $$;
 revoke execute on function public.partida_libre_exenta(text) from public, anon;
 grant execute on function public.partida_libre_exenta(text) to authenticated;
@@ -277,6 +291,15 @@ grant execute on function public.partida_libre_exenta(text) to authenticated;
 alter table public.cotizacion_lineas add column if not exists libre_cara boolean not null default false;
 comment on column public.cotizacion_lineas.libre_cara is
   'Partida libre de umbral_mxn o más que pide autorización (partida_libre_cara). Solo para pintar, como bajo_minimo.';
+
+-- El disparador «recalcular» (003) solo mira cantidad, precio, descuento, opcional y artículo: cambiarle
+-- el nombre a una partida libre de «Flete a Mérida» a «Montacargas» la dejaba sin marcar, la
+-- cotización no pasaba a «Por autorizar» y el envío se trababa sin poder pedir autorización. Solo
+-- cuando el nombre la saca o la mete a la exención: corregir una letra no pierde la autorización.
+drop trigger if exists recalcular_titulo on public.cotizacion_lineas;
+create trigger recalcular_titulo after update of titulo on public.cotizacion_lineas
+  for each row when (new.articulo_id is null and partida_libre_exenta(old.titulo) is distinct from partida_libre_exenta(new.titulo))
+  execute function public.trg_lineas_cotizacion();
 
 -- La misma base que partida_bajo_minimo (082): pesos, sin IVA, con los dos descuentos.
 create or replace function public.partida_libre_cara(l public.cotizacion_lineas, c public.cotizaciones) returns boolean
@@ -322,6 +345,7 @@ begin
     requiere_autorizacion = v_bajo,
     estado = case when v_bajo and c.estado in ('borrador', 'autorizada') and c.autorizada_por is null then 'por_autorizar'
                   when not v_bajo and c.estado = 'por_autorizar' then 'borrador'
+                  -- Autorizada sin autorización vigente (le cambiaron el descuento y ya no hace falta): vuelve a borrador.
                   when not v_bajo and c.estado = 'autorizada' and c.autorizada_por is null then 'borrador'
                   else c.estado end,
     autorizacion_pedida_en = case when v_bajo then c.autorizacion_pedida_en end
@@ -345,12 +369,14 @@ begin
     raise exception 'La cotización tiene precios abajo del mínimo o partidas libres sin autorizar' using errcode = '42501';
   end if;
   -- Las opcionales no frenan el envío, pero elegirlas al convertir las mete al pedido: ahí sí cuentan.
-  if c.autorizada_por is null and p_partidas is not null and exists (
+  -- Como no ponen la cotización en «Por autorizar», no hay autorización que pedir: la convierte la
+  -- gerencia (que es la que autorizaría) o se saca una versión con esa partida incluida.
+  if c.autorizada_por is null and not puede('ventas', 3) and p_partidas is not null and exists (
        select 1 from cotizacion_lineas l where l.cotizacion_id = c.id and l.id = any(p_partidas) and l.opcional
          and (partida_libre_cara(l, c) or precio_bajo_minimo(l.articulo_id,
                l.precio_unitario * (1 - l.descuento_pct) * (1 - c.descuento_pct) * c.tipo_cambio
                  / case when c.precios_con_iva then 1 + c.tasa_iva else 1 end, l.precio_lista))) then
-    raise exception 'Una opcional que elegiste va abajo del mínimo (o es partida libre de $20,000 o más): pide la autorización primero' using errcode = '42501';
+    raise exception 'Una opcional que elegiste va abajo del mínimo (o es partida libre de $20,000 o más): pídele a la gerencia de ventas que haga el pedido, o saca una versión con esa partida incluida y pide la autorización' using errcode = '42501';
   end if;
   if exists (select 1 from pedidos where cotizacion_id = p_cotizacion and estado <> 'cancelado') then
     raise exception 'Esta cotización ya tiene pedido';
@@ -373,7 +399,8 @@ begin
   v_falta := cliente_falta_para_pedido(c.cliente_id);
   if cardinality(v_falta) > 0 then
     raise exception 'Para hacer el pedido falta: %', array_to_string(array(select case x
-        when 'fiscal' then 'RFC y razón social (o marca «Público en general»)' when 'estado' then 'el estado'
+        when 'fiscal' then 'RFC y razón social (o marca «Público en general»)' when 'razon_social' then 'la razón social'
+        when 'estado' then 'el estado'
         else '¿cómo llegó?' end from unnest(v_falta) x), ', ')
       using errcode = '23514', detail = array_to_string(v_falta, ',');
   end if;
@@ -410,8 +437,10 @@ begin
     raise exception 'La línea de comisión (maquinaria, refacciones, otros) la pone el catálogo; si está mal, que la cambie la gerencia'
       using errcode = '42501';
   end if;
-  -- Ahora también mira la cantidad: 1 × $15,000 que se vuelve 10 × $15,000 cruza el umbral.
-  if tg_op = 'UPDATE' and (new.precio_unitario, new.descuento_pct, new.cantidad) is not distinct from (old.precio_unitario, old.descuento_pct, old.cantidad) then
+  -- Ahora también mira la cantidad (1 × $15,000 que se vuelve 10 × $15,000 cruza el umbral) y el
+  -- nombre cuando la saca de la exención («Flete» que se vuelve «Generador»).
+  if tg_op = 'UPDATE' and (new.precio_unitario, new.descuento_pct, new.cantidad) is not distinct from (old.precio_unitario, old.descuento_pct, old.cantidad)
+     and not (new.articulo_id is null and partida_libre_exenta(old.titulo) and not partida_libre_exenta(new.titulo)) then
     return new;
   end if;
   select * into p from pedidos where id = new.pedido_id;
@@ -546,4 +575,13 @@ begin
     new.cerrada_en := now();
   end if;
   return new;
+end $$;
+
+-- 9. pedir_autorizacion de 082 con el mensaje al día: también se pide por partidas libres caras.
+create or replace function public.pedir_autorizacion(p_id uuid, p_nota text default null) returns void
+language plpgsql security invoker as $$
+begin
+  update cotizaciones set autorizacion_pedida_en = now(), nota_autorizacion = nullif(trim(p_nota), '')
+  where id = p_id and estado = 'por_autorizar';
+  if not found then raise exception 'Solo se pide autorización cuando hay precios abajo del mínimo o partidas libres de $20,000 o más'; end if;
 end $$;

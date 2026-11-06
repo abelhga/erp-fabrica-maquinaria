@@ -129,9 +129,13 @@ export function DialogoConvertir({ abierto, alCambiar, c, partidas, alConfirmar,
     queryFn: () => q<{ cve_ent: string; nombre_corto: string }[]>(supabase.from("geo_estados").select("cve_ent, nombre_corto").order("nombre_corto")),
   });
   const pideFiscal = faltan.includes("fiscal"), pideEstado = faltan.includes("estado"), pideFuente = faltan.includes("fuente");
+  // Ya tiene RFC (de verdad): solo falta la razón social. Ni se vuelve a pedir el RFC (la base no lo
+  // pisaría) ni se ofrece «Público en general» (un RFC de verdad lo apaga).
+  const pideRazon = faltan.includes("razon_social");
   const rfcN = normalizarRfc(d.rfc);
   const rfcMalo = rfcN !== "" && !RFC_VALIDO.test(rfcN);
-  const fiscalOk = !pideFiscal || d.publico || (RFC_VALIDO.test(rfcN) && d.razon_social.trim() !== "");
+  const fiscalOk = (!pideFiscal || d.publico || (RFC_VALIDO.test(rfcN) && d.razon_social.trim() !== ""))
+    && (!pideRazon || d.razon_social.trim() !== "");
   const estadoOk = !pideEstado || (d.estado === FUERA ? d.pais.trim() !== "" : d.estado !== "");
   const fuenteOk = !pideFuente || d.fuente !== "";
   const datosOk = fiscalOk && estadoOk && fuenteOk;
@@ -139,6 +143,7 @@ export function DialogoConvertir({ abierto, alCambiar, c, partidas, alConfirmar,
     if (!faltan.length) return null;
     return {
       ...(pideFiscal ? (d.publico ? { publico_general: true } : { rfc: rfcN, razon_social: d.razon_social.trim() }) : {}),
+      ...(pideRazon ? { razon_social: d.razon_social.trim() } : {}),
       ...(pideEstado ? (d.estado === FUERA ? { pais: d.pais.trim() } : { estado: d.estado }) : {}),
       ...(pideFuente ? { fuente_id: Number(d.fuente) } : {}),
     };
@@ -187,6 +192,15 @@ export function DialogoConvertir({ abierto, alCambiar, c, partidas, alConfirmar,
                   <input type="checkbox" checked={d.publico} onChange={(e) => setD({ ...d, publico: e.target.checked })} />
                   Público en general (no pide factura a su nombre)
                 </label>
+              </div>
+            )}
+            {pideRazon && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <LlenarConConstancia para="cliente" excluir={c.cliente_id} className="sm:col-span-2"
+                  alLeer={(k) => setD((x) => ({ ...x, razon_social: k.razon_social ?? x.razon_social }))} />
+                <Campo etiqueta="Razón social" className="sm:col-span-2" ayuda="Ya tiene RFC; falta la razón social, como viene en su constancia.">
+                  <Entrada value={d.razon_social} onChange={(e) => setD({ ...d, razon_social: e.target.value })} />
+                </Campo>
               </div>
             )}
             {(pideEstado || pideFuente) && (
