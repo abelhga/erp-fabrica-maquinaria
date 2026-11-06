@@ -13,7 +13,8 @@
 --     En días distintos porque tres «No contestó» se anotan en diez segundos.
 -- (b) Hay 25 oportunidades abiertas con dos «Sigue en pie»/«No contestó» seguidos. Al tercero se
 --     pide decidir: una fecha con su porqué, Negociación o perdida. Así ninguna venta da vueltas
---     cada dos o tres días sin que nadie decida nada.
+--     cada dos o tres días sin que nadie decida nada. Un «No contestó» solo lo pide cuando ya se
+--     puede perder por no respondió (si no, (b) exigiría decidir justo cuando (a) no deja perder).
 -- (c) El 74 % de los seguimientos quedaban como «llamada» (el valor por omisión) y 1 de cada 5 de
 --     esas notas dice que fue mensaje; en Leads, 247 de 247 intentos del mes quedaron como WhatsApp.
 --     El canal ya no viene puesto: la base lo pide.
@@ -146,7 +147,12 @@ begin
 
   -- Antes de escribir nada: los disparadores lo vuelven a revisar, pero así no queda nada a medias.
   v_estado := _estado_seguimiento(o.id);
-  v_decidir := p_resultado in ('sigue', 'no_contesta') and (v_estado->>'decidir')::boolean;
+  -- Un «No contestó» solo pide decidir cuando ya se puede dar por perdida porque no respondió: antes
+  -- de eso «perdida» no es opción y el mensaje de (a) dice justo «anota No contestó»; pedirle una
+  -- fecha con porqué a un teléfono que no contesta solo pone a inventar. La ventana es corta (a los
+  -- 10 días hábiles del envío ya se puede), así que no abre un hueco para dar vueltas.
+  v_decidir := (v_estado->>'decidir')::boolean
+    and (p_resultado = 'sigue' or (p_resultado = 'no_contesta' and (v_estado->>'puede_sin_respuesta')::boolean));
   if p_resultado = 'perdida' and es_motivo_sin_respuesta(p_motivo) and not (v_estado->>'puede_sin_respuesta')::boolean then
     raise exception '%', _mensaje_sin_respuesta(v_estado) using errcode = '23514', hint = 'sin_respuesta';
   end if;
@@ -216,7 +222,9 @@ begin
     if new.etapa <> 'perdida' or (old.etapa = 'perdida' and old.motivo_perdida is not distinct from new.motivo_perdida) then return new; end if;
     v_op := new.id; v_m := new.motivo_perdida;
   else
-    if new.estado <> 'rechazada' or old.estado = 'rechazada' or new.oportunidad_id is null then return new; end if;
+    -- También al cambiarle el motivo a una ya rechazada: «Lo cotizado» agrupa lo perdido por este motivo.
+    if new.estado <> 'rechazada' or new.oportunidad_id is null
+       or (old.estado = 'rechazada' and old.motivo_rechazo is not distinct from new.motivo_rechazo) then return new; end if;
     v_op := new.oportunidad_id; v_m := new.motivo_rechazo;
   end if;
   if es_motivo_sin_respuesta(v_m) then
@@ -233,7 +241,7 @@ drop trigger if exists perder_sin_respuesta on public.oportunidades;
 create trigger perder_sin_respuesta before update of etapa, motivo_perdida on public.oportunidades
   for each row execute function public.trg_perder_sin_respuesta();
 drop trigger if exists rechazar_sin_respuesta on public.cotizaciones;
-create trigger rechazar_sin_respuesta before update of estado on public.cotizaciones
+create trigger rechazar_sin_respuesta before update of estado, motivo_rechazo on public.cotizaciones
   for each row execute function public.trg_perder_sin_respuesta();
 
 -- 7. registrar_intento_lead de 235 con el canal obligatorio: un canal nulo chocaba con el not null

@@ -97,6 +97,11 @@ begin
   op3 := pg_temp.enviada255(v_cli);
   perform rechazar_cotizacion((select id from cotizaciones where oportunidad_id = op3), 'Precio más alto que la competencia', true);
   assert (select etapa from oportunidades where id = op3) = 'perdida', 'rechazar con motivo del cliente no la cerró';
+  -- Cambiarle después el motivo a «no respondió» tampoco se la salta, ni en la cotización ni en la oportunidad.
+  v_err := pg_temp.falla255(format('update cotizaciones set motivo_rechazo = ''No respondió'' where oportunidad_id = %L', op3));
+  assert v_err like '23514 %hacen falta%', 'cambiar el motivo de la rechazada se saltó la regla: ' || coalesce(v_err, 'pasó');
+  v_err := pg_temp.falla255(format('update oportunidades set motivo_perdida = ''Sin respuesta'' where id = %L', op3));
+  assert v_err like '23514 %hacen falta%', 'cambiar el motivo de la perdida se saltó la regla: ' || coalesce(v_err, 'pasó');
 
   -- 9. Lo que ve la pantalla.
   e := estado_seguimiento(op1);
@@ -143,7 +148,8 @@ begin
   update cotizaciones set enviada_en = (d + time '12:00') at time zone 'America/Mexico_City' where oportunidad_id = op6;
   update cotizaciones set enviada_en = (d + 1 + time '12:00') at time zone 'America/Mexico_City' where oportunidad_id = op7;
   perform pg_temp.como(v_ven);
-  assert sumar_dias_laborables(d, 10) = hoy_mx() and sumar_dias_laborables(d + 1, 10) > hoy_mx(), 'la frontera no quedó donde debía';
+  -- «<=» y no «=»: en sábado, domingo o festivo ningún envío cumple justo hoy (la prueba fallaba esos días).
+  assert sumar_dias_laborables(d, 10) <= hoy_mx() and sumar_dias_laborables(d + 1, 10) > hoy_mx(), 'la frontera no quedó donde debía';
   assert (estado_seguimiento(op6)->>'puede_sin_respuesta')::boolean, 'justo a los 10 días hábiles no dejó';
   assert not (estado_seguimiento(op7)->>'puede_sin_respuesta')::boolean, 'a 9 días hábiles dejó';
   assert pg_temp.falla255(format(perder, op5, 'No respondió')) like '23514 %hacen falta%', 'a 5 días naturales dejó perder';
@@ -189,7 +195,21 @@ begin
     'la bitácora no dice la fecha y su porqué';
 
   -- 18. El cuarto también lo pide.
-  assert pg_temp.falla255(format('select registrar_seguimiento(%L, ''no_contesta'', null, ''llamada'')', op9)) like '23514 %Ya van 4%', 'el cuarto no pidió decidir';
+  assert pg_temp.falla255(format('select registrar_seguimiento(%L, ''sigue'', ''Sigue igual'', ''llamada'')', op9)) like '23514 %Ya van 4%', 'el cuarto no pidió decidir';
+
+  -- 18b. Pero un «No contestó» mientras no se puede perder por no respondió pasa sin fecha ni porqué:
+  --      (a) dice «anota No contestó» y perderla no es opción todavía.
+  assert not (estado_seguimiento(op9)->>'puede_sin_respuesta')::boolean, 'op9 ya se podía perder';
+  perform registrar_seguimiento(op9, 'no_contesta', null, 'llamada');
+  -- (now() es el mismo en toda la transacción: se cuenta en vez de ordenar por cerrado_en.)
+  assert (select count(*) filter (where resultado = 'no_contesta' and motivo_fecha is null) = 2 and count(*) filter (where motivo_fecha is not null) = 1
+          from seguimientos_cotizacion where oportunidad_id = op9 and estado = 'hecho'), 'el «No contestó» pidió decidir';
+
+  -- 18c. Ya con 2 «No contestó» en días distintos (se puede perder), el siguiente sí pide decidir.
+  assert (estado_seguimiento(op9)->>'no_contesto')::int = 2 and (estado_seguimiento(op9)->>'puede_sin_respuesta')::boolean,
+    'no contó los dos días de op9: ' || estado_seguimiento(op9)::text;
+  assert pg_temp.falla255(format('select registrar_seguimiento(%L, ''no_contesta'', null, ''llamada'')', op9)) like '23514 %Ya van 5%',
+    'con la pérdida ya permitida, «No contestó» no pidió decidir';
 
   -- 19. Negociación en plena racha pasa sin porqué, y la racha se reinicia.
   perform registrar_seguimiento(op9, 'negociacion', 'Pide 5 % por pago de contado', 'llamada');

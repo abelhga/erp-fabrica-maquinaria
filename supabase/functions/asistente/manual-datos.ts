@@ -1527,8 +1527,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "«Solo vencidas» deja las que pasaron su vigencia sin cerrarse (renglones en rojo). Abajo ves cuánto suma lo filtrado en pesos y sin IVA; con CSV te la llevas a Excel.",
    "Para la gerencia, «Por autorizar» es la cola de precios abajo del mínimo: primero las que el vendedor ya pidió, con su nota, cuántas partidas van bajo el mínimo y qué tanto abajo de lista. «Autorizar» deja al vendedor enviarla.",
    "«Seguimiento» es la lista de cotizaciones enviadas a las que toca preguntarles qué pasó: primero las vencidas, luego las de hoy y luego las que vienen. Cada cotización enviada aparece aquí 3 días hábiles después.",
-   "En «¿Qué pasó?» eliges cómo va (sigue en pie, no contestó, contactado, negociando, ya compró o se perdió) por dónde fue (no viene marcado) y escribes lo que dijo el cliente; Enter lo guarda y abre la siguiente. Si sigue viva, se agenda la próxima.",
-   "Para darla por perdida porque no respondió hacen falta 2 «No contestó» en días distintos o 10 días hábiles desde el envío; antes, la ventana te ofrece «No contestó». Al tercer «Sigue en pie» o «No contestó» seguido te pide decidir: otra fecha con su porqué, Negociación o perdida.",
+   "En «¿Qué pasó?» eliges cómo va (sigue en pie, no contestó, contactado, negociando, ya compró o se perdió), por dónde fue (no viene marcado) y escribes lo que dijo el cliente; Enter lo guarda y abre la siguiente. Si sigue viva, se agenda la próxima.",
+   "Para darla por perdida porque no respondió hacen falta 2 «No contestó» en días distintos o 10 días hábiles desde el envío; antes, la ventana te ofrece «No contestó». Al tercer «Sigue en pie» o «No contestó» seguido te pide decidir: otra fecha con su porqué, Negociación o perdida (si no contesta y aún no se puede perder, «No contestó» pasa sin más).",
    "El botón «Mensaje» (con destellos) de cada renglón, o «Redactar mensaje» dentro de «¿Qué pasó?», le pide a la IA el WhatsApp de seguimiento con lo que has anotado de esa venta: entre más detalle anotes, más a la medida sale.",
    "El mensaje lo revisas, lo cambias si quieres y lo abres en WhatsApp; no se manda solo.",
    "Con más de 10 seguimientos vencidos no puedes enviar cotizaciones nuevas hasta ponerte al día; el aviso de arriba te lo dice antes.",
@@ -6603,7 +6603,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Al tercer «Sigue en pie» o «No contestó» seguido sin avance (sin pasar a Negociación ni mandar otra versión), «¿Qué pasó?» te pide decidir: le vuelves a buscar en una fecha que tú pones, con el porqué (por ejemplo, «decide en enero»), la pasas a Negociación o la das por perdida. Así ninguna venta se queda dando vueltas sin que nadie decida."
+  "texto": "Al tercer «Sigue en pie» o «No contestó» seguido sin avance (sin pasar a Negociación ni mandar otra versión), «¿Qué pasó?» te pide decidir: le vuelves a buscar en una fecha que tú pones, con el porqué (por ejemplo, «decide en enero»), la pasas a Negociación o la das por perdida. Si no te contesta y todavía no se puede dar por perdida porque no respondió, «No contestó» se anota sin más. Así ninguna venta se queda dando vueltas sin que nadie decida."
  },
  {
   "clave": "deDondeSaleCapacidad",
@@ -13588,7 +13588,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cómo va la venta después de hablar con el cliente. Sigue en pie: lo está pensando; le vuelves a buscar en 3 días hábiles o la fecha que pongas. No contestó: se reintenta en 2. Negociando: pasa a Negociación. Ya compró: te lleva a convertir la cotización en pedido. Se perdió: con su motivo, la oportunidad y su cotización se cierran; por «No respondió», solo después de 2 «No contestó» en días distintos o de 10 días hábiles desde el envío. Al tercer «Sigue en pie» o «No contestó» seguido te pide la fecha y su porqué, o pasarla a Negociación o a perdida. Lo que escribes queda en la historia del cliente."
+  "texto": "Cómo va la venta después de hablar con el cliente. Sigue en pie: lo está pensando; le vuelves a buscar en 3 días hábiles o la fecha que pongas. No contestó: se reintenta en 2. Negociando: pasa a Negociación. Ya compró: te lleva a convertir la cotización en pedido. Se perdió: con su motivo, la oportunidad y su cotización se cierran; por «No respondió», solo después de 2 «No contestó» en días distintos o de 10 días hábiles desde el envío. Al tercer «Sigue en pie» o «No contestó» seguido te pide la fecha y su porqué, o pasarla a Negociación o a perdida («No contestó» solo cuando ya se puede perder porque no respondió). Lo que escribes queda en la historia del cliente."
  },
  {
   "clave": "resumenDineroPorEmbarque",
@@ -14293,7 +14293,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cuándo le vuelves a preguntar, de hoy a cuatro meses. Si lo dejas vacío se agenda solo: en 2 días hábiles si no contestó y en 3 si sigue en pie o negociando. Desde el tercer «Sigue en pie» o «No contestó» seguido, la fecha y su porqué son obligatorios."
+  "texto": "Cuándo le vuelves a preguntar, de hoy a cuatro meses. Si lo dejas vacío se agenda solo: en 2 días hábiles si no contestó y en 3 si sigue en pie o negociando. Desde el tercer «Sigue en pie» o «No contestó» seguido, la fecha y su porqué son obligatorios (en «No contestó», solo cuando ya se puede perder porque no respondió)."
  },
  {
   "clave": "simuladorPrecios",
@@ -14418,7 +14418,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cuándo se puede dar por perdida una venta porque el cliente no respondió: cuando ya anotaste 2 «No contestó» en días distintos, o cuando pasaron 10 días hábiles desde que enviaste la última versión de la cotización. Antes de eso, «No contestó» la vuelve a agendar en 2 días hábiles. Si el cliente sí te dijo que no, elige el motivo que te dio. Vale igual al arrastrar la tarjeta a Perdida o al marcar rechazada la cotización."
+  "texto": "Cuándo se puede dar por perdida una venta porque el cliente no respondió (eligiendo «No respondió» o escribiendo algo igual, como «no contesta» o «sin respuesta»): cuando ya anotaste 2 «No contestó» en días distintos, o cuando pasaron 10 días hábiles desde que enviaste la última versión de la cotización. Antes de eso, «No contestó» la vuelve a agendar en 2 días hábiles. Si el cliente sí te dijo que no, elige el motivo que te dio. Vale igual al arrastrar la tarjeta a Perdida o al marcar rechazada la cotización."
  },
  {
   "clave": "sinSalidaInventario",

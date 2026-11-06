@@ -208,7 +208,8 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
     queryFn: () => q<EstadoSeguimiento>(supabase.rpc("estado_seguimiento", { p_oportunidad: llave })),
   });
   const est = estado.data;
-  const decidir = !!est?.decidir && (resultado === "sigue" || resultado === "no_contesta");
+  // Igual que la base: un «No contestó» solo pide decidir cuando ya se podría perder por no respondió.
+  const decidir = !!est?.decidir && (resultado === "sigue" || (resultado === "no_contesta" && est.puede_sin_respuesta));
 
   const guardar = useAccion(
     () => q(supabase.rpc("registrar_seguimiento", {
@@ -269,7 +270,7 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
         {est?.decidir && (
           <p className="flex gap-2 rounded-lg bg-aviso-suave px-3 py-2 text-xs" data-explain={GLOSARIO.decidirSeguimiento} data-explain-title="Toca decidir">
             <AlertTriangle className="h-4 w-4 shrink-0 text-aviso" />
-            <span>Ya van <b>{est.racha}</b> «Sigue en pie» o «No contestó» seguidos sin avance. Decide qué sigue: otra fecha con su porqué, Negociación o darla por perdida.</span>
+            <span>Ya van <b>{est.racha}</b> «Sigue en pie» o «No contestó» seguidos sin avance. Decide qué sigue: otra fecha con su porqué, Negociación o darla por perdida.{!est.puede_sin_respuesta && " Si ahora tampoco contesta, anota «No contestó» sin más."}</span>
           </p>
         )}
 
