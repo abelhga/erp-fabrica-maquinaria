@@ -1483,7 +1483,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "La ficha del cliente: datos fiscales, contactos, seguimiento e historial completo de cotizaciones, pedidos, oportunidades y lo que compró antes del ERP.",
    "Paso 1: Si la cuenta está libre, dale «Hacerlo mío» para que quede a tu nombre.",
    "Paso 2: En «Actividad», anota cada llamada, WhatsApp o visita en una línea y Enter.",
-   "Paso 3: Dale «Nueva cotización» para cotizarle: sale ya ligada a este cliente.",
+   "Paso 3: Dale «Nueva cotización»: sale ligada a su oportunidad abierta; si tiene varias, eliges cuál.",
+   "«Nueva cotización» usa la oportunidad que el cliente tenía abierta sin cotizar (la del lead primero). Si tiene varias, o una ya cotizada, te pregunta para cuál es; «Es otro proyecto» abre una nueva al enviarla.",
    "Arriba ves de quién es la cuenta y hasta cuándo. Si es de otro vendedor solo ves eso: contactos, compras y saldo quedan privados. Si te buscó a ti, pídele a la gerencia que lo reasigne o que compartan el crédito.",
    "En «Actividad», si le pones fecha a una nota se vuelve tarea. Tus seguimientos alargan la vigencia de la cuenta a tu nombre.",
    "Para facturar bien captura RFC, régimen, CP fiscal y uso de CFDI, o llénalos con la constancia de situación fiscal.",
@@ -1546,6 +1547,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 2: Llena «Tiempo de entrega»: sin él no se puede enviar.",
    "Paso 3: Dale «Enviar» y elige «Enviar por WhatsApp», «Por correo» o «Solo marcar enviada».",
    "Se guarda sola mientras escribes; arriba dice «Guardado» con la hora.",
+   "Arriba, «Oportunidad» dice a qué venta pertenece. Sale sola con la que el cliente tenía abierta; si cambias el cliente, toma la del nuevo. Si es otro proyecto, elige «Una nueva al enviar».",
    "Al agregar una partida, el precio de lista, la descripción y la foto se llenan solos (clic en la foto para pegar otra liga o subir una). Clic en una partida muestra su ficha de venta: precio mínimo, existencia y entrega.",
    "Para fletes, instalación o servicios usa «Partida libre». Con «Flete con Skydropx» cotizas el envío con el código postal del cliente y los bultos de las partidas, y se agrega la partida de flete con su precio (no se genera guía ni se cobra).",
    "Si algo no tiene precio, «Pedir precio a compras» y aquí ves cuando contestan.",
@@ -1574,7 +1576,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Se crea una cotización con las condiciones de pago, entrega y notas que la gerencia dejó por defecto, y en un momento se abre el editor.",
    "El folio se asigna cuando agregas la primera partida (o cuando la mandas a autorizar o la envías): si abres y sales sin capturar, no se gasta un folio y el borrador vacío se borra solo al día siguiente.",
-   "Si llegas desde un cliente o una oportunidad, la cotización ya sale ligada a ellos y con el contacto principal del cliente."
+   "Si llegas desde un cliente o una oportunidad, la cotización ya sale ligada a ellos y con el contacto principal del cliente. Desde un cliente se liga a la oportunidad que tenía abierta sin cotizar (la del lead primero); si tiene varias, antes te pregunta cuál."
   ]
  },
  {
@@ -1636,6 +1638,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "«Crear oportunidad» se habilita hasta que contesta (o pide cotización). Si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta. Si no le interesa, se descarta con el motivo.",
    "Para escribirle, «Mensaje con IA» te lo redacta con lo que busca y lo que le pidas en la caja de contexto. Cada uno sale distinto, porque WhatsApp bloquea a quien manda el mismo texto a muchos; al abrirlo en WhatsApp se anota «Le escribí».",
    "La columna «Intentos» dice lo último que hiciste y cuándo («Le escribiste por WhatsApp · hace 2 h»), y «Sin contactar» junta a los que todavía no les has escrito ni llamado.",
+   "Ya convertido, «Cotizar» abre la cotización en la oportunidad del lead; al enviarla el lead dice «Cotizado».",
    "Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad."
   ]
  },
@@ -3138,6 +3141,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Anota cuánto cobra la paquetería o el transportista, con IVA, y qué servicio, si lo cotizaste fuera del ERP. Si estaba «Por cotizar», pasa a «Cotizado»; se puede cambiar mientras no tenga guía."
  },
  {
+  "clave": "botonCotizarLead",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Abre una cotización ya ligada a la oportunidad de este lead. Al enviarla pasa a Cotizado y quien registró el lead lo ve."
+ },
+ {
   "clave": "botonCrearOrdenesFaltantes",
   "modulos": [
    "produccion",
@@ -3383,7 +3396,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Abre el envío: por WhatsApp con el mensaje ya armado, por correo desde tu Gmail con el PDF, o solo marcarla enviada. Al enviarla ya no se edita, su oportunidad pasa a Cotizado (si no había, se abre) y se agenda preguntar qué pasó en 3 días hábiles. Antes te pide el tiempo de entrega."
+  "texto": "Abre el envío: por WhatsApp con el mensaje ya armado, por correo desde tu Gmail con el PDF, o solo marcarla enviada. Al enviarla ya no se edita, su oportunidad pasa a Cotizado (si no tenía, se liga a la que el cliente ya tenía abierta sin cotizar, o se abre una) y se agenda preguntar qué pasó en 3 días hábiles. Antes te pide el tiempo de entrega."
  },
  {
   "clave": "botonEnvioAFull",
@@ -3727,7 +3740,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Abre una cotización en borrador con las condiciones de pago, entrega y notas que dejó la gerencia. El folio se asigna cuando agregas la primera partida: si sales sin capturar, no se gasta."
+  "texto": "Abre una cotización en borrador con las condiciones de pago, entrega y notas que dejó la gerencia. El folio se asigna cuando agregas la primera partida: si sales sin capturar, no se gasta. Si vienes de un cliente que ya tiene una oportunidad abierta (la del lead, por ejemplo), sale ligada a ella; si tiene varias, te pregunta para cuál es o si es otro proyecto."
  },
  {
   "clave": "botonNuevaDevolucion",
@@ -6071,7 +6084,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Un lead se vuelve oportunidad cuando ya te contestó: primero anotas en «Intentos de contacto» que contestó y qué te dijo, y entonces se habilita «Crear oportunidad». Si ya era cliente va a su cuenta; si no, eliges la empresa si ya existe o se da de alta como cliente nuevo con este contacto. Si su teléfono o correo ya es de otro cliente, no deja darlo de alta otra vez: te dice cuál es para que lo elijas. La oportunidad nace en Contactado, a nombre del vendedor que tiene el lead, con lo que te dijo, y quien registró el lead ve en qué etapa va."
+  "texto": "Un lead se vuelve oportunidad cuando ya te contestó: primero anotas en «Intentos de contacto» que contestó y qué te dijo, y entonces se habilita «Crear oportunidad». Si ya era cliente va a su cuenta; si no, eliges la empresa si ya existe o se da de alta como cliente nuevo con este contacto. Si su teléfono o correo ya es de otro cliente, no deja darlo de alta otra vez: te dice cuál es para que lo elijas. La oportunidad nace en Contactado, a nombre del vendedor que tiene el lead, con lo que te dijo, y quien registró el lead ve en qué etapa va. Para cotizarle, «Cotizar» aquí o «Nueva cotización» en la ficha del cliente usan esta misma oportunidad: al enviarla, el lead dice «Cotizado»."
  },
  {
   "clave": "convertirMonedaCotizacion",
@@ -7222,6 +7235,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Elige la etapa de esta estación. Cada botón dice cuántas órdenes se trabajan ahí (iniciadas o pausadas) y cuántas ya pueden empezar."
  },
  {
+  "clave": "elegirOportunidad",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Este cliente tiene más de una oportunidad abierta, o una que ya se cotizó. Elige para cuál es la cotización; al enviarla, esa oportunidad se mueve sola. Si es algo distinto, «Es otro proyecto» abre una nueva al enviarla."
+ },
+ {
   "clave": "eliminarBorradorOrden",
   "modulos": [
    "compras"
@@ -7257,7 +7280,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Las oportunidades abiertas por etapa: prospecto → contactado → cotizado → negociación. Al enviar una cotización, su oportunidad pasa sola a “cotizado” (y si no había, se abre); al convertirla en pedido, a “ganada”."
+  "texto": "Las oportunidades abiertas por etapa: prospecto → contactado → cotizado → negociación. Al enviar una cotización, su oportunidad pasa sola a “cotizado”. Si la cotización no trae oportunidad, se liga a la tuya que el cliente ya tenía abierta sin cotizar (primero la que vino de un lead); solo si no hay ninguna, o si dijiste que es otro proyecto, se abre una nueva. Al convertirla en pedido pasa a “ganada”."
  },
  {
   "clave": "empacarEnvio",
@@ -10711,7 +10734,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Lo que crees que vale la venta, sin IVA. Si la oportunidad la abre una cotización enviada, toma el total sin IVA de esa cotización."
+  "texto": "Lo que crees que vale la venta, sin IVA. Si estaba vacío cuando se envió la cotización (o la cotización abrió la oportunidad), toma el total sin IVA de esa cotización."
  },
  {
   "clave": "montoMatriz",
@@ -11134,6 +11157,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Liberada: la gerencia ya la pasó al taller, pero ninguna etapa ha empezado."
+ },
+ {
+  "clave": "oportunidadCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "La venta a la que pertenece esta cotización. Sale sola: la tuya que el cliente ya tenía abierta sin cotizar, primero la que vino de un lead. Si es otro proyecto, elige «Una nueva al enviar» y al enviarla se abre otra. Solo puedes elegir oportunidades de este cliente que sean tuyas."
  },
  {
   "clave": "opPlaneada",

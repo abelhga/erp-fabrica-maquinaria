@@ -22,7 +22,7 @@ import { Actividades } from "./componentes/Actividades";
 import type { Cartera } from "./componentes/Cartera";
 import {
   CANAL, ESTADO_COT, ESTADO_PEDIDO, ETAPA, RFC_VALIDO, dineroEn, enlaceWhatsApp, normalizarRfc, useFuentes, useVendedores,
-  type Contacto, type VCotizacion, type VOportunidad, type VPedido, haceCuanto,
+  type Contacto, type EtapaOportunidad, type VCotizacion, type VOportunidad, type VPedido, haceCuanto,
 } from "./comun";
 import { Barra } from "./componentes/campos";
 import { JuntarClientes } from "./componentes/JuntarClientes";
@@ -43,7 +43,6 @@ interface MovHoja { id: number; fecha: string; tipo: string; monto: number; desc
 export default function DetalleCliente() {
   const { id } = useParams();
   const { perfil, puede } = useSesion();
-  const ir = useNavigate();
   const esGerente = puede("ventas", 3);
 
   const cli = useQuery({
@@ -108,7 +107,7 @@ export default function DetalleCliente() {
       acciones={<>
         {!c.vendedor_id && puede("ventas", 2) && <Boton variante="secundario" onClick={() => tomar.mutate(undefined)} cargando={tomar.isPending} data-explain={GLOSARIO.botonHacerloMio}><Star className="h-4 w-4" />Hacerlo mío</Boton>}
         {puedeJuntar && <Boton variante="secundario" onClick={() => abrirJuntar(null)} data-explain={GLOSARIO.juntarClientes} data-explain-title="Juntar con otro cliente"><Merge className="h-4 w-4" />Juntar con otro</Boton>}
-        {puede("ventas", 2) && <Boton onClick={() => ir(`/ventas/cotizaciones/nueva?cliente=${c.id}`)} data-explain={GLOSARIO.botonNuevaCotizacion}><FilePlus className="h-4 w-4" />Nueva cotización</Boton>}
+        {puede("ventas", 2) && <NuevaCotizacion clienteId={c.id} />}
       </>}>
       {otrosRfc.length > 0 && (
         <div className="rounded-xl border border-aviso/40 bg-aviso-suave px-4 py-3 text-sm flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -396,5 +395,76 @@ function Historia({ clienteId }: { clienteId: string }) {
           vacio={{ icono: History, titulo: "Sin historial en la hoja", texto: "Aquí sale lo que el cliente compró y pagó según la BASE DE DATOS anterior al ERP (solo el dueño, la gerencia y cobranza)." }} />
       </ContenidoPestana>
     </Pestanas>
+  );
+}
+
+const ABIERTAS: EtapaOportunidad[] = ["prospecto", "contactado", "cotizado", "negociacion"];
+
+/** «Nueva cotización» desde la ficha: sale ligada a la oportunidad abierta del cliente (la del lead,
+ *  casi siempre). Antes solo pasaba el cliente y al enviar se abría otra oportunidad, y la del lead
+ *  se quedaba en «Contactado» para siempre. Con varias abiertas (o una ya cotizada) pregunta. */
+function NuevaCotizacion({ clienteId }: { clienteId: string }) {
+  const { perfil, puede } = useSesion();
+  const ir = useNavigate();
+  const esGerente = puede("ventas", 3);
+  const [abierto, setAbierto] = useState(false);
+  const ops = useQuery({
+    queryKey: ["v_oportunidades", "cliente", clienteId, "para_cotizar"],
+    queryFn: () => q<Pick<VOportunidad, "id" | "titulo" | "etapa" | "fuente" | "vendedor_id" | "vendedor" | "creado_en" | "cotizaciones">[]>(
+      supabase.from("v_oportunidades").select("id, titulo, etapa, fuente, vendedor_id, vendedor, creado_en, cotizaciones")
+        .eq("cliente_id", clienteId).in("etapa", ABIERTAS).order("creado_en", { ascending: false })),
+  });
+  // La misma que tomaría la base sola: así «Sugerida» no se recalcula aquí.
+  const sugerida = useQuery({
+    queryKey: ["oportunidad_para_cotizar", clienteId, perfil?.id], enabled: !!perfil?.id,
+    queryFn: () => q<string | null>(supabase.rpc("oportunidad_para_cotizar", { p_cliente: clienteId, p_vendedor: perfil!.id })),
+  });
+  const lista = (ops.data ?? []).filter((o) => o.vendedor_id === perfil?.id || esGerente);
+  const ids = lista.map((o) => o.id);
+  const deLead = useQuery({
+    queryKey: ["leads_de_oportunidades", ids], enabled: abierto && ids.length > 0,
+    queryFn: () => q<{ oportunidad_id: string }[]>(supabase.from("leads").select("oportunidad_id").in("oportunidad_id", ids)),
+  });
+  const vinoDeLead = new Set((deLead.data ?? []).map((l) => l.oportunidad_id));
+  const ordenadas = [...lista].sort((a, b) => Number(b.id === sugerida.data) - Number(a.id === sugerida.data)
+    || Number(vinoDeLead.has(b.id)) - Number(vinoDeLead.has(a.id)) || b.creado_en.localeCompare(a.creado_en));
+
+  const nueva = (params: string) => { setAbierto(false); ir(`/ventas/cotizaciones/nueva?${params}`); };
+  const alDarClic = () => {
+    if (!lista.length) nueva(`cliente=${clienteId}`);
+    else if (lista.length === 1 && (lista[0].etapa === "prospecto" || lista[0].etapa === "contactado")) nueva(`oportunidad=${lista[0].id}`);
+    else setAbierto(true);
+  };
+
+  return (
+    <>
+      <Boton onClick={alDarClic} cargando={ops.isLoading} data-explain={GLOSARIO.botonNuevaCotizacion}><FilePlus className="h-4 w-4" />Nueva cotización</Boton>
+      <Dialogo abierto={abierto} alCambiar={setAbierto} titulo="¿Para cuál oportunidad es?"
+        descripcion="Al enviar la cotización, la oportunidad que elijas se mueve sola.">
+        <div className="space-y-2" data-explain={GLOSARIO.elegirOportunidad} data-explain-title="¿Para cuál oportunidad es?">
+          {ordenadas.map((o, i) => (
+            <button key={o.id} type="button" autoFocus={i === 0} onClick={() => nueva(`oportunidad=${o.id}`)}
+              className="w-full text-left rounded-lg border border-borde px-3 py-2.5 hover:bg-fondo focus:outline-none focus-visible:ring-2 focus-visible:ring-marca">
+              <span className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{o.titulo}</span>
+                <Insignia tono={ETAPA[o.etapa].tono}>{ETAPA[o.etapa].texto}</Insignia>
+                {o.id === sugerida.data && <Insignia tono="marca">Sugerida</Insignia>}
+              </span>
+              <span className="block text-xs text-tenue mt-0.5">
+                {[vinoDeLead.has(o.id) ? `Vino de un lead${o.fuente ? " · " + o.fuente : ""}` : o.fuente,
+                  esGerente ? o.vendedor : null,
+                  o.cotizaciones ? `${o.cotizaciones} cotización${o.cotizaciones === 1 ? "" : "es"}` : "Sin cotizar",
+                  `abierta ${haceCuanto(o.creado_en)}`].filter(Boolean).join(" · ")}
+              </span>
+            </button>
+          ))}
+          <button type="button" onClick={() => nueva(`cliente=${clienteId}&nueva=1`)}
+            className="w-full text-left rounded-lg border border-dashed border-borde px-3 py-2.5 hover:bg-fondo focus:outline-none focus-visible:ring-2 focus-visible:ring-marca">
+            <span className="font-medium">Es otro proyecto: abrir una nueva</span>
+            <span className="block text-xs text-tenue mt-0.5">La oportunidad se abre al enviar la cotización.</span>
+          </button>
+        </div>
+      </Dialogo>
+    </>
   );
 }

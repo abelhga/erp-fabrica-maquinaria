@@ -18,8 +18,8 @@ import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Dialogo, Lateral } from "@/components/ui/dialogo";
 import { BuscadorArticulo } from "@/components/datos/BuscadorArticulo";
 import {
-  EDITABLES, ESTADO_COT, dineroEn, folioCot, mensualidad, useAncho, usePlanesMeses, useTextosComerciales, venceEl, hoyMx,
-  type Contacto, type Cotizacion, type Partida, type Moneda, haceCuanto,
+  EDITABLES, ESTADO_COT, ETAPA, dineroEn, folioCot, mensualidad, useAncho, usePlanesMeses, useTextosComerciales, venceEl, hoyMx,
+  type Contacto, type Cotizacion, type EtapaOportunidad, type Partida, type Moneda, haceCuanto,
 } from "./comun";
 import { CampoNumero, MenuAcciones, OpcionMenu, SelectorTexto, SeparadorMenu } from "./componentes/campos";
 import { TablaPartidas, importeLocal } from "./componentes/TablaPartidas";
@@ -46,7 +46,8 @@ export default function EditorCotizacion() {
   return <Editor key={id} id={id} />;
 }
 
-/** /ventas/cotizaciones/nueva[?cliente=…&oportunidad=…]: la crea con las condiciones por defecto y abre el editor. */
+/** /ventas/cotizaciones/nueva[?cliente=…&oportunidad=…&nueva=1]: la crea con las condiciones por defecto y abre el editor.
+ *  nueva=1 es «es otro proyecto»: la base no la liga a la oportunidad abierta del cliente. */
 function CrearCotizacion() {
   const [params] = useSearchParams();
   const ir = useNavigate();
@@ -55,7 +56,9 @@ function CrearCotizacion() {
     // En modo estricto React monta dos veces: sin esto salían dos folios.
     if (hecho.current) return;
     hecho.current = true;
-    supabase.rpc("nueva_cotizacion", { p_cliente: params.get("cliente"), p_oportunidad: params.get("oportunidad") }).then(({ data, error }) => {
+    supabase.rpc("nueva_cotizacion", {
+      p_cliente: params.get("cliente"), p_oportunidad: params.get("oportunidad"), p_oportunidad_nueva: params.get("nueva") === "1",
+    }).then(({ data, error }) => {
       if (error) { toast.error(mensajeError(error)); ir("/ventas/cotizaciones", { replace: true }); }
       else ir(`/ventas/cotizaciones/${data}`, { replace: true });
     });
@@ -104,7 +107,7 @@ function Editor({ id }: { id: string }) {
   });
   const oportunidades = useQuery({
     queryKey: ["v_oportunidades", "cliente", clienteId], enabled: !!clienteId,
-    queryFn: () => q<{ id: string; titulo: string; etapa: string }[]>(
+    queryFn: () => q<{ id: string; titulo: string; etapa: EtapaOportunidad }[]>(
       supabase.from("v_oportunidades").select("id, titulo, etapa").eq("cliente_id", clienteId!).order("creado_en", { ascending: false })),
   });
   const pedido = useQuery({
@@ -427,7 +430,8 @@ function Editor({ id }: { id: string }) {
 
   // El cliente se guarda al momento (no con el resto): con la regla de cartera
   // encendida la base puede negarse ("Este cliente es de X hasta…") y ese
-  // mensaje se muestra tal cual en vez de quedarse reintentando.
+  // mensaje se muestra tal cual en vez de quedarse reintentando. La oportunidad no se manda: al
+  // cambiar el cliente la base suelta la del anterior y toma la abierta del nuevo.
   async function cambiarCliente(cl: { id: string; nombre: string; razon_social: string | null } | null, contacto?: { id: string; nombre: string } | null) {
     await guardar();
     let cambios: Partial<Cotizacion> = { cliente_id: null, contacto_id: null };
@@ -438,13 +442,16 @@ function Editor({ id }: { id: string }) {
         principal = data?.[0] ?? null;
       }
       cambios = { cliente_id: cl.id, contacto_id: principal?.id ?? null, atencion: principal?.nombre ?? c?.atencion ?? null,
-        empresa: cl.razon_social || cl.nombre, oportunidad_id: null };
+        empresa: cl.razon_social || cl.nombre };
     }
     const { error } = await supabase.from("cotizaciones").update(cambios).eq("id", id);
     if (error) { toast.error(mensajeError(error)); return; }
     qc.setQueryData<Cotizacion | null>(["cotizacion", id], (v) => (v ? { ...v, ...cambios } : v));
     qc.invalidateQueries({ queryKey: ["cotizacion", id] });
-    if (cl) qc.invalidateQueries({ queryKey: ["cliente", cl.id] });
+    if (cl) {
+      qc.invalidateQueries({ queryKey: ["cliente", cl.id] });
+      qc.invalidateQueries({ queryKey: ["v_oportunidades", "cliente", cl.id] });
+    }
   }
 
   // ---------------------------------------------------------------- render
@@ -732,12 +739,18 @@ function Editor({ id }: { id: string }) {
                   onChange={(e) => sinIva.mutate(e.target.checked)} />
                 <span data-explain={GLOSARIO.sinIva} data-explain-title="Sin IVA">Sin IVA (no lleva factura)<span className="block text-xs text-tenue">El precio de cada partida queda igual sin IVA; el total es el subtotal.</span></span>
               </label>
-              {c.cliente_id && (oportunidades.data?.length ?? 0) > 0 && (
+              {c.cliente_id && (
                 <label className="space-y-1.5 sm:col-span-2">
-                  <span className="text-sm font-medium" data-explain={GLOSARIO.embudo} data-explain-title="Oportunidad">Oportunidad</span>
-                  <select className="campo pr-8" value={c.oportunidad_id ?? ""} disabled={!editable} onChange={(e) => editarEnc({ oportunidad_id: e.target.value || null })}>
-                    <option value="">— se abre sola al enviar —</option>
-                    {oportunidades.data!.map((o) => <option key={o.id} value={o.id}>{o.titulo} ({o.etapa})</option>)}
+                  <span className="text-sm font-medium" data-explain={GLOSARIO.oportunidadCotizacion} data-explain-title="Oportunidad">Oportunidad</span>
+                  {/* Sin oportunidades también se muestra: así se ve que al enviarla se abrirá una. */}
+                  <select className="campo pr-8" value={c.oportunidad_id ?? "nueva"} disabled={!editable}
+                    onChange={(e) => editarEnc(e.target.value === "nueva"
+                      ? { oportunidad_id: null, oportunidad_nueva: true }
+                      : { oportunidad_id: e.target.value, oportunidad_nueva: false })}>
+                    {(oportunidades.data ?? []).filter((o) => o.id === c.oportunidad_id || (o.etapa !== "ganada" && o.etapa !== "perdida")).map((o) => (
+                      <option key={o.id} value={o.id}>{o.titulo} ({ETAPA[o.etapa]?.texto ?? o.etapa})</option>
+                    ))}
+                    <option value="nueva">Una nueva al enviar (es otro proyecto)</option>
                   </select>
                 </label>
               )}

@@ -76,7 +76,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     resumen: "Se crea una cotización con las condiciones de pago, entrega y notas que la gerencia dejó por defecto, y en un momento se abre el editor.",
     detalle: [
       "El folio se asigna cuando agregas la primera partida (o cuando la mandas a autorizar o la envías): si abres y sales sin capturar, no se gasta un folio y el borrador vacío se borra solo al día siguiente.",
-      "Si llegas desde un cliente o una oportunidad, la cotización ya sale ligada a ellos y con el contacto principal del cliente.",
+      "Si llegas desde un cliente o una oportunidad, la cotización ya sale ligada a ellos y con el contacto principal del cliente. Desde un cliente se liga a la oportunidad que tenía abierta sin cotizar (la del lead primero); si tiene varias, antes te pregunta cuál.",
     ],
   },
   "/ventas/cotizaciones/:id": {
@@ -88,6 +88,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     ],
     detalle: [
       "Se guarda sola mientras escribes; arriba dice «Guardado» con la hora.",
+      "Arriba, «Oportunidad» dice a qué venta pertenece. Sale sola con la que el cliente tenía abierta; si cambias el cliente, toma la del nuevo. Si es otro proyecto, elige «Una nueva al enviar».",
       "Al agregar una partida, el precio de lista, la descripción y la foto se llenan solos (clic en la foto para pegar otra liga o subir una). Clic en una partida muestra su ficha de venta: precio mínimo, existencia y entrega.",
       "Para fletes, instalación o servicios usa «Partida libre». Con «Flete con Skydropx» cotizas el envío con el código postal del cliente y los bultos de las partidas, y se agrega la partida de flete con su precio (no se genera guía ni se cobra).",
       "Si algo no tiene precio, «Pedir precio a compras» y aquí ves cuando contestan.",
@@ -158,9 +159,10 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     pasos: [
       "Si la cuenta está libre, dale «Hacerlo mío» para que quede a tu nombre.",
       "En «Actividad», anota cada llamada, WhatsApp o visita en una línea y Enter.",
-      "Dale «Nueva cotización» para cotizarle: sale ya ligada a este cliente.",
+      "Dale «Nueva cotización»: sale ligada a su oportunidad abierta; si tiene varias, eliges cuál.",
     ],
     detalle: [
+      "«Nueva cotización» usa la oportunidad que el cliente tenía abierta sin cotizar (la del lead primero). Si tiene varias, o una ya cotizada, te pregunta para cuál es; «Es otro proyecto» abre una nueva al enviarla.",
       "Arriba ves de quién es la cuenta y hasta cuándo. Si es de otro vendedor solo ves eso: contactos, compras y saldo quedan privados. Si te buscó a ti, pídele a la gerencia que lo reasigne o que compartan el crédito.",
       "En «Actividad», si le pones fecha a una nota se vuelve tarea. Tus seguimientos alargan la vigencia de la cuenta a tu nombre.",
       "Para facturar bien captura RFC, régimen, CP fiscal y uso de CFDI, o llénalos con la constancia de situación fiscal.",
@@ -199,6 +201,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
       "«Crear oportunidad» se habilita hasta que contesta (o pide cotización). Si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta. Si no le interesa, se descarta con el motivo.",
       "Para escribirle, «Mensaje con IA» te lo redacta con lo que busca y lo que le pidas en la caja de contexto. Cada uno sale distinto, porque WhatsApp bloquea a quien manda el mismo texto a muchos; al abrirlo en WhatsApp se anota «Le escribí».",
       "La columna «Intentos» dice lo último que hiciste y cuándo («Le escribiste por WhatsApp · hace 2 h»), y «Sin contactar» junta a los que todavía no les has escrito ni llamado.",
+      "Ya convertido, «Cotizar» abre la cotización en la oportunidad del lead; al enviarla el lead dice «Cotizado».",
       "Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad.",
     ],
   },

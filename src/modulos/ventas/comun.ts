@@ -59,7 +59,7 @@ export type Moneda = "MXN" | "USD" | "EUR";
 // ---------------------------------------------------------------------------
 export interface Cotizacion {
   id: string; folio: string; version: number; origen_id: string | null; cliente_id: string | null; contacto_id: string | null;
-  atencion: string | null; empresa: string | null; oportunidad_id: string | null; vendedor_id: string; fecha: string;
+  atencion: string | null; empresa: string | null; oportunidad_id: string | null; oportunidad_nueva: boolean; vendedor_id: string; fecha: string;
   vigencia_dias: number; moneda: Moneda; tipo_cambio: number; tasa_iva: number; precios_con_iva: boolean; descuento_pct: number;
   leyenda_promocion: string | null; condiciones_pago: string | null; tiempo_entrega: string | null; notas: string[];
   plan_meses: number | null; logo_comarca_url: string | null; estado: EstadoCotizacion; requiere_autorizacion: boolean;
