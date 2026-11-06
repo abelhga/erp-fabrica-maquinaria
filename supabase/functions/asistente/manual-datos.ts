@@ -611,7 +611,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "«Subir complementos de pago», arriba, registra cada pago en el pedido de su factura, aunque subas muchos a la vez, y no duplica lo que ya estaba.",
    "Si a una factura le falta el UUID o tiene un dato mal, corrígela con el lápiz en vez de registrarla otra vez: un folio o un UUID repetido no entra.",
    "La antigüedad corre desde la primera factura, o desde el pedido si aún no se factura; la de la hoja, desde la venta (los pagos tapan primero las ventas más viejas).",
-   "Los saldos en dólares se pasan a pesos con el tipo de cambio de hoy, que se ve arriba (finanzas y compras lo pueden capturar ahí)."
+   "Los saldos en dólares se pasan a pesos con el tipo de cambio de hoy, que se ve arriba (finanzas y compras lo pueden capturar ahí).",
+   "Te llega un aviso cuando un pedido de maquinaria con anticipo en sus condiciones de pago entra a producción sin ningún cobro registrado: o falta registrar el pago, o hay que hablarle al cliente."
   ]
  },
  {
@@ -1548,7 +1549,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "El editor de la cotización, con la plantilla de la hoja: agregas partidas, pones condiciones y la envías; cada versión se guarda sin pisar la anterior.",
    "Paso 1: Agrega partidas: escribe parte del nombre o la clave y Enter.",
    "Paso 2: Llena «Tiempo de entrega»: sin él no se puede enviar.",
-   "Paso 3: Dale «Enviar» y elige «Enviar por WhatsApp», «Por correo» o «Solo marcar enviada».",
+   "Paso 3: Dale «Enviar»: por WhatsApp, por correo, o «Solo marcar enviada» diciendo por dónde salió.",
    "Se guarda sola mientras escribes; arriba dice «Guardado» con la hora.",
    "Arriba, «Oportunidad» dice a qué venta pertenece. Sale sola con la que el cliente tenía abierta; si cambias el cliente, toma la del nuevo. Si es otro proyecto, elige «Una nueva al enviar».",
    "Al agregar una partida, el precio de lista, la descripción y la foto se llenan solos (clic en la foto para pegar otra liga o subir una). Clic en una partida muestra su ficha de venta: precio mínimo, existencia y entrega.",
@@ -1560,13 +1561,14 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Junto a «Tiempo de entrega» están los atajos «Inmediata (en existencia)» y «Se confirma al recibir el anticipo», además del que estima el ERP con la carga del taller.",
    "Abajo de «Tiempo de entrega» ves cuándo sale de verdad con el taller como está hoy: lo que tarda el equipo o lo que tarda la fila del taller, lo que sea más tarde. Con «Usar» lo pones en la cotización; si prometes menos días, se pone en amarillo. Al convertir a pedido, la fecha compromiso ya viene con esa fecha.",
    "El botón principal cambia según el estado: «Enviar», «Convertir a pedido» (eliges partidas y fecha compromiso) o «Nueva versión».",
-   "Enviar la deja como enviada y agenda preguntar qué pasó en 3 días hábiles. «Abrir PDF» solo abre la hoja: si la mandas por otro lado, dale después «Solo marcar enviada». Con más de 10 seguimientos vencidos no deja enviar, ni sacar el PDF o la vista previa de una cotización que todavía no envías, hasta ponerte al día.",
+   "Enviar la deja como enviada y agenda preguntar qué pasó en 3 días hábiles. «Abrir PDF» solo abre la hoja: si la mandas por otro lado, dale después «Solo marcar enviada» y di por dónde salió (WhatsApp desde tu celular, correo fuera del ERP, en persona, o solo marcarla). Con más de 10 seguimientos vencidos no deja enviar, ni sacar el PDF o la vista previa de una cotización que todavía no envías, hasta ponerte al día.",
+   "Ya enviada, arriba dice por dónde salió y a qué número o correo. Cada vez que la vuelves a compartir por WhatsApp o por correo también queda anotado, para saber cuáles sí le llegaron al cliente.",
    "Ya enviada no se edita; para cambiarla saca una nueva versión: te pregunta si la actual ya no vale (queda rechazada, o cancelada si no se envió) o si sigue vigente.",
    "En el menú «···» están imprimir, duplicar y marcar rechazada con su motivo («No respondió», solo después de 2 «No contestó» en días distintos o 10 días hábiles desde el envío). «Vista previa» te enseña la hoja tal como la recibe el cliente sin salir del editor.",
    "Si el equipo tiene más fotos, salen en miniatura bajo la partida y en la hoja de fotos al final del PDF; pasa el mouse por una y con la × la quitas de esta cotización.",
    "«Por correo» (en Enviar) o «Mandar por correo» (en el menú «···») manda la cotización desde tu propio Gmail con el PDF adjunto: el mismo que sale en Imprimir. Propone el correo del contacto y los demás contactos del cliente con correo; puedes cambiar el asunto y el mensaje.",
    "Las respuestas te llegan a tu Gmail, como siempre. La primera vez te pide conectar tu Gmail. Si la cotización no se puede enviar (precios abajo del mínimo o partidas libres sin autorizar, seguimientos vencidos), te dice por qué y no sale nada.",
-   "Ya mandada por correo queda como enviada, con su seguimiento, y en la bitácora del cliente queda a qué correo se fue.",
+   "Ya mandada por correo queda como enviada, con su seguimiento. Queda anotado que salió por correo y a quién, y en la bitácora del cliente también.",
    "Si el cliente no quiere factura, marca «Sin IVA (no lleva factura)»: el precio de cada partida queda igual sin IVA y el total es el subtotal. Si los precios traían IVA incluido, se les quita. En la hoja impresa solo sale el total (sin renglón de IVA) y el pedido sale sin IVA.",
    "«Sin IVA» se cambia mientras la cotización no se haya enviado; ya enviada, saca una nueva versión."
   ]
@@ -1638,7 +1640,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Lo usan recepción, los vendedores, la gerencia de ventas y marketing, que los ve todos para saber de dónde llegan y qué pasó con ellos.",
    "Al registrarlo pon también dónde está, su empresa (o «Particular») y qué busca con modelo o medida. Si se te pasó algo, al abrirlo te dice qué le falta y lo completas ahí; «Incompletos» junta los que tienen algo pendiente.",
    "Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es y dices «Es este», le llega directo a su vendedor.",
-   "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma o nadie lo atiende a tiempo, se le avisa a la gerencia.",
+   "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma a tiempo, se le avisa a la gerencia.",
+   "Si un lead asignado pasa las horas que fijó la gerencia sin ningún intento anotado, se le avisa al vendedor y a la gerencia; con un intento («Le escribí», «No contestó», «No estaba» o «Contestó») ya no cuenta. Mientras no haya gerente de ventas, dirección recibe un resumen por vendedor en la mañana (desde las 9:00) y en la tarde (desde las 15:00) de cada día hábil, y al abrirlo llega a «Sin contactar» de ese vendedor (la etiqueta «De: …» se quita con la ×).",
    "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no. Elige primero por dónde fue: no viene marcado. «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo.",
    "«Crear oportunidad» se habilita hasta que contesta (o pide cotización). Si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta. Si no le interesa, se descarta con el motivo.",
    "Para escribirle, «Mensaje con IA» te lo redacta con lo que busca y lo que le pidas en la caja de contexto. Cada uno sale distinto, porque WhatsApp bloquea a quien manda el mismo texto a muchos; al abrirlo en WhatsApp se anota «Le escribí».",
@@ -1754,6 +1757,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "En «Entregar» sacas todo o una parte de cada partida: lo demás queda por entregar. La foto de la hoja firmada la puedes subir después. Lo que sale se descuenta del inventario, y cada entrega sale en el recuadro de entregas con su hoja.",
    "Si te equivocaste, el aviso trae «Deshacer» por 15 minutos; después la reabre la gerencia de ventas con el motivo. Entregan almacén, el vendedor sus pedidos, la gerencia de ventas y dirección.",
    "Facturas y cobros los registra finanzas, y el saldo se recalcula solo; una factura ya registrada se corrige o se quita con su lápiz.",
+   "Si el pedido es de maquinaria, sus condiciones de pago dicen anticipo y entra a producción sin ningún cobro registrado, al vendedor y a finanzas les llega un aviso, una sola vez. No detiene al taller: si el cliente ya pagó, falta registrar el cobro.",
    "Si el pedido tiene equipos en el taller, «Plan del taller» enseña cuándo entra y sale cada uno de cada área y si llega a la fecha compromiso (el rombo verde llega, el rojo no). Es el plan de la planta: se mueve solo con lo que pasa en el piso. Clic en un equipo abre su orden.",
    "Si es una venta de Mercado Libre, el recuadro «Mercado Libre» dice cómo va su envío allá (lista para enviar, en camino, entregada) y el dinero: lo que pagó el comprador, lo que se quedó Mercado Libre, las retenciones y lo que llega a Mercado Pago.",
    "En una venta de Mercado Libre el cobro entra solo en cuanto se aprueba el pago, y el envío y el pedido avanzan solos con lo que dice Mercado Libre.",
@@ -3402,7 +3406,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Abre el envío: por WhatsApp con el mensaje ya armado, por correo desde tu Gmail con el PDF, o solo marcarla enviada. Al enviarla ya no se edita, su oportunidad pasa a Cotizado (si no tenía, se liga a la que el cliente ya tenía abierta sin cotizar, o se abre una) y se agenda preguntar qué pasó en 3 días hábiles. Antes te pide el tiempo de entrega."
+  "texto": "Abre el envío: por WhatsApp con el mensaje ya armado, por correo desde tu Gmail con el PDF, o solo marcarla enviada diciendo por dónde la mandaste. Al enviarla ya no se edita, su oportunidad pasa a Cotizado (si no tenía, se liga a la que el cliente ya tenía abierta sin cotizar, o se abre una) y se agenda preguntar qué pasó en 3 días hábiles. Antes te pide el tiempo de entrega."
  },
  {
   "clave": "botonEnvioAFull",
@@ -5003,6 +5007,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "analisis"
   ],
   "texto": "Escribe la meta del año con IVA: acepta «32,000,000» o «32 M». Enter o Guardar la guarda; abajo ves cuánto es contra lo que cerró el año anterior."
+ },
+ {
+  "clave": "canalEnvioCotizacion",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Por dónde salió la cotización: por WhatsApp (con el número), por correo (a quién), en persona, o «solo marcada» si se marcó enviada sin decir por dónde. Cada vez que la vuelves a compartir también queda anotado. Sirve para saber cuáles sí le llegaron al cliente."
  },
  {
   "clave": "canalesComisionesConfig",
@@ -9761,7 +9775,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cada vez que le llamas, le escribes o lo visitas, anótalo. Elige siempre por dónde fue: no viene marcado. Si le escribiste por WhatsApp o correo, «Le escribí»; si le llamaste y no contestó, «No contestó»; si fuiste y no estaba, «No estaba»; y cuando conteste, «Contestó» con lo que te dijo. Todo cuenta como intento, conteste o no, y en la lista se ve lo último que hiciste y cuándo. Mientras no conteste, sigue siendo lead (no se da de alta como cliente). Los leads que alguien tiene varios días sin ningún intento, o que se volvieron oportunidad y no se cotizan, le aparecen a dirección en «Por revisar»."
+  "texto": "Cada vez que le llamas, le escribes o lo visitas, anótalo. Elige siempre por dónde fue: no viene marcado. Si le escribiste por WhatsApp o correo, «Le escribí»; si le llamaste y no contestó, «No contestó»; si fuiste y no estaba, «No estaba»; y cuando conteste, «Contestó» con lo que te dijo. Todo cuenta como intento, conteste o no, y en la lista se ve lo último que hiciste y cuándo. Mientras no conteste, sigue siendo lead (no se da de alta como cliente). Con un intento anotado, el lead ya no cuenta como «sin atender» y deja de avisarse. Los leads que alguien tiene varios días sin ningún intento, o que se volvieron oportunidad y no se cotizan, le aparecen a dirección en «Por revisar»."
  },
  {
   "clave": "interruptorConsumiblesTaller",

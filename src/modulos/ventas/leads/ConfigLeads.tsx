@@ -47,7 +47,7 @@ export function ConfigLeads({ editable }: { editable: boolean }) {
           <Entrada type="number" min="0.5" step="0.5" className="cifra w-28 block" disabled={!editable} value={f.horas_sin_tomar}
             onChange={(e) => setF({ ...f, horas_sin_tomar: e.target.value as unknown as number })} />
         </Campo>
-        <Campo etiqueta="Horas sin atender" ayuda="Si el vendedor no lo vuelve oportunidad ni lo descarta, se le avisa a él y a la gerencia.">
+        <Campo etiqueta="Horas sin atender" ayuda="Si el vendedor no anota ningún intento (le escribió, le llamó o lo visitó) en ese tiempo, se le avisa a él y a la gerencia. Sin gerente de ventas, dirección recibe un resumen por vendedor.">
           <Entrada type="number" min="1" step="1" className="cifra w-28 block" disabled={!editable} value={f.horas_sin_atender}
             onChange={(e) => setF({ ...f, horas_sin_atender: e.target.value as unknown as number })} />
         </Campo>

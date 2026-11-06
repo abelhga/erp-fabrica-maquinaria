@@ -119,6 +119,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
       "Si a una factura le falta el UUID o tiene un dato mal, corrígela con el lápiz en vez de registrarla otra vez: un folio o un UUID repetido no entra.",
       "La antigüedad corre desde la primera factura, o desde el pedido si aún no se factura; la de la hoja, desde la venta (los pagos tapan primero las ventas más viejas).",
       "Los saldos en dólares se pasan a pesos con el tipo de cambio de hoy, que se ve arriba (finanzas y compras lo pueden capturar ahí).",
+      "Te llega un aviso cuando un pedido de maquinaria con anticipo en sus condiciones de pago entra a producción sin ningún cobro registrado: o falta registrar el pago, o hay que hablarle al cliente.",
     ],
   },
   "/finanzas/pagos": {

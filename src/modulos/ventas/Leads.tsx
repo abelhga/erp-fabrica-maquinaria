@@ -47,7 +47,11 @@ export default function Leads() {
   // Con la RLS cada quien recibe solo lo que le toca: recepción lo suyo, ventas la bandeja y lo suyo.
   const leads = useQuery({ queryKey: [...CLAVE_LEADS],
     queryFn: () => q<Lead[]>(supabase.from("v_leads").select("*").order("creado_en", { ascending: false }).limit(1000)) });
-  const todos = leads.data ?? [];
+  // ?vendedor= viene del resumen que recibe dirección («Juan Manuel: 75 leads sin ningún intento»).
+  const deVendedor = params.get("vendedor");
+  const todos = (leads.data ?? []).filter((l) => !deVendedor || l.vendedor_id === deVendedor);
+  const nombreVendedor = deVendedor ? (leads.data ?? []).find((l) => l.vendedor_id === deVendedor)?.vendedor ?? "un vendedor" : null;
+  const quitarVendedor = () => { const p = new URLSearchParams(params); p.delete("vendedor"); setParams(p, { replace: true }); };
   const yo = perfil?.id;
   const pasa = (l: Lead, v: Vista) =>
     v === "abiertos" ? l.estado === "nuevo" || l.estado === "asignado"
@@ -67,7 +71,7 @@ export default function Leads() {
   const cambiar = (v: Vista) => { const p = new URLSearchParams(params); p.set("filtro", v); setParams(p, { replace: true }); };
   const abiertoId = params.get("id");
   const abrir = (id: string | null) => { const p = new URLSearchParams(params); if (id) p.set("id", id); else p.delete("id"); setParams(p, { replace: true }); };
-  const abierto = todos.find((l) => l.id === abiertoId) ?? null;
+  const abierto = (leads.data ?? []).find((l) => l.id === abiertoId) ?? null;
 
   const opciones: { valor: Vista; texto: string; cuenta?: number; explica?: string }[] = [
     ...(gerencia ? [{ valor: "abiertos" as Vista, texto: "Abiertos", cuenta: cuenta("abiertos"), explica: GLOSARIO.filtroLeadsAbiertos }] : []),
@@ -109,6 +113,12 @@ export default function Leads() {
         claseFila={(l) => (l.id === abiertoId ? "bg-marca-suave" : undefined)}
         filtros={<>
           <Filtro<Vista> valor={vista} alCambiar={cambiar} opciones={opciones} />
+          {nombreVendedor && (
+            <button type="button" onClick={quitarVendedor} title="Quitar el filtro de vendedor"
+              className="inline-flex items-center gap-1 rounded-full border border-marca/40 bg-marca-suave px-2.5 py-1 text-xs font-medium text-marca-texto hover:bg-marca-suave/70">
+              De: {nombreVendedor}<X className="h-3.5 w-3.5" />
+            </button>
+          )}
           <span className="ml-auto text-xs text-tenue" data-explain={GLOSARIO.modoLeads} data-explain-title="¿A quién le llega?">
             {MODOS.find((m) => m.valor === modo)?.texto}</span>
         </>}

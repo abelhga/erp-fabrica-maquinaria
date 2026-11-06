@@ -15,19 +15,31 @@ import { dinero, fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import {
   RFC_VALIDO, compromisoDesde, dineroEn, enlaceWhatsApp, normalizarRfc, telefonoWa, textoWhatsApp, useFuentes,
-  type Contacto, type Cotizacion, type Partida, type PlanMeses,
+  type CanalEnvio, type Contacto, type Cotizacion, type Partida, type PlanMeses,
 } from "../comun";
 import { GLOSARIO } from "@/tutorial/glosario";
+
+const CANALES_MARCAR: { valor: CanalEnvio; texto: string; ayuda: string }[] = [
+  { valor: "whatsapp", texto: "WhatsApp desde mi celular", ayuda: "Se la mandaste tú por WhatsApp, fuera del ERP." },
+  { valor: "correo", texto: "Correo fuera del ERP", ayuda: "La mandaste desde otro correo." },
+  { valor: "en_persona", texto: "En persona o impresa", ayuda: "Se la entregaste o se la enseñaste en persona." },
+  { valor: "solo_marcada", texto: "Solo marcarla (sin decir por dónde)", ayuda: "Queda enviada, pero no se sabe si le llegó." },
+];
 
 /**
  * Enviar = mandar el PDF y el mensaje por WhatsApp (como hoy) y dejar la
  * cotización como "enviada" para darle seguimiento. wa.me no permite adjuntar:
  * el PDF se descarga con "Abrir PDF" y se arrastra al chat.
+ * Cada envío (y cada vez que se vuelve a compartir) queda anotado con su canal: antes
+ * «Enviar por WhatsApp» y «Solo marcar enviada» guardaban lo mismo y no se sabía cuáles
+ * le habían llegado al cliente.
  */
-export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vendedor, plan, yaEnviada, alMarcarEnviada, alAbrirPdf, enviando, fichas = [], frenado, alPorCorreo }: {
+export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vendedor, plan, yaEnviada, alRegistrarEnvio, alAbrirPdf, enviando, fichas = [], frenado, alPorCorreo }: {
   abierto: boolean; alCambiar: (v: boolean) => void; c: Cotizacion; partidas: Partida[]; contacto: Contacto | null | undefined;
   vendedor: { nombre?: string | null; telefono?: string | null } | null | undefined; plan: PlanMeses | null | undefined;
-  yaEnviada: boolean; alMarcarEnviada: () => Promise<unknown>; alAbrirPdf: () => void; enviando?: boolean;
+  yaEnviada: boolean; alAbrirPdf: () => void; enviando?: boolean;
+  /** Anota el envío (la base la deja «enviada» si no lo estaba). WhatsApp: el número en dígitos o null. */
+  alRegistrarEnvio: (canal: CanalEnvio, destino: string | null) => Promise<unknown>;
   /** Fichas técnicas vigentes de las partidas: el cliente las pide y antes se buscaban en Drive. */
   fichas?: { titulo: string; drive_url: string }[];
   /** Con más seguimientos vencidos que el tope, no se envía (ni se abre WhatsApp) hasta ponerse al día. */
@@ -39,12 +51,19 @@ export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vende
   const [tel, setTel] = useState("");
   const [texto, setTexto] = useState("");
   const [conFichas, setConFichas] = useState(false);
+  const [paso, setPaso] = useState<"enviar" | "marcar">("enviar");
+  // Sin canal elegido a propósito: si viniera uno marcado, todos dirían ese.
+  const [canal, setCanal] = useState<CanalEnvio | null>(null);
+  const [correo, setCorreo] = useState("");
   const bloqueFichas = textoFichas(fichas);
   useEffect(() => {
     if (!abierto) return;
     setTel(contacto?.whatsapp || contacto?.telefono || "");
     setTexto(textoWhatsApp(c, partidas, vendedor, plan));
     setConFichas(false);
+    setPaso("enviar");
+    setCanal(null);
+    setCorreo(contacto?.correo || "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [abierto]);
   // Las ligas se agregan antes de la despedida; quitarlas deja el texto como estaba (aunque se haya editado).
@@ -57,18 +76,60 @@ export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vende
     });
   }
 
+  // El error ya lo avisa useAccion; aquí solo se evita cerrar el diálogo.
+  async function registrar(canalElegido: CanalEnvio, destino: string | null) {
+    try { await alRegistrarEnvio(canalElegido, destino); alCambiar(false); } catch { /* aviso ya mostrado */ }
+  }
+
   async function porWhatsApp() {
     // Se abre antes del await: los navegadores bloquean ventanas que no salen directo del clic.
     window.open(enlaceWhatsApp(tel, texto), "_blank", "noopener");
-    if (!yaEnviada) await alMarcarEnviada();
-    alCambiar(false);
+    // También al volver a compartirla: así se sabe a qué número salió cada vez.
+    await registrar("whatsapp", tel.trim() ? telefonoWa(tel) : null);
   }
+
+  const listoMarcar = !!canal && (canal !== "correo" || correo.includes("@"));
+  async function marcar() {
+    if (!canal || !listoMarcar) return;
+    await registrar(canal, canal === "whatsapp" ? (tel.trim() ? telefonoWa(tel) : null) : canal === "correo" ? correo.trim() : null);
+  }
+
+  if (paso === "marcar") return (
+    <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="¿Por dónde la mandaste?" ancho="max-w-xl"
+      descripcion={`${c.folio} quedará como enviada y se agenda su seguimiento. Anota por dónde salió para saber si le llegó al cliente.`}
+      pie={<>
+        <Boton variante="secundario" onClick={() => setPaso("enviar")}>Regresar</Boton>
+        <Boton onClick={marcar} cargando={enviando} disabled={!listoMarcar || bloqueado}><Send className="h-4 w-4" />Marcar enviada</Boton>
+      </>}>
+      <div className="space-y-3" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void marcar(); } }}>
+        <div role="radiogroup" aria-label="Por dónde la mandaste" className="grid gap-2"
+          data-explain={GLOSARIO.canalEnvioCotizacion} data-explain-title="Por dónde salió">
+          {CANALES_MARCAR.map((o) => (
+            <label key={o.valor} className={cn("flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-2.5", canal === o.valor ? "border-marca bg-marca-suave" : "border-borde hover:bg-fondo")}>
+              <input type="radio" name="canal_envio" className="mt-1 h-4 w-4 accent-marca" checked={canal === o.valor} onChange={() => setCanal(o.valor)} />
+              <span><span className="font-medium">{o.texto}</span><span className="block text-xs text-tenue">{o.ayuda}</span></span>
+            </label>
+          ))}
+        </div>
+        {canal === "whatsapp" && (
+          <Campo etiqueta="¿A qué número?" ayuda={tel && telefonoWa(tel).length < 12 ? "Revisa el número: le faltan dígitos." : "Déjalo vacío si no lo tienes a la mano."}>
+            <Entrada value={tel} onChange={(e) => setTel(e.target.value)} inputMode="tel" placeholder="33 1234 5678" autoFocus />
+          </Campo>
+        )}
+        {canal === "correo" && (
+          <Campo etiqueta="¿A qué correo?">
+            <Entrada type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} placeholder="compras@cliente.mx" autoFocus />
+          </Campo>
+        )}
+      </div>
+    </Dialogo>
+  );
 
   return (
     <Dialogo abierto={abierto} alCambiar={alCambiar} titulo={yaEnviada ? "Compartir cotización" : "Enviar cotización"} ancho="max-w-xl"
       descripcion={yaEnviada ? `${c.folio} ya está enviada; puedes volver a compartirla.` : `${c.folio} quedará como enviada y empieza a contar su vigencia para el seguimiento.`}
       pie={<>
-        {!yaEnviada && <Boton variante="secundario" cargando={enviando} disabled={bloqueado} onClick={async () => { await alMarcarEnviada(); alCambiar(false); }}><Send className="h-4 w-4" />Solo marcar enviada</Boton>}
+        {!yaEnviada && <Boton variante="secundario" disabled={bloqueado} onClick={() => setPaso("marcar")}><Send className="h-4 w-4" />Solo marcar enviada</Boton>}
         <Boton variante="secundario" onClick={alAbrirPdf} disabled={bloqueado}><FileText className="h-4 w-4" />Abrir PDF</Boton>
         {alPorCorreo && <Boton variante="secundario" onClick={() => { alCambiar(false); alPorCorreo(); }} disabled={bloqueado}><Mail className="h-4 w-4" />Por correo</Boton>}
         <Boton variante="exito" onClick={porWhatsApp} cargando={enviando} disabled={bloqueado}><MessageCircle className="h-4 w-4" />Enviar por WhatsApp</Boton>

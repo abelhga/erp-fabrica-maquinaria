@@ -25,8 +25,9 @@ function icono(tipo: string) {
   if (tipo.startsWith("cotizacion_")) return FileText;
   if (tipo.startsWith("cliente_")) return Users;
   if (tipo.startsWith("requisicion_")) return ClipboardList;
+  // Antes de «pedido_»: el aviso de anticipo es de dinero, no del pedido en sí.
+  if (tipo === "cobro" || tipo === "pedido_sin_anticipo") return Wallet;
   if (tipo.startsWith("pedido_")) return ShoppingCart;
-  if (tipo === "cobro") return Wallet;
   if (tipo.startsWith("incidencia_")) return UserRound;
   if (tipo === "pendiente_hecho") return CheckCircle2;
   if (tipo.endsWith("_vencido") || tipo.endsWith("_atorada")) return TimerReset;

@@ -19,7 +19,7 @@ import { Dialogo, Lateral } from "@/components/ui/dialogo";
 import { BuscadorArticulo } from "@/components/datos/BuscadorArticulo";
 import {
   EDITABLES, ESTADO_COT, ETAPA, dineroEn, folioCot, mensualidad, useAncho, usePlanesMeses, useTextosComerciales, venceEl, hoyMx,
-  type Contacto, type Cotizacion, type EtapaOportunidad, type Partida, type Moneda, haceCuanto,
+  type CanalEnvio, type Contacto, type Cotizacion, type EtapaOportunidad, type Partida, type Moneda, haceCuanto, textoCanalEnvio,
 } from "./comun";
 import { CampoNumero, MenuAcciones, OpcionMenu, SelectorTexto, SeparadorMenu } from "./componentes/campos";
 import { TablaPartidas, importeLocal } from "./componentes/TablaPartidas";
@@ -373,14 +373,25 @@ function Editor({ id }: { id: string }) {
     { exito: (quitar: boolean) => (quitar ? "Cotización sin IVA" : "La cotización vuelve a llevar IVA"), invalidar: [["cotizacion", id], ["cotizacion_lineas", id]] },
   );
 
-  const cambiarEstado = useAccion(
-    async (estado: "enviada") => {
+  // Enviar (o volver a compartir) siempre dice por dónde: la base anota el canal y, si no estaba
+  // enviada, la deja enviada con todos sus candados (freno, tiempo de entrega, seguimiento).
+  const enviar = useAccion(
+    async (a: { canal: CanalEnvio; destino: string | null }) => {
+      const primera = ["borrador", "autorizada"].includes(c?.estado ?? "");
       await guardar();
-      const r = await q<{ id: string }[]>(supabase.from("cotizaciones").update({ estado }).eq("id", id).select("id"));
-      if (!r.length) throw new Error("No se pudo cambiar el estado");
+      await q(supabase.rpc("marcar_cotizacion_enviada", { p_id: id, p_canal: a.canal, p_destino: a.destino }));
+      return primera;
     },
-    { exito: "Cotización enviada: su seguimiento queda agendado", invalidar: [["cotizacion", id], ["v_cotizaciones"], ["v_oportunidades"], ["indicadores"], ["seguimientos"], ["calendario"]] },
+    { exito: (primera: boolean) => (primera ? "Cotización enviada: su seguimiento queda agendado" : "Quedó anotado que la compartiste"),
+      invalidar: [["cotizacion", id], ["cotizacion_envios", id], ["v_cotizaciones"], ["v_oportunidades"], ["indicadores"], ["seguimientos"], ["calendario"]] },
   );
+  const envios = useQuery({
+    queryKey: ["cotizacion_envios", id], enabled: !!id && ["enviada", "aceptada"].includes(c?.estado ?? ""),
+    queryFn: () => q<{ canal: CanalEnvio; destino: string | null; en: string; marco_enviada: boolean }[]>(
+      supabase.from("cotizacion_envios").select("canal, destino, en, marco_enviada").eq("cotizacion_id", id!).order("en", { ascending: false })),
+  });
+  const envioInicial = envios.data?.find((e) => e.marco_enviada) ?? envios.data?.[envios.data.length - 1];
+  const reenvios = (envios.data ?? []).filter((e) => e !== envioInicial).length;
   const pedirAutorizacion = useAccion(
     async (nota: string) => { await guardar(); await q(supabase.rpc("pedir_autorizacion", { p_id: id, p_nota: nota })); },
     { exito: "Listo: la gerencia ya la ve en su cola", invalidar: [["cotizacion", id], ["v_cotizaciones"]], alTerminar: () => setDlg(null) },
@@ -659,7 +670,11 @@ function Editor({ id }: { id: string }) {
           c.estado === "aceptada" ? "border-ok/30 bg-ok-suave" : c.estado === "rechazada" ? "border-peligro/30 bg-peligro-suave" : "border-borde bg-fondo")}>
           {c.estado === "aceptada" ? <CheckCircle2 className="h-5 w-5 text-ok" /> : c.estado === "rechazada" ? <X className="h-5 w-5 text-peligro" /> : <Send className="h-5 w-5 text-marca" />}
           <span className="flex-1">
-            {c.estado === "enviada" && <>Enviada {c.enviada_en ? haceCuanto(c.enviada_en) : ""}. Para cambiarla, saca una nueva versión: esta queda como se mandó.</>}
+            {c.estado === "enviada" && <>
+              <span data-explain={GLOSARIO.canalEnvioCotizacion} data-explain-title="Por dónde salió">
+                Enviada {c.enviada_en ? haceCuanto(c.enviada_en) : ""}{envioInicial ? ` ${textoCanalEnvio(envioInicial.canal, envioInicial.destino)}` : ""}
+                {reenvios > 0 ? ` · la compartiste ${reenvios === 1 ? "1 vez" : `${reenvios} veces`} más` : ""}.
+              </span>{" "}Para cambiarla, saca una nueva versión: esta queda como se mandó.</>}
             {c.estado === "aceptada" && <>Aceptada{pedido.data?.[0] ? <> · pedido <Link className="font-medium text-marca-texto" to={`/ventas/pedidos/${pedido.data[0].id}`}>{pedido.data[0].folio}</Link></> : null}.</>}
             {c.estado === "rechazada" && <>Rechazada: {c.motivo_rechazo}</>}
             {(c.estado === "cancelada" || c.estado === "vencida") && <>Esta cotización está {est.texto.toLowerCase()}.</>}
@@ -914,7 +929,7 @@ function Editor({ id }: { id: string }) {
         alAgregar={(titulo, precio) => agregarFlete.mutateAsync({ titulo, precio })} />}
       <DialogoEnviar abierto={dlg === "enviar"} alCambiar={(v) => setDlg(v ? "enviar" : null)} c={{ ...c, ...(tot ?? {}) }} partidas={lineas}
         contacto={contactoSel} vendedor={vendedor.data} plan={plan} yaEnviada={!["borrador", "autorizada"].includes(c.estado)}
-        alMarcarEnviada={() => cambiarEstado.mutateAsync("enviada")} alAbrirPdf={abrirPdf} enviando={cambiarEstado.isPending} fichas={ligasFichas}
+        alRegistrarEnvio={(canal, destino) => enviar.mutateAsync({ canal, destino })} alAbrirPdf={abrirPdf} enviando={enviar.isPending} fichas={ligasFichas}
         frenado={freno.data?.frenado ? freno.data : null} alPorCorreo={() => setDlg("correo")} />
       <DialogoCorreo abierto={dlg === "correo"} alCambiar={(v) => setDlg(v ? "correo" : null)} tipo="cotizacion" id={id!}
         // Lo que no se ha guardado también va en el PDF: se guarda y luego se toma la hoja de impresión.
