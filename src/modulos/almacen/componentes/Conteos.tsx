@@ -22,11 +22,21 @@ import { CantidadConSigno, useAlmacenes } from "./comun";
 interface Conteo {
   id: string; nombre: string; almacen_id: number; almacen: string; estado: "abierto" | "cerrado"; creado_por_nombre: string | null;
   creado_en: string; cerrado_en: string | null; capturados: number; en_sistema: number; ajustes: number; ajustes_pendientes: number;
+  con_lista: boolean; a_ciegas: boolean;
 }
 interface LineaCaptura {
-  articulo_id: string; clave: string; nombre: string; unidad: string; sistema: number; contada: number | null; diferencia: number | null;
-  contado_por: string | null; contado_en: string | null; valor_diferencia: number | null;
+  /** A ciegas, `sistema` llega vacío hasta que el artículo tiene lo contado. */
+  articulo_id: string; clave: string; nombre: string; unidad: string; sistema: number | null; contada: number | null; diferencia: number | null;
+  contado_por: string | null; contado_en: string | null; valor_diferencia: number | null; nota: string | null;
 }
+
+type ModoConteo = "todo" | "produccion" | "movidos" | "claves";
+const MODOS: { valor: ModoConteo; texto: string }[] = [
+  { valor: "produccion", texto: "Lo que piden las órdenes de producción" },
+  { valor: "movidos", texto: "Lo que salió en los últimos 30 días" },
+  { valor: "claves", texto: "Pegar claves" },
+  { valor: "todo", texto: "Todo el almacén" },
+];
 
 /** Conteos físicos: reemplazan las hojas C1, C2 e INVENTARIADO. Cerrar uno convierte cada diferencia en un ajuste por autorizar. */
 export function Conteos({ irAAjustes }: { irAAjustes: () => void }) {
@@ -45,28 +55,45 @@ function Lista({ abrir }: { abrir: (id: string) => void }) {
   const almacenes = useAlmacenes();
   const [nombre, setNombre] = useState("");
   const [almacen, setAlmacen] = useState("");
+  const [modo, setModo] = useState<ModoConteo>("produccion");
+  const [claves, setClaves] = useState("");
+  const [aCiegas, setACiegas] = useState(true);
   const conteos = useQuery({
     queryKey: ["v_conteos"],
     queryFn: () => q<Conteo[]>(supabase.from("v_conteos").select("*").order("estado").order("creado_en", { ascending: false }).limit(100)),
   });
-  const crear = useAccion(async () => {
-    const al = almacenes.data!.find((a) => a.id === Number(almacen))!;
-    const n = nombre.trim() || `${al.nombre} · ${new Date().toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}`;
-    return q<{ id: string }>(supabase.from("conteos").insert({ nombre: n, almacen_id: al.id }).select("id").single());
-  }, { exito: "Conteo abierto: captura lo que hay en cada estante", invalidar: [["v_conteos"]], alTerminar: (r) => abrir(r.id) });
+  // La lista la arma la base (crear_conteo): qué piden las órdenes o qué se movió lo sabe ella.
+  const crear = useAccion(() => q<string>(supabase.rpc("crear_conteo", {
+    p_almacen: Number(almacen), p_nombre: nombre.trim() || null, p_modo: modo, p_dias: 30,
+    p_claves: modo === "claves" ? claves : null, p_a_ciegas: aCiegas,
+  })), { exito: "Conteo abierto: captura lo que hay en cada estante", invalidar: [["v_conteos"]], alTerminar: (id) => abrir(id) });
+  const listo = !!almacen && (modo !== "claves" || claves.trim() !== "");
 
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,360px)_1fr] items-start">
       {puede("inventario", 2) ? (
         <Tarjeta>
           <EncabezadoTarjeta titulo="Nuevo conteo" descripcion="Un almacén a la vez. Lo que no se capture no se ajusta." explica={GLOSARIO.conteoFisico} />
-          <form className="px-5 pb-5 space-y-3" onSubmit={(e) => { e.preventDefault(); if (almacen) crear.mutate(undefined); }}>
+          <form className="px-5 pb-5 space-y-3" onSubmit={(e) => { e.preventDefault(); if (listo) crear.mutate(undefined); }}>
             <Seleccion value={almacen} onChange={(e) => setAlmacen(e.target.value)} aria-label="Almacén">
               <option value="">Elige el almacén…</option>
               {(almacenes.data ?? []).map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
             </Seleccion>
+            <div data-explain={GLOSARIO.queContarConteo} data-explain-title="Qué contar">
+              <Seleccion value={modo} onChange={(e) => setModo(e.target.value as ModoConteo)} aria-label="Qué contar">
+                {MODOS.map((m) => <option key={m.valor} value={m.valor}>{m.texto}</option>)}
+              </Seleccion>
+            </div>
+            {modo === "claves" && (
+              <textarea className="campo min-h-[96px] font-mono text-sm" value={claves} onChange={(e) => setClaves(e.target.value)}
+                placeholder={"C-00041\nC-00081, C-N1747…"} aria-label="Claves a contar" />
+            )}
             <input className="campo" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre (opcional): cierre de octubre…" />
-            <Boton type="submit" className="w-full" disabled={!almacen} cargando={crear.isPending}><Plus className="h-4 w-4" /> Empezar a contar</Boton>
+            <label className="flex items-start gap-2 text-sm cursor-pointer" data-explain={GLOSARIO.conteoACiegas} data-explain-title="A ciegas">
+              <input type="checkbox" className="mt-0.5" checked={aCiegas} onChange={(e) => setACiegas(e.target.checked)} />
+              <span>A ciegas: no enseñar lo que dice el sistema hasta capturar lo contado</span>
+            </label>
+            <Boton type="submit" className="w-full" disabled={!listo} cargando={crear.isPending}><Plus className="h-4 w-4" /> Empezar a contar</Boton>
           </form>
         </Tarjeta>
       ) : <Tarjeta className="p-5 text-sm text-tenue">Los conteos los captura almacén. Aquí ves su avance y sus diferencias.</Tarjeta>}
@@ -82,7 +109,8 @@ function Lista({ abrir }: { abrir: (id: string) => void }) {
                 <button onClick={() => abrir(c.id)} className="w-full text-left px-5 py-3 hover:bg-fondo flex items-center gap-4">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium truncate">{c.nombre}</p>
-                    <p className="text-xs text-tenue">{c.almacen} · {c.creado_por_nombre ?? "—"} · {fecha(c.creado_en)}</p>
+                    <p className="text-xs text-tenue">{c.almacen} · {c.creado_por_nombre ?? "—"} · {fecha(c.creado_en)}
+                      {c.con_lista && " · con lista"}{c.a_ciegas && " · a ciegas"}</p>
                   </div>
                   {c.estado === "abierto" ? (
                     <div className="text-right">
@@ -185,7 +213,8 @@ function Captura({ id, volver, irAAjustes }: { id: string; volver: () => void; i
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-semibold truncate">{c?.nombre ?? "Conteo"}</h2>
           <p className="text-sm text-tenue">{c?.almacen} · abrió {c?.creado_por_nombre ?? "—"} el {fecha(c?.creado_en)}
-            {c?.estado === "cerrado" && <> · cerrado el {fecha(c.cerrado_en)}</>}</p>
+            {c?.estado === "cerrado" && <> · cerrado el {fecha(c.cerrado_en)}</>}
+            {c?.a_ciegas && <span data-explain={GLOSARIO.conteoACiegas} data-explain-title="A ciegas"> · a ciegas</span>}</p>
         </div>
         {editable && <Boton onClick={() => setCerrando(true)} disabled={!resumen.contados}><Lock className="h-4 w-4" /> Cerrar conteo</Boton>}
       </div>
@@ -203,7 +232,7 @@ function Captura({ id, volver, irAAjustes }: { id: string; volver: () => void; i
         <div className="flex flex-wrap items-center gap-2 p-3 border-b border-borde">
           <div className="relative flex-1 min-w-[180px] max-w-sm">
             <Search className="h-4 w-4 text-tenue absolute left-3 top-1/2 -translate-y-1/2" />
-            <input className="campo pl-9" placeholder="Buscar en este almacén…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+            <input className="campo pl-9" placeholder={c?.con_lista ? "Buscar en la lista…" : "Buscar en este almacén…"} value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
           </div>
           <Filtro<FiltroCaptura> valor={filtro} alCambiar={setFiltro} opciones={[
             { valor: "todos", texto: "Todos" }, { valor: "pendientes", texto: "Sin contar", cuenta: resumen.total - resumen.contados },
@@ -238,8 +267,11 @@ function Captura({ id, volver, irAAjustes }: { id: string; volver: () => void; i
                   return (
                     <tr key={l.articulo_id} className={cn(dif != null && dif !== 0 && "bg-aviso-suave/40")}>
                       <td className="hidden sm:table-cell text-tenue whitespace-nowrap text-xs">{l.clave}</td>
-                      <td className="max-w-[300px]"><p className="truncate text-sm">{l.nombre}</p><p className="text-xs text-tenue">{l.unidad}</p></td>
-                      <td className="text-right cifra text-tenue">{numero(l.sistema)}</td>
+                      <td className="max-w-[300px]">
+                        <p className="truncate text-sm">{l.nombre}</p><p className="text-xs text-tenue">{l.unidad}</p>
+                        {l.nota && <p className="text-xs text-aviso whitespace-normal" data-explain={GLOSARIO.notaConteo} data-explain-title="Qué revisar">{l.nota}</p>}
+                      </td>
+                      <td className="text-right cifra text-tenue">{l.sistema == null ? <span className="text-tenue/50" title="A ciegas: aparece al capturar">·</span> : numero(l.sistema)}</td>
                       <td className="text-right">
                         {editable ? (
                           <div className="relative">
