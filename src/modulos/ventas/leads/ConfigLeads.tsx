@@ -43,7 +43,7 @@ export function ConfigLeads({ editable }: { editable: boolean }) {
         ))}
       </fieldset>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Campo etiqueta="Horas sin tomar" ayuda="Si un lead nuevo sigue sin vendedor, se avisa a la gerencia.">
+        <Campo etiqueta="Horas sin tomar" ayuda="Si un lead nuevo sigue sin vendedor, se avisa a la gerencia (sin gerente de ventas, a dirección).">
           <Entrada type="number" min="0.5" step="0.5" className="cifra w-28 block" disabled={!editable} value={f.horas_sin_tomar}
             onChange={(e) => setF({ ...f, horas_sin_tomar: e.target.value as unknown as number })} />
         </Campo>

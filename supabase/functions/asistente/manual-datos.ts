@@ -1641,7 +1641,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Lo usan recepción, los vendedores, la gerencia de ventas y marketing, que los ve todos para saber de dónde llegan y qué pasó con ellos.",
    "Al registrarlo pon también dónde está, su empresa (o «Particular») y qué busca con modelo o medida. Si se te pasó algo, al abrirlo te dice qué le falta y lo completas ahí; «Incompletos» junta los que tienen algo pendiente.",
    "Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es y dices «Es este», le llega directo a su vendedor.",
-   "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma a tiempo, se le avisa a la gerencia.",
+   "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma a tiempo, se le avisa a la gerencia (mientras no haya gerente de ventas, a dirección).",
    "Si un lead asignado pasa las horas que fijó la gerencia sin ningún intento anotado, se le avisa al vendedor y a la gerencia; con un intento («Le escribí», «No contestó», «No estaba» o «Contestó») ya no cuenta. Mientras no haya gerente de ventas, dirección recibe un resumen por vendedor en la mañana (desde las 9:00) y en la tarde (desde las 15:00) de cada día hábil, y al abrirlo llega a «Sin contactar» de ese vendedor (la etiqueta «De: …» se quita con la ×).",
    "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no. Elige primero por dónde fue: no viene marcado. «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo.",
    "«Crear oportunidad» se habilita hasta que contesta (o pide cotización). Si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta. Si no le interesa, se descarta con el motivo.",
@@ -5027,7 +5027,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Por dónde salió la cotización: por WhatsApp (con el número), por correo (a quién), en persona, o «solo marcada» si se marcó enviada sin decir por dónde. Cada vez que la vuelves a compartir también queda anotado. Sirve para saber cuáles sí le llegaron al cliente."
+  "texto": "Por dónde salió la cotización: por WhatsApp (con el número), por correo (a quién), en persona, o «solo marcada» si se marcó enviada sin decir por dónde. Cada vez que la vuelves a compartir desde aquí por WhatsApp o por correo también queda anotado (abrir el PDF no cuenta). Sirve para saber cuáles sí le llegaron al cliente."
  },
  {
   "clave": "canalesComisionesConfig",
@@ -7858,7 +7858,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Por tomar (o por asignar): nadie lo tiene todavía. Con…: ya tiene vendedor y está pendiente de que lo atienda. Oportunidad: el vendedor ya lo volvió oportunidad; junto sale en qué etapa va (cotizado, ganada, perdida…). Descartado: no se siguió, con su motivo. Si nadie lo toma o nadie lo atiende a tiempo, se avisa a la gerencia."
+  "texto": "Por tomar (o por asignar): nadie lo tiene todavía. Con…: ya tiene vendedor y está pendiente de que lo atienda. Oportunidad: el vendedor ya lo volvió oportunidad; junto sale en qué etapa va (cotizado, ganada, perdida…). Descartado: no se siguió, con su motivo. Si nadie lo toma a tiempo, o su vendedor no le anota ningún intento a tiempo, se avisa a la gerencia (mientras no haya gerente de ventas, a dirección)."
  },
  {
   "clave": "estadoMaquina",

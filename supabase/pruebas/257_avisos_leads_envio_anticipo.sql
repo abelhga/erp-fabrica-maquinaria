@@ -7,8 +7,8 @@
 --    vendedor, una sola vez; con cobro, o sin la palabra anticipo, no.
 do $$
 declare v_a uuid; v_b uuid; v_ger uuid; v_dir uuid; v_rec uuid; v_fin uuid; v_gp uuid;
-  v_cli uuid; v_con uuid; l1 uuid; l2 uuid; l3 uuid; lb uuid; c1 uuid; c2 uuid; c3 uuid;
-  v_ped uuid; v_ped2 uuid; v_ped3 uuid; v_eq uuid; v_mp uuid; v_op uuid;
+  v_cli uuid; v_con uuid; l1 uuid; l2 uuid; l3 uuid; l4 uuid; lb uuid; lb2 uuid; ln uuid; c1 uuid; c2 uuid; c3 uuid;
+  v_ped uuid; v_ped2 uuid; v_ped3 uuid; v_ped4 uuid; v_eq uuid; v_mp uuid; v_op uuid;
   v_dia date; t timestamptz; v_ok boolean; v_err text; v_n int; r record;
 begin
   v_a := pg_temp.usuario('vena257@hegamex.com', '{ventas}');
@@ -58,16 +58,31 @@ begin
   assert not exists (select gerencia_leads()), 'la gerencia debía quedar vacía';
   perform pg_temp.como(v_rec);
   insert into leads (nombre, telefono, interes, vendedor_id) values ('Otro sin tocar 257', '5550002574', 'Criba 257', v_a) returning id into l3;
+  -- Recién asignados (todavía dentro de sus horas): cuentan en el resumen como en «Sin contactar»,
+  -- pero un vendedor que solo tiene recién asignados no sale.
+  insert into leads (nombre, telefono, interes, vendedor_id) values ('Recién de A 257', '5550002575', 'Elevador 257', v_a) returning id into l4;
+  insert into leads (nombre, telefono, interes, vendedor_id) values ('Recién de B 257', '5550002576', 'Colector 257', v_b) returning id into lb2;
   perform pg_temp.como_postgres();
+  update leads set asignado_en = t - interval '1 hour' where id in (l4, lb2);
+  -- Sin tomar y sin gerencia: le llega a dirección (antes se marcaba avisado sin que le llegara a nadie).
+  -- (En modo recepción no se da de alta sin vendedor: se deja «nuevo» a mano, como los dos de la nube.)
+  perform pg_temp.como(v_rec);
+  insert into leads (nombre, telefono, interes, vendedor_id) values ('Sin tomar 257', '5550002577', 'Tolva 257', v_a) returning id into ln;
+  perform pg_temp.como_postgres();
+  update leads set estado = 'nuevo', vendedor_id = null, asignado_en = null, como_se_asigno = null where id = ln;
   perform avisos_leads(t + interval '5 minutes');
   assert (select count(*) from avisos where tipo = 'lead_sin_atender' and registro_id = l3::text) = 1
      and exists (select 1 from avisos where tipo = 'lead_sin_atender' and registro_id = l3::text and usuario_id = v_a),
     'sin gerencia el aviso por lead debe ir solo al vendedor';
   select * into r from avisos where tipo = 'leads_sin_atender_resumen' and usuario_id = v_dir and registro_id like v_a || ' %';
-  assert r.id is not null and r.titulo like '%: 2 leads sin ningún intento' and r.ruta = '/ventas/leads?filtro=sin_contactar&vendedor=' || v_a,
+  assert r.id is not null and r.titulo like '%: 3 leads sin ningún intento' and r.ruta = '/ventas/leads?filtro=sin_contactar&vendedor=' || v_a,
     format('resumen de dirección: %s', row_to_json(r));
   assert not exists (select 1 from avisos where tipo = 'leads_sin_atender_resumen' and registro_id like v_b || ' %'),
-    'B solo tiene un lead con intento: no debe salir en el resumen';
+    'B solo tiene un lead con intento y uno recién asignado: no debe salir en el resumen';
+  assert exists (select 1 from avisos where tipo = 'lead_sin_tomar' and registro_id = ln::text and usuario_id = v_dir),
+    'sin gerencia, el lead sin tomar no le llegó a dirección';
+  assert not exists (select 1 from avisos where tipo = 'lead_sin_tomar' and registro_id = ln::text and usuario_id in (v_a, v_b, v_rec)),
+    'el lead sin tomar le llegó a vendedores o a recepción';
   assert not exists (select 1 from avisos where tipo = 'leads_sin_atender_resumen' and usuario_id in (v_a, v_b, v_rec)),
     'el resumen es para dirección, no para vendedores ni recepción';
 
@@ -178,9 +193,10 @@ begin
   insert into pedidos (cliente_id, canal, condiciones_pago) values (v_cli, 'directo', '50% anticipo, 50% al aviso de la entrega.') returning id into v_ped;
   insert into pedidos (cliente_id, canal, condiciones_pago) values (v_cli, 'directo', '50% anticipo, 50% al aviso de la entrega.') returning id into v_ped2;
   insert into pedidos (cliente_id, canal, condiciones_pago) values (v_cli, 'directo', 'En una sola exhibición.') returning id into v_ped3;
+  insert into pedidos (cliente_id, canal, condiciones_pago) values (v_cli, 'directo', 'Contra entrega, sin anticipo.') returning id into v_ped4;
   perform pg_temp.como_postgres();
   insert into pedido_lineas (pedido_id, articulo_id, titulo, cantidad, precio_unitario)
-  select p, v_eq, 'Banda 257', 1, 120000 from unnest(array[v_ped, v_ped2, v_ped3]) p;
+  select p, v_eq, 'Banda 257', 1, 120000 from unnest(array[v_ped, v_ped2, v_ped3, v_ped4]) p;
   insert into cobros (pedido_id, monto) values (v_ped2, 69600);
 
   -- Producción manda los tres al taller.
@@ -188,14 +204,15 @@ begin
   perform ordenes_desde_pedido(v_ped);
   perform ordenes_desde_pedido(v_ped2);
   perform ordenes_desde_pedido(v_ped3);
+  perform ordenes_desde_pedido(v_ped4);
   perform pg_temp.como_postgres();
   assert (select estado from pedidos where id = v_ped) = 'en_produccion', 'el pedido no entró a producción';
   assert (select count(*) from avisos where tipo = 'pedido_sin_anticipo' and registro_id = v_ped::text and usuario_id in (v_fin, v_a)) = 2,
     'no avisó a finanzas y al vendedor';
   assert not exists (select 1 from avisos where tipo = 'pedido_sin_anticipo' and registro_id = v_ped::text and usuario_id in (v_gp, v_b, v_dir)),
     'el aviso le llegó a quien no le toca';
-  assert not exists (select 1 from avisos where tipo = 'pedido_sin_anticipo' and registro_id in (v_ped2::text, v_ped3::text)),
-    'avisó de un pedido con cobro o sin anticipo en sus condiciones';
+  assert not exists (select 1 from avisos where tipo = 'pedido_sin_anticipo' and registro_id in (v_ped2::text, v_ped3::text, v_ped4::text)),
+    'avisó de un pedido con cobro, o cuyas condiciones no piden anticipo (o dicen «sin anticipo»)';
   -- Una orden más del mismo pedido no repite el aviso (la base local tiene más gente de finanzas).
   select count(*) into v_n from avisos where tipo = 'pedido_sin_anticipo' and registro_id = v_ped::text;
   perform pg_temp.como(v_gp);

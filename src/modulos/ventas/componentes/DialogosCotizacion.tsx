@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { AlertTriangle, FileText, Mail, MessageCircle, Send } from "lucide-react";
 import { textoFichas } from "./Fichas";
 import type { Estimacion } from "./EntregaRealista";
@@ -82,6 +83,12 @@ export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vende
   }
 
   async function porWhatsApp() {
+    // La base rechaza un número de menos de 10 dígitos; si se revisara después de abrir WhatsApp,
+    // el mensaje ya habría salido (a un número equivocado) y la cotización seguiría sin enviar.
+    if (tel.trim() && tel.replace(/\D/g, "").length < 10) {
+      toast.error("Revisa el número de WhatsApp: le faltan dígitos (o déjalo vacío para elegir el chat)");
+      return;
+    }
     // Se abre antes del await: los navegadores bloquean ventanas que no salen directo del clic.
     window.open(enlaceWhatsApp(tel, texto), "_blank", "noopener");
     // También al volver a compartirla: así se sabe a qué número salió cada vez.

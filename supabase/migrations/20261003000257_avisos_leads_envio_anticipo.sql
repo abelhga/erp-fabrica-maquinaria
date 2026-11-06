@@ -37,16 +37,18 @@ declare
   v_hora time := (p_ahora at time zone 'America/Mexico_City')::time;
   v_ventana text;
 begin
-  -- Sin tomar: igual que en 128.
+  -- Sin tomar: como en 128, pero sin gerencia de ventas le llega a dirección. Antes se marcaba
+  -- como avisado sin que le llegara a nadie: en la nube 144 leads marcados y 2 avisos, y dos
+  -- leads siguen «nuevos» y sin vendedor desde el 22 oct.
   for r in select * from leads where estado = 'nuevo' and avisado_sin_tomar_en is null
              and creado_en < p_ahora - make_interval(secs => (c->>'horas_sin_tomar')::numeric * 3600) loop
-    n := n + avisar(v_ger, 'lead_sin_tomar', 'Lead sin tomar: ' || r.nombre,
+    n := n + avisar(case when cardinality(v_ger) = 0 then v_dir else v_ger end, 'lead_sin_tomar', 'Lead sin tomar: ' || r.nombre,
       r.interes || ' · lleva ' || floor(extract(epoch from p_ahora - r.creado_en) / 3600) || ' h esperando', '/ventas/leads?id=' || r.id, 'leads', r.id::text);
     update leads set avisado_sin_tomar_en = p_ahora where id = r.id;
   end loop;
 
-  -- Sin atender = asignado y SIN NINGÚN intento. Un lead al que ya se le escribió o llamó no se
-  -- marca: si el intento se borra (no se puede) o se reasigna, asignar_lead limpia la marca.
+  -- Sin atender = asignado y SIN NINGÚN intento (del lead, como «Sin contactar» y la revisión de
+  -- 214). Al reasignarlo, asignar_lead limpia la marca; los intentos del vendedor anterior cuentan.
   for r in select l.*, p.nombre as vendedor from leads l join perfiles p on p.id = l.vendedor_id
            where l.estado = 'asignado' and l.avisado_sin_atender_en is null
              and l.asignado_en < p_ahora - v_horas
@@ -59,16 +61,20 @@ begin
   -- Sin gerencia de ventas: a dirección, un resumen por vendedor en dos ventanas de día hábil.
   -- La llave es vendedor + día + ventana (9:00 o 15:00): el cron corre cada 15 minutos y solo el
   -- primero de cada ventana manda. Va en registro_id y no en la hora del aviso, que es la del reloj.
+  -- Cuenta lo mismo que «Sin contactar» (a donde lleva la liga), y sale solo si al menos uno ya
+  -- pasó las horas sin atender: si el título dijera 76 y la lista 78, nadie le cree a ninguno.
   if cardinality(v_ger) = 0 and cardinality(v_dir) > 0 and dia_laborable(v_dia) and v_hora >= time '09:00' then
     v_ventana := to_char(v_dia, 'YYYY-MM-DD') || case when v_hora >= time '15:00' then ' 15:00' else ' 09:00' end;
     for r in
       select l.vendedor_id, p.nombre, count(*) n, min(greatest(l.asignado_en, v_desde)) mas_viejo,
-             count(*) filter (where l.asignado_en >= p_ahora - v_horas - interval '1 day') nuevos
+             count(*) filter (where l.asignado_en >= p_ahora - v_horas - interval '1 day'
+                                and l.asignado_en < p_ahora - v_horas) nuevos
       from leads l join perfiles p on p.id = l.vendedor_id
-      where l.estado = 'asignado' and greatest(l.asignado_en, v_desde) < p_ahora - v_horas
+      where l.estado = 'asignado'
         and not exists (select 1 from lead_intentos i where i.lead_id = l.id)
       group by 1, 2
-      having not exists (select 1 from avisos a where a.tipo = 'leads_sin_atender_resumen'
+      having count(*) filter (where greatest(l.asignado_en, v_desde) < p_ahora - v_horas) > 0
+         and not exists (select 1 from avisos a where a.tipo = 'leads_sin_atender_resumen'
                            and a.registro_id = l.vendedor_id || ' ' || v_ventana)
     loop
       n := n + avisar(v_dir, 'leads_sin_atender_resumen',
@@ -189,7 +195,8 @@ grant execute on function public.correo_marcar_enviado(text, uuid, text[]) to au
 -- -----------------------------------------------------------------------------
 
 -- Una vez por pedido. «Anticipo» es lo que dicen sus condiciones de pago (texto libre que viene
--- de la cotización); «cobro» es cualquier cobro positivo registrado al pedido.
+-- de la cotización; «sin anticipo» o «no requiere anticipo» no cuentan); «cobro» es cualquier
+-- cobro positivo registrado al pedido.
 create or replace function public.avisar_pedido_sin_anticipo(p_pedido uuid) returns int
 language plpgsql security definer set search_path = public as $$
 declare p pedidos; v_cliente text;
@@ -197,6 +204,7 @@ begin
   select * into p from pedidos where id = p_pedido;
   if p.id is null or p.historico or p.estado = 'cancelado'
      or coalesce(p.condiciones_pago, '') !~* 'anticip'
+     or p.condiciones_pago ~* '\m(sin|no)\s+((se\s+)?(requiere|pide|necesita)n?\s+)?anticip'
      or not exists (select 1 from pedido_lineas l where l.pedido_id = p.id and l.linea = 'maquinaria')
      or exists (select 1 from cobros c where c.pedido_id = p.id and c.monto > 0)
      or exists (select 1 from avisos a where a.tipo = 'pedido_sin_anticipo' and a.registro_id = p.id::text) then
