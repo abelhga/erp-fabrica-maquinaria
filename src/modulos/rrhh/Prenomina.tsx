@@ -182,7 +182,7 @@ function VistaSemana({ semana }: { semana: Semana }) {
         <div className="rounded-lg border border-aviso/30 bg-aviso-suave p-3 text-sm text-aviso flex gap-2">
           <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
           <div className="space-y-1">
-            {sinBase > 0 && <p data-explain={GLOSARIO.bonoObjetivos} data-explain-title="Base del bono"><b>Falta definir la base del bono.</b> {sinBase} {sinBase === 1 ? "persona tiene" : "personas tienen"} objetivos aprobados: se enseña el % y no se paga nada hasta que dirección diga cuánto vale el bono por puesto o por persona.</p>}
+            {sinBase > 0 && <p data-explain={GLOSARIO.bonoObjetivos} data-explain-title="Base del bono"><b>Falta definir la base del bono.</b> {sinBase} {sinBase === 1 ? "persona tiene" : "personas tienen"} objetivos aprobados: se enseña el % y no se paga nada hasta que se capture su base en Objetivos › Bases del bono.</p>}
             {sinSueldo > 0 && <p data-explain={GLOSARIO.sinSueldoNomina} data-explain-title="Sin sueldo"><b>{sinSueldo} sin sueldo registrado.</b> Captúralo en la pestaña Sueldos.</p>}
           </div>
         </div>
@@ -239,7 +239,7 @@ function DetalleRenglon({ r, editable }: { r: Renglon; editable: boolean }) {
             <div>
               <p>Bono de objetivos</p>
               <p className="text-xs text-tenue">{(r.bono_detalle ?? []).map((b) => `${nombreMes(b.mes)}: ${puntos(b.pct)}`).join(" · ")}</p>
-              {r.bono_aviso && <p className="text-xs text-aviso">{r.bono_aviso}: no se paga hasta que dirección la defina.</p>}
+              {r.bono_aviso && <p className="text-xs text-aviso">{r.bono_aviso}: no se paga hasta que se capture en Objetivos › Bases del bono.</p>}
             </div>
             <span className="cifra whitespace-nowrap">{r.bono_monto != null ? dinero(r.bono_monto) : <span className="text-tenue">{puntos(r.bono_pct)}</span>}</span>
           </div>
