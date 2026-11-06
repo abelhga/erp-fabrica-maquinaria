@@ -33,7 +33,7 @@ begin
   c_negocia := nueva_cotizacion(v_cli);
   insert into cotizacion_lineas (cotizacion_id, titulo, precio_unitario) values (c_negocia, 'Cribadora 199', 2000);
   update cotizaciones set estado = 'enviada' where id = c_negocia;
-  perform registrar_seguimiento((select oportunidad_id from cotizaciones where id = c_negocia), 'negociacion', 'Pide 5 % menos');
+  perform registrar_seguimiento((select oportunidad_id from cotizaciones where id = c_negocia), 'negociacion', 'Pide 5 % menos', 'llamada');
   -- Sin enviar. $1,000.
   c_borrador := nueva_cotizacion(v_cli);
   insert into cotizacion_lineas (cotizacion_id, titulo, precio_unitario) values (c_borrador, 'Catarina 199', 1000);

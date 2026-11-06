@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FilePlus, Hand, Inbox, Mail, MessageCircle, Phone, Plus, Settings2, Sparkles, UserPlus, X } from "lucide-react";
@@ -138,11 +138,13 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
   const [descartar, setDescartar] = useState(false);
   const [para, setPara] = useState("");
   const [cliente, setCliente] = useState<ClienteBreve | null>(null);
-  const [canal, setCanal] = useState<CanalIntento>("whatsapp");
+  // Sin preseleccionar: con WhatsApp puesto, 247 de 247 intentos de un mes quedaron como WhatsApp.
+  const [canal, setCanal] = useState<CanalIntento | null>(null);
   const [dijo, setDijo] = useState("");
   const [redactar, setRedactar] = useState(false);
   const ir = useNavigate();
   const vendedores = useVendedoresLeads(!!l && gerencia);
+  useEffect(() => setCanal(null), [l?.id]);
   const intentos = useQuery({
     queryKey: [...CLAVE_LEADS, l?.id, "intentos"], enabled: !!l,
     queryFn: () => q<IntentoLead[]>(supabase.from("lead_intentos").select("id, canal, resultado, nota, en, usuario:perfiles(nombre)").eq("lead_id", l!.id).order("en", { ascending: false }).returns<IntentoLead[]>()),
@@ -257,16 +259,17 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
             {puedeAtender && (
               <div className="rounded-lg border border-borde p-3 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Seleccion value={canal} onChange={(ev) => setCanal(ev.target.value as CanalIntento)} aria-label="Por dónde" className="w-auto">
+                  <Seleccion value={canal ?? ""} onChange={(ev) => setCanal(ev.target.value as CanalIntento)} aria-label="Por dónde" className="w-auto">
+                    <option value="" disabled>¿Por dónde?</option>
                     {Object.entries(CANAL_INTENTO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </Seleccion>
-                  <Boton variante="secundario" tamano="sm" cargando={intento.isPending && intento.variables?.resultado !== "contesto"}
-                    onClick={() => intento.mutate({ id: l.id, resultado: botonSinRespuesta(canal).resultado })}>{botonSinRespuesta(canal).texto}</Boton>
+                  <Boton variante="secundario" tamano="sm" disabled={!canal} cargando={intento.isPending && intento.variables?.resultado !== "contesto"}
+                    onClick={() => canal && intento.mutate({ id: l.id, resultado: botonSinRespuesta(canal).resultado })}>{canal ? botonSinRespuesta(canal).texto : "Sin respuesta"}</Boton>
                 </div>
                 <AreaTexto rows={2} value={dijo} onChange={(ev) => setDijo(ev.target.value)} aria-label="Qué te dijo"
                   placeholder="Si contestó: qué te dijo (qué busca, para cuándo, si pidió cotización)" />
                 <div className="flex justify-end">
-                  <Boton tamano="sm" disabled={dijo.trim().length < 5} cargando={intento.isPending && intento.variables?.resultado === "contesto"}
+                  <Boton tamano="sm" disabled={!canal || dijo.trim().length < 5} cargando={intento.isPending && intento.variables?.resultado === "contesto"}
                     onClick={() => intento.mutate({ id: l.id, resultado: "contesto" })}>Contestó</Boton>
                 </div>
               </div>

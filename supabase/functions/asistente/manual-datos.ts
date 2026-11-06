@@ -1527,7 +1527,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "«Solo vencidas» deja las que pasaron su vigencia sin cerrarse (renglones en rojo). Abajo ves cuánto suma lo filtrado en pesos y sin IVA; con CSV te la llevas a Excel.",
    "Para la gerencia, «Por autorizar» es la cola de precios abajo del mínimo: primero las que el vendedor ya pidió, con su nota, cuántas partidas van bajo el mínimo y qué tanto abajo de lista. «Autorizar» deja al vendedor enviarla.",
    "«Seguimiento» es la lista de cotizaciones enviadas a las que toca preguntarles qué pasó: primero las vencidas, luego las de hoy y luego las que vienen. Cada cotización enviada aparece aquí 3 días hábiles después.",
-   "En «¿Qué pasó?» eliges cómo va (sigue en pie, no contestó, contactado, negociando, ya compró o se perdió) y escribes lo que dijo el cliente; Enter lo guarda y abre la siguiente. Si sigue viva, se agenda la próxima.",
+   "En «¿Qué pasó?» eliges cómo va (sigue en pie, no contestó, contactado, negociando, ya compró o se perdió) por dónde fue (no viene marcado) y escribes lo que dijo el cliente; Enter lo guarda y abre la siguiente. Si sigue viva, se agenda la próxima.",
+   "Para darla por perdida porque no respondió hacen falta 2 «No contestó» en días distintos o 10 días hábiles desde el envío; antes, la ventana te ofrece «No contestó». Al tercer «Sigue en pie» o «No contestó» seguido te pide decidir: otra fecha con su porqué, Negociación o perdida.",
    "El botón «Mensaje» (con destellos) de cada renglón, o «Redactar mensaje» dentro de «¿Qué pasó?», le pide a la IA el WhatsApp de seguimiento con lo que has anotado de esa venta: entre más detalle anotes, más a la medida sale.",
    "El mensaje lo revisas, lo cambias si quieres y lo abres en WhatsApp; no se manda solo.",
    "Con más de 10 seguimientos vencidos no puedes enviar cotizaciones nuevas hasta ponerte al día; el aviso de arriba te lo dice antes.",
@@ -1557,7 +1558,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "El botón principal cambia según el estado: «Enviar», «Convertir a pedido» (eliges partidas y fecha compromiso) o «Nueva versión».",
    "Enviar la deja como enviada y agenda preguntar qué pasó en 3 días hábiles. «Abrir PDF» solo abre la hoja: si la mandas por otro lado, dale después «Solo marcar enviada». Con más de 10 seguimientos vencidos no deja enviar, ni sacar el PDF o la vista previa de una cotización que todavía no envías, hasta ponerte al día.",
    "Ya enviada no se edita; para cambiarla saca una nueva versión: te pregunta si la actual ya no vale (queda rechazada, o cancelada si no se envió) o si sigue vigente.",
-   "En el menú «···» están imprimir, duplicar y marcar rechazada con su motivo. «Vista previa» te enseña la hoja tal como la recibe el cliente sin salir del editor.",
+   "En el menú «···» están imprimir, duplicar y marcar rechazada con su motivo («No respondió», solo después de 2 «No contestó» en días distintos o 10 días hábiles desde el envío). «Vista previa» te enseña la hoja tal como la recibe el cliente sin salir del editor.",
    "Si el equipo tiene más fotos, salen en miniatura bajo la partida y en la hoja de fotos al final del PDF; pasa el mouse por una y con la × la quitas de esta cotización.",
    "«Por correo» (en Enviar) o «Mandar por correo» (en el menú «···») manda la cotización desde tu propio Gmail con el PDF adjunto: el mismo que sale en Imprimir. Propone el correo del contacto y los demás contactos del cliente con correo; puedes cambiar el asunto y el mensaje.",
    "Las respuestas te llegan a tu Gmail, como siempre. La primera vez te pide conectar tu Gmail. Si la cotización no se puede enviar (precios abajo del mínimo sin autorizar, seguimientos vencidos), te dice por qué y no sale nada.",
@@ -1628,13 +1629,13 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Aquí se anota a quien llama o escribe interesado y todavía no es cliente ni oportunidad, para que no se pierda en un papel.",
    "Paso 1: Dale «Registrar lead», escribe quién es, cómo contactarlo y qué busca, y Enter.",
-   "Paso 2: Abre el lead y anota cada intento: «Le escribí», «No contestó» o «Contestó».",
+   "Paso 2: Abre el lead, elige por dónde fue y anota cada intento: «Le escribí», «No contestó» o «Contestó».",
    "Paso 3: Cuando conteste, dale «Crear oportunidad»; si no le interesa, «Descartar» con el motivo.",
    "Lo usan recepción, los vendedores, la gerencia de ventas y marketing, que los ve todos para saber de dónde llegan y qué pasó con ellos.",
    "Al registrarlo pon también dónde está, su empresa (o «Particular») y qué busca con modelo o medida. Si se te pasó algo, al abrirlo te dice qué le falta y lo completas ahí; «Incompletos» junta los que tienen algo pendiente.",
    "Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es y dices «Es este», le llega directo a su vendedor.",
    "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna; o quien lo registra escoge al vendedor. Si nadie lo toma o nadie lo atiende a tiempo, se le avisa a la gerencia.",
-   "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no: «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo.",
+   "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no. Elige primero por dónde fue: no viene marcado. «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo.",
    "«Crear oportunidad» se habilita hasta que contesta (o pide cotización). Si no era cliente, se da de alta; si su teléfono ya es de un cliente, te ofrece esa cuenta. Si no le interesa, se descarta con el motivo.",
    "Para escribirle, «Mensaje con IA» te lo redacta con lo que busca y lo que le pidas en la caja de contexto. Cada uno sale distinto, porque WhatsApp bloquea a quien manda el mismo texto a muchos; al abrirlo en WhatsApp se anota «Le escribí».",
    "La columna «Intentos» dice lo último que hiciste y cuándo («Le escribiste por WhatsApp · hace 2 h»), y «Sin contactar» junta a los que todavía no les has escrito ni llamado.",
@@ -1685,12 +1686,12 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 2: Arrastra una tarjeta a otra columna para cambiarla de etapa.",
    "Paso 3: Dale clic a una tarjeta para editarla, sacar una cotización o anotar qué pasó.",
    "Los vendedores la usan para no soltar a nadie; la gerencia, para ver qué está atorado, y puede filtrar por vendedor.",
-   "Si sueltas una tarjeta en «Perdida» te pide el motivo. A «Negociación» (y de Prospecto a Contactado) no pasa solo con arrastrar: se abre «¿Qué pasó?», escribes lo que dijo el cliente y eso la mueve.",
+   "Si sueltas una tarjeta en «Perdida» te pide el motivo; «No respondió» se acepta cuando ya van 2 «No contestó» en días distintos o 10 días hábiles desde que se envió su cotización. A «Negociación» (y de Prospecto a Contactado) no pasa solo con arrastrar: se abre «¿Qué pasó?», escribes lo que dijo el cliente y eso la mueve.",
    "En el detalle de la derecha editas monto, probabilidad y cierre estimado, sacas una cotización y anotas qué pasó.",
    "Los días en ámbar dicen que lleva más de 14 en la misma etapa; la tarea en rojo, que ya venció. La etiqueta «Seguimiento» dice cuándo toca preguntarle al cliente qué pasó con su cotización (en rojo si ya venció); dale clic para anotarlo ahí mismo.",
    "Ganadas y perdidas se quedan 60 días en el tablero; después solo en la vista de lista, que también se descarga a CSV.",
    "No todo se mueve a mano: enviar una cotización pasa su oportunidad a «Cotizado» (y la crea si no existía) y le agenda su seguimiento a 3 días hábiles; convertirla en pedido la marca «Ganada», y rechazarla la cierra como «Perdida» si no tiene otra cotización viva.",
-   "Al anotar qué pasó, «Negociando» la pasa a Negociación y «Se perdió» la cierra con su motivo."
+   "Al anotar qué pasó, «Negociando» la pasa a Negociación y «Se perdió» la cierra con su motivo («No respondió», con la misma regla)."
   ]
  },
  {
@@ -5031,7 +5032,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Por dónde hablaste con el cliente. Lo que escribes queda en su historia con ese medio y cuenta como seguimiento para la vigencia de su cuenta."
+  "texto": "Por dónde hablaste con el cliente: llamada, WhatsApp, correo o visita. No viene marcado: elígelo cada vez (si le das «Llamar» o «WhatsApp» desde aquí, se marca solo). Lo que escribes queda en su historia con ese medio y cuenta como seguimiento para la vigencia de su cuenta."
  },
  {
   "clave": "canalVenta",
@@ -6593,6 +6594,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "CURP, RFC, NSS, salario, cuenta bancaria, domicilio, tipo de sangre, alergias, crédito Infonavit y si sus contratos están firmados. Solo los ven Recursos Humanos con nivel de administrar y dirección; cada cambio queda en la bitácora."
+ },
+ {
+  "clave": "decidirSeguimiento",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Al tercer «Sigue en pie» o «No contestó» seguido sin avance (sin pasar a Negociación ni mandar otra versión), «¿Qué pasó?» te pide decidir: le vuelves a buscar en una fecha que tú pones, con el porqué (por ejemplo, «decide en enero»), la pasas a Negociación o la das por perdida. Así ninguna venta se queda dando vueltas sin que nadie decida."
  },
  {
   "clave": "deDondeSaleCapacidad",
@@ -9715,7 +9726,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cada vez que le llamas, le escribes o lo visitas, anótalo. Si le escribiste por WhatsApp o correo, «Le escribí»; si le llamaste y no contestó, «No contestó»; si fuiste y no estaba, «No estaba»; y cuando conteste, «Contestó» con lo que te dijo. Todo cuenta como intento, conteste o no, y en la lista se ve lo último que hiciste y cuándo. Mientras no conteste, sigue siendo lead (no se da de alta como cliente). Los leads que alguien tiene varios días sin ningún intento, o que se volvieron oportunidad y no se cotizan, le aparecen a dirección en «Por revisar»."
+  "texto": "Cada vez que le llamas, le escribes o lo visitas, anótalo. Elige siempre por dónde fue: no viene marcado. Si le escribiste por WhatsApp o correo, «Le escribí»; si le llamaste y no contestó, «No contestó»; si fuiste y no estaba, «No estaba»; y cuando conteste, «Contestó» con lo que te dijo. Todo cuenta como intento, conteste o no, y en la lista se ve lo último que hiciste y cuándo. Mientras no conteste, sigue siendo lead (no se da de alta como cliente). Los leads que alguien tiene varios días sin ningún intento, o que se volvieron oportunidad y no se cotizan, le aparecen a dirección en «Por revisar»."
  },
  {
   "clave": "interruptorConsumiblesTaller",
@@ -10799,7 +10810,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Por qué se perdió (precio, tiempo de entrega, seguimiento…). Es obligatorio: sin eso no se sabe qué corregir."
+  "texto": "Por qué se perdió (precio, tiempo de entrega, compró con otro…). Es obligatorio: sin eso no se sabe qué corregir. «No respondió» se acepta cuando ya van 2 «No contestó» en días distintos o 10 días hábiles desde que se envió la cotización; mientras, anota «No contestó»."
  },
  {
   "clave": "motivoReactivar",
@@ -13577,7 +13588,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cómo va la venta después de hablar con el cliente. Sigue en pie: lo está pensando; le vuelves a buscar en 3 días hábiles o la fecha que pongas. No contestó: se reintenta en 2. Negociando: pasa a Negociación. Ya compró: te lleva a convertir la cotización en pedido. Se perdió: con su motivo, la oportunidad y su cotización se cierran. Lo que escribes queda en la historia del cliente."
+  "texto": "Cómo va la venta después de hablar con el cliente. Sigue en pie: lo está pensando; le vuelves a buscar en 3 días hábiles o la fecha que pongas. No contestó: se reintenta en 2. Negociando: pasa a Negociación. Ya compró: te lleva a convertir la cotización en pedido. Se perdió: con su motivo, la oportunidad y su cotización se cierran; por «No respondió», solo después de 2 «No contestó» en días distintos o de 10 días hábiles desde el envío. Al tercer «Sigue en pie» o «No contestó» seguido te pide la fecha y su porqué, o pasarla a Negociación o a perdida. Lo que escribes queda en la historia del cliente."
  },
  {
   "clave": "resumenDineroPorEmbarque",
@@ -14282,7 +14293,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cuándo le vuelves a preguntar, de hoy a cuatro meses. Si lo dejas vacío se agenda solo: en 2 días hábiles si no contestó y en 3 si sigue en pie o negociando."
+  "texto": "Cuándo le vuelves a preguntar, de hoy a cuatro meses. Si lo dejas vacío se agenda solo: en 2 días hábiles si no contestó y en 3 si sigue en pie o negociando. Desde el tercer «Sigue en pie» o «No contestó» seguido, la fecha y su porqué son obligatorios."
  },
  {
   "clave": "simuladorPrecios",
@@ -14398,6 +14409,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "compras"
   ],
   "texto": "Ni su costo ni el catálogo dicen a quién se le compra. Al crear las órdenes te pide elegir uno para estas partidas; si no, se quedan pendientes."
+ },
+ {
+  "clave": "sinRespuestaSeguimiento",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cuándo se puede dar por perdida una venta porque el cliente no respondió: cuando ya anotaste 2 «No contestó» en días distintos, o cuando pasaron 10 días hábiles desde que enviaste la última versión de la cotización. Antes de eso, «No contestó» la vuelve a agendar en 2 días hábiles. Si el cliente sí te dijo que no, elige el motivo que te dio. Vale igual al arrastrar la tarjeta a Perdida o al marcar rechazada la cotización."
  },
  {
   "clave": "sinSalidaInventario",
