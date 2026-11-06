@@ -1,6 +1,10 @@
 -- Correo desde el ERP: antes de mandar se revisa con las mismas reglas que «Marcar enviada» (y
 -- no cambia nada); ya mandado, la cotización queda enviada con su nota en la bitácora y su
 -- seguimiento, la OC queda enviada. Los tokens de Gmail no los lee nadie con sesión.
+
+-- Esta prueba no es de partidas libres (256): sus «Cribadora…» sin artículo pedirían autorización.
+update configuracion set valor = valor || '{"desde": "2999-01-01"}' where clave = 'partidas_libres';
+
 do $$
 declare v_ven uuid; v_otro uuid; v_comp uuid; v_cli uuid; v_con uuid; c1 uuid; c2 uuid; v_prov uuid; v_oc uuid; v_op uuid;
   r jsonb; v_ok boolean; v_err text; v_act uuid; i int;

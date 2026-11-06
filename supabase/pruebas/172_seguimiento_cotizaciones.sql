@@ -1,6 +1,10 @@
 -- Seguimiento de cotizaciones: enviar agenda uno a 3 días hábiles; solo se cierra diciendo qué
 -- pasó y el resultado mueve la oportunidad; Negociación sin qué pasó no entra; con más de 10
 -- vencidos no se envía otra cotización hasta que la gerencia libere; pedido o rechazo lo cierran.
+
+-- Esta prueba no es de partidas libres (256): sus «Cribadora…» sin artículo pedirían autorización.
+update configuracion set valor = valor || '{"desde": "2999-01-01"}' where clave = 'partidas_libres';
+
 do $$
 declare v_ven uuid; v_otro uuid; v_ger uuid; v_cli uuid; c1 uuid; c2 uuid; c3 uuid; v_op uuid; v_op3 uuid; v_s uuid;
   v_ok boolean; v_err text; v_n int; i int;

@@ -12,7 +12,7 @@ begin
   v_otro := pg_temp.usuario('otro199@hegamex.com', '{ventas}');
   v_ger := pg_temp.usuario('ger199@hegamex.com', '{gerente_ventas}');
   v_fin := pg_temp.usuario('fin199@hegamex.com', '{finanzas}');
-  insert into clientes (nombre, vendedor_id) values ('Concretos 199', v_ven) returning id into v_cli;
+  insert into clientes (nombre, vendedor_id, estado, fuente_id, publico_general) values ('Concretos 199', v_ven, 'Jalisco', 1, true) returning id into v_cli;  -- convertir los pide (256)
 
   perform pg_temp.como(v_ven);
   -- Ganada: se volvió pedido. $10,000 sin IVA.

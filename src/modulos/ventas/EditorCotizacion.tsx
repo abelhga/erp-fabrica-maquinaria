@@ -26,7 +26,7 @@ import { TablaPartidas, importeLocal } from "./componentes/TablaPartidas";
 import { FichaVenta } from "./componentes/FichaVenta";
 import { DialogoFleteSkydropx } from "./componentes/FleteSkydropx";
 import { DialogoCliente, DialogoMotivo, ElegirCliente, MOTIVOS_PERDIDA, type ClienteNuevo } from "./componentes/dialogos";
-import { DialogoConvertir, DialogoEnviar, DialogoPedirAutorizacion } from "./componentes/DialogosCotizacion";
+import { DialogoConvertir, DialogoEnviar, DialogoPedirAutorizacion, type DatosClientePedido } from "./componentes/DialogosCotizacion";
 import { DialogoCorreo } from "@/components/correo/DialogoCorreo";
 import { pdfDeRuta } from "@/lib/pdf";
 import { SIN_ENVIAR, mensajeFreno, useFreno } from "./componentes/Seguimiento";
@@ -93,8 +93,13 @@ function Editor({ id }: { id: string }) {
   const clienteId = cot.data?.cliente_id;
   const cliente = useQuery({
     queryKey: ["cliente", clienteId], enabled: !!clienteId,
-    queryFn: () => q<{ id: string; nombre: string; razon_social: string | null; vendedor_id: string | null; vendedor: { nombre: string } | null; estado: string | null; ciudad: string | null }>(
-      supabase.from("clientes").select("id, nombre, razon_social, vendedor_id, estado, ciudad, vendedor:perfiles!clientes_vendedor_id_fkey(nombre)").eq("id", clienteId!).single()),
+    queryFn: () => q<{ id: string; nombre: string; razon_social: string | null; vendedor_id: string | null; vendedor: { nombre: string } | null; estado: string | null; ciudad: string | null; legacy_ref: string | null }>(
+      supabase.from("clientes").select("id, nombre, razon_social, vendedor_id, estado, ciudad, legacy_ref, vendedor:perfiles!clientes_vendedor_id_fkey(nombre)").eq("id", clienteId!).single()),
+  });
+  // Lo que le falta al cliente para hacer el pedido (RFC, estado, fuente): se pide al convertir, no al cotizar.
+  const clienteFalta = useQuery({
+    queryKey: ["cliente_falta", clienteId], enabled: !!clienteId,
+    queryFn: () => q<string[] | null>(supabase.rpc("cliente_falta_para_pedido", { p_cliente: clienteId! })),
   });
   const contactos = useQuery({
     queryKey: ["contactos", clienteId], enabled: !!clienteId,
@@ -246,6 +251,9 @@ function Editor({ id }: { id: string }) {
   // la juzga partida_bajo_minimo() en la base, y la ficha debe decir lo mismo.
   const precioEfectivo = (l: Partida) => Number(l.precio_unitario) * (1 - Number(l.descuento_pct)) * (1 - Number(c?.descuento_pct ?? 0));
   const bajoMinimo = lineas.filter((l) => l.bajo_minimo && !sucias.has(l.id));
+  // Una partida libre de $20,000 o más (partida_libre_cara en la base) pide la misma autorización.
+  const libresCaras = lineas.filter((l) => l.libre_cara && !l.bajo_minimo && !sucias.has(l.id));
+  const porAutorizar = lineas.filter((l) => (l.bajo_minimo || l.libre_cara) && !sucias.has(l.id));
   const vence = c ? venceEl(c.fecha, c.vigencia_dias) : null;
   const vencida = !!c && ["borrador", "por_autorizar", "autorizada", "enviada"].includes(c.estado) && !!vence && vence < hoyMx();
 
@@ -394,11 +402,12 @@ function Editor({ id }: { id: string }) {
     { exito: "Cotización duplicada con folio nuevo", invalidar: [["v_cotizaciones"]], alTerminar: (nid) => ir(`/ventas/cotizaciones/${nid}`) },
   );
   const convertir = useAccion(
-    async (a: { fecha: string; ids: string[] }) => {
+    async (a: { fecha: string; ids: string[]; datos: DatosClientePedido | null }) => {
       await guardar();
-      return q<string>(supabase.rpc("convertir_a_pedido", { p_cotizacion: id, p_fecha_compromiso: a.fecha || null, p_partidas: a.ids }));
+      return q<string>(supabase.rpc("convertir_a_pedido", { p_cotizacion: id, p_fecha_compromiso: a.fecha || null, p_partidas: a.ids, p_cliente: a.datos }));
     },
-    { exito: "Pedido creado", invalidar: [["cotizacion", id], ["v_cotizaciones"], ["v_pedidos"], ["indicadores"]], alTerminar: (pid) => ir(`/ventas/pedidos/${pid}`) },
+    { exito: "Pedido creado", invalidar: [["cotizacion", id], ["v_cotizaciones"], ["v_pedidos"], ["indicadores"], ["cliente", clienteId], ["cliente_falta"], ["cliente_detalle", clienteId]],
+      alTerminar: (pid) => ir(`/ventas/pedidos/${pid}`) },
   );
   const rechazar = useAccion(
     async (a: { motivo: string; cerrar: boolean }) => {
@@ -470,7 +479,7 @@ function Editor({ id }: { id: string }) {
   const contactoSel = contactos.data?.find((x) => x.id === c.contacto_id) ?? null;
   // Una partida autorizada sigue "bajo el mínimo" (eso no cambia): lo que la
   // deja pasar es la autorización vigente, igual que en convertir_a_pedido().
-  const preciosEnRegla = bajoMinimo.length === 0 || !!c.autorizada_por;
+  const preciosEnRegla = porAutorizar.length === 0 || !!c.autorizada_por;
   const puedeEnviar = editable && (c.estado === "borrador" || c.estado === "autorizada") && preciosEnRegla && lineas.some((l) => !l.opcional);
   // Sin tiempo de entrega no se envía (la base tampoco la deja): se avisa antes de que salga por WhatsApp o correo.
   const faltaEntrega = !c.tiempo_entrega?.trim() && !["enviada", "aceptada"].includes(c.estado);
@@ -573,6 +582,11 @@ function Editor({ id }: { id: string }) {
             <AlertTriangle className="h-4 w-4 shrink-0" />{bajoMinimo.length} partida(s) abajo del precio mínimo{c.estado === "autorizada" ? " (autorizadas)" : ""}
           </p>
         )}
+        {libresCaras.length > 0 && (
+          <p className="rounded-lg bg-aviso-suave text-aviso px-3 py-2 text-xs flex gap-2" data-explain={GLOSARIO.partidaLibreCara} data-explain-title="Partida libre por autorizar">
+            <AlertTriangle className="h-4 w-4 shrink-0" />{libresCaras.length} partida(s) libre(s) de $20,000 o más{c.estado === "autorizada" ? " (autorizadas)" : ""}
+          </p>
+        )}
       </div>
     </Tarjeta>
   );
@@ -624,7 +638,10 @@ function Editor({ id }: { id: string }) {
         <div className="rounded-xl border border-aviso/30 bg-aviso-suave px-4 py-3 text-sm flex flex-wrap items-center gap-3">
           <ShieldCheck className="h-5 w-5 text-aviso shrink-0" />
           <div className="flex-1 min-w-[200px]">
-            <p className="font-medium" data-explain={GLOSARIO.autorizacionPrecios} data-explain-title="Autorización de precios">{bajoMinimo.length || "Hay"} partida(s) abajo del precio mínimo: necesita autorización de la gerencia para enviarse.</p>
+            <p className="font-medium" data-explain={GLOSARIO.autorizacionPrecios} data-explain-title="Autorización de precios">
+              {[bajoMinimo.length ? `${bajoMinimo.length} partida(s) abajo del precio mínimo` : null,
+                libresCaras.length ? `${libresCaras.length} partida(s) libre(s) de $20,000 o más` : null].filter(Boolean).join(" y ") || "Hay partidas por autorizar"}: necesita autorización de la gerencia para enviarse.
+            </p>
             {c.autorizacion_pedida_en ? <p className="text-tenue">Pedida {haceCuanto(c.autorizacion_pedida_en)}{c.nota_autorizacion ? ` · “${c.nota_autorizacion}”` : ""}</p>
               : <p className="text-tenue">Ajusta los precios o pide la autorización cuando termines de capturar.</p>}
           </div>
@@ -884,7 +901,7 @@ function Editor({ id }: { id: string }) {
 
       {/* Diálogos */}
       <DialogoCliente abierto={dlg === "cliente"} alCambiar={(v) => setDlg(v ? "cliente" : null)} nombreInicial={nombreCliente}
-        alCrear={(n: ClienteNuevo) => cambiarCliente(n, n.contacto ?? null)} />
+        alCrear={(n: ClienteNuevo) => cambiarCliente(n, n.contacto)} />
       <Dialogo abierto={vista > 0} alCambiar={(v) => !v && setVista(0)} ancho="max-w-[9.5in]" titulo={`Vista previa · ${c.folio}`}
         descripcion="Así la recibe el cliente. Para mandarla usa Enviar; para guardarla en PDF, el botón PDF."
         pie={<><Boton variante="secundario" onClick={() => setVista(0)}>Cerrar</Boton><Boton onClick={abrirPdf}><Printer className="h-4 w-4" />PDF</Boton></>}>
@@ -908,8 +925,9 @@ function Editor({ id }: { id: string }) {
       <DialogoPedirPrecio abierto={!!pedirPara} alCambiar={(v) => !v && setPedirPara(null)} inicial={pedirPara ?? {}}
         crear={pedirPara?.nuevaPartida ? crearConPartida : undefined} />
       <DialogoConvertir estimacion={estimacion.data} abierto={dlg === "convertir"} alCambiar={(v) => setDlg(v ? "convertir" : null)} c={c} partidas={lineas}
-        cargando={convertir.isPending} alConfirmar={(f, ids) => convertir.mutate({ fecha: f, ids })} />
-      <DialogoPedirAutorizacion abierto={dlg === "autorizacion"} alCambiar={(v) => setDlg(v ? "autorizacion" : null)} partidasBajo={bajoMinimo}
+        faltan={clienteFalta.data ?? []} cliente={cliente.data}
+        cargando={convertir.isPending} alConfirmar={(f, ids, datos) => convertir.mutate({ fecha: f, ids, datos })} />
+      <DialogoPedirAutorizacion abierto={dlg === "autorizacion"} alCambiar={(v) => setDlg(v ? "autorizacion" : null)} partidasBajo={porAutorizar}
         pedidaEn={c.autorizacion_pedida_en} cargando={pedirAutorizacion.isPending} alConfirmar={(n) => pedirAutorizacion.mutate(n)} />
       <Dialogo abierto={dlg === "version"} alCambiar={(v) => setDlg(v ? "version" : null)} titulo={`Nueva versión de ${c.folio}`}
         descripcion="La nueva sale como borrador con las mismas partidas. ¿Qué pasa con esta?">

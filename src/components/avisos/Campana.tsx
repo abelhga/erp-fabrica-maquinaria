@@ -8,7 +8,7 @@ import * as P from "@radix-ui/react-popover";
 import { toast } from "sonner";
 import {
   Bell, CheckCheck, CheckCircle2, ClipboardList, Factory, FileText, Inbox, PackageCheck, Scale, ShoppingCart,
-  TimerReset, UserRound, Wallet,
+  TimerReset, UserRound, Users, Wallet,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
@@ -23,6 +23,7 @@ function icono(tipo: string) {
   if (tipo.startsWith("op_")) return Factory;
   if (tipo.startsWith("ajuste_")) return Scale;
   if (tipo.startsWith("cotizacion_")) return FileText;
+  if (tipo.startsWith("cliente_")) return Users;
   if (tipo.startsWith("requisicion_")) return ClipboardList;
   if (tipo.startsWith("pedido_")) return ShoppingCart;
   if (tipo === "cobro") return Wallet;

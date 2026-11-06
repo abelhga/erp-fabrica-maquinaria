@@ -21,10 +21,11 @@ begin
 
   -- Cada vendedor da de alta su cliente con su contacto.
   perform pg_temp.como(v_isaac);
-  insert into clientes (nombre, vendedor_id) values ('Concretos del Bajío', v_isaac) returning id into v_cli_isaac;
+  -- Estado, fuente y público en general: convertir a pedido los pide (256).
+  insert into clientes (nombre, vendedor_id, estado, fuente_id, publico_general) values ('Concretos del Bajío', v_isaac, 'Jalisco', 1, true) returning id into v_cli_isaac;
   insert into contactos (cliente_id, nombre, telefono, principal) values (v_cli_isaac, 'Ing. Pérez', '3311111111', true);
   perform pg_temp.como(v_juan);
-  insert into clientes (nombre, vendedor_id) values ('Agregados del Norte', v_juan) returning id into v_cli_juan;
+  insert into clientes (nombre, vendedor_id, estado, fuente_id, publico_general) values ('Agregados del Norte', v_juan, 'Jalisco', 1, true) returning id into v_cli_juan;
   insert into contactos (cliente_id, nombre, telefono) values (v_cli_juan, 'Lic. Gómez', '8122222222');
 
   -- Juan ve que el cliente de Isaac existe (para no duplicarlo) pero NO su teléfono.

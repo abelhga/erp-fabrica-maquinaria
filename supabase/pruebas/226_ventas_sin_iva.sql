@@ -2,6 +2,10 @@
 -- cada partida no cambia; el pedido hereda la tasa. El pedido lo cambia su vendedor, la gerencia o
 -- finanzas (otro vendedor y producción no), nunca con una factura registrada, y el subtotal (lo que
 -- cuenta para la comisión) se queda igual.
+
+-- Esta prueba no es de partidas libres (256): sus «Cribadora…» sin artículo pedirían autorización.
+update configuracion set valor = valor || '{"desde": "2999-01-01"}' where clave = 'partidas_libres';
+
 do $$
 declare
   v_ven uuid; v_otro uuid; v_fin uuid; v_prod uuid; v_cli uuid;
@@ -11,7 +15,7 @@ begin
   v_otro := pg_temp.usuario('otro226@hegamex.com', '{ventas}');
   v_fin := pg_temp.usuario('fin226@hegamex.com', '{finanzas}');
   v_prod := pg_temp.usuario('prod226@hegamex.com', '{produccion}');
-  insert into clientes (nombre, vendedor_id) values ('Granos 226', v_ven) returning id into v_cli;
+  insert into clientes (nombre, vendedor_id, estado, fuente_id, publico_general) values ('Granos 226', v_ven, 'Jalisco', 1, true) returning id into v_cli;  -- convertir los pide (256)
 
   perform pg_temp.como(v_ven);
   -- 1. Cotización con precios más IVA: sin IVA, el total es el subtotal.

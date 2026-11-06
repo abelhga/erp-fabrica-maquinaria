@@ -4,6 +4,9 @@
 --   descontado lo reembolsado y no cuenta intentos rechazados · L1 iniciar sin nombres no borra la
 --   cuadrilla planeada · T4 lo nuevo nace con la tasa de IVA de Configuración.
 
+-- Esta prueba no es de partidas libres (256): sus «Cribadora…» sin artículo pedirían autorización.
+update configuracion set valor = valor || '{"desde": "2999-01-01"}' where clave = 'partidas_libres';
+
 -- C2. El saldo de la hoja con más de 90 días entra al «+90 d» del tablero (y a la gráfica).
 do $$
 declare v_fin uuid; v_ven uuid; v_cli uuid; j0 jsonb; j1 jsonb; v_hoy date := hoy_planta();

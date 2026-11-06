@@ -36,7 +36,7 @@ begin
   -- ---------------------------------------------------------------------------
   -- Alta con condiciones por defecto, RFC normalizado, contacto principal
   -- ---------------------------------------------------------------------------
-  insert into clientes (nombre, vendedor_id, razon_social, rfc) values (' Concretos T60 ', v_isaac, 'Concretos T60 SA de CV', ' cte160202ab1 ')
+  insert into clientes (nombre, vendedor_id, razon_social, rfc, estado, fuente_id) values (' Concretos T60 ', v_isaac, 'Concretos T60 SA de CV', ' cte160202ab1 ', 'Jalisco', 1)
   returning id into v_cli;
   assert (select rfc from clientes where id = v_cli) = 'CTE160202AB1', 'el RFC se guarda en mayúsculas y sin espacios';
   insert into contactos (cliente_id, nombre, principal) values (v_cli, 'Ing. Pérez', true);

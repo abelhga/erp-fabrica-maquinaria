@@ -194,7 +194,7 @@ function ColaAutorizacion({ filas, cargando, alAutorizar, autorizando }: {
 }) {
   if (cargando) return <div className="tarjeta"><Cargando /></div>;
   if (!filas.length) {
-    return <div className="tarjeta"><Vacio icono={ShieldCheck} titulo="Nada por autorizar" texto="Cuando un vendedor cotice abajo del precio mínimo y pida autorización, aparece aquí." /></div>;
+    return <div className="tarjeta"><Vacio icono={ShieldCheck} titulo="Nada por autorizar" texto="Cuando un vendedor cotice abajo del precio mínimo o con una partida libre de $20,000 o más y pida autorización, aparece aquí." /></div>;
   }
   const orden = [...filas].sort((a, b) => (a.autorizacion_pedida_en ? 0 : 1) - (b.autorizacion_pedida_en ? 0 : 1)
     || (a.autorizacion_pedida_en ?? a.actualizado_en).localeCompare(b.autorizacion_pedida_en ?? b.actualizado_en));
@@ -210,7 +210,10 @@ function ColaAutorizacion({ filas, cargando, alAutorizar, autorizando }: {
             </div>
             <div className="text-right shrink-0">
               <p className="text-lg font-semibold cifra">{dineroEn(Number(c.total), c.moneda)}</p>
-              <span data-explain={GLOSARIO.bajoMinimo} data-explain-title="Bajo el mínimo"><Insignia tono="peligro">{c.partidas_bajo_minimo} bajo el mínimo</Insignia></span>
+              {/* Sin partidas bajo el mínimo, lo que la tiene aquí es una partida libre de $20,000 o más. */}
+              {Number(c.partidas_bajo_minimo) > 0
+                ? <span data-explain={GLOSARIO.bajoMinimo} data-explain-title="Bajo el mínimo"><Insignia tono="peligro">{c.partidas_bajo_minimo} bajo el mínimo</Insignia></span>
+                : <span data-explain={GLOSARIO.partidaLibreCara} data-explain-title="Partida libre por autorizar"><Insignia tono="aviso">Partida libre por autorizar</Insignia></span>}
               {c.descuento_vs_lista != null && Number(c.descuento_vs_lista) > 0 && (
                 <p className="text-xs text-tenue mt-1 cifra" title="Lo cotizado del catálogo contra su precio de lista, con todos los descuentos" data-explain={GLOSARIO.descuentoVsLista}>
                   {porcentaje(Number(c.descuento_vs_lista), 1)} abajo de lista

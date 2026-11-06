@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, FileText, Mail, MessageCircle, Send } from "lucide-react";
 import { textoFichas } from "./Fichas";
 import type { Estimacion } from "./EntregaRealista";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
-import { AreaTexto, Campo, Entrada } from "@/components/ui/campo";
+import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
+import { LlenarConConstancia } from "@/components/datos/LlenarConConstancia";
+import { supabase } from "@/lib/supabase";
+import { q } from "@/lib/consultas";
 import { Insignia } from "@/components/ui/insignia";
 import { dinero, fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import {
-  compromisoDesde, dineroEn, enlaceWhatsApp, telefonoWa, textoWhatsApp,
+  RFC_VALIDO, compromisoDesde, dineroEn, enlaceWhatsApp, normalizarRfc, telefonoWa, textoWhatsApp, useFuentes,
   type Contacto, type Cotizacion, type Partida, type PlanMeses,
 } from "../comun";
 import { GLOSARIO } from "@/tutorial/glosario";
@@ -97,18 +101,51 @@ export function DialogoEnviar({ abierto, alCambiar, c, partidas, contacto, vende
   );
 }
 
+/** Lo que convertir_a_pedido() guarda en la ficha del cliente si le falta (nunca pisa lo que hay). */
+export interface DatosClientePedido {
+  rfc?: string | null; razon_social?: string | null; publico_general?: boolean; estado?: string | null; pais?: string | null; fuente_id?: number | null;
+}
+/** Fuente «Ya había comprado»: la mitad de las conversiones sin fuente eran clientes de la hoja. */
+const FUENTE_YA_HABIA_COMPRADO = 13;
+const FUERA = "__fuera__";
+
 /**
  * Cotización → pedido. Aquí se eligen las partidas: las opcionales vienen sin
  * marcar (no suman), pero si el cliente eligió la alternativa se palomea.
+ * Si al cliente le falta algo para facturar o medir (faltan, de cliente_falta_para_pedido),
+ * se pide aquí: al cotizar no se pide nada para no frenar la venta.
  */
-export function DialogoConvertir({ abierto, alCambiar, c, partidas, alConfirmar, cargando, estimacion }: {
+export function DialogoConvertir({ abierto, alCambiar, c, partidas, alConfirmar, cargando, estimacion, faltan = [], cliente }: {
   abierto: boolean; alCambiar: (v: boolean) => void; c: Cotizacion; partidas: Partida[]; estimacion?: Estimacion;
-  alConfirmar: (fechaCompromiso: string, ids: string[]) => void; cargando?: boolean;
+  alConfirmar: (fechaCompromiso: string, ids: string[], datos: DatosClientePedido | null) => void; cargando?: boolean;
+  faltan?: string[]; cliente?: { legacy_ref: string | null } | null;
 }) {
   const [fechaC, setFechaC] = useState("");
   const [sel, setSel] = useState<Set<string>>(new Set());
+  const [d, setD] = useState({ rfc: "", razon_social: "", publico: false, estado: "", pais: "", fuente: "" });
+  const fuentes = useFuentes();
+  const estados = useQuery({
+    queryKey: ["geo_estados"], staleTime: Infinity, enabled: abierto && faltan.includes("estado"),
+    queryFn: () => q<{ cve_ent: string; nombre_corto: string }[]>(supabase.from("geo_estados").select("cve_ent, nombre_corto").order("nombre_corto")),
+  });
+  const pideFiscal = faltan.includes("fiscal"), pideEstado = faltan.includes("estado"), pideFuente = faltan.includes("fuente");
+  const rfcN = normalizarRfc(d.rfc);
+  const rfcMalo = rfcN !== "" && !RFC_VALIDO.test(rfcN);
+  const fiscalOk = !pideFiscal || d.publico || (RFC_VALIDO.test(rfcN) && d.razon_social.trim() !== "");
+  const estadoOk = !pideEstado || (d.estado === FUERA ? d.pais.trim() !== "" : d.estado !== "");
+  const fuenteOk = !pideFuente || d.fuente !== "";
+  const datosOk = fiscalOk && estadoOk && fuenteOk;
+  function datos(): DatosClientePedido | null {
+    if (!faltan.length) return null;
+    return {
+      ...(pideFiscal ? (d.publico ? { publico_general: true } : { rfc: rfcN, razon_social: d.razon_social.trim() }) : {}),
+      ...(pideEstado ? (d.estado === FUERA ? { pais: d.pais.trim() } : { estado: d.estado }) : {}),
+      ...(pideFuente ? { fuente_id: Number(d.fuente) } : {}),
+    };
+  }
   useEffect(() => {
     if (!abierto) return;
+    setD({ rfc: "", razon_social: "", publico: false, estado: "", pais: "", fuente: cliente?.legacy_ref ? String(FUENTE_YA_HABIA_COMPRADO) : "" });
     // Lo prometido en la cotización, pero nunca antes de lo que el taller puede sacar hoy.
     const prometida = compromisoDesde(c.tiempo_entrega);
     setFechaC(estimacion?.fecha_propuesta && estimacion.fecha_propuesta > prometida ? estimacion.fecha_propuesta : prometida);
@@ -124,12 +161,61 @@ export function DialogoConvertir({ abierto, alCambiar, c, partidas, alConfirmar,
       descripcion="El pedido toma precios, descuentos y condiciones de la cotización; producción y cobranza lo ven al instante."
       pie={<>
         <Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
-        <Boton disabled={!elegidas.length || !c.cliente_id} cargando={cargando} onClick={() => alConfirmar(fechaC, elegidas.map((p) => p.id))}>
+        <Boton disabled={!elegidas.length || !c.cliente_id || !datosOk} cargando={cargando} onClick={() => alConfirmar(fechaC, elegidas.map((p) => p.id), datos())}>
           Crear pedido por {dineroEn(sinIva * (1 + Number(c.tasa_iva)), c.moneda)}
         </Boton>
       </>}>
       <div className="space-y-4">
         {!c.cliente_id && <p className="rounded-lg bg-aviso-suave text-aviso text-sm p-3">Liga la cotización a un cliente antes de convertirla (arriba, en “Cliente”).</p>}
+        {c.cliente_id && faltan.length > 0 && (
+          <section className="rounded-lg border border-aviso/40 bg-aviso-suave p-3 space-y-3" data-explain={GLOSARIO.datosParaPedido} data-explain-title="Datos del cliente para el pedido">
+            <div>
+              <p className="text-sm font-medium">Datos del cliente para el pedido</p>
+              <p className="text-xs text-tenue">Le faltan a su ficha; se guardan ahí.</p>
+            </div>
+            {pideFiscal && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <LlenarConConstancia para="cliente" excluir={c.cliente_id} className="sm:col-span-2"
+                  alLeer={(k) => setD((x) => ({ ...x, publico: false, rfc: k.rfc ?? x.rfc, razon_social: k.razon_social ?? x.razon_social }))} />
+                <Campo etiqueta="RFC" error={rfcMalo && !d.publico ? "RFC con formato inválido (ej. CBA160202AB1)" : undefined}>
+                  <Entrada value={d.rfc} disabled={d.publico} onChange={(e) => setD({ ...d, rfc: e.target.value })} className="uppercase" maxLength={15} />
+                </Campo>
+                <Campo etiqueta="Razón social">
+                  <Entrada value={d.razon_social} disabled={d.publico} onChange={(e) => setD({ ...d, razon_social: e.target.value })} />
+                </Campo>
+                <label className="sm:col-span-2 flex items-center gap-2 text-sm" data-explain={GLOSARIO.publicoGeneral} data-explain-title="Público en general">
+                  <input type="checkbox" checked={d.publico} onChange={(e) => setD({ ...d, publico: e.target.checked })} />
+                  Público en general (no pide factura a su nombre)
+                </label>
+              </div>
+            )}
+            {(pideEstado || pideFuente) && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {pideEstado && (<>
+                  <Campo etiqueta="Estado">
+                    <Seleccion value={d.estado} onChange={(e) => setD({ ...d, estado: e.target.value })}>
+                      <option value="">— elegir —</option>
+                      {estados.data?.map((x) => <option key={x.cve_ent} value={x.nombre_corto}>{x.nombre_corto}</option>)}
+                      <option value={FUERA}>Fuera de México</option>
+                    </Seleccion>
+                  </Campo>
+                  {d.estado === FUERA && (
+                    <Campo etiqueta="País"><Entrada value={d.pais} onChange={(e) => setD({ ...d, pais: e.target.value })} placeholder="Guatemala" /></Campo>
+                  )}
+                </>)}
+                {pideFuente && (
+                  <Campo etiqueta="¿Cómo llegó?">
+                    <Seleccion value={d.fuente} onChange={(e) => setD({ ...d, fuente: e.target.value })}
+                      data-explain={GLOSARIO.fuenteCliente} data-explain-title="¿Cómo llegó?">
+                      <option value="">— elegir —</option>
+                      {fuentes.data?.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
+                    </Seleccion>
+                  </Campo>
+                )}
+              </div>
+            )}
+          </section>
+        )}
         <div data-explain={GLOSARIO.fechaCompromisoPedido} data-explain-title="Fecha compromiso">
           <Campo etiqueta="Fecha compromiso de entrega"
             ayuda={estimacion?.fecha_propuesta
@@ -166,12 +252,14 @@ export function DialogoConvertir({ abierto, alCambiar, c, partidas, alConfirmar,
   );
 }
 
-/** El vendedor explica el descuento: la gerente lo lee en su cola antes de autorizar. */
+/** El vendedor explica el descuento (o la partida libre cara): la gerente lo lee en su cola antes de autorizar. */
 export function DialogoPedirAutorizacion({ abierto, alCambiar, partidasBajo, alConfirmar, cargando, pedidaEn }: {
   abierto: boolean; alCambiar: (v: boolean) => void; partidasBajo: Partida[]; alConfirmar: (nota: string) => void; cargando?: boolean; pedidaEn?: string | null;
 }) {
   const [nota, setNota] = useState("");
   useEffect(() => { if (abierto) setNota(""); }, [abierto]);
+  const bajo = partidasBajo.filter((p) => p.bajo_minimo);
+  const libres = partidasBajo.filter((p) => p.libre_cara && !p.bajo_minimo);
   return (
     <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="Pedir autorización de precios"
       descripcion={pedidaEn ? `Ya la pediste el ${fecha(pedidaEn)}; puedes mandar otra nota.` : "La gerencia de ventas la verá en su cola de autorización."}
@@ -180,10 +268,18 @@ export function DialogoPedirAutorizacion({ abierto, alCambiar, partidasBajo, alC
         <Boton onClick={() => alConfirmar(nota)} cargando={cargando} data-explain={GLOSARIO.autorizacionPrecios}>Pedir autorización</Boton>
       </>}>
       <div className="space-y-3">
-        <div className="rounded-lg border border-peligro/30 bg-peligro-suave p-3 text-sm" data-explain={GLOSARIO.bajoMinimo} data-explain-title="Bajo el mínimo">
-          <p className="font-medium text-peligro mb-1">{partidasBajo.length} partida(s) abajo del precio mínimo</p>
-          <ul className="list-disc pl-5 text-texto/90">{partidasBajo.map((p) => <li key={p.id}>{p.titulo}</li>)}</ul>
-        </div>
+        {bajo.length > 0 && (
+          <div className="rounded-lg border border-peligro/30 bg-peligro-suave p-3 text-sm" data-explain={GLOSARIO.bajoMinimo} data-explain-title="Bajo el mínimo">
+            <p className="font-medium text-peligro mb-1">{bajo.length} partida(s) abajo del precio mínimo</p>
+            <ul className="list-disc pl-5 text-texto/90">{bajo.map((p) => <li key={p.id}>{p.titulo}</li>)}</ul>
+          </div>
+        )}
+        {libres.length > 0 && (
+          <div className="rounded-lg border border-aviso/40 bg-aviso-suave p-3 text-sm" data-explain={GLOSARIO.partidaLibreCara} data-explain-title="Partida libre por autorizar">
+            <p className="font-medium text-aviso mb-1">{libres.length} partida(s) libre(s) de $20,000 o más</p>
+            <ul className="list-disc pl-5 text-texto/90">{libres.map((p) => <li key={p.id}>{p.titulo}</li>)}</ul>
+          </div>
+        )}
         <Campo etiqueta="¿Por qué este precio?" ayuda="Ej.: cliente frecuente, compra 4 equipos, la competencia lo dejó en…">
           <AreaTexto autoFocus value={nota} onChange={(e) => setNota(e.target.value)} />
         </Campo>

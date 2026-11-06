@@ -2,6 +2,9 @@
 -- desde el último envío (por «¿Qué pasó?», el tablero y «Marcar rechazada…», también la gerencia);
 -- al tercer «Sigue en pie»/«No contestó» seguido se pide fecha con porqué; el canal no viene puesto.
 
+-- Esta prueba no es de partidas libres (256): sus «Cribadora…» sin artículo pedirían autorización.
+update configuracion set valor = valor || '{"desde": "2999-01-01"}' where clave = 'partidas_libres';
+
 -- Cotización enviada en una oportunidad nueva del cliente; regresa la oportunidad.
 create function pg_temp.enviada255(p_cli uuid, p_op uuid default null) returns uuid
 language plpgsql as $$

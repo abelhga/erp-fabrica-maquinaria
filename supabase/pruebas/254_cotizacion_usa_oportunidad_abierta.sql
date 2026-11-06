@@ -1,6 +1,10 @@
 -- La cotización usa la oportunidad que ya tenía el cliente (la del lead primero) en vez de abrir
 -- otra; «es otro proyecto» sí abre una; nadie cuelga su cotización de la oportunidad de otro
 -- vendedor ni de otro cliente.
+
+-- Esta prueba no es de partidas libres (256): sus «Cribadora…» sin artículo pedirían autorización.
+update configuracion set valor = valor || '{"desde": "2999-01-01"}' where clave = 'partidas_libres';
+
 do $$
 declare v_rec uuid; v_a uuid; v_b uuid; v_ger uuid; v_cli uuid; v_cli2 uuid; v_libre uuid; v_lead uuid; v_op_lead uuid; v_op_man uuid;
   v_op2 uuid; v_op_a uuid; c1 uuid; c2 uuid; c3 uuid; c4 uuid; c5 uuid; v_ok boolean; v_err text;

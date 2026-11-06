@@ -28,12 +28,13 @@ import { Barra } from "./componentes/campos";
 import { JuntarClientes } from "./componentes/JuntarClientes";
 import { EXPLICA_ESTADO_PEDIDO } from "./componentes/EntregaPedido";
 import { GLOSARIO } from "@/tutorial/glosario";
+import type { ClienteParecido } from "./componentes/dialogos";
 
 interface Cliente {
   id: string; nombre: string; razon_social: string | null; rfc: string | null; regimen_fiscal: string | null; cp_fiscal: string | null;
   uso_cfdi: string | null; giro: string | null; ciudad: string | null; estado: string | null; pais: string; vendedor_id: string | null;
   fuente_id: number | null; es_distribuidor: boolean; dias_credito: number; notas: string | null; activo: boolean; creado_en: string;
-  vendedor: { nombre: string } | null;
+  publico_general: boolean; vendedor: { nombre: string } | null;
 }
 /** En las tarjetas de arriba un millón con centavos no cabe: desde $1 M se abrevia. */
 const corto = (n: number) => (Math.abs(Number(n)) >= 1_000_000 ? dineroCompacto(Number(n)) : dinero(Number(n)));
@@ -166,7 +167,7 @@ function DatosFiscales({ c, editable, esGerente }: { c: Cliente; editable: boole
     () => q(supabase.from("clientes").update({
       nombre: f.nombre.trim(), razon_social: f.razon_social || null, rfc: rfc || null, regimen_fiscal: f.regimen_fiscal || null,
       cp_fiscal: f.cp_fiscal || null, uso_cfdi: f.uso_cfdi || null, giro: f.giro || null, ciudad: f.ciudad || null, estado: f.estado || null,
-      pais: f.pais || "México", fuente_id: f.fuente_id, es_distribuidor: f.es_distribuidor, dias_credito: f.dias_credito, notas: f.notas || null,
+      pais: f.pais || "México", fuente_id: f.fuente_id, es_distribuidor: f.es_distribuidor, publico_general: f.publico_general, dias_credito: f.dias_credito, notas: f.notas || null,
       ...(esGerente ? { vendedor_id: f.vendedor_id } : {}),
     }).eq("id", c.id)),
     { exito: "Datos guardados", invalidar: [["cliente_detalle", c.id], ["v_clientes"], ["v_cartera"]], alTerminar: () => setEditando(false) },
@@ -191,7 +192,8 @@ function DatosFiscales({ c, editable, esGerente }: { c: Cliente; editable: boole
         <div className="px-5 pb-4 grid sm:grid-cols-2 gap-x-6">
           <div>
             {fila("Razón social", c.razon_social)}
-            {fila("RFC", c.rfc && <span className="cifra">{c.rfc}</span>)}
+            {fila("RFC", c.rfc ? <span className="cifra">{c.rfc}</span>
+              : c.publico_general && <span data-explain={GLOSARIO.publicoGeneral} data-explain-title="Público en general">Público en general</span>)}
             {fila("Régimen fiscal", c.regimen_fiscal)}
             {fila("CP fiscal / Uso CFDI", [c.cp_fiscal, c.uso_cfdi].filter(Boolean).join(" · "))}
           </div>
@@ -217,6 +219,13 @@ function DatosFiscales({ c, editable, esGerente }: { c: Cliente; editable: boole
           ayuda={rfc && !rfcMalo ? "✓ Formato correcto" : undefined}>
           <Entrada value={f.rfc ?? ""} onChange={t("rfc")} className="uppercase" maxLength={15} />
         </Campo>
+        {/* Con un RFC de verdad la base la apaga sola: no tiene caso ofrecerla. */}
+        {!rfc || rfc.startsWith("XAXX") || rfc.startsWith("XEXX") ? (
+          <label className="sm:col-span-2 flex items-center gap-2 text-sm" data-explain={GLOSARIO.publicoGeneral} data-explain-title="Público en general">
+            <input type="checkbox" checked={f.publico_general} onChange={(e) => setF({ ...f, publico_general: e.target.checked })} />
+            Público en general (no pide factura a su nombre)
+          </label>
+        ) : null}
         <Campo etiqueta="Régimen fiscal"><Entrada value={f.regimen_fiscal ?? ""} onChange={t("regimen_fiscal")} placeholder="601 General de Ley Personas Morales" /></Campo>
         <Campo etiqueta="CP fiscal"><Entrada value={f.cp_fiscal ?? ""} onChange={t("cp_fiscal")} inputMode="numeric" maxLength={5} /></Campo>
         <Campo etiqueta="Uso de CFDI"><Entrada value={f.uso_cfdi ?? ""} onChange={t("uso_cfdi")} placeholder="G03 Gastos en general" /></Campo>
@@ -260,6 +269,19 @@ function Contactos({ clienteId, visibles, editable, duenio }: { clienteId: strin
     queryFn: () => q<Contacto[]>(supabase.from("contactos").select("*").eq("cliente_id", clienteId).order("principal", { ascending: false }).order("nombre")),
   });
   const [editar, setEditar] = useState<Partial<Contacto> | null>(null);
+  // Al salir de Teléfono, WhatsApp o Correo: ¿ya está en otro cliente? No bloquea; es para juntarlos
+  // o, si es de otro vendedor, saber que le llega un aviso (lo manda la base al guardar).
+  const [revisar, setRevisar] = useState<{ tel: string; correo: string } | null>(null);
+  useEffect(() => { if (!editar) setRevisar(null); }, [editar]);
+  const alSalir = () => editar && setRevisar({ tel: [editar.telefono, editar.whatsapp].find((x) => (x ?? "").replace(/\D/g, "").length >= 10) ?? "", correo: editar.correo?.includes("@") ? editar.correo.trim() : "" });
+  const otroCliente = useQuery({
+    queryKey: ["clientes_parecidos", "contacto", clienteId, revisar?.tel, revisar?.correo],
+    enabled: !!revisar && (!!revisar.tel || !!revisar.correo),
+    queryFn: () => q<ClienteParecido[]>(supabase.rpc("clientes_parecidos", {
+      p_nombre: "", p_telefono: revisar!.tel || null, p_correo: revisar!.correo || null, p_excluir: clienteId,
+    })),
+  });
+  const otros = revisar && (revisar.tel || revisar.correo) ? otroCliente.data ?? [] : [];
   const guardar = useAccion(
     async (x: Partial<Contacto>) => {
       const datos = { nombre: x.nombre?.trim(), puesto: x.puesto || null, telefono: x.telefono || null, whatsapp: x.whatsapp || null,
@@ -316,9 +338,20 @@ function Contactos({ clienteId, visibles, editable, duenio }: { clienteId: strin
           <form className="grid gap-3 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); if (editar.nombre?.trim()) guardar.mutate(editar); }}>
             <Campo etiqueta="Nombre"><Entrada autoFocus value={editar.nombre ?? ""} onChange={(e) => setEditar({ ...editar, nombre: e.target.value })} /></Campo>
             <Campo etiqueta="Puesto"><Entrada value={editar.puesto ?? ""} onChange={(e) => setEditar({ ...editar, puesto: e.target.value })} /></Campo>
-            <Campo etiqueta="Teléfono"><Entrada value={editar.telefono ?? ""} inputMode="tel" onChange={(e) => setEditar({ ...editar, telefono: e.target.value })} /></Campo>
-            <Campo etiqueta="WhatsApp"><Entrada value={editar.whatsapp ?? ""} inputMode="tel" onChange={(e) => setEditar({ ...editar, whatsapp: e.target.value })} /></Campo>
-            <Campo etiqueta="Correo" className="sm:col-span-2"><Entrada type="email" value={editar.correo ?? ""} onChange={(e) => setEditar({ ...editar, correo: e.target.value })} /></Campo>
+            <Campo etiqueta="Teléfono"><Entrada value={editar.telefono ?? ""} inputMode="tel" onBlur={alSalir} onChange={(e) => setEditar({ ...editar, telefono: e.target.value })} /></Campo>
+            <Campo etiqueta="WhatsApp"><Entrada value={editar.whatsapp ?? ""} inputMode="tel" onBlur={alSalir} onChange={(e) => setEditar({ ...editar, whatsapp: e.target.value })} /></Campo>
+            <Campo etiqueta="Correo" className="sm:col-span-2"><Entrada type="email" value={editar.correo ?? ""} onBlur={alSalir} onChange={(e) => setEditar({ ...editar, correo: e.target.value })} /></Campo>
+            {otros.length > 0 && (
+              <div className="sm:col-span-2 rounded-lg border border-aviso/40 bg-aviso-suave px-3 py-2 text-sm space-y-1" role="status"
+                data-explain={GLOSARIO.telefonoDeOtroCliente} data-explain-title="Ya está en otro cliente">
+                {otros.map((o) => (
+                  <p key={o.id} className="flex flex-wrap items-center gap-x-2">
+                    <span>{o.por === "correo" ? "Ese correo" : "Ese teléfono"} ya está en «{o.nombre}»{o.vendedor ? ` (de ${o.vendedor})` : ""}</span>
+                    <Link to={`/ventas/clientes/${o.id}`} className="text-marca-texto underline">Abrir</Link>
+                  </p>
+                ))}
+              </div>
+            )}
             <Campo etiqueta="Domicilio" className="sm:col-span-2"><Entrada value={editar.domicilio ?? ""} onChange={(e) => setEditar({ ...editar, domicilio: e.target.value })} /></Campo>
             <label className="sm:col-span-2 flex items-center gap-2 text-sm" data-explain={GLOSARIO.contactoPrincipal} data-explain-title="Contacto principal"><input type="checkbox" checked={!!editar.principal} onChange={(e) => setEditar({ ...editar, principal: e.target.checked })} /> Contacto principal (sale en las cotizaciones)</label>
             <button type="submit" className="hidden" />

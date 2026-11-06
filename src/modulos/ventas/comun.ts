@@ -70,7 +70,7 @@ export interface Cotizacion {
 export interface Partida {
   id: string; cotizacion_id: string; orden: number; articulo_id: string | null; titulo: string; descripcion: string | null;
   imagen_url: string | null; imagenes_extra?: string[] | null; unidad: string; cantidad: number; precio_unitario: number; precio_lista: number | null;
-  descuento_pct: number; opcional: boolean; bajo_minimo: boolean; importe: number;
+  descuento_pct: number; opcional: boolean; bajo_minimo: boolean; libre_cara: boolean; importe: number;
 }
 export interface VCotizacion {
   id: string; folio: string; version: number; fecha: string; vence: string; estado: EstadoCotizacion; cliente_id: string | null;
