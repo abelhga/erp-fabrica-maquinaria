@@ -1,9 +1,10 @@
-# Contrato Teléfono ↔ ERP (versión 1, fase 1: voz → ERP)
+# Contrato Teléfono ↔ ERP (versión 1; fase 1: voz → ERP, fase 2: ERP → voz)
 
 Dos productos que se venden por separado. hegamex-voz (Railway, su Postgres) contesta llamadas;
 el ERP (Supabase) lleva el CRM. Cuando están conectados, voz le manda al ERP cada llamada y el lead
-que salió de ella; el ERP es dueño de leads, etapas y seguimiento. Sin `ERP_URL`/`ERP_LLAVE`, voz se
-comporta exactamente como hoy.
+que salió de ella; el ERP es dueño de leads, etapas y seguimiento. Desde la fase 2, al empezar cada
+llamada voz le pregunta al ERP quién llama (`GET /contexto`, abajo). Sin `ERP_URL`/`ERP_LLAVE`, voz se
+comporta exactamente como antes de conectarlo.
 
 ## Transporte
 - `POST {ERP_URL}/evento` con `Content-Type: application/json` y `x-llave: <ERP_LLAVE>`.
@@ -116,9 +117,90 @@ solo su huella (sha256). Generar otra deja sin servir la anterior al momento. `e
 dice si hay llave (nunca la regresa), el último aviso, el último error, llamadas y «nadie
 contestó» de 7 días y cuántos nombres del directorio no tienen persona.
 
+## Fase 2: GET /contexto (el ERP le dice a voz quién llama)
+
+Para que la IA del teléfono sepa si quien llama ya es cliente, se lo pase primero a su vendedor y le
+pueda decir cómo va su pedido. Lo contesta `telefono_contexto(text)` (migración 259), que solo puede
+llamar la función de borde con la llave de servicio (ni `anon` ni `authenticated`).
+
+### Transporte
+- `GET {ERP_URL}/contexto?tel=<teléfono como venga, +52… o 10 dígitos>` con `x-llave: <ERP_LLAVE>`
+  (la misma llave de la fase 1). Sin cuerpo.
+- Respuestas:
+  - `200` con el cuerpo de abajo, también cuando el número no es de nadie (`conocido: false`).
+  - `400 {"error":"Teléfono inválido"}` si `tel` falta o trae menos de 10 dígitos.
+  - `401 {"error":"Llave inválida"}` (una llave de menos de 32 caracteres ni se le pregunta a la base).
+  - `500 {"error":"No se pudo consultar quién llama"}` cualquier otra cosa; queda anotado en
+    Integraciones como «último error», sin el teléfono.
+- Voz espera máximo `ERP_CONTEXTO_MS` (800 ms por omisión); si no llega, la llamada sigue sin
+  contexto. Por eso es una sola función SQL, todo por índice (en local, con 8,000 contactos y
+  3,000 pedidos, de 2 a 9 ms).
+
+### Cuerpo (200)
+```json
+{
+  "ok": true,
+  "conocido": true,
+  "cliente": { "nombre": "Agregados del Bajío" },                    // null si no es cliente
+  "lead": { "nombre": "Juan Pérez", "interes": "Banda 20 m" },       // null; solo sin cliente y con lead abierto
+  "vendedor": { "nombre": "Isaac Hernández", "telefono": "+523300000000" },  // null si no hay dueño vigente y activo
+  "pedidos": [
+    {
+      "folio": "PED-26-812",
+      "que_es": "Thor 36",                // títulos de las partidas unidos con coma, máximo 80 caracteres
+      "estado": "En producción",          // Confirmado | En producción | Listo para entregar
+      "etapa": "Pintura",                 // etapa actual de la orden más atrasada; null si no hay orden o no ha arrancado
+      "avance": 70,                       // 0–100 entero; null si no hay órdenes
+      "en_espera": false,                 // alguna orden en espera
+      "fecha_compromiso": "2026-11-20",   // null si no tiene
+      "atrasado": false                   // fecha_compromiso < hoy (planta) y no está listo
+    }
+  ],
+  "cotizaciones": [ { "folio": "COT-2026-00312", "fecha": "2026-11-02", "vence": "2026-11-17" } ]
+}
+```
+
+### De dónde sale cada cosa
+- **Cliente**: `cliente_con_contacto(tel, null)`, los últimos 10 dígitos del teléfono o el WhatsApp
+  de alguno de sus contactos (cliente activo; si hay dos, el más antiguo).
+- **Vendedor**: el dueño del cliente solo si `vigencia_cliente()` dice que su cartera sigue vigente
+  y su perfil está activo (el mismo criterio con el que la fase 1 le da el lead al dueño). Su
+  teléfono es `perfiles.telefono` tal cual. Sin cliente: el vendedor del lead abierto, si ya está
+  asignado.
+- **Lead** (solo sin cliente): un lead `nuevo` o `asignado` con ese teléfono, o el que dejó una
+  llamada anterior del mismo número (`llamadas.telefono10`). Primero el asignado, luego el más nuevo.
+- **Pedidos abiertos**: `confirmado`, `en_produccion` o `listo`, sin los históricos de la hoja;
+  máximo 5, los de fecha compromiso más próxima primero (sin fecha al final).
+  - Avance: la fórmula del tablero de planta (161): horas de etapas terminadas más horas × avance
+    reportado de las que están en proceso o pausadas, entre las horas totales; una orden terminada o
+    entregada es 100; las canceladas no cuentan. El del pedido es el promedio de sus órdenes, el
+    mismo número que ve la planta en Producción → Pedidos.
+  - Etapa: de la orden con menos avance que no ha terminado, la etapa en proceso o pausada; si está
+    entre etapas, la que sigue; si sigue planeada, ninguna.
+  - Se calcula sobre las tablas, no con `v_pedidos_produccion`/`pedidos_basicos`: esas dependen de
+    `puede()` (sale de `auth.uid()`) y con la llave de servicio regresan vacío.
+- **Cotizaciones vivas**: `autorizada` o `enviada`, `fecha + vigencia_dias >= hoy`, sin folios
+  `BORRADOR-`; máximo 5, las más recientes. Solo folio, fecha y vence.
+- **Nunca** montos, precios, costos, márgenes, RFC, direcciones, correos ni los otros contactos del
+  cliente. Lo prueba `supabase/pruebas/259_telefono_contexto.sql` revisando todas las llaves del
+  jsonb a cualquier profundidad.
+
+### Lo que hace voz con esto
+- Lo pide al empezar la llamada (en paralelo al saludo) y lo guarda por `callSid`.
+- En el prompt va como «POSIBLE CLIENTE CONOCIDO (según el ERP)…» (bloque no cacheado) con nombre,
+  vendedor y cuántos pedidos y cotizaciones tiene. La IA confirma nombre o empresa de forma natural
+  antes de usarlo, nunca lee el registro ni dice «aparece en el sistema», y si no es quien dice el
+  ERP, sigue como con alguien nuevo.
+- Ruteo: el vendedor va primero en la cola (después de «pidió a alguien por nombre»), si está en el
+  directorio de voz (por los últimos 10 dígitos o por nombre). Si no contesta, sigue la cola normal.
+- Herramienta `estado_pedido`: solo después de confirmar identidad. Dice estado, etapa, «va como al
+  N %» y fecha compromiso; si va `atrasado` o `en_espera`, no da fecha y ofrece pasarlo con su
+  vendedor. Nunca montos.
+
 ## Para conectarlo (una vez)
 1. `npx supabase functions deploy telefono --no-verify-jwt` (no necesita secretos propios).
-2. Migración 258 aplicada en la nube.
+2. Migraciones 258 y 259 aplicadas en la nube (la 259 es la de «quién llama»; sin ella `/contexto`
+   contesta 500 y voz sigue sin contexto).
 3. Dirección: Configuración → Integraciones → Teléfono → «Generar llave».
 4. En Railway, en el conmutador: `ERP_URL` = la dirección que muestra esa tarjeta
    (`https://<proyecto>.supabase.co/functions/v1/telefono`) y `ERP_LLAVE` = la llave.

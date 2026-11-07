@@ -5942,7 +5942,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "El conmutador con IA que contesta el teléfono (un sistema aparte) le avisa al ERP de cada llamada: quién llamó, quién contestó, el resumen y la grabación. Aquí se liga al cliente por los últimos 10 dígitos de su teléfono, deja su lead si la IA tomó uno, y lo que nadie contestó sale en «A quién llamar hoy». Sin conectar, el conmutador contesta igual, pero nada llega al ERP."
+  "texto": "El conmutador con IA que contesta el teléfono (un sistema aparte) le avisa al ERP de cada llamada: quién llamó, quién contestó, el resumen y la grabación. Aquí se liga al cliente por los últimos 10 dígitos de su teléfono, deja su lead si la IA tomó uno, y lo que nadie contestó sale en «A quién llamar hoy». Y al revés: al entrar una llamada, el conmutador le pregunta al ERP quién llama. Si es cliente, la IA sabe cómo se llama, se la pasa primero a su vendedor (si la cuenta sigue siendo suya) y le puede decir cómo va su pedido: estado, etapa, avance y fecha compromiso, nunca montos. Antes de usar nada confirma su nombre o su empresa, y si el pedido va atrasado no da fecha: ofrece pasarlo con su vendedor. Sin conectar, el conmutador contesta igual, pero nada llega al ERP ni la IA sabe quién llama."
  },
  {
   "clave": "confiabilidadCosto",

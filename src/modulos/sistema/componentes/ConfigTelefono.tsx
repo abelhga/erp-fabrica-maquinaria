@@ -59,7 +59,7 @@ export function ConfigTelefono() {
   return (
     <Tarjeta>
       <EncabezadoTarjeta titulo="Teléfono (recepción con IA)" explica={GLOSARIO.conexionTelefono}
-        descripcion="Cada llamada del conmutador entra sola: se liga al cliente, deja su lead y lo que nadie contestó sale en «A quién llamar hoy»."
+        descripcion="Cada llamada del conmutador entra sola: se liga al cliente, deja su lead y lo que nadie contestó sale en «A quién llamar hoy». Y la IA sabe quién llama: se la pasa primero a su vendedor y le dice cómo va su pedido, sin montos."
         acciones={e.ultimo_evento_en ? <Insignia tono="ok"><CheckCircle2 className="h-3.5 w-3.5" /> Conectado</Insignia>
           : <Insignia tono={e.tiene_llave ? "info" : "neutro"}>{e.tiene_llave ? "Esperando la primera llamada" : "Sin conectar"}</Insignia>} />
       <div className="px-5 pb-5 space-y-4 text-sm">
