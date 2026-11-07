@@ -1,11 +1,13 @@
 // La puerta del conmutador: sin la llave vigente contesta 401 (y no toca la base), un cuerpo mal
-// hecho 400, y la misma foto dos veces deja una sola llamada y un solo lead. Lo de la base (cliente,
-// dueño, regresar llamada) lo prueba supabase/pruebas/258_telefono.sql. La parte contra la base
+// hecho 400, y la misma foto dos veces deja una sola llamada y un solo lead. «Quién llama» (GET
+// /contexto) contesta 400 a un teléfono que no lo es y, para un cliente con su pedido en planta, el
+// folio, el estado y el avance sin ningún monto. Lo de la base (cliente, dueño, regresar llamada,
+// el avance) lo prueban supabase/pruebas/258_telefono.sql y 259_telefono_contexto.sql. La parte contra la base
 // local necesita la llave de servicio (SUPABASE_SERVICE_ROLE_KEY y DATABASE_URL); sin ella se brinca.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import pg from "pg";
-import { atender, validar } from "./nucleo.ts";
+import { atender, telefonoValido, validar } from "./nucleo.ts";
 
 const base = { version: 1, tipo: "llamada", call_sid: "CA-prueba", llamada: { telefono: "+523312345678", nadie_contesto: false }, lead: null };
 
@@ -41,10 +43,23 @@ describe("sin llave no entra", () => {
     expect(r.status).toBe(401);
     expect(await r.json()).toEqual({ error: "Llave inválida" });
   });
+  it("sin llave, «quién llama» también es 401 sin preguntarle a la base", async () => {
+    const r = await atender(new Request("http://local/functions/v1/telefono/contexto?tel=%2B523312345678"), entorno);
+    expect(r.status).toBe(401);
+    expect(await r.json()).toEqual({ error: "Llave inválida" });
+    const corta = await atender(new Request("http://local/functions/v1/telefono/contexto?tel=3312345678", { headers: { "x-llave": "corta" } }), entorno);
+    expect(corta.status).toBe(401);
+  });
   it("otra ruta u otro método es 404", async () => {
     expect((await atender(new Request("http://local/functions/v1/telefono/otra", { method: "POST" }), entorno)).status).toBe(404);
     expect((await atender(new Request("http://local/functions/v1/telefono/evento"), entorno)).status).toBe(404);
+    expect((await atender(new Request("http://local/functions/v1/telefono/contexto", { method: "POST" }), entorno)).status).toBe(404);
   });
+});
+
+describe("telefonoValido", () => {
+  it.each([["+523312345678", true], ["33 1234 5678", true], ["5213312345678", true], ["12345", false], ["", false], [null, false], ["abc", false]])(
+    "%s → %s", (tel, ok) => expect(telefonoValido(tel)).toBe(ok));
 });
 
 // -----------------------------------------------------------------------------
@@ -67,6 +82,12 @@ describe.skipIf(!hayBase)("contra la base local", () => {
   const mandar = (cuerpo: unknown, llave = LLAVE) => atender(new Request("http://local/functions/v1/telefono/evento", {
     method: "POST", headers: { "x-llave": llave, "Content-Type": "application/json" },
     body: typeof cuerpo === "string" ? cuerpo : JSON.stringify(cuerpo) }), entorno);
+  const pedir = (tel: string | null, llave = LLAVE) => atender(new Request(
+    `http://local/functions/v1/telefono/contexto${tel === null ? "" : `?tel=${encodeURIComponent(tel)}`}`,
+    { headers: { "x-llave": llave } }), entorno);
+  // Un cliente con su pedido en producción: Pailería terminada (10 h) y Pintura a la mitad (10 h) = 75 %.
+  const TEL_CLI = `33${String(Date.now()).slice(-8)}`;
+  const ids: { cliente?: string; articulo?: string; pedido?: string; orden?: string; folio?: string } = {};
   const foto = {
     version: 1, tipo: "llamada", call_sid: SID, enviado_en: new Date().toISOString(),
     llamada: { telefono: "+525550009901", inicio: new Date(Date.now() - 300_000).toISOString(), fin: new Date().toISOString(),
@@ -80,12 +101,38 @@ describe.skipIf(!hayBase)("contra la base local", () => {
     await c.connect();
     antes = (await c.query("select * from public.telefono_cuenta where id = 1")).rows[0];
     await c.query("update public.telefono_cuenta set llave_huella = public._telefono_huella($1) where id = 1", [LLAVE]);
+    const uno = async (sql: string, p: unknown[]) => (await c.query(sql, p)).rows[0];
+    ids.cliente = (await uno("insert into public.clientes (nombre) values ('Vitest Contexto') returning id", [])).id;
+    await c.query("insert into public.contactos (cliente_id, nombre, telefono, correo) values ($1, 'Vitest', $2, 'vitest@ejemplo.com')", [ids.cliente, TEL_CLI]);
+    ids.articulo = (await uno("insert into public.articulos (clave, tipo, nombre) values ($1, 'equipo', 'Banda Vitest') returning id", [`VT-${Date.now()}`])).id;
+    const ped = await uno(`insert into public.pedidos (cliente_id, canal, estado, fecha_compromiso)
+      values ($1, 'directo', 'en_produccion', current_date + 15) returning id, folio`, [ids.cliente]);
+    ids.pedido = ped.id; ids.folio = ped.folio;
+    await c.query("insert into public.pedido_lineas (pedido_id, articulo_id, titulo, cantidad, precio_unitario) values ($1, $2, 'Banda Vitest 20 m', 1, 98765.43)", [ids.pedido, ids.articulo]);
+    ids.orden = (await uno("insert into public.ordenes_produccion (articulo_id, cantidad, estado, pedido_id) values ($1, 1, 'en_proceso', $2) returning id", [ids.articulo, ids.pedido])).id;
+    await c.query(`insert into public.op_operaciones (orden_id, etapa_id, horas_estimadas, estado, avance)
+      select $1, id, 10, case nombre when 'Pailería' then 'terminada'::estado_operacion else 'en_proceso' end, case nombre when 'Pintura' then 0.5 end
+      from public.etapas where nombre in ('Pailería', 'Pintura')`, [ids.orden]);
   });
   afterAll(async () => {
     const leads = (await c.query("select id from public.leads where llamada_id in (select id from public.llamadas where call_sid = $1)", [SID])).rows.map((r: { id: string }) => r.id);
     await c.query("delete from public.avisos where registro_id = any($1::text[])", [leads]);
     await c.query("delete from public.leads where id = any($1::uuid[])", [leads]);
     await c.query("delete from public.llamadas where call_sid = $1", [SID]);
+    if (ids.orden) {
+      await c.query("delete from public.op_operaciones where orden_id = $1", [ids.orden]);
+      await c.query("delete from public.ordenes_produccion where id = $1", [ids.orden]);
+    }
+    if (ids.pedido) {
+      await c.query("delete from public.avisos where registro_id = any($1::text[])", [[ids.pedido, ids.orden].filter(Boolean)]);
+      await c.query("delete from public.pedido_lineas where pedido_id = $1", [ids.pedido]);
+      await c.query("delete from public.pedidos where id = $1", [ids.pedido]);
+    }
+    if (ids.cliente) {
+      await c.query("delete from public.contactos where cliente_id = $1", [ids.cliente]);
+      await c.query("delete from public.clientes where id = $1", [ids.cliente]);
+    }
+    if (ids.articulo) await c.query("delete from public.articulos where id = $1", [ids.articulo]);
     if (antes) {
       await c.query(`update public.telefono_cuenta set llave_huella = $1, generada_en = $2, generada_por = $3, ultimo_evento_en = $4,
         ultimo_error = $5, ultimo_error_en = $6 where id = 1`,
@@ -126,5 +173,39 @@ describe.skipIf(!hayBase)("contra la base local", () => {
     expect((await c.query("select count(*)::int n from public.leads where llamada_id = $1", [a.llamada_id])).rows[0].n).toBe(1);
     const t = (await c.query("select ultimo_evento_en is not null visto, ultimo_error from public.telefono_cuenta where id = 1")).rows[0];
     expect(t).toEqual({ visto: true, ultimo_error: null });
+  });
+
+  it("quién llama: sin la llave vigente es 401; sin teléfono o con uno corto, 400", async () => {
+    expect((await pedir(TEL_CLI, `tel_otra_${"y".repeat(40)}`)).status).toBe(401);
+    for (const tel of [null, "", "12345", "sin numero"]) {
+      const r = await pedir(tel);
+      expect(r.status, String(tel)).toBe(400);
+      expect(await r.json()).toEqual({ error: "Teléfono inválido" });
+    }
+  });
+
+  it("quién llama: un número que no es de nadie es 200 con conocido:false", async () => {
+    const r = await pedir("+52 99 0000 0000");
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ ok: true, conocido: false, cliente: null, lead: null, vendedor: null, pedidos: [], cotizaciones: [] });
+  });
+
+  it("quién llama: el cliente con su pedido en producción, con avance y sin montos", async () => {
+    const r = await pedir(`+52${TEL_CLI}`);
+    expect(r.status).toBe(200);
+    const d = await r.json();
+    expect(d).toMatchObject({ ok: true, conocido: true, cliente: { nombre: "Vitest Contexto" }, vendedor: null, cotizaciones: [] });
+    expect(d.pedidos).toHaveLength(1);
+    expect(d.pedidos[0]).toMatchObject({ folio: ids.folio, que_es: "Banda Vitest 20 m", estado: "En producción", etapa: "Pintura",
+      avance: 75, en_espera: false, atrasado: false });
+    // Ni una llave de dinero o datos personales, a ninguna profundidad; ni el precio escrito.
+    const llaves: string[] = [];
+    const recorrer = (v: unknown) => {
+      if (Array.isArray(v)) v.forEach(recorrer);
+      else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) { llaves.push(k); recorrer(x); }
+    };
+    recorrer(d);
+    expect(llaves.filter((k) => /total|subtotal|importe|precio|costo|margen|monto|iva|rfc|correo|domicilio|direccion/i.test(k))).toEqual([]);
+    expect(JSON.stringify(d)).not.toMatch(/98765|vitest@ejemplo/);
   });
 });

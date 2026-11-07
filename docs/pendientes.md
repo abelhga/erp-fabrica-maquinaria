@@ -5,6 +5,9 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
 
 ## Por decidir o esperar a alguien
 
+- **Teléfono con IA, fase 2 (259, «quién llama»):** falta en la nube aplicar la migración 259 y
+  redesplegar `telefono` (`npx supabase functions deploy telefono --no-verify-jwt`); voz la usa en
+  cuanto tenga `ERP_URL`/`ERP_LLAVE`. Antes de aplicarla, medir `telefono_contexto` contra la nube.
 - **Teléfono con IA, fase 1 (258):** falta en la nube aplicar la migración 258, desplegar la función
   (`npx supabase functions deploy telefono --no-verify-jwt`), que dirección genere la llave en
   Configuración → Integraciones → Teléfono y que el dueño ponga `ERP_URL` y `ERP_LLAVE` en Railway

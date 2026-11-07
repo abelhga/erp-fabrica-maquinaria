@@ -1,16 +1,20 @@
-// La puerta del conmutador con IA (hegamex-voz) hacia el ERP. El conmutador manda la foto completa
-// de cada llamada (al terminar y otra vez cuando llega la grabación); aquí solo se revisa la llave
-// y la forma del cuerpo, y la base hace todo lo demás (telefono_registrar_evento): ligar el
-// cliente, crear el lead, la actividad y lo que hay que regresar. El contrato está en
-// docs/integracion-telefono.md y obliga a los dos lados.
+// La puerta del conmutador con IA (hegamex-voz) hacia el ERP. El contrato está en
+// docs/integracion-telefono.md y obliga a los dos lados. Dos rutas, las dos con la llave en x-llave:
 //
-// Lo que contesta importa porque el conmutador decide con eso si reintenta:
+// POST /telefono/evento (fase 1): el conmutador manda la foto completa de cada llamada (al terminar
+// y otra vez cuando llega la grabación); aquí solo se revisa la llave y la forma del cuerpo, y la
+// base hace todo lo demás (telefono_registrar_evento): ligar el cliente, crear el lead, la actividad
+// y lo que hay que regresar. Lo que contesta importa porque el conmutador decide con eso si reintenta:
 //   401 llave inválida  → no reintenta hasta que cambie la llave
 //   400 cuerpo mal hecho → no reintenta ese envío tal cual
 //   5xx                 → reintenta con espera creciente (por eso un error de la base es 500)
 //
-// Ruta: POST /telefono/evento con la llave en x-llave. Se despliega sin verificar JWT: el
-// conmutador no tiene sesión del ERP, entra con la llave que generó dirección.
+// GET /telefono/contexto?tel=… (fase 2): al empezar una llamada el conmutador pregunta quién llama
+// (telefono_contexto: cliente, su vendedor, pedidos abiertos y cotizaciones vivas, sin montos). Lo
+// espera 800 ms y, si no llega, la llamada sigue sin contexto: por eso es una sola consulta a la base.
+//
+// Se despliega sin verificar JWT: el conmutador no tiene sesión del ERP, entra con la llave que
+// generó dirección.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 export interface Entorno {
@@ -75,19 +79,53 @@ async function anotar(admin: SupabaseClient, error: string) {
   try { await admin.rpc("telefono_anotar_error", { p: error }); } catch { /* sin anotar, la respuesta igual sale */ }
 }
 
-export async function atender(req: Request, e: Entorno): Promise<Response> {
-  const ruta = new URL(req.url).pathname.split("/").filter(Boolean).pop();
-  if (req.method !== "POST" || ruta !== "evento") return json({ error: "Ruta no válida" }, 404);
-  const admin = createClient(e.supabaseUrl, e.serviceKey, sinSesion);
-
+/**
+ * La llave del conmutador, igual en las dos rutas. Devuelve la respuesta de error (401/500) o null
+ * si pasa. Una llave corta ni se le pregunta a la base. `que` dice en el aviso a dirección qué llegó.
+ */
+async function revisarLlave(req: Request, admin: SupabaseClient, que: string): Promise<Response | null> {
   const llave = req.headers.get("x-llave") ?? "";
   if (llave.length < 32) return json({ error: "Llave inválida" }, 401);
-  const { data: valida, error: errLlave } = await admin.rpc("telefono_llave_valida", { p: llave });
-  if (errLlave) return json({ error: "No se pudo revisar la llave" }, 500);
+  const { data: valida, error } = await admin.rpc("telefono_llave_valida", { p: llave });
+  if (error) return json({ error: "No se pudo revisar la llave" }, 500);
   if (valida !== true) {
-    await anotar(admin, "Llegó un aviso con una llave que no es la vigente: revisa ERP_LLAVE en el conmutador.");
+    await anotar(admin, `Llegó ${que} con una llave que no es la vigente: revisa ERP_LLAVE en el conmutador.`);
     return json({ error: "Llave inválida" }, 401);
   }
+  return null;
+}
+
+/** Un teléfono sirve si trae 10 dígitos o más (la base compara los últimos 10, telefono10). */
+export const telefonoValido = (tel: string | null) => (tel ?? "").replace(/\D/g, "").length >= 10;
+
+export async function atender(req: Request, e: Entorno): Promise<Response> {
+  const url = new URL(req.url);
+  const ruta = url.pathname.split("/").filter(Boolean).pop();
+  if (req.method === "POST" && ruta === "evento") return evento(req, e);
+  if (req.method === "GET" && ruta === "contexto") return contexto(req, url, e);
+  return json({ error: "Ruta no válida" }, 404);
+}
+
+async function contexto(req: Request, url: URL, e: Entorno): Promise<Response> {
+  const admin = createClient(e.supabaseUrl, e.serviceKey, sinSesion);
+  const sinPaso = await revisarLlave(req, admin, "una consulta de quién llama");
+  if (sinPaso) return sinPaso;
+  const tel = url.searchParams.get("tel");
+  if (!telefonoValido(tel)) return json({ error: "Teléfono inválido" }, 400);
+  const { data, error } = await admin.rpc("telefono_contexto", { p_tel: tel });
+  if (error) {
+    if (error.code === "22023") return json({ error: "Teléfono inválido" }, 400);
+    // Sin el teléfono en el aviso: dirección ve que falló, no a quién se buscaba.
+    await anotar(admin, `No se pudo contestar quién llama: ${error.message}`);
+    return json({ error: "No se pudo consultar quién llama" }, 500);
+  }
+  return json(data);
+}
+
+async function evento(req: Request, e: Entorno): Promise<Response> {
+  const admin = createClient(e.supabaseUrl, e.serviceKey, sinSesion);
+  const sinPaso = await revisarLlave(req, admin, "un aviso");
+  if (sinPaso) return sinPaso;
 
   const texto = await req.text();
   if (new TextEncoder().encode(texto).length > TOPE_BYTES) return json({ error: "Cuerpo demasiado grande" }, 400);
