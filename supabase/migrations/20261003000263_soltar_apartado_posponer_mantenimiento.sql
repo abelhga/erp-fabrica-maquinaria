@@ -22,9 +22,10 @@
 --    sigue contando desde la fecha que le tocaba a la pospuesta, aunque se haya pasado al mes que
 --    sigue (antes eso brincaba un mes). En los planes «cada N días» se cuenta desde que se hizo, como
 --    siempre: así está pensado el plan (el engrase cada 30 días se cuenta desde el último engrase).
---    El indicador del bono «Mantenimientos preventivos a tiempo» sigue midiendo contra la fecha del
---    plan: posponer es para organizar el trabajo, no para que lo hecho tarde cuente a tiempo (quien
---    pospone es a quien se mide). La evidencia dice cuántas veces se pospuso y por qué.
+--    El indicador del bono «Mantenimientos preventivos a tiempo» mide contra la fecha nueva (así lo
+--    decidió dirección): posponer con motivo es reprogramar, no fallar. Para que eso no se vuelva
+--    costumbre sin que nadie lo vea, la evidencia dice cuántas veces se pospuso y por qué, y a la
+--    gerencia de producción le llega el aviso de cada posposición.
 -- =============================================================================
 
 -- ---------------------------------------------------------------- 1. soltar lo apartado
@@ -440,24 +441,24 @@ begin
   if n = d then raise exception 'mantenimiento_analitica: no encontré la siguiente fecha'; end if;
   execute n;
 
-  -- El indicador del bono (261) mide contra la fecha del plan, no contra la pospuesta.
+  -- El indicador del bono (261) ya mide contra o.vence, que es la fecha pospuesta: solo se le agrega
+  -- en la evidencia cuántas veces se pospuso y por qué, para que la posposición quede a la vista.
   d := pg_get_functiondef('public.objetivo_medir(text, text, uuid, date, jsonb)'::regprocedure);
   n := replace(d, $a$      select o.id, o.folio, m.nombre maquina, o.vence, o.estado, (o.cerrada_en at time zone tz)::date cerrada
       from ordenes_mantenimiento o left join maquinas m on m.id = o.maquina_id
       where o.tipo = 'preventivo' and o.estado <> 'cancelada' and o.vence >= v_ini and o.vence < v_fin
         and (o.cerrada_en is not null or o.vence < v_hoy)
     )$a$,
-    $a$      select o.id, o.folio, m.nombre maquina, coalesce(o.vence_original, o.vence) vence, o.estado,
+    $a$      select o.id, o.folio, m.nombre maquina, o.vence, o.estado,
         (o.cerrada_en at time zone tz)::date cerrada, o.pospuesto_veces, o.pospuesto_motivo
       from ordenes_mantenimiento o left join maquinas m on m.id = o.maquina_id
-      where o.tipo = 'preventivo' and o.estado <> 'cancelada'
-        and coalesce(o.vence_original, o.vence) >= v_ini and coalesce(o.vence_original, o.vence) < v_fin
-        and (o.cerrada_en is not null or coalesce(o.vence_original, o.vence) < v_hoy)
+      where o.tipo = 'preventivo' and o.estado <> 'cancelada' and o.vence >= v_ini and o.vence < v_fin
+        and (o.cerrada_en is not null or o.vence < v_hoy)
     )$a$);
   if n = d then raise exception 'objetivo_medir: no encontré preventivos_a_tiempo'; end if;
   d := n;
   n := replace(d, $a$      'nota', 'Preventivos que vencían en el mes. Incidencia: se cerró después de su fecha o sigue abierto.',$a$,
-    $a$      'nota', 'Preventivos que vencían en el mes, por la fecha de su plan aunque se hayan pospuesto. Incidencia: se cerró después de esa fecha o sigue abierto.',$a$);
+    $a$      'nota', 'Preventivos que vencían en el mes (con su fecha nueva si se pospuso). Incidencia: se cerró después de esa fecha o sigue abierto.',$a$);
   if n = d then raise exception 'objetivo_medir: no encontré la nota de preventivos'; end if;
   d := n;
   n := replace(d, $a$                       then 'hecho ' || (x.cerrada - x.vence) || ' día(s) tarde' else 'a tiempo' end,$a$,

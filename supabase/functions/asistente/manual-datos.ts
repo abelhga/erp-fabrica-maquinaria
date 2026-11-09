@@ -6688,7 +6688,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "De los preventivos que vencían en el periodo, cuántos se hicieron en su fecha o antes. Un preventivo hecho tarde ya no previno igual. Los vencidos son los que pasaron su fecha y siguen abiertos. Uno pospuesto cuenta con su fecha nueva, y abajo dice cuántas veces se pospuso algo en el periodo. El bono de mantenimiento, en cambio, lo mide contra la fecha de su plan."
+  "texto": "De los preventivos que vencían en el periodo, cuántos se hicieron en su fecha o antes. Un preventivo hecho tarde ya no previno igual. Los vencidos son los que pasaron su fecha y siguen abiertos. Uno pospuesto cuenta con su fecha nueva, y abajo dice cuántas veces se pospuso algo en el periodo. El bono de mantenimiento lo mide igual, con la fecha nueva, y en su detalle dice cuántas veces se pospuso y por qué."
  },
  {
   "clave": "cuotaFijaCanal",
@@ -12860,7 +12860,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "El preventivo se pasó a otra fecha porque no se pudo hacer el día que tocaba (un imprevisto, salir a un servicio, no se podía parar producción). Dice cuántas veces se ha pospuesto, la última razón, quién y cuándo, y qué día le tocaba según su plan. No sale vencido hasta su fecha nueva. El plan de la máquina no cambia: en los planes por mes, el siguiente sigue tocando en su mes; en los de cada tantos días, se cuenta desde que se hace, como siempre. El bono de mantenimiento lo sigue midiendo contra la fecha del plan."
+  "texto": "El preventivo se pasó a otra fecha porque no se pudo hacer el día que tocaba (un imprevisto, salir a un servicio, no se podía parar producción). Dice cuántas veces se ha pospuesto, la última razón, quién y cuándo, y qué día le tocaba según su plan. No sale vencido hasta su fecha nueva. El plan de la máquina no cambia: en los planes por mes, el siguiente sigue tocando en su mes; en los de cada tantos días, se cuenta desde que se hace, como siempre. El bono de mantenimiento también lo mide contra la fecha nueva, y en su detalle queda cuántas veces se pospuso y por qué."
  },
  {
   "clave": "precioConEnvioCanal",

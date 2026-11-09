@@ -104,7 +104,7 @@ end $$;
 do $$
 declare v_mtto uuid; v_gp uuid; v_taller uuid; v_alm uuid; v_vend uuid; v_maq uuid; v_plan uuid; v_ord uuid; v_falla uuid;
   v_antes date; v_f1 date := hoy_planta() + 7; v_f2 date := hoy_planta() + 14; v_ok boolean; v_msg text; m jsonb; x jsonb; v_n int;
-  m1 uuid; m2 uuid;
+  m1 uuid; m2 uuid; m3 uuid;
 begin
   perform pg_temp.como_postgres();
   v_mtto := pg_temp.usuario('mtto263@hegamex.com', '{mantenimiento}');
@@ -209,19 +209,26 @@ begin
   update ordenes_mantenimiento set vence_original = null, pospuesto_veces = 0 where plan_id = v_plan;
   assert (select proxima_fecha from v_planes_preventivos where id = v_plan) = '2027-01-25', 'sin posponer, hecho en diciembre, toca enero (como antes)';
 
-  -- 10. El bono mide contra la fecha del plan: pospuesto del 6 al 9 de mayo y hecho el 9 es tarde, con
-  --     el motivo en la evidencia; el que tocaba en abril y se pospuso a mayo cuenta en abril.
+  -- 10. El bono mide contra la fecha nueva: pospuesto del 6 al 9 de mayo y hecho el 9 es a tiempo,
+  --     hecho el 10 es tarde (contra el 9), y los dos llevan el motivo en la evidencia. El que tocaba en
+  --     abril y se pospuso a mayo cuenta en mayo, no en abril.
   m := objetivo_medir('preventivos_a_tiempo', null, null, '2025-05-01');
   v_n := (m->>'posibles')::int;
   insert into ordenes_mantenimiento (maquina_id, tipo, estado, vence, vence_original, pospuesto_veces, pospuesto_motivo, cerrada_en)
   values (v_maq, 'preventivo', 'cerrada', '2025-05-09', '2025-05-06', 1, 'No se pudo parar la línea', '2025-05-09 15:00-06') returning id into m1;
   insert into ordenes_mantenimiento (maquina_id, tipo, estado, vence, vence_original, pospuesto_veces, pospuesto_motivo, cerrada_en)
   values (v_maq, 'preventivo', 'cerrada', '2025-05-05', '2025-04-28', 1, 'Faltó la refacción', '2025-05-05 15:00-06') returning id into m2;
+  insert into ordenes_mantenimiento (maquina_id, tipo, estado, vence, vence_original, pospuesto_veces, pospuesto_motivo, cerrada_en)
+  values (v_maq, 'preventivo', 'cerrada', '2025-05-09', '2025-05-06', 2, 'Salí a servicio', '2025-05-10 15:00-06') returning id into m3;
   m := objetivo_medir('preventivos_a_tiempo', null, null, '2025-05-01');
-  assert (m->>'posibles')::int = v_n + 1, 'el bono contó lo pospuesto en el mes nuevo: ' || m::text;
+  assert (m->>'posibles')::int = v_n + 3, 'el bono no contó los pospuestos en su mes nuevo: ' || m::text;
   select e into x from jsonb_array_elements(m->'evidencias') e where e->>'referencia' = m1::text;
-  assert (x->>'cuenta')::boolean and x->>'fecha' = '2025-05-06' and x->>'detalle' like '%3 día(s) tarde · pospuesto 1 vez: No se pudo parar la línea',
-    'el bono tomó la fecha pospuesta: ' || coalesce(x::text, 'no salió');
+  assert not (x->>'cuenta')::boolean and x->>'fecha' = '2025-05-09' and x->>'detalle' like '%a tiempo · pospuesto 1 vez: No se pudo parar la línea',
+    'hecho en su fecha nueva no salió a tiempo: ' || coalesce(x::text, 'no salió');
+  select e into x from jsonb_array_elements(m->'evidencias') e where e->>'referencia' = m3::text;
+  assert (x->>'cuenta')::boolean and x->>'detalle' like '%1 día(s) tarde · pospuesto 2 veces: Salí a servicio',
+    'hecho después de su fecha nueva no salió tarde: ' || coalesce(x::text, 'no salió');
+  assert (m->'evidencias') @> jsonb_build_array(jsonb_build_object('referencia', m2::text, 'cuenta', false)), 'el pospuesto de abril a mayo no contó en mayo';
   m := objetivo_medir('preventivos_a_tiempo', null, null, '2025-04-01');
-  assert (m->'evidencias') @> jsonb_build_array(jsonb_build_object('referencia', m2::text, 'cuenta', true)), 'el de abril no contó en abril';
+  assert not (m->'evidencias') @> jsonb_build_array(jsonb_build_object('referencia', m2::text)), 'el pospuesto a mayo siguió contando en abril';
 end $$;
