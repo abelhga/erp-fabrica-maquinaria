@@ -11,7 +11,7 @@ import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos"
 import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { fecha, hace, numero } from "@/lib/formato";
-import { CLAVE, ESTADO_MAQUINA, ESTADO_MTO, TIPO_MAQUINA, cadaPlan, horas, useMaquinas, useServicioEnVivo, type Maquina, type OrdenMto, type Plan } from "./datos";
+import { CLAVE, ESTADO_MAQUINA, ESTADO_MTO, TIPO_MAQUINA, cadaPlan, horas, useMaquinas, useServicioEnVivo, vecesPospuesto, type Maquina, type OrdenMto, type Plan } from "./datos";
 import { EnlaceBoton, InsigniaMaquina, InsigniaMto, usePermisosServicio } from "./componentes/piezas";
 import { LateralMantenimiento } from "./componentes/LateralMantenimiento";
 import { DialogoMaquina } from "./componentes/DialogoMaquina";
@@ -95,7 +95,9 @@ export default function Maquinas() {
     { clave: "estado", titulo: "Estado", valor: (o) => ESTADO_MTO[o.estado].texto, explica: GLOSARIO.estadoOrdenMto, celda: (o) => (
       <div className="flex flex-wrap gap-1"><InsigniaMto estado={o.estado} explica={GLOSARIO.estadoOrdenMto} />
         {o.detiene && <span className="inline-flex" data-explain={GLOSARIO.estadoMaquina} data-explain-title="Máquina parada"><Insignia tono="peligro">Parada</Insignia></span>}
-        {o.vencida && <span className="inline-flex" data-explain={GLOSARIO.situacionPreventivo} data-explain-title="Vencido"><Insignia tono="peligro">Vencido</Insignia></span>}</div>
+        {o.vencida && <span className="inline-flex" data-explain={GLOSARIO.situacionPreventivo} data-explain-title="Vencido"><Insignia tono="peligro">Vencido</Insignia></span>}
+        {o.pospuesto_veces > 0 && <span className="inline-flex" data-explain={GLOSARIO.pospuestoMto} data-explain-title="Pospuesto" title={o.pospuesto_motivo ?? undefined}>
+          <Insignia tono="aviso">{vecesPospuesto(o.pospuesto_veces)}{o.vence ? ` · ${fecha(o.vence)}` : ""}</Insignia></span>}</div>
     ) },
     { clave: "refacciones_pendientes", titulo: "Refacciones", alinear: "der", explica: GLOSARIO.refaccionesEntregadasOrden, celda: (o) => o.refacciones ? `${o.refacciones - o.refacciones_pendientes}/${o.refacciones}` : "—" },
   ];
@@ -111,7 +113,9 @@ export default function Maquinas() {
     ) },
     { clave: "situacion", titulo: "Situación", explica: GLOSARIO.situacionPreventivo, valor: (x) => SITUACION[x.situacion].texto, celda: (x) => (
       <div><span className="inline-flex" data-explain={GLOSARIO.situacionPreventivo} data-explain-title={SITUACION[x.situacion].texto}><Insignia tono={SITUACION[x.situacion].tono}>{SITUACION[x.situacion].texto}</Insignia></span>
-        {x.orden_folio && <p className="text-[11px] text-tenue mt-0.5 whitespace-nowrap">{x.orden_folio}</p>}</div>
+        {x.orden_folio && <p className="text-[11px] text-tenue mt-0.5 whitespace-nowrap">{x.orden_folio}</p>}
+        {x.orden_pospuesta_veces > 0 && <p className="text-[11px] text-aviso mt-0.5 max-w-[220px] truncate" data-explain={GLOSARIO.pospuestoMto}
+          data-explain-title="Pospuesto" title={x.orden_pospuesto_motivo ?? undefined}>{vecesPospuesto(x.orden_pospuesta_veces)}{x.orden_vence_original ? ` · tocaba el ${fecha(x.orden_vence_original)}` : ""}</p>}</div>
     ) },
   ];
 

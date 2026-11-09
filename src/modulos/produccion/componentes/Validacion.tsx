@@ -19,7 +19,11 @@ const ESTILO: Record<PasoValidacion["estado"], { icono: typeof CheckCircle2; cla
   no_aplica: { icono: MinusCircle, clase: "text-tenue", texto: "No hizo falta" },
 };
 
-export interface AccionPaso { texto: string; alClic: () => void; cargando?: boolean; deshabilitado?: string | false; secundaria?: boolean }
+export interface AccionPaso {
+  texto: string; alClic: () => void; cargando?: boolean; deshabilitado?: string | false; secundaria?: boolean;
+  /** Una segunda acción del mismo paso, más discreta (soltar lo apartado), con su explicación. */
+  extra?: { texto: string; alClic: () => void; explica?: string };
+}
 
 /**
  * Los pasos de la hoja de validación (técnico → almacén → compras → salida),
@@ -47,10 +51,18 @@ export function PasosValidacion({ pasos, acciones }: { pasos: PasoValidacion[]; 
               {p.detalle && <p>{p.detalle}</p>}
             </div>
             {a && (
-              <Boton tamano="sm" variante={a.secundaria ? "secundario" : "primario"} onClick={a.alClic} cargando={a.cargando}
-                     disabled={!!a.deshabilitado} title={a.deshabilitado || undefined} className="self-start">
-                {a.texto}
-              </Boton>
+              <div className="flex flex-wrap gap-1.5">
+                <Boton tamano="sm" variante={a.secundaria ? "secundario" : "primario"} onClick={a.alClic} cargando={a.cargando}
+                       disabled={!!a.deshabilitado} title={a.deshabilitado || undefined}>
+                  {a.texto}
+                </Boton>
+                {a.extra && (
+                  <Boton tamano="sm" variante="fantasma" className="text-peligro" onClick={a.extra.alClic}
+                         data-explain={a.extra.explica} data-explain-title={a.extra.explica ? a.extra.texto : undefined}>
+                    {a.extra.texto}
+                  </Boton>
+                )}
+              </div>
             )}
           </li>
         );

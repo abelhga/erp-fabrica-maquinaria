@@ -11,7 +11,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { fecha, hace } from "@/lib/formato";
 import { cn, coincide } from "@/lib/utilidades";
-import { CLAVE, CRITICIDAD, horas, useServicioEnVivo, type OrdenMto } from "./datos";
+import { CLAVE, CRITICIDAD, horas, useServicioEnVivo, vecesPospuesto, type OrdenMto } from "./datos";
 import { EnlaceBoton, usePermisosServicio } from "./componentes/piezas";
 import { LateralMantenimiento } from "./componentes/LateralMantenimiento";
 import { GLOSARIO } from "@/tutorial/glosario";
@@ -91,6 +91,8 @@ export default function TerminalMantenimiento() {
               {o.detiene && <span className="inline-flex" data-explain={GLOSARIO.estadoMaquina} data-explain-title="Máquina parada"><Insignia tono="peligro">Parada</Insignia></span>}
               {o.vencida && <span className="inline-flex" data-explain={GLOSARIO.situacionPreventivo} data-explain-title="Vencido"><Insignia tono="peligro">Vencido {o.vence ? fecha(o.vence) : ""}</Insignia></span>}
               {!o.vencida && o.vence && o.estado === "pendiente" && <span className="text-tenue">Toca {fecha(o.vence)}</span>}
+              {o.pospuesto_veces > 0 && <span className="inline-flex" data-explain={GLOSARIO.pospuestoMto} data-explain-title="Pospuesto" title={o.pospuesto_motivo ?? undefined}>
+                <Insignia tono="aviso">{vecesPospuesto(o.pospuesto_veces)}</Insignia></span>}
               {o.criticidad && <span data-explain={GLOSARIO.criticidadMaquina}><Insignia tono={CRITICIDAD[o.criticidad].tono}>Criticidad {CRITICIDAD[o.criticidad].texto.toLowerCase()}</Insignia></span>}
               {o.puntos > 0 && <span className="text-tenue cifra" data-explain={GLOSARIO.checklistMantenimiento} data-explain-title="Checklist">Checklist {o.puntos_revisados}/{o.puntos}</span>}
               {!!o.horas_tramos && <span className="text-tenue" data-explain={GLOSARIO.tramoMantenimiento}>Llevan {horas(o.horas_tramos)}</span>}

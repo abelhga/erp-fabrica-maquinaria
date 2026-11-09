@@ -5,16 +5,12 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
 
 ## Por decidir o esperar a alguien
 
-- **Teléfono con IA, fase 4 (262, WhatsApp del vendedor):** falta en la nube aplicar la 262 y redesplegar
-  `telefono` (rutas `/accion` y `/resumen`) **antes** de prender «CRM externo» en el panel de voz. Después,
-  que cada vendedor quede ligado por su WhatsApp en «Quién contesta» (el primer mensaje de un número sin
-  ligar lo deja ahí «Sin persona»).
-- **Teléfono con IA, fase 3 (261, coaching y análisis):** falta en la nube aplicar la migración 261 y
-  redesplegar `telefono` (cambió el validador), **antes** de que voz empiece a mandar `coaching` y
-  `analisis`: sin la 261 caerían en `llamadas.datos`, que ve el dueño del cliente. Antes de aplicarla,
-  medir `llamadas_analitica`, `coaching_resumen` y las dos reglas nocturnas contra la nube (ensayo con
-  `raise exception`). Después: agregar el indicador 75 a las plantillas de vendedores y recepción, y el
-  relleno histórico desde voz (`llamada.historica`), con ensayo primero.
+- **Teléfono con IA, fase 4 (262, WhatsApp del vendedor):** ya está en la nube. Falta que cada vendedor
+  quede ligado por su WhatsApp en «Quién contesta» (el primer mensaje de un número sin ligar lo deja ahí
+  «Sin persona») y luego prender «CRM externo» en el panel de voz.
+- **Teléfono con IA, fase 3 (261, coaching y análisis):** ya está en la nube. Falta agregar el indicador 75
+  a las plantillas de vendedores y recepción, y el relleno histórico desde voz (`llamada.historica`), con
+  ensayo primero.
 - **Teléfono con IA, fase 1 (258):** ligar en «Quién contesta» los nombres que no se ligaron solos por
   el teléfono de su perfil (al ligarlos también se les asignan sus coachings).
 - **Conteo de lo que no cuadra con la hoja (Noemí, vence 5 y 6 nov):** 3 pendientes con 96

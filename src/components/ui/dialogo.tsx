@@ -3,15 +3,19 @@ import { X } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utilidades";
 
-/** Ventana modal centrada. `ancho` en clases de Tailwind para formularios largos. */
-export function Dialogo({ abierto, alCambiar, titulo, descripcion, children, pie, ancho = "max-w-lg" }: {
+/**
+ * Ventana modal centrada. `ancho` en clases de Tailwind para formularios largos. `sobreLateral`: se
+ * abre desde un panel lateral, y su sombra tiene que tapar también el panel (si no, queda a la vista
+ * y parece que se puede seguir usando).
+ */
+export function Dialogo({ abierto, alCambiar, titulo, descripcion, children, pie, ancho = "max-w-lg", sobreLateral }: {
   abierto: boolean; alCambiar: (v: boolean) => void; titulo: ReactNode; descripcion?: ReactNode;
-  children: ReactNode; pie?: ReactNode; ancho?: string;
+  children: ReactNode; pie?: ReactNode; ancho?: string; sobreLateral?: boolean;
 }) {
   return (
     <D.Root open={abierto} onOpenChange={alCambiar}>
       <D.Portal>
-        <D.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] data-[state=open]:animate-in" />
+        <D.Overlay className={cn("fixed inset-0 bg-black/40 backdrop-blur-[2px] data-[state=open]:animate-in", sobreLateral ? "z-50" : "z-40")} />
         <D.Content
           className={cn("fixed left-1/2 top-[8vh] z-50 w-[calc(100%-2rem)] -translate-x-1/2 tarjeta shadow-2xl max-h-[84vh] flex flex-col", ancho)}
         >

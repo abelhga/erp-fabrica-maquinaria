@@ -962,6 +962,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Clic en el recuadro «Pedido y cliente» abre el pedido de la orden. «Lo que se le vendió al cliente» trae la descripción de su partida, sin precio; «Imprimir» la saca en una hoja para el taller.",
    "Ventas y quien solo sigue el avance ven el compromiso, las etapas y la historia; el material, los planos y las horas son de planta, almacén, ingeniería y compras.",
    "«Validación de material» son los cinco pasos antes del taller, en orden: ingeniería revisa la lista, se aparta el material, se piden los faltantes a compras, almacén revisa la existencia física y la gerencia la libera. Cada paso guarda quién y cuándo. Sin la revisión de ingeniería no se puede liberar.",
+   "Si se apartó por error (o ese material va para otra orden), almacén o la gerencia usan «Soltar lo apartado» en el paso «Material apartado»: todo o solo unas partidas, con el motivo. Lo ya entregado al taller no cambia; si ya no queda nada apartado, el paso vuelve a Pendiente. No hace falta cancelar la orden.",
    "En Material, la lista sale agrupada por categoría (todo lo eléctrico junto, todo el material para aire, la tornillería…); con «Agrupar por» la cambias a subensamble (la parte del equipo donde va) y la próxima vez te sale como la dejaste. El buscador encuentra por nombre, clave o categoría, sin acentos.",
    "Falta es lo requerido que todavía no está surtido ni apartado; Pedido es lo que ya se pidió a compras para esta orden; Disponible es lo que hay en planta sin apartar para nadie.",
    "Al surtir, la lista también sale por categoría y con buscador; si escribiste cantidades en partidas que la búsqueda esconde, te avisa que también salen. Las cantidades empiezan vacías: toca el número de «Por surtir» o de «Apartado» para llenarlo. Si es una parte, lo demás queda por surtir.",
@@ -1264,6 +1265,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "«Etiquetas QR» abre una hoja para imprimir y recortar las etiquetas de todas las máquinas (o de las del filtro que tengas puesto). Pegada en la máquina, quien vea una falla la escanea con el celular y le sale el reporte de esa máquina, sin buscarla.",
    "En Máquinas, el filtro «Dadas de baja» muestra lo que ya no conviene reparar, con la fecha y el motivo. Al dar de alta, la categoría se elige de la lista o se escribe una nueva (impresora, aire acondicionado…); el tipo «Equipo de oficina» es para computadoras, impresoras y lo demás que no es del taller.",
    "Al abrir una orden preventiva, cada punto del checklist se marca Bien o Falla (con qué tiene); la orden no se cierra mientras falte alguno.",
+   "Si un preventivo no se puede hacer el día que toca, mantenimiento o la gerencia lo pasan a otra fecha con «Posponer» y el motivo (te sugiere el viernes que viene). Sale «Pospuesto» con cuántas veces y por qué, no cuenta como vencido hasta su fecha nueva y el plan de la máquina no cambia.",
    "Al cerrar una orden, mantenimiento anota qué se hizo y las horas que le dedicó (no las que estuvo parada la máquina); si le dieron play en la terminal, las horas ya vienen llenas."
   ]
  },
@@ -1312,6 +1314,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "«Carga de preventivo» proyecta de cada plan los preventivos de las próximas 8 semanas, por criticidad y con horas de técnico estimadas, para repartir antes las semanas pesadas.",
    "«Fallas contra tiempo de reparación» separa las máquinas que fallan seguido (crónicas: causa raíz, preventivo) de las que tardan en volver (agudas: refacciones, proveedor).",
    "«Lo abierto» reparte las órdenes abiertas por antigüedad; «Vuelven a fallar», las reparaciones que no duraron 30 días; «Horas del técnico», las horas de las órdenes cerradas, por quien las atendió. En «Por máquina» ves todo por máquina (clic abre su ficha) y lo descargas en CSV.",
+   "Un preventivo pospuesto cuenta a tiempo o tarde contra su fecha nueva, y no sale vencido antes; en «Preventivo a tiempo» dice cuántas veces se pospuso algo en el periodo, y en «Lo abierto», cuántas veces cada uno.",
    "Los números salen de las órdenes de mantenimiento: cuándo se reportó, cuándo se paró y volvió la máquina, cuándo se cerró y las horas del técnico. Si una orden se cierra sin esos datos, no cuenta bien. Quien ve costos también ve lo que costó cada máquina.",
    "Todos los tiempos (disponibilidad, horas paradas, MTBF y MTTR) son horas laborales del taller: no cuentan noches, fines de semana, feriados ni descansos, con el horario que pone la gerencia de producción. Lo dado de baja cuenta solo hasta el día de su baja."
   ]
@@ -1364,7 +1367,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 2: Dale Play al empezar; al dejarla, dale Pausa y elige por qué.",
    "Paso 3: Toca la tarjeta para abrir la orden: checklist, diagnóstico y refacciones.",
    "La usan mantenimiento y el personal de piso que atiende máquinas. Quien no es del personal de mantenimiento ve lo que está en trabajo, pero no da play.",
-   "Arriba está lo que traes en play (con cuánto llevas) y luego lo que está en pausa, primero lo último que pausaste, para regresar rápido. Abajo, los preventivos por hacer (los vencidos primero) y las fallas reportadas (las que tienen la máquina parada y las más críticas primero).",
+   "Arriba está lo que traes en play (con cuánto llevas) y luego lo que está en pausa, primero lo último que pausaste, para regresar rápido. Abajo, los preventivos por hacer (los vencidos primero; un pospuesto dice para cuándo quedó) y las fallas reportadas (las que tienen la máquina parada y las más críticas primero).",
    "Dar play en otra orden pausa la que traías: una persona trabaja una a la vez. Al pausar eliges por qué («Esperando refacción», «Me voy a otra», «Fin del día») o «Solo pausar». Si dos personas trabajan la misma máquina, cada quien le da play y sus horas se suman.",
    "En la orden palomeas el checklist, escribes el diagnóstico y pides refacciones. El play no pide diagnóstico; ese se escribe cuando ya sabes qué tiene.",
    "La orden la cierran mantenimiento o la gerencia de producción, y al cerrarla las horas trabajadas salen solas de los play."
@@ -4103,6 +4106,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Abre el cálculo de este artículo paso a paso, con sus números: consumo de los últimos meses, demanda, punto de reorden, lote, disponible y por qué quedó en este estado."
  },
  {
+  "clave": "botonPosponerMto",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "Pasa este preventivo a otra fecha, con el motivo. Te sugiere el viernes que viene (el día de lo atrasado) y lo puedes cambiar; tiene que ser después de la fecha que tiene, y de hoy en adelante. Le avisa a la gerencia de producción y al resto de mantenimiento. Solo mantenimiento y la gerencia de producción lo posponen, y solo si nadie lo ha empezado: si ya se empezó, ponlo en pausa en la terminal."
+ },
+ {
   "clave": "botonPrestarHerramienta",
   "modulos": [
    "servicio",
@@ -6677,7 +6688,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "De los preventivos que vencían en el periodo, cuántos se hicieron en su fecha o antes. Un preventivo hecho tarde ya no previno igual. Los vencidos son los que pasaron su fecha y siguen abiertos."
+  "texto": "De los preventivos que vencían en el periodo, cuántos se hicieron en su fecha o antes. Un preventivo hecho tarde ya no previno igual. Los vencidos son los que pasaron su fecha y siguen abiertos. Uno pospuesto cuenta con su fecha nueva, y abajo dice cuántas veces se pospuso algo en el periodo. El bono de mantenimiento lo mide igual, con la fecha nueva, y en su detalle dice cuántas veces se pospuso y por qué."
  },
  {
   "clave": "cuotaFijaCanal",
@@ -10148,7 +10159,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "Planes preventivos activos que ya pasaron su fecha o sus horas de uso. Abajo, cuántos planes activos hay. Lo ideal es cero; con clic vas a la pestaña Preventivos."
+  "texto": "Planes preventivos activos que ya pasaron su fecha o sus horas de uso (los pospuestos cuentan hasta que pase su fecha nueva). Abajo, cuántos planes activos hay. Lo ideal es cero; con clic vas a la pestaña Preventivos."
  },
  {
   "clave": "kpiServiciosEnCurso",
@@ -11927,7 +11938,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Aparta para esta orden lo que hay libre en planta de lo que le falta, hasta lo que necesita: sigue en el almacén, pero nadie más lo puede tomar. Lo que no alcanzó queda «Con faltantes»; «Volver a apartar» lo intenta otra vez cuando llega material. Pide la revisión de ingeniería primero: sin ella solo la gerencia de producción aparta, con el motivo, que queda en la orden. Si ingeniería baja o quita algo después, lo apartado de más se suelta solo."
+  "texto": "Aparta para esta orden lo que hay libre en planta de lo que le falta, hasta lo que necesita: sigue en el almacén, pero nadie más lo puede tomar. Lo que no alcanzó queda «Con faltantes»; «Volver a apartar» lo intenta otra vez cuando llega material. Pide la revisión de ingeniería primero: sin ella solo la gerencia de producción aparta, con el motivo, que queda en la orden. Si ingeniería baja o quita algo después, lo apartado de más se suelta solo. Si se apartó por error, almacén o la gerencia lo sueltan con «Soltar lo apartado»."
  },
  {
   "clave": "pasoLiberarOrden",
@@ -12704,7 +12715,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "El mantenimiento que le toca a una máquina por fecha, por horas de uso o lo que pase primero. La fecha puede ser cada tantos días, un día de la semana del mes (el primer lunes, el último viernes) o un día fijo del mes (el 15), cada uno o cada varios meses. Su orden se genera sola: por fecha, unos días antes de vencer; por horas, al llegar a ellas. Si cambias el calendario de un plan, la orden que ya salió y nadie ha tocado se mueve a la fecha nueva, o se cancela y vuelve a salir cuando toque."
+  "texto": "El mantenimiento que le toca a una máquina por fecha, por horas de uso o lo que pase primero. La fecha puede ser cada tantos días, un día de la semana del mes (el primer lunes, el último viernes) o un día fijo del mes (el 15), cada uno o cada varios meses. Su orden se genera sola: por fecha, unos días antes de vencer; por horas, al llegar a ellas. Si cambias el calendario de un plan, la orden que ya salió y nadie ha tocado se mueve a la fecha nueva, o se cancela y vuelve a salir cuando toque; si alguien la pospuso, se queda en la fecha que le pusieron."
  },
  {
   "clave": "planSalidaInventarioEnvio",
@@ -12842,6 +12853,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Las órdenes con material pendiente de entregar al taller, en el orden en que el taller las va a trabajar según el plan del taller. «Empieza» es el día en que el plan dice que arranca su siguiente etapa: sirve para tener el material listo antes de que vengan por él. «Venía de la hoja» es una orden que ya existía antes del ERP y puede tener material ya entregado: regístralo con «Ya se había entregado con la hoja»."
+ },
+ {
+  "clave": "pospuestoMto",
+  "modulos": [
+   "servicio",
+   "mantenimiento"
+  ],
+  "texto": "El preventivo se pasó a otra fecha porque no se pudo hacer el día que tocaba (un imprevisto, salir a un servicio, no se podía parar producción). Dice cuántas veces se ha pospuesto, la última razón, quién y cuándo, y qué día le tocaba según su plan. No sale vencido hasta su fecha nueva. El plan de la máquina no cambia: en los planes por mes, el siguiente sigue tocando en su mes; en los de cada tantos días, se cuenta desde que se hace, como siempre. El bono de mantenimiento también lo mide contra la fecha nueva, y en su detalle queda cuántas veces se pospuso y por qué."
  },
  {
   "clave": "precioConEnvioCanal",
@@ -14820,7 +14839,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "servicio",
    "mantenimiento"
   ],
-  "texto": "Al día: todavía no toca. Por vencer: ya entró en los días de aviso de su plan (cuando sale su orden) o ya lleva 90 % de sus horas. Vencido: ya pasó la fecha o llegó a las horas."
+  "texto": "Al día: todavía no toca. Por vencer: ya entró en los días de aviso de su plan (cuando sale su orden) o ya lleva 90 % de sus horas. Vencido: ya pasó la fecha o llegó a las horas. Un preventivo pospuesto no sale vencido hasta su fecha nueva."
  },
  {
   "clave": "sobranFaltanConteo",
@@ -14917,6 +14936,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "clave": "soloLoMio",
   "modulos": [],
   "texto": "Deja solo lo que está a tu nombre: tus pedidos, oportunidades, llamadas y reclamos; las requisiciones, compras, embarques y envíos que tú pediste; los servicios que programaste o en los que vas; las máquinas a tu cargo y la herramienta que tienes; lo que entra a tu área del taller; tus pendientes, tus vacaciones y tu cumpleaños."
+ },
+ {
+  "clave": "soltarApartado",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Suelta lo que está apartado para esta orden sin cancelarla: todo, o solo las partidas que elijas, con el motivo. Ese material vuelve a quedar libre y otra orden o pedido lo puede tomar. Lo que ya se le entregó al taller no cambia. Si ya no queda nada apartado, el paso «Material apartado» vuelve a Pendiente y se puede volver a apartar. Queda en la línea de tiempo con quién y por qué. Lo hacen almacén o la gerencia de producción."
  },
  {
   "clave": "stockSeguridad",
