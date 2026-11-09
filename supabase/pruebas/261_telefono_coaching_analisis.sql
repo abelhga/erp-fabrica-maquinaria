@@ -383,6 +383,9 @@ begin
     format('el equipo ligado sale con su nombre del catálogo: %s', m->'equipos');
   assert m->'preguntas' @> jsonb_build_array(jsonb_build_object('clave', llamada_texto_clave('banda pvc grado alimenticio'), 'n', 4)),
     format('las preguntas parecidas se juntan: %s', m->'preguntas');
+  -- La hora con su zona: sin ella el navegador la tomaba como suya y decía «hace 6 h» de algo de hace minutos.
+  assert (select bool_and(x->>'ultima' ~ '[+-]\d\d:\d\d$') from jsonb_array_elements(m->'preguntas') x),
+    format('«ultima» debe llevar su zona horaria: %s', m->'preguntas');
   assert m::text not like '%1234 5678%' and m::text not like '%8180002611%', 'la analítica NO debe llevar teléfonos';
   assert m->'objeciones' @> '[{"categoria": "precio"}]' and m->'intenciones' @> '[{"intencion": "cotizar"}]', 'objeciones e intenciones';
   perform pg_temp.como(v_dir);

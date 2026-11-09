@@ -715,8 +715,10 @@ begin
   pr0 as materialized (select a.llamada_id, a.local, q.t texto from a, unnest(a.preguntas_sin_respuesta) q(t)),
   pr_clave as materialized (select t.texto, llamada_texto_clave(t.texto) clave from (select distinct texto from pr0) t),
   pr as materialized (select pr0.*, k.clave from pr0 join pr_clave k on k.texto = pr0.texto),
+  -- «ultima» sale con su zona: la hora local suelta la leía el navegador como si fuera la suya, y fuera
+  -- de México (o en un navegador en UTC) una pregunta de hace minutos decía «hace 6 h».
   pr_top as (
-    select clave, count(distinct llamada_id) n, (array_agg(texto order by local desc))[1] ejemplo, max(local) ultima
+    select clave, count(distinct llamada_id) n, (array_agg(texto order by local desc))[1] ejemplo, max(local) at time zone tz ultima
     from pr where clave is not null group by clave order by count(distinct llamada_id) desc, max(local) desc limit 20
   ),
   ob as (
