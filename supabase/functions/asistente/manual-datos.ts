@@ -1409,7 +1409,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "En la tarjeta de Skydropx, quien administra envíos prueba la conexión (muestra el saldo) y elige la dirección de la planta de las que ya están en Skydropx, la clave de carta porte, el tipo de empaque y el formato de la guía. Sin dirección y carta porte no se puede generar guía.",
    "Ahí también pone el recargo que se le suma al flete cuando un vendedor lo cotiza en una cotización.",
    "La tarjeta «Teléfono (recepción con IA)» dice si el conmutador está mandando las llamadas y cuándo llegó la última. Para conectarlo, en Railway se ponen ERP_URL (la dirección que viene ahí, con su botón de copiar) y ERP_LLAVE, la llave que genera dirección con «Generar llave».",
-   "La llave se ve una sola vez: cópiala al momento. Generar otra deja sin servir la anterior. En «Quién contesta» dirección liga cada nombre del conmutador a su persona del ERP; los que traen el mismo teléfono que su perfil se ligan solos. Al ligarlo, sus llamadas y sus calificaciones de coaching anteriores quedan a su nombre."
+   "La llave se ve una sola vez: cópiala al momento. Generar otra deja sin servir la anterior. En «Quién contesta» dirección liga cada nombre del conmutador a su persona del ERP; los que traen el mismo teléfono que su perfil se ligan solos. Al ligarlo, a mano o solo, sus llamadas y sus calificaciones de coaching anteriores quedan a su nombre; si lo dejas en «Sin persona», dejan de ser suyas."
   ]
  },
  {
@@ -1534,7 +1534,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Cada quien ve solo sus llamadas. La gerencia de ventas y dirección ven a todo el equipo: la tabla del equipo trae el promedio, la tendencia y el fallo que más repite cada quien, y arriba eligen a una persona para ver lo suyo.",
    "La tendencia compara las últimas 4 semanas contra las 4 de antes, hasta el final del periodo, aunque el periodo sea más corto.",
    "Las llamadas que atendió la IA también se califican y las ve la gerencia. Un nombre «sin ligar» lo liga dirección en Configuración → Integraciones → Teléfono; desde ahí sus calificaciones son de esa persona.",
-   "Las calificaciones llegan solas de cada llamada cuando el conmutador está conectado; sin conmutador no hay coaching.",
+   "Las calificaciones llegan solas de las llamadas que el conmutador califica (no siempre son todas) cuando está conectado; sin conmutador no hay coaching.",
    "«Escuchar» abre la grabación mientras su enlace siga vigente; después ya no aparece. En Objetivos, «Calificación de coaching» es el promedio del mes de las llamadas que atendiste."
   ]
  },
@@ -4989,7 +4989,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "La nota de 1 a 10 de una llamada que atendiste. La calcula el conmutador con la rúbrica de la empresa: cada criterio pesa distinto y, si pasó algo grave, un tope la limita. Llega sola de cada llamada que atiendes. La ves tú, la gerencia de ventas y dirección; nunca otro vendedor, ni el dueño del cliente si contestaste tú."
+  "texto": "La nota de 1 a 10 de una llamada que atendiste. La calcula el conmutador con la rúbrica de la empresa: cada criterio pesa distinto y, si pasó algo grave, un tope la limita. Llega sola de las llamadas que atiendes y que el conmutador califica (no siempre son todas). La ves tú, la gerencia de ventas y dirección; nunca otro vendedor, ni el dueño del cliente si contestaste tú."
  },
  {
   "clave": "calificacionEnLlamada",
@@ -7264,7 +7264,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "Los nombres de quienes contestan en el conmutador, cada uno ligado a su persona del ERP. Así la llamada que atendió queda a su nombre: la ve, el lead es suyo si recibe leads y queda en la actividad del cliente. Se llena solo con la primera llamada que atiende cada quien; si trae el mismo teléfono que su perfil, se liga solo. Los demás los liga dirección; al ligarlo, sus llamadas anteriores y sus calificaciones de coaching también quedan a su nombre (los leads ya repartidos no se mueven)."
+  "texto": "Los nombres de quienes contestan en el conmutador, cada uno ligado a su persona del ERP. Así la llamada que atendió queda a su nombre: la ve, el lead es suyo si recibe leads y queda en la actividad del cliente. Se llena solo con la primera llamada que atiende cada quien; si trae el mismo teléfono que su perfil, se liga solo. Los demás los liga dirección; al ligarlo (a mano o solo), sus llamadas anteriores y sus calificaciones de coaching también quedan a su nombre (los leads ya repartidos no se mueven). Si lo dejas en «Sin persona», lo que se le había pasado deja de ser suyo."
  },
  {
   "clave": "disponibilidadMaquina",

@@ -390,3 +390,111 @@ begin
   assert (m->>'llamadas')::int > 0, 'dirección ve la analítica';
   perform pg_temp.como_postgres();
 end $$;
+
+-- =========================================================================
+-- 9. Lo que encontró la revisión adversarial (cada caso fallaba antes del arreglo)
+-- =========================================================================
+do $$
+declare v_e uuid; v_f uuid; v_g uuid; v_h uuid; v_dir uuid; v_cmp uuid; r jsonb; e1 uuid; e2 uuid; v_d uuid; v_n int; i int; emp uuid;
+  t0 timestamptz := now() - interval '3 hours';
+  v_mes date := date_trunc('month', (now() - interval '3 hours') at time zone 'America/Mexico_City')::date;
+begin
+  v_e := pg_temp.usuario('vene261@hegamex.com', '{ventas}');
+  v_f := pg_temp.usuario('venf261@hegamex.com', '{ventas}');
+  v_g := pg_temp.usuario('veng261@hegamex.com', '{ventas}');
+  v_dir := pg_temp.usuario('dir2261@hegamex.com', '{direccion}');
+  v_h := pg_temp.usuario('venh261@hegamex.com', '{ventas}');
+  update perfiles set telefono = '33 1111 2618' where id = v_h;
+
+  -- a) Dirección liga un nombre a quien no era y lo corrige con «Sin persona»: esa persona deja de ver
+  --    la calificación (y la llamada), y la siguiente foto no se la devuelve.
+  r := pg_temp.foto('CA261-M1', jsonb_build_object('telefono', '+525550002671', 'inicio', t0, 'nadie_contesto', false,
+         'atendio', jsonb_build_object('nombre', 'Persona Mal 261', 'telefono', null)), jsonb_build_object('coaching', pg_temp.coach(4.0)));
+  e1 := (r->>'llamada_id')::uuid;
+  select id into v_d from telefono_directorio where clave = 'nombre:persona mal 261';
+  perform pg_temp.como(v_dir);
+  perform fijar_directorio_telefono(v_d, v_f);
+  perform fijar_directorio_telefono(v_d, null);
+  perform pg_temp.como(v_f);
+  assert not exists (select 1 from llamada_coaching where llamada_id = e1), 'al desligarlo, NO debe seguir viendo la calificación de otra persona';
+  assert not exists (select 1 from llamadas where id = e1), 'al desligarlo, NO debe seguir viendo la llamada';
+  perform pg_temp.como_postgres();
+  r := pg_temp.foto('CA261-M1', jsonb_build_object('telefono', '+525550002671', 'inicio', t0, 'nadie_contesto', false,
+         'atendio', jsonb_build_object('nombre', 'Persona Mal 261', 'telefono', null)), jsonb_build_object('coaching', pg_temp.coach(4.5)));
+  assert (select perfil_id is null from llamada_coaching where llamada_id = e1), 'la foto siguiente NO debe devolverle el coaching';
+
+  -- b) Se liga solo por teléfono cuando por fin lo ponen en su perfil: lo de antes también es suyo.
+  r := pg_temp.foto('CA261-L1', jsonb_build_object('telefono', '+525550002672', 'inicio', t0 - interval '2 days', 'nadie_contesto', false,
+         'atendio', jsonb_build_object('nombre', 'Vendedor E 261', 'telefono', '+523311112615')), jsonb_build_object('coaching', pg_temp.coach(7.0)));
+  e2 := (r->>'llamada_id')::uuid;
+  assert (select perfil_id is null from llamada_coaching where llamada_id = e2), 'sin teléfono en su perfil todavía no es de nadie';
+  update perfiles set telefono = '33 1111 2615' where id = v_e;
+  r := pg_temp.foto('CA261-L2', jsonb_build_object('telefono', '+525550002673', 'inicio', t0, 'nadie_contesto', false,
+         'atendio', jsonb_build_object('nombre', 'Vendedor E 261', 'telefono', '+523311112615')), jsonb_build_object('coaching', pg_temp.coach(9.0)));
+  perform pg_temp.como(v_e);
+  assert (select count(*) from llamada_coaching where llamada_id in (e2, (r->>'llamada_id')::uuid)) = 2,
+    'al ligarse solo, la calificación de antes también debe ser suya';
+  assert exists (select 1 from llamadas where id = e2), 'y la llamada de antes también';
+  perform pg_temp.como_postgres();
+
+  -- c) La calificación sigue a la llamada: una foto sin coaching (se está rehaciendo) que corrige quién
+  --    atendió se la pasa a esa persona, y el indicador 75 mide lo mismo que ella ve.
+  update perfiles set telefono = '33 1111 2616' where id = v_g;
+  r := pg_temp.foto('CA261-L2', jsonb_build_object('telefono', '+525550002673', 'inicio', t0, 'nadie_contesto', false,
+         'atendio', jsonb_build_object('nombre', 'Vendedor G 261', 'telefono', '+523311112616')));
+  assert (select perfil_id = v_g from llamada_coaching where llamada_id = (r->>'llamada_id')::uuid), 'la calificación debe seguir a quien atendió';
+  insert into empleados (nombre, fecha_ingreso, usuario_id) values ('P261 E', '2024-01-01', v_e) returning id into emp;
+  assert (jsonb_array_length(objetivo_medir('calificacion_coaching', null, emp, v_mes)->'evidencias')) = 1
+     and (select count(*) from llamada_coaching where perfil_id = v_e) = 1, 'el indicador 75 debe medir lo mismo que la persona ve';
+
+  -- d) Calificación baja sostenida: con uno abierto (de otro mes) NO sale otro de la misma persona.
+  for i in 1..5 loop
+    perform pg_temp.foto('CA261-F' || i, jsonb_build_object('telefono', '+52555000268' || i, 'inicio', t0 - (i || ' days')::interval, 'nadie_contesto', false,
+      'atendio', jsonb_build_object('nombre', 'Vendedor F 261', 'telefono', '+523311112617')), jsonb_build_object('coaching', pg_temp.coach(3.0)));
+  end loop;
+  update perfiles set telefono = '33 1111 2617' where id = v_f;
+  perform pg_temp.foto('CA261-F6', jsonb_build_object('telefono', '+525550002686', 'inicio', t0, 'nadie_contesto', false,
+      'atendio', jsonb_build_object('nombre', 'Vendedor F 261', 'telefono', '+523311112617')), jsonb_build_object('coaching', pg_temp.coach(3.0)));
+  insert into revision_corridas default values returning id into i;
+  perform revision_correr_reglas(i);
+  assert (select count(*) from revision_hallazgos where regla = 'coaching_bajo_repetido' and registro_id = v_f::text and estado = 'abierto') = 1,
+    'F debía salir una vez';
+  -- El de antes sigue abierto (así queda cuando dirección no alcanza a verlo y cambia la huella).
+  update revision_hallazgos set huella = 'coaching_bajo_repetido:' || v_f || ':2000-01'
+  where regla = 'coaching_bajo_repetido' and registro_id = v_f::text;
+  perform revision_correr_reglas(i);
+  assert (select count(*) from revision_hallazgos where regla = 'coaching_bajo_repetido' and registro_id = v_f::text and estado = 'abierto') = 1,
+    'NO debe abrir otro de la misma persona mientras siga abierto el anterior';
+  -- Ya atendido, en el mismo mes no vuelve.
+  update revision_hallazgos set estado = 'corregido', cerrado_en = now(), huella = 'coaching_bajo_repetido:' || v_f || ':' || to_char(hoy_planta(), 'YYYY-MM')
+  where regla = 'coaching_bajo_repetido' and registro_id = v_f::text;
+  perform revision_correr_reglas(i);
+  assert (select count(*) from revision_hallazgos where regla = 'coaching_bajo_repetido' and registro_id = v_f::text) = 1,
+    'en el mismo mes NO debe volver a salir';
+
+  -- Dos llamadas pésimas entre tres buenas bajan el promedio, pero no son un patrón.
+  for i in 1..5 loop
+    perform pg_temp.foto('CA261-G' || i, jsonb_build_object('telefono', '+52555000267' || i, 'inicio', t0 - (i || ' days')::interval, 'nadie_contesto', false,
+      'atendio', jsonb_build_object('nombre', 'Vendedor H 261', 'telefono', '+523311112618')),
+      jsonb_build_object('coaching', pg_temp.coach((array[9.0, 8.0, 7.0, 2.0, 1.5])[i])));
+  end loop;
+  assert (select count(*) = 5 and avg(calificacion) < 6 from llamada_coaching where perfil_id = v_h), 'el caso debía ser de H y promediar menos de 6';
+  assert not exists (select 1 from revision_r_coaching_bajo_repetido() h where h.registro_id = v_h::text),
+    'dos llamadas malas entre buenas NO deben salir como calificación baja sostenida';
+
+  -- e) Preguntas: le llega a quien puede abrir a dónde lleva; «¿Cuánto cuesta?» a secas no es un hueco.
+  insert into permisos_rol (rol, modulo, nivel) values ('compras', 'catalogo', 3)
+  on conflict (rol, modulo) do update set nivel = 3;
+  v_cmp := pg_temp.usuario('cmp261@hegamex.com', '{compras}');
+  assert not exists (select 1 from revision_r_preguntas_sin_respuesta() h where v_cmp = any (h.responsables)),
+    'quien administra el catálogo pero NO puede abrir «Lo que dicen las llamadas» NO debe recibir el hallazgo';
+  assert exists (select 1 from revision_r_preguntas_sin_respuesta() h where v_dir = any (h.responsables)), 'dirección sí';
+  for i in 1..3 loop
+    perform pg_temp.foto('CA261-C' || i, jsonb_build_object('telefono', '+52555000269' || i, 'inicio', t0, 'nadie_contesto', false),
+      jsonb_build_object('analisis', jsonb_build_object('preguntas_sin_respuesta', jsonb_build_array(case i when 1 then '¿Cuánto cuesta?' when 2 then '¿Cuál es el precio?' else '¿Me da precio?' end))));
+  end loop;
+  assert not exists (select 1 from revision_r_preguntas_sin_respuesta() h where h.huella = 'preguntas_sin_respuesta:' || md5('precio')),
+    '«¿Cuánto cuesta?» a secas NO debe salir como hueco del catálogo';
+  assert llamada_texto_clave('¿Me da precio de la banda?') = llamada_texto_clave('¿Cuánto cuesta la banda?'),
+    'pedir precio con «me da» es la misma pregunta: ' || llamada_texto_clave('¿Me da precio de la banda?');
+end $$;

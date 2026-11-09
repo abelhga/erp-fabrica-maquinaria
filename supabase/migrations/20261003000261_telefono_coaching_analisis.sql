@@ -146,6 +146,8 @@ language sql immutable parallel safe set search_path = public as $$
         'quiero', 'quisiera', 'saber', 'se', 'si', 'sin', 'sobre', 'son', 'su', 'sus', 'tambien', 'tiene', 'tienen', 'tener',
         'u', 'un', 'una', 'unas', 'uno', 'unos', 'usted', 'ustedes', 'y', 'ya', 'manejan', 'maneja', 'venden', 'vende',
         'hacen', 'hace', 'fabrican', 'fabrica', 'pueden', 'puede', 'podrian', 'cuenta', 'cuentan', 'disponible', 'existe',
+        -- «¿me da precio de la banda?» es «¿cuánto cuesta la banda?»
+        'da', 'dan', 'dar', 'den', 'dieran', 'pasa', 'pasan', 'pasar',
         -- lo que acompaña a un dato de contacto (que ya se quitó) o a la cortesía
         'numero', 'telefono', 'correo', 'whatsapp', 'marque', 'marcar', 'marcame', 'llame', 'llamar', 'llamen', 'hablar', 'hableme',
         'favor', 'gracias', 'oiga', 'buenas', 'buenos', 'dias', 'tardes'])
@@ -227,6 +229,12 @@ begin
       having count(*) = 1;
       if v_perfil is not null then
         update telefono_directorio set perfil_id = v_perfil, ligado_en = now() where id = v_dir.id returning * into v_dir;
+        -- Se ligó solo: lo que ya había atendido con ese nombre también es suyo, igual que cuando
+        -- dirección lo liga a mano. Sin esto, sus calificaciones de antes de poner el teléfono en su
+        -- perfil se quedaban sin dueño para siempre (la tarjeta ya dice «se ligó solo» y nadie lo vuelve a ligar).
+        update llamadas set atendio_perfil = v_perfil where atendio_directorio = v_dir.id and atendio_perfil is null;
+        update llamada_coaching k set perfil_id = v_perfil from llamadas ll
+        where ll.id = k.llamada_id and ll.atendio_directorio = v_dir.id and k.atendio_tipo = 'persona' and k.perfil_id is null;
       end if;
     end if;
     v_perfil := v_dir.perfil_id;
@@ -409,9 +417,11 @@ begin
         generado_en = excluded.generado_en, recibido_en = now();
     end if;
   elsif c.atendio_perfil is not null then
-    -- Una foto sin coaching que por fin dice quién atendió: el coaching que ya había es suyo.
+    -- Una foto sin coaching (se está rehaciendo) que dice quién atendió: el coaching que ya había es
+    -- de esa persona. También si antes decía otra: la calificación sigue a la llamada, y así lo que
+    -- ve cada quien en «Coaching» es lo mismo que mide su indicador 75.
     update llamada_coaching set perfil_id = c.atendio_perfil
-    where llamada_id = c.id and atendio_tipo = 'persona' and perfil_id is null;
+    where llamada_id = c.id and atendio_tipo = 'persona' and perfil_id is distinct from c.atendio_perfil;
   end if;
 
   -- El análisis, con la misma regla. Los equipos se ligan al catálogo por su clave si existe; los
@@ -497,6 +507,15 @@ begin
   from llamadas ll
   where ll.id = k.llamada_id and ll.atendio_directorio = p_id and k.atendio_tipo = 'persona' and p_perfil is not null
     and (k.perfil_id is null or k.perfil_id = d.perfil_id);
+  -- Desligarlo («Sin persona») es casi siempre corregir un error: estaba ligado a quien no era. Lo que
+  -- se le había pasado deja de ser suyo, o seguiría viendo las calificaciones de otra persona. Las
+  -- llamadas también: si no, la siguiente foto le devolvería el coaching (sigue a la llamada).
+  if p_perfil is null and d.perfil_id is not null then
+    update llamada_coaching k set perfil_id = null
+    from llamadas ll
+    where ll.id = k.llamada_id and ll.atendio_directorio = p_id and k.perfil_id = d.perfil_id;
+    update llamadas set atendio_perfil = null where atendio_directorio = p_id and atendio_perfil = d.perfil_id;
+  end if;
 end $$;
 revoke execute on function public.fijar_directorio_telefono(uuid, uuid) from public, anon;
 grant execute on function public.fijar_directorio_telefono(uuid, uuid) to authenticated;
@@ -1354,7 +1373,9 @@ begin
         select k.llamada_id, k.calificacion, coalesce(ll.inicio, ll.creado_en) fecha,
           coalesce(ll.cliente_nombre, ll.lead_nombre, 'Llamada') quien, ll.area_nombre
         from llamada_coaching k join llamadas ll on ll.id = k.llamada_id
-        where ll.atendio_perfil = v_usuario and k.atendio_tipo = 'persona'
+        -- La misma llave que decide quién ve la calificación: lo que la persona ve en «Coaching» es
+        -- lo que se le mide.
+        where k.perfil_id = v_usuario and k.atendio_tipo = 'persona'
           and coalesce(ll.inicio, ll.creado_en) >= v_t0 and coalesce(ll.inicio, ll.creado_en) < v_t1
       )
       select case when count(*) = 0 then jsonb_build_object('sin_dato', true,
@@ -1381,9 +1402,11 @@ revoke execute on function public.objetivo_medir(text, text, uuid, date, jsonb) 
 -- Preguntas que nadie supo contestar y se repiten: dos llamadas o más en 7 días con la misma pregunta
 -- (dicha con otras palabras cuenta igual, llamada_texto_clave) es un hueco del catálogo, de una ficha
 -- o de un precio. Le llega a quien administra el catálogo o los costos (catalogo 3 o costos 3: quien
--- puede dar de alta lo que falta o ponerle precio; si nadie más lo tiene, es dirección). Se cierra
--- sola cuando deja de repetirse. Solo SQL: las preguntas no llevan datos de quien llamó (y aun así
--- pasan por sin_datos_personales al entrar).
+-- puede dar de alta lo que falta o ponerle precio) y además puede abrir «Lo que dicen las llamadas»
+-- (análisis 1 o ventas 3), que es a donde lleva el hallazgo; si nadie cumple las dos, a dirección. Se
+-- cierra sola cuando deja de repetirse. «¿Cuánto cuesta?» a secas (la clave queda solo en «precio») no
+-- sale: no dice qué falta, y dar precios por teléfono está prohibido a propósito, no es un hueco.
+-- Solo SQL: las preguntas no llevan datos de quien llamó (y aun así pasan por sin_datos_personales al entrar).
 create or replace function public.revision_r_preguntas_sin_respuesta() returns setof public.revision_hallazgo_nuevo
 language sql stable security definer set search_path = public, extensions as $$
   with pr0 as materialized (
@@ -1396,10 +1419,13 @@ language sql stable security definer set search_path = public, extensions as $$
   g as (
     select clave, count(distinct llamada_id) n, (array_agg(texto order by fecha desc))[1] ejemplo,
       jsonb_agg(jsonb_build_object('tipo', 'llamada', 'referencia', llamada_id, 'detalle', left(texto, 140), 'fecha', fecha) order by fecha desc) evidencia
-    from pr where clave is not null group by clave having count(distinct llamada_id) >= 2
+    from pr where clave is not null and clave <> 'precio' group by clave having count(distinct llamada_id) >= 2
   ),
   quienes as (
-    select array(select u from (select usuarios_con_permiso('catalogo', 3) u union select usuarios_con_permiso('costos', 3)) x order by u) r
+    select array(select u from (
+      (select usuarios_con_permiso('catalogo', 3) u union select usuarios_con_permiso('costos', 3))
+      intersect
+      (select usuarios_con_permiso('analisis', 1) union select usuarios_con_permiso('ventas', 3))) x order by u) r
   )
   select 'llamada_analisis', null::text, '/analisis/llamadas',
     format('%s llamadas en 7 días preguntaron: «%s»', g.n, left(g.ejemplo, 90)),
@@ -1411,10 +1437,14 @@ language sql stable security definer set search_path = public, extensions as $$
 $$;
 revoke execute on function public.revision_r_preguntas_sin_respuesta() from public, anon, authenticated;
 
--- Calificación baja sostenida de una persona: 5 llamadas o más en 2 semanas con promedio menor a 6.
+-- Calificación baja sostenida de una persona: 5 llamadas o más en 2 semanas con promedio menor a 6 y
+-- la mayoría de ellas (6 de cada 10) abajo de 6.
 -- Para dirección, como patrón y sin acusar (puede ser la rúbrica, llamadas difíciles o carga). El
 -- título no lleva nombre ni calificación: los títulos de los hallazgos le llegan a la IA nocturna
 -- para no repetirse (ya_dicho, 209), y esto es una evaluación de una persona. El nombre va en el detalle.
+-- Uno por persona y por mes a lo más, y ninguno nuevo mientras siga abierto el anterior: las dos
+-- semanas se traslapan, y con una huella por semana el mismo patrón (casi las mismas llamadas) salía
+-- otra vez cada lunes, con dos o tres abiertos de la misma persona si dirección no alcanzaba a verlos.
 create or replace function public.revision_r_coaching_bajo_repetido() returns setof public.revision_hallazgo_nuevo
 language sql stable security definer set search_path = public, extensions as $$
   with k as (
@@ -1426,7 +1456,11 @@ language sql stable security definer set search_path = public, extensions as $$
     select perfil_id, count(*) n, round(avg(calificacion), 1) promedio,
       jsonb_agg(jsonb_build_object('tipo', 'llamada', 'referencia', llamada_id, 'detalle', 'Calificación ' || calificacion || ' de 10',
                                    'fecha', fecha) order by fecha desc) evidencia
-    from k group by perfil_id having count(*) >= 5 and avg(calificacion) < 6
+    -- Sostenida: además del promedio, 6 de cada 10 llamadas o más abajo de 6. Medido con 90 días
+    -- simulados (unas 17 llamadas por persona cada 2 semanas): solo con el promedio, quien promedia 6.2
+    -- salía casi una noche de cada dos, y dos llamadas pésimas entre tres buenas (9, 8, 7, 2, 1.5) ya
+    -- eran «patrón». Con la mayoría abajo solo salen quienes de verdad andan bajos (5.5 o menos).
+    from k group by perfil_id having count(*) >= 5 and avg(calificacion) < 6 and avg((calificacion < 6)::int) >= 0.6
   )
   select 'perfiles', g.perfil_id::text, '/ventas/coaching?perfil=' || g.perfil_id,
     format('Coaching: un patrón de %s llamadas con calificación baja', g.n),
@@ -1439,16 +1473,19 @@ language sql stable security definer set search_path = public, extensions as $$
            group by c.v->>'clave' order by 2 limit 2) y) b where b.nombres is not null),
       'Puede ser la rúbrica, llamadas difíciles o carga de trabajo; vale la pena escuchar un par juntos y ver qué le ayudaría.'),
     g.evidencia, '{}'::uuid[], case when g.promedio < 4 then 'alta' else 'media' end, null::jsonb,
-    'coaching_bajo_repetido:' || g.perfil_id || ':' || to_char(current_date, 'IYYY-IW')
+    'coaching_bajo_repetido:' || g.perfil_id || ':' || to_char(hoy_planta(), 'YYYY-MM')
   from g
+  where not exists (select 1 from revision_hallazgos h
+                    where h.regla = 'coaching_bajo_repetido' and h.registro_id = g.perfil_id::text and h.estado = 'abierto')
 $$;
 revoke execute on function public.revision_r_coaching_bajo_repetido() from public, anon, authenticated;
 
 insert into public.revision_reglas (clave, modulo, nombre, descripcion, para, se_resuelve_sola) values
   ('preguntas_sin_respuesta', 'ventas', 'Preguntas de las llamadas que nadie supo contestar',
-   'Preguntas que se repiten en 2 llamadas o más en 7 días (con estas u otras palabras) y no se les supo contestar. Le sale a quien administra el catálogo o los costos; se cierra sola cuando deja de repetirse.',
+   'Preguntas que se repiten en 2 llamadas o más en 7 días (con estas u otras palabras) y no se les supo contestar. Le sale a quien administra el catálogo o los costos y puede ver el análisis de llamadas (si nadie, a dirección); se cierra sola cuando deja de repetirse.',
    'responsable', true),
   ('coaching_bajo_repetido', 'ventas', 'Calificación de coaching baja sostenida',
-   'Por persona: 5 llamadas o más en las últimas 2 semanas con calificación promedio menor a 6. Solo para dirección, como patrón para platicarlo, no como falta.',
+   'Por persona: 5 llamadas o más en las últimas 2 semanas con calificación promedio menor a 6 y la mayoría de ellas (6 de cada 10) abajo de 6. Solo para dirección, como patrón para platicarlo, no como falta. A lo más una vez al mes por persona, y no mientras siga abierta la anterior.',
    'direccion', false)
-on conflict (clave) do nothing;
+on conflict (clave) do update set modulo = excluded.modulo, nombre = excluded.nombre, descripcion = excluded.descripcion,
+  para = excluded.para, se_resuelve_sola = excluded.se_resuelve_sola;

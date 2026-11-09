@@ -292,7 +292,10 @@ que no trae la ciudad no hace olvidar la anterior).
   - `perfil_id` = `llamadas.atendio_perfil` resuelto por el directorio. Si nadie del ERP está ligado,
     se guarda con `perfil_id` null (lo ve solo la gerencia) y aparece en «Quién contesta» para
     ligarlo; al ligarlo (`fijar_directorio_telefono`) sus coachings se le asignan, igual que sus
-    llamadas. Si una foto posterior dice quién atendió, el coaching sin dueño también es suyo.
+    llamadas, y lo mismo cuando se liga solo por teléfono. La calificación sigue a la llamada: si una
+    foto posterior (sin `coaching`, porque se está rehaciendo) dice quién atendió, el coaching es de
+    esa persona aunque antes dijera otra. Desligarlo («Sin persona») le quita a esa persona las
+    llamadas y los coachings que se le habían pasado: casi siempre es corregir un ligado equivocado.
   - Un coaching con `atendio_tipo = "ia"` califica a la IA: no es de nadie (lo ve la gerencia).
 - **Quién ve el análisis**: quien ve la llamada (la regla de `llamadas`). Los agregados, con permiso de
   análisis (abajo).
@@ -333,8 +336,8 @@ que no trae la ciudad no hace olvidar la anterior).
 
 ### Objetivos
 Indicador 75 `calificacion_coaching` («Calificación de coaching», área ventas, automático, en
-puntos): el promedio del mes de las llamadas que la persona atendió (`atendio_perfil`) y que se le
-calificaron a ella (no a la IA). `posibles` = 10, así que la regla proporcional da promedio × 10 %.
+puntos): el promedio del mes de los coachings que son suyos (`llamada_coaching.perfil_id`, la misma
+llave que decide quién los ve) y que la califican a ella (no a la IA). `posibles` = 10, así que la regla proporcional da promedio × 10 %.
 Cada llamada es evidencia (tipo `llamada`) con su calificación; cuenta como incidencia la que queda
 por debajo de la mínima (parámetro `minima`, 6 si no se dice). Sin llamadas calificadas en el mes, no
 hay dato y lo califica el jefe. Se agrega a las plantillas desde la pantalla.
@@ -343,9 +346,15 @@ hay dato y lo califica el jefe. Se agrega a las plantillas desde la pantalla.
 - `preguntas_sin_respuesta` (ventas, para responsable, se cierra sola): la misma pregunta en 2
   llamadas o más en 7 días. Le llega a quien administra el catálogo o los costos
   (`usuarios_con_permiso('catalogo', 3)` ∪ `('costos', 3)`: quien puede dar de alta lo que falta o
-  ponerle precio; hoy es dirección, y si se le da ese nivel a alguien más, le llega a esa persona).
-- `coaching_bajo_repetido` (ventas, para dirección): una persona con 5 llamadas o más en 2 semanas y
-  promedio menor a 6, escrita como patrón y sin acusar. El título no lleva nombre ni calificación,
+  ponerle precio; hoy es dirección, y si se le da ese nivel a alguien más, le llega a esa persona),
+  siempre que además pueda abrir «Lo que dicen las llamadas» (análisis 1 o ventas 3), que es a donde
+  lleva; si nadie cumple las dos, a dirección. Una pregunta cuya clave queda solo en «precio»
+  («¿Cuánto cuesta?» a secas) no sale: no dice qué falta, y el conmutador no da precios a propósito.
+- `coaching_bajo_repetido` (ventas, para dirección): una persona con 5 llamadas o más en 2 semanas,
+  promedio menor a 6 y la mayoría (6 de cada 10) abajo de 6, escrita como patrón y sin acusar. A lo más
+  uno por persona y por mes, y ninguno nuevo mientras siga abierto el anterior. Medido con 90 días
+  simulados: solo con el promedio, quien promedia 6.2 salía casi una noche de cada dos y dos llamadas
+  pésimas entre tres buenas ya eran «patrón»; así solo salen quienes andan en 5.5 o menos. El título no lleva nombre ni calificación,
   porque los títulos de los hallazgos sí se le mandan a la IA nocturna para que no se repita; el
   nombre va en el detalle, que solo ve dirección.
 
