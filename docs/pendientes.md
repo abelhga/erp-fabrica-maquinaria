@@ -5,6 +5,11 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
 
 ## Por decidir o esperar a alguien
 
+- **Teléfono con IA, dónde está el lead (260):** falta en la nube aplicar la migración 260 (después
+  de 258 y 259) y redesplegar `telefono` para que también revise `lead.ciudad`/`lead.estado` (sin
+  redesplegar ya funciona: la función de borde pasa la foto tal cual). Después, rellenar el estado
+  de los leads del teléfono que ya entraron sin él: ensayo primero, solo cuando la llamada nombra
+  un solo estado.
 - **Teléfono con IA, fase 2 (259, «quién llama»):** falta en la nube aplicar la migración 259 y
   redesplegar `telefono` (`npx supabase functions deploy telefono --no-verify-jwt`); voz la usa en
   cuanto tenga `ERP_URL`/`ERP_LLAVE`. Antes de aplicarla, medir `telefono_contexto` contra la nube.

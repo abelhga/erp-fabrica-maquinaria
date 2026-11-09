@@ -51,6 +51,8 @@ comporta exactamente como antes de conectarlo.
     "empresa": "Agregados del Bajío",
     "telefono": "+523312345678",
     "correo": "juan@ejemplo.com",
+    "ciudad": "Tepatitlán",               // opcional (desde 260): como lo dijo quien llamó; null si no se sabe
+    "estado": "Jalisco",                  // opcional (desde 260): estado de la República, texto libre; null si no se sabe
     "interes": "Banda transportadora 20 m",
     "detalle": "Para grava, 60 t/h, la quiere en enero",
     "notas": "Llamó por el anuncio de Facebook"
@@ -87,8 +89,14 @@ borde `telefono` con la llave de servicio. La función de borde revisa `x-llave`
    vacío = lo capturó la IA, `leads.llamada_id` = la llamada, nota «Entró por el teléfono (IA).»
    seguida de `detalle` y `notas`). Si falta `interes` se usa el resumen; si falta `nombre`, la
    empresa o «Sin nombre». Sin teléfono, correo ni cliente no se crea (la base lo exige).
-   Las siguientes fotos solo llenan lo que le falta (empresa, teléfono, correo, notas): nunca
-   pisan lo capturado. Si una persona del ERP que recibe leads (`vendedores_leads()`) lo atendió,
+   `ciudad` se guarda sin espacios de más (tope 80 letras). `estado` se traduce al nombre del
+   catálogo de estados del ERP (`normalizar_estado_mx`, migración 260: «Edo. de México», «Edomex»
+   → «Estado de México»; «CDMX», «DF» → «Ciudad de México»; «nuevo leon» → «Nuevo León»;
+   «Coahuila de Zaragoza» → «Coahuila»); lo que no se reconoce sin duda («México» a secas, una
+   ciudad, un estado de otro país) queda vacío y la pantalla lo sigue pidiendo. El texto tal cual
+   queda en `llamadas.datos`. Sin los dos campos el lead entra igual que antes.
+   Las siguientes fotos solo llenan lo que le falta (empresa, teléfono, correo, ciudad, estado,
+   notas): nunca pisan lo capturado. Si una persona del ERP que recibe leads (`vendedores_leads()`) lo atendió,
    el lead se le asigna (`como_se_asigno = 'llamada'`), salvo que el cliente ya tenga vendedor
    vigente (manda el dueño, `'cliente'`). Si no, aplica el modo de leads: en bandeja queda por
    tomar; en modo gerente, por asignar; en modo «recepción elige» **no falla** (no hay quién

@@ -67,7 +67,7 @@ export function validar(cuerpo: unknown): { ok: true; evento: Evento } | { ok: f
   const ld = cuerpo.lead;
   if (!(ld === undefined || ld === null || esObjeto(ld))) return { ok: false, error: "lead debe ser un objeto o null" };
   if (esObjeto(ld)) {
-    for (const k of ["nombre", "empresa", "telefono", "correo", "interes", "detalle", "notas"]) {
+    for (const k of ["nombre", "empresa", "telefono", "correo", "ciudad", "estado", "interes", "detalle", "notas"]) {
       if (!textoONulo(ld[k])) return { ok: false, error: `lead.${k} debe ser texto o null` };
     }
   }

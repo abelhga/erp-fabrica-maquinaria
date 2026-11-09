@@ -14,7 +14,7 @@ const base = { version: 1, tipo: "llamada", call_sid: "CA-prueba", llamada: { te
 describe("validar", () => {
   it("acepta la foto del contrato", () => {
     expect(validar(base).ok).toBe(true);
-    expect(validar({ ...base, enviado_en: "2026-11-06T22:10:00Z", lead: { nombre: "Juan", interes: "Banda" },
+    expect(validar({ ...base, enviado_en: "2026-11-06T22:10:00Z", lead: { nombre: "Juan", interes: "Banda", ciudad: "Tepatitlán", estado: "Jalisco" },
       llamada: { ...base.llamada, duracion_seg: 252, atendio: { nombre: "Isaac", telefono: null }, atendio_ia: "Sofía" } }).ok).toBe(true);
   });
   it.each([
@@ -28,6 +28,7 @@ describe("validar", () => {
     ["atendio texto", { ...base, llamada: { atendio: "Isaac" } }, "atendio"],
     ["lead lista", { ...base, lead: [] }, "lead"],
     ["lead.correo número", { ...base, lead: { correo: 5 } }, "lead.correo"],
+    ["lead.estado número", { ...base, lead: { estado: 14 } }, "lead.estado"],
   ])("rechaza %s", (_n, cuerpo, texto) => {
     const r = validar(cuerpo);
     expect(r.ok).toBe(false);
