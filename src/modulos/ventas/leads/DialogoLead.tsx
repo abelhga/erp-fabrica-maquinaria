@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Inbox, UserCheck, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Inbox, PhoneIncoming, UserCheck, X } from "lucide-react";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
@@ -9,7 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { mensajeError, q } from "@/lib/consultas";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { LINEA, useFuentes, type Linea } from "../comun";
-import { CLAVE_LEADS, useConfigLeads, useVendedoresLeads } from "./datos";
+import { CLAVE_LEADS, hace, useConfigLeads, useVendedoresLeads, type EstadoLead } from "./datos";
 
 interface Coincidencia { cliente_id: string; nombre: string; ciudad: string | null; estado: string | null; vendedor: string | null; vigente: boolean; coincide: string }
 const VACIO = { nombre: "", empresa: "", telefono: "", correo: "", ciudad: "", estado_mx: "", interes: "", linea: "maquinaria" as Linea, fuente_id: "", notas: "", vendedor_id: "" };
@@ -35,10 +36,54 @@ function useCoincidencias(telefono: string, texto: string) {
   });
 }
 
+interface LlamadaReciente {
+  cuando: string; nadie_contesto: boolean; lead_id: string | null; lead_nombre: string | null;
+  vendedor: string | null; estado: EstadoLead | null; lo_ves: boolean;
+}
+
+/**
+ * ¿Ese número ya llamó esta semana? Si la IA del teléfono ya dejó su lead, no se captura otra vez.
+ * Con el teléfono completo (10 dígitos) y la misma espera que la búsqueda de clientes.
+ */
+function useLlamadaReciente(telefono: string) {
+  const [t, setT] = useState("");
+  useEffect(() => {
+    const id = setTimeout(() => setT(telefono), 350);
+    return () => clearTimeout(id);
+  }, [telefono]);
+  const digitos = t.replace(/\D/g, "");
+  return useQuery({
+    queryKey: ["llamada_reciente_de", digitos.slice(-10)],
+    enabled: digitos.length >= 10,
+    staleTime: 30_000,
+    queryFn: () => q<LlamadaReciente[]>(supabase.rpc("llamada_reciente_de", { p_tel: digitos })),
+  });
+}
+
+/** «Este número llamó hace 2 h; la IA ya registró su lead (de Isaac)», con la liga si lo puedes abrir. */
+function AvisoLlamada({ ll, alAbrir }: { ll: LlamadaReciente; alAbrir: () => void }) {
+  const como = ll.estado === "convertido" ? " y ya es oportunidad" : ll.estado === "descartado" ? " y se descartó" : "";
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-aviso/30 bg-aviso-suave px-3 py-2 text-sm"
+      data-explain={GLOSARIO.yaEntroPorTelefono} data-explain-title="Ya entró por teléfono">
+      <PhoneIncoming className="h-4 w-4 mt-0.5 text-aviso shrink-0" />
+      <span className="flex-1 min-w-0">
+        Este número llamó {hace(ll.cuando)}
+        {ll.lead_id ? <>; la IA ya registró su lead{ll.vendedor ? <> (de <b>{ll.vendedor}</b>)</> : " (todavía sin vendedor)"}{como}.</>
+          : ll.nadie_contesto ? "; nadie contestó y no dejó lead." : ", pero no dejó lead."}
+        {ll.lead_id && (ll.lo_ves
+          ? <Link to={`/ventas/leads?id=${ll.lead_id}`} onClick={alAbrir} className="block text-xs text-marca-texto hover:underline">Ver su lead →</Link>
+          : <span className="block text-xs text-tenue">No lo registres otra vez: {ll.vendedor ? "ya le llegó a su vendedor" : "ya está en los leads por repartir"}.</span>)}
+      </span>
+    </div>
+  );
+}
+
 /**
  * Registrar un lead mientras se habla por teléfono: quién, cómo contactarlo y qué busca.
  * Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es,
- * le llega directo a su vendedor. Enter lo guarda.
+ * le llega directo a su vendedor. Si el número ya llamó y la IA dejó su lead, lo avisa para no
+ * capturarlo dos veces. Enter lo guarda.
  */
 export function DialogoLead({ abierto, alCambiar }: { abierto: boolean; alCambiar: (v: boolean) => void }) {
   const qc = useQueryClient();
@@ -50,6 +95,7 @@ export function DialogoLead({ abierto, alCambiar }: { abierto: boolean; alCambia
   const modo = cfg.data?.modo ?? "bandeja";
   const vendedores = useVendedoresLeads(abierto && modo === "recepcion");
   const coincidencias = useCoincidencias(cliente ? "" : f.telefono, cliente ? "" : f.empresa || f.nombre);
+  const llamada = useLlamadaReciente(abierto ? f.telefono : "");
   const directo = cliente?.vigente && cliente.vendedor;
   const escoger = modo === "recepcion" && !directo;
 
@@ -105,6 +151,8 @@ export function DialogoLead({ abierto, alCambiar }: { abierto: boolean; alCambia
           <Campo etiqueta="Teléfono"><Entrada value={f.telefono} onChange={cambia("telefono")} inputMode="tel" placeholder="844 123 4567" /></Campo>
           <Campo etiqueta="Correo"><Entrada value={f.correo} onChange={cambia("correo")} type="email" /></Campo>
         </div>
+
+        {llamada.data?.[0] && <AvisoLlamada ll={llamada.data[0]} alAbrir={() => alCambiar(false)} />}
 
         {cliente ? (
           <div className="flex items-start gap-2 rounded-lg border border-ok/30 bg-ok-suave px-3 py-2 text-sm" data-explain={GLOSARIO.yaEsCliente} data-explain-title="Ya es cliente">

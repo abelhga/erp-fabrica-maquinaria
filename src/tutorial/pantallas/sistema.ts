@@ -90,6 +90,7 @@ export const SISTEMA: Record<string, Ayuda> = {
       "Ahí también pone el recargo que se le suma al flete cuando un vendedor lo cotiza en una cotización.",
       "La tarjeta «Teléfono (recepción con IA)» dice si el conmutador está mandando las llamadas y cuándo llegó la última. Para conectarlo, en Railway se ponen ERP_URL (la dirección que viene ahí, con su botón de copiar) y ERP_LLAVE, la llave que genera dirección con «Generar llave».",
       "La llave se ve una sola vez: cópiala al momento. Generar otra deja sin servir la anterior. En «Quién contesta» dirección liga cada nombre del conmutador a su persona del ERP; los que traen el mismo teléfono que su perfil se ligan solos. Al ligarlo, a mano o solo, sus llamadas y sus calificaciones de coaching anteriores quedan a su nombre; si lo dejas en «Sin persona», dejan de ser suyas.",
+      "Ahí también va el WhatsApp de cada vendedor, ligado a su persona: lo que contesta en el WhatsApp del teléfono («contactado», «no contestó», «perdido»…) se anota en el ERP a su nombre, con las mismas reglas. Un número que escribe sin estar ligado aparece «Sin persona» y no anota nada hasta que lo ligues.",
     ],
   },
 };

@@ -5,6 +5,10 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
 
 ## Por decidir o esperar a alguien
 
+- **Teléfono con IA, fase 4 (262, WhatsApp del vendedor):** falta en la nube aplicar la 262 y redesplegar
+  `telefono` (rutas `/accion` y `/resumen`) **antes** de prender «CRM externo» en el panel de voz. Después,
+  que cada vendedor quede ligado por su WhatsApp en «Quién contesta» (el primer mensaje de un número sin
+  ligar lo deja ahí «Sin persona»).
 - **Teléfono con IA, fase 3 (261, coaching y análisis):** falta en la nube aplicar la migración 261 y
   redesplegar `telefono` (cambió el validador), **antes** de que voz empiece a mandar `coaching` y
   `analisis`: sin la 261 caerían en `llamadas.datos`, que ve el dueño del cliente. Antes de aplicarla,

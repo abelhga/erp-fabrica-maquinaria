@@ -23,7 +23,11 @@ export interface Lead {
 }
 
 /** Cada vez que el vendedor le llamó o escribió, y si le contestó. */
-export interface IntentoLead { id: string; canal: CanalIntento; resultado: ResultadoIntento; nota: string | null; en: string; usuario: { nombre: string } | null }
+export interface IntentoLead {
+  id: string; canal: CanalIntento; resultado: ResultadoIntento; nota: string | null; en: string; usuario: { nombre: string } | null;
+  /** «whatsapp»: lo anotó el vendedor contestando el WhatsApp del teléfono, no en la pantalla. */
+  via: "whatsapp" | null;
+}
 export type CanalIntento = "llamada" | "whatsapp" | "correo" | "visita";
 /** «enviado»: le escribiste (WhatsApp o correo) y todavía no contesta. «no_contesto»: llamada o visita sin respuesta. */
 export type ResultadoIntento = "contesto" | "no_contesto" | "enviado";
