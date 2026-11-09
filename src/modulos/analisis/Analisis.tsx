@@ -14,6 +14,7 @@ const Planeacion = lazy(() => import("./Planeacion"));
 const Ubicaciones = lazy(() => import("./Ubicaciones"));
 const Entregas = lazy(() => import("./Entregas"));
 const Capacidad = lazy(() => import("./Capacidad"));
+const LlamadasAnalisis = lazy(() => import("./LlamadasAnalisis"));
 
 // Una sola ruta /analisis/* con sus pestañas: el periodo elegido (en la URL) se queda al
 // cambiar de vista, y cada vista tiene su liga para mandarla o regresar a ella.
@@ -25,6 +26,7 @@ const PESTANAS = [
   { ruta: "/analisis/planeacion", texto: "Planeación", periodo: false, explica: GLOSARIO.pestanaPlaneacion },
   { ruta: "/analisis/entregas", texto: "Entregas", periodo: true, explica: GLOSARIO.pestanaEntregas },
   { ruta: "/analisis/capacidad", texto: "Capacidad del taller", periodo: false, explica: GLOSARIO.pestanaCapacidadTaller },
+  { ruta: "/analisis/llamadas", texto: "Lo que dicen las llamadas", periodo: true, explica: GLOSARIO.pestanaLlamadasAnalisis },
   { ruta: "/analisis/ubicaciones", texto: "Ubicaciones por revisar", periodo: false, explica: GLOSARIO.pestanaUbicacionesRevisar },
 ];
 
@@ -36,6 +38,7 @@ const DESCRIPCION: Record<string, string> = {
   "/analisis/planeacion": "La meta del año repartida con la estacionalidad real, contra lo vendido.",
   "/analisis/entregas": "Si cumplimos lo que prometemos: entregas a tiempo y lo que ya no va a salir a tiempo con la fila del taller.",
   "/analisis/capacidad": "Si prometemos más de lo que el taller saca: lo prometido para cada mes contra lo que cabe.",
+  "/analisis/llamadas": "Qué piden, qué no se supo contestar y qué objetan quienes llaman por el conmutador.",
   "/analisis/ubicaciones": "Ciudades escritas a mano que no se reconocieron: corregirlas una vez afina el mapa para siempre.",
 };
 
@@ -68,6 +71,7 @@ export default function Analisis() {
           <Route path="planeacion" element={<Planeacion />} />
           <Route path="entregas" element={<Entregas />} />
           <Route path="capacidad" element={<Capacidad />} />
+          <Route path="llamadas" element={<LlamadasAnalisis />} />
           <Route path="ubicaciones" element={<Ubicaciones />} />
           <Route path="*" element={<MapaVentas />} />
         </Routes>

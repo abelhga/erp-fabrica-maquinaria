@@ -328,6 +328,21 @@ begin
   assert m->'criterios' @> '[{"clave": "siguiente_paso", "n": 3}]' and m->'fallos' @> '[{"clave": "no-cerro-fecha"}]'
      and (m->'peor'->>'calificacion')::numeric = 5.0 and (m->'mejor'->>'calificacion')::numeric = 7.0,
     format('criterios, fallos, mejor y peor: %s', m);
+  assert m->'personas'->0->'fallo'->>'nombre' = 'No cerró fecha' and (m->'personas'->0->>'reciente')::numeric = (m->>'promedio')::numeric
+     and m->'personas'->0->'anterior' = 'null'::jsonb and (m->>'reciente')::numeric = (m->>'promedio')::numeric,
+    format('fallo más repetido y tendencia de A (todo es de las últimas 4 semanas): %s', m->'personas');
+  -- La lista: A ve sus 3; el dueño del cliente (B), recepción y almacén NO ven la calificación de A.
+  assert (select count(*) = 3 and bool_and(x.perfil_id = v_a) from coaching_llamadas(v_mes - 31, current_date) x),
+    'A debe ver en la lista sus 3 llamadas calificadas y nada más';
+  perform pg_temp.como(v_b);
+  assert not exists (select 1 from coaching_llamadas(v_mes - 31, current_date) x where x.perfil_id is distinct from v_b),
+    'el dueño del cliente NO debe ver en la lista la calificación de quien atendió';
+  perform pg_temp.como(v_rec);
+  assert (select count(*) > 0 and bool_and(x.perfil_id = v_rec) from coaching_llamadas(v_mes - 31, current_date) x),
+    'recepción ve solo lo suyo en la lista';
+  perform pg_temp.como(v_alm);
+  assert not exists (select 1 from coaching_llamadas(v_mes - 31, current_date)), 'almacén NO debe ver ninguna calificación';
+  perform pg_temp.como(v_a);
   v_ok := false;
   begin perform coaching_resumen(v_mes - 31, current_date, v_d); v_ok := true; exception when insufficient_privilege then null; end;
   assert not v_ok, 'un vendedor NO debe poder pedir el coaching de otro';
@@ -337,6 +352,18 @@ begin
      and m->'personas' @> '[{"tipo": "ia"}]', format('la gerencia ve a todos, incluida la IA: %s', m->'personas');
   m := coaching_resumen(v_mes - 31, current_date, v_d);
   assert (m->>'n')::int = 5 and (m->>'promedio')::numeric = 4.6, format('la gerencia filtra por persona: %s', m);
+  assert m->'personas'->0->'fallo'->>'nombre' = 'No cerró fecha', format('el fallo más repetido de D: %s', m->'personas');
+  assert (select count(*) >= 5 and bool_or(x.atendio_tipo = 'ia') and bool_or(x.perfil_id = v_d)
+          from coaching_llamadas(v_mes - 31, current_date) x), 'la gerencia ve en la lista a todos, incluida la IA';
+  -- Tendencia: las últimas 4 semanas contra las 4 de antes, aunque el periodo pedido sea de una semana.
+  perform pg_temp.como_postgres();
+  perform pg_temp.foto('CA261-D-vieja', jsonb_build_object('telefono', '+525550002660', 'inicio', t0 - interval '50 days', 'nadie_contesto', false,
+    'atendio', jsonb_build_object('nombre', 'Vendedor D 261', 'telefono', '+523311112614')),
+    jsonb_build_object('coaching', pg_temp.coach(8.0)));
+  perform pg_temp.como(v_ger);
+  m := coaching_resumen(current_date - 6, current_date, v_d);
+  assert (m->'personas'->0->>'reciente')::numeric = 4.6 and (m->'personas'->0->>'anterior')::numeric = 8.0
+     and (m->>'anterior')::numeric = 8.0, format('la tendencia de D debía ser 4.6 contra 8.0: %s', m);
 
   v_ok := false;
   perform pg_temp.como(v_a);

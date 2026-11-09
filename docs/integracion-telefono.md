@@ -309,7 +309,16 @@ que no trae la ciudad no hace olvidar la anterior).
   nombre, n, promedio, semanas, mejor, peor}], `criterios` [{clave, nombre, peso, n, promedio}],
   `fallos` (los 10 más repetidos) [{clave, nombre, n}], `tono` [{clave, nombre, signo, n}], `mejor` y
   `peor` [{llamada_id, fecha, calificacion, perfil_id}]. La IA y los nombres sin ligar salen como su
-  propia «persona» (`tipo`, `perfil_id` null).
+  propia «persona» (`tipo`, `perfil_id` null). Cada persona trae también `fallo` (el que más repite) y
+  `reciente`/`anterior`: el promedio de las últimas 4 semanas hasta `p_hasta` y el de las 4 de antes,
+  aunque el periodo sea más corto (lo mismo, para todo lo visible, en `reciente`/`anterior` de arriba).
+- `coaching_llamadas(p_desde, p_hasta, p_perfil default null)`: las llamadas calificadas del periodo,
+  una por renglón (calificación, sin topes, cuántos topes, nombres de los fallos, quién atendió, quién
+  llamó, grabación), hasta 2,000. `security invoker`: la RLS de `llamada_coaching` decide. El detalle
+  (criterios con evidencia, topes, lo bueno…) se lee de `llamada_coaching` al abrir una.
+- Pantallas: «Coaching» en `/ventas/coaching` (`?perfil=` para la gerencia, `?llamada=` abre el
+  detalle) y «Lo que dicen las llamadas» en `/analisis/llamadas`. La ficha de cada llamada muestra la
+  calificación junto a la duración solo si `llamada_coaching` se la deja leer a quien la ve.
 - `llamadas_analitica(p_desde date, p_hasta date) → jsonb`, para `puede('analisis', 1)` o
   `puede('ventas', 3)` (si no, error 42501). Solo agregados, sin teléfonos ni nombres de quien llamó:
   `llamadas`, `nadie_contesto`, `con_analisis`, `stt_dudoso`, `pct_stt_dudoso`, `semanas`, `equipos`

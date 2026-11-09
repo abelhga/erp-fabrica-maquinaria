@@ -22,8 +22,8 @@
 --   * corrección de ubicación: cuando el conmutador vuelve a oír la grabación y corrige la ciudad o el
 --     estado («Antequila» → «Tequila»), el lead se corrige si sigue con lo que mandó el teléfono la vez
 --     anterior o vacío. Si una persona lo cambió, manda la persona.
---   * coaching_resumen y llamadas_analitica para las pantallas; el indicador 75 para Objetivos; dos
---     reglas nocturnas hechas solo en SQL (a la IA no le llega nada de esto).
+--   * coaching_resumen, coaching_llamadas y llamadas_analitica para las pantallas; el indicador 75
+--     para Objetivos; dos reglas nocturnas hechas solo en SQL (a la IA no le llega nada de esto).
 -- =============================================================================
 
 -- 0. Llamadas: si es de la historia, y un índice por fecha para la analítica -----------------------
@@ -506,6 +506,8 @@ grant execute on function public.fijar_directorio_telefono(uuid, uuid) to authen
 -- gerencia de ventas y dirección, el de todos o el de una persona (p_perfil). Es definer para no
 -- depender de la RLS de llamadas al tomar la fecha: la regla de quién ve qué está aquí, igual a la
 -- de llamada_coaching. Pedir el de otra persona sin ser gerencia es un error, no una lista vacía.
+-- La tendencia de cada quien (las últimas 4 semanas hasta p_hasta contra las 4 de antes) no depende
+-- del periodo elegido: con un periodo de 30 días también hay contra qué comparar.
 create or replace function public.coaching_resumen(p_desde date, p_hasta date, p_perfil uuid default null) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 declare
@@ -514,6 +516,8 @@ declare
   v_todos boolean := puede('ventas', 3);
   v_t0 timestamptz := p_desde::timestamp at time zone 'America/Mexico_City';
   v_t1 timestamptz := (p_hasta + 1)::timestamp at time zone 'America/Mexico_City';
+  v_h4 timestamptz := (p_hasta - 27)::timestamp at time zone 'America/Mexico_City';
+  v_h8 timestamptz := (p_hasta - 55)::timestamp at time zone 'America/Mexico_City';
   v_r jsonb;
 begin
   if v_yo is null then raise exception 'Necesitas entrar al ERP para ver el coaching' using errcode = '42501'; end if;
@@ -566,13 +570,39 @@ begin
   ),
   sem as (
     select k.semana, count(*) n, round(avg(k.calificacion), 1) promedio from k group by 1
+  ),
+  -- El fallo que más repite cada quien en el periodo (para la tabla del equipo).
+  fal_per as (
+    select distinct on (x.quien) x.quien, x.nombre, x.n from (
+      select k.quien, f.v->>'clave' clave, (array_agg(f.v->>'nombre' order by k.fecha desc))[1] nombre, count(distinct k.llamada_id) n
+      from k, jsonb_array_elements(k.fallos) f(v)
+      where jsonb_typeof(f.v) = 'object' and f.v->>'clave' is not null
+      group by 1, 2) x
+    order by x.quien, x.n desc, x.clave
+  ),
+  t0 as materialized (
+    select coalesce(k.perfil_id::text, k.atendio_tipo || ':' || coalesce(sin_acentos(ll.atendio_nombre), '')) quien,
+      k.calificacion, coalesce(ll.inicio, ll.creado_en) >= v_h4 reciente
+    from llamada_coaching k join llamadas ll on ll.id = k.llamada_id
+    where coalesce(ll.inicio, ll.creado_en) >= v_h8 and coalesce(ll.inicio, ll.creado_en) < v_t1
+      and case when p_perfil is not null then k.perfil_id = p_perfil
+               when v_todos then true
+               else k.perfil_id = v_yo end
+  ),
+  tend as (
+    select quien, round(avg(calificacion) filter (where reciente), 1) reciente, round(avg(calificacion) filter (where not reciente), 1) anterior
+    from t0 group by 1
   )
   select jsonb_build_object(
     'desde', p_desde, 'hasta', p_hasta, 'todos', v_todos and p_perfil is null,
     'n', (select count(*) from k),
     'promedio', (select round(avg(calificacion), 1) from k),
     'semanas', coalesce((select jsonb_agg(jsonb_build_object('semana', s.semana, 'n', s.n, 'promedio', s.promedio) order by s.semana) from sem s), '[]'),
+    'reciente', (select round(avg(calificacion), 1) from t0 where reciente),
+    'anterior', (select round(avg(calificacion), 1) from t0 where not reciente),
     'personas', coalesce((select jsonb_agg(jsonb_build_object('perfil_id', p.perfil_id, 'tipo', p.tipo, 'nombre', p.nombre, 'n', p.n, 'promedio', p.promedio,
+        'reciente', (select t.reciente from tend t where t.quien = p.quien), 'anterior', (select t.anterior from tend t where t.quien = p.quien),
+        'fallo', (select jsonb_build_object('nombre', f.nombre, 'n', f.n) from fal_per f where f.quien = p.quien),
         'semanas', (select jsonb_agg(jsonb_build_object('semana', s.semana, 'n', s.n, 'promedio', s.promedio) order by s.semana) from per_sem s where s.quien = p.quien),
         'mejor', (select jsonb_build_object('llamada_id', x.llamada_id, 'fecha', x.fecha, 'calificacion', x.calificacion)
                   from k x where x.quien = p.quien order by x.calificacion desc, x.fecha desc limit 1),
@@ -594,6 +624,33 @@ begin
 end $$;
 revoke execute on function public.coaching_resumen(date, date, uuid) from public, anon;
 grant execute on function public.coaching_resumen(date, date, uuid) to authenticated;
+
+-- Las llamadas calificadas del periodo, una por renglón, para la lista de «Coaching». Invoker: la
+-- RLS de llamada_coaching decide (cada quien lo suyo; ventas 3, todo) y la de llamadas pone el nombre
+-- de quien llamó solo a quien ya ve la llamada. Sin criterios ni evidencia: eso se pide al abrir una.
+create or replace function public.coaching_llamadas(p_desde date, p_hasta date, p_perfil uuid default null)
+returns table (llamada_id uuid, fecha timestamptz, perfil_id uuid, atendio_tipo text, atendio text, quien_llamo text,
+  duracion_seg int, area_nombre text, calificacion numeric, calificacion_sin_topes numeric, topes int, fallos text[],
+  grabacion_url text, grabacion_vence timestamptz)
+language sql stable security invoker set search_path = public as $$
+  select k.llamada_id, coalesce(ll.inicio, ll.creado_en), k.perfil_id, k.atendio_tipo,
+    case when k.atendio_tipo = 'ia' then coalesce('La IA (' || ll.atendio_ia || ')', 'La IA')
+         else coalesce(p.nombre, ll.atendio_nombre || ' (sin ligar)', 'Sin nombre') end,
+    coalesce(ll.cliente_nombre, ll.lead_nombre), ll.duracion_seg, ll.area_nombre, k.calificacion, k.calificacion_sin_topes,
+    jsonb_array_length(k.topes),
+    array(select f.v->>'nombre' from jsonb_array_elements(k.fallos) f(v) where jsonb_typeof(f.v) = 'object' and f.v->>'nombre' is not null),
+    ll.grabacion_url, ll.grabacion_vence
+  from llamada_coaching k
+  join llamadas ll on ll.id = k.llamada_id
+  left join perfiles p on p.id = k.perfil_id
+  where coalesce(ll.inicio, ll.creado_en) >= p_desde::timestamp at time zone 'America/Mexico_City'
+    and coalesce(ll.inicio, ll.creado_en) < (p_hasta + 1)::timestamp at time zone 'America/Mexico_City'
+    and (p_perfil is null or k.perfil_id = p_perfil)
+  order by 2 desc
+  limit 2000
+$$;
+revoke execute on function public.coaching_llamadas(date, date, uuid) from public, anon;
+grant execute on function public.coaching_llamadas(date, date, uuid) to authenticated;
 
 -- Lo que dicen las llamadas de un periodo: solo agregados, sin teléfonos ni nombres de quien llamó.
 -- Para quien ve análisis o la gerencia de ventas. Definer: con la RLS de llamadas, alguien con

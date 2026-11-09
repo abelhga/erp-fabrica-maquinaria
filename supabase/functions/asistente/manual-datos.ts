@@ -211,6 +211,25 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   ]
  },
  {
+  "ruta": "/analisis/llamadas",
+  "nombre": "Análisis y metas › llamadas",
+  "modulos": [
+   "analisis"
+  ],
+  "nivel": 1,
+  "texto": [
+   "Lo que dicen las llamadas del conmutador: qué equipos piden, qué no se supo contestar, qué objetan y a qué horas llaman.",
+   "Paso 1: Elige el periodo arriba; todo se cuenta con las llamadas de esas fechas.",
+   "Paso 2: Revisa las preguntas sin respuesta: lo que se repite suele faltar en el catálogo o en precios.",
+   "Paso 3: Dale clic a un equipo ligado para abrirlo en el catálogo.",
+   "Solo son cifras juntas: no salen teléfonos ni nombres de quien llamó.",
+   "Equipos, preguntas, objeciones, desenlaces e intenciones salen de las llamadas que ya traen el análisis del conmutador; las llamadas, las horas y «nadie contestó» cuentan todas.",
+   "Las preguntas dichas con otras palabras se juntan. Si una se repite en 2 llamadas o más en 7 días, también sale en «Por revisar» para quien administra el catálogo o los costos.",
+   "Un periodo de más de 400 días cuenta solo los últimos 400.",
+   "Sin conmutador conectado no hay nada que contar: se conecta en Configuración → Integraciones → Teléfono."
+  ]
+ },
+ {
   "ruta": "/analisis/planeacion",
   "nombre": "Análisis y metas › planeacion",
   "modulos": [
@@ -1390,7 +1409,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "En la tarjeta de Skydropx, quien administra envíos prueba la conexión (muestra el saldo) y elige la dirección de la planta de las que ya están en Skydropx, la clave de carta porte, el tipo de empaque y el formato de la guía. Sin dirección y carta porte no se puede generar guía.",
    "Ahí también pone el recargo que se le suma al flete cuando un vendedor lo cotiza en una cotización.",
    "La tarjeta «Teléfono (recepción con IA)» dice si el conmutador está mandando las llamadas y cuándo llegó la última. Para conectarlo, en Railway se ponen ERP_URL (la dirección que viene ahí, con su botón de copiar) y ERP_LLAVE, la llave que genera dirección con «Generar llave».",
-   "La llave se ve una sola vez: cópiala al momento. Generar otra deja sin servir la anterior. En «Quién contesta» dirección liga cada nombre del conmutador a su persona del ERP; los que traen el mismo teléfono que su perfil se ligan solos."
+   "La llave se ve una sola vez: cópiala al momento. Generar otra deja sin servir la anterior. En «Quién contesta» dirección liga cada nombre del conmutador a su persona del ERP; los que traen el mismo teléfono que su perfil se ligan solos. Al ligarlo, sus llamadas y sus calificaciones de coaching anteriores quedan a su nombre."
   ]
  },
  {
@@ -1497,6 +1516,26 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Al juntar, lo que le falte al que se queda (RFC, régimen, ciudad, vendedor) lo toma del otro, y el otro se borra. Lo hacen la gerencia de ventas, o tú si los dos clientes son tuyos o libres.",
    "Si otro cliente tiene el mismo RFC, arriba sale el aviso con su botón «Juntar»; si es una sucursal, déjalo así.",
    "Si el cliente ha llamado al conmutador, abajo de «Actividad» sale «Llamadas»: cuándo, quién contestó o «Nadie contestó», cuánto duró y de qué se habló. «Escuchar» abre la grabación mientras su enlace siga vigente. Si la atendió alguien del ERP, también queda en «Actividad» a su nombre."
+  ]
+ },
+ {
+  "ruta": "/ventas/coaching",
+  "nombre": "Coaching",
+  "modulos": [
+   "leads"
+  ],
+  "nivel": 1,
+  "texto": [
+   "Cómo van tus llamadas: la calificación que el conmutador le pone a cada llamada que atiendes, qué te sale bien, qué fallos repites y cómo mejorar.",
+   "Paso 1: Elige el periodo arriba y revisa tu calificación semana a semana.",
+   "Paso 2: Escucha tu mejor y tu peor llamada, una tras otra.",
+   "Paso 3: Abre una llamada de la lista para ver cada criterio con la frase que lo justifica.",
+   "La calificación va de 1 a 10 y la calcula el conmutador con la rúbrica de la empresa: cada criterio tiene su peso y, si pasó algo grave (por ejemplo, colgar sin dejar cómo dar seguimiento), un tope la limita. El ERP no la recalcula.",
+   "Cada quien ve solo sus llamadas. La gerencia de ventas y dirección ven a todo el equipo: la tabla del equipo trae el promedio, la tendencia y el fallo que más repite cada quien, y arriba eligen a una persona para ver lo suyo.",
+   "La tendencia compara las últimas 4 semanas contra las 4 de antes, hasta el final del periodo, aunque el periodo sea más corto.",
+   "Las llamadas que atendió la IA también se califican y las ve la gerencia. Un nombre «sin ligar» lo liga dirección en Configuración → Integraciones → Teléfono; desde ahí sus calificaciones son de esa persona.",
+   "Las calificaciones llegan solas de cada llamada cuando el conmutador está conectado; sin conmutador no hay coaching.",
+   "«Escuchar» abre la grabación mientras su enlace siga vigente; después ya no aparece. En Objetivos, «Calificación de coaching» es el promedio del mes de las llamadas que atendiste."
   ]
  },
  {
@@ -4943,6 +4982,26 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Una fila por persona y una barra por servicio, dos semanas a la vez; los fines de semana van sombreados. El color es el tipo de servicio y, si la barra se ve más clara, ya se cerró. Pasa el mouse por una barra para ver su horario y sus horas de taller; con clic abres el servicio."
  },
  {
+  "clave": "calificacionCoaching",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "La nota de 1 a 10 de una llamada que atendiste. La calcula el conmutador con la rúbrica de la empresa: cada criterio pesa distinto y, si pasó algo grave, un tope la limita. Llega sola de cada llamada que atiendes. La ves tú, la gerencia de ventas y dirección; nunca otro vendedor, ni el dueño del cliente si contestaste tú."
+ },
+ {
+  "clave": "calificacionEnLlamada",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "La calificación de coaching de esta llamada, de 1 a 10. Solo la ves si tú la atendiste o eres de la gerencia de ventas o dirección. Clic para ver de dónde sale."
+ },
+ {
   "clave": "calificacionIndicador",
   "modulos": [
    "rrhh",
@@ -4953,6 +5012,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Los puntos que sacó en este indicador contra su peso, que es lo más que puede dar. Verde: todo el peso; amarillo: una parte; rojo: 0. Un guion: falta calificarlo."
+ },
+ {
+  "clave": "calificacionSinTopes",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Lo que salía con los pesos de cada criterio antes de aplicar los topes. Si es más alta que la calificación, un tope la bajó: abajo dice cuál y por qué."
  },
  {
   "clave": "cambiarCompromisoOrden",
@@ -6458,6 +6527,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Días que da el proveedor para pagar. El vencimiento de cada orden se fija al recibirla: fecha de recepción más estos días. Sin crédito, es de contado."
  },
  {
+  "clave": "criterioCoaching",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cada cosa que se revisa en la llamada (el saludo, entender la necesidad, los datos técnicos, el siguiente paso con fecha…), con su peso: entre más pesa, más mueve la calificación. Cada uno lleva una nota de 0 a 10 y la frase de la llamada que la justifica. Los criterios y sus pesos los define la empresa en el conmutador. La barra es el promedio del periodo."
+ },
+ {
   "clave": "criterioRepartoGasto",
   "modulos": [
    "importaciones"
@@ -6825,6 +6904,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuánto abajo del precio de lista va lo cotizado del catálogo, sumando todos los descuentos (en pesos y sin IVA)."
  },
  {
+  "clave": "desenlaceLlamada",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "En qué terminó la llamada: se pasó a una persona, dejó un lead, se resolvió en la misma llamada, colgaron antes de terminar o no era de nada (número equivocado, publicidad)."
+ },
+ {
   "clave": "deshacerCambiosHorario",
   "modulos": [
    "produccion",
@@ -7178,7 +7264,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "Los nombres de quienes contestan en el conmutador, cada uno ligado a su persona del ERP. Así la llamada que atendió queda a su nombre: la ve, el lead es suyo si recibe leads y queda en la actividad del cliente. Se llena solo con la primera llamada que atiende cada quien; si trae el mismo teléfono que su perfil, se liga solo. Los demás los liga dirección; al ligarlo, sus llamadas anteriores también quedan a su nombre (los leads ya repartidos no se mueven)."
+  "texto": "Los nombres de quienes contestan en el conmutador, cada uno ligado a su persona del ERP. Así la llamada que atendió queda a su nombre: la ve, el lead es suyo si recibe leads y queda en la actividad del cliente. Se llena solo con la primera llamada que atiende cada quien; si trae el mismo teléfono que su perfil, se liga solo. Los demás los liga dirección; al ligarlo, sus llamadas anteriores y sus calificaciones de coaching también quedan a su nombre (los leads ya repartidos no se mueven)."
  },
  {
   "clave": "disponibilidadMaquina",
@@ -7652,6 +7738,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La pantalla se actualiza sola cuando alguien registra algo (un pedido, un cobro, un avance de taller). No hace falta recargar."
  },
  {
+  "clave": "equipoCoaching",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cada quien que atendió llamadas calificadas en el periodo, con su promedio, su tendencia y el fallo que más repite. La IA también se califica. «Sin ligar» es un nombre del conmutador que todavía no está ligado a su persona del ERP: dirección lo liga en Configuración → Integraciones → Teléfono («Quién contesta») y desde entonces sus calificaciones son de esa persona. Clic en alguien para ver lo suyo."
+ },
+ {
   "clave": "equipoFabricado",
   "modulos": [
    "costeo",
@@ -7690,6 +7786,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Los equipos que le hemos hecho a este cliente, con su número de serie y su pedido. En una garantía es obligatorio elegirlo: de ahí sale si sigue vigente. Si no es nuestro o no aparece, deja «Otro equipo» y escríbelo abajo."
+ },
+ {
+  "clave": "equiposPedidos",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Los equipos que más se mencionaron en las llamadas del periodo, contados una vez por llamada. Lo que se dice igual con otras palabras («banda», «bandas transportadoras») se cuenta junto. Si el conmutador lo ligó a su clave, el nombre abre el artículo en el catálogo. La rayita es semana a semana."
  },
  {
   "clave": "equiposTerminados",
@@ -8148,6 +8251,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La calificación de los objetivos de una persona en un mes. Al empezar cada mes se arma sola la del mes que terminó, para quien tiene puesto asignado, con lo que el sistema ya puede medir; lo demás lo califica su jefe."
  },
  {
+  "clave": "evidenciaCoaching",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "La frase de la llamada en la que se basa la nota de un criterio, tal como se dijo. «Escuchar desde…» abre la grabación en ese momento mientras el enlace siga vigente. Si el criterio no aplicó en esa llamada, va sin frase."
+ },
+ {
   "clave": "evidenciaEmpaque",
   "modulos": [
    "inventario",
@@ -8340,6 +8453,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Cuántas fallas le reportaron en los últimos 12 meses, sin contar las canceladas. En la lista de máquinas, abajo, las horas que estuvo parada en ese tiempo (por fallas o mientras le hacían un preventivo)."
+ },
+ {
+  "clave": "falloCoaching",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Un error concreto que se notó en la llamada («No cerró fecha», «No pidió la ubicación»). Sale de una lista fija de la empresa, así que se puede contar cuál se repite más: el número es en cuántas llamadas salió."
  },
  {
   "clave": "faltanHoras",
@@ -9820,6 +9943,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que lleva la cuadrilla o la reparación: sale de almacén con el folio del servicio, o se pide a compras si no hay."
  },
  {
+  "clave": "intencionLlamada",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Para qué llamaron: cotizar, una factura, un proveedor que nos quiere vender, empleo, un envío, soporte, seguimiento de algo que ya está en curso, u otra cosa."
+ },
+ {
   "clave": "intentoLead",
   "modulos": [
    "ventas",
@@ -10258,7 +10388,21 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Las llamadas que entraron por el conmutador con IA: cuándo, quién contestó (o «Nadie contestó»), cuánto duró, el área y un resumen de lo que se habló. «Escuchar» abre la grabación mientras su enlace siga vigente. Las ven el vendedor del cliente o del lead, quien la atendió, la gerencia de ventas y dirección; las que no son de nadie, también recepción. Si la atendió alguien del ERP y es de un cliente, también queda en «Actividad» a su nombre."
+  "texto": "Las llamadas que entraron por el conmutador con IA: cuándo, quién contestó (o «Nadie contestó»), cuánto duró, el área y un resumen de lo que se habló. «Escuchar» abre la grabación mientras su enlace siga vigente. Las ven el vendedor del cliente o del lead, quien la atendió, la gerencia de ventas y dirección; las que no son de nadie, también recepción. La calificación de coaching, junto a la duración, es aparte: solo la ven quien atendió la llamada, la gerencia de ventas y dirección, así que el dueño del cliente no ve la de otro vendedor. Si la atendió alguien del ERP y es de un cliente, también queda en «Actividad» a su nombre."
+ },
+ {
+  "clave": "llamadasConAnalisis",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Cuántas llamadas del periodo ya traen el análisis del conmutador. Equipos, preguntas, objeciones, desenlaces e intenciones salen solo de esas."
+ },
+ {
+  "clave": "llamadasPorHoraDia",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Cuántas llamadas entran a cada hora y cada día de la semana, y cuántas de esas nadie contestó. Sirve para ver a qué horas hace falta alguien más al teléfono."
  },
  {
   "clave": "llaveBono",
@@ -10634,6 +10778,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "clave": "mejoresClientesAnio",
   "modulos": [],
   "texto": "Los 8 clientes que más han comprado este año, con IVA y en pesos: lo del libro de ventas de la hoja más los pedidos del ERP no cancelados. Clic para abrir su ficha."
+ },
+ {
+  "clave": "mejorPeorLlamada",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "La llamada con la calificación más alta y la más baja del periodo. Escuchar las dos, una tras otra, es la forma más rápida de ver qué cambia."
  },
  {
   "clave": "mensajeIALead",
@@ -11218,6 +11372,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "El número de venta de Mercado Libre (o del sitio web). No se puede repetir dentro del mismo canal, así nadie captura dos veces la misma venta."
+ },
+ {
+  "clave": "objecionLlamada",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Lo que frenó a quien llamó, en categorías fijas: precio, tiempo de entrega, ya tiene proveedor, lo va a pensar, financiamiento, especificación u otro. Abajo de cada una, ejemplos de cómo lo dijeron."
  },
  {
   "clave": "ocAtrasada",
@@ -12353,6 +12514,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Todos los movimientos de inventario, con quién, cuándo y para qué. Filtra por tipo, almacén, persona y fechas (abre con los últimos 30 días) y bájalo a Excel con el botón de CSV."
  },
  {
+  "clave": "pestanaLlamadasAnalisis",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Lo que dicen las llamadas del conmutador: qué equipos piden, qué preguntas no se supieron contestar, qué objetan, para qué llaman y en qué termina cada llamada. Solo números juntos, sin quién llamó."
+ },
+ {
   "clave": "pestanaLosQuePedi",
   "modulos": [],
   "texto": "Lo que tú pediste a otros y sigue abierto. Si se lo pediste a varias personas sale una sola vez, con quién ya terminó. Con la X lo cancelas."
@@ -12810,6 +12978,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Una pregunta de una publicación que está pausada o cerrada en Mercado Libre. Mercado Libre ya no deja contestarla, así que no sale por contestar ni cuenta en «Preguntas sin contestar». Si la publicación se vuelve a activar, la pregunta regresa sola."
+ },
+ {
+  "clave": "preguntaSinRespuesta",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Algo que preguntó quien llamó y no se le supo contestar en la llamada. Se juntan las que preguntan lo mismo con otras palabras. Las que se repiten suelen ser un hueco del catálogo, de una ficha técnica o de un precio: si se repite en 2 llamadas o más en 7 días, también le sale en «Por revisar» a quien administra el catálogo o los costos."
  },
  {
   "clave": "preguntasSinContestarML",
@@ -14405,6 +14580,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que conviene revisar de una publicación: que no esté ligada a un artículo, que su precio se aleje 2 % o más del sugerido, que publique más piezas de las que hay libres en planta, que tenga menos de 3 fotos, o que tenga 50 visitas o más en 30 días sin ninguna venta."
  },
  {
+  "clave": "senalTono",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cómo sonó la llamada: a favor («Sonó cálido») o en contra («Interrumpió»). El número es en cuántas llamadas del periodo salió cada una."
+ },
+ {
   "clave": "seQuedoML",
   "modulos": [
    "ventas",
@@ -14739,6 +14924,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Piezas extra que siempre deben quedar, por si la entrega se atrasa. Se suman al punto de reorden. Vacío es cero."
  },
  {
+  "clave": "sttDudoso",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Las llamadas en las que el reconocedor de voz no entendió bien partes de lo que se dijo (ruido, mala señal, hablaron encimados). Lo que sale de esas llamadas puede traer errores; si el porcentaje sube, conviene revisar la línea."
+ },
+ {
   "clave": "subensamble",
   "modulos": [
    "costeo",
@@ -15055,6 +15247,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El tema con el que abre el ERP para todos. Cada persona puede cambiarlo con el botón de la luna o el sol (arriba a la derecha); lo que escoja se queda en su navegador y manda sobre este."
  },
  {
+  "clave": "tendenciaCoaching",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "El promedio de las últimas 4 semanas contra el de las 4 semanas de antes, en puntos. Flecha arriba: va mejorando. Se cuenta hasta el final del periodo elegido, aunque el periodo sea más corto."
+ },
+ {
   "clave": "tendenciaUsoErp",
   "modulos": [
    "admin"
@@ -15327,6 +15529,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "analisis"
   ],
   "texto": "Los clientes que más compraron en el periodo. La primera cifra chica es lo que pesa cada uno en la venta; la segunda, lo que juntan del primero hasta él. Si hay más de 10, «Ver 15» muestra más; clic en uno para abrir su ficha."
+ },
+ {
+  "clave": "topeCoaching",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Un límite para cuando pasó algo que pesa más que todo lo demás, por ejemplo colgar sin dejar cómo dar seguimiento: la calificación no pasa de ese máximo aunque lo demás haya salido bien."
  },
  {
   "clave": "topeMesesTarjeta",
