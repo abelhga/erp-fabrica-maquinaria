@@ -163,7 +163,7 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
   useEffect(() => setCanal(null), [l?.id]);
   const intentos = useQuery({
     queryKey: [...CLAVE_LEADS, l?.id, "intentos"], enabled: !!l,
-    queryFn: () => q<IntentoLead[]>(supabase.from("lead_intentos").select("id, canal, resultado, nota, en, usuario:perfiles(nombre)").eq("lead_id", l!.id).order("en", { ascending: false }).returns<IntentoLead[]>()),
+    queryFn: () => q<IntentoLead[]>(supabase.from("lead_intentos").select("id, canal, resultado, nota, en, via, usuario:perfiles(nombre)").eq("lead_id", l!.id).order("en", { ascending: false }).returns<IntentoLead[]>()),
   });
   // ¿Su teléfono ya es de un cliente? Se ofrece esa cuenta antes de dar de alta otra (la base no deja duplicar).
   const yaExiste = useQuery({
@@ -274,7 +274,7 @@ function DetalleLead({ lead: l, modo, alCerrar, alConvertir }: {
                 {intentos.data!.map((x) => (
                   <li key={x.id} className="text-sm flex gap-2">
                     <Insignia tono={x.resultado === "contesto" ? "ok" : "neutro"} className="shrink-0 h-fit">{textoIntento(x.canal, x.resultado).corto}</Insignia>
-                    <span className="min-w-0"><span className="text-tenue">{CANAL_INTENTO[x.canal]} · {hace(x.en)}{x.usuario ? ` · ${x.usuario.nombre}` : ""}</span>
+                    <span className="min-w-0"><span className="text-tenue">{CANAL_INTENTO[x.canal]} · {hace(x.en)}{x.usuario ? ` · ${x.usuario.nombre}` : ""}{x.via === "whatsapp" ? " · por WhatsApp" : ""}</span>
                       {x.nota && <span className={x.resultado === "enviado" ? "line-clamp-2 text-tenue" : "block"} title={x.nota}>{x.nota}</span>}</span>
                   </li>
                 ))}

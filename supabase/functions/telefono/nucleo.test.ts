@@ -3,12 +3,15 @@
 // /contexto) contesta 400 a un teléfono que no lo es y, para un cliente con su pedido en planta, el
 // folio, el estado y el avance sin ningún monto. Lo de la base (cliente, dueño, regresar llamada,
 // el avance) lo prueban supabase/pruebas/258_telefono.sql y 259_telefono_contexto.sql; el coaching y el
-// análisis (fase 3), 261_telefono_coaching_analisis.sql. La parte contra la base
+// análisis (fase 3), 261_telefono_coaching_analisis.sql; lo que contesta el vendedor por WhatsApp y el
+// resumen de la mañana (fase 4), 262_telefono_whatsapp.sql. Aquí, de la fase 4: sin llave 401, un
+// cuerpo mal hecho 400, un número no ligado no mueve nada, «contactado» deja el intento a nombre del
+// vendedor una sola vez aunque llegue dos, y el resumen trae la liga completa. La parte contra la base
 // local necesita la llave de servicio (SUPABASE_SERVICE_ROLE_KEY y DATABASE_URL); sin ella se brinca.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import pg from "pg";
-import { atender, telefonoValido, validar } from "./nucleo.ts";
+import { atender, telefonoValido, validar, validarAccion } from "./nucleo.ts";
 
 const base = { version: 1, tipo: "llamada", call_sid: "CA-prueba", llamada: { telefono: "+523312345678", nadie_contesto: false }, lead: null };
 // Fase 3, como viene en el contrato.
@@ -83,6 +86,41 @@ describe("validar", () => {
   });
 });
 
+// Fase 4, como viene en el contrato.
+const accion = {
+  version: 1, tipo: "accion", id: "SMprueba", quien: { telefono: "+523311112621", nombre: "Isaac Hernández" },
+  lead: { erp_id: "3f2a91c0-0000-4000-8000-000000000001", call_sid: null }, accion: "contactado",
+  texto: "Le interesa la de 20 m", motivo: null, cuando: null, canal: null,
+};
+
+describe("validarAccion", () => {
+  it("acepta la acción del contrato, solo con call_sid y con fecha para recordar", () => {
+    expect(validarAccion(accion).ok).toBe(true);
+    expect(validarAccion({ ...accion, lead: { erp_id: null, call_sid: "CA123" } }).ok).toBe(true);
+    expect(validarAccion({ ...accion, accion: "recordar", cuando: "2026-11-12T09:00:00-06:00", canal: "whatsapp" }).ok).toBe(true);
+    expect(validarAccion({ ...accion, accion: "perdido", motivo: "precio", texto: null }).ok).toBe(true);
+  });
+  it.each([
+    ["otra versión", { ...accion, version: 2 }, "Versión"],
+    ["otro tipo", { ...accion, tipo: "llamada" }, "Tipo"],
+    ["sin id", { ...accion, id: "" }, "id"],
+    ["id largo", { ...accion, id: "x".repeat(101) }, "id"],
+    ["sin quien", { ...accion, quien: null }, "quien.telefono"],
+    ["teléfono corto", { ...accion, quien: { telefono: "12345" } }, "quien.telefono"],
+    ["sin lead", { ...accion, lead: { erp_id: null, call_sid: null } }, "erp_id o call_sid"],
+    ["erp_id no uuid", { ...accion, lead: { erp_id: "123" } }, "lead.erp_id"],
+    ["acción desconocida", { ...accion, accion: "bailar" }, "Acción"],
+    ["texto largo", { ...accion, texto: "x".repeat(1001) }, "texto"],
+    ["motivo número", { ...accion, motivo: 5 }, "motivo"],
+    ["canal fax", { ...accion, canal: "fax" }, "canal"],
+    ["cuando sin fecha", { ...accion, cuando: "el jueves" }, "cuando"],
+  ])("rechaza %s", (_n, cuerpo, texto) => {
+    const r = validarAccion(cuerpo);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toContain(texto);
+  });
+});
+
 describe("sin llave no entra", () => {
   // La URL no existe: si la función intentara hablar con la base, la prueba tronaría.
   const entorno = { supabaseUrl: "http://127.0.0.1:9", serviceKey: "x" };
@@ -98,7 +136,16 @@ describe("sin llave no entra", () => {
     const corta = await atender(new Request("http://local/functions/v1/telefono/contexto?tel=3312345678", { headers: { "x-llave": "corta" } }), entorno);
     expect(corta.status).toBe(401);
   });
+  it("sin llave, la respuesta de WhatsApp y el resumen también son 401 sin preguntarle a la base", async () => {
+    const r = await atender(new Request("http://local/functions/v1/telefono/accion", { method: "POST", body: JSON.stringify(accion) }), entorno);
+    expect(r.status).toBe(401);
+    expect(await r.json()).toEqual({ error: "Llave inválida" });
+    const s = await atender(new Request("http://local/functions/v1/telefono/resumen?tel=%2B523311112621", { headers: { "x-llave": "corta" } }), entorno);
+    expect(s.status).toBe(401);
+  });
   it("otra ruta u otro método es 404", async () => {
+    expect((await atender(new Request("http://local/functions/v1/telefono/accion"), entorno)).status).toBe(404);
+    expect((await atender(new Request("http://local/functions/v1/telefono/resumen", { method: "POST" }), entorno)).status).toBe(404);
     expect((await atender(new Request("http://local/functions/v1/telefono/otra", { method: "POST" }), entorno)).status).toBe(404);
     expect((await atender(new Request("http://local/functions/v1/telefono/evento"), entorno)).status).toBe(404);
     expect((await atender(new Request("http://local/functions/v1/telefono/contexto", { method: "POST" }), entorno)).status).toBe(404);
@@ -247,6 +294,109 @@ describe.skipIf(!hayBase)("contra la base local", () => {
     } finally {
       await c.query("delete from public.llamadas where call_sid = $1", [sid]);
     }
+  });
+
+  describe("fase 4: lo que contesta el vendedor por WhatsApp", () => {
+    const sello = String(Date.now()).slice(-8);
+    const TEL_VEN = `+52 33${sello}`, TEL_NADIE = `+52 55${sello}`;
+    const APP = "https://erp.prueba";
+    const e4 = { ...entorno, appUrl: APP };
+    const f4: { ven?: string; lead?: string; otro?: string } = {};
+    const ids4: string[] = [];
+    const accionar = (cuerpo: unknown, llave = LLAVE) => atender(new Request("http://local/functions/v1/telefono/accion", {
+      method: "POST", headers: { "x-llave": llave, "Content-Type": "application/json" },
+      body: typeof cuerpo === "string" ? cuerpo : JSON.stringify(cuerpo) }), e4);
+    const resumir = (tel: string | null, llave = LLAVE) => atender(new Request(
+      `http://local/functions/v1/telefono/resumen${tel === null ? "" : `?tel=${encodeURIComponent(tel)}`}`, { headers: { "x-llave": llave } }), e4);
+    const msj = (id: string, tel: string, accion: string, texto: string | null = null) => {
+      ids4.push(id);
+      return { version: 1, tipo: "accion", id, quien: { telefono: tel, nombre: "Vitest WhatsApp" }, lead: { erp_id: f4.lead, call_sid: null },
+        accion, texto, motivo: null, cuando: null, canal: null };
+    };
+
+    beforeAll(async () => {
+      // Un vendedor (con el teléfono de su perfil, así se reconoce sin ligar nada) y dos leads suyos.
+      f4.ven = (await c.query(`insert into auth.users (id, email, raw_user_meta_data) values (gen_random_uuid(), $1, '{"full_name":"Vitest Vendedor"}') returning id`,
+        [`vitest-wa-${sello}@hegamex.com`])).rows[0].id;
+      await c.query("insert into public.usuario_roles (usuario_id, rol) values ($1, 'ventas')", [f4.ven]);
+      await c.query("update public.perfiles set nombre = 'Vitest Vendedor', telefono = $2 where id = $1", [f4.ven, TEL_VEN]);
+      const lead = async (nombre: string) => {
+        const id = (await c.query("insert into public.leads (nombre, telefono, interes) values ($1, $2, 'Tolva de prueba') returning id",
+          [nombre, `+52 81${sello}`])).rows[0].id;
+        await c.query("update public.leads set estado = 'asignado', vendedor_id = $2, como_se_asigno = 'gerente', asignado_en = now() where id = $1", [id, f4.ven]);
+        return id as string;
+      };
+      f4.lead = await lead("Vitest Contactado");
+      f4.otro = await lead("Vitest Sin Contactar");
+    });
+    afterAll(async () => {
+      const leads = [f4.lead, f4.otro].filter(Boolean);
+      await c.query("delete from public.telefono_acciones where id = any($1::text[])", [ids4]);
+      await c.query("delete from public.telefono_directorio where clave = any($1::text[])", [[TEL_NADIE, TEL_VEN].map((t) => t.replace(/\D/g, "").slice(-10))]);
+      await c.query("delete from public.lead_intentos where lead_id = any($1::uuid[])", [leads]);
+      await c.query("delete from public.avisos where registro_id = any($1::text[]) or usuario_id = $2", [leads, f4.ven]);
+      await c.query("delete from public.leads where id = any($1::uuid[])", [leads]);
+      if (f4.ven) {
+        await c.query("delete from public.usuario_roles where usuario_id = $1", [f4.ven]);
+        await c.query("delete from auth.users where id = $1", [f4.ven]);
+      }
+    });
+
+    it("una llave que no es la vigente es 401; un cuerpo mal hecho, 400, y no se guarda", async () => {
+      expect((await accionar(msj("SM-vt-0", TEL_VEN, "nota", "x"), `tel_otra_${"y".repeat(40)}`)).status).toBe(401);
+      expect((await accionar("{no es json")).status).toBe(400);
+      const r = await accionar({ ...msj("SM-vt-0", TEL_VEN, "nota", "x"), accion: "bailar" });
+      expect(r.status).toBe(400);
+      expect((await r.json()).error).toContain("Acción");
+      expect((await c.query("select count(*)::int n from public.telefono_acciones where id = 'SM-vt-0'")).rows[0].n).toBe(0);
+    });
+
+    it("un número que nadie ligó no mueve nada y queda en «Quién contesta»", async () => {
+      const r = await accionar(msj(`SM-vt-1-${sello}`, TEL_NADIE, "contactado", "Le interesa la de 20 m"));
+      expect(r.status).toBe(200);
+      expect(await r.json()).toEqual({ ok: true, aplicado: false, lead: null, liga: null,
+        mensaje: "Tu número no está ligado en el ERP; pídele a dirección que lo ligue en Configuración → Integraciones → Teléfono" });
+      expect((await c.query("select count(*)::int n from public.lead_intentos where lead_id = $1", [f4.lead])).rows[0].n).toBe(0);
+      expect((await c.query("select perfil_id from public.telefono_directorio where clave = $1", [TEL_NADIE.replace(/\D/g, "").slice(-10)])).rows)
+        .toEqual([{ perfil_id: null }]);
+    });
+
+    it("«contactado» deja el intento a su nombre, con la liga completa, y el mismo mensaje dos veces lo deja una vez", async () => {
+      const cuerpo = msj(`SM-vt-2-${sello}`, TEL_VEN, "contactado", "Le interesa la de 20 m, quiere precio");
+      const r1 = await accionar(cuerpo);
+      expect(r1.status).toBe(200);
+      const a = await r1.json();
+      expect(a).toMatchObject({ ok: true, aplicado: true, lead: { id: f4.lead, nombre: "Vitest Contactado", estado: "asignado" },
+        liga: `${APP}/ventas/leads?id=${f4.lead}` });
+      expect(a.mensaje).toContain("contestó");
+      const r2 = await accionar(cuerpo);
+      expect(await r2.json()).toEqual(a);
+      const intentos = (await c.query("select usuario_id, canal, resultado, via from public.lead_intentos where lead_id = $1", [f4.lead])).rows;
+      expect(intentos).toEqual([{ usuario_id: f4.ven, canal: "llamada", resultado: "contesto", via: "whatsapp" }]);
+    });
+
+    it("una regla que lo frena es 200 con aplicado:false y el mensaje del ERP", async () => {
+      const r = await accionar(msj(`SM-vt-3-${sello}`, TEL_VEN, "contactado"));
+      expect(r.status).toBe(200);
+      const a = await r.json();
+      expect(a).toMatchObject({ ok: true, aplicado: false });
+      expect(a.mensaje).toMatch(/^Escribe qué te dijo/);
+    });
+
+    it("el resumen de la mañana: sus leads sin contactar, sin montos y con la liga a «A quién llamar hoy»", async () => {
+      expect((await resumir(TEL_VEN, `tel_otra_${"y".repeat(40)}`)).status).toBe(401);
+      expect((await resumir("12345")).status).toBe(400);
+      const r = await resumir(TEL_VEN);
+      expect(r.status).toBe(200);
+      const d = await r.json();
+      expect(d).toMatchObject({ ok: true, vendedor: "Vitest Vendedor" });
+      expect(d.texto).toContain("*Leads sin contactar (1):* Vitest Sin Contactar");
+      expect(d.texto).not.toContain("Vitest Contactado");
+      expect(d.texto.endsWith(`A quién llamar hoy: ${APP}/ventas/para-llamar`)).toBe(true);
+      expect(d.texto.length).toBeLessThanOrEqual(1400);
+      expect(d.texto).not.toMatch(/\$\s*\d/);
+      expect(await (await resumir(TEL_NADIE)).json()).toEqual({ ok: true, vendedor: null, texto: null });
+    });
   });
 
   it("quién llama: sin la llave vigente es 401; sin teléfono o con uno corto, 400", async () => {

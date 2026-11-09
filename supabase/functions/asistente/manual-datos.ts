@@ -1409,7 +1409,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "En la tarjeta de Skydropx, quien administra envíos prueba la conexión (muestra el saldo) y elige la dirección de la planta de las que ya están en Skydropx, la clave de carta porte, el tipo de empaque y el formato de la guía. Sin dirección y carta porte no se puede generar guía.",
    "Ahí también pone el recargo que se le suma al flete cuando un vendedor lo cotiza en una cotización.",
    "La tarjeta «Teléfono (recepción con IA)» dice si el conmutador está mandando las llamadas y cuándo llegó la última. Para conectarlo, en Railway se ponen ERP_URL (la dirección que viene ahí, con su botón de copiar) y ERP_LLAVE, la llave que genera dirección con «Generar llave».",
-   "La llave se ve una sola vez: cópiala al momento. Generar otra deja sin servir la anterior. En «Quién contesta» dirección liga cada nombre del conmutador a su persona del ERP; los que traen el mismo teléfono que su perfil se ligan solos. Al ligarlo, a mano o solo, sus llamadas y sus calificaciones de coaching anteriores quedan a su nombre; si lo dejas en «Sin persona», dejan de ser suyas."
+   "La llave se ve una sola vez: cópiala al momento. Generar otra deja sin servir la anterior. En «Quién contesta» dirección liga cada nombre del conmutador a su persona del ERP; los que traen el mismo teléfono que su perfil se ligan solos. Al ligarlo, a mano o solo, sus llamadas y sus calificaciones de coaching anteriores quedan a su nombre; si lo dejas en «Sin persona», dejan de ser suyas.",
+   "Ahí también va el WhatsApp de cada vendedor, ligado a su persona: lo que contesta en el WhatsApp del teléfono («contactado», «no contestó», «perdido»…) se anota en el ERP a su nombre, con las mismas reglas. Un número que escribe sin estar ligado aparece «Sin persona» y no anota nada hasta que lo ligues."
   ]
  },
  {
@@ -1683,6 +1684,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Lo usan recepción, los vendedores, la gerencia de ventas y marketing, que los ve todos para saber de dónde llegan y qué pasó con ellos.",
    "Al registrarlo pon también dónde está, su empresa (o «Particular») y qué busca con modelo o medida. Si se te pasó algo, al abrirlo te dice qué le falta y lo completas ahí; «Incompletos» junta los que tienen algo pendiente.",
    "Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es y dices «Es este», le llega directo a su vendedor.",
+   "Con el teléfono completo también te avisa si ese número ya llamó esta semana y la IA del teléfono ya registró su lead, de quién es y si ya es oportunidad. Así no lo capturas dos veces.",
    "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna (sin gerente de ventas, el aviso del lead nuevo le llega a dirección); o quien lo registra escoge al vendedor. Si nadie lo toma a tiempo, se le avisa a la gerencia (mientras no haya gerente de ventas, a dirección).",
    "Si un lead asignado pasa las horas que fijó la gerencia sin ningún intento anotado, se le avisa al vendedor y a la gerencia; con un intento («Le escribí», «No contestó», «No estaba» o «Contestó») ya no cuenta. Mientras no haya gerente de ventas, dirección recibe un resumen por vendedor en la mañana (desde las 9:00) y en la tarde (desde las 15:00) de cada día hábil, y al abrirlo llega a «Sin contactar» de ese vendedor (la etiqueta «De: …» se quita con la ×).",
    "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no. Elige primero por dónde fue: no viene marcado. «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo.",
@@ -1692,6 +1694,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Ya convertido, «Cotizar» abre la cotización en la oportunidad del lead; al enviarla el lead dice «Cotizado».",
    "Quien lo registró ve en «Los que registré» quién lo tomó y en qué etapa va la oportunidad.",
    "Los leads que deja el conmutador con IA llegan solos: «Lo registró» dice «La IA del teléfono» y al abrirlo sale su llamada, con el resumen y la grabación. Si lo atendió un vendedor que recibe leads, es suyo; si ya es cliente con vendedor vigente, de su vendedor; si no, se reparte como cualquier otro, y cuando quien registra escoge al vendedor, se queda por asignar para la gerencia.",
+   "Si el vendedor contesta por WhatsApp el aviso del teléfono («contactado: …», «no contestó», «nota: …», «perdido: …»), se anota aquí a su nombre con las mismas reglas que en la pantalla, y el intento dice «por WhatsApp». Una nota se agrega a las notas del lead con la fecha (ya convertido, a la actividad de su oportunidad) y «recordar» le deja un pendiente para ese día.",
    "Recepción ve aquí arriba «Regresar llamada»: las llamadas que nadie contestó y que todavía no son de ningún vendedor. Cuando alguien toma su lead, pasa a ese vendedor."
   ]
  },
@@ -7264,7 +7267,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "Los nombres de quienes contestan en el conmutador, cada uno ligado a su persona del ERP. Así la llamada que atendió queda a su nombre: la ve, el lead es suyo si recibe leads y queda en la actividad del cliente. Se llena solo con la primera llamada que atiende cada quien; si trae el mismo teléfono que su perfil, se liga solo. Los demás los liga dirección; al ligarlo (a mano o solo), sus llamadas anteriores y sus calificaciones de coaching también quedan a su nombre (los leads ya repartidos no se mueven). Si lo dejas en «Sin persona», lo que se le había pasado deja de ser suyo."
+  "texto": "Los nombres de quienes contestan en el conmutador, cada uno ligado a su persona del ERP. Así la llamada que atendió queda a su nombre: la ve, el lead es suyo si recibe leads y queda en la actividad del cliente. Se llena solo con la primera llamada que atiende cada quien; si trae el mismo teléfono que su perfil, se liga solo. Los demás los liga dirección; al ligarlo (a mano o solo), sus llamadas anteriores y sus calificaciones de coaching también quedan a su nombre (los leads ya repartidos no se mueven). Si lo dejas en «Sin persona», lo que se le había pasado deja de ser suyo. También van aquí los WhatsApp de los vendedores: lo que contestan por ahí se anota a nombre de la persona ligada."
  },
  {
   "clave": "disponibilidadMaquina",
@@ -9957,7 +9960,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cada vez que le llamas, le escribes o lo visitas, anótalo. Elige siempre por dónde fue: no viene marcado. Si le escribiste por WhatsApp o correo, «Le escribí»; si le llamaste y no contestó, «No contestó»; si fuiste y no estaba, «No estaba»; y cuando conteste, «Contestó» con lo que te dijo. Todo cuenta como intento, conteste o no, y en la lista se ve lo último que hiciste y cuándo. Mientras no conteste, sigue siendo lead (no se da de alta como cliente). Con un intento anotado, el lead ya no cuenta como «sin atender» y deja de avisarse. Los leads que alguien tiene varios días sin ningún intento, o que se volvieron oportunidad y no se cotizan, le aparecen a dirección en «Por revisar»."
+  "texto": "Cada vez que le llamas, le escribes o lo visitas, anótalo. Elige siempre por dónde fue: no viene marcado. Si le escribiste por WhatsApp o correo, «Le escribí»; si le llamaste y no contestó, «No contestó»; si fuiste y no estaba, «No estaba»; y cuando conteste, «Contestó» con lo que te dijo. Todo cuenta como intento, conteste o no, y en la lista se ve lo último que hiciste y cuándo. Mientras no conteste, sigue siendo lead (no se da de alta como cliente). Con un intento anotado, el lead ya no cuenta como «sin atender» y deja de avisarse. Los leads que alguien tiene varios días sin ningún intento, o que se volvieron oportunidad y no se cotizan, le aparecen a dirección en «Por revisar». Si junto al intento dice «por WhatsApp», el vendedor lo anotó contestando el aviso que le llega al WhatsApp desde el teléfono con IA."
  },
  {
   "clave": "interruptorConsumiblesTaller",
@@ -16242,12 +16245,29 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Abre el chat con el contacto de la cotización, sin mensaje escrito. Abrirlo no cierra el seguimiento: cuando te conteste, anota qué pasó."
  },
  {
+  "clave": "whatsappVendedorTelefono",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "El teléfono con IA le avisa a cada vendedor de sus leads por WhatsApp, y él puede contestar ahí: «tomar», «contactado» con lo que le dijo, «no contestó», una nota, «recordar» con el día o «perdido» con el motivo. El ERP lo anota a su nombre, como si lo hubiera capturado él y con las mismas reglas: «contactado» pide lo que le dijo el cliente, «no respondió» solo después de insistir, al tercer seguimiento sin avance hay que decidir, y un lead de otro vendedor no se toca. Cotizar, cerrar un pedido o pasarle el lead a otro se hace en el ERP: la respuesta trae la liga. Para que funcione, su WhatsApp tiene que estar ligado a su persona en «Quién contesta» (o ser el teléfono de su perfil); un número que escribe sin estar ligado aparece ahí «Sin persona» y no anota nada. El resumen que le llega cada mañana sale de lo suyo en el ERP: leads sin contactar, llamadas por regresar, seguimientos de cotizaciones y pendientes que vencen, sin montos."
+ },
+ {
   "clave": "yaDebioEmpezar",
   "modulos": [
    "produccion",
    "procesos"
   ],
   "texto": "Según el plan, esta etapa ya tenía que haber empezado y en el piso todavía no se inicia."
+ },
+ {
+  "clave": "yaEntroPorTelefono",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cuando escribes el teléfono completo, se revisa si ese número llamó al teléfono con IA en los últimos 7 días. Si la IA ya registró su lead, te dice cuándo llamó, de qué vendedor es y si ya es oportunidad, para que no lo registres otra vez; si tú lo puedes abrir, te deja la liga. Si llamó y no dejó lead (por ejemplo, nadie contestó), solo te avisa: ahí sí regístralo."
  },
  {
   "clave": "yaEsCliente",

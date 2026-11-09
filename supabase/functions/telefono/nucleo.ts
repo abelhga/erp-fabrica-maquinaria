@@ -16,6 +16,18 @@
 // (telefono_contexto: cliente, su vendedor, pedidos abiertos y cotizaciones vivas, sin montos). Lo
 // espera 800 ms y, si no llega, la llamada sigue sin contexto: por eso es una sola consulta a la base.
 //
+// POST /telefono/accion (fase 4): lo que el vendedor contesta por WhatsApp («contactado: …», «no
+// contestó», «perdido: precio»…). La base reconoce al vendedor por su número y lo aplica como él, con
+// las reglas de siempre (telefono_accion). Lo que una regla frena NO es un error: es 200 con
+// aplicado:false y el mensaje del ERP, que el conmutador le contesta tal cual. El mismo id (el
+// message_sid) dos veces regresa la misma respuesta. 400 cuerpo mal hecho, 401 llave, 500 lo demás
+// (el conmutador lo encola y reintenta).
+//
+// GET /telefono/resumen?tel=… (fase 4): el resumen de la mañana de ese vendedor, sacado de sus
+// pendientes del ERP (telefono_resumen), sin montos y con la liga a «A quién llamar hoy».
+//
+// Las ligas al ERP se arman aquí con APP_URL: la base solo sabe la ruta.
+//
 // Se despliega sin verificar JWT: el conmutador no tiene sesión del ERP, entra con la llave que
 // generó dirección.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -23,7 +35,30 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 export interface Entorno {
   supabaseUrl: string;
   serviceKey: string;
+  /** La dirección del ERP para las ligas que viajan por WhatsApp (APP_URL). */
+  appUrl?: string;
 }
+
+const APP_URL = "https://erp.hegamex.com";
+
+/** Fase 4: lo que manda el conmutador por cada respuesta de WhatsApp (versión 1). */
+export interface Accion {
+  version: 1;
+  tipo: "accion";
+  id: string;
+  quien: { telefono: string; nombre?: string | null };
+  lead: { erp_id?: string | null; call_sid?: string | null };
+  accion: (typeof ACCIONES)[number];
+  texto?: string | null;
+  motivo?: string | null;
+  cuando?: string | null;
+  canal?: "llamada" | "whatsapp" | "correo" | "visita" | null;
+}
+export const ACCIONES = ["tomar", "contactado", "no_contesto", "nota", "cotizado", "cerrado", "perdido", "recordar", "soltar"] as const;
+const CANALES = ["llamada", "whatsapp", "correo", "visita"];
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Una respuesta de WhatsApp: hasta 1000 de texto más poquito; más que esto no es un mensaje. */
+export const TOPE_ACCION = 16 * 1024;
 
 /** Lo que manda el conmutador (versión 1). La base vuelve a revisar fechas y números. */
 export interface Evento {
@@ -143,6 +178,33 @@ export function validar(cuerpo: unknown): { ok: true; evento: Evento } | { ok: f
   return { ok: true, evento: cuerpo as unknown as Evento };
 }
 
+/** Fase 4: revisa la forma de una acción. La base lo vuelve a revisar (22023 → 400). */
+export function validarAccion(cuerpo: unknown): { ok: true; accion: Accion } | { ok: false; error: string } {
+  if (!esObjeto(cuerpo)) return { ok: false, error: "El cuerpo debe ser un objeto JSON" };
+  if (cuerpo.version !== 1) return { ok: false, error: `Versión no soportada: ${JSON.stringify(cuerpo.version ?? null)} (se espera 1)` };
+  if (cuerpo.tipo !== "accion") return { ok: false, error: `Tipo no soportado: ${JSON.stringify(cuerpo.tipo ?? null)} (se espera "accion")` };
+  if (typeof cuerpo.id !== "string" || !cuerpo.id.trim() || cuerpo.id.length > 100) return { ok: false, error: "id debe ser el message_sid (1 a 100 caracteres)" };
+  const qn = cuerpo.quien;
+  if (!esObjeto(qn) || typeof qn.telefono !== "string" || !telefonoValido(qn.telefono)) return { ok: false, error: "quien.telefono debe traer 10 dígitos o más" };
+  if (!textoHasta(qn.nombre, 120)) return { ok: false, error: "quien.nombre debe ser texto o null" };
+  const ld = cuerpo.lead;
+  if (!esObjeto(ld)) return { ok: false, error: "Falta «lead» (objeto con erp_id o call_sid)" };
+  if (!(vacio(ld.erp_id) || (typeof ld.erp_id === "string" && UUID.test(ld.erp_id)))) return { ok: false, error: "lead.erp_id debe ser un uuid o null" };
+  if (!(vacio(ld.call_sid) || (typeof ld.call_sid === "string" && ld.call_sid.length <= 100))) return { ok: false, error: "lead.call_sid debe ser texto o null" };
+  if (vacio(ld.erp_id) && (vacio(ld.call_sid) || !(ld.call_sid as string).trim())) return { ok: false, error: "lead necesita erp_id o call_sid" };
+  if (!(ACCIONES as readonly unknown[]).includes(cuerpo.accion)) return { ok: false, error: `Acción no soportada: ${JSON.stringify(cuerpo.accion ?? null)}` };
+  if (!textoHasta(cuerpo.texto, 1000)) return { ok: false, error: "texto debe ser texto de hasta 1000 caracteres o null" };
+  if (!textoHasta(cuerpo.motivo, 300)) return { ok: false, error: "motivo debe ser texto de hasta 300 caracteres o null" };
+  if (!(vacio(cuerpo.canal) || CANALES.includes(cuerpo.canal as string))) return { ok: false, error: "canal debe ser llamada, whatsapp, correo, visita o null" };
+  if (!(vacio(cuerpo.cuando) || (typeof cuerpo.cuando === "string" && !Number.isNaN(Date.parse(cuerpo.cuando))))) {
+    return { ok: false, error: "cuando debe ser una fecha ISO (2026-11-12T09:00:00-06:00) o null" };
+  }
+  return { ok: true, accion: cuerpo as unknown as Accion };
+}
+
+/** La ruta del ERP que regresa la base, como liga completa para WhatsApp. */
+const liga = (e: Entorno, ruta: unknown) => (typeof ruta === "string" && ruta.startsWith("/") ? `${(e.appUrl || APP_URL).replace(/\/+$/, "")}${ruta}` : null);
+
 /** Lo que no se pudo guardar se anota para que dirección lo vea en Integraciones. Nunca tumba la respuesta. */
 async function anotar(admin: SupabaseClient, error: string) {
   try { await admin.rpc("telefono_anotar_error", { p: error }); } catch { /* sin anotar, la respuesta igual sale */ }
@@ -172,7 +234,47 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
   const ruta = url.pathname.split("/").filter(Boolean).pop();
   if (req.method === "POST" && ruta === "evento") return evento(req, e);
   if (req.method === "GET" && ruta === "contexto") return contexto(req, url, e);
+  if (req.method === "POST" && ruta === "accion") return accion(req, e);
+  if (req.method === "GET" && ruta === "resumen") return resumen(req, url, e);
   return json({ error: "Ruta no válida" }, 404);
+}
+
+async function accion(req: Request, e: Entorno): Promise<Response> {
+  const admin = createClient(e.supabaseUrl, e.serviceKey, sinSesion);
+  const sinPaso = await revisarLlave(req, admin, "una respuesta de WhatsApp");
+  if (sinPaso) return sinPaso;
+  const texto = await req.text();
+  if (new TextEncoder().encode(texto).length > TOPE_ACCION) return json({ error: "Cuerpo demasiado grande" }, 400);
+  let cuerpo: unknown;
+  try { cuerpo = JSON.parse(texto); } catch { return json({ error: "El cuerpo no es JSON válido" }, 400); }
+  const v = validarAccion(cuerpo);
+  if (!v.ok) { await anotar(admin, `Respuesta de WhatsApp rechazada: ${v.error}`); return json({ error: v.error }, 400); }
+  const { data, error } = await admin.rpc("telefono_accion", { p: v.accion });
+  if (error) {
+    const deDatos = typeof error.code === "string" && error.code.startsWith("22");
+    // Sin el teléfono ni el texto en el aviso: dirección ve que falló, no lo que escribió el vendedor.
+    await anotar(admin, `No se pudo aplicar la respuesta de WhatsApp ${v.accion.id} (${v.accion.accion}): ${error.message}`);
+    return json({ error: deDatos ? error.message : "No se pudo aplicar; se puede reintentar" }, deDatos ? 400 : 500);
+  }
+  const r = data as { aplicado: boolean; mensaje: string; lead: Record<string, unknown> | null; ruta: string | null };
+  return json({ ok: true, aplicado: r.aplicado === true, mensaje: r.mensaje, lead: r.lead ?? null, liga: liga(e, r.ruta) });
+}
+
+async function resumen(req: Request, url: URL, e: Entorno): Promise<Response> {
+  const admin = createClient(e.supabaseUrl, e.serviceKey, sinSesion);
+  const sinPaso = await revisarLlave(req, admin, "una consulta del resumen de la mañana");
+  if (sinPaso) return sinPaso;
+  const tel = url.searchParams.get("tel");
+  if (!telefonoValido(tel)) return json({ error: "Teléfono inválido" }, 400);
+  const { data, error } = await admin.rpc("telefono_resumen", { p_tel: tel });
+  if (error) {
+    if (error.code === "22023") return json({ error: "Teléfono inválido" }, 400);
+    await anotar(admin, `No se pudo armar el resumen de la mañana: ${error.message}`);
+    return json({ error: "No se pudo armar el resumen" }, 500);
+  }
+  const r = data as { vendedor: string | null; texto: string | null; ruta?: string | null };
+  const l = r.texto ? liga(e, r.ruta) : null;
+  return json({ ok: true, vendedor: r.vendedor ?? null, texto: r.texto ? `${r.texto}${l ? `\n\nA quién llamar hoy: ${l}` : ""}` : null });
 }
 
 async function contexto(req: Request, url: URL, e: Entorno): Promise<Response> {

@@ -11,5 +11,7 @@ Deno.serve((req) =>
   atender(req, {
     supabaseUrl: Deno.env.get("SUPABASE_URL")!,
     serviceKey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    // Para las ligas que viajan por WhatsApp (fase 4); igual que en las funciones de correo y ML.
+    appUrl: Deno.env.get("APP_URL") || "https://erp.hegamex.com",
   })
 );

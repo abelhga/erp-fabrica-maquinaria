@@ -1,4 +1,4 @@
-# Contrato Teléfono ↔ ERP (versión 1; fase 1: voz → ERP, fase 2: ERP → voz, fase 3: coaching y análisis)
+# Contrato Teléfono ↔ ERP (versión 1; fase 1: voz → ERP, fase 2: ERP → voz, fase 3: coaching y análisis, fase 4: WhatsApp del vendedor)
 
 Dos productos que se venden por separado. hegamex-voz (Railway, su Postgres) contesta llamadas;
 el ERP (Supabase) lleva el CRM. Cuando están conectados, voz le manda al ERP cada llamada y el lead
@@ -358,9 +358,99 @@ hay dato y lo califica el jefe. Se agrega a las plantillas desde la pantalla.
   porque los títulos de los hallazgos sí se le mandan a la IA nocturna para que no se repita; el
   nombre va en el detalle, que solo ve dirección.
 
+## Fase 4: lo que el vendedor contesta por WhatsApp queda en el ERP
+
+Voz le avisa a cada vendedor de sus leads por WhatsApp y él contesta ahí («contactado: le interesa la
+de 20 m», «no contestó», «perdido: precio»…). Con «CRM externo» prendido en el panel de voz, cada
+respuesta se manda al ERP, que la aplica **como si el vendedor la hubiera capturado**, con las mismas
+reglas y funciones que la pantalla, y voz le contesta con el `mensaje` que regresa el ERP. Con el
+interruptor apagado, voz sigue con su mini-CRM y no llama a nada de esto. Versión 1: solo agrega rutas.
+
+### Transporte
+Misma llave `x-llave` que `/evento` y `/contexto`.
+
+- `POST {ERP_URL}/accion`, cuerpo:
+  ```json
+  {
+    "version": 1, "tipo": "accion",
+    "id": "SMxxxxxxxx",
+    "quien": { "telefono": "+5233…", "nombre": "Isaac Hernández" },
+    "lead": { "erp_id": "<uuid>|null", "call_sid": "CA…|null" },
+    "accion": "tomar|contactado|no_contesto|nota|cotizado|cerrado|perdido|recordar|soltar",
+    "texto": "lo que dijo, sin recortar, ≤ 1000",
+    "motivo": "para perdido (≤ 300)",
+    "cuando": "2026-11-12T09:00:00-06:00",
+    "canal": "llamada|whatsapp|correo|visita|null"
+  }
+  ```
+  - `id` es el `message_sid` del WhatsApp entrante: la llave de idempotencia. El mismo `id` dos veces
+    regresa la respuesta guardada sin volver a aplicar nada (`telefono_acciones`).
+  - `quien.telefono` es el número que **escribió** (su WhatsApp, que puede no ser el de marcado).
+  - `lead`: al menos uno; se busca primero `erp_id` y, si no existe, el lead de la llamada `call_sid`.
+  - `texto`, `motivo`, `cuando` y `canal` pueden faltar o venir `null`.
+- Respuestas:
+  - `200 {"ok":true, "aplicado":true|false, "mensaje":"…", "lead":{"id","nombre","estado","etapa"}|null, "liga":"https://…|null"}`
+    siempre que la llave sea buena y el cuerpo válido. **Una regla que lo frena no es un error**:
+    `aplicado:false` con el mensaje del ERP (en su tono, sin montos), que voz le contesta tal cual.
+  - `400 {"error":"…"}` cuerpo mal hecho (no se guarda; voz no lo reintenta igual).
+  - `401 {"error":"Llave inválida"}`.
+  - `500` lo demás (voz lo encola y reintenta con el mismo `id`). Un error del sistema nunca se guarda
+    como respuesta, así que el reintento sí se vuelve a aplicar.
+- `GET {ERP_URL}/resumen?tel=+5233…` → `200 {"ok":true, "vendedor":"Isaac Hernández"|null, "texto":"…"|null}`:
+  el resumen de la mañana de **ese** vendedor, listo para WhatsApp (≤ 1400 caracteres, sin montos):
+  leads asignados sin ningún intento («Sin contactar»), «Regresar llamada» de sus clientes y leads
+  (o de nadie, si reparte leads), seguimientos de cotización de hoy y vencidos (con el folio, nunca el
+  importe) y sus pendientes que vencen hoy o ya vencieron; termina con la liga a «A quién llamar hoy».
+  `texto:null` si no tiene nada o el número no está ligado. `400` teléfono inválido, `401` llave.
+- Las ligas las arma la función de borde con `APP_URL` (por omisión `https://erp.hegamex.com`): la
+  base solo regresa la ruta (`/ventas/leads?id=…`).
+
+### Quién escribe
+`_telefono_perfil_de`: su número ligado a una persona en «Quién contesta» (por los últimos 10
+dígitos) o, si no, el único perfil activo con ese teléfono. Si no es nadie, el número se agrega a
+«Quién contesta» sin persona (para que dirección lo ligue una vez) y la respuesta es `aplicado:false`
+con «Tu número no está ligado en el ERP; pídele a dirección que lo ligue en Configuración →
+Integraciones → Teléfono». Un perfil dado de baja no actúa. Mientras alguien de dirección ve el ERP
+como otro rol («Ver como»), no se le suplanta: `mis_roles()` regresaría el rol simulado y la acción
+iría con permisos que no son los suyos; se le pide regresar a su vista.
+
+### Cómo se aplica (migración 262)
+`telefono_accion` guarda la sesión de quien llama (`request.jwt.claims` y `request.jwt.claim.sub`),
+pone la del vendedor (`{"sub": <perfil>, "role": "authenticated"}`) y `hegamex.via = 'whatsapp'`, llama a
+las funciones de siempre y **regresa la sesión al terminar, también si algo truena**. Así aplican los
+candados que se brincan sin sesión (perder sin respuesta, seguimientos, clientes repetidos) y la
+bitácora dice que fue él. Lo que el vendedor no ve en la pantalla (la regla de la RLS de leads),
+tampoco lo mueve: la respuesta es «Ese lead es de otro vendedor…» con `lead:null`.
+
+| Acción | Qué hace en el ERP |
+|---|---|
+| `tomar` | `tomar_lead` (solo en bandeja; en los otros modos lo asigna la gerencia). |
+| `contactado` | `registrar_intento_lead(canal ?? 'llamada', 'contesto', texto)`: sin «qué te dijo» (5 letras) no pasa. Ya oportunidad: `registrar_seguimiento('contactado')`. |
+| `no_contesto` | Intento `no_contesto` (por WhatsApp o correo, `enviado`: «Le escribí»). Ya oportunidad: `registrar_seguimiento('no_contesta')`, con la regla de decidir al tercero sin avance. |
+| `contactado`/`no_contesto` de un lead por tomar | En bandeja lo toma y anota, todo junto (si el intento no pasa, tampoco lo toma). |
+| `nota` | `anotar_lead` (nueva): una línea con fecha, quién y «por WhatsApp» en las notas del lead; ya oportunidad, una nota en su actividad. |
+| `recordar` | Un pendiente para él en `pendientes`, para el día de `cuando` (la hora va en el detalle), ligado al lead. Sin fecha o con una pasada, no. |
+| `perdido` | Lead abierto: `descartar_lead(motivo: texto)`. Ya oportunidad: `registrar_seguimiento('perdida', texto, canal ?? 'whatsapp', null, motivo)` con la regla de «no respondió» (solo después de insistir). |
+| `cotizado` / `cerrado` | No se capturan por WhatsApp: `aplicado:false` y la liga para cotizar en su oportunidad (o al lead, si falta volverlo oportunidad). |
+| `soltar` | Solo la gerencia reasigna: `aplicado:false` y se lo dice (a la gerencia, con la liga para hacerlo en el ERP). |
+
+El intento anotado así lleva `lead_intentos.via = 'whatsapp'`, y en el lead se ve «por WhatsApp».
+
+### «Ya entró por teléfono»
+`llamada_reciente_de(p_tel)` (`puede('leads', 2)`): las llamadas de ese número en los últimos 7 días,
+con cuándo, si nadie contestó, su lead, de qué vendedor es, en qué va y si quien pregunta lo puede
+abrir. El diálogo «Registrar lead» lo enseña al escribir el teléfono completo, para que recepción no
+capture otra vez el lead que la IA ya registró.
+
+### Para que entre en vigor
+1. Migración 262 en la nube y redesplegar `telefono` (rutas nuevas).
+2. Cada vendedor con su WhatsApp ligado en Configuración → Integraciones → Teléfono → «Quién
+   contesta» (o como teléfono de su perfil). El primer mensaje de un número sin ligar lo deja ahí.
+3. En el panel de voz, prender «CRM externo».
+
 ## Para conectarlo (una vez)
 1. `npx supabase functions deploy telefono --no-verify-jwt` (no necesita secretos propios).
-2. Migraciones 258 a 261 aplicadas en la nube (la 259 es la de «quién llama»; sin ella `/contexto`
+2. Migraciones 258 a 262 aplicadas en la nube (la 259 es la de «quién llama»; sin ella `/contexto`
    contesta 500 y voz sigue sin contexto; la 261 es la del coaching y el análisis, y **va antes** de
    que voz los mande: sin ella caerían en `llamadas.datos`, que ve el dueño del cliente).
 3. Dirección: Configuración → Integraciones → Teléfono → «Generar llave».
