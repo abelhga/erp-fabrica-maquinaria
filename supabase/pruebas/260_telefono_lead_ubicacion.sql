@@ -56,11 +56,12 @@ begin
   assert (select datos->'lead'->>'estado' from llamadas where call_sid = 'CA260-1') = 'Edo. de México',
     'lo crudo queda en la llamada';
 
-  -- Otra foto con otros datos: lo que ya tiene no se pisa.
+  -- Otra foto con otra ubicación y nadie la había tocado: desde 261 es una corrección del teléfono
+  -- (volvió a oír la grabación) y sí entra. Lo que cambió una persona no (abajo y en 261).
   r := pg_temp.foto('CA260-1', jsonb_build_object('telefono', '+525550002601', 'inicio', t0, 'nadie_contesto', false),
        '{"nombre": "Ana 260", "telefono": "+525550002601", "interes": "Cribadora vibratoria 4x8", "ciudad": "Toluca", "estado": "CDMX"}');
   select * into l from leads where id = (r->>'lead_id')::uuid;
-  assert l.ciudad = 'Ecatepec de Morelos' and l.estado_mx = 'Estado de México', 'una foto nueva no debe pisar la ubicación';
+  assert l.ciudad = 'Toluca' and l.estado_mx = 'Ciudad de México', 'la corrección del teléfono debe entrar si nadie la tocó: ' || l.ciudad;
 
   -- Lo que una persona corrigió a mano tampoco.
   update leads set ciudad = 'Tlalnepantla', estado_mx = 'México' where id = l.id;

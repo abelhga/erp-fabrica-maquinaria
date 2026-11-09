@@ -1,4 +1,4 @@
-# Contrato Teléfono ↔ ERP (versión 1; fase 1: voz → ERP, fase 2: ERP → voz)
+# Contrato Teléfono ↔ ERP (versión 1; fase 1: voz → ERP, fase 2: ERP → voz, fase 3: coaching y análisis)
 
 Dos productos que se venden por separado. hegamex-voz (Railway, su Postgres) contesta llamadas;
 el ERP (Supabase) lleva el CRM. Cuando están conectados, voz le manda al ERP cada llamada y el lead
@@ -96,7 +96,8 @@ borde `telefono` con la llave de servicio. La función de borde revisa `x-llave`
    ciudad, un estado de otro país) queda vacío y la pantalla lo sigue pidiendo. El texto tal cual
    queda en `llamadas.datos`. Sin los dos campos el lead entra igual que antes.
    Las siguientes fotos solo llenan lo que le falta (empresa, teléfono, correo, ciudad, estado,
-   notas): nunca pisan lo capturado. Si una persona del ERP que recibe leads (`vendedores_leads()`) lo atendió,
+   notas): nunca pisan lo capturado. La excepción es la ubicación que el mismo teléfono corrige
+   (fase 3, abajo). Si una persona del ERP que recibe leads (`vendedores_leads()`) lo atendió,
    el lead se le asigna (`como_se_asigno = 'llamada'`), salvo que el cliente ya tenga vendedor
    vigente (manda el dueño, `'cliente'`). Si no, aplica el modo de leads: en bandeja queda por
    tomar; en modo gerente, por asignar; en modo «recepción elige» **no falla** (no hay quién
@@ -118,6 +119,8 @@ borde `telefono` con la llave de servicio. La función de borde revisa `x-llave`
 Gerencia de ventas y dirección (`puede('ventas', 3)`), quien la atendió, el dueño (vendedor del
 cliente o del lead) y, si no son de nadie, recepción y leads nivel 3. Nunca otro vendedor. Nadie
 escribe `llamadas` directo. El directorio lo ven sistemas y dirección (`admin` 3).
+El coaching tiene su propia regla, más cerrada (fase 3): el dueño del cliente ve la llamada, pero no
+la calificación de quien la atendió.
 
 ## La llave
 `telefono_generar_llave()` (solo dirección) devuelve una llave nueva una sola vez; la base guarda
@@ -205,10 +208,143 @@ llamar la función de borde con la llave de servicio (ni `anon` ni `authenticate
   N %» y fecha compromiso; si va `atrasado` o `en_espera`, no da fecha y ofrece pasarlo con su
   vendedor. Nunca montos.
 
+## Fase 3: coaching y análisis
+
+Sigue siendo **versión 1**: solo se agregan campos opcionales a la misma foto (`POST /evento`). Un
+conmutador que no los mande sigue funcionando igual. El ERP se publica primero (migración 261 y la
+función `telefono` redesplegada, porque cambió el validador).
+
+### Regla de presencia (para `coaching` y `analisis`)
+- **Llave ausente** → el ERP no toca lo que ya tenía.
+- **`null`** → ya no existe (se borró, o se rehízo y falló): el ERP borra lo suyo.
+- **Objeto** → reemplaza completo lo que tenía (no se mezcla: un «Rehacer» sin fallos deja cero fallos).
+
+### `llamada.historica` (boolean, opcional, por omisión false)
+Foto de una llamada anterior a la conexión, mandada para llenar la historia. El ERP guarda la
+llamada, su coaching y su análisis, y la liga al cliente por teléfono, pero **no crea ni toca leads,
+actividades, avisos ni «Regresar llamada»**, y no la liga a leads. Una vez marcada, la llamada se
+queda como histórica aunque una foto posterior no traiga la marca (`llamadas.historica`).
+
+### `coaching` (objeto | null)
+```json
+{
+  "rubrica": { "clave": "ventas-2026-11", "version": 3 },
+  "calificacion": 7.4,                  // 1.0–10.0, un decimal. La CALCULA el conmutador con pesos y topes; el ERP no la recalcula
+  "calificacion_sin_topes": 8.1,        // la que salía antes de aplicar topes (para explicar); 0–10 o null
+  "criterios": [                        // los de la rúbrica, en su orden (hasta 30)
+    { "clave": "siguiente_paso", "nombre": "Siguiente paso con fecha", "peso": 20,
+      "nota": 4,                        // 0–10 entero, la pone la IA
+      "evidencia": "«Le marco el jueves a las 10 para confirmar medidas»",  // cita breve, ≤ 200 car.; puede ser ""
+      "segundo": 143 }                  // segundo de la grabación donde está la evidencia, o null
+  ],
+  "topes": [ { "clave": "sin_canal", "nombre": "Colgó sin canal de seguimiento", "maximo": 4 } ],   // los que se aplicaron (hasta 20)
+  "fallos": [ { "clave": "no-cerro-fecha", "nombre": "No cerró fecha", "texto": "…" } ],           // máx. 5
+  "tono": [ { "clave": "sono-calido", "nombre": "Sonó cálido", "signo": 1, "texto": "…" } ],       // signo 1 a favor, -1 en contra; máx. 5
+  "lo_bueno": ["…"], "a_mejorar": ["…"], "sugerencias": ["…"],   // máx. 3 cada una, ≤ 300 car.
+  "resumen": "…",                       // ≤ 600 car.
+  "atendio_tipo": "persona",            // "persona" | "ia": a quién califica (la persona sale de llamada.atendio)
+  "modelo": "…", "generado_en": "2026-11-09T18:00:00Z"
+}
+```
+Reglas del conmutador:
+- Nunca transcripción, teléfonos, correos ni montos dentro de los textos.
+- Solo coaching en estado «listo». Califica a quien de verdad atendió (`llamada.atendio`, con prueba).
+- `fallos` y `tono` llevan siempre `nombre` legible: el ERP no mantiene una copia del catálogo.
+
+### `analisis` (objeto | null)
+```json
+{
+  "intencion": "cotizar|factura|proveedor|empleo|envio|soporte|seguimiento|otro",
+  "desenlace": "transferida|lead|resuelta|abandonada|sin-valor",
+  "equipos": [ { "texto": "banda transportadora", "clave_catalogo": "BT-20" } ],   // hasta 20; texto normalizado; clave del catálogo del ERP o null
+  "preguntas_sin_respuesta": ["¿Manejan bandas de PVC grado alimenticio?"],          // máx. 5, ≤ 300 car., sin datos personales
+  "objeciones": [ { "categoria": "precio|tiempo_entrega|ya_tiene_proveedor|lo_pensara|financiamiento|especificacion|otro", "texto": "…" } ],  // hasta 10
+  "stt_dudoso": false,
+  "fuente_transcripcion": "en_vivo|scribe",
+  "modelo": "…", "generado_en": "…"
+}
+```
+Las listas de intención, desenlace y categoría son las que usa el conmutador hoy; el ERP **no las
+cierra**: un valor nuevo se guarda tal cual y sale como su propio grupo (rechazarlo tiraría la
+llamada entera). Una objeción sin categoría queda como `otro`.
+
+### Respuestas
+Las mismas de la fase 1. Una forma que no cumple lo de arriba (calificación fuera de 1–10, criterios
+que no son lista, más fallos de los permitidos, `atendio_tipo` desconocido, `historica` que no es
+booleano…) es **400** con el campo en el mensaje, y no toca nada de la llamada (la revisan la función
+de borde y otra vez la base, con 22023). Queda anotado en Integraciones como «último error».
+
+### Corrección de ubicación del lead
+Cuando el conmutador vuelve a oír la grabación (Scribe v2 + entidades) y corrige `lead.ciudad` /
+`lead.estado`, manda la foto nueva con el valor corregido. El ERP **reemplaza** `ciudad` y
+`estado_mx` si el valor actual en el lead es igual al que mandó el teléfono en una foto anterior de
+esa misma llamada (nadie lo tocó a mano) o si está vacío. Si una persona cambió la ciudad **o** el
+estado, la ubicación ya la revisó una persona: el teléfono solo llena lo que siga vacío. «Lo que
+mandó el teléfono» es el último valor no vacío de cada campo del `lead` en `llamadas.datos` (una foto
+que no trae la ciudad no hace olvidar la anterior).
+
+### Lo que hace el ERP (migración 261)
+- Quita `coaching` y `analisis` de `llamadas.datos` (como la transcripción; `datos` lo ve también el
+  dueño del cliente) y los guarda en `llamada_coaching` y `llamada_analisis`, una fila por llamada.
+  Solo `telefono_registrar_evento` las escribe; nadie con sesión.
+- **Quién ve el coaching**: quien atendió (`perfil_id = auth.uid()`) y la gerencia de ventas y
+  dirección (`puede('ventas', 3)`). **Nunca otro vendedor**, ni el dueño del cliente si atendió otro.
+  - `perfil_id` = `llamadas.atendio_perfil` resuelto por el directorio. Si nadie del ERP está ligado,
+    se guarda con `perfil_id` null (lo ve solo la gerencia) y aparece en «Quién contesta» para
+    ligarlo; al ligarlo (`fijar_directorio_telefono`) sus coachings se le asignan, igual que sus
+    llamadas. Si una foto posterior dice quién atendió, el coaching sin dueño también es suyo.
+  - Un coaching con `atendio_tipo = "ia"` califica a la IA: no es de nadie (lo ve la gerencia).
+- **Quién ve el análisis**: quien ve la llamada (la regla de `llamadas`). Los agregados, con permiso de
+  análisis (abajo).
+- **Equipos**: `clave_catalogo` se busca en `articulos.clave`; si existe, se guarda su `articulo_id`.
+- **Filtro de respaldo**: los textos del análisis (equipos, preguntas, objeciones) pasan por
+  `sin_datos_personales()`: 7 dígitos o más seguidos son `[teléfono]` y un correo es `[correo]`.
+- **Llamadas históricas**: ver arriba. Tampoco salen en «Regresar llamada» (`llamadas_por_regresar`).
+
+### Para las pantallas
+- `coaching_resumen(p_desde date, p_hasta date, p_perfil uuid default null) → jsonb` (fechas de la
+  planta, las dos incluidas; máximo 400 días). Cada quien recibe lo suyo; la gerencia de ventas y
+  dirección, el de todos o el de `p_perfil`. Pedir el de otro sin ser gerencia es error 42501.
+  Devuelve `n`, `promedio`, `semanas` [{semana (lunes), n, promedio}], `personas` [{perfil_id, tipo,
+  nombre, n, promedio, semanas, mejor, peor}], `criterios` [{clave, nombre, peso, n, promedio}],
+  `fallos` (los 10 más repetidos) [{clave, nombre, n}], `tono` [{clave, nombre, signo, n}], `mejor` y
+  `peor` [{llamada_id, fecha, calificacion, perfil_id}]. La IA y los nombres sin ligar salen como su
+  propia «persona» (`tipo`, `perfil_id` null).
+- `llamadas_analitica(p_desde date, p_hasta date) → jsonb`, para `puede('analisis', 1)` o
+  `puede('ventas', 3)` (si no, error 42501). Solo agregados, sin teléfonos ni nombres de quien llamó:
+  `llamadas`, `nadie_contesto`, `con_analisis`, `stt_dudoso`, `pct_stt_dudoso`, `semanas`, `equipos`
+  (los 15 más pedidos, por artículo del catálogo o por texto normalizado, con su serie semanal),
+  `preguntas` (las 20 más repetidas, juntando las que dicen lo mismo con otras palabras, con un
+  ejemplo y la última vez), `objeciones` por categoría (con hasta 3 ejemplos), `desenlaces`,
+  `intenciones`, `por_hora` (0–23) y `por_dia` (1 lunes … 7 domingo), cada uno con su «nadie contestó».
+  Con 20,000 llamadas en local, 90 días tardan unos 230 ms.
+- Las preguntas «parecidas» se juntan con `llamada_texto_clave()`: sin acentos ni signos, sin
+  palabras de relleno, en singular y en orden («¿Manejan bandas de PVC grado alimenticio?» = «¿tienen
+  banda PVC grado alimenticio?»).
+
+### Objetivos
+Indicador 75 `calificacion_coaching` («Calificación de coaching», área ventas, automático, en
+puntos): el promedio del mes de las llamadas que la persona atendió (`atendio_perfil`) y que se le
+calificaron a ella (no a la IA). `posibles` = 10, así que la regla proporcional da promedio × 10 %.
+Cada llamada es evidencia (tipo `llamada`) con su calificación; cuenta como incidencia la que queda
+por debajo de la mínima (parámetro `minima`, 6 si no se dice). Sin llamadas calificadas en el mes, no
+hay dato y lo califica el jefe. Se agrega a las plantillas desde la pantalla.
+
+### Revisión nocturna (solo SQL; a la IA no le llega nada de esto)
+- `preguntas_sin_respuesta` (ventas, para responsable, se cierra sola): la misma pregunta en 2
+  llamadas o más en 7 días. Le llega a quien administra el catálogo o los costos
+  (`usuarios_con_permiso('catalogo', 3)` ∪ `('costos', 3)`: quien puede dar de alta lo que falta o
+  ponerle precio; hoy es dirección, y si se le da ese nivel a alguien más, le llega a esa persona).
+- `coaching_bajo_repetido` (ventas, para dirección): una persona con 5 llamadas o más en 2 semanas y
+  promedio menor a 6, escrita como patrón y sin acusar. El título no lleva nombre ni calificación,
+  porque los títulos de los hallazgos sí se le mandan a la IA nocturna para que no se repita; el
+  nombre va en el detalle, que solo ve dirección.
+
 ## Para conectarlo (una vez)
 1. `npx supabase functions deploy telefono --no-verify-jwt` (no necesita secretos propios).
-2. Migraciones 258 y 259 aplicadas en la nube (la 259 es la de «quién llama»; sin ella `/contexto`
-   contesta 500 y voz sigue sin contexto).
+2. Migraciones 258 a 261 aplicadas en la nube (la 259 es la de «quién llama»; sin ella `/contexto`
+   contesta 500 y voz sigue sin contexto; la 261 es la del coaching y el análisis, y **va antes** de
+   que voz los mande: sin ella caerían en `llamadas.datos`, que ve el dueño del cliente).
 3. Dirección: Configuración → Integraciones → Teléfono → «Generar llave».
 4. En Railway, en el conmutador: `ERP_URL` = la dirección que muestra esa tarjeta
    (`https://<proyecto>.supabase.co/functions/v1/telefono`) y `ERP_LLAVE` = la llave.
