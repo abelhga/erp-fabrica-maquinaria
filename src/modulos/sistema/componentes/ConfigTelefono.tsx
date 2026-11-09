@@ -100,7 +100,7 @@ export function ConfigTelefono() {
 
         <div className="space-y-2" data-explain={GLOSARIO.directorioTelefono} data-explain-title="Directorio del teléfono">
           <p className="font-medium">Quién contesta</p>
-          <p className="text-xs text-tenue">Cada nombre que manda el conmutador, ligado a su persona del ERP. Los que traen el mismo teléfono que su perfil se ligan solos.</p>
+          <p className="text-xs text-tenue">Cada nombre que manda el conmutador, ligado a su persona del ERP. Los que traen el mismo teléfono que su perfil se ligan solos. Al ligarlo, sus llamadas y calificaciones anteriores pasan a esa persona; con «Sin persona» dejan de ser suyas.</p>
           {directorio.isLoading ? <Cargando filas={2} /> : (directorio.data ?? []).length === 0 ? (
             <p className="text-xs text-tenue">Todavía nadie. Aparecen solos con la primera llamada que atiende cada quien.</p>
           ) : (

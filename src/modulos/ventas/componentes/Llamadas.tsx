@@ -1,16 +1,18 @@
 // Las llamadas que manda el conmutador con IA (función «telefono»): en la ficha del cliente, en el
 // lead y, las que nadie contestó, en «Regresar llamada». Quién ve cuál lo decide la base (RLS de
-// llamadas): el dueño, quien la atendió, la gerencia y, si no son de nadie, recepción.
+// llamadas): el dueño, quien la atendió, la gerencia y, si no son de nadie, recepción. La calificación
+// de coaching va aparte (llamada_coaching, con su propia RLS): el dueño del cliente ve la llamada que
+// atendió otro vendedor, pero no su calificación. Por eso nunca sale de llamadas.datos.
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Bot, Check, Headphones, PhoneCall, PhoneMissed, X } from "lucide-react";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto } from "@/components/ui/campo";
-import { Insignia } from "@/components/ui/insignia";
+import { Insignia, type Tono } from "@/components/ui/insignia";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion, useTiempoReal } from "@/lib/consultas";
-import { fechaYHora, hace } from "@/lib/formato";
+import { fechaYHora, hace, numero } from "@/lib/formato";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 export interface Llamada {
@@ -47,8 +49,22 @@ export function useLlamadas(filtro: { cliente?: string; lead?: string }) {
   });
 }
 
+/** El tono de una calificación de coaching (1 a 10), el mismo en la ficha y en «Coaching». */
+export const tonoCalificacion = (v: number): Tono => (v >= 8 ? "ok" : v >= 6 ? "marca" : "aviso");
+
+/** Las calificaciones de coaching de estas llamadas que el usuario puede ver: la RLS de llamada_coaching
+ *  deja solo las que atendió él (o todas a la gerencia de ventas y dirección); las demás no llegan. */
+export function useCalificaciones(ids: string[]) {
+  useTiempoReal("llamada_coaching", [["calificaciones_llamadas"]]);
+  return useQuery({
+    queryKey: ["calificaciones_llamadas", ids], enabled: ids.length > 0,
+    queryFn: () => q<{ llamada_id: string; calificacion: number }[]>(supabase.from("llamada_coaching").select("llamada_id, calificacion").in("llamada_id", ids)),
+    select: (r) => new Map(r.map((x) => [x.llamada_id, Number(x.calificacion)])),
+  });
+}
+
 /** Una llamada en una línea: cuándo, quién la atendió (o nadie), cuánto duró, el resumen y la grabación. */
-export function FilaLlamada({ l }: { l: Llamada }) {
+export function FilaLlamada({ l, calificacion }: { l: Llamada; calificacion?: number }) {
   const quien = l.atendio?.nombre ?? l.atendio_nombre;
   const d = duracion(l.duracion_seg);
   return (
@@ -64,6 +80,12 @@ export function FilaLlamada({ l }: { l: Llamada }) {
           ) : quien ? <span>Atendió <b className="font-medium">{quien}</b></span>
             : l.atendio_ia ? <span className="inline-flex items-center gap-1 text-tenue"><Bot className="h-3.5 w-3.5" />La atendió la IA ({l.atendio_ia})</span> : null}
           {d && <span className="text-tenue cifra">{d}</span>}
+          {calificacion != null && (
+            <Link to={`/ventas/coaching?llamada=${l.id}`} data-explain={GLOSARIO.calificacionEnLlamada} data-explain-title="Calificación de coaching"
+              className="inline-flex" aria-label={`Calificación de coaching: ${numero(calificacion)} de 10`}>
+              <Insignia tono={tonoCalificacion(calificacion)} className="cifra hover:underline">{numero(calificacion)} de 10</Insignia>
+            </Link>
+          )}
           {l.area_nombre && <span className="text-tenue">· {l.area_nombre}</span>}
         </p>
         {l.resumen && <p className="break-words">{l.resumen}</p>}
@@ -81,7 +103,8 @@ export function FilaLlamada({ l }: { l: Llamada }) {
 }
 
 export function ListaLlamadas({ llamadas }: { llamadas: Llamada[] }) {
-  return <ul className="divide-y divide-borde">{llamadas.map((l) => <FilaLlamada key={l.id} l={l} />)}</ul>;
+  const cal = useCalificaciones(llamadas.map((l) => l.id));
+  return <ul className="divide-y divide-borde">{llamadas.map((l) => <FilaLlamada key={l.id} l={l} calificacion={cal.data?.get(l.id)} />)}</ul>;
 }
 
 // -----------------------------------------------------------------------------

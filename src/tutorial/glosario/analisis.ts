@@ -37,6 +37,7 @@ export const ANALISIS = {
   pestanaEntregas: "Si cumplimos las fechas prometidas: pedidos a tiempo, días de atraso y cada orden del taller con la fecha a la que sale de verdad.",
   pestanaCapacidadTaller: "Si se promete más de lo que el taller saca: lo prometido para cada mes contra lo que cabe, y lo que entra contra lo que sale.",
   pestanaUbicacionesRevisar: "Ciudades y estados de clientes que no se reconocieron o se ubicaron con duda; lo que no se ubica no sale en el mapa. Lo que dirección corrige aquí se queda para los clientes que vengan después.",
+  pestanaLlamadasAnalisis: "Lo que dicen las llamadas del conmutador: qué equipos piden, qué preguntas no se supieron contestar, qué objetan, para qué llaman y en qué termina cada llamada. Solo números juntos, sin quién llamó.",
   periodoEsteAnio: "Del 1 de enero a hoy, contra el mismo tramo del año pasado.",
   periodoDoceMeses: "Los 12 meses que terminan hoy, contra los 12 meses anteriores a esos. Sirve para comparar sin que importe en qué mes del año vas.",
   periodoAnioAnterior: "El año pasado completo, de enero a diciembre, contra el año antes de ese.",
@@ -126,4 +127,14 @@ export const ANALISIS = {
 
   // --- Tarjeta del inicio de dirección ---
   dondeVendemosInicio: "La venta de este año por estado, con IVA; el tono dice cuánto (gris: sin venta). Abajo, los 3 estados que más venden y su parte del total. Clic en el mapa para abrir el análisis.",
+
+  // --- Lo que dicen las llamadas ---
+  llamadasConAnalisis: "Cuántas llamadas del periodo ya traen el análisis del conmutador. Equipos, preguntas, objeciones, desenlaces e intenciones salen solo de esas.",
+  equiposPedidos: "Los equipos que más se mencionaron en las llamadas del periodo, contados una vez por llamada. Lo que se dice igual con otras palabras («banda», «bandas transportadoras») se cuenta junto. Si el conmutador lo ligó a su clave, el nombre abre el artículo en el catálogo. La rayita es semana a semana.",
+  preguntaSinRespuesta: "Algo que preguntó quien llamó y no se le supo contestar en la llamada. Se juntan las que preguntan lo mismo con otras palabras. Las que se repiten suelen ser un hueco del catálogo, de una ficha técnica o de un precio: si se repite en 2 llamadas o más en 7 días, también le sale en «Por revisar» a quien administra el catálogo o los costos.",
+  objecionLlamada: "Lo que frenó a quien llamó, en categorías fijas: precio, tiempo de entrega, ya tiene proveedor, lo va a pensar, financiamiento, especificación u otro. Abajo de cada una, ejemplos de cómo lo dijeron.",
+  desenlaceLlamada: "En qué terminó la llamada: se pasó a una persona, dejó un lead, se resolvió en la misma llamada, colgaron antes de terminar o no era de nada (número equivocado, publicidad).",
+  intencionLlamada: "Para qué llamaron: cotizar, una factura, un proveedor que nos quiere vender, empleo, un envío, soporte, seguimiento de algo que ya está en curso, u otra cosa.",
+  sttDudoso: "Las llamadas en las que el reconocedor de voz no entendió bien partes de lo que se dijo (ruido, mala señal, hablaron encimados). Lo que sale de esas llamadas puede traer errores; si el porcentaje sube, conviene revisar la línea.",
+  llamadasPorHoraDia: "Cuántas llamadas entran a cada hora y cada día de la semana, y cuántas de esas nadie contestó. Sirve para ver a qué horas hace falta alguien más al teléfono.",
 } satisfies Record<string, string>;

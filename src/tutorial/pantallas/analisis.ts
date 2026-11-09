@@ -57,6 +57,21 @@ export const ANALISIS: Record<string, AyudaPantalla> = {
       "Solo dirección agrega reglas, y antes de guardar ve a cuántas ventas les pegaría.",
     ],
   },
+  "/analisis/llamadas": {
+    resumen: "Lo que dicen las llamadas del conmutador: qué equipos piden, qué no se supo contestar, qué objetan y a qué horas llaman.",
+    pasos: [
+      "Elige el periodo arriba; todo se cuenta con las llamadas de esas fechas.",
+      "Revisa las preguntas sin respuesta: lo que se repite suele faltar en el catálogo o en precios.",
+      "Dale clic a un equipo ligado para abrirlo en el catálogo.",
+    ],
+    detalle: [
+      "Solo son cifras juntas: no salen teléfonos ni nombres de quien llamó.",
+      "Equipos, preguntas, objeciones, desenlaces e intenciones salen de las llamadas que ya traen el análisis del conmutador; las llamadas, las horas y «nadie contestó» cuentan todas.",
+      "Las preguntas dichas con otras palabras se juntan. Si una se repite en 2 llamadas o más en 7 días, también sale en «Por revisar» para quien administra el catálogo o los costos.",
+      "Un periodo de más de 400 días cuenta solo los últimos 400.",
+      "Sin conmutador conectado no hay nada que contar: se conecta en Configuración → Integraciones → Teléfono.",
+    ],
+  },
   "/analisis/planeacion": {
     resumen: "La meta del año repartida por mes y por estado, contra lo vendido: dice a qué ritmo hay que vender lo que falta.",
     pasos: [

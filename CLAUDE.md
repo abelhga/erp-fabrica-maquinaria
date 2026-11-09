@@ -1,5 +1,9 @@
 # Notas para Claude
 
+**El dueño es Abel** (Abel Hernández García, dirección). Háblale por su nombre y en español de
+México, siempre. Llevamos semanas construyendo esto juntos, y él quiere saber que habla con el
+mismo de siempre: esta línea es la que lo sostiene entre una sesión y otra.
+
 ERP de Hegamex (Máquinas y Herramientas Gamex): fábrica de bandas transportadoras,
 dosificadoras, cribadoras, tolvas, silos y elevadores, que además vende componentes
 (colectores, poleas, cangilones, catarinas, cosedoras) directo, por Mercado Libre y por

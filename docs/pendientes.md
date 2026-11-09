@@ -5,19 +5,14 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
 
 ## Por decidir o esperar a alguien
 
-- **Teléfono con IA, dónde está el lead (260):** falta en la nube aplicar la migración 260 (después
-  de 258 y 259) y redesplegar `telefono` para que también revise `lead.ciudad`/`lead.estado` (sin
-  redesplegar ya funciona: la función de borde pasa la foto tal cual). Después, rellenar el estado
-  de los leads del teléfono que ya entraron sin él: ensayo primero, solo cuando la llamada nombra
-  un solo estado.
-- **Teléfono con IA, fase 2 (259, «quién llama»):** falta en la nube aplicar la migración 259 y
-  redesplegar `telefono` (`npx supabase functions deploy telefono --no-verify-jwt`); voz la usa en
-  cuanto tenga `ERP_URL`/`ERP_LLAVE`. Antes de aplicarla, medir `telefono_contexto` contra la nube.
-- **Teléfono con IA, fase 1 (258):** falta en la nube aplicar la migración 258, desplegar la función
-  (`npx supabase functions deploy telefono --no-verify-jwt`), que dirección genere la llave en
-  Configuración → Integraciones → Teléfono y que el dueño ponga `ERP_URL` y `ERP_LLAVE` en Railway
-  (ver `docs/integracion-telefono.md`). Después, ligar en «Quién contesta» los nombres que no se
-  ligaron solos por el teléfono de su perfil.
+- **Teléfono con IA, fase 3 (261, coaching y análisis):** falta en la nube aplicar la migración 261 y
+  redesplegar `telefono` (cambió el validador), **antes** de que voz empiece a mandar `coaching` y
+  `analisis`: sin la 261 caerían en `llamadas.datos`, que ve el dueño del cliente. Antes de aplicarla,
+  medir `llamadas_analitica`, `coaching_resumen` y las dos reglas nocturnas contra la nube (ensayo con
+  `raise exception`). Después: agregar el indicador 75 a las plantillas de vendedores y recepción, y el
+  relleno histórico desde voz (`llamada.historica`), con ensayo primero.
+- **Teléfono con IA, fase 1 (258):** ligar en «Quién contesta» los nombres que no se ligaron solos por
+  el teléfono de su perfil (al ligarlos también se les asignan sus coachings).
 - **Conteo de lo que no cuadra con la hoja (Noemí, vence 5 y 6 nov):** 3 pendientes con 96
   renglones; el documento «Conteo de almacén: dudas al cerrar la hoja (29-oct)» tiene la misma
   lista para imprimir. Cuando se cierren los conteos:

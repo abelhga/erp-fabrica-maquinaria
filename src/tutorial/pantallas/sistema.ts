@@ -89,7 +89,7 @@ export const SISTEMA: Record<string, Ayuda> = {
       "En la tarjeta de Skydropx, quien administra envíos prueba la conexión (muestra el saldo) y elige la dirección de la planta de las que ya están en Skydropx, la clave de carta porte, el tipo de empaque y el formato de la guía. Sin dirección y carta porte no se puede generar guía.",
       "Ahí también pone el recargo que se le suma al flete cuando un vendedor lo cotiza en una cotización.",
       "La tarjeta «Teléfono (recepción con IA)» dice si el conmutador está mandando las llamadas y cuándo llegó la última. Para conectarlo, en Railway se ponen ERP_URL (la dirección que viene ahí, con su botón de copiar) y ERP_LLAVE, la llave que genera dirección con «Generar llave».",
-      "La llave se ve una sola vez: cópiala al momento. Generar otra deja sin servir la anterior. En «Quién contesta» dirección liga cada nombre del conmutador a su persona del ERP; los que traen el mismo teléfono que su perfil se ligan solos.",
+      "La llave se ve una sola vez: cópiala al momento. Generar otra deja sin servir la anterior. En «Quién contesta» dirección liga cada nombre del conmutador a su persona del ERP; los que traen el mismo teléfono que su perfil se ligan solos. Al ligarlo, a mano o solo, sus llamadas y sus calificaciones de coaching anteriores quedan a su nombre; si lo dejas en «Sin persona», dejan de ser suyas.",
     ],
   },
 };

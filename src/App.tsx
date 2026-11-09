@@ -27,6 +27,7 @@ const DetallePedido = p(() => import("./modulos/ventas/DetallePedido"));
 const Clientes = p(() => import("./modulos/ventas/Clientes"));
 const DetalleCliente = p(() => import("./modulos/ventas/DetalleCliente"));
 const Comisiones = p(() => import("./modulos/ventas/Comisiones"));
+const Coaching = p(() => import("./modulos/ventas/Coaching"));
 const Precios = p(() => import("./modulos/compras/Precios"));
 const OrdenesCompra = p(() => import("./modulos/compras/OrdenesCompra"));
 const DetalleOrdenCompra = p(() => import("./modulos/compras/DetalleOrdenCompra"));
@@ -195,6 +196,8 @@ export function App() {
           <Route path="ventas/clientes" element={<Con m="ventas"><Clientes /></Con>} />
           <Route path="ventas/clientes/:id" element={<Con m="ventas"><DetalleCliente /></Con>} />
           <Route path="ventas/comisiones" element={<Con m="ventas"><Comisiones /></Con>} />
+          {/* Con «leads» y no «ventas»: recepción también atiende llamadas y no tiene ventas. Cada quien ve lo suyo (la base decide). */}
+          <Route path="ventas/coaching" element={<Con m="leads"><Coaching /></Con>} />
           {/* La piden ventas e ingeniería (costeo 3): la pantalla revisa los dos permisos; la RLS decide qué ve cada quien. */}
           <Route path="ventas/solicitudes" element={<MisSolicitudesPrecio />} />
           <Route path="ventas/leads" element={<Con m="leads"><Leads /></Con>} />

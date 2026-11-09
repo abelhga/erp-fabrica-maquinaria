@@ -9,6 +9,9 @@
 //   400 cuerpo mal hecho → no reintenta ese envío tal cual
 //   5xx                 → reintenta con espera creciente (por eso un error de la base es 500)
 //
+// Desde la fase 3 la misma foto puede traer `coaching` y `analisis` (y `llamada.historica`): aquí se
+// revisa su forma; la base los guarda en sus tablas, cada una con quién la ve, nunca en llamadas.datos.
+//
 // GET /telefono/contexto?tel=… (fase 2): al empezar una llamada el conmutador pregunta quién llama
 // (telefono_contexto: cliente, su vendedor, pedidos abiertos y cotizaciones vivas, sin montos). Lo
 // espera 800 ms y, si no llega, la llamada sigue sin contexto: por eso es una sola consulta a la base.
@@ -30,6 +33,9 @@ export interface Evento {
   enviado_en?: string | null;
   llamada: Record<string, unknown>;
   lead?: Record<string, unknown> | null;
+  /** Fase 3. Ausente = el ERP no toca lo que tenía; null = lo borra; objeto = lo reemplaza completo. */
+  coaching?: Record<string, unknown> | null;
+  analisis?: Record<string, unknown> | null;
 }
 
 const json = (cuerpo: unknown, status = 200) =>
@@ -40,6 +46,66 @@ export const TOPE_BYTES = 256 * 1024;
 
 const esObjeto = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const textoONulo = (v: unknown) => v === undefined || v === null || typeof v === "string";
+const vacio = (v: unknown) => v === undefined || v === null;
+const textoHasta = (v: unknown, max: number) => vacio(v) || (typeof v === "string" && v.length <= max);
+const numeroEntre = (v: unknown, min: number, max: number) => typeof v === "number" && Number.isFinite(v) && v >= min && v <= max;
+/** Una lista opcional de textos: hasta `n`, cada uno de hasta `max` caracteres. */
+const textos = (v: unknown, n: number, max: number) => vacio(v) || (Array.isArray(v) && v.length <= n && v.every((t) => typeof t === "string" && t.length <= max));
+/** Una lista opcional de objetos: hasta `n`, y cada uno cumple `ok`. */
+const objetos = (v: unknown, n: number, ok: (o: Record<string, unknown>) => boolean) =>
+  vacio(v) || (Array.isArray(v) && v.length <= n && v.every((o) => esObjeto(o) && ok(o)));
+const conClave = (o: Record<string, unknown>) => typeof o.clave === "string" && o.clave.length > 0 && o.clave.length <= 60 && textoHasta(o.nombre, 120);
+
+/**
+ * Fase 3: la forma del coaching (docs/integracion-telefono.md). Los tamaños son los del contrato: el
+ * conmutador ya los respeta, y algo más grande es un error suyo que conviene ver (queda anotado) en vez
+ * de guardarlo recortado sin que nadie sepa. La calificación la calcula el conmutador: aquí solo se
+ * revisa que esté en la escala.
+ */
+function validarCoaching(co: unknown): string | null {
+  if (co === null) return null;
+  if (!esObjeto(co)) return "coaching debe ser un objeto o null";
+  if (!numeroEntre(co.calificacion, 1, 10)) return "coaching.calificacion debe ser un número de 1 a 10";
+  if (!(vacio(co.calificacion_sin_topes) || numeroEntre(co.calificacion_sin_topes, 0, 10))) return "coaching.calificacion_sin_topes debe ser un número de 0 a 10 o null";
+  if (co.atendio_tipo !== "persona" && co.atendio_tipo !== "ia") return "coaching.atendio_tipo debe ser \"persona\" o \"ia\"";
+  if (!(vacio(co.rubrica) || (esObjeto(co.rubrica) && textoHasta(co.rubrica.clave, 60) && (vacio(co.rubrica.version) || Number.isInteger(co.rubrica.version))))) {
+    return "coaching.rubrica debe ser {clave, version entera} o null";
+  }
+  if (!Array.isArray(co.criterios)) return "coaching.criterios debe ser una lista";
+  if (!objetos(co.criterios, 30, (c) => conClave(c) && (vacio(c.peso) || numeroEntre(c.peso, 0, 100))
+      && (vacio(c.nota) || (Number.isInteger(c.nota) && numeroEntre(c.nota, 0, 10))) && textoHasta(c.evidencia, 200)
+      && (vacio(c.segundo) || numeroEntre(c.segundo, 0, 86_400)))) {
+    return "coaching.criterios: hasta 30, cada uno {clave, nombre, peso 0–100, nota entera 0–10, evidencia ≤ 200, segundo}";
+  }
+  if (!objetos(co.topes, 20, (t) => conClave(t) && (vacio(t.maximo) || numeroEntre(t.maximo, 0, 10)))) return "coaching.topes: hasta 20 {clave, nombre, maximo 0–10}";
+  if (!objetos(co.fallos, 5, (f) => conClave(f) && textoHasta(f.texto, 300))) return "coaching.fallos: hasta 5 {clave, nombre, texto ≤ 300}";
+  if (!objetos(co.tono, 5, (t) => conClave(t) && (t.signo === 1 || t.signo === -1) && textoHasta(t.texto, 300))) {
+    return "coaching.tono: hasta 5 {clave, nombre, signo 1 o -1, texto ≤ 300}";
+  }
+  for (const k of ["lo_bueno", "a_mejorar", "sugerencias"]) {
+    if (!textos(co[k], 3, 300)) return `coaching.${k}: hasta 3 textos de 300 caracteres`;
+  }
+  if (!textoHasta(co.resumen, 600)) return "coaching.resumen debe ser texto de hasta 600 caracteres o null";
+  if (!textoHasta(co.modelo, 100) || !textoONulo(co.generado_en)) return "coaching.modelo y coaching.generado_en deben ser texto o null";
+  return null;
+}
+
+/** Fase 3: la forma del análisis. Sin listas cerradas de intención o desenlace: un valor nuevo del conmutador no debe tirar la llamada. */
+function validarAnalisis(an: unknown): string | null {
+  if (an === null) return null;
+  if (!esObjeto(an)) return "analisis debe ser un objeto o null";
+  for (const k of ["intencion", "desenlace", "fuente_transcripcion"]) if (!textoHasta(an[k], 40)) return `analisis.${k} debe ser texto corto o null`;
+  if (!objetos(an.equipos, 20, (e) => textoHasta(e.texto, 120) && textoHasta(e.clave_catalogo, 60))) {
+    return "analisis.equipos: hasta 20 {texto ≤ 120, clave_catalogo o null}";
+  }
+  if (!textos(an.preguntas_sin_respuesta, 5, 300)) return "analisis.preguntas_sin_respuesta: hasta 5 textos de 300 caracteres";
+  if (!objetos(an.objeciones, 10, (o) => textoHasta(o.categoria, 40) && textoHasta(o.texto, 300))) {
+    return "analisis.objeciones: hasta 10 {categoria, texto ≤ 300}";
+  }
+  if (!(vacio(an.stt_dudoso) || typeof an.stt_dudoso === "boolean")) return "analisis.stt_dudoso debe ser true, false o null";
+  if (!textoHasta(an.modelo, 100) || !textoONulo(an.generado_en)) return "analisis.modelo y analisis.generado_en deben ser texto o null";
+  return null;
+}
 
 /** Revisa la forma del cuerpo. Devuelve el error en español para el 400 (el conmutador lo anota). */
 export function validar(cuerpo: unknown): { ok: true; evento: Evento } | { ok: false; error: string } {
@@ -64,6 +130,7 @@ export function validar(cuerpo: unknown): { ok: true; evento: Evento } | { ok: f
   if (!(ll.atendio === undefined || ll.atendio === null || (esObjeto(ll.atendio) && textoONulo(ll.atendio.nombre) && textoONulo(ll.atendio.telefono)))) {
     return { ok: false, error: "llamada.atendio debe ser {nombre, telefono} o null" };
   }
+  if (!(vacio(ll.historica) || typeof ll.historica === "boolean")) return { ok: false, error: "llamada.historica debe ser true, false o null" };
   const ld = cuerpo.lead;
   if (!(ld === undefined || ld === null || esObjeto(ld))) return { ok: false, error: "lead debe ser un objeto o null" };
   if (esObjeto(ld)) {
@@ -71,6 +138,8 @@ export function validar(cuerpo: unknown): { ok: true; evento: Evento } | { ok: f
       if (!textoONulo(ld[k])) return { ok: false, error: `lead.${k} debe ser texto o null` };
     }
   }
+  if ("coaching" in cuerpo) { const e = validarCoaching(cuerpo.coaching); if (e) return { ok: false, error: e }; }
+  if ("analisis" in cuerpo) { const e = validarAnalisis(cuerpo.analisis); if (e) return { ok: false, error: e }; }
   return { ok: true, evento: cuerpo as unknown as Evento };
 }
 

@@ -8,7 +8,7 @@ import { FileX,
 import { Activity, Award, Banknote, Coins, Hash, ListChecks, Target, Waypoints } from "lucide-react";
 import { AlertTriangle, CalendarDays, CalendarRange, Hand, Wrench } from "lucide-react";
 import { BookOpen, Calendar, Inbox, MessageSquareQuote, PackageCheck, ScanSearch, Store, Undo2 } from "lucide-react";
-import { GanttChart, Gauge, HardHat, Lightbulb, Map as MapaIcono } from "lucide-react";
+import { GanttChart, Gauge, HardHat, Headset, Lightbulb, Map as MapaIcono } from "lucide-react";
 import type { Modulo, Rol } from "./lib/sesion";
 
 // `tambien`: un segundo permiso que también hace falta (Resultados: finanzas y costos, porque trae márgenes).
@@ -31,6 +31,8 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/ventas/pedidos", texto: "Pedidos", icono: ShoppingCart, modulo: "ventas" },
       { ruta: "/ventas/clientes", texto: "Clientes", icono: Users, modulo: "ventas" },
       { ruta: "/ventas/comisiones", texto: "Comisiones", icono: Trophy, modulo: "ventas" },
+      // «leads» para que recepción también vea su coaching; la base filtra a cada quien lo suyo.
+      { ruta: "/ventas/coaching", texto: "Coaching", icono: Headset, modulo: "leads" },
       { ruta: "/ventas/devoluciones", texto: "Devoluciones y reclamos", icono: Undo2, modulo: "envios" },
       { ruta: "/ventas/mercadolibre", texto: "Mercado Libre", icono: Store, modulo: "mercadolibre" },
     ],

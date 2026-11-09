@@ -2,7 +2,8 @@
 // hecho 400, y la misma foto dos veces deja una sola llamada y un solo lead. «Quién llama» (GET
 // /contexto) contesta 400 a un teléfono que no lo es y, para un cliente con su pedido en planta, el
 // folio, el estado y el avance sin ningún monto. Lo de la base (cliente, dueño, regresar llamada,
-// el avance) lo prueban supabase/pruebas/258_telefono.sql y 259_telefono_contexto.sql. La parte contra la base
+// el avance) lo prueban supabase/pruebas/258_telefono.sql y 259_telefono_contexto.sql; el coaching y el
+// análisis (fase 3), 261_telefono_coaching_analisis.sql. La parte contra la base
 // local necesita la llave de servicio (SUPABASE_SERVICE_ROLE_KEY y DATABASE_URL); sin ella se brinca.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
@@ -10,12 +11,58 @@ import pg from "pg";
 import { atender, telefonoValido, validar } from "./nucleo.ts";
 
 const base = { version: 1, tipo: "llamada", call_sid: "CA-prueba", llamada: { telefono: "+523312345678", nadie_contesto: false }, lead: null };
+// Fase 3, como viene en el contrato.
+const coaching = {
+  rubrica: { clave: "ventas-2026-11", version: 3 }, calificacion: 7.4, calificacion_sin_topes: 8.1,
+  criterios: [{ clave: "siguiente_paso", nombre: "Siguiente paso con fecha", peso: 20, nota: 4, evidencia: "«Le marco el jueves a las 10»", segundo: 143 }],
+  topes: [{ clave: "sin_canal", nombre: "Colgó sin canal de seguimiento", maximo: 4 }],
+  fallos: [{ clave: "no-cerro-fecha", nombre: "No cerró fecha", texto: "Quedó en «luego le hablo»" }],
+  tono: [{ clave: "sono-calido", nombre: "Sonó cálido", signo: 1, texto: "Saludó con calma" }],
+  lo_bueno: ["Preguntó para qué material"], a_mejorar: ["Cerrar con fecha"], sugerencias: ["Proponer día y hora"],
+  resumen: "Buena llamada; faltó cerrar fecha.", atendio_tipo: "persona", modelo: "modelo-x", generado_en: "2026-11-09T18:00:00Z",
+};
+const analisis = {
+  intencion: "cotizar", desenlace: "transferida", equipos: [{ texto: "banda transportadora", clave_catalogo: null }],
+  preguntas_sin_respuesta: ["¿Manejan bandas de PVC grado alimenticio?"], objeciones: [{ categoria: "precio", texto: "Le pareció caro" }],
+  stt_dudoso: false, fuente_transcripcion: "scribe", modelo: "modelo-x", generado_en: "2026-11-09T18:00:00Z",
+};
 
 describe("validar", () => {
   it("acepta la foto del contrato", () => {
     expect(validar(base).ok).toBe(true);
     expect(validar({ ...base, enviado_en: "2026-11-06T22:10:00Z", lead: { nombre: "Juan", interes: "Banda", ciudad: "Tepatitlán", estado: "Jalisco" },
       llamada: { ...base.llamada, duracion_seg: 252, atendio: { nombre: "Isaac", telefono: null }, atendio_ia: "Sofía" } }).ok).toBe(true);
+  });
+  it("acepta coaching y análisis del contrato (fase 3), y null para borrarlos", () => {
+    expect(validar({ ...base, coaching: coaching, analisis: analisis, llamada: { ...base.llamada, historica: true } }).ok).toBe(true);
+    expect(validar({ ...base, coaching: null, analisis: null }).ok).toBe(true);
+    // Un valor de intención que el ERP todavía no conoce no tira la llamada.
+    expect(validar({ ...base, analisis: { ...analisis, intencion: "garantia" } }).ok).toBe(true);
+  });
+  it.each([
+    ["coaching texto", { ...base, coaching: "7.4" }, "coaching debe"],
+    ["coaching lista", { ...base, coaching: [] }, "coaching debe"],
+    ["calificación 11", { ...base, coaching: { ...coaching, calificacion: 11 } }, "coaching.calificacion"],
+    ["calificación 0.5", { ...base, coaching: { ...coaching, calificacion: 0.5 } }, "coaching.calificacion"],
+    ["calificación texto", { ...base, coaching: { ...coaching, calificacion: "7" } }, "coaching.calificacion"],
+    ["sin topes 12", { ...base, coaching: { ...coaching, calificacion_sin_topes: 12 } }, "calificacion_sin_topes"],
+    ["sin atendio_tipo", { ...base, coaching: { ...coaching, atendio_tipo: undefined } }, "atendio_tipo"],
+    ["criterios objeto", { ...base, coaching: { ...coaching, criterios: {} } }, "coaching.criterios"],
+    ["criterio con nota 11", { ...base, coaching: { ...coaching, criterios: [{ ...coaching.criterios[0], nota: 11 }] } }, "coaching.criterios"],
+    ["evidencia larga", { ...base, coaching: { ...coaching, criterios: [{ ...coaching.criterios[0], evidencia: "x".repeat(201) }] } }, "coaching.criterios"],
+    ["6 fallos", { ...base, coaching: { ...coaching, fallos: Array(6).fill(coaching.fallos[0]) } }, "coaching.fallos"],
+    ["tono sin signo", { ...base, coaching: { ...coaching, tono: [{ clave: "x", nombre: "X" }] } }, "coaching.tono"],
+    ["4 sugerencias", { ...base, coaching: { ...coaching, sugerencias: ["a", "b", "c", "d"] } }, "coaching.sugerencias"],
+    ["resumen largo", { ...base, coaching: { ...coaching, resumen: "x".repeat(601) } }, "coaching.resumen"],
+    ["análisis texto", { ...base, analisis: "cotizar" }, "analisis debe"],
+    ["6 preguntas", { ...base, analisis: { ...analisis, preguntas_sin_respuesta: ["1", "2", "3", "4", "5", "6"] } }, "preguntas_sin_respuesta"],
+    ["equipo sin objeto", { ...base, analisis: { ...analisis, equipos: ["banda"] } }, "analisis.equipos"],
+    ["stt_dudoso texto", { ...base, analisis: { ...analisis, stt_dudoso: "no" } }, "stt_dudoso"],
+    ["historica texto", { ...base, llamada: { ...base.llamada, historica: "si" } }, "historica"],
+  ])("rechaza %s", (_n, cuerpo, texto) => {
+    const r = validar(cuerpo);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toContain(texto);
   });
   it.each([
     ["sin versión 1", { ...base, version: 2 }, "Versión"],
@@ -174,6 +221,32 @@ describe.skipIf(!hayBase)("contra la base local", () => {
     expect((await c.query("select count(*)::int n from public.leads where llamada_id = $1", [a.llamada_id])).rows[0].n).toBe(1);
     const t = (await c.query("select ultimo_evento_en is not null visto, ultimo_error from public.telefono_cuenta where id = 1")).rows[0];
     expect(t).toEqual({ visto: true, ultimo_error: null });
+  });
+
+  it("fase 3: el coaching y el análisis van a sus tablas, no a llamadas.datos; null los borra", async () => {
+    const sid = `${SID}-f3`;
+    const conF3 = { ...foto, call_sid: sid, lead: null, coaching, analisis, llamada: { ...foto.llamada, nadie_contesto: false, historica: true } };
+    try {
+      const r = await mandar(conF3);
+      expect(r.status).toBe(200);
+      const { llamada_id } = await r.json();
+      const fila = (await c.query(`select ll.datos, ll.historica, k.calificacion::float cal, k.atendio_tipo, a.intencion
+        from public.llamadas ll left join public.llamada_coaching k on k.llamada_id = ll.id left join public.llamada_analisis a on a.llamada_id = ll.id
+        where ll.id = $1`, [llamada_id])).rows[0];
+      expect(fila).toMatchObject({ historica: true, cal: 7.4, atendio_tipo: "persona", intencion: "cotizar" });
+      expect(Object.keys(fila.datos)).not.toContain("coaching");
+      expect(Object.keys(fila.datos)).not.toContain("analisis");
+      // Un coaching fuera de escala es 400 y no toca lo que había.
+      const mal = await mandar({ ...conF3, coaching: { ...coaching, calificacion: 12 } });
+      expect(mal.status).toBe(400);
+      expect((await c.query("select calificacion::float c from public.llamada_coaching where llamada_id = $1", [llamada_id])).rows[0].c).toBe(7.4);
+      expect((await mandar({ ...conF3, coaching: null, analisis: null })).status).toBe(200);
+      const n = (await c.query(`select (select count(*) from public.llamada_coaching where llamada_id = $1)::int k,
+        (select count(*) from public.llamada_analisis where llamada_id = $1)::int a`, [llamada_id])).rows[0];
+      expect(n).toEqual({ k: 0, a: 0 });
+    } finally {
+      await c.query("delete from public.llamadas where call_sid = $1", [sid]);
+    }
   });
 
   it("quién llama: sin la llave vigente es 401; sin teléfono o con uno corto, 400", async () => {
