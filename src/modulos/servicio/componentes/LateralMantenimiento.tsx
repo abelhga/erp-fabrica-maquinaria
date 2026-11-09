@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Ban, Check, CheckCircle2, Stethoscope, Undo2 } from "lucide-react";
-import { Lateral } from "@/components/ui/dialogo";
+import { AlertTriangle, Ban, CalendarClock, Check, CheckCircle2, Stethoscope, Undo2 } from "lucide-react";
+import { Dialogo, Lateral } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, Entrada } from "@/components/ui/campo";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando } from "@/components/ui/estados";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
-import { fecha, fechaYHora, hace } from "@/lib/formato";
-import { CLAVE, horas, type OrdenMto, type PuntoChecklist } from "../datos";
+import { fecha, fechaYHora, hace, hoyISO } from "@/lib/formato";
+import { CLAVE, horas, vecesPospuesto, type OrdenMto, type PuntoChecklist } from "../datos";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { cn } from "@/lib/utilidades";
 import { Dato, InsigniaMto, usePermisosServicio } from "./piezas";
@@ -91,6 +91,50 @@ function Checklist({ ordenId, planId, editable }: { ordenId: string; planId: str
   );
 }
 
+// Fechas como texto AAAA-MM-DD, al mediodía para que el cambio de horario no mueva el día.
+const sumarDias = (iso: string, d: number) => { const x = new Date(iso + "T12:00:00Z"); x.setUTCDate(x.getUTCDate() + d); return x.toISOString().slice(0, 10); };
+const diaSemana = (iso: string) => new Date(iso + "T12:00:00Z").getUTCDay();   // 0 domingo … 5 viernes
+
+/**
+ * El viernes que viene: Juan Esteban deja los viernes para lo atrasado. Cuenta desde el día después
+ * de la fecha que tiene (posponer es pasarla para adelante) o desde hoy si ya se venció.
+ */
+export function viernesSugerido(vence: string | null, hoy = hoyISO()) {
+  const desde = vence && vence >= hoy ? sumarDias(vence, 1) : hoy;
+  return sumarDias(desde, (5 - diaSemana(desde) + 7) % 7);
+}
+
+/** Pasar un preventivo a otra fecha con el motivo; la base guarda cuántas veces y por qué. */
+function DialogoPosponer({ o, abierto, alCambiar }: { o: OrdenMto; abierto: boolean; alCambiar: (v: boolean) => void }) {
+  const hoy = hoyISO();
+  const minimo = o.vence && o.vence >= hoy ? sumarDias(o.vence, 1) : hoy;
+  const [dia, setDia] = useState(() => viernesSugerido(o.vence, hoy));
+  const [motivo, setMotivo] = useState("");
+  const posponer = useAccion(() => q(supabase.rpc("posponer_mantenimiento", { p_orden: o.id, p_fecha: dia, p_motivo: motivo })), {
+    invalidar: [CLAVE], exito: `${o.folio} pasa al ${fecha(dia)}`, alTerminar: () => { setMotivo(""); alCambiar(false); },
+  });
+  const listo = motivo.trim().length >= 5 && !!dia && dia >= minimo;
+  return (
+    <Dialogo abierto={abierto} alCambiar={alCambiar} titulo={`Posponer ${o.folio}`} sobreLateral
+      descripcion={<>{o.numero} {o.maquina}{o.vence ? ` · le toca el ${fecha(o.vence)}` : ""}. Deja de salir vencido hasta la fecha nueva; el plan de la máquina no cambia.</>}
+      pie={<><Boton variante="secundario" onClick={() => alCambiar(false)}>No posponer</Boton>
+        <Boton onClick={() => posponer.mutate(undefined)} disabled={!listo} cargando={posponer.isPending}><CalendarClock className="h-4 w-4" />Posponer</Boton></>}>
+      <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (listo) posponer.mutate(undefined); }}>
+        <Campo etiqueta="¿Para cuándo?" ayuda={diaSemana(dia) === 5 ? "El viernes que viene, el día de lo atrasado. Cámbialo si va otro día." : "Puede ser cualquier día de hoy en adelante."}>
+          <span className="block" data-explain={GLOSARIO.pospuestoMto} data-explain-title="Fecha nueva">
+            <Entrada type="date" min={minimo} value={dia} onChange={(e) => setDia(e.target.value)} className="w-48" />
+          </span>
+        </Campo>
+        <Campo etiqueta="¿Por qué no se puede ese día?" ayuda={o.pospuesto_veces ? `Ya se pospuso ${o.pospuesto_veces === 1 ? "una vez" : `${o.pospuesto_veces} veces`}: ${o.pospuesto_motivo}` : "Queda en la orden y la ve la gerencia de producción."}>
+          <AreaTexto autoFocus rows={2} value={motivo} onChange={(e) => setMotivo(e.target.value)}
+                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (listo) posponer.mutate(undefined); } }}
+                     placeholder="Ej. no se puede parar la línea: entrega del lunes" />
+        </Campo>
+      </form>
+    </Dialogo>
+  );
+}
+
 /**
  * Una orden de mantenimiento sin perder la lista: lo que se reportó, el
  * diagnóstico, las refacciones (salen de almacén), el costo y el tiempo parada.
@@ -116,6 +160,7 @@ export function LateralMantenimiento({ id, alCerrar }: { id: string | null; alCe
   const [horasTrab, setHorasTrab] = useState("");
   const [motivo, setMotivo] = useState("");
   const [cancelando, setCancelando] = useState(false);
+  const [posponiendo, setPosponiendo] = useState(false);
   const inv = { invalidar: [CLAVE] };
   const atender = useAccion(() => q(supabase.rpc("atender_mantenimiento", {
     p_orden: id, p_diagnostico: diag ?? o?.diagnostico ?? "", p_atiende: atiende ?? o?.atendido_por ?? null,
@@ -135,12 +180,14 @@ export function LateralMantenimiento({ id, alCerrar }: { id: string | null; alCe
         <span data-explain={GLOSARIO.tipoOrdenMto} data-explain-title={o.tipo === "preventivo" ? "Preventivo" : "Correctivo"}>
           <Insignia tono={o.tipo === "preventivo" ? "info" : "neutro"}>{o.tipo === "preventivo" ? "Preventivo" : "Correctivo"}</Insignia></span>
         {o.vencida && <span data-explain={GLOSARIO.situacionPreventivo} data-explain-title="Vencido"><Insignia tono="peligro">Vencido</Insignia></span>}
+        {o.pospuesto_veces > 0 && <span data-explain={GLOSARIO.pospuestoMto} data-explain-title="Pospuesto"><Insignia tono="aviso">{vecesPospuesto(o.pospuesto_veces)}</Insignia></span>}
         {o.detiene && o.abierta && <span data-explain={GLOSARIO.estadoMaquina} data-explain-title="Máquina parada"><Insignia tono="peligro">Máquina parada</Insignia></span>}</span>}>
       {orden.isLoading || !o ? <Cargando filas={6} /> : (
         <div className="space-y-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <Dato etiqueta={o.tipo === "preventivo" ? "Generado" : "Reportó"}>{o.reportado_por_nombre ?? "—"}<span className="block text-xs text-tenue">{fechaYHora(o.reportado_en)}</span></Dato>
-            {o.tipo === "preventivo" && <Dato etiqueta="Vence">{o.vence ? fecha(o.vence) : `${horas(o.vence_horas)} de uso`}</Dato>}
+            {o.tipo === "preventivo" && <Dato etiqueta="Vence">{o.vence ? fecha(o.vence) : `${horas(o.vence_horas)} de uso`}
+              {o.vence_original && <span className="block text-xs text-tenue">le tocaba el {fecha(o.vence_original)}</span>}</Dato>}
             <Dato etiqueta="Tiempo parada" explica={GLOSARIO.tiempoParadaOrden}>{o.horas_paro == null ? "No se paró" : o.horas_paro >= 48 ? `${Math.round(o.horas_paro / 24)} días` : horas(o.horas_paro)}
               {o.fuera_desde && o.abierta && <span className="block text-xs text-tenue">desde {hace(o.fuera_desde)}</span>}</Dato>
             {o.horas_tramos != null && (
@@ -151,6 +198,14 @@ export function LateralMantenimiento({ id, alCerrar }: { id: string | null; alCe
             <Dato etiqueta="Máquina"><Link className="text-marca-texto hover:underline" to={`/servicio/maquinas/${o.maquina_id}`}>{o.numero} {o.maquina}</Link>
               <span className="block text-xs text-tenue">{o.etapa ?? o.categoria}</span></Dato>
           </div>
+
+          {o.pospuesto_veces > 0 && (
+            <div className="rounded-lg bg-aviso-suave px-3 py-2 text-sm" data-explain={GLOSARIO.pospuestoMto} data-explain-title="Pospuesto">
+              <p className="font-medium">{vecesPospuesto(o.pospuesto_veces)}</p>
+              <p>{o.pospuesto_motivo}</p>
+              <p className="text-xs text-tenue">{o.pospuesto_por_nombre}{o.pospuesto_en ? ` · ${fechaYHora(o.pospuesto_en)}` : ""}</p>
+            </div>
+          )}
 
           <Seccion titulo={o.tipo === "preventivo" ? "Qué hay que hacer" : "Lo que se reportó"}>
             <p className="text-sm whitespace-pre-line">{o.falla}</p>
@@ -229,6 +284,10 @@ export function LateralMantenimiento({ id, alCerrar }: { id: string | null; alCe
                       <CheckCircle2 className="h-4 w-4" />Cerrar y poner en servicio
                     </Boton>
                   </span>
+                  {o.tipo === "preventivo" && o.estado === "pendiente" && (
+                    <Boton type="button" variante="secundario" onClick={() => setPosponiendo(true)} data-explain={GLOSARIO.botonPosponerMto} data-explain-title="Posponer">
+                      <CalendarClock className="h-4 w-4" />Posponer</Boton>
+                  )}
                   <Boton type="button" variante="fantasma" onClick={() => setCancelando((v) => !v)} data-explain={GLOSARIO.botonCancelarOrdenMto}><Ban className="h-4 w-4" />Cancelar orden</Boton>
                 </div>
               </form>
@@ -240,6 +299,7 @@ export function LateralMantenimiento({ id, alCerrar }: { id: string | null; alCe
               )}
             </section>
           )}
+          {posponiendo && <DialogoPosponer o={o} abierto={posponiendo} alCambiar={setPosponiendo} />}
           {abierta && !p.gerencia && <p className="text-xs text-tenue">Mantenimiento o la gerencia de producción cierran la orden cuando la máquina queda lista.</p>}
         </div>
       )}

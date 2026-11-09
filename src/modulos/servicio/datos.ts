@@ -154,6 +154,9 @@ export interface OrdenMto {
   /** De la terminal: horas que suman los tramos de play, quién la trae en play y su última pausa. */
   horas_tramos: number | null; en_play: string[] | null; yo_en_play: boolean; ultima_pausa: string | null;
   ultima_pausa_motivo: string | null; mi_ultima_pausa: string | null; criticidad: Criticidad | null;
+  /** Posponer: la fecha que le tocaba según su plan (vence ya es la nueva), cuántas veces, la última razón y quién. */
+  vence_original: string | null; pospuesto_veces: number; pospuesto_motivo: string | null; pospuesto_en: string | null;
+  pospuesto_por_nombre: string | null;
 }
 
 /** Un punto del checklist de un preventivo: null = sin revisar. */
@@ -167,6 +170,8 @@ export interface Plan {
   rutina_id: string | null; rutina: string | null; rutina_puntos: number | null;
   modo: ModoPlan; cada_meses: number | null; semana_mes: number | null; dia_semana: number | null; dia_mes: number | null;
   solo_laborables: boolean;
+  /** Si su orden abierta se pospuso: cuántas veces, por qué y qué día le tocaba (proxima_fecha ya es la nueva). */
+  orden_pospuesta_veces: number; orden_pospuesto_motivo: string | null; orden_vence_original: string | null;
 }
 
 /** Cómo se programa un preventivo por fecha: cada N días, «el primer lunes» o «el día 15» de cada N meses. */
@@ -358,3 +363,6 @@ export function useUrlsFirmadas(rutas: string[]) {
     },
   });
 }
+
+/** «Pospuesto 2 veces»: lo que dice la insignia de un preventivo que se pasó a otra fecha. */
+export const vecesPospuesto = (n: number) => `Pospuesto ${n} ${n === 1 ? "vez" : "veces"}`;

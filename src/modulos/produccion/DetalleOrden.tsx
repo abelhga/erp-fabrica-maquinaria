@@ -20,7 +20,7 @@ import { CLAVE, consulta, useEventos, useProduccionEnVivo, useTablero, type Esta
 import { BarraAvance, EXPLICA_ESTADO_ETAPA, EXPLICA_ESTADO_OP, IconoEvento, InsigniaCompromiso } from "./componentes/piezas";
 import { PasosValidacion, type AccionPaso } from "./componentes/Validacion";
 import { DialogoSurtir, MaterialOrden } from "./componentes/MaterialOrden";
-import { DialogoAgregarEtapa, DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, DialogoEnEspera, DialogoReabrir, DialogoRegresarStock, type OrdenBasica } from "./componentes/DialogosOrden";
+import { DialogoAgregarEtapa, DialogoCambioIngenieria, DialogoCancelar, DialogoEditarOrden, DialogoEnEspera, DialogoReabrir, DialogoRegresarStock, DialogoSoltarApartado, type OrdenBasica } from "./componentes/DialogosOrden";
 import { ESTADO_OP, ESTADO_OPERACION, PRIORIDAD, horas, textoEvento, cifra } from "./componentes/util";
 import { AvanceEtapa } from "./componentes/AvanceEtapa";
 import { GanttCompacto } from "./Gantt";
@@ -107,7 +107,7 @@ export default function DetalleOrden() {
       .eq("orden_id", id).order("solicitado_en", { ascending: false })),
   });
 
-  const [dialogo, setDialogo] = useState<null | "editar" | "cancelar" | "surtir" | "cambio" | "espera" | "etapa" | "stock" | "apartar">(null);
+  const [dialogo, setDialogo] = useState<null | "editar" | "cancelar" | "surtir" | "cambio" | "espera" | "etapa" | "stock" | "apartar" | "soltar">(null);
   const [motivoApartar, setMotivoApartar] = useState("");
   const abrir = (d: typeof dialogo) => (v: boolean) => setDialogo(v ? d : null);
 
@@ -152,6 +152,8 @@ export default function DetalleOrden() {
   const enTaller = o.estado === "liberada" || o.estado === "en_proceso";
   const p = { ing: puede("costeo", 2) || puede("produccion", 3), apartar: puede("produccion", 2) || puede("inventario", 2),
               almacen: puede("inventario", 2), gerencia: puede("produccion", 3), taller: puede("produccion", 2),
+              // Soltar le quita el material a la orden: almacén o la gerencia, no todos los que apartan (la base lo revisa igual).
+              soltar: puede("inventario", 3) || puede("produccion", 3),
               solicitar: puede("produccion", 2) || puede("inventario", 2) || puede("costeo", 1) || puede("ventas", 2),
               resolver: puede("costeo", 2) };
   const basica: OrdenBasica = { id: o.id, folio: o.folio, numero_serie: o.numero_serie, prioridad: o.prioridad, fecha_compromiso: o.fecha_compromiso,
@@ -168,13 +170,17 @@ export default function DetalleOrden() {
   const pasoDe = (k: PasoValidacion["paso"]) => pasos.data?.find((x) => x.paso === k);
   const revisadaIng = pasoDe("ingenieria")?.estado === "hecho";
   const faltanSinPedir = lista.some((m) => m.faltante - m.pedido_a_compras > 0);
+  const hayApartado = lista.some((m) => m.apartado > 0);
+  const soltarExtra = p.soltar && hayApartado ? { texto: "Soltar lo apartado", alClic: () => setDialogo("soltar"), explica: GLOSARIO.soltarApartado } : undefined;
 
   const acciones: Partial<Record<PasoValidacion["paso"], AccionPaso | null>> = !abierta ? {} : {
     ingenieria: p.ing && pasoDe("ingenieria")?.estado === "pendiente" ? { texto: "Marcar revisada", alClic: () => revisar.mutate("ingenieria"), cargando: revisar.isPending } : null,
     apartado: p.apartar ? { texto: pasoDe("apartado")?.estado === "pendiente" ? "Apartar material" : "Volver a apartar", secundaria: pasoDe("apartado")?.estado !== "pendiente",
                             alClic: () => (revisadaIng ? apartar.mutate(undefined) : setDialogo("apartar")), cargando: apartar.isPending,
                             deshabilitado: (pasoDe("apartado")?.estado === "hecho" && "Ya está todo apartado o surtido")
-                              || (!revisadaIng && !p.gerencia && "Falta que ingeniería revise la lista: la gerencia de producción puede apartarla antes si es urgente") } : null,
+                              || (!revisadaIng && !p.gerencia && "Falta que ingeniería revise la lista: la gerencia de producción puede apartarla antes si es urgente"),
+                            extra: soltarExtra }
+      : soltarExtra ? { texto: "Soltar lo apartado", alClic: soltarExtra.alClic, secundaria: true } : null,
     faltantes: p.apartar && faltanSinPedir ? { texto: "Pedir a compras", alClic: () => pedir.mutate(undefined), cargando: pedir.isPending } : null,
     almacen: p.almacen && pasoDe("almacen")?.estado === "pendiente" ? { texto: "Marcar revisado", alClic: () => revisar.mutate("almacen"), cargando: revisar.isPending } : null,
     liberada: p.gerencia && o.estado === "planeada" ? { texto: "Liberar al taller", alClic: () => liberar.mutate(undefined), cargando: liberar.isPending,
@@ -427,6 +433,7 @@ export default function DetalleOrden() {
         <DialogoAgregarEtapa abierto={dialogo === "etapa"} alCambiar={abrir("etapa")} o={{ ...basica, terminada: o.estado === "terminada", conPedido: !!o.pedido_id }}
           tiene={(operaciones.data ?? []).map((x) => x.etapa_id)} />
       </>}
+      {p.soltar && <DialogoSoltarApartado abierto={dialogo === "soltar"} alCambiar={abrir("soltar")} o={basica} material={lista} />}
       {p.almacen && <DialogoSurtir abierto={dialogo === "surtir"} alCambiar={abrir("surtir")} ordenId={id} folio={o.folio} material={lista} creadaEn={o.creado_en} />}
       {p.solicitar && <DialogoCambioIngenieria abierto={dialogo === "cambio"} alCambiar={abrir("cambio")} o={basica} material={lista.filter((m) => !m.quitado_en)} />}
     </Pagina>

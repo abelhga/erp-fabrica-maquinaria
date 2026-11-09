@@ -12,6 +12,7 @@ import { useRpc } from "@/lib/consultas";
 import { dinero, fecha, numero, porcentaje, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { vecesPospuesto } from "./datos";
 
 /**
  * Cómo anda el mantenimiento: si las máquinas están disponibles, cada cuánto fallan, cuánto
@@ -31,11 +32,13 @@ interface Datos {
     maquinas: number; paradas_ahora: number; disponibilidad: number | null; disponibilidad_criticas: number | null; fallas: number | null;
     horas_fuera: number | null; mtbf_h: number | null; mttr_h: number | null; paro_por_falla_h: number | null;
     prev_programados: number | null; prev_a_tiempo: number | null; prev_tarde: number; prev_vencidos: number;
+    /** Veces que se pospuso un preventivo en el periodo, y cuántos siguen pospuestos sin hacer. */
+    posposiciones: number; prev_pospuestos: number;
     horas_preventivo: number; horas_correctivo: number; abiertas: number; abiertas_dias: number | null; costo: number | null;
   };
   maquinas: Maquina[];
   reincidencias: { folio: string; maquina: string; reportada: string; falla: string | null; dias: number; anterior: string; anterior_falla: string | null }[];
-  pendientes: { id: string; folio: string; maquina: string; tipo: string; estado: string; detiene: boolean; falla: string | null; vence: string | null; dias: number }[];
+  pendientes: { id: string; folio: string; maquina: string; tipo: string; estado: string; detiene: boolean; falla: string | null; vence: string | null; dias: number; pospuesto_veces: number }[];
   tecnicos: { quien: string; horas: number; preventivas: number; correctivas: number }[];
   semanas: { semana: string; correctivas: number; preventivas: number }[];
 }
@@ -97,7 +100,8 @@ function Contenido({ d, a }: { d: Datos; a?: Analitica }) {
           detalle={r.paro_por_falla_h == null ? "de reporte a cierre" : `paro promedio ${numero(r.paro_por_falla_h)} h`} explica={GLOSARIO.mttr} />
         <Kpi titulo="Preventivo a tiempo" valor={porcentaje(cumplimiento, 0)} icono={CalendarCheck}
           tono={cumplimiento == null ? "neutro" : cumplimiento >= 0.9 ? "ok" : cumplimiento >= 0.7 ? "aviso" : "peligro"}
-          detalle={`${numero(r.prev_a_tiempo ?? 0)} de ${numero(r.prev_programados ?? 0)} · ${numero(r.prev_vencidos)} vencidos`} explica={GLOSARIO.cumplimientoPreventivo} />
+          detalle={`${numero(r.prev_a_tiempo ?? 0)} de ${numero(r.prev_programados ?? 0)} · ${numero(r.prev_vencidos)} vencidos${r.posposiciones ? ` · se pospuso ${numero(r.posposiciones)} ${r.posposiciones === 1 ? "vez" : "veces"}` : ""}`}
+          explica={GLOSARIO.cumplimientoPreventivo} />
         <Kpi titulo="Preventivo / correctivo" valor={totalHoras ? porcentaje(r.horas_preventivo / totalHoras, 0) : "—"} icono={Wrench}
           tono={!totalHoras ? "neutro" : r.horas_preventivo / totalHoras >= 0.6 ? "ok" : "aviso"}
           detalle={`${numero(r.horas_preventivo)} h preventivo · ${numero(r.horas_correctivo)} h correctivo`} explica={GLOSARIO.preventivoVsCorrectivo} />
@@ -166,7 +170,7 @@ function Contenido({ d, a }: { d: Datos; a?: Analitica }) {
                   <span className={cn("cifra text-xs whitespace-nowrap", x.dias > 7 && "text-peligro font-medium")} data-explain={GLOSARIO.backlogMantenimiento}
                     data-explain-title="Días abierta">{numero(x.dias)} d</span>
                 </div>
-                <p className="text-xs text-tenue truncate">{x.tipo === "preventivo" ? `Preventivo${x.vence ? ` · vence ${fecha(x.vence)}` : ""}` : x.detiene ? "Falla · máquina parada" : "Falla"}{x.falla ? ` · ${x.falla}` : ""}</p>
+                <p className="text-xs text-tenue truncate">{x.tipo === "preventivo" ? `Preventivo${x.vence ? ` · vence ${fecha(x.vence)}` : ""}${x.pospuesto_veces ? ` · ${vecesPospuesto(x.pospuesto_veces).toLowerCase()}` : ""}` : x.detiene ? "Falla · máquina parada" : "Falla"}{x.falla ? ` · ${x.falla}` : ""}</p>
               </li>
             ))}
           </ul>

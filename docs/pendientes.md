@@ -5,6 +5,10 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
 
 ## Por decidir o esperar a alguien
 
+- **Soltar lo apartado y posponer mantenimiento (263):** falta aplicarla en la nube. Después, Abel decide
+  una cosa: el indicador del bono «Mantenimientos preventivos a tiempo» mide contra la fecha del plan,
+  aunque se haya pospuesto (quien pospone es a quien se mide); si prefiere que cuente la fecha nueva, es
+  quitar el `coalesce(vence_original, …)` de ese caso en `objetivo_medir`.
 - **Teléfono con IA, fase 4 (262, WhatsApp del vendedor):** falta en la nube aplicar la 262 y redesplegar
   `telefono` (rutas `/accion` y `/resumen`) **antes** de prender «CRM externo» en el panel de voz. Después,
   que cada vendedor quede ligado por su WhatsApp en «Quién contesta» (el primer mensaje de un número sin

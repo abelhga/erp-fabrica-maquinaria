@@ -7,7 +7,8 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { CLAVE, useEtapas, type MaterialOP } from "./datos";
 import { GLOSARIO } from "@/tutorial/glosario";
-import { CAUSAS_ESPERA } from "./util";
+import { CAUSAS_ESPERA, cifra } from "./util";
+import { Filtro } from "@/components/datos/TablaDatos";
 
 export interface OrdenBasica {
   id: string; folio: string; numero_serie: string | null; prioridad: number; fecha_compromiso: string | null; notas: string | null;
@@ -63,6 +64,64 @@ export function DialogoCancelar({ abierto, alCambiar, o }: { abierto: boolean; a
       <Campo etiqueta="¿Por qué se cancela?">
         <AreaTexto value={motivo} onChange={(e) => setMotivo(e.target.value)} autoFocus placeholder="El cliente cambió el pedido a…" />
       </Campo>
+    </Dialogo>
+  );
+}
+
+/**
+ * Soltar lo apartado sin cancelar la orden (se apartó por error, el material va para otra): todo o
+ * solo unas partidas, con el motivo. Lo surtido ya salió del almacén y no se toca.
+ */
+export function DialogoSoltarApartado({ abierto, alCambiar, o, material }: {
+  abierto: boolean; alCambiar: (v: boolean) => void; o: OrdenBasica; material: MaterialOP[];
+}) {
+  const apartadas = material.filter((m) => m.apartado > 0);
+  const [modo, setModo] = useState<"todo" | "elegir">("todo");
+  const [elegidas, setElegidas] = useState<string[]>([]);
+  const [motivo, setMotivo] = useState("");
+  useEffect(() => { if (abierto) { setModo("todo"); setElegidas([]); setMotivo(""); } }, [abierto]);
+  const soltar = useAccion(() => q<{ partidas: number; quedan_apartadas: number }>(supabase.rpc("soltar_apartado", {
+    p_op: o.id, p_articulos: modo === "todo" ? null : elegidas, p_motivo: motivo,
+  })), {
+    exito: (r) => r.quedan_apartadas === 0 ? "Se soltó lo apartado: ya no queda nada apartado para esta orden"
+      : `Se soltó lo apartado de ${r.partidas} partida(s); ${r.quedan_apartadas} siguen apartadas`,
+    invalidar: [CLAVE], alTerminar: () => alCambiar(false),
+  });
+  const listo = motivo.trim().length >= 5 && (modo === "todo" || elegidas.length > 0);
+  const cambiar = (id: string, si: boolean) => setElegidas((x) => (si ? [...x, id] : x.filter((y) => y !== id)));
+  return (
+    <Dialogo abierto={abierto} alCambiar={alCambiar} titulo={`Soltar lo apartado de ${o.folio}`}
+             descripcion="El material vuelve a quedar libre en el almacén y otra orden o pedido lo puede tomar. Lo que ya se le entregó al taller no cambia."
+             pie={<><Boton variante="secundario" onClick={() => alCambiar(false)}>No soltar</Boton>
+               <Boton variante="peligro" onClick={() => soltar.mutate(undefined)} disabled={!listo} cargando={soltar.isPending}>Soltar lo apartado</Boton></>}>
+      <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (listo) soltar.mutate(undefined); }}>
+        <span className="block" data-explain={GLOSARIO.soltarApartado} data-explain-title="Qué se suelta">
+          <Filtro<"todo" | "elegir"> valor={modo} alCambiar={setModo} opciones={[
+            { valor: "todo", texto: "Todo lo apartado", cuenta: apartadas.length },
+            { valor: "elegir", texto: "Elegir partidas" },
+          ]} />
+        </span>
+        {modo === "elegir" && (
+          <ul className="max-h-64 overflow-y-auto divide-y divide-borde/60 rounded-lg border border-borde">
+            {apartadas.map((m) => (
+              <li key={m.articulo_id}>
+                <label className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-fondo">
+                  <input type="checkbox" checked={elegidas.includes(m.articulo_id)} onChange={(e) => cambiar(m.articulo_id, e.target.checked)}
+                         className="h-4 w-4 accent-[hsl(var(--marca))]" />
+                  <span className="flex-1 min-w-0"><span className="block truncate">{m.nombre}</span><span className="text-xs text-tenue">{m.clave}</span></span>
+                  <span className="cifra whitespace-nowrap">{cifra(m.apartado)} {m.unidad}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
+        {modo === "todo" && <p className="text-sm text-tenue">{apartadas.length === 1 ? "1 partida apartada" : `${apartadas.length} partidas apartadas`}: {apartadas.slice(0, 4).map((m) => m.nombre).join(", ")}{apartadas.length > 4 ? "…" : ""}</p>}
+        <Campo etiqueta="¿Por qué se suelta?" ayuda="Queda en la línea de tiempo de la orden, con tu nombre.">
+          <AreaTexto value={motivo} onChange={(e) => setMotivo(e.target.value)} autoFocus={modo === "todo"}
+                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (listo) soltar.mutate(undefined); } }}
+                     placeholder="Ej. se apartó por error: era para la OP-2026-00040" />
+        </Campo>
+      </form>
     </Dialogo>
   );
 }
