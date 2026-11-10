@@ -28,10 +28,11 @@ begin
   assert not (v_par->0 ? 'telefono'), 'clientes_parecidos regresó el teléfono de un cliente ajeno';
   v_par := clientes_parecidos('TRITURADOS Y PRETÉNSADOS  TEKAX 256');
   assert v_par->0->>'por' = 'nombre', 'no lo encontró por nombre sin acentos: ' || v_par::text;
-  --    Un nombre de una palabra («Particular») no cuenta como el mismo cliente.
-  perform alta_cliente('{"nombre": "Particular"}', null);
+  --    Un nombre de una palabra («Herrería») no cuenta como el mismo cliente. («Particular» ya no
+  --    se puede: el cliente se llama como la persona, ver 268.)
+  perform alta_cliente('{"nombre": "Herrería"}', null);
   perform pg_temp.como(v_b);
-  assert jsonb_array_length(clientes_parecidos('Particular')) = 0, '«Particular» salió como repetido';
+  assert jsonb_array_length(clientes_parecidos('Herrería')) = 0, '«Herrería» salió como repetido';
 
   -- 2. Darlo de alta otra vez se detiene y dice de quién es; «es otro» lo deja pasar y avisa a B y a la gerencia.
   perform pg_temp.como(v_a);

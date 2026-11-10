@@ -3700,7 +3700,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Escribe «Particular» como empresa, para cuando quien llamó es una persona y no una empresa. Luego dale Guardar."
+  "texto": "Escribe «Particular» como empresa, para cuando quien llamó es una persona y no una empresa. Luego dale Guardar. Al volverlo oportunidad, el cliente queda con el nombre de la persona, no como «Particular»."
  },
  {
   "clave": "botonLeerCorreosIA",
@@ -10265,7 +10265,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Un lead está completo cuando el vendedor tiene con qué atenderlo: dónde está (ciudad o estado), la empresa (o «Particular» si es una persona) y qué busca con modelo, medida o para qué («Cribadora V3», «Silo fijo para cemento», no solo «Informes»). Si ya es cliente, la empresa y el lugar salen de su ficha. Al abrir uno incompleto te dice qué le falta y lo completas ahí; lo puede completar quien lo registró, el vendedor que lo tiene o la gerencia, mientras siga abierto. «Incompletos» junta los que tienen algo pendiente. Para recepción es un objetivo: cuenta cómo están al revisar el mes, así que si lo completas antes, ya no cuenta."
+  "texto": "Un lead está completo cuando el vendedor tiene con qué atenderlo: dónde está (ciudad o estado), la empresa (o «Particular» si es una persona; «...» no cuenta) y qué busca con modelo, medida o para qué («Cribadora V3», «Silo fijo para cemento», no solo «Informes»). Si ya es cliente, la empresa y el lugar salen de su ficha. Al abrir uno incompleto te dice qué le falta y lo completas ahí; lo puede completar quien lo registró, el vendedor que lo tiene o la gerencia, mientras siga abierto. «Incompletos» junta los que tienen algo pendiente. Para recepción es un objetivo: cuenta cómo están al revisar el mes, así que si lo completas antes, ya no cuenta."
  },
  {
   "clave": "leadDelTelefono",
