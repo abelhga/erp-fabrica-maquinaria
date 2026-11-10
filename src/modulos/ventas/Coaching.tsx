@@ -29,6 +29,11 @@ import { duracion, grabacionVigente, tonoCalificacion } from "./componentes/Llam
  * evidencia. Cada quien ve lo suyo y la gerencia de ventas/dirección el equipo; esa regla no vive
  * aquí sino en la base (RLS de llamada_coaching y coaching_resumen): esta pantalla solo pide
  * «todo lo que puedo ver» o, si es gerencia, «lo de esta persona».
+ *
+ * Ventas y atención van APARTE (pestañas): el conmutador califica una venta con su rúbrica de
+ * ventas y lo demás (un proveedor, una factura, un trámite) con la de atención, y promediarlas
+ * juntas le movía el número a un vendedor con llamadas que no eran venta. Se abre en la que tiene
+ * más llamadas: a recepción en Atención, a un vendedor en Ventas.
  */
 
 interface Semana { semana: string; n: number; promedio: number }
@@ -38,7 +43,11 @@ interface Persona {
   reciente: number | null; anterior: number | null; fallo: { nombre: string; n: number } | null;
   semanas: Semana[] | null; mejor: Referencia; peor: Referencia;
 }
+type Rubrica = "ventas" | "atencion";
+const NOMBRE_RUBRICA: Record<Rubrica, string> = { ventas: "Ventas", atencion: "Atención" };
+const esRubrica = (v: string | null): v is Rubrica => v === "ventas" || v === "atencion";
 interface Resumen {
+  rubricas: { clave: Rubrica; n: number }[];
   desde: string; hasta: string; todos: boolean; n: number; promedio: number | null; reciente: number | null; anterior: number | null;
   semanas: Semana[]; personas: Persona[];
   criterios: { clave: string; nombre: string; peso: number | null; n: number; promedio: number }[];
@@ -49,7 +58,7 @@ interface Resumen {
 interface FilaCoaching {
   llamada_id: string; fecha: string; perfil_id: string | null; atendio_tipo: "persona" | "ia"; atendio: string; quien_llamo: string | null;
   duracion_seg: number | null; area_nombre: string | null; calificacion: number; calificacion_sin_topes: number | null; topes: number;
-  fallos: string[]; grabacion_url: string | null; grabacion_vence: string | null;
+  fallos: string[]; grabacion_url: string | null; grabacion_vence: string | null; rubrica: Rubrica;
 }
 
 type Periodo = "30" | "90" | "180" | "365";
@@ -79,22 +88,41 @@ export default function Coaching() {
   };
 
   useTiempoReal("llamada_coaching", [["coaching_resumen"], ["coaching_llamadas"], ["coaching_detalle"]]);
-  const resumen = useQuery({
-    queryKey: ["coaching_resumen", desde, hasta, persona],
-    queryFn: () => q<Resumen>(supabase.rpc("coaching_resumen", { p_desde: desde, p_hasta: hasta, p_perfil: persona })),
+  // La rúbrica: la que pidió (?rubrica=) o, si no, primero todo, y si hay de las dos, la que tenga
+  // más llamadas (la base las regresa ordenadas). Con una sola, «todo» ya es esa.
+  const pedida = esRubrica(params.get("rubrica")) ? (params.get("rubrica") as Rubrica) : null;
+  const pedir = (r: Rubrica | null, perfil: string | null) =>
+    q<Resumen>(supabase.rpc("coaching_resumen", { p_desde: desde, p_hasta: hasta, p_perfil: perfil, p_rubrica: r }));
+  const base = useQuery({
+    queryKey: ["coaching_resumen", desde, hasta, persona, pedida],
+    queryFn: () => pedir(pedida, persona),
     placeholderData: keepPreviousData,
   });
+  const grupos = base.data?.rubricas ?? [];
+  const elegida: Rubrica | null = pedida ?? (grupos.length > 1 ? grupos[0].clave : null);
+  const filtrada = useQuery({
+    queryKey: ["coaching_resumen", desde, hasta, persona, elegida],
+    queryFn: () => pedir(elegida, persona),
+    enabled: !pedida && !!elegida, placeholderData: keepPreviousData,
+  });
+  const resumen = pedida || !elegida ? base : filtrada;
   // El equipo completo, para el selector de persona (la misma consulta que la vista del equipo).
   const equipo = useQuery({
-    queryKey: ["coaching_resumen", desde, hasta, null],
-    queryFn: () => q<Resumen>(supabase.rpc("coaching_resumen", { p_desde: desde, p_hasta: hasta, p_perfil: null })),
+    queryKey: ["coaching_resumen", desde, hasta, null, elegida],
+    queryFn: () => pedir(elegida, null),
     enabled: gerencia, placeholderData: keepPreviousData,
   });
   const lista = useQuery({
-    queryKey: ["coaching_llamadas", desde, hasta, persona],
-    queryFn: () => q<FilaCoaching[]>(supabase.rpc("coaching_llamadas", { p_desde: desde, p_hasta: hasta, p_perfil: persona })),
+    queryKey: ["coaching_llamadas", desde, hasta, persona, elegida],
+    queryFn: () => q<FilaCoaching[]>(supabase.rpc("coaching_llamadas", { p_desde: desde, p_hasta: hasta, p_perfil: persona, p_rubrica: elegida })),
     placeholderData: keepPreviousData,
   });
+  const pestanas = grupos.length > 1 || pedida
+    ? (["ventas", "atencion"] as Rubrica[]).map((r) => ({
+        valor: r, texto: NOMBRE_RUBRICA[r], cuenta: grupos.find((g) => g.clave === r)?.n ?? 0,
+        explica: r === "ventas" ? GLOSARIO.rubricaVentas : GLOSARIO.rubricaAtencion,
+      }))
+    : null;
 
   const vistaEquipo = gerencia && !persona;
   const nombrePersona = persona ? resumen.data?.personas[0]?.nombre ?? equipo.data?.personas.find((p) => p.perfil_id === persona)?.nombre : null;
@@ -105,8 +133,9 @@ export default function Coaching() {
 
   return (
     <Pagina titulo="Coaching" ancho="max-w-[1500px]"
-      descripcion={`${vistaEquipo ? "Todo el equipo" : nombrePersona ?? (gerencia ? "Una persona" : "Tus llamadas")} · del ${fecha(desde)} al ${fecha(hasta)}`}
+      descripcion={`${vistaEquipo ? "Todo el equipo" : nombrePersona ?? (gerencia ? "Una persona" : "Tus llamadas")}${elegida ? ` · ${NOMBRE_RUBRICA[elegida].toLowerCase()}` : ""} · del ${fecha(desde)} al ${fecha(hasta)}`}
       acciones={<>
+        {pestanas && <Filtro opciones={pestanas} valor={elegida ?? "ventas"} alCambiar={(v) => cambiar("rubrica", v)} />}
         {gerencia && (
           <Seleccion aria-label="Persona" className="h-8 w-auto min-w-[200px] text-sm" value={persona ?? ""}
             onChange={(e) => cambiar("perfil", e.target.value || null)} data-explain={GLOSARIO.equipoCoaching} data-explain-title="Persona">
@@ -464,7 +493,9 @@ function DetalleCoaching({ id, cerrar }: { id: string | null; cerrar: () => void
             <Lista titulo="Sugerencias" items={x.sugerencias} />
           </div>
           <p className="text-xs text-tenue border-t border-borde pt-3">
-            {x.rubrica_clave ? `Rúbrica «${x.rubrica_clave}»${x.rubrica_version != null ? `, versión ${x.rubrica_version}` : ""}` : "Rúbrica del conmutador"}
+            {x.rubrica_clave
+              ? `Rúbrica de ${/^atencion/i.test(x.rubrica_clave) ? "atención" : "ventas"} («${x.rubrica_clave}»${x.rubrica_version != null ? `, versión ${x.rubrica_version}` : ""})`
+              : "Rúbrica del conmutador"}
             {x.generado_en ? ` · calificada el ${fechaYHora(x.generado_en)}` : ""}. La calificación la calcula el conmutador; el ERP no la cambia.
           </p>
         </div>

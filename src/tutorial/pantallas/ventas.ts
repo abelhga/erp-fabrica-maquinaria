@@ -205,12 +205,13 @@ export const VENTAS: Record<string, AyudaPantalla> = {
       "Abre una llamada de la lista para ver cada criterio con la frase que lo justifica.",
     ],
     detalle: [
-      "La calificación va de 1 a 10 y la calcula el conmutador con la rúbrica de la empresa: cada criterio tiene su peso y, si pasó algo grave (por ejemplo, colgar sin dejar cómo dar seguimiento), un tope la limita. El ERP no la recalcula.",
+      "La calificación va de 1 a 10 y la calcula el conmutador con la rúbrica que le toca a la llamada: cada criterio tiene su peso y, si pasó algo grave (por ejemplo, colgar sin dejar cómo dar seguimiento), un tope la limita. El ERP no la recalcula.",
+      "Ventas y Atención van aparte, arriba: una venta (cotizar, comprar, seguimiento) se califica con la rúbrica de ventas, y lo demás (un proveedor, una factura, un trámite) con la de atención, aunque la conteste un vendedor. Así una llamada de proveedor no te mueve el promedio de ventas. La pantalla abre en la que tiene más llamadas.",
       "Cada quien ve solo sus llamadas. La gerencia de ventas y dirección ven a todo el equipo: la tabla del equipo trae el promedio, la tendencia y el fallo que más repite cada quien, y arriba eligen a una persona para ver lo suyo.",
       "La tendencia compara las últimas 4 semanas contra las 4 de antes, hasta el final del periodo, aunque el periodo sea más corto.",
       "Las llamadas que atendió la IA también se califican y las ve la gerencia. Un nombre «sin ligar» lo liga dirección en Configuración → Integraciones → Teléfono; desde ahí sus calificaciones son de esa persona.",
       "Las calificaciones llegan solas de las llamadas que el conmutador califica (no siempre son todas) cuando está conectado; sin conmutador no hay coaching.",
-      "«Escuchar» abre la grabación mientras su enlace siga vigente; después ya no aparece. En Objetivos, «Calificación de coaching» es el promedio del mes de las llamadas que atendiste.",
+      "«Escuchar» abre la grabación mientras su enlace siga vigente; después ya no aparece. En Objetivos, «Calificación de coaching (ventas)» es el promedio del mes de tus llamadas de venta, y «Calificación de atención telefónica» el de las de atención.",
     ],
   },
   "/ventas/leads": {
