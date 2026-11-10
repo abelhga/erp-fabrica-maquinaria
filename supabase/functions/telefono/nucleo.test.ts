@@ -11,7 +11,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import pg from "pg";
-import { atender, telefonoValido, validar, validarAccion } from "./nucleo.ts";
+import { atender, telefonoValido, validar, validarAccion, validarBorrado } from "./nucleo.ts";
 
 const base = { version: 1, tipo: "llamada", call_sid: "CA-prueba", llamada: { telefono: "+523312345678", nadie_contesto: false }, lead: null };
 // Fase 3, como viene en el contrato.
@@ -143,12 +143,27 @@ describe("sin llave no entra", () => {
     const s = await atender(new Request("http://local/functions/v1/telefono/resumen?tel=%2B523311112621", { headers: { "x-llave": "corta" } }), entorno);
     expect(s.status).toBe(401);
   });
+  it("sin llave, borrar una llamada también es 401 sin preguntarle a la base", async () => {
+    const r = await atender(new Request("http://local/functions/v1/telefono/borrar", { method: "POST", body: JSON.stringify({ version: 1, tipo: "borrar", call_sid: "CA1" }) }), entorno);
+    expect(r.status).toBe(401);
+    expect((await atender(new Request("http://local/functions/v1/telefono/borrar"), entorno)).status).toBe(404);
+  });
   it("otra ruta u otro método es 404", async () => {
     expect((await atender(new Request("http://local/functions/v1/telefono/accion"), entorno)).status).toBe(404);
     expect((await atender(new Request("http://local/functions/v1/telefono/resumen", { method: "POST" }), entorno)).status).toBe(404);
     expect((await atender(new Request("http://local/functions/v1/telefono/otra", { method: "POST" }), entorno)).status).toBe(404);
     expect((await atender(new Request("http://local/functions/v1/telefono/evento"), entorno)).status).toBe(404);
     expect((await atender(new Request("http://local/functions/v1/telefono/contexto", { method: "POST" }), entorno)).status).toBe(404);
+  });
+});
+
+describe("validarBorrado", () => {
+  it("pide versión 1, tipo borrar y el call_sid", () => {
+    expect(validarBorrado({ version: 1, tipo: "borrar", call_sid: " CA123 " })).toEqual({ ok: true, call_sid: "CA123" });
+    expect(validarBorrado({ version: 2, tipo: "borrar", call_sid: "CA1" }).ok).toBe(false);
+    expect(validarBorrado({ version: 1, tipo: "llamada", call_sid: "CA1" }).ok).toBe(false);
+    expect(validarBorrado({ version: 1, tipo: "borrar", call_sid: "" }).ok).toBe(false);
+    expect(validarBorrado("x").ok).toBe(false);
   });
 });
 
