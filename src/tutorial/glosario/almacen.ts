@@ -55,6 +55,7 @@ export const ALMACEN = {
   queContarConteo: "Qué trae la lista del conteo. Lo que piden las órdenes de producción: el material que las órdenes abiertas todavía no reciben o que está apartado, si hay en este almacén. Lo que salió en los últimos 30 días: lo que tuvo salidas de este almacén. Pegar claves: solo las que escribas. Todo el almacén: todo lo que el sistema dice que hay ahí, para un conteo general.",
   conteoACiegas: "Quien cuenta no ve lo que dice el sistema hasta capturar lo contado: así el número esperado no contagia el conteo. En cuanto capturas, aparecen lo que decía el sistema y la diferencia.",
   notaConteo: "Qué revisar en ese artículo al contarlo, por ejemplo si también hay que buscarlo en otro almacén.",
+  otrosAlmacenesConteo: "Ese artículo también tiene existencia en otro almacén. Un conteo es de un solo almacén: lo que escribes reemplaza lo de este almacén y no toca los demás. Cuenta solo lo que tienes enfrente; lo del otro almacén se cuenta allá, en su propio conteo. No dice cuánto hay allá para que el conteo siga siendo a ciegas.",
   conDiferenciaConteo: "Lo contado menos lo que decía el sistema al capturarlo: en verde sobra, en rojo falta. Al cerrar el conteo, cada artículo con diferencia se vuelve un ajuste por autorizar.",
   sobranFaltanConteo: "De los artículos con diferencia, en cuántos hay más de lo que dice el sistema (sobran) y en cuántos menos (faltan).",
   agregarAlConteo: "¿Hay en el estante algo que no viene en la lista? Búscalo aquí: se agrega al conteo con 0 y te lleva a su renglón para que escribas cuánto hay.",

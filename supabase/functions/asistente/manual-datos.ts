@@ -11735,6 +11735,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Le pide a la IA otro mensaje con los mismos datos. Lo que hayas cambiado a mano en la caja se pierde."
  },
  {
+  "clave": "otrosAlmacenesConteo",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Ese artículo también tiene existencia en otro almacén. Un conteo es de un solo almacén: lo que escribes reemplaza lo de este almacén y no toca los demás. Cuenta solo lo que tienes enfrente; lo del otro almacén se cuenta allá, en su propio conteo. No dice cuánto hay allá para que el conteo siga siendo a ciegas."
+ },
+ {
   "clave": "otrosEnPlayMto",
   "modulos": [
    "servicio",
