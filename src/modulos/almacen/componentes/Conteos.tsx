@@ -28,6 +28,8 @@ interface LineaCaptura {
   /** A ciegas, `sistema` llega vacío hasta que el artículo tiene lo contado. */
   articulo_id: string; clave: string; nombre: string; unidad: string; sistema: number | null; contada: number | null; diferencia: number | null;
   contado_por: string | null; contado_en: string | null; valor_diferencia: number | null; nota: string | null;
+  /** Otros almacenes donde también hay existencia (solo el nombre: sigue siendo a ciegas). */
+  otros_almacenes: string[] | null;
 }
 
 type ModoConteo = "todo" | "produccion" | "movidos" | "claves";
@@ -270,6 +272,11 @@ function Captura({ id, volver, irAAjustes }: { id: string; volver: () => void; i
                       <td className="max-w-[300px]">
                         <p className="truncate text-sm">{l.nombre}</p><p className="text-xs text-tenue">{l.unidad}</p>
                         {l.nota && <p className="text-xs text-aviso whitespace-normal" data-explain={GLOSARIO.notaConteo} data-explain-title="Qué revisar">{l.nota}</p>}
+                        {!!l.otros_almacenes?.length && (
+                          <p className="text-xs text-info whitespace-normal" data-explain={GLOSARIO.otrosAlmacenesConteo} data-explain-title="También en otro almacén">
+                            También hay en {l.otros_almacenes.join(", ")}: cuenta solo lo de {c?.almacen ?? "aquí"}
+                          </p>
+                        )}
                       </td>
                       <td className="text-right cifra text-tenue">{l.sistema == null ? <span className="text-tenue/50" title="A ciegas: aparece al capturar">·</span> : numero(l.sistema)}</td>
                       <td className="text-right">
