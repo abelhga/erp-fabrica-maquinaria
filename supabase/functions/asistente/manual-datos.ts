@@ -2116,7 +2116,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "La única forma de corregir una existencia. Lo pide quien encontró la diferencia y lo autoriza la gerencia de producción, dirección o el jefe de almacén; quien lo pidió no se lo autoriza (salvo dirección). Hasta entonces la existencia no cambia. Al autorizarlo se aplica la diferencia que se encontró, así que lo que entró o salió desde que se pidió se respeta; si con eso la existencia quedaría negativa, no se autoriza y se vuelve a contar. Si el artículo se contó en ese almacén después de pedir el ajuste, ya no se autoriza: el conteo ya lo dejó en lo que hay, así que se rechaza y queda como constancia."
+  "texto": "La única forma de corregir una existencia. Lo pide quien encontró la diferencia y lo autoriza la gerencia de producción o dirección, nunca alguien de almacén, para que quien cuenta no dé por buena su propia diferencia; quien lo pidió no se lo autoriza (salvo dirección). Hasta entonces la existencia no cambia. Al autorizarlo se aplica la diferencia que se encontró, así que lo que entró o salió desde que se pidió se respeta; si con eso la existencia quedaría negativa, no se autoriza y se vuelve a contar. Si el artículo se contó en ese almacén después de pedir el ajuste, ya no se autoriza: el conteo ya lo dejó en lo que hay, así que se rechaza y queda como constancia."
  },
  {
   "clave": "ajusteObjetivo",

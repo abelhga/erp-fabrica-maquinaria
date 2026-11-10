@@ -24,13 +24,14 @@ export interface Ajuste {
 
 /**
  * Ajustes: la única forma de corregir una existencia. Lo pide quien encontró la
- * diferencia y lo autoriza otra persona (la base lo exige); hasta entonces la
+ * diferencia y lo autoriza la gerencia de producción o dirección, nunca almacén
+ * (la base lo exige: quien cuenta no da por buena su diferencia); hasta entonces la
  * existencia no se mueve. Así se acaba el "regresar a una fila vieja y cambiarla".
  */
 export function Ajustes() {
   const { puede, tieneRol, perfil } = useSesion();
   const verCostos = puede("costos", 1);
-  const resuelve = puede("inventario", 3) || tieneRol("direccion") || tieneRol("gerente_produccion");
+  const resuelve = tieneRol("direccion") || tieneRol("gerente_produccion");
   const [vista, setVista] = useState<"todos" | "aprobado" | "rechazado">("todos");
 
   const datos = useQuery({
@@ -76,7 +77,7 @@ export function Ajustes() {
           <EncabezadoTarjeta
             titulo={<span className="flex items-center gap-2">Por autorizar <span className="rounded-full bg-fondo px-2 text-xs cifra">{pendientes.length}</span></span>}
             explica={GLOSARIO.ajusteInventario}
-            descripcion={resuelve ? "Revisa el motivo y, si hace falta, que alguien lo vuelva a contar." : "Los autoriza la gerencia de producción, dirección o el jefe de almacén."}
+            descripcion={resuelve ? "Revisa el motivo y, si hace falta, que alguien lo vuelva a contar." : "Los autoriza la gerencia de producción o dirección; almacén cuenta y los pide."}
             acciones={verCostos && pendientes.length > 0 && (
               <span className="text-sm text-tenue" data-explain={GLOSARIO.valorNetoDiferenciasInventario} data-explain-title="Neto">Neto: <b className={cn("cifra", netoPendiente < 0 ? "text-peligro" : "text-texto")}>{dinero(netoPendiente)}</b></span>
             )}
