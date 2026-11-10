@@ -18,7 +18,7 @@ interface Mov {
 }
 
 const GRUPOS: { valor: string; texto: string; tipos: TipoMovimiento[] }[] = [
-  { valor: "", texto: "Todos los tipos", tipos: [] },
+  { valor: "", texto: "Todos (sin saldos iniciales)", tipos: [] },
   { valor: "entradas", texto: "Entradas de compra", tipos: ["entrada_compra"] },
   { valor: "salidas", texto: "Todas las salidas", tipos: ["salida_produccion", "salida_venta", "salida_consumo"] },
   { valor: "produccion", texto: "Salidas a producción", tipos: ["salida_produccion"] },
@@ -57,7 +57,10 @@ export function Historial() {
         let c = supabase.from("v_movimientos")
           .select("id, en, tipo, clave, nombre, unidad, almacen, cantidad, costo_unitario, motivo, usuario, referencia, fuera_de_lista, recibio, deshace_id, deshecho_por")
           .order("en", { ascending: false }).order("id", { ascending: false });
+        // Los saldos iniciales se cargaron de golpe (2,156 el 20 de octubre) y se comían el límite de
+        // filas: lo de antes de esa tarde no salía. Se ven eligiendo «Saldos iniciales».
         if (tipos.length) c = c.in("tipo", tipos);
+        else c = c.neq("tipo", "inicial");
         if (almacen) c = c.eq("almacen_id", Number(almacen));
         if (usuario) c = c.eq("usuario_id", usuario);
         if (desde) c = c.gte("en", new Date(desde + "T00:00:00").toISOString());
