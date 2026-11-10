@@ -27,6 +27,10 @@
 // GET /telefono/resumen?tel=… (fase 4): el resumen de la mañana de ese vendedor, sacado de sus
 // pendientes del ERP (telefono_resumen), sin montos y con la liga a «A quién llamar hoy».
 //
+// POST /telefono/borrar (llamadas de prueba): {version:1, tipo:"borrar", call_sid}. La base borra la
+// llamada con su coaching, su análisis y su lead si nadie lo trabajó, y anota el call_sid para que una
+// foto atrasada no la vuelva a crear (telefono_borrar_llamada). Borrar una que no existe también es 200.
+//
 // Las ligas al ERP se arman aquí con APP_URL: la base solo sabe la ruta.
 //
 // Se despliega sin verificar JWT: el conmutador no tiene sesión del ERP, entra con la llave que
@@ -237,6 +241,7 @@ export async function atender(req: Request, e: Entorno): Promise<Response> {
   if (req.method === "GET" && ruta === "contexto") return contexto(req, url, e);
   if (req.method === "POST" && ruta === "accion") return accion(req, e);
   if (req.method === "GET" && ruta === "resumen") return resumen(req, url, e);
+  if (req.method === "POST" && ruta === "borrar") return borrar(req, e);
   return json({ error: "Ruta no válida" }, 404);
 }
 
@@ -300,6 +305,35 @@ async function contexto(req: Request, url: URL, e: Entorno): Promise<Response> {
     // Sin el teléfono en el aviso: dirección ve que falló, no a quién se buscaba.
     await anotar(admin, `No se pudo contestar quién llama: ${error.message}`);
     return json({ error: "No se pudo consultar quién llama" }, 500);
+  }
+  return json(data);
+}
+
+/** Revisa la forma de un borrado: solo el call_sid. */
+export function validarBorrado(cuerpo: unknown): { ok: true; call_sid: string } | { ok: false; error: string } {
+  if (!esObjeto(cuerpo)) return { ok: false, error: "El cuerpo debe ser un objeto JSON" };
+  if (cuerpo.version !== 1) return { ok: false, error: `Versión no soportada: ${JSON.stringify(cuerpo.version ?? null)} (se espera 1)` };
+  if (cuerpo.tipo !== "borrar") return { ok: false, error: `Tipo no soportado: ${JSON.stringify(cuerpo.tipo ?? null)} (se espera "borrar")` };
+  if (typeof cuerpo.call_sid !== "string" || !cuerpo.call_sid.trim() || cuerpo.call_sid.length > 100) {
+    return { ok: false, error: "call_sid debe ser un texto de 1 a 100 caracteres" };
+  }
+  return { ok: true, call_sid: cuerpo.call_sid.trim() };
+}
+
+async function borrar(req: Request, e: Entorno): Promise<Response> {
+  const admin = createClient(e.supabaseUrl, e.serviceKey, sinSesion);
+  const sinPaso = await revisarLlave(req, admin, "un borrado de llamada");
+  if (sinPaso) return sinPaso;
+  const texto = await req.text();
+  if (texto.length > 2048) return json({ error: "Cuerpo demasiado grande" }, 400);
+  let cuerpo: unknown;
+  try { cuerpo = JSON.parse(texto); } catch { return json({ error: "El cuerpo no es JSON válido" }, 400); }
+  const v = validarBorrado(cuerpo);
+  if (!v.ok) return json({ error: v.error }, 400);
+  const { data, error } = await admin.rpc("telefono_borrar_llamada", { p_call_sid: v.call_sid });
+  if (error) {
+    await anotar(admin, `No se pudo borrar ${v.call_sid}: ${error.message}`);
+    return json({ error: "No se pudo borrar la llamada; se puede reintentar" }, 500);
   }
   return json(data);
 }

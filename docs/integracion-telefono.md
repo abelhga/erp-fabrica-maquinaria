@@ -453,6 +453,24 @@ capture otra vez el lead que la IA ya registró.
    contesta» (o como teléfono de su perfil). El primer mensaje de un número sin ligar lo deja ahí.
 3. En el panel de voz, prender «CRM externo».
 
+## Borrar una llamada de prueba: POST /borrar
+
+Para las llamadas de prueba, que no deben quedar en el coaching, en «Lo que dicen las llamadas» ni
+como lead. Misma llave en `x-llave`.
+
+```json
+{ "version": 1, "tipo": "borrar", "call_sid": "CAcf99d0d60a4e2ed3734844f522871303" }
+```
+
+- Se borran la llamada, su coaching, su análisis y la actividad que generó.
+- El lead que dejó se borra solo si nadie lo trabajó: sigue nuevo o asignado, sin intentos y sin
+  oportunidad. Si ya se trabajó, se queda y solo pierde la liga con la llamada.
+- El `call_sid` queda anotado: una foto que llegue después (un reintento en la cola) contesta 200
+  con `"borrada": true` y no vuelve a crear la llamada.
+- Respuesta: `{"ok": true, "habia": true, "lead_borrado": true, "lead_se_quedo": false}`. Borrar
+  una que no existe también es 200 (`"habia": false`). 400 cuerpo mal hecho, 401 llave, 500 se
+  puede reintentar.
+
 ## Para conectarlo (una vez)
 1. `npx supabase functions deploy telefono --no-verify-jwt` (no necesita secretos propios).
 2. Migraciones 258 a 262 aplicadas en la nube (la 259 es la de «quién llama»; sin ella `/contexto`
