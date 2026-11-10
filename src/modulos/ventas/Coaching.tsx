@@ -23,6 +23,7 @@ import { fecha, fechaYHora, hoyISO, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { duracion, grabacionVigente, tonoCalificacion } from "./componentes/Llamadas";
+import { RadarCriterios, CriteriosPorSemana, FallosPorSemana, EquipoPorCriterio, type Graficas } from "./componentes/CoachingGraficas";
 
 /**
  * Coaching de llamadas: la calificación que el conmutador le pone a cada llamada atendida, con su
@@ -87,7 +88,7 @@ export default function Coaching() {
     setParams(n, { replace: true });
   };
 
-  useTiempoReal("llamada_coaching", [["coaching_resumen"], ["coaching_llamadas"], ["coaching_detalle"]]);
+  useTiempoReal("llamada_coaching", [["coaching_resumen"], ["coaching_llamadas"], ["coaching_detalle"], ["coaching_graficas"]]);
   // La rúbrica: la que pidió (?rubrica=) o, si no, primero todo, y si hay de las dos, la que tenga
   // más llamadas (la base las regresa ordenadas). Con una sola, «todo» ya es esa.
   const pedida = esRubrica(params.get("rubrica")) ? (params.get("rubrica") as Rubrica) : null;
@@ -115,6 +116,12 @@ export default function Coaching() {
   const lista = useQuery({
     queryKey: ["coaching_llamadas", desde, hasta, persona, elegida],
     queryFn: () => q<FilaCoaching[]>(supabase.rpc("coaching_llamadas", { p_desde: desde, p_hasta: hasta, p_perfil: persona, p_rubrica: elegida })),
+    placeholderData: keepPreviousData,
+  });
+  // Las gráficas (radar, mapas de calor): la misma persona y rúbrica que el resto de la pantalla.
+  const graficas = useQuery({
+    queryKey: ["coaching_graficas", desde, hasta, persona, elegida],
+    queryFn: () => q<Graficas>(supabase.rpc("coaching_graficas", { p_desde: desde, p_hasta: hasta, p_perfil: persona, p_rubrica: elegida })),
     placeholderData: keepPreviousData,
   });
   const pestanas = grupos.length > 1 || pedida
@@ -151,7 +158,8 @@ export default function Coaching() {
         </Tarjeta>
       ) : (
         <Contenido r={resumen.data} lista={lista.data} cargandoLista={lista.isLoading} errorLista={lista.error} equipo={vistaEquipo}
-          propio={!gerencia} abrir={(id) => cambiar("llamada", id)} elegir={(id) => cambiar("perfil", id)} />
+          propio={!gerencia} abrir={(id) => cambiar("llamada", id)} elegir={(id) => cambiar("perfil", id)}
+          g={graficas.data} quien={vistaEquipo ? "El equipo" : !gerencia ? "Tú" : nombrePersona ?? "La persona"} />
       )}
       <DetalleCoaching id={abierta} cerrar={() => cambiar("llamada", null)} />
     </Pagina>
@@ -186,7 +194,8 @@ function Calificacion({ v, className }: { v: number; className?: string }) {
   return <Insignia tono={tonoCalificacion(v)} className={cn("cifra", className)}>{numero(v)}</Insignia>;
 }
 
-function Contenido({ r, lista, cargandoLista, errorLista, equipo, propio, abrir, elegir }: {
+function Contenido({ r, lista, cargandoLista, errorLista, equipo, propio, abrir, elegir, g, quien }: {
+  g: Graficas | undefined; quien: string;
   r: Resumen; lista?: FilaCoaching[]; cargandoLista: boolean; errorLista: unknown; equipo: boolean; propio: boolean;
   abrir: (id: string) => void; elegir: (id: string) => void;
 }) {
@@ -321,6 +330,14 @@ function Contenido({ r, lista, cargandoLista, errorLista, equipo, propio, abrir,
           </div>
         </Tarjeta>
       </div>
+
+      {/* El radar junto a su detalle por semana; los fallos, a lo ancho porque llevan más columnas. */}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+        <RadarCriterios criterios={r.criterios} g={g} quien={quien} />
+        {g && <CriteriosPorSemana g={g} criterios={r.criterios} />}
+      </div>
+      {g && <FallosPorSemana g={g} />}
+      {g && equipo && <EquipoPorCriterio g={g} criterios={r.criterios} />}
 
       <Tarjeta>
         <EncabezadoTarjeta titulo={propio ? "Tus llamadas calificadas" : "Llamadas calificadas"} explica={GLOSARIO.calificacionCoaching}

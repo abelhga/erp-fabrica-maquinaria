@@ -263,6 +263,24 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   ]
  },
  {
+  "ruta": "/analisis/telefono",
+  "nombre": "Análisis y metas › telefono",
+  "modulos": [
+   "analisis"
+  ],
+  "nivel": 1,
+  "texto": [
+   "El teléfono como negocio: si las llamadas llegan a cotización y a pedido, si se regresan las que nadie contestó y si el coaching vende.",
+   "Paso 1: Elige el periodo arriba; todo se cuenta con las llamadas de esas fechas.",
+   "Paso 2: Revisa el embudo: el paso donde más se cae es donde hay que trabajar.",
+   "Paso 3: Compara cuánto cotizan las llamadas bien y mal calificadas.",
+   "Una llamada llega a cotización si se cotizó la oportunidad de su lead, o si el mismo cliente recibió una cotización en los 14 días siguientes; a pedido, si esa cotización se volvió pedido. Los borradores no cuentan.",
+   "«Regresadas» son las que nadie contestó y alguien regresó desde «A quién llamar hoy»; las de antes de conectar el conmutador no cuentan. La mediana es el tiempo en que se regresó la mitad.",
+   "«¿Sirve el coaching?» solo lo ve quien puede ver el coaching de todo el equipo, y solo cuenta llamadas de venta. Con pocas llamadas la diferencia todavía puede ser suerte.",
+   "Solo son conteos: no salen montos, teléfonos ni nombres de quien llamó. Un periodo de más de 400 días cuenta solo los últimos 400."
+  ]
+ },
+ {
   "ruta": "/analisis/tendencias",
   "nombre": "Análisis y metas › tendencias",
   "modulos": [
@@ -1535,6 +1553,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 2: Escucha tu mejor y tu peor llamada, una tras otra.",
    "Paso 3: Abre una llamada de la lista para ver cada criterio con la frase que lo justifica.",
    "La calificación va de 1 a 10 y la calcula el conmutador con la rúbrica que le toca a la llamada: cada criterio tiene su peso y, si pasó algo grave (por ejemplo, colgar sin dejar cómo dar seguimiento), un tope la limita. El ERP no la recalcula.",
+   "Las gráficas: el radar enseña cada criterio contra lo correcto (7) y, si son 3 personas o más, contra el promedio del equipo; los mapas de calor, cada criterio y cada fallo semana a semana. La gerencia ve además quién necesita qué, persona por criterio.",
    "Ventas y Atención van aparte, arriba: una venta (cotizar, comprar, seguimiento) se califica con la rúbrica de ventas, y lo demás (un proveedor, una factura, un trámite) con la de atención, aunque la conteste un vendedor. Así una llamada de proveedor no te mueve el promedio de ventas. La pantalla abre en la que tiene más llamadas.",
    "Cada quien ve solo sus llamadas. La gerencia de ventas y dirección ven a todo el equipo: la tabla del equipo trae el promedio, la tendencia y el fallo que más repite cada quien, y arriba eligen a una persona para ver lo suyo.",
    "La tendencia compara las últimas 4 semanas contra las 4 de antes, hasta el final del periodo, aunque el periodo sea más corto.",
@@ -5654,6 +5673,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuántos clientes distintos compraron en el periodo. Un cliente con varias compras cuenta una vez."
  },
  {
+  "clave": "coachingResultado",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "Las llamadas de venta que el conmutador calificó, separadas por su calificación (menos de 5, de 5 a 7, 7 o más), y cuántas de cada grupo llegaron a cotización. Si las mejor calificadas cotizan más, la rúbrica está pidiendo lo que vende. Solo lo ve quien puede ver el coaching de todo el equipo."
+ },
+ {
   "clave": "coberturaContraMeta",
   "modulos": [
    "inventario",
@@ -7486,6 +7512,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Las oportunidades abiertas por etapa: prospecto → contactado → cotizado → negociación. Al enviar una cotización, su oportunidad pasa sola a “cotizado”. Si la cotización no trae oportunidad, se liga a la tuya que el cliente ya tenía abierta sin cotizar (primero la que vino de un lead); solo si no hay ninguna, o si dijiste que es otro proyecto, se abre una nueva. Al convertirla en pedido pasa a “ganada”."
  },
  {
+  "clave": "embudoTelefono",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "De cada llamada del periodo: si la atendió una persona, si dejó un lead, si llegó a cotización y si llegó a pedido. Cuenta como su cotización la de la oportunidad de su lead, o una del mismo cliente hecha en los 14 días siguientes (los borradores no cuentan); el pedido, si salió de esa cotización. El porcentaje de cada paso es contra el paso anterior."
+ },
+ {
   "clave": "empacarEnvio",
   "modulos": [
    "inventario",
@@ -7777,6 +7810,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Equipo que viene del libro de seriales de la hoja (desde 2015): se puede buscar y dar servicio, pero no tiene orden de producción en el ERP. ERP = lo numeró el ERP."
+ },
+ {
+  "clave": "equipoPorCriterio",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Una fila por persona y una columna por criterio, con su promedio en el periodo: rojo es lo que hay que trabajar con ella y azul lo que hace bien. Solo lo ven la gerencia de ventas y dirección."
  },
  {
   "clave": "equiposDeEspecialidad",
@@ -8478,6 +8521,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Un error concreto que se notó en la llamada («No cerró fecha», «No pidió la ubicación»). Sale de una lista fija de la empresa, así que se puede contar cuál se repite más: el número es en cuántas llamadas salió."
+ },
+ {
+  "clave": "fallosPorSemana",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "En cuántas llamadas de cada semana salió cada fallo; arriba de cada columna, cuántas llamadas se calificaron esa semana. El número es en cuántas salió, y el color, qué parte de las llamadas de esa semana fue: más oscuro, en más de ellas. Si un fallo se va aclarando, se está corrigiendo."
  },
  {
   "clave": "faltanHoras",
@@ -10541,6 +10594,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Fallas: correctivos reportados en el periodo y cuántos pararon la máquina. Horas fuera de servicio: el tiempo que las máquinas estuvieron paradas dentro del periodo. Tiempo de reparación: de que se reporta la falla a que se cierra (MTTR). Preventivos a tiempo: los hechos antes de su fecha."
+ },
+ {
+  "clave": "mapaCalorCoaching",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cada cuadro es el promedio de un criterio en una semana. Rojo: abajo de lo correcto (7); gris: alrededor de 7; azul: arriba. Leído de izquierda a derecha dice si un criterio va mejorando o se cayó. Un cuadro vacío es una semana sin llamadas calificadas."
  },
  {
   "clave": "mapaCalorUsoErp",
@@ -12610,6 +12673,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Para registrar una salida (consumo del taller o venta), una devolución o un traspaso entre almacenes. Lo que llega de compras entra al recibir la orden de compra, y lo que va a una orden de producción sale al surtirla desde la orden."
  },
  {
+  "clave": "pestanaTelefono",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "El teléfono como negocio: cuántas llamadas llegan a lead, a cotización y a pedido, si las que nadie contestó se regresan y qué tan rápido, y si las llamadas mejor calificadas cotizan más. Solo números juntos, sin montos ni quién llamó."
+ },
+ {
   "clave": "pestanaTendencias",
   "modulos": [
    "analisis"
@@ -13473,6 +13543,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Quita la partida del pedido y los totales se recalculan. Solo mientras el pedido está confirmado."
  },
  {
+  "clave": "radarCoaching",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Cada criterio de la rúbrica en un eje, de 0 (centro) a 10 (orilla): tu promedio del periodo contra lo correcto (7, la línea punteada). Donde tu figura se mete abajo de la punteada es lo que hay que trabajar. Si en el periodo hay 3 personas o más calificadas, también sale el promedio del equipo; con menos no, para que nadie pueda deducir el de otro."
+ },
+ {
   "clave": "rangoGraficaCosteo",
   "modulos": [
    "costeo",
@@ -13762,6 +13842,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Suelta una orden de su pedido y la regresa a «Para stock», con su avance, su número de serie y el material que ya se le surtió. Sirve cuando se le dio «Usar» a la orden equivocada o cuando el cliente canceló: el equipo se puede dar a otro pedido. En el pedido, ese equipo vuelve a quedar «Sin orden». Solo la gerencia de producción, con el motivo."
+ },
+ {
+  "clave": "regresarTelefono",
+  "modulos": [
+   "analisis"
+  ],
+  "texto": "De las llamadas que nadie contestó (sin las de antes de conectar el conmutador), cuántas se regresaron y en cuánto tiempo: la mediana es el tiempo en que se regresó la mitad. Una llamada se da por regresada cuando alguien registra el intento en «A quién llamar hoy»."
  },
  {
   "clave": "reimportarHojas",

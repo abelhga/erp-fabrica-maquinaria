@@ -36,6 +36,9 @@
      rampa; entre brazos ΔE CVD 13.0 (todos los pares). */
   --div-1: #8b2827; --div-2: #d24c4a; --div-3: #ed9b94; --div-4: #c9c8c1;
   --div-5: #8cb7f0; --div-6: #3380de; --div-7: #144f94;
+  /* Texto encima de cada paso divergente (mapas de calor con número en la celda). */
+  --div-tinta-1: #ffffff; --div-tinta-2: #ffffff; --div-tinta-3: #1a1a1a; --div-tinta-4: #1a1a1a;
+  --div-tinta-5: #1a1a1a; --div-tinta-6: #ffffff; --div-tinta-7: #ffffff;
   --mapa-vacio: #e6e5e0;   /* sin venta: gris neutro, que no se confunda con "poco" (azul claro) */
   --serie-resto: #a3a29b;  /* lo que se junta en "Resto" cuando hay más de 7 series */
   color-scheme: light;
@@ -69,6 +72,9 @@
   --seq-tinta-5: #0b0b0b; --seq-tinta-6: #0b0b0b; --seq-tinta-7: #0b0b0b;
   --div-1: #f1a8a1; --div-2: #db5854; --div-3: #9c2e2e; --div-4: #4a4a46;
   --div-5: #185aa6; --div-6: #4089e6; --div-7: #9ac1f3;
+  /* En oscuro los extremos son los claros: el texto se invierte. */
+  --div-tinta-1: #0b0b0b; --div-tinta-2: #0b0b0b; --div-tinta-3: #ffffff; --div-tinta-4: #ffffff;
+  --div-tinta-5: #ffffff; --div-tinta-6: #0b0b0b; --div-tinta-7: #0b0b0b;
   --mapa-vacio: #2c313b;
   --serie-resto: #6b6a66;
   color-scheme: dark;
