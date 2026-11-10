@@ -72,6 +72,20 @@ export const ANALISIS: Record<string, AyudaPantalla> = {
       "Sin conmutador conectado no hay nada que contar: se conecta en Configuración → Integraciones → Teléfono.",
     ],
   },
+  "/analisis/telefono": {
+    resumen: "El teléfono como negocio: si las llamadas llegan a cotización y a pedido, si se regresan las que nadie contestó y si el coaching vende.",
+    pasos: [
+      "Elige el periodo arriba; todo se cuenta con las llamadas de esas fechas.",
+      "Revisa el embudo: el paso donde más se cae es donde hay que trabajar.",
+      "Compara cuánto cotizan las llamadas bien y mal calificadas.",
+    ],
+    detalle: [
+      "Una llamada llega a cotización si se cotizó la oportunidad de su lead, o si el mismo cliente recibió una cotización en los 14 días siguientes; a pedido, si esa cotización se volvió pedido. Los borradores no cuentan.",
+      "«Regresadas» son las que nadie contestó y alguien regresó desde «A quién llamar hoy»; las de antes de conectar el conmutador no cuentan. La mediana es el tiempo en que se regresó la mitad.",
+      "«¿Sirve el coaching?» solo lo ve quien puede ver el coaching de todo el equipo, y solo cuenta llamadas de venta. Con pocas llamadas la diferencia todavía puede ser suerte.",
+      "Solo son conteos: no salen montos, teléfonos ni nombres de quien llamó. Un periodo de más de 400 días cuenta solo los últimos 400.",
+    ],
+  },
   "/analisis/planeacion": {
     resumen: "La meta del año repartida por mes y por estado, contra lo vendido: dice a qué ritmo hay que vender lo que falta.",
     pasos: [
