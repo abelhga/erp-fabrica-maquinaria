@@ -54,6 +54,13 @@ begin
   assert not exists (select 1 from pendientes where id = p), 'un vendedor ve el pendiente de compras';
 
   --    Marcarlo hecho es «Ya lo corregí»: el hallazgo se cierra y al otro responsable ya no le toca.
+  --    Y comprueba (267): con los dos pagos todavía ahí, no se puede marcar hecho; ya borrado uno, sí.
+  perform pg_temp.como(v_com);
+  begin update pendientes set estado = 'hecho', nota_cierre = 'Era el mismo pago; borré uno' where id = p; v_ok := true;
+  exception when check_violation then v_ok := false; v_msg := sqlerrm; end;
+  assert not v_ok and v_msg like 'Todavía sale igual%', format('se marcó hecho con el pago repetido todavía ahí: %s', v_msg);
+  perform pg_temp.como_postgres();
+  delete from movimientos_proveedor where proveedor_llave = 'r210' and registrado_por = v_com2;
   perform pg_temp.como(v_com);
   update pendientes set estado = 'hecho', nota_cierre = 'Era el mismo pago; borré uno' where id = p;
   perform pg_temp.como_postgres();

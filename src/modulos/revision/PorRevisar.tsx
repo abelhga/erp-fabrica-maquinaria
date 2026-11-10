@@ -191,6 +191,19 @@ export function TarjetaHallazgo({ h, para, de_otro }: { h: Hallazgo; yo?: string
     q<string>(supabase.rpc("revision_responder", { p_hallazgo: h.id, p_respuesta: a.respuesta, p_nota: a.nota ?? null })), {
     exito: (m) => m, invalidar: [claves.abiertos, claves.cerrados], alTerminar: () => setConfirmar(false),
   });
+  // «Ya lo corregí» comprueba primero: si la revisión lo sigue encontrando no se cierra, y si no se
+  // puede medir y el registro no cambió, pide decir qué se corrigió (aquí mismo, sin perder la tarjeta).
+  const [aviso, setAviso] = useState<{ motivo: "sigue" | "falta_nota"; mensaje: string } | null>(null);
+  const [nota, setNota] = useState("");
+  const corregi = useAccion((n: string | null) =>
+    q<{ estado: "cerrado" | "abierto"; motivo?: "sigue" | "falta_nota"; mensaje: string }>(
+      supabase.rpc("revision_ya_lo_corregi", { p_hallazgo: h.id, p_nota: n })), {
+    invalidar: [claves.abiertos, claves.cerrados],
+    alTerminar: (r) => {
+      if (r.estado === "cerrado") { toast.success(r.mensaje); setAviso(null); setNota(""); }
+      else setAviso({ motivo: r.motivo ?? "sigue", mensaje: r.mensaje });
+    },
+  });
   const escalado = !!h.escalado_en;
   return (
     <Tarjeta className="p-4 space-y-3">
@@ -240,7 +253,7 @@ export function TarjetaHallazgo({ h, para, de_otro }: { h: Hallazgo; yo?: string
           )}
           {/* Se deshabilita mientras guarda: la explicación va en el envoltorio para que no se pierda. */}
           <span data-explain={GLOSARIO.revisionYaLoCorregi} data-explain-title={h.para === "direccion" ? "Ya lo revisé" : "Ya lo corregí"}>
-            <Boton tamano="sm" variante="secundario" onClick={() => responder.mutate({ respuesta: "corregido" })} cargando={responder.isPending && !confirmar}>
+            <Boton tamano="sm" variante="secundario" onClick={() => corregi.mutate(null)} cargando={corregi.isPending && !aviso}>
               <CheckCircle2 className="h-4 w-4" />{h.para === "direccion" ? "Ya lo revisé" : "Ya lo corregí"}
             </Boton>
           </span>
@@ -250,6 +263,26 @@ export function TarjetaHallazgo({ h, para, de_otro }: { h: Hallazgo; yo?: string
             </Boton>
           )}
           {h.ruta && <Link to={h.ruta} className="ml-auto inline-flex items-center gap-1 text-sm text-marca-texto hover:underline">Abrir <ArrowRight className="h-4 w-4" /></Link>}
+        </div>
+      )}
+      {aviso && !porque && (
+        <div className="space-y-2 rounded-xl border border-aviso/40 bg-aviso-suave/40 p-3 text-sm" role="status">
+          <p>{aviso.mensaje}</p>
+          {aviso.motivo === "falta_nota" && (
+            <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); if (nota.trim().length >= 10) corregi.mutate(nota); }}>
+              <label className="block font-medium" htmlFor={`corregi-${h.id}`}>¿Qué corregiste?</label>
+              <AreaTexto id={`corregi-${h.id}`} autoFocus rows={2} value={nota} onChange={(e) => setNota(e.target.value)}
+                placeholder="Ej.: «Cambié la unidad a pulgadas en el nombre» o «El proveedor reenvió la factura»"
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (nota.trim().length >= 10) corregi.mutate(nota); } }} />
+              <div className="flex flex-wrap items-center gap-2">
+                <Boton type="submit" tamano="sm" disabled={nota.trim().length < 10} cargando={corregi.isPending}><Check className="h-4 w-4" />Guardar</Boton>
+                <Boton type="button" tamano="sm" variante="fantasma" onClick={() => { setAviso(null); setNota(""); }}>Cancelar</Boton>
+              </div>
+            </form>
+          )}
+          {aviso.motivo === "sigue" && (
+            <Boton type="button" tamano="sm" variante="fantasma" onClick={() => setAviso(null)}>Entendido</Boton>
+          )}
         </div>
       )}
       <Dialogo abierto={confirmar} alCambiar={setConfirmar} titulo="¿Lo corrijo?" descripcion={h.accion?.texto}

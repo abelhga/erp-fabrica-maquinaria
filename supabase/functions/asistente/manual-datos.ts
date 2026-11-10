@@ -14226,7 +14226,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
  {
   "clave": "revisionYaLoCorregi",
   "modulos": [],
-  "texto": "Dices que ya lo arreglaste en su pantalla: se cierra como corregido y, si también estaba en tus Pendientes, ahí queda hecho. Si es algo que la revisión vuelve a medir cada noche (un artículo o cliente repetido, una cuenta sin ficha, una compra sin recibir) y sigue igual, vuelve a salir en la siguiente revisión. En los patrones dice «Ya lo revisé»."
+  "texto": "Dices que ya lo arreglaste en su pantalla, y el ERP lo comprueba antes de cerrarlo. Si es algo que la revisión puede volver a medir (un artículo o cliente repetido, una cuenta sin ficha, una compra sin recibir, un pago repetido) y lo sigue encontrando, no se cierra y te dice qué falta; si tiene «Corrígelo», úsalo. Si no se puede medir (lo que señala la IA, un costo raro) y el registro no cambió desde que salió, te pide escribir qué corregiste. Lo mismo pasa al marcarlo hecho en Pendientes. Si no había nada que corregir, usa «Está bien así» con el porqué. En los patrones dice «Ya lo revisé» y no pide nada."
  },
  {
   "clave": "riesgoSeguridad",
