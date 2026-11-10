@@ -13740,7 +13740,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "De qué documento salió: la orden de compra, la orden de producción, el pedido o el ajuste. En un traspaso dice a qué almacén fue o de cuál vino."
+  "texto": "De qué documento salió: la orden de compra (con el nombre del proveedor, así lo encuentras escribiéndolo en el buscador), la orden de producción, el pedido o el ajuste. En un traspaso dice a qué almacén fue o de cuál vino."
  },
  {
   "clave": "referenciaServicio",
@@ -15628,7 +15628,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "Qué fue: entrada de compra, devolución, salida a producción, venta, consumo, traspaso, ajuste autorizado o saldo inicial. Lo que entra suma (verde) y lo que sale resta (rojo)."
+  "texto": "Qué fue: entrada de compra, devolución, salida a producción, venta, consumo, traspaso, ajuste autorizado o saldo inicial. Lo que entra suma (verde) y lo que sale resta (rojo). «Todos» no trae los saldos iniciales (la carga de la hoja del 20 de octubre, que son miles); para verlos elige «Saldos iniciales»."
  },
  {
   "clave": "tipoOrdenMto",
