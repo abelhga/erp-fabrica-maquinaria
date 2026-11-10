@@ -143,9 +143,14 @@ llamar la función de borde con la llave de servicio (ni `anon` ni `authenticate
   - `401 {"error":"Llave inválida"}` (una llave de menos de 32 caracteres ni se le pregunta a la base).
   - `500 {"error":"No se pudo consultar quién llama"}` cualquier otra cosa; queda anotado en
     Integraciones como «último error», sin el teléfono.
-- Voz espera máximo `ERP_CONTEXTO_MS` (800 ms por omisión); si no llega, la llamada sigue sin
-  contexto. Por eso es una sola función SQL, todo por índice (en local, con 8,000 contactos y
-  3,000 pedidos, de 2 a 9 ms).
+- Voz espera máximo `ERP_CONTEXTO_MS` (800 ms por omisión), contados desde que abre la llamada; si
+  no llega, la llamada empieza sin contexto y lo usa en cuanto llega. Por eso es una sola función
+  SQL, todo por índice (en local, con 8,000 contactos y 3,000 pedidos, de 2 a 9 ms; en la nube, de 2
+  a 22 ms), y la función revisa la llave **al mismo tiempo** que consulta.
+- Lo que tarda de verdad es la red: la función corre cerca de quien la llama y le habla a la base
+  desde ahí. Voz pregunta desde el webhook de entrada (unos 4 s antes de abrir el websocket) y, si
+  la base del ERP queda lejos, puede pedir que la función corra junto a ella con el encabezado
+  `x-region` de Supabase (`ERP_REGION` en voz, p. ej. `us-west-1`).
 
 ### Cuerpo (200)
 ```json

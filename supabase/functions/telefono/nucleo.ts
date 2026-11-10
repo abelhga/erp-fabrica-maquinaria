@@ -14,7 +14,8 @@
 //
 // GET /telefono/contexto?tel=… (fase 2): al empezar una llamada el conmutador pregunta quién llama
 // (telefono_contexto: cliente, su vendedor, pedidos abiertos y cotizaciones vivas, sin montos). Lo
-// espera 800 ms y, si no llega, la llamada sigue sin contexto: por eso es una sola consulta a la base.
+// espera 800 ms y, si no llega, la llamada sigue sin contexto: por eso es una sola consulta a la base,
+// que corre al mismo tiempo que la revisión de la llave.
 //
 // POST /telefono/accion (fase 4): lo que el vendedor contesta por WhatsApp («contactado: …», «no
 // contestó», «perdido: precio»…). La base reconoce al vendedor por su número y lo aplica como él, con
@@ -279,11 +280,21 @@ async function resumen(req: Request, url: URL, e: Entorno): Promise<Response> {
 
 async function contexto(req: Request, url: URL, e: Entorno): Promise<Response> {
   const admin = createClient(e.supabaseUrl, e.serviceKey, sinSesion);
-  const sinPaso = await revisarLlave(req, admin, "una consulta de quién llama");
-  if (sinPaso) return sinPaso;
   const tel = url.searchParams.get("tel");
-  if (!telefonoValido(tel)) return json({ error: "Teléfono inválido" }, 400);
-  const { data, error } = await admin.rpc("telefono_contexto", { p_tel: tel });
+  // Sin llave, o con una corta, ni se le pregunta a la base (tampoco «al mismo tiempo»).
+  if ((req.headers.get("x-llave") ?? "").length < 32 || !telefonoValido(tel)) {
+    const sinPaso = await revisarLlave(req, admin, "una consulta de quién llama");
+    return sinPaso ?? json({ error: "Teléfono inválido" }, 400);
+  }
+  // La llave y la consulta van AL MISMO TIEMPO: la base del ERP puede estar lejos de donde corre la
+  // función (la de Hegamex está en California y la función en Virginia, junto al conmutador), y una
+  // detrás de otra eran dos viajes que se comían los 800 ms que espera la llamada. Lo consultado solo
+  // sale si la llave pasa; si no, se tira sin leerlo.
+  const [sinPaso, { data, error }] = await Promise.all([
+    revisarLlave(req, admin, "una consulta de quién llama"),
+    admin.rpc("telefono_contexto", { p_tel: tel }),
+  ]);
+  if (sinPaso) return sinPaso;
   if (error) {
     if (error.code === "22023") return json({ error: "Teléfono inválido" }, 400);
     // Sin el teléfono en el aviso: dirección ve que falló, no a quién se buscaba.

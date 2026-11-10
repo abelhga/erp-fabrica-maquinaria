@@ -400,7 +400,12 @@ describe.skipIf(!hayBase)("contra la base local", () => {
   });
 
   it("quién llama: sin la llave vigente es 401; sin teléfono o con uno corto, 400", async () => {
-    expect((await pedir(TEL_CLI, `tel_otra_${"y".repeat(40)}`)).status).toBe(401);
+    // La llave se revisa al mismo tiempo que la consulta: con una mala, del cliente no sale nada.
+    const mala = await pedir(TEL_CLI, `tel_otra_${"y".repeat(40)}`);
+    expect(mala.status).toBe(401);
+    expect(await mala.json()).toEqual({ error: "Llave inválida" });
+    const malaSinTel = await pedir(null, `tel_otra_${"y".repeat(40)}`);
+    expect(malaSinTel.status).toBe(401);
     for (const tel of [null, "", "12345", "sin numero"]) {
       const r = await pedir(tel);
       expect(r.status, String(tel)).toBe(400);
