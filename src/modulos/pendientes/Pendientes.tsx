@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Check, CheckCircle2, Clock, Hourglass, ListTodo, MessageCircleQuestion, RotateCcw, Send, Timer, Users, X } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, Clock, Hourglass, ImagePlus, ListTodo, Loader2, MessageCircleQuestion, RotateCcw, Send, Timer, Users, X } from "lucide-react";
 import { Pagina } from "@/components/layout/Shell";
 import { Boton } from "@/components/ui/boton";
 import { Dialogo, Lateral } from "@/components/ui/dialogo";
@@ -23,6 +23,8 @@ import { fecha, fechaYHora, hace, hoyISO, numero, porcentaje } from "@/lib/forma
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { useMinutosDeshacer } from "@/lib/deshacer";
+import { subirImagen } from "@/components/datos/SubirFoto";
+import { toast } from "sonner";
 
 type Estado = "abierto" | "hecho" | "cancelado" | "cubierto";
 interface Pendiente {
@@ -35,7 +37,25 @@ interface Pendiente {
 }
 /** El de la revisión nocturna no lo pidió una persona (no tiene creado_por). */
 const quienPidio = (p: Pendiente) => p.creador?.nombre ?? (p.creado_por ? "…" : "Revisión nocturna");
-interface Mensaje { id: number; pendiente_id: string; autor_id: string; texto: string; en: string; autor: { nombre: string } | null }
+interface Mensaje { id: number; pendiente_id: string; autor_id: string; texto: string; adjunto: string | null; en: string; autor: { nombre: string } | null }
+
+/** La captura de un mensaje: el bucket es privado, así que se pide una liga que dura una hora. */
+function CapturaMensaje({ ruta }: { ruta: string }) {
+  const liga = useQuery({
+    queryKey: ["pendientes", "captura", ruta], staleTime: 50 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.storage.from("pendientes").createSignedUrl(ruta, 3600);
+      if (error) throw error;
+      return data.signedUrl;
+    },
+  });
+  if (!liga.data) return <div className="h-24 w-32 rounded-lg bg-fondo animate-pulse" />;
+  return (
+    <a href={liga.data} target="_blank" rel="noreferrer" className="block mt-1" title="Abrir la captura completa">
+      <img src={liga.data} alt="Captura" className="max-h-56 max-w-full rounded-lg border border-borde" />
+    </a>
+  );
+}
 interface Cumplimiento {
   persona_id: string; persona: string; abiertos: number; vencidos: number; cerrados: number; a_tiempo: number; tarde: number;
   sin_fecha: number; dias_promedio: number | null; esperan: number; dias_retraso: number; pidio: number; pidio_abiertos: number;
@@ -446,17 +466,28 @@ function FichaPendiente({ p, cargando, yo, hoy, alCerrar, alHecho, alCancelar, a
   alReabrir?: () => void;
 }) {
   const [texto, setTexto] = useState("");
+  const [adjunto, setAdjunto] = useState<{ ruta: string; vista: string } | null>(null);
+  const [subiendo, setSubiendo] = useState(false);
+  const archivo = useRef<HTMLInputElement>(null);
   const fin = useRef<HTMLDivElement>(null);
   const mensajes = useQuery({
     queryKey: ["pendientes", "mensajes", p?.id], enabled: !!p,
     queryFn: () => q<Mensaje[]>(supabase.from("pendiente_mensajes").select("*, autor:perfiles(nombre)").eq("pendiente_id", p!.id).order("en")),
   });
   useTiempoReal("pendiente_mensajes", [["pendientes", "mensajes"]]);
-  const enviar = useAccion(() => q(supabase.rpc("comentar_pendiente", { p_pendiente: p!.id, p_texto: texto })), {
+  const enviar = useAccion(() => q(supabase.rpc("comentar_pendiente", { p_pendiente: p!.id, p_texto: texto, p_adjunto: adjunto?.ruta ?? null })), {
     exito: p?.responsable_id === yo ? "Pregunta enviada: le llegó un aviso" : "Respuesta enviada: le llegó un aviso",
-    invalidar: [["pendientes"]], alTerminar: () => setTexto(""),
+    invalidar: [["pendientes"]], alTerminar: () => { setTexto(""); setAdjunto(null); },
   });
-  useEffect(() => { setTexto(""); }, [p?.id]);
+  useEffect(() => { setTexto(""); setAdjunto(null); }, [p?.id]);
+  // Una captura (pegada con Ctrl+V o elegida del celular) se sube en cuanto se elige; el mensaje la liga al mandarse.
+  async function adjuntar(f: File | undefined | null) {
+    if (!f || !p) return;
+    setSubiendo(true);
+    try { setAdjunto({ ruta: await subirImagen("pendientes", p.id, f), vista: URL.createObjectURL(f) }); }
+    catch (err) { toast.error(err instanceof Error ? err.message : String(err)); }
+    finally { setSubiendo(false); }
+  }
   useEffect(() => { fin.current?.scrollIntoView({ block: "end" }); }, [mensajes.data?.length]);
   const abierto = p?.estado === "abierto";
   const soyResp = !!p && p.responsable_id === yo, soyCreador = !!p && p.creado_por === yo;
@@ -464,7 +495,7 @@ function FichaPendiente({ p, cargando, yo, hoy, alCerrar, alHecho, alCancelar, a
   const escribe = abierto && (soyResp || soyCreador) && !!p!.creado_por && p!.responsable_id !== p!.creado_por;
   const otro = soyResp ? (p ? quienPidio(p) : undefined) : p?.responsable?.nombre;
   const vencido = abierto && p?.vence && p.vence < hoy;
-  const mandar = () => { if (texto.trim() && !enviar.isPending) enviar.mutate(undefined); };
+  const mandar = () => { if ((texto.trim() || adjunto) && !subiendo && !enviar.isPending) enviar.mutate(undefined); };
   return (
     <Lateral abierto={!!p || cargando} alCambiar={(v) => !v && alCerrar()} ancho="max-w-xl"
       titulo={p?.titulo ?? "Pendiente"}
@@ -507,7 +538,8 @@ function FichaPendiente({ p, cargando, yo, hoy, alCerrar, alHecho, alCancelar, a
                 const mio = m.autor_id === yo;
                 return (
                   <div key={m.id} className={cn("max-w-[85%] rounded-xl px-3 py-2 text-sm", mio ? "ml-auto bg-marca-suave text-texto" : "bg-fondo")}>
-                    <p className="whitespace-pre-wrap">{m.texto}</p>
+                    {m.texto && <p className="whitespace-pre-wrap">{m.texto}</p>}
+                    {m.adjunto && <CapturaMensaje ruta={m.adjunto} />}
                     <p className="mt-0.5 text-[11px] text-tenue">{mio ? "Tú" : m.autor?.nombre} · {fechaYHora(m.en)}</p>
                   </div>
                 );
@@ -515,12 +547,28 @@ function FichaPendiente({ p, cargando, yo, hoy, alCerrar, alHecho, alCancelar, a
               <div ref={fin} />
             </div>
             {escribe && (
-              <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); mandar(); }}>
-                <textarea className="campo flex-1 h-16 py-2" value={texto} onChange={(e) => setTexto(e.target.value)}
-                  placeholder={soyResp ? `Pregúntale a ${otro ?? "quien lo pidió"} lo que te falta…` : `Contéstale a ${otro ?? "quien lo tiene"}…`}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); mandar(); } }} />
-                <Boton type="submit" disabled={!texto.trim()} cargando={enviar.isPending} className="self-end">
-                  <Send className="h-4 w-4" />{soyResp ? "Preguntar" : "Responder"}</Boton>
+              <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); mandar(); }}>
+                {adjunto && (
+                  <div className="relative inline-block">
+                    <img src={adjunto.vista} alt="Captura por mandar" className="max-h-32 rounded-lg border border-borde" />
+                    <button type="button" onClick={() => setAdjunto(null)} aria-label="Quitar la captura"
+                      className="absolute -top-2 -right-2 rounded-full bg-superficie border border-borde p-0.5 text-tenue hover:text-texto"><X className="h-3.5 w-3.5" /></button>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <textarea className="campo flex-1 h-16 py-2" value={texto} onChange={(e) => setTexto(e.target.value)}
+                    placeholder={soyResp ? `Pregúntale a ${otro ?? "quien lo pidió"} lo que te falta…` : `Contéstale a ${otro ?? "quien lo tiene"}…`}
+                    onPaste={(e) => { const f = Array.from(e.clipboardData.files).find((x) => x.type.startsWith("image/")); if (f) { e.preventDefault(); adjuntar(f); } }}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); mandar(); } }} />
+                  <div className="flex flex-col gap-1.5 self-end">
+                    <input ref={archivo} type="file" accept="image/*" hidden onChange={(e) => { adjuntar(e.target.files?.[0]); e.target.value = ""; }} />
+                    <Boton type="button" variante="secundario" tamano="sm" onClick={() => { if (!subiendo) archivo.current?.click(); }} aria-busy={subiendo}
+                      data-explain={GLOSARIO.capturaPendiente} data-explain-title="Adjuntar captura">
+                      {subiendo ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}Captura</Boton>
+                    <Boton type="submit" disabled={(!texto.trim() && !adjunto) || subiendo} cargando={enviar.isPending}>
+                      <Send className="h-4 w-4" />{soyResp ? "Preguntar" : "Responder"}</Boton>
+                  </div>
+                </div>
               </form>
             )}
           </section>

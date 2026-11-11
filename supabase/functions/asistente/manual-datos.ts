@@ -5307,6 +5307,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que pone el jefe según la regla: cuántas incidencias, el resultado del mes o lo cumplido de lo posible, con una nota y, si quieres, una liga de evidencia. Enter guarda y el resultado se recalcula."
  },
  {
+  "clave": "capturaPendiente",
+  "modulos": [],
+  "texto": "Manda una captura o foto junto con tu pregunta o respuesta, por ejemplo para enseñar en qué pantalla y botón se hace algo. Elígela del celular o, en la computadora, pégala con Ctrl+V en el cuadro de texto. La ven solo quienes ven este pendiente."
+ },
+ {
   "clave": "capturarTipoCambioCosteo",
   "modulos": [
    "costeo",
