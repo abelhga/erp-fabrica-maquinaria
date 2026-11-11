@@ -58,10 +58,10 @@ begin
   r := pg_temp.foto('CA264-1', jsonb_build_object('telefono', '+525550002641', 'inicio', t0, 'nadie_contesto', false, 'historica', true));
   assert (r->>'lead_id')::uuid = l_cerca, 'una foto nueva NO cambia el lead que ya tenía';
 
-  -- 5. Una llamada de hoy sigue su camino: crea su lead nuevo (no la liga al que ya existía).
+  -- 5. Una llamada de hoy de un número con lead abierto se suma a ese lead, no crea otro (279).
   select count(*) into v_n from leads;
   r := pg_temp.foto('CA264-5', jsonb_build_object('telefono', '+525550002641', 'inicio', now(), 'nadie_contesto', true),
        jsonb_build_object('lead', jsonb_build_object('nombre', 'Nuevo 264', 'telefono', '+525550002641', 'interes', 'Cribadora de 2 camas')));
-  assert (select count(*) from leads) = v_n + 1 and (r->>'lead_id')::uuid not in (l_viejo, l_cerca, l_cli),
-    format('la llamada de hoy hace su lead como siempre: %s', r);
+  assert (select count(*) from leads) = v_n and (r->>'lead_id')::uuid in (l_viejo, l_cerca),
+    format('la llamada de hoy debía sumarse al lead abierto de ese número: %s', r);
 end $$;
