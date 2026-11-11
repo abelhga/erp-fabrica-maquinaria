@@ -14351,7 +14351,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Lo que el cliente ya debía en la hoja el día que arrancó el ERP, menos lo que ha pagado de eso desde entonces. Se muestra aparte del saldo de los pedidos nuevos."
+  "texto": "Lo que el cliente ya debía en la hoja el día que arrancó el ERP, menos lo que ha pagado de eso desde entonces. En la hoja, las ventas suman y los pagos restan; una nota de crédito o reembolso pendiente resta (es lo que se le debe), y un reembolso ya hecho suma (deshace lo que tenía a favor). Se muestra aparte del saldo de los pedidos nuevos."
  },
  {
   "clave": "saldoArranqueVacaciones",
