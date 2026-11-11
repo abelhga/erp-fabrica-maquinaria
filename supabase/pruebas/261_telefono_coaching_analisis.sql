@@ -52,7 +52,7 @@ begin
   update configuracion set valor = valor || '{"modo": "bandeja", "vendedores": []}' where clave = 'leads';
   insert into clientes (nombre, vendedor_id) values ('Agregados 261', v_b) returning id into v_cli;
   insert into contactos (cliente_id, nombre, telefono) values (v_cli, 'Juan 261', '818 000 2611');
-  insert into articulos (clave, tipo, nombre) values ('T261-BT20', 'equipo', 'Banda 261 de 20 m') returning id into v_art;
+  insert into articulos (clave, tipo, nombre) values ('T261-BT20', 'equipo', 'Banda 261 de 20 metros') returning id into v_art;
   v_an := jsonb_build_object('intencion', 'cotizar', 'desenlace', 'transferida',
     'equipos', jsonb_build_array(jsonb_build_object('texto', 'banda transportadora', 'clave_catalogo', 'T261-BT20'),
                                  jsonb_build_object('texto', 'bandas transportadoras', 'clave_catalogo', 'NO-EXISTE')),
@@ -379,7 +379,7 @@ begin
      and (select sum((x->>'n')::int) from jsonb_array_elements(m->'por_dia') x) = (m->>'llamadas')::int,
     format('las horas y los días deben sumar las llamadas: %s', m);
   assert (m->>'nadie_contesto')::int >= 2, 'faltan las que nadie contestó';
-  assert m->'equipos' @> jsonb_build_array(jsonb_build_object('articulo_id', v_art, 'nombre', 'Banda 261 de 20 m', 'n', 1)),
+  assert m->'equipos' @> jsonb_build_array(jsonb_build_object('articulo_id', v_art, 'nombre', 'Banda 261 de 20 metros', 'n', 1)),
     format('el equipo ligado sale con su nombre del catálogo: %s', m->'equipos');
   assert m->'preguntas' @> jsonb_build_array(jsonb_build_object('clave', llamada_texto_clave('banda pvc grado alimenticio'), 'n', 4)),
     format('las preguntas parecidas se juntan: %s', m->'preguntas');

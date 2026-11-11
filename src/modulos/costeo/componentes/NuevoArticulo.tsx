@@ -1,15 +1,30 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { supabase } from "@/lib/supabase";
-import { mensajeError } from "@/lib/consultas";
+import { mensajeError, q } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { leerNumero, rutaArticulo, useTiposEquipo, type TipoArticulo } from "./comun";
 import { GLOSARIO } from "@/tutorial/glosario";
+import { Copy } from "lucide-react";
+
+interface Revision { nombre: string | null; parecidos: { id: string; clave: string; nombre: string; tipo: TipoArticulo; activo: boolean }[] }
+
+/** Cómo va a quedar el nombre y si ya existe uno igual: lo decide la base (la misma regla que al guardar). */
+function useRevisarNombre(nombre: string, tipo: TipoArticulo) {
+  const [t, setT] = useState("");
+  useEffect(() => { const id = setTimeout(() => setT(nombre.trim()), 350); return () => clearTimeout(id); }, [nombre]);
+  return useQuery({
+    queryKey: ["revisar_nombre_articulo", t, tipo],
+    enabled: t.length >= 3,
+    staleTime: 30_000,
+    queryFn: () => q<Revision>(supabase.rpc("revisar_nombre_articulo", { p_nombre: t, p_tipo: tipo })),
+  });
+}
 
 const UNIDADES = ["pieza", "metro", "kilo", "litro", "juego", "tramo", "m2", "caja", "carga", "rollo", "servicio", "horas"];
 
@@ -36,6 +51,9 @@ export function NuevoArticulo({ abierto, alCambiar, tipo }: {
   const [moneda, setMoneda] = useState<"MXN" | "USD" | "EUR">("MXN");
   const [guardando, setGuardando] = useState(false);
   const real: TipoArticulo = tipo === "componente" ? subtipo : tipo;
+  const revision = useRevisarNombre(nombre, real);
+  const propuesto = revision.data?.nombre;
+  const parecidos = revision.data?.parecidos ?? [];
 
   useEffect(() => {
     if (!abierto) return;
@@ -91,6 +109,26 @@ export function NuevoArticulo({ abierto, alCambiar, tipo }: {
           <Entrada autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)}
             placeholder={tipo === "equipo" ? 'Banda transportadora 18" x 20 m' : tipo === "subensamble" ? 'Cabezal motriz 18"' : "Chumacera de piso 1 7/16\" UCP-207"} />
         </Campo>
+        {nombre.trim().length >= 3 && propuesto && propuesto !== nombre.trim() && (
+          <p className="sm:col-start-2 -mt-2 text-xs text-tenue" data-explain={GLOSARIO.nombreConvencion} data-explain-title="Así va a quedar">
+            Se guardará como: <span className="text-texto">{propuesto}</span>
+          </p>
+        )}
+        {parecidos.length > 0 && (
+          <div className="sm:col-span-2 flex items-start gap-2 rounded-lg border border-aviso/30 bg-aviso-suave px-3 py-2 text-sm"
+            data-explain={GLOSARIO.articuloYaExiste} data-explain-title="Ya existe">
+            <Copy className="h-4 w-4 mt-0.5 text-aviso shrink-0" />
+            <div className="min-w-0 space-y-1">
+              <p className="font-medium">Ya existe uno igual: ¿no es este?</p>
+              {parecidos.map((p) => (
+                <Link key={p.id} to={rutaArticulo({ id: p.id, tipo: p.tipo })} onClick={() => alCambiar(false)}
+                  className="block text-marca-texto hover:underline">
+                  <span className="cifra">{p.clave}</span> · {p.nombre}{!p.activo && <span className="text-tenue"> (inactivo)</span>}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
         {tipo === "componente" && (
           <>
             <Campo etiqueta="Tipo">

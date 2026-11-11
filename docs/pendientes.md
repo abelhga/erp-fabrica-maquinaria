@@ -14,10 +14,6 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
   (subensambles con el mismo nombre; que ingeniería diga cuál sobra), C-N4270/C-N4271 («Poleas EsmerilB»),
   C-N4295/C-N4296 («Bandas Fresa»), C-N0168/C-N2159 (capuchón con tuerca), C-N1697/C-N3957 (silo auxiliar
   100 t con y sin «DKT»).
-- **Catálogo, convención al dar de alta (11 nov):** propuesto, sin aprobar: que el alta de artículos aplique
-  la convención con la que se renombraron 3,121 artículos (escritura normal y no en mayúsculas, acentos,
-  medidas como «8 x 25 mm» y «12 m», sin «p/», «inox» ni «mts») y avise si ya existe uno con el mismo nombre.
-
 - **Teléfono con IA, fase 4 (262, WhatsApp del vendedor):** ya está en la nube. Falta que cada vendedor
   quede ligado por su WhatsApp en «Quién contesta» (el primer mensaje de un número sin ligar lo deja ahí
   «Sin persona») y luego prender «CRM externo» en el panel de voz.
