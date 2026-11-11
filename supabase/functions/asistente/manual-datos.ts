@@ -5120,7 +5120,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "Las altas, cambios y bajas que la persona registró en el periodo, los mismos de la Bitácora: una cotización, un surtido, un pendiente cerrado, una partida corregida…"
+  "texto": "Las altas, cambios y bajas que la persona registró en el periodo, los mismos de la Bitácora: una cotización, un surtido, un pendiente cerrado, una partida corregida… No cuenta lo que hizo la IA a petición de esa persona (un cambio masivo, por ejemplo): eso queda en la Bitácora a su nombre, pero no es uso suyo."
  },
  {
   "clave": "cambiosSugeridosML",
