@@ -5,6 +5,19 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
 
 ## Por decidir o esperar a alguien
 
+- **Catálogo, bandas «H» (11 nov):** 37 bandas existen dos veces, sin nada y con «H» al final (categoría
+  «Bandas transportadoras H»). La H es la importada de China; sin H, la de Transbelt (más cara). Abel
+  todavía no decide si se quedan separadas (y entonces el nombre debe decir el origen en vez de «H») o
+  se juntan con `juntar_articulos`.
+- **Catálogo, repetidos por decidir (11 nov):** se llaman igual pero no son lo mismo, o no se sabe:
+  E-036/E-037 (banda cargadora 20" x 10 m reversible, listas distintas), SUB-002/SUB-010 y SUB-015/SUB-016
+  (subensambles con el mismo nombre; que ingeniería diga cuál sobra), C-N4270/C-N4271 («Poleas EsmerilB»),
+  C-N4295/C-N4296 («Bandas Fresa»), C-N0168/C-N2159 (capuchón con tuerca), C-N1697/C-N3957 (silo auxiliar
+  100 t con y sin «DKT»).
+- **Catálogo, convención al dar de alta (11 nov):** propuesto, sin aprobar: que el alta de artículos aplique
+  la convención con la que se renombraron 3,121 artículos (escritura normal y no en mayúsculas, acentos,
+  medidas como «8 x 25 mm» y «12 m», sin «p/», «inox» ni «mts») y avise si ya existe uno con el mismo nombre.
+
 - **Teléfono con IA, fase 4 (262, WhatsApp del vendedor):** ya está en la nube. Falta que cada vendedor
   quede ligado por su WhatsApp en «Quién contesta» (el primer mensaje de un número sin ligar lo deja ahí
   «Sin persona») y luego prender «CRM externo» en el panel de voz.
