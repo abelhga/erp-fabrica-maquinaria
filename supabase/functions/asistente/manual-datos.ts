@@ -489,6 +489,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 2: Dale clic a un renglón para abrir su ficha.",
    "Paso 3: Usa los filtros para ver solo lo importado o lo que tiene existencia.",
    "Ingeniería y compras lo dan de alta con «Nuevo componente»; los demás lo consultan. El botón CSV baja la lista para Excel.",
+   "Al dar de alta o renombrar, el nombre se acomoda solo a la forma de escribir del catálogo (acentos, «8 x 25 mm», «para» en vez de «p/», nada en mayúsculas), y si ya existe uno igual aunque esté escrito distinto, te lo enseña antes de crear el repetido.",
    "La existencia suma los almacenes de planta: lo que está en el Full de Mercado Libre no cuenta aquí.",
    "Quien tiene permiso de costos ve además el costo, su fecha y el proveedor, y los filtros «Sin costo» y «Costo de +6 meses»; los renglones en rojo no tienen costo capturado."
   ]
@@ -2442,6 +2443,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "compras"
   ],
   "texto": "Artículos activos que tienen a este proveedor como su proveedor de siempre o como el del costo vigente."
+ },
+ {
+  "clave": "articuloYaExiste",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Ya hay un artículo con el mismo nombre, aunque esté escrito distinto (otras comillas, otro orden de medidas, con o sin acentos). Si es el mismo, ábrelo y usa ese: un repetido parte la existencia en dos y el reabasto pide lo que sí hay."
  },
  {
   "clave": "asignarLead",
@@ -11313,6 +11322,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Quita el cliente que escogiste, por si no era él: el lead se registra sin ligarlo a un cliente y se reparte con la regla de siempre."
+ },
+ {
+  "clave": "nombreConvencion",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Así va a quedar el nombre: con acentos, medidas como «8 x 25 mm» o «12 m», «para» en vez de «p/», «inoxidable» en vez de «inox» y escrito normal, no en mayúsculas. Las claves, modelos y marcas se quedan como los escribiste. Es la misma forma de todo el catálogo, para que un repetido se note."
  },
  {
   "clave": "nombreParametro",

@@ -12,10 +12,10 @@ begin
   v_comp := pg_temp.usuario('comp263@hegamex.com', '{compras}');
   v_vend := pg_temp.usuario('vend263@hegamex.com', '{ventas}');
   select id into v_pb from almacenes where nombre = 'Planta Baja';
-  insert into articulos (clave, tipo, nombre) values ('T263-EQ', 'equipo', 'T263 Banda') returning id into v_eq;
-  insert into articulos (clave, tipo, nombre) values ('T263-A', 'componente', 'T263 Chumacera') returning id into a1;
-  insert into articulos (clave, tipo, nombre) values ('T263-B', 'componente', 'T263 Polea') returning id into a2;
-  insert into articulos (clave, tipo, nombre) values ('T263-C', 'componente', 'T263 Banda lisa') returning id into a3;
+  insert into articulos (clave, tipo, nombre) values ('T263-EQ', 'equipo', 'T263 banda') returning id into v_eq;
+  insert into articulos (clave, tipo, nombre) values ('T263-A', 'componente', 'T263 chumacera') returning id into a1;
+  insert into articulos (clave, tipo, nombre) values ('T263-B', 'componente', 'T263 polea') returning id into a2;
+  insert into articulos (clave, tipo, nombre) values ('T263-C', 'componente', 'T263 banda lisa') returning id into a3;
   insert into movimientos_inventario (tipo, articulo_id, almacen_id, cantidad, motivo)
   values ('inicial', a1, v_pb, 10, 'T263'), ('inicial', a2, v_pb, 10, 'T263'), ('inicial', a3, v_pb, 10, 'T263');
   insert into ordenes_produccion (articulo_id, cantidad, estado) values (v_eq, 1, 'planeada') returning id into v_op;
@@ -79,7 +79,7 @@ begin
   assert r->>'estado' = 'pendiente' and r->>'detalle' like 'Se soltó lo apartado: Se apartó por error%' and r->>'por' is not null,
     'el paso no volvió a pendiente: ' || r::text;
   assert exists (select 1 from op_eventos where orden_id = v_op and tipo = 'nota' and usuario_id = v_gp
-                 and nota like 'Se soltó lo apartado (todo)%T263 Chumacera%Motivo: Se apartó por error%'), 'la línea de tiempo no lo dice';
+                 and nota like 'Se soltó lo apartado (todo)%T263 chumacera%Motivo: Se apartó por error%'), 'la línea de tiempo no lo dice';
   perform pg_temp.como_postgres();
   assert exists (select 1 from bitacora where tabla = 'ordenes_produccion' and registro_id = v_op::text and usuario_id = v_gp
                  and accion = 'cambio'), 'no quedó en la bitácora';

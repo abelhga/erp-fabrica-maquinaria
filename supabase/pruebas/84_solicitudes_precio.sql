@@ -59,7 +59,7 @@ begin
   insert into articulos (clave, tipo, nombre, tiempo_entrega_dias) values ('T84-POL', 'componente', 'T Polea 8" masa fija', 3) returning id into v_pol;
   insert into costos_articulo (articulo_id, costo) values (v_pol, 700);
   assert (select precio from precios_lista where articulo_id = v_pol) = 1000, 'precio de la polea';
-  insert into articulos (clave, tipo, nombre) values ('T84-CAT', 'componente', 'T Catarina 80-14 sin costo') returning id into v_pol2;
+  insert into articulos (clave, tipo, nombre) values ('T84-CAT', 'componente', 'T catarina 80-14 sin costo') returning id into v_pol2;
   insert into articulos (clave, tipo, nombre) values ('T84-EQ', 'equipo', 'T Dosificadora Zar-6') returning id into v_eq;
   insert into proveedores (nombre) values ('T84 Rodamientos del Bajío') returning id into v_prov;
   insert into clientes (nombre, vendedor_id, legacy_ref) values ('T84 Agregados del Centro', v_isaac, 'T:84') returning id into v_cli;
@@ -229,7 +229,7 @@ begin
     if sqlerrm not like '%tiempo de entrega%' then raise; end if;
   end;
   v_j := contestar_solicitud_precio(v_s1, 735, 'MXN', v_prov, 5, current_date + 30, 'Mínimo 2 piezas', null,
-                                    '{"nombre": "T Polea 10\" doble canal 2B10", "unidad": "pieza"}');
+                                    '{"nombre": "T polea 10\" doble canal 2B10", "unidad": "pieza"}');
   v_nuevo := (v_j->>'articulo_id')::uuid;
   -- Compras no ve el precio de venta (149); queda guardado para el vendedor.
   assert v_j->>'precio_lista' is null, format('compras vio el precio de lista: %s', v_j->>'precio_lista');
@@ -338,7 +338,7 @@ begin
   perform pg_temp.como(v_isaac);
   perform aplicar_solicitud_precio(v_s1);
   select * into r from cotizacion_lineas where id = v_libre;
-  assert r.articulo_id = v_nuevo and r.precio_unitario = 1050 and r.precio_lista = 1050 and r.titulo like 'T Polea 10%' and r.cantidad = 2,
+  assert r.articulo_id = v_nuevo and r.precio_unitario = 1050 and r.precio_lista = 1050 and r.titulo like 'T polea 10%' and r.cantidad = 2,
     format('la partida libre se volvió el artículo: %s %s %s', r.articulo_id, r.precio_unitario, r.precio_lista);
   assert exists (select 1 from v_solicitudes_precio where id = v_s1 and usada and aplicada_en is not null), 'quedó como usada';
 
@@ -348,7 +348,7 @@ begin
   perform pg_temp.como(v_isaac);
   perform aplicar_solicitud_precio(v_s2);
   select * into r from cotizacion_lineas where id = v_l_pol2;
-  assert r.articulo_id = v_pol2 and r.precio_unitario = 200 and r.precio_lista = 200 and r.titulo = 'T Catarina 80-14 sin costo' and not r.bajo_minimo,
+  assert r.articulo_id = v_pol2 and r.precio_unitario = 200 and r.precio_lista = 200 and r.titulo = 'T catarina 80-14 sin costo' and not r.bajo_minimo,
     format('precio y foto de lista de la catarina: %s / %s', r.precio_unitario, r.precio_lista);
 
   -- ---------------------------------------------------------------------------
