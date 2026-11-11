@@ -1,6 +1,7 @@
 export const GENERAL = {
   // --- Conceptos que se repiten en todo el ERP ---
   folioPedido: "El número del pedido. Los de clientes van PED-26-799: el año en que se levantó y el número corrido de siempre (el que seguía al pedido 798 de la hoja); el número no vuelve a 1 al cambiar de año. Mercado Libre, la tienda web y Amazon llevan su propia serie que sí empieza cada año (ML-26-0001, WEB-26-0001). Un equipo de stock que se vende lleva un folio de pedido normal. Si el pedido tenía otro folio antes (HIS-…, P-…, PED-2026-…), sale como «antes …» y también lo encuentras por él.",
+  buscadorGlobal: "Un solo buscador para todo (también con Ctrl+K): clientes, sus contactos, leads, equipos y componentes, cotizaciones, pedidos, órdenes, proveedores y números de serie. A un cliente lo encuentras por su nombre, su RFC o por el nombre, el teléfono o el correo de cualquiera de sus contactos; a un lead, por su nombre, empresa o teléfono. Solo te salen las cosas que tu puesto puede ver.",
   folio: "El número que el sistema le pone solo a cada documento (cotización, pedido, orden…), en orden y sin repetirse. Con él lo buscas y lo citas; no se escribe a mano.",
   iva: "Impuesto al valor agregado, normalmente 16 %. Los precios de lista son sin IVA; el total con IVA es lo que paga el cliente. Si un número ya trae IVA, la pantalla lo dice.",
   montoSinIva: "El importe antes del impuesto. Las ventas del mes, las comisiones y las compras de 12 meses se miden sin IVA, para comparar parejo sin importar cómo se cotizó.",
