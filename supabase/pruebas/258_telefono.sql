@@ -95,14 +95,15 @@ begin
   -- Una foto vieja (reintento atrasado) no pisa lo nuevo.
   perform pg_temp.foto('CA258-1', jsonb_build_object('estado', 'in-progress', 'resumen', 'Viejo'), null, t0 + interval '1 minute');
   assert (select estado || '|' || resumen from llamadas where id = e1) = 'completed|Busca una banda de 20 m para grava', 'una foto vieja pisó la nueva';
-  -- Una foto nueva con campos vacíos no borra; con lead sin datos nuevos no pisa lo capturado.
+  -- Una foto nueva con campos vacíos no borra. Lo que trae nuevo del lead corrige lo que dejó el teléfono
+  -- mientras nadie lo haya tocado (277: «Sin nombre» a mitad de la llamada, el nombre al colgar).
   perform pg_temp.foto('CA258-1', jsonb_build_object('grabacion_url', 'https://voz/g/CA258-1.mp3', 'grabacion_vence', now() + interval '30 days'),
     '{"nombre": "Otro nombre", "interes": "Otra cosa", "correo": "pedro@gravas258.mx"}', t0 + interval '9 minutes');
   assert (select resumen from llamadas where id = e1) = 'Busca una banda de 20 m para grava'
      and (select grabacion_url from llamadas where id = e1) is not null, 'la foto con la grabación borró o no guardó';
   select * into l from leads where id = l.id;
-  assert l.nombre = 'Pedro 258' and l.interes = 'Banda transportadora 20 m' and l.correo = 'pedro@gravas258.mx',
-    format('las fotos siguientes solo llenan lo que falta: %s', row_to_json(l));
+  assert l.nombre = 'Otro nombre' and l.interes = 'Otra cosa' and l.correo = 'pedro@gravas258.mx' and l.notas like '%60 t/h%',
+    format('la foto nueva corrige lo que dejó el teléfono sin borrar las notas: %s', row_to_json(l));
 
   -- =========================================================================
   -- 2. Cliente de B (con +52 contra 10 dígitos), atendida por A: manda el dueño; actividad una vez
