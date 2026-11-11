@@ -179,7 +179,7 @@ export const VENTAS = {
   botonHacerloMio: "Este cliente no tiene dueño: con esto pasa a tu cartera. Desde ese momento sus contactos y su historia solo los ven tú, la gerencia y cobranza.",
   datosFiscalesCliente: "Lo que va en la factura (razón social, RFC, régimen, CP fiscal y uso de CFDI) y lo comercial: giro, ubicación, días de crédito y por dónde llegó. Lo editan su vendedor y la gerencia (si es libre, cualquier vendedor); con la constancia de situación fiscal, lo fiscal se llena solo.",
   diasCreditoCliente: "Cuántos días tiene el cliente para pagar. En cobranza, su pago vence esos días después de la primera factura (o del pedido, si no se ha facturado). En 0 es de contado.",
-  fuenteCliente: "Por dónde llegó el cliente: una visita de ruta, una llamada a recepción, el formulario del sitio web, una pregunta de Mercado Libre, una recomendación… La lista la mantiene la gerencia de ventas.",
+  fuenteCliente: "Por dónde llegó el cliente: una visita de ruta, una llamada a recepción, una expo o feria, el formulario o el botón de contacto del sitio web, una pregunta de Mercado Libre, una recomendación… La lista la mantiene la gerencia de ventas.",
   contactosCliente: "Las personas con quien tratas en este cliente: teléfono, WhatsApp, correo y domicilio. Los ven su vendedor, la gerencia y cobranza (si el cliente es libre, cualquiera); si es de otro vendedor, te salen bloqueados.",
   contactoPrincipal: "El contacto que sale en las cotizaciones de este cliente. Hay uno solo: si marcas otro como principal, este deja de serlo.",
   botonBorrarContacto: "Borra este contacto del cliente (te pide confirmar). Si solo cambió de teléfono o de puesto, mejor edítalo con el lápiz.",

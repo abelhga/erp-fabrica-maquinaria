@@ -9230,7 +9230,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Por dónde llegó el cliente: una visita de ruta, una llamada a recepción, el formulario del sitio web, una pregunta de Mercado Libre, una recomendación… La lista la mantiene la gerencia de ventas."
+  "texto": "Por dónde llegó el cliente: una visita de ruta, una llamada a recepción, una expo o feria, el formulario o el botón de contacto del sitio web, una pregunta de Mercado Libre, una recomendación… La lista la mantiene la gerencia de ventas."
  },
  {
   "clave": "fuenteIndicador",
