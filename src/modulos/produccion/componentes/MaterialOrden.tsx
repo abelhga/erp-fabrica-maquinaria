@@ -138,7 +138,8 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
                 <th className="text-right" data-explain={GLOSARIO.faltanteMaterial} data-explain-title="Falta"><span>Falta</span></th>
                 <th className="text-right" title="Lo que se pidió a compras para esta orden" data-explain={GLOSARIO.pedidoACompras} data-explain-title="Pedido"><span>Pedido</span></th>
                 <th className="text-right" title="Existencia en planta menos lo apartado para cualquier orden" data-explain={GLOSARIO.disponiblePlanta} data-explain-title="Disponible"><span>Disponible</span></th>
-                {editable && <th className="w-20"><span className="sr-only">Cambiar</span></th>}
+                {/* Pegada a la derecha: en una pantalla ancha la orden va en columnas y la tabla se recorre de lado; los botones no deben quedar fuera. */}
+                {editable && <th className="w-20 sticky right-0 bg-superficie"><span className="sr-only">Cambiar</span></th>}
               </tr>
             </thead>
             <tbody>
@@ -176,7 +177,7 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
                         {cifra(m.disponible_planta)}
                       </td>
                       {editable && (
-                        <td className="whitespace-nowrap text-right">
+                        <td className="whitespace-nowrap text-right sticky right-0 bg-superficie">
                           <button type="button" className="p-1.5 text-tenue hover:text-marca-texto" title="Reemplazar por otro material" aria-label={`Reemplazar ${m.nombre}`}
                                   data-explain={GLOSARIO.botonReemplazarMaterial} data-explain-title="Reemplazar"
                                   onClick={() => setReemplazando(m)}><ArrowLeftRight className="h-4 w-4" /></button>
@@ -244,7 +245,7 @@ function FilaQuitada({ m, equipo, editable, alReponer, reponiendo }: {
       <td className="text-right cifra whitespace-nowrap"><s>{cifra(m.requerido_antes)}</s> <span className="text-xs">{m.unidad}</span></td>
       <td colSpan={5} />
       {editable && (
-        <td className="whitespace-nowrap text-right">
+        <td className="whitespace-nowrap text-right sticky right-0 bg-superficie">
           {!m.reemplazado_por && <Boton tamano="sm" variante="fantasma" cargando={reponiendo} onClick={alReponer} title="Volver a ponerlo con la cantidad que llevaba"
             data-explain={GLOSARIO.botonReponerMaterial} data-explain-title="Volver">
             <RotateCcw className="h-3.5 w-3.5" />Volver</Boton>}
