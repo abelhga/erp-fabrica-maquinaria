@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import { Inbox, PhoneIncoming, UserCheck, X } from "lucide-react";
+import { Inbox, PhoneIncoming, UserCheck, Users, X } from "lucide-react";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
@@ -60,6 +60,58 @@ function useLlamadaReciente(telefono: string) {
   });
 }
 
+interface LeadParecido {
+  lead_id: string; lead_nombre: string; empresa: string | null; creado_en: string; vendedor: string | null;
+  estado: EstadoLead; por_telefono: boolean; coincide: string; lo_ves: boolean;
+}
+
+/**
+ * ¿Ya hay un lead abierto de esta persona o esta empresa? El aviso por teléfono no basta: Sandra
+ * Patlán entró por la IA con un número y recepción la volvió a registrar con otro. La base compara
+ * el nombre completo, la empresa (sin «S.A. de C.V.») y el teléfono.
+ */
+function useLeadParecido(nombre: string, empresa: string, telefono: string) {
+  const [t, setT] = useState({ nombre: "", empresa: "", telefono: "" });
+  useEffect(() => {
+    const id = setTimeout(() => setT({ nombre, empresa, telefono }), 350);
+    return () => clearTimeout(id);
+  }, [nombre, empresa, telefono]);
+  const listo = t.nombre.trim().includes(" ") || t.empresa.trim().length >= 4 || t.telefono.replace(/\D/g, "").length >= 10;
+  return useQuery({
+    queryKey: ["lead_parecido", t.nombre.trim().toLowerCase(), t.empresa.trim().toLowerCase(), t.telefono.replace(/\D/g, "").slice(-10)],
+    enabled: listo,
+    staleTime: 30_000,
+    queryFn: () => q<LeadParecido[]>(supabase.rpc("lead_parecido", {
+      p_nombre: t.nombre.trim() || null, p_empresa: t.empresa.trim() || null, p_tel: t.telefono.trim() || null,
+    })),
+  });
+}
+
+/** «Sandra Patlán · El Surco: entró por teléfono hace 10 min, es de Susana. Coincide el nombre.» */
+function AvisoParecido({ leads, alAbrir }: { leads: LeadParecido[]; alAbrir: () => void }) {
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-aviso/30 bg-aviso-suave px-3 py-2 text-sm"
+      data-explain={GLOSARIO.leadParecido} data-explain-title="Ya hay un lead parecido">
+      <Users className="h-4 w-4 mt-0.5 text-aviso shrink-0" />
+      <div className="flex-1 min-w-0 space-y-1.5">
+        <p className="font-medium">Ya hay {leads.length === 1 ? "un lead parecido" : `${leads.length} leads parecidos`}: revisa que no sea la misma persona</p>
+        {leads.map((l) => (
+          <div key={l.lead_id}>
+            <b>{l.lead_nombre}</b>{l.empresa && <span className="text-tenue"> · {l.empresa}</span>}
+            <span className="block text-xs text-tenue">
+              {l.por_telefono ? "Entró por el teléfono" : "Se registró"} {hace(l.creado_en)}
+              {l.vendedor ? <>, es de <b className="text-texto">{l.vendedor}</b></> : ", todavía sin vendedor"}
+              {l.estado === "convertido" ? " y ya es oportunidad" : ""}. Coincide {l.coincide}.
+            </span>
+            {l.lo_ves && <Link to={`/ventas/leads?id=${l.lead_id}`} onClick={alAbrir} className="text-xs text-marca-texto hover:underline">Ver ese lead →</Link>}
+          </div>
+        ))}
+        <p className="text-xs text-tenue">Si es la misma, no la registres otra vez: avísale a su vendedor.</p>
+      </div>
+    </div>
+  );
+}
+
 /** «Este número llamó hace 2 h; la IA ya registró su lead (de Isaac)», con la liga si lo puedes abrir. */
 function AvisoLlamada({ ll, alAbrir }: { ll: LlamadaReciente; alAbrir: () => void }) {
   const como = ll.estado === "convertido" ? " y ya es oportunidad" : ll.estado === "descartado" ? " y se descartó" : "";
@@ -82,8 +134,8 @@ function AvisoLlamada({ ll, alAbrir }: { ll: LlamadaReciente; alAbrir: () => voi
 /**
  * Registrar un lead mientras se habla por teléfono: quién, cómo contactarlo y qué busca.
  * Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es,
- * le llega directo a su vendedor. Si el número ya llamó y la IA dejó su lead, lo avisa para no
- * capturarlo dos veces. Enter lo guarda.
+ * le llega directo a su vendedor. Si el número ya llamó y la IA dejó su lead, o si ya hay un lead
+ * abierto con el mismo nombre o empresa, lo avisa para no capturarlo dos veces. Enter lo guarda.
  */
 export function DialogoLead({ abierto, alCambiar }: { abierto: boolean; alCambiar: (v: boolean) => void }) {
   const qc = useQueryClient();
@@ -96,6 +148,10 @@ export function DialogoLead({ abierto, alCambiar }: { abierto: boolean; alCambia
   const vendedores = useVendedoresLeads(abierto && modo === "recepcion");
   const coincidencias = useCoincidencias(cliente ? "" : f.telefono, cliente ? "" : f.empresa || f.nombre);
   const llamada = useLlamadaReciente(abierto ? f.telefono : "");
+  const parecidos = useLeadParecido(abierto ? f.nombre : "", abierto ? f.empresa : "", abierto ? f.telefono : "");
+  // Lo que ya avisa la llamada (mismo lead) no se repite aquí.
+  const yaAvisado = llamada.data?.[0]?.lead_id;
+  const otros = (parecidos.data ?? []).filter((l) => l.lead_id !== yaAvisado);
   const directo = cliente?.vigente && cliente.vendedor;
   const escoger = modo === "recepcion" && !directo;
 
@@ -153,6 +209,7 @@ export function DialogoLead({ abierto, alCambiar }: { abierto: boolean; alCambia
         </div>
 
         {llamada.data?.[0] && <AvisoLlamada ll={llamada.data[0]} alAbrir={() => alCambiar(false)} />}
+        {otros.length > 0 && <AvisoParecido leads={otros} alAbrir={() => alCambiar(false)} />}
 
         {cliente ? (
           <div className="flex items-start gap-2 rounded-lg border border-ok/30 bg-ok-suave px-3 py-2 text-sm" data-explain={GLOSARIO.yaEsCliente} data-explain-title="Ya es cliente">

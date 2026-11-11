@@ -1707,7 +1707,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Lo usan recepción, los vendedores, la gerencia de ventas y marketing, que los ve todos para saber de dónde llegan y qué pasó con ellos.",
    "Al registrarlo pon también dónde está, su empresa (o «Particular») y qué busca con modelo o medida. Si se te pasó algo, al abrirlo te dice qué le falta y lo completas ahí; «Incompletos» junta los que tienen algo pendiente.",
    "Mientras escribes el teléfono o la empresa te dice si ya es cliente y de quién; si lo es y dices «Es este», le llega directo a su vendedor.",
-   "Con el teléfono completo también te avisa si ese número ya llamó esta semana y la IA del teléfono ya registró su lead, de quién es y si ya es oportunidad. Así no lo capturas dos veces.",
+   "Con el teléfono completo también te avisa si ese número ya llamó esta semana y la IA del teléfono ya registró su lead, de quién es y si ya es oportunidad. Y si ya hay un lead abierto con el mismo nombre completo o la misma empresa, aunque el teléfono sea otro, te dice de quién es. Así no lo capturas dos veces.",
    "A quién le llega lo demás depende de cómo lo dejó la gerencia: en bandeja se avisa a los vendedores y el primero que lo toma se lo queda; o la gerencia lo asigna (sin gerente de ventas, el aviso del lead nuevo le llega a dirección); o quien lo registra escoge al vendedor. Si nadie lo toma a tiempo, se le avisa a la gerencia (mientras no haya gerente de ventas, a dirección).",
    "Si un lead asignado pasa las horas que fijó la gerencia sin ningún intento anotado, se le avisa al vendedor y a la gerencia; con un intento («Le escribí», «No contestó», «No estaba» o «Contestó») ya no cuenta. Mientras no haya gerente de ventas, dirección recibe un resumen por vendedor en la mañana (desde las 9:00) y en la tarde (desde las 15:00) de cada día hábil, y al abrirlo llega a «Sin contactar» de ese vendedor (la etiqueta «De: …» se quita con la ×).",
    "Dale clic a un lead para ver sus datos, llamarle o escribirle por WhatsApp. Cada intento se anota, conteste o no. Elige primero por dónde fue: no viene marcado. «Le escribí» si fue por WhatsApp o correo, «No contestó» si le llamaste (o «No estaba» si fuiste), y «Contestó» con lo que te dijo.",
@@ -10276,6 +10276,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Los leads que deja el conmutador con IA llegan solos, registrados por «La IA del teléfono», con lo que pidió la persona y la nota «Entró por el teléfono (IA)». Si lo atendió alguien que recibe leads, es suyo («lo atendió por teléfono»); si ya es cliente con vendedor vigente, de su vendedor; si no, se reparte como cualquier otro. Cuando quien lo registra escoge al vendedor, como no lo registró nadie, se queda por asignar para la gerencia (mientras no haya gerente de ventas, para dirección)."
+ },
+ {
+  "clave": "leadParecido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Mientras escribes el nombre, la empresa o el teléfono, se revisa si ya hay un lead abierto (o que se volvió oportunidad en el último mes) con el mismo nombre completo, la misma empresa (aunque una diga «S.A. de C.V.» y la otra no) o el mismo teléfono. Te dice de quién es, cuándo entró y en qué coincide. Si es la misma persona, no la registres otra vez: avísale a su vendedor. Un solo nombre («Juan») o «Particular» no cuentan como coincidencia."
  },
  {
   "clave": "leadsDeHoyInicio",
