@@ -72,7 +72,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
       "El botón «Mensaje» (con destellos) de cada renglón, o «Redactar mensaje» dentro de «¿Qué pasó?», le pide a la IA el WhatsApp de seguimiento con lo que has anotado de esa venta: entre más detalle anotes, más a la medida sale.",
       "El mensaje lo revisas, lo cambias si quieres y lo abres en WhatsApp; no se manda solo.",
       "Con más de 10 seguimientos vencidos no puedes enviar cotizaciones nuevas hasta ponerte al día; el aviso de arriba te lo dice antes.",
-      "La gerencia ve en «Seguimiento» cuánto trae cada vendedor y lo que hizo en la semana, y con «Liberar por hoy» deja enviar a alguien por el día si un cliente está esperando.",
+      "La gerencia ve en «Seguimiento» cuánto trae cada vendedor y lo que hizo en la semana, y con «Liberar…» deja enviar a uno o a varios hasta una fecha (un cliente esperando, una expo, un viaje); al pasar la fecha el freno vuelve solo.",
     ],
   },
   "/ventas/cotizaciones/nueva": {

@@ -1426,6 +1426,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "En «Empresa», «Deshacer errores» fija cuántos minutos tiene quien se equivocó para deshacer una salida o un traspaso en almacén, y para reabrir un pendiente que cerró (15 de inicio). En 0 se apaga: almacén pide un ajuste y el pendiente se pide de nuevo.",
    "En «Ventas», la tarjeta «Leads de recepción» dice a quién le llega cada lead nuevo: bandeja (el primero que lo toma), la gerencia de ventas lo asigna o recepción elige al vendedor. La cambian la gerencia de ventas o dirección.",
    "Ahí mismo se ponen las horas para avisar a la gerencia si nadie toma un lead o nadie lo atiende, y qué vendedores reciben leads.",
+   "También en «Ventas», «Freno de seguimiento» prende o apaga para todos el freno que no deja enviar cotizaciones a quien trae más seguimientos vencidos que el tope, y fija ese tope. Para unos días y ciertos vendedores es mejor «Liberar…» en el seguimiento de Cotizaciones, que se quita solo.",
    "En «Integraciones», dirección conecta la cuenta de Mercado Libre (los pasos vienen ahí mismo), elige quiénes la atienden, si las ventas entran como pedidos y a nombre de quién quedan. Los avisos les llegan a quienes la atienden y también a la persona a cuyo nombre quedan las ventas; si no hay nadie, a una persona de dirección. Si eliges a alguien invitado que todavía no entra, le empiezan a llegar en cuanto entre.",
    "La tarjeta dice si los avisos de Mercado Libre están entrando; «Revisar ahora» vuelve a intentar lo que quedó pendiente. Mercado Libre solo avisa lo nuevo: «Traer lo pendiente» trae las preguntas sin contestar y los reclamos que ya estaban y, si las ventas entran como pedidos, las ventas desde la fecha que elijas.",
    "En la tarjeta de Skydropx, quien administra envíos prueba la conexión (muestra el saldo) y elige la dirección de la planta de las que ya están en Skydropx, la clave de carta porte, el tipo de empaque y el formato de la guía. Sin dirección y carta porte no se puede generar guía.",
@@ -1603,7 +1604,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "El botón «Mensaje» (con destellos) de cada renglón, o «Redactar mensaje» dentro de «¿Qué pasó?», le pide a la IA el WhatsApp de seguimiento con lo que has anotado de esa venta: entre más detalle anotes, más a la medida sale.",
    "El mensaje lo revisas, lo cambias si quieres y lo abres en WhatsApp; no se manda solo.",
    "Con más de 10 seguimientos vencidos no puedes enviar cotizaciones nuevas hasta ponerte al día; el aviso de arriba te lo dice antes.",
-   "La gerencia ve en «Seguimiento» cuánto trae cada vendedor y lo que hizo en la semana, y con «Liberar por hoy» deja enviar a alguien por el día si un cliente está esperando."
+   "La gerencia ve en «Seguimiento» cuánto trae cada vendedor y lo que hizo en la semana, y con «Liberar…» deja enviar a uno o a varios hasta una fecha (un cliente esperando, una expo, un viaje); al pasar la fecha el freno vuelve solo."
   ]
  },
  {
@@ -9235,7 +9236,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Con más de 10 seguimientos vencidos no puedes enviar cotizaciones nuevas, ni sacar el PDF o la vista previa de una que todavía no envías, hasta anotar qué pasó con las que ya mandaste: la idea es no seguir cotizando sin saber qué pasó con lo anterior. Las que ya enviaste sí las puedes volver a compartir. Convertir en pedido nunca se frena. Si un cliente está esperando, la gerencia de ventas te libera por ese día con un motivo, y te llega el aviso."
+  "texto": "Con más de 10 seguimientos vencidos no puedes enviar cotizaciones nuevas, ni sacar el PDF o la vista previa de una que todavía no envías, hasta anotar qué pasó con las que ya mandaste: la idea es no seguir cotizando sin saber qué pasó con lo anterior. Las que ya enviaste sí las puedes volver a compartir. Convertir en pedido nunca se frena. Si un cliente está esperando, o estás de viaje o en una expo, la gerencia de ventas te libera con un motivo hasta una fecha (máximo un mes), y te llega el aviso; al día siguiente el freno regresa solo. Dirección también puede apagarlo para todos en Configuración."
  },
  {
   "clave": "fuenteCliente",
@@ -10064,6 +10065,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Prendido, lo de las categorías marcadas sale a nombre de quien lo recibe y no a la orden. Al prenderlo se suelta lo que estaba apartado de esos artículos para órdenes. Apagado, todo lo que sale para una orden se carga a la orden."
  },
  {
+  "clave": "interruptorFrenoSeguimiento",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Prende o apaga el freno para todos y fija el tope: con más seguimientos vencidos que el tope, un vendedor no puede enviar cotizaciones nuevas. Apagado, nadie se frena, pero los seguimientos se siguen contando y avisando igual. Es para temporadas; para unos días y ciertos vendedores conviene «Liberar…» en el seguimiento de Cotizaciones, que se quita solo."
+ },
+ {
   "clave": "inventarioTablero",
   "modulos": [
    "costeo",
@@ -10354,7 +10365,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Deja enviar cotizaciones a este vendedor solo por hoy, aunque siga con seguimientos vencidos. Pide el motivo y le llega un aviso; mañana el freno vuelve si no se pone al día."
+  "texto": "Deja enviar cotizaciones a uno o a varios vendedores hasta la fecha que elijas (hoy, mañana, el viernes o la que pongas, máximo un mes), aunque traigan seguimientos vencidos. Pide el motivo y a cada uno le llega el aviso; al día siguiente de la fecha el freno vuelve solo si no se pusieron al día. Si ya está liberado, aquí mismo le cambias la fecha."
  },
  {
   "clave": "ligaEmpleado",
@@ -14716,7 +14727,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cuántos seguimientos trae cada vendedor: vencidos, para hoy y en total, y en los últimos 7 días cuántas cotizaciones envió contra cuántos seguimientos anotó. «Frenado» = pasó de 10 vencidos y no puede enviar; con «Liberar por hoy» lo dejas enviar ese día (pide el motivo y le avisa). Clic en un vendedor filtra la lista de abajo."
+  "texto": "Cuántos seguimientos trae cada vendedor: vencidos, para hoy y en total, y en los últimos 7 días cuántas cotizaciones envió contra cuántos seguimientos anotó. «Frenado» = pasó del tope de vencidos (10) y no puede enviar; con «Liberar…» lo dejas enviar hasta la fecha que elijas, a él o a todos los frenados de una vez (pide el motivo y les avisa). «Liberado hasta el…» dice cuándo vuelve el freno. Clic en un vendedor filtra la lista de abajo."
  },
  {
   "clave": "selectorMesObjetivos",
