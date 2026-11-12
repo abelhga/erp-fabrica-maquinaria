@@ -29,7 +29,11 @@ export interface AccionPaso {
  * Los pasos de la hoja de validación (técnico → almacén → compras → salida),
  * ahora con nombre y hora de quien los hizo. Cada rol ve el botón de su paso.
  */
-export function PasosValidacion({ pasos, acciones }: { pasos: PasoValidacion[]; acciones: Partial<Record<PasoValidacion["paso"], AccionPaso | null>> }) {
+export function PasosValidacion({ pasos, acciones, firmar }: {
+  pasos: PasoValidacion[]; acciones: Partial<Record<PasoValidacion["paso"], AccionPaso | null>>;
+  /** Firmar una especialidad de la revisión de ingeniería (cuando hay más de una). */
+  firmar?: { alFirmar: (clave: string) => void; cargando: boolean };
+}) {
   return (
     <ol className="grid gap-px rounded-xl overflow-hidden border border-borde bg-borde sm:grid-cols-2 lg:grid-cols-5">
       {pasos.map((p, i) => {
@@ -44,12 +48,29 @@ export function PasosValidacion({ pasos, acciones }: { pasos: PasoValidacion[]; 
               </span>
               <p className="font-medium text-sm leading-tight">{p.titulo}</p>
             </div>
-            <p className={cn("flex items-center gap-1.5 text-sm", e.clase)}><e.icono className="h-4 w-4" />{e.texto}</p>
+            <p className={cn("flex items-center gap-1.5 text-sm", e.clase)}><e.icono className="h-4 w-4" />{p.paso === "ingenieria" && p.estado === "parcial" ? "Falta una firma" : e.texto}</p>
             <div className="text-xs text-tenue space-y-0.5 flex-1">
               {p.por && <p className="text-texto">{p.por}</p>}
               {p.en && <p className="cifra">{fechaYHora(p.en)}</p>}
               {p.detalle && <p>{p.detalle}</p>}
             </div>
+            {(p.firmas?.length ?? 0) > 1 && (
+              <ul className="space-y-1.5 text-xs" data-explain={GLOSARIO.firmasIngenieria} data-explain-title="Firmas de ingeniería">
+                {p.firmas!.map((f) => (
+                  <li key={f.clave} className="flex items-center justify-between gap-2">
+                    <span className="min-w-0">
+                      <span className={cn("font-medium", f.por ? "text-ok" : "text-texto")}>{f.nombre}</span>{" "}
+                      <span className="text-tenue">{f.por ? `· ${f.por}${f.en_lugar_de ? " (en lugar de)" : ""}` : `· ${f.responsables ?? "ingeniería"}`}</span>
+                    </span>
+                    {!f.por && f.puedo && firmar && (
+                      <Boton tamano="sm" variante={f.mia ? "primario" : "fantasma"} cargando={firmar.cargando} onClick={() => firmar.alFirmar(f.clave)}>
+                        {f.mia ? "Firmar" : "Firmar en su lugar"}
+                      </Boton>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
             {a && (
               <div className="flex flex-wrap gap-1.5">
                 <Boton tamano="sm" variante={a.secundaria ? "secundario" : "primario"} onClick={a.alClic} cargando={a.cargando}

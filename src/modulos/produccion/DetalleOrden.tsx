@@ -113,6 +113,7 @@ export default function DetalleOrden() {
 
   const inv = { invalidar: [CLAVE] };
   const revisar = useAccion((paso: "ingenieria" | "almacen") => q(supabase.rpc("revisar_orden", { p_op: id, p_paso: paso })), { ...inv, exito: "Revisión registrada" });
+  const firmar = useAccion((clave: string) => q(supabase.rpc("revisar_orden", { p_op: id, p_paso: "ingenieria", p_especialidad: clave })), { ...inv, exito: "Firma registrada" });
   // Sin la revisión de ingeniería solo gerencia aparta, con motivo (la base lo exige y lo anota en la orden).
   const apartar = useAccion((motivo?: string) => q<{ articulo_id: string }[]>(supabase.rpc("apartar_material", { p_op: id, p_motivo: motivo ?? null })), {
     ...inv, exito: (r) => (r.length === 0 ? "Material apartado: no falta nada" : `Material apartado; ${r.length} partida(s) con faltante`),
@@ -174,7 +175,9 @@ export default function DetalleOrden() {
   const soltarExtra = p.soltar && hayApartado ? { texto: "Soltar lo apartado", alClic: () => setDialogo("soltar"), explica: GLOSARIO.soltarApartado } : undefined;
 
   const acciones: Partial<Record<PasoValidacion["paso"], AccionPaso | null>> = !abierta ? {} : {
-    ingenieria: p.ing && pasoDe("ingenieria")?.estado === "pendiente" ? { texto: "Marcar revisada", alClic: () => revisar.mutate("ingenieria"), cargando: revisar.isPending } : null,
+    // Con varias especialidades, cada quien firma la suya en la lista del paso (no hay un solo botón).
+    ingenieria: p.ing && pasoDe("ingenieria")?.estado === "pendiente" && (pasoDe("ingenieria")?.firmas?.length ?? 0) <= 1
+      ? { texto: "Marcar revisada", alClic: () => revisar.mutate("ingenieria"), cargando: revisar.isPending } : null,
     apartado: p.apartar ? { texto: pasoDe("apartado")?.estado === "pendiente" ? "Apartar material" : "Volver a apartar", secundaria: pasoDe("apartado")?.estado !== "pendiente",
                             alClic: () => (revisadaIng ? apartar.mutate(undefined) : setDialogo("apartar")), cargando: apartar.isPending,
                             deshabilitado: (pasoDe("apartado")?.estado === "hecho" && "Ya está todo apartado o surtido")
@@ -293,7 +296,7 @@ export default function DetalleOrden() {
 
       <section className="space-y-2">
         <h2 className="font-semibold" data-explain={GLOSARIO.validacionMaterial} data-explain-title="Validación de material">Validación de material</h2>
-        {pasos.error ? <ErrorCarga error={pasos.error} /> : pasos.isLoading ? <Cargando filas={2} /> : <PasosValidacion pasos={pasos.data ?? []} acciones={acciones} />}
+        {pasos.error ? <ErrorCarga error={pasos.error} /> : pasos.isLoading ? <Cargando filas={2} /> : <PasosValidacion pasos={pasos.data ?? []} acciones={acciones} firmar={abierta ? { alFirmar: (c) => firmar.mutate(c), cargando: firmar.isPending } : undefined} />}
       </section>
 
       <div className="grid gap-4 2xl:grid-cols-3 items-start">

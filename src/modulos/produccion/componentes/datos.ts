@@ -79,6 +79,12 @@ export interface Evento {
 export interface PasoValidacion {
   paso: "ingenieria" | "apartado" | "faltantes" | "almacen" | "liberada"; titulo: string;
   estado: "hecho" | "parcial" | "pendiente" | "no_aplica"; por: string | null; en: string | null; detalle: string | null;
+  /** Ingeniería: una firma por especialidad (mecánica, eléctrica…); con una sola no se muestran. */
+  firmas?: FirmaIngenieria[];
+}
+export interface FirmaIngenieria {
+  clave: string; nombre: string; por: string | null; en: string | null; en_lugar_de: boolean;
+  responsables: string | null; mia: boolean; puedo: boolean;
 }
 
 export interface MaterialOP {
