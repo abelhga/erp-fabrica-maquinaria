@@ -15,7 +15,6 @@ import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { useMinutosDeshacer } from "@/lib/deshacer";
 import { CantidadConSigno, InsigniaMovimiento, nombreCorto, unidadEn, useAlmacenes, type TipoMovimiento } from "./comun";
-import { usePersonalPiso } from "@/modulos/produccion/componentes/datos";
 
 type Modo = "salida" | "devolucion" | "traspaso";
 type TipoSalida = "salida_venta" | "salida_consumo";
@@ -58,7 +57,9 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
   const [motivo, setMotivo] = useState("");
   // En consumo se anota quién se lo lleva aparte del motivo: así se ve cuánto consume cada persona.
   const [recibe, setRecibe] = useState("");
-  const personal = usePersonalPiso();
+  // Todo el personal activo, no solo el de piso: oficina también se lleva tóner y papelería.
+  const personal = useQuery({ queryKey: ["quien_recibe_material"], staleTime: 300_000,
+    queryFn: () => q<{ id: string; nombre: string }[]>(supabase.rpc("quien_recibe_material")) });
   const refCantidad = useRef<HTMLInputElement>(null);
   const refMotivo = useRef<HTMLInputElement>(null);
 

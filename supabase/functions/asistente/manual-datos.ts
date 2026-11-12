@@ -360,7 +360,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 2: Dale clic a un renglón para abrir la orden.",
    "Paso 3: En la pestaña Requisiciones, marca partidas y dale «Crear órdenes de compra».",
    "Las abiertas son los borradores, las enviadas y las recibidas en parte. Las atrasadas van en rojo, y la barra de Recibido dice qué parte de lo pedido ya llegó.",
-   "La pestaña Requisiciones tiene lo que producción y almacén le piden a compras. «Crear órdenes de compra» arma una orden en borrador por cada proveedor de las partidas marcadas.",
+   "La pestaña Requisiciones tiene lo que producción y almacén le piden a compras. «Crear órdenes de compra» arma una orden en borrador por cada proveedor de las partidas marcadas. Si ya hiciste una orden con ese artículo, la partida dice «Ya en OC-…»: dale «Ligar» para no comprarlo dos veces.",
    "Los importes y lo que falta por pagar solo los ve quien tiene costos o finanzas."
   ]
  },
@@ -1828,7 +1828,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 3: Dale «Entregar»: elige qué sale, quién recibió y sube la foto de la hoja firmada.",
    "Mientras está Confirmado se pueden ajustar las partidas; se guardan al salir del campo (Enter o Tab). Los precios que vienen de una cotización ya pasaron por la autorización: solo la gerencia los cambia, o sacas una nueva versión de la cotización.",
    "«Mandar a producción» (lo usa producción) crea una orden por cada equipo con lista de materiales; «Marcar listo» avanza el estado; «Cancelar» pide el motivo. La «Hoja de salida» sale sin precios.",
-   "En «Entregar» sacas todo o una parte de cada partida: lo demás queda por entregar. La foto de la hoja firmada la puedes subir después. Lo que sale se descuenta del inventario, y cada entrega sale en el recuadro de entregas con su hoja.",
+   "En «Entregar» sacas todo o una parte de cada partida: lo demás queda por entregar. La foto de la hoja firmada la puedes subir después. Lo que sale se descuenta del inventario, y cada entrega sale en el recuadro de entregas con su hoja. Si el pedido tiene un envío abierto (paquetería, flete o el cliente recoge), se entrega desde Envíos.",
    "Si te equivocaste, el aviso trae «Deshacer» por 15 minutos; después la reabre la gerencia de ventas con el motivo. Entregan almacén, el vendedor sus pedidos, la gerencia de ventas y dirección.",
    "Facturas y cobros los registra finanzas, y el saldo se recalcula solo; una factura ya registrada se corrige o se quita con su lápiz.",
    "Si el pedido es de maquinaria, sus condiciones de pago dicen anticipo y entra a producción sin ningún cobro registrado, al vendedor y a finanzas les llega un aviso, una sola vez. No detiene al taller: si el cliente ya pagó, falta registrar el cobro.",
@@ -3478,7 +3478,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Registra lo que sale: cuánto de cada partida (todo lo que falta o solo una parte), quién recibió y, si ya la tienes, la foto de la hoja firmada. Lo que sale se descuenta del inventario. Si te equivocas, «Deshacer» en el aviso regresa esa entrega en los primeros 15 minutos; después la reabre la gerencia de ventas."
+  "texto": "Registra lo que sale: cuánto de cada partida (todo lo que falta o solo una parte), quién recibió y, si ya la tienes, la foto de la hoja firmada. Lo que sale se descuenta del inventario. Si te equivocas, «Deshacer» en el aviso regresa esa entrega en los primeros 15 minutos; después la reabre la gerencia de ventas. Si el pedido tiene un envío abierto, no se entrega aquí sino en Envíos."
  },
  {
   "clave": "botonEnviarCotizacion",
@@ -7652,6 +7652,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Días hábiles que tarda en salir según el catálogo o, si el artículo no lo tiene, lo que tarda su proveedor. En un equipo sin dato dice «Según taller»: la fecha realista sale bajo «Tiempo de entrega»."
  },
  {
+  "clave": "entregaConEnvio",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Este pedido tiene un envío abierto (paquetería, flete o el cliente recoge), así que se entrega desde Envíos: ahí se empaca con fotos y check list y se anota quién se lo llevó, y el pedido queda entregado solo. Si el envío ya no aplica, cancélalo en Envíos y entonces sí se entrega desde el pedido."
+ },
+ {
   "clave": "entregadoAntesDelErp",
   "modulos": [
    "produccion",
@@ -10374,6 +10384,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "importaciones"
   ],
   "texto": "Elige una orden de compra (en borrador, enviada o recibida en parte) para que viaje en este embarque; primero salen las de importación o en otra moneda. Al ligarla, si traía IVA se pone en 0: el IVA se paga en el pedimento."
+ },
+ {
+  "clave": "ligarRequisicionOc",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Ya hay una orden de compra con este artículo (hecha antes o sin pasar por la requisición). «Ligar» deja la partida como ordenada en esa orden, sin crear otra: sale de pendientes, el reabasto ya no la vuelve a pedir y a quien la pidió le llega el aviso cuando llegue el material (o en ese momento, si la orden ya llegó)."
  },
  {
   "clave": "ligaTerminalPiso",
@@ -13526,7 +13543,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "Quién se llevó el material del almacén, que no siempre es quien lo registró. En una salida a consumo es obligatorio: eliges a alguien de la gente de piso o escribes el nombre, y se queda para la siguiente salida. Así se ve cuánto consumible se lleva cada persona."
+  "texto": "Quién se llevó el material del almacén, que no siempre es quien lo registró. En una salida a consumo es obligatorio: eliges a alguien del personal (taller u oficina) o escribes el nombre, y se queda para la siguiente salida. Así se ve cuánto consumible se lleva cada persona."
  },
  {
   "clave": "quienRegistra",
