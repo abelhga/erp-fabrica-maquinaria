@@ -148,11 +148,11 @@ export function Shell() {
         <header className="no-imprimir h-16 shrink-0 flex items-center gap-3 px-4 lg:px-8 border-b border-borde bg-superficie/80 backdrop-blur sticky top-0 z-30">
           <button className="lg:hidden p-2 -ml-2" onClick={() => setAbiertoMovil(true)} aria-label="Abrir menú"><Menu className="h-5 w-5" /></button>
           <button
-            onClick={() => setBuscando(true)}
+            onClick={() => setBuscando(true)} data-explain={GLOSARIO.buscadorGlobal} data-explain-title="Buscar"
             className="flex items-center gap-2 h-9 flex-1 min-w-0 max-w-md rounded-lg border border-borde bg-fondo px-3 text-sm text-tenue hover:border-marca/40"
           >
             <Search className="h-4 w-4" />
-            <span className="truncate">Buscar cliente, equipo, componente, folio…</span>
+            <span className="truncate">Buscar cliente, contacto, lead, equipo, folio…</span>
             <kbd className="ml-auto hidden sm:inline text-[10px] border border-borde rounded px-1.5 py-0.5">Ctrl K</kbd>
           </button>
           <div className="ml-auto flex items-center gap-1">

@@ -4992,6 +4992,11 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Las cajas que van a salir, con peso y medidas. Salen del empaque capturado de cada artículo de la cotización (sin contar opcionales ni servicios); si a uno le falta, escríbelo o agrega un bulto a mano. Sin peso y medidas de todos, la paquetería no cotiza."
  },
  {
+  "clave": "buscadorGlobal",
+  "modulos": [],
+  "texto": "Un solo buscador para todo (también con Ctrl+K): clientes, sus contactos, leads, equipos y componentes, cotizaciones, pedidos, órdenes, proveedores y números de serie. A un cliente lo encuentras por su nombre, su RFC o por el nombre, el teléfono o el correo de cualquiera de sus contactos; a un lead, por su nombre, empresa o teléfono. Solo te salen las cosas que tu puesto puede ver."
+ },
+ {
   "clave": "cadaHorasPreventivo",
   "modulos": [
    "servicio",
