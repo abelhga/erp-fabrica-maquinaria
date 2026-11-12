@@ -113,7 +113,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Deshacer deja el movimiento contrario ligado al original (sale como «corrección» y el original como «deshecho»), con tu nombre y la hora, y el consumo se compensa. Un traspaso solo regresa si lo que llegó sigue en el destino.",
    "Pasado ese tiempo, o si lo registró otra persona, no lo vuelvas a capturar al revés: pide un ajuste. Lo surtido a una orden, lo recibido de una compra, las entregas de pedidos y los envíos se corrigen desde su propia pantalla.",
    "Historial filtra por tipo, almacén, persona y fechas (al abrir, los últimos 30 días) y se baja a Excel. «Recibió» es quién se llevó el material; «Quién» es quién lo registró. Registrar solo sale si tu puesto captura almacén; Historial, si capturas almacén o tienes permiso de costos.",
-   "En Ajustes pides una corrección cuando lo del estante no cuadra, y la gerencia la aprueba o la rechaza; hasta entonces la existencia no cambia.",
+   "En Ajustes pides una corrección cuando lo del estante no cuadra, y la gerencia la aprueba o la rechaza; hasta entonces la existencia no cambia. Si falta o sobra algo de valor, la gerencia te pide que expliques qué pasó o dónde están, y lo escribes ahí mismo en el ajuste.",
    "En Conteos físicos abres un conteo por almacén: eliges qué contar (lo que piden las órdenes de producción, lo que salió en los últimos 30 días, unas claves o todo el almacén) y si va a ciegas, y le das «Empezar a contar». Capturas cada artículo en cuanto lo cuentas (Enter guarda y baja al siguiente) y, al cerrarlo, cada diferencia se vuelve un ajuste por autorizar."
   ]
  },
@@ -2118,7 +2118,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "La única forma de corregir una existencia. Lo pide quien encontró la diferencia y lo autoriza la gerencia de producción o dirección, nunca alguien de almacén, para que quien cuenta no dé por buena su propia diferencia; quien lo pidió no se lo autoriza (salvo dirección). Hasta entonces la existencia no cambia. Al autorizarlo se aplica la diferencia que se encontró, así que lo que entró o salió desde que se pidió se respeta; si con eso la existencia quedaría negativa, no se autoriza y se vuelve a contar. Si el artículo se contó en ese almacén después de pedir el ajuste, ya no se autoriza: el conteo ya lo dejó en lo que hay, así que se rechaza y queda como constancia."
+  "texto": "La única forma de corregir una existencia. Lo pide quien encontró la diferencia y lo autoriza la gerencia de producción o dirección, nunca alguien de almacén, para que quien cuenta no dé por buena su propia diferencia; quien lo pidió no se lo autoriza (salvo dirección). Hasta entonces la existencia no cambia. Si la diferencia es de valor alto, primero alguien tiene que explicarla. Al autorizarlo se aplica la diferencia que se encontró, así que lo que entró o salió desde que se pidió se respeta; si con eso la existencia quedaría negativa, no se autoriza y se vuelve a contar. Si el artículo se contó en ese almacén después de pedir el ajuste, ya no se autoriza: el conteo ya lo dejó en lo que hay, así que se rechaza y queda como constancia."
  },
  {
   "clave": "ajusteObjetivo",
@@ -2828,6 +2828,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Agrega un bono o un descuento a la comisión de este mes, con su concepto (un bono de Mercado Libre, una corrección…). Negativo descuenta. Lo hacen la gerencia de ventas y dirección."
  },
  {
+  "clave": "botonAjusteComoTraspaso",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cuando la explicación es «están en otro almacén»: en lugar de darlas por perdidas, mueve las piezas entre los dos almacenes. Si aquí faltan, pasan de aquí al otro; si aquí sobran, vienen del otro, y el otro tiene que tenerlas en el sistema. No se pierde ni se gana nada, solo cambian de lugar. Si el otro almacén tiene su propio ajuste del mismo artículo, te avisa para que lo revises."
+ },
+ {
   "clave": "botonAnotarPorRecuperar",
   "modulos": [
    "importaciones"
@@ -2847,7 +2855,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "Aplica la diferencia a la existencia de hoy, con un movimiento de ajuste a tu nombre. No se puede si tú lo pediste (salvo dirección), si la existencia quedaría en negativo o si el artículo se volvió a contar en ese almacén después de pedirlo."
+  "texto": "Aplica la diferencia a la existencia de hoy, con un movimiento de ajuste a tu nombre. No se puede si tú lo pediste (salvo dirección), si es una diferencia de valor alto que nadie ha explicado, si la existencia quedaría en negativo o si el artículo se volvió a contar en ese almacén después de pedirlo."
  },
  {
   "clave": "botonAprobarSolicitud",
@@ -4073,6 +4081,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "Pide el envío de lo que falta mandar de este pedido. Las partidas, el peso y las medidas de cada artículo y el domicilio ya vienen llenos; tú eliges cómo va y cuánto de cada cosa. Si lo empaca almacén, le llega el aviso."
+ },
+ {
+  "clave": "botonPedirExplicacionAjuste",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Le pide a alguien que explique la diferencia: por omisión a quien pidió el ajuste, o a otra persona que estuvo en el conteo. Le llega como pendiente con el artículo, el almacén y las cantidades, y lo contesta escribiendo qué pasó. Al contestar te llega el aviso."
  },
  {
   "clave": "botonPedirInsumosCompras",
@@ -8420,6 +8436,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "admin"
   ],
   "texto": "El inventario con el que arrancó el ERP se cargó una sola vez, por artículo y almacén; el número cuenta cuántos artículo × almacén tienen existencia hoy. Después, una diferencia se corrige con un ajuste autorizado, no reimportando."
+ },
+ {
+  "clave": "explicacionAjuste",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Qué pasó con la diferencia o dónde están las piezas, dicho por quien estuvo en el conteo. Una diferencia de valor alto (más de $5,000 de faltante o sobrante, lo fija dirección en Configuración) no se aprueba sin explicación, y la da alguien distinto de quien autoriza; rechazarla sí se puede. La escribe almacén aquí mismo, o la persona a quien se le pidió, al marcar su pendiente como hecho."
  },
  {
   "clave": "exportacionVenta",

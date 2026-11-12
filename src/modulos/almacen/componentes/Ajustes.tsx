@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, ClipboardCheck, Scale, ShieldAlert, X } from "lucide-react";
+import { ArrowLeftRight, CheckCircle2, ClipboardCheck, MessageSquareText, Scale, ShieldAlert, X } from "lucide-react";
 import { BuscadorArticulo, type ArticuloEncontrado } from "@/components/datos/BuscadorArticulo";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { Boton } from "@/components/ui/boton";
@@ -20,7 +20,10 @@ export interface Ajuste {
   cantidad_sistema: number; cantidad_fisica: number; diferencia: number; motivo: string; conteo: string | null; estado: "pendiente" | "aprobado" | "rechazado";
   solicitado_por: string; solicitado_por_nombre: string | null; solicitado_en: string; resuelto_por_nombre: string | null; resuelto_en: string | null;
   comentario: string | null; existencia_actual: number | null; aplicado: number | null; valor_diferencia: number | null;
+  requiere_explicacion: boolean; notas: NotaAjuste[];
 }
+
+export interface NotaAjuste { tipo: "pregunta" | "explicacion"; texto: string; en: string; por: string | null; para: string | null }
 
 /**
  * Ajustes: la única forma de corregir una existencia. Lo pide quien encontró la
@@ -87,7 +90,7 @@ export function Ajustes() {
               <div className="flex items-center gap-2 py-8 justify-center text-sm text-tenue"><CheckCircle2 className="h-5 w-5 text-ok" /> No hay ajustes esperando autorización.</div>
             ) : (
               <div className="grid gap-3 xl:grid-cols-2">
-                {pendientes.map((a) => <TarjetaPendiente key={a.id} a={a} resuelve={resuelve} esMio={a.solicitado_por === perfil?.id} verCostos={verCostos} />)}
+                {pendientes.map((a) => <TarjetaPendiente key={a.id} a={a} resuelve={resuelve} explica={puede("inventario", 2) && !resuelve} esMio={a.solicitado_por === perfil?.id} verCostos={verCostos} />)}
               </div>
             )}
           </div>
@@ -113,12 +116,14 @@ export function Ajustes() {
   );
 }
 
-function TarjetaPendiente({ a, resuelve, esMio, verCostos }: { a: Ajuste; resuelve: boolean; esMio: boolean; verCostos: boolean }) {
+function TarjetaPendiente({ a, resuelve, explica, esMio, verCostos }: { a: Ajuste; resuelve: boolean; explica: boolean; esMio: boolean; verCostos: boolean }) {
   const [comentario, setComentario] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [abierto, setAbierto] = useState<null | "pedir" | "traspaso" | "explicar">(null);
+  const invalidar = [["v_ajustes"], ["ajustes_pendientes_cuenta"], ["v_existencias"], ["kardex"], ["indicadores"]];
   const resolver = useAccion((aprobar: boolean) => q(supabase.rpc("resolver_ajuste", { p_ajuste: a.id, p_aprobar: aprobar, p_comentario: comentario.trim() || null })), {
     exito: () => `Ajuste ${a.folio} resuelto`,
-    invalidar: [["v_ajustes"], ["ajustes_pendientes_cuenta"], ["v_existencias"], ["kardex"], ["indicadores"]],
+    invalidar,
   });
   // La base es la que decide quién autoriza; aquí solo se muestra su razón junto al ajuste.
   const intentar = (aprobar: boolean) => {
@@ -129,9 +134,11 @@ function TarjetaPendiente({ a, resuelve, esMio, verCostos }: { a: Ajuste; resuel
   const hoy = Number(a.existencia_actual ?? 0);
   const cambio = hoy !== Number(a.cantidad_sistema);
   const queda = hoy + Number(a.diferencia);
+  const explicado = a.notas.some((n) => n.tipo === "explicacion");
+  const falta = a.requiere_explicacion && !explicado;
 
   return (
-    <div className="rounded-lg border border-borde p-3 space-y-2.5">
+    <div className={cn("rounded-lg border p-3 space-y-2.5", falta ? "border-aviso/60" : "border-borde")}>
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <p className="font-medium text-sm truncate" title={a.nombre}>{a.nombre}</p>
@@ -150,6 +157,33 @@ function TarjetaPendiente({ a, resuelve, esMio, verCostos }: { a: Ajuste; resuel
       </p>
       <p className="text-sm text-tenue bg-fondo rounded-md px-2.5 py-1.5">“{a.motivo}”</p>
       <p className="text-xs text-tenue">Pidió {a.solicitado_por_nombre ?? "—"} · {hace(a.solicitado_en)} ({fechaYHora(a.solicitado_en)}){a.conteo && ` · ${a.conteo}`}</p>
+
+      {(a.notas.length > 0 || a.requiere_explicacion) && (
+        <div className="space-y-1.5" data-explain={GLOSARIO.explicacionAjuste} data-explain-title="Explicación">
+          {a.notas.map((n, i) => (
+            <div key={i} className={cn("rounded-md px-2.5 py-1.5 text-sm", n.tipo === "explicacion" ? "bg-ok-suave" : "bg-aviso-suave")}>
+              <p className="text-[11px] text-tenue">
+                {n.tipo === "explicacion" ? `Explicó ${n.por ?? "—"}` : `${n.por ?? "—"} le preguntó a ${n.para ?? "—"}`} · {hace(n.en)}
+              </p>
+              <p>{n.texto}</p>
+            </div>
+          ))}
+          {falta && (
+            <p className="text-xs text-aviso flex items-center gap-1">
+              <MessageSquareText className="h-3.5 w-3.5" />
+              {a.notas.length > 0 ? "Esperando la explicación." : "Diferencia de valor alto: necesita explicación antes de aprobarse."}
+            </p>
+          )}
+        </div>
+      )}
+
+      {explica && abierto !== "explicar" && (
+        <Boton variante="secundario" tamano="sm" onClick={() => setAbierto("explicar")} data-explain={GLOSARIO.explicacionAjuste} data-explain-title="Explicar">
+          <MessageSquareText className="h-4 w-4" /> {explicado ? "Agregar explicación" : "Explicar la diferencia"}
+        </Boton>
+      )}
+      {abierto === "explicar" && <Explicar a={a} alTerminar={() => setAbierto(null)} />}
+
       {resuelve && (
         <div className="space-y-2 pt-1">
           {esMio && <p className="text-xs text-aviso flex items-center gap-1"><ShieldAlert className="h-3.5 w-3.5" /> Lo pediste tú: lo debe autorizar otra persona.</p>}
@@ -164,9 +198,110 @@ function TarjetaPendiente({ a, resuelve, esMio, verCostos }: { a: Ajuste; resuel
               <X className="h-4 w-4" /> Rechazar
             </Boton>
           </div>
+          <div className="flex gap-2">
+            <Boton variante={falta ? "primario" : "fantasma"} tamano="sm" className="flex-1" onClick={() => setAbierto(abierto === "pedir" ? null : "pedir")}
+              data-explain={GLOSARIO.botonPedirExplicacionAjuste} data-explain-title="Pedir explicación">
+              <MessageSquareText className="h-4 w-4" /> Pedir explicación
+            </Boton>
+            <Boton variante="fantasma" tamano="sm" className="flex-1" onClick={() => setAbierto(abierto === "traspaso" ? null : "traspaso")}
+              data-explain={GLOSARIO.botonAjusteComoTraspaso} data-explain-title="Fue un traspaso">
+              <ArrowLeftRight className="h-4 w-4" /> Fue un traspaso
+            </Boton>
+          </div>
+          {abierto === "pedir" && <PedirExplicacion a={a} alTerminar={() => setAbierto(null)} />}
+          {abierto === "traspaso" && <ComoTraspaso a={a} comentario={comentario} invalidar={invalidar} alTerminar={() => setAbierto(null)} />}
           {error && <p className="text-xs text-peligro bg-peligro-suave rounded-md px-2 py-1.5">No se pudo: {error}</p>}
         </div>
       )}
+    </div>
+  );
+}
+
+function Explicar({ a, alTerminar }: { a: Ajuste; alTerminar: () => void }) {
+  const [texto, setTexto] = useState("");
+  const guardar = useAccion(() => q(supabase.rpc("explicar_ajuste", { p_ajuste: a.id, p_texto: texto.trim() })), {
+    exito: "Explicación guardada: le llegó a quien la pidió",
+    invalidar: [["v_ajustes"]],
+    alTerminar,
+  });
+  return (
+    <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); if (texto.trim().length >= 10) guardar.mutate(undefined); }}>
+      <textarea autoFocus className="campo min-h-[64px] text-sm" value={texto} onChange={(e) => setTexto(e.target.value)}
+        placeholder="Qué pasó o dónde están. Ej. las 4 están en Contenedor 1, se movieron para la OP de la cribadora" />
+      <div className="flex gap-2">
+        <Boton type="submit" tamano="sm" disabled={texto.trim().length < 10} cargando={guardar.isPending}>Guardar explicación</Boton>
+        <Boton type="button" variante="fantasma" tamano="sm" onClick={alTerminar}>Cancelar</Boton>
+      </div>
+    </form>
+  );
+}
+
+function PedirExplicacion({ a, alTerminar }: { a: Ajuste; alTerminar: () => void }) {
+  const { perfil } = useSesion();
+  const [para, setPara] = useState(a.solicitado_por);
+  const [pregunta, setPregunta] = useState("");
+  const personas = useQuery({
+    queryKey: ["perfiles_activos"],
+    queryFn: () => q<{ id: string; nombre: string; puesto: string | null }[]>(
+      supabase.from("perfiles").select("id, nombre, puesto").eq("activo", true).order("nombre")),
+  });
+  const pedir = useAccion(() => q(supabase.rpc("pedir_explicacion_ajuste", { p_ajuste: a.id, p_a: para, p_pregunta: pregunta.trim() || null })), {
+    exito: "Le llegó como pendiente",
+    invalidar: [["v_ajustes"]],
+    alTerminar,
+  });
+  return (
+    <form className="space-y-2 rounded-md border border-borde p-2.5" onSubmit={(e) => { e.preventDefault(); pedir.mutate(undefined); }}>
+      <label className="block space-y-1">
+        <span className="text-xs text-tenue">¿A quién?</span>
+        <select className="campo h-8 text-sm" value={para} onChange={(e) => setPara(e.target.value)}>
+          {(personas.data ?? []).filter((p) => p.id !== perfil?.id).map((p) => (
+            <option key={p.id} value={p.id}>{p.nombre}{p.id === a.solicitado_por ? " (pidió el ajuste)" : p.puesto ? ` · ${p.puesto}` : ""}</option>
+          ))}
+        </select>
+      </label>
+      <input className="campo h-8 text-sm" value={pregunta} onChange={(e) => setPregunta(e.target.value)} placeholder="Pregunta (opcional). Ej. ¿dónde están las 4?" />
+      <div className="flex gap-2">
+        <Boton type="submit" tamano="sm" cargando={pedir.isPending}>Pedir</Boton>
+        <Boton type="button" variante="fantasma" tamano="sm" onClick={alTerminar}>Cancelar</Boton>
+      </div>
+    </form>
+  );
+}
+
+function ComoTraspaso({ a, comentario, invalidar, alTerminar }: { a: Ajuste; comentario: string; invalidar: string[][]; alTerminar: () => void }) {
+  const almacenes = useAlmacenes();
+  const [otro, setOtro] = useState<number | null>(null);
+  const faltan = Number(a.diferencia) < 0;
+  const n = Math.abs(Number(a.diferencia));
+  const mover = useAccion(() => q<string | null>(supabase.rpc("resolver_ajuste_como_traspaso", { p_ajuste: a.id, p_otro: otro, p_comentario: comentario.trim() || null })), {
+    // Si el otro almacén tiene su propio ajuste del artículo, la base lo dice: va en el aviso.
+    exito: (r) => `Ajuste ${a.folio} resuelto como traspaso${r ? `. ${r}` : ""}`,
+    invalidar,
+    alTerminar,
+  });
+  const nombre = almacenes.data?.find((x) => x.id === otro)?.nombre;
+  return (
+    <div className="space-y-2 rounded-md border border-borde p-2.5">
+      <p className="text-xs text-tenue">{faltan ? "¿En qué almacén están las que faltan aquí?" : "¿De qué almacén salieron las que sobran aquí?"}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {(almacenes.data ?? []).filter((x) => x.id !== a.almacen_id).map((x) => (
+          <button key={x.id} type="button" onClick={() => setOtro(x.id)}
+            className={cn("rounded-lg border px-2.5 py-1 text-xs", otro === x.id ? "border-marca bg-marca-suave" : "border-borde hover:bg-fondo")}>
+            {nombreCorto(x.nombre)}
+          </button>
+        ))}
+      </div>
+      {otro != null && (
+        <p className="text-xs">
+          {faltan ? <>Pasan <b className="cifra">{numero(n)}</b> de {nombreCorto(a.almacen)} a {nombreCorto(nombre ?? "")}.</>
+                  : <>Pasan <b className="cifra">{numero(n)}</b> de {nombreCorto(nombre ?? "")} a {nombreCorto(a.almacen)}.</>}
+        </p>
+      )}
+      <div className="flex gap-2">
+        <Boton tamano="sm" disabled={otro == null} cargando={mover.isPending} onClick={() => mover.mutate(undefined)}>Mover y resolver</Boton>
+        <Boton type="button" variante="fantasma" tamano="sm" onClick={alTerminar}>Cancelar</Boton>
+      </div>
     </div>
   );
 }
