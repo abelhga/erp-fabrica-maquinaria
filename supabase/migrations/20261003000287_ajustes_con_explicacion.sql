@@ -15,7 +15,8 @@
 --   * explicar_ajuste: almacén (o quien tiene el pendiente) escribe la explicación; cierra el
 --     pendiente y le avisa a quien preguntó.
 --   * Una diferencia que vale más de configuracion.ajustes_inventario.explicacion_desde ($5,000 por
---     omisión) no se aprueba sin explicación. Rechazar sí se puede siempre.
+--     omisión) no se aprueba sin la explicación de alguien distinto de quien autoriza. Rechazar sí se
+--     puede siempre.
 --   * resolver_ajuste_como_traspaso: cuando la explicación es «están en otro almacén», el ajuste se
 --     resuelve moviendo las piezas entre almacenes en lugar de darlas por perdidas.
 -- =============================================================================
@@ -150,8 +151,9 @@ declare d text; n text;
 begin
   d := pg_get_functiondef('public.resolver_ajuste(uuid, boolean, text)'::regprocedure);
   n := replace(d, $a$  if p_aprobar then
-    -- Si el artículo$a$, $a$  if p_aprobar and ajuste_requiere_explicacion(a.id)
-     and not exists (select 1 from ajuste_notas where ajuste_id = a.id and tipo = 'explicacion') then
+    -- Si el artículo$a$, $a$  -- La explicación la da otra persona: quien autoriza no se explica a sí mismo su diferencia.
+  if p_aprobar and ajuste_requiere_explicacion(a.id)
+     and not exists (select 1 from ajuste_notas where ajuste_id = a.id and tipo = 'explicacion' and por <> auth.uid()) then
     raise exception 'Esta diferencia es de valor alto y nadie la ha explicado: usa «Pedir explicación» o recházala' using errcode = '23514';
   end if;
   if p_aprobar then
@@ -187,7 +189,7 @@ begin
   if v_otro is null then raise exception 'No existe ese almacén'; end if;
   v_dif := a.cantidad_fisica - a.cantidad_sistema;
   if v_dif = 0 then raise exception 'Este ajuste no tiene diferencia'; end if;
-  if ajuste_requiere_explicacion(a.id) and not exists (select 1 from ajuste_notas where ajuste_id = a.id and tipo = 'explicacion') then
+  if ajuste_requiere_explicacion(a.id) and not exists (select 1 from ajuste_notas where ajuste_id = a.id and tipo = 'explicacion' and por <> auth.uid()) then
     raise exception 'Esta diferencia es de valor alto y nadie la ha explicado: usa «Pedir explicación» primero' using errcode = '23514';
   end if;
   select l.en into v_contado from conteo_lineas l join conteos c on c.id = l.conteo_id

@@ -8443,7 +8443,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "Qué pasó con la diferencia o dónde están las piezas, dicho por quien estuvo en el conteo. Una diferencia de valor alto (más de $5,000 de faltante o sobrante, lo fija dirección en Configuración) no se aprueba sin explicación; rechazarla sí se puede. La escribe almacén aquí mismo, o la persona a quien se le pidió, al marcar su pendiente como hecho."
+  "texto": "Qué pasó con la diferencia o dónde están las piezas, dicho por quien estuvo en el conteo. Una diferencia de valor alto (más de $5,000 de faltante o sobrante, lo fija dirección en Configuración) no se aprueba sin explicación, y la da alguien distinto de quien autoriza; rechazarla sí se puede. La escribe almacén aquí mismo, o la persona a quien se le pidió, al marcar su pendiente como hecho."
  },
  {
   "clave": "exportacionVenta",

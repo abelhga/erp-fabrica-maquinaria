@@ -37,6 +37,11 @@ begin
   perform resolver_ajuste(v_aj2, true);
   assert (select cantidad from existencias where articulo_id = v_bar and almacen_id = v_pb) = 95, 'el chico no se aplicó';
 
+  -- La gerencia no se lo explica a sí misma para aprobarlo.
+  perform explicar_ajuste(v_aj, 'Creo que se usaron en la OP');
+  begin perform resolver_ajuste(v_aj, true); v_ok := true; exception when check_violation then v_ok := false; end;
+  assert not v_ok, 'la gerencia aprobó con su propia explicación';
+
   -- 2. La gerencia le pide la explicación a alguien de RH que estuvo en el conteo.
   v_p := pedir_explicacion_ajuste(v_aj, v_rh, '¿Dónde están las 4?');
   begin perform pedir_explicacion_ajuste(v_aj, v_rh); v_ok := true; exception when raise_exception then v_ok := false; end;
@@ -57,6 +62,7 @@ begin
   update pendientes set estado = 'hecho', nota_cierre = 'Las 4 están en Contenedor 1, las movieron para la OP' where id = v_p;
   perform pg_temp.como_postgres();
   assert (select count(*) from ajuste_notas where ajuste_id = v_aj and tipo = 'explicacion' and por = v_rh) = 1, 'no quedó la explicación';
+  -- Explicar ya no deja pendientes abiertos (el de RH se cerró al contestar).
 
   -- 4. La gerencia lo resuelve como traspaso: Planta Baja baja 4, Contenedor 1 sube 4, el ajuste vale $0.
   perform pg_temp.como(v_ger);

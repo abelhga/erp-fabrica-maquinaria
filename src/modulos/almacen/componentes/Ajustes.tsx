@@ -90,7 +90,7 @@ export function Ajustes() {
               <div className="flex items-center gap-2 py-8 justify-center text-sm text-tenue"><CheckCircle2 className="h-5 w-5 text-ok" /> No hay ajustes esperando autorización.</div>
             ) : (
               <div className="grid gap-3 xl:grid-cols-2">
-                {pendientes.map((a) => <TarjetaPendiente key={a.id} a={a} resuelve={resuelve} explica={puede("inventario", 2)} esMio={a.solicitado_por === perfil?.id} verCostos={verCostos} />)}
+                {pendientes.map((a) => <TarjetaPendiente key={a.id} a={a} resuelve={resuelve} explica={puede("inventario", 2) && !resuelve} esMio={a.solicitado_por === perfil?.id} verCostos={verCostos} />)}
               </div>
             )}
           </div>
