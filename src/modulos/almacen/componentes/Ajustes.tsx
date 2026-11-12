@@ -21,6 +21,7 @@ export interface Ajuste {
   solicitado_por: string; solicitado_por_nombre: string | null; solicitado_en: string; resuelto_por_nombre: string | null; resuelto_en: string | null;
   comentario: string | null; existencia_actual: number | null; aplicado: number | null; valor_diferencia: number | null;
   requiere_explicacion: boolean; notas: NotaAjuste[];
+  recontado: { en: string; conteo: string; contado: number; sistema: number | null } | null;
 }
 
 export interface NotaAjuste { tipo: "pregunta" | "explicacion"; texto: string; en: string; por: string | null; para: string | null }
@@ -135,7 +136,7 @@ function TarjetaPendiente({ a, resuelve, explica, esMio, verCostos }: { a: Ajust
   const cambio = hoy !== Number(a.cantidad_sistema);
   const queda = hoy + Number(a.diferencia);
   const explicado = a.notas.some((n) => n.tipo === "explicacion");
-  const falta = a.requiere_explicacion && !explicado;
+  const falta = a.requiere_explicacion && !explicado && !a.recontado;
 
   return (
     <div className={cn("rounded-lg border p-3 space-y-2.5", falta ? "border-aviso/60" : "border-borde")}>
@@ -177,6 +178,13 @@ function TarjetaPendiente({ a, resuelve, explica, esMio, verCostos }: { a: Ajust
         </div>
       )}
 
+      {a.recontado && (
+        <p className="text-xs rounded-md bg-ok-suave px-2.5 py-1.5" data-explain={GLOSARIO.ajusteRecontado} data-explain-title="Ya se volvió a contar">
+          Se volvió a contar el {fecha(a.recontado.en)} ({a.recontado.conteo}): había <b className="cifra">{numero(a.recontado.contado)}</b>.
+          El sistema ya quedó en lo que hay, así que este ajuste solo se rechaza (queda de constancia).
+        </p>
+      )}
+
       {explica && abierto !== "explicar" && (
         <Boton variante="secundario" tamano="sm" onClick={() => setAbierto("explicar")} data-explain={GLOSARIO.explicacionAjuste} data-explain-title="Explicar">
           <MessageSquareText className="h-4 w-4" /> {explicado ? "Agregar explicación" : "Explicar la diferencia"}
@@ -187,18 +195,18 @@ function TarjetaPendiente({ a, resuelve, explica, esMio, verCostos }: { a: Ajust
       {resuelve && (
         <div className="space-y-2 pt-1">
           {esMio && <p className="text-xs text-aviso flex items-center gap-1"><ShieldAlert className="h-3.5 w-3.5" /> Lo pediste tú: lo debe autorizar otra persona.</p>}
-          <input className="campo h-8 text-sm" placeholder="Comentario (opcional)" value={comentario} onChange={(e) => setComentario(e.target.value)} />
+          <input className="campo h-8 text-sm" placeholder={a.recontado ? `Ej. Recontado el ${fecha(a.recontado.en)}: había ${numero(a.recontado.contado)}` : "Comentario (opcional)"} value={comentario} onChange={(e) => setComentario(e.target.value)} />
           <div className="flex gap-2">
-            <Boton variante="exito" tamano="sm" className="flex-1" onClick={() => intentar(true)} cargando={resolver.isPending && resolver.variables === true}
+            {!a.recontado && <Boton variante="exito" tamano="sm" className="flex-1" onClick={() => intentar(true)} cargando={resolver.isPending && resolver.variables === true}
               data-explain={GLOSARIO.botonAprobarAjuste} data-explain-title="Aprobar">
               <ClipboardCheck className="h-4 w-4" /> Aprobar
-            </Boton>
+            </Boton>}
             <Boton variante="secundario" tamano="sm" className="flex-1" onClick={() => intentar(false)} cargando={resolver.isPending && resolver.variables === false}
               data-explain={GLOSARIO.botonRechazarAjuste} data-explain-title="Rechazar">
               <X className="h-4 w-4" /> Rechazar
             </Boton>
           </div>
-          <div className="flex gap-2">
+          {!a.recontado && <div className="flex gap-2">
             <Boton variante={falta ? "primario" : "fantasma"} tamano="sm" className="flex-1" onClick={() => setAbierto(abierto === "pedir" ? null : "pedir")}
               data-explain={GLOSARIO.botonPedirExplicacionAjuste} data-explain-title="Pedir explicación">
               <MessageSquareText className="h-4 w-4" /> Pedir explicación
@@ -207,7 +215,7 @@ function TarjetaPendiente({ a, resuelve, explica, esMio, verCostos }: { a: Ajust
               data-explain={GLOSARIO.botonAjusteComoTraspaso} data-explain-title="Fue un traspaso">
               <ArrowLeftRight className="h-4 w-4" /> Fue un traspaso
             </Boton>
-          </div>
+          </div>}
           {abierto === "pedir" && <PedirExplicacion a={a} alTerminar={() => setAbierto(null)} />}
           {abierto === "traspaso" && <ComoTraspaso a={a} comentario={comentario} invalidar={invalidar} alTerminar={() => setAbierto(null)} />}
           {error && <p className="text-xs text-peligro bg-peligro-suave rounded-md px-2 py-1.5">No se pudo: {error}</p>}

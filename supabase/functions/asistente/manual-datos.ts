@@ -2133,6 +2133,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Un mes aprobado ya no se vuelve a calificar: si hubo un error, Recursos Humanos o dirección piden un ajuste con el resultado corregido y el motivo. Lo autoriza otra persona, no quien lo pidió; autorizado, el resultado corregido es el que cuenta."
  },
  {
+  "clave": "ajusteRecontado",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "El artículo se volvió a contar en ese almacén después de pedir este ajuste. Ese conteo ya dejó el sistema en lo que hay, así que aprobar este ajuste lo movería dos veces: solo se rechaza, y queda como constancia de la diferencia que se encontró antes."
+ },
+ {
   "clave": "alcanceDocumentoMaquina",
   "modulos": [
    "servicio",
