@@ -21,7 +21,7 @@ import { AreaTexto, Campo, Entrada } from "@/components/ui/campo";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando, Vacio } from "@/components/ui/estados";
 import { GLOSARIO } from "@/tutorial/glosario";
-import { DialogoMotivo, MOTIVOS_PERDIDA } from "./dialogos";
+import { MOTIVOS_PERDIDA } from "./dialogos";
 import { dineroEn, enlaceWhatsApp, folioCot, haceCuanto, hoyMx, type EtapaOportunidad, type Moneda } from "../comun";
 
 export interface Seguimiento {
@@ -33,7 +33,7 @@ export interface Seguimiento {
 }
 export interface PorVendedor {
   vendedor_id: string; vendedor: string; pendientes: number; vencidos: number; para_hoy: number; anotados_7d: number;
-  enviadas_7d: number; frenado: boolean; liberado_motivo: string | null;
+  enviadas_7d: number; frenado: boolean; liberado_motivo: string | null; liberado_hasta: string | null;
 }
 export interface Freno { vencidos: number; tope: number; frenado: boolean; liberado: boolean; liberado_por: string | null; motivo: string | null }
 
@@ -434,14 +434,18 @@ export function ColaSeguimientos({ filas, cargando, conVendedor }: { filas: Segu
 
 /** Para la gerencia: cuánto debe cada vendedor, quién está frenado y lo que hizo en la semana. */
 export function ResumenVendedores({ filas, elegido, alElegir }: { filas: PorVendedor[]; elegido: string; alElegir: (id: string) => void }) {
-  const [liberar, setLiberar] = useState<PorVendedor | null>(null);
-  const accion = useAccion(
-    (m: string) => q(supabase.rpc("liberar_freno_seguimiento", { p_vendedor: liberar!.vendedor_id, p_motivo: m })),
-    { exito: "Liberado por hoy: ya le avisamos", invalidar: [["seguimientos"]], alTerminar: () => setLiberar(null) },
-  );
+  const [liberar, setLiberar] = useState<string[] | null>(null);
   if (!filas.length) return null;
+  const frenados = filas.filter((v) => v.frenado);
   return (
     <>
+      {frenados.length > 1 && (
+        <div className="flex justify-end">
+          <Boton tamano="sm" variante="secundario" onClick={() => setLiberar(frenados.map((v) => v.vendedor_id))} data-explain={GLOSARIO.liberarFrenoSeguimiento}>
+            <LockOpen className="h-3.5 w-3.5" />Liberar a los {frenados.length} frenados…
+          </Boton>
+        </div>
+      )}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" data-explain={GLOSARIO.seguimientosPorVendedor} data-explain-title="Seguimiento por vendedor">
         {filas.map((v) => (
           <div key={v.vendedor_id} role="button" tabIndex={0} onClick={() => alElegir(elegido === v.vendedor_id ? "todos" : v.vendedor_id)}
@@ -450,24 +454,71 @@ export function ResumenVendedores({ filas, elegido, alElegir }: { filas: PorVend
             <div className="flex items-center justify-between gap-2">
               <p className="font-semibold truncate">{v.vendedor}</p>
               {v.frenado ? <span data-explain={GLOSARIO.frenoSeguimientos} data-explain-title="Frenado"><Insignia tono="peligro">Frenado</Insignia></span>
-                : v.liberado_motivo ? <span data-explain={GLOSARIO.frenoSeguimientos} data-explain-title="Liberado hoy"><Insignia tono="info">Liberado hoy</Insignia></span> : null}
+                : v.liberado_motivo ? <span data-explain={GLOSARIO.frenoSeguimientos} data-explain-title="Liberado" title={v.liberado_motivo}>
+                    <Insignia tono="info">{v.liberado_hasta && v.liberado_hasta !== hoyMx() ? `Liberado hasta el ${fecha(v.liberado_hasta)}` : "Liberado hoy"}</Insignia></span> : null}
             </div>
             <p className="mt-2 text-sm"><b className={cn("cifra", v.vencidos > 0 && "text-peligro")}>{v.vencidos}</b> vencidos · <b className="cifra">{v.para_hoy}</b> para hoy · <span className="cifra">{v.pendientes}</span> en total</p>
             <p className="text-xs text-tenue mt-1">Últimos 7 días: envió <span className="cifra">{v.enviadas_7d}</span> cotización{v.enviadas_7d === 1 ? "" : "es"} y anotó <span className="cifra">{v.anotados_7d}</span> seguimiento{v.anotados_7d === 1 ? "" : "s"}</p>
-            {v.frenado && (
-              <Boton tamano="sm" variante="secundario" className="mt-3" onClick={(e) => { e.stopPropagation(); setLiberar(v); }}
+            {(v.frenado || v.liberado_motivo) && (
+              <Boton tamano="sm" variante="secundario" className="mt-3" onClick={(e) => { e.stopPropagation(); setLiberar([v.vendedor_id]); }}
                 data-explain={GLOSARIO.liberarFrenoSeguimiento}>
-                <LockOpen className="h-3.5 w-3.5" />Liberar por hoy</Boton>
+                <LockOpen className="h-3.5 w-3.5" />{v.frenado ? "Liberar…" : "Cambiar fecha…"}</Boton>
             )}
           </div>
         ))}
       </div>
-      <DialogoMotivo abierto={!!liberar} alCambiar={(v) => !v && setLiberar(null)} peligro={false}
-        titulo={`¿Dejar enviar cotizaciones a ${liberar?.vendedor.split(" ")[0] ?? ""} hoy?`}
-        descripcion={`Tiene ${liberar?.vencidos ?? 0} seguimientos vencidos. Vale solo por hoy; mañana el freno vuelve si sigue sin ponerse al día.`}
-        etiqueta="¿Por qué?" sugerencias={["Cliente esperando la cotización", "Se pone al día hoy en la tarde"]}
-        textoBoton="Liberar por hoy" cargando={accion.isPending} alConfirmar={(m) => accion.mutate(m)} />
+      <DialogoLiberar filas={filas} inicial={liberar} alCerrar={() => setLiberar(null)} />
     </>
+  );
+}
+
+/** Liberar del freno a uno o a varios hasta una fecha: se quita solo al pasar ese día. */
+function DialogoLiberar({ filas, inicial, alCerrar }: { filas: PorVendedor[]; inicial: string[] | null; alCerrar: () => void }) {
+  const hoy = hoyMx();
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [hasta, setHasta] = useState(hoy);
+  const [motivo, setMotivo] = useState("");
+  useEffect(() => { if (inicial) { setSel(new Set(inicial)); setHasta(hoy); setMotivo(""); } }, [inicial]); // eslint-disable-line react-hooks/exhaustive-deps
+  const dia = (n: number) => { const d = new Date(hoy + "T12:00:00"); d.setDate(d.getDate() + n); return d.toLocaleDateString("en-CA"); };
+  const viernes = (() => { const d = new Date(hoy + "T12:00:00"); const faltan = (5 - d.getDay() + 7) % 7; d.setDate(d.getDate() + faltan); return d.toLocaleDateString("en-CA"); })();
+  const accion = useAccion(() => q<number>(supabase.rpc("liberar_freno_hasta", { p_vendedores: [...sel], p_hasta: hasta, p_motivo: motivo })), {
+    exito: (n) => `${n === 1 ? "Liberado" : `${n} liberados`} ${hasta === hoy ? "por hoy" : `hasta el ${fecha(hasta)}`}: ya les avisamos`,
+    invalidar: [["seguimientos"]], alTerminar: alCerrar,
+  });
+  const valido = sel.size > 0 && motivo.trim().length >= 3 && hasta >= hoy;
+  return (
+    <Dialogo abierto={!!inicial} alCambiar={(v) => !v && alCerrar()} titulo="Dejar enviar cotizaciones"
+      descripcion="Mientras estén liberados pueden enviar aunque traigan seguimientos vencidos. Se quita solo al pasar la fecha y a cada uno le llega el aviso."
+      pie={<>
+        <Boton variante="fantasma" onClick={alCerrar}>Cancelar</Boton>
+        <Boton disabled={!valido} cargando={accion.isPending} onClick={() => accion.mutate(undefined)}><LockOpen className="h-4 w-4" />Liberar</Boton>
+      </>}>
+      <div className="space-y-4">
+        <div>
+          <p className="text-sm font-medium mb-1.5">¿A quién?</p>
+          <div className="space-y-1">
+            {filas.map((v) => (
+              <label key={v.vendedor_id} className="flex items-center gap-2 text-sm">
+                <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--marca))]" checked={sel.has(v.vendedor_id)}
+                  onChange={(e) => setSel((s) => { const n = new Set(s); if (e.target.checked) n.add(v.vendedor_id); else n.delete(v.vendedor_id); return n; })} />
+                {v.vendedor} <span className="text-tenue text-xs">({v.vencidos} vencidos{v.frenado ? ", frenado" : ""})</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <Campo etiqueta="¿Hasta cuándo?" ayuda="El día siguiente regresa el freno. Un mes como máximo; para más, se apaga en Configuración.">
+          <div className="flex flex-wrap items-center gap-2">
+            <Entrada type="date" min={hoy} max={dia(31)} value={hasta} onChange={(e) => setHasta(e.target.value)} className="w-44" />
+            <Boton type="button" tamano="sm" variante="fantasma" onClick={() => setHasta(hoy)}>Hoy</Boton>
+            <Boton type="button" tamano="sm" variante="fantasma" onClick={() => setHasta(dia(1))}>Mañana</Boton>
+            {viernes !== hoy && <Boton type="button" tamano="sm" variante="fantasma" onClick={() => setHasta(viernes)}>Viernes</Boton>}
+          </div>
+        </Campo>
+        <Campo etiqueta="¿Por qué?">
+          <Entrada value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Cliente esperando la cotización, expo, viaje…" />
+        </Campo>
+      </div>
+    </Dialogo>
   );
 }
 

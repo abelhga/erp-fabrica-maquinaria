@@ -38,6 +38,7 @@ export function ConfigVentas() {
         {cfg.data ? <MesesTope inicial={Number(cfg.data.meses_tope?.valor ?? 0)} editable={puede("admin", 3)} /> : <Cargando />}
       </div>
       {cfg.data && <Cartera inicial={(cfg.data.propiedad_clientes?.valor ?? {}) as Propiedad} editable={puede("admin", 3)} />}
+      {cfg.data && <FrenoSeguimiento inicial={(cfg.data.seguimiento_cotizaciones?.valor ?? {}) as Record<string, unknown>} editable={puede("admin", 3)} />}
       <ConfigLeads editable={puede("leads", 3)} />
       <TextosComerciales editable={puede("ventas", 3) || puede("admin", 3)} />
       <div className="grid gap-4 xl:grid-cols-2 items-start">
@@ -135,6 +136,33 @@ function EnvioGratis({ inicial, editable }: { inicial: { desde_neto?: number; ex
               className="h-6 rounded-full border border-dashed border-borde bg-transparent px-2.5 text-xs w-44 focus:outline-none focus:border-marca" />
           )}
         </div>
+      </div>
+    </TarjetaForm>
+  );
+}
+
+/**
+ * El freno de seguimiento: con más de N vencidos un vendedor no envía cotizaciones. Apagarlo es para
+ * temporadas (todos en una expo); para unos días a ciertos vendedores está «Liberar hasta…» en Seguimiento.
+ */
+function FrenoSeguimiento({ inicial, editable }: { inicial: Record<string, unknown>; editable: boolean }) {
+  const [activo, setActivo] = useState(inicial.freno_activo !== false);
+  const [tope, setTope] = useState(String(inicial.tope_vencidos ?? 10));
+  const guardar = useGuardarConfig("Freno de seguimiento guardado");
+  return (
+    <TarjetaForm titulo="Freno de seguimiento" explica={GLOSARIO.interruptorFrenoSeguimiento} editable={editable} quien="sistemas o dirección"
+      descripcion="Con más seguimientos vencidos que el tope, el vendedor no puede enviar cotizaciones nuevas hasta anotar qué pasó con las que ya mandó."
+      pie={activo ? "Encendido: se frena a quien pase del tope." : "Apagado: nadie se frena; los seguimientos se siguen contando igual."}
+      guardando={guardar.isPending}
+      alGuardar={() => guardar.mutate({ clave: "seguimiento_cotizaciones", valor: { ...inicial, freno_activo: activo, tope_vencidos: Math.max(Number(tope) || 0, 0) } })}>
+      <div className="grid gap-4 sm:grid-cols-2 items-end">
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--marca))]" checked={activo} onChange={(e) => setActivo(e.target.checked)} />
+          Freno encendido
+        </label>
+        <Campo etiqueta="Tope de seguimientos vencidos" ayuda="Con más que estos, se frena.">
+          <Entrada type="number" min="0" value={tope} onChange={(e) => setTope(e.target.value)} className="cifra w-28 block" />
+        </Campo>
       </div>
     </TarjetaForm>
   );
