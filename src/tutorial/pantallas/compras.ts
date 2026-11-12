@@ -43,7 +43,7 @@ export const COMPRAS: Record<string, AyudaPantalla> = {
     ],
     detalle: [
       "Las abiertas son los borradores, las enviadas y las recibidas en parte. Las atrasadas van en rojo, y la barra de Recibido dice qué parte de lo pedido ya llegó.",
-      "La pestaña Requisiciones tiene lo que producción y almacén le piden a compras. «Crear órdenes de compra» arma una orden en borrador por cada proveedor de las partidas marcadas.",
+      "La pestaña Requisiciones tiene lo que producción y almacén le piden a compras. «Crear órdenes de compra» arma una orden en borrador por cada proveedor de las partidas marcadas. Si ya hiciste una orden con ese artículo, la partida dice «Ya en OC-…»: dale «Ligar» para no comprarlo dos veces.",
       "Los importes y lo que falta por pagar solo los ve quien tiene costos o finanzas.",
     ],
   },

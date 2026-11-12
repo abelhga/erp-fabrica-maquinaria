@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, ClipboardList, Factory, ShoppingCart, TrendingDown, X } from "lucide-react";
+import { AlertTriangle, ClipboardList, Factory, Link2, ShoppingCart, TrendingDown, X } from "lucide-react";
 import { Boton } from "@/components/ui/boton";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Insignia } from "@/components/ui/insignia";
@@ -22,6 +22,12 @@ interface LineaReq {
   unidad: string; es_importado: boolean; cantidad: number; estado: string; op_folio: string | null; proveedor_id: string | null;
   proveedor: string | null; costo: number | null; moneda: Moneda | null; oc_folio: string | null; en_planta: number | null;
 }
+/** Una orden de compra que ya existe con el mismo artículo: se le puede ligar la partida. */
+interface Candidata {
+  requisicion_linea_id: string; oc_linea_id: string; orden_compra_id: string; oc_folio: string; oc_estado: string;
+  cantidad: number; recibido: number; creada: string;
+}
+const ESTADO_OC: Record<string, string> = { borrador: "en borrador", enviada: "enviada", parcial: "llegó una parte", recibida: "ya llegó" };
 interface Resultado { ordenes: { id: string; folio: string; proveedor: string }[]; sin_proveedor: { id: string; clave: string; nombre: string }[] }
 
 const ORIGEN = {
@@ -50,6 +56,16 @@ export function Requisiciones() {
     queryFn: () => q<LineaReq[]>(supabase.from("v_requisicion_lineas").select("*").eq("estado", "pendiente")
       .order("necesaria_para", { ascending: true, nullsFirst: false }).order("creado_en").limit(1000)),
   });
+  // Compras a veces compra sin pasar por la requisición: aquí se ve y se liga.
+  const candidatas = useQuery({
+    queryKey: ["v_requisicion_lineas", "candidatas"], enabled: compra,
+    queryFn: () => q<Candidata[]>(supabase.rpc("requisicion_ocs_candidatas")),
+  });
+  const porLinea = useMemo(() => {
+    const m = new Map<string, Candidata[]>();
+    for (const c of candidatas.data ?? []) m.set(c.requisicion_linea_id, [...(m.get(c.requisicion_linea_id) ?? []), c]);
+    return m;
+  }, [candidatas.data]);
   const grupos = useMemo(() => {
     const m = new Map<string, LineaReq[]>();
     for (const l of datos.data ?? []) m.set(l.requisicion_id, [...(m.get(l.requisicion_id) ?? []), l]);
@@ -69,6 +85,9 @@ export function Requisiciones() {
       if (r.ordenes.length === 1) { toast.success(`Se creó ${r.ordenes[0].folio} para ${r.ordenes[0].proveedor}`); ir(`/compras/ordenes/${r.ordenes[0].id}`); }
       else if (r.ordenes.length > 1) { toast.success(`Se crearon ${r.ordenes.length} órdenes en borrador`); ir(`/compras/ordenes?creadas=${r.ordenes.map((o) => o.id).join(",")}`); }
     },
+  });
+  const ligar = useAccion((c: Candidata) => q(supabase.rpc("ligar_requisicion_oc", { p_req_linea: c.requisicion_linea_id, p_oc_linea: c.oc_linea_id })), {
+    exito: "Partida ligada a la orden: ya no está pendiente", invalidar: [["v_requisicion_lineas"], ["requisiciones_pendientes_cuenta"]],
   });
   const cancelar = useAccion((id: string) => q(supabase.from("requisicion_lineas").update({ estado: "cancelada" }).eq("id", id).select("id").single()), {
     exito: "Partida cancelada", invalidar: [["v_requisicion_lineas"], ["requisiciones_pendientes_cuenta"]],
@@ -131,7 +150,15 @@ export function Requisiciones() {
                     <tr key={l.id} className={cn(sel.has(l.id) && "bg-marca-suave/50")}>
                       {compra && <td><input type="checkbox" className="accent-[hsl(var(--marca))]" checked={sel.has(l.id)} aria-label={`Elegir ${l.nombre}`}
                         onChange={(e) => alternar([l.id], e.target.checked)} /></td>}
-                      <td className="min-w-[240px]"><p>{l.nombre}</p><p className="text-xs text-tenue">{l.clave}{l.es_importado && " · importado"}</p></td>
+                      <td className="min-w-[240px]"><p>{l.nombre}</p><p className="text-xs text-tenue">{l.clave}{l.es_importado && " · importado"}</p>
+                        {compra && (porLinea.get(l.id) ?? []).slice(0, 3).map((c) => (
+                          <button key={c.oc_linea_id} type="button"
+                            className="mt-1 mr-1 inline-flex items-center gap-1 rounded-full border border-marca/40 bg-marca-suave/40 px-2 py-0.5 text-xs text-marca-texto hover:bg-marca-suave"
+                            data-explain={GLOSARIO.ligarRequisicionOc} data-explain-title="Ya está en una orden"
+                            onClick={() => { if (!ligar.isPending && confirm(`¿Ligar ${l.nombre} de ${r.folio} a ${c.oc_folio}? Deja de estar pendiente y a quien la pidió le avisa cuando llegue (o ahora, si ya llegó).`)) ligar.mutate(c); }}>
+                            <Link2 className="h-3 w-3" /> Ya en {c.oc_folio} ({numero(c.cantidad)}, {ESTADO_OC[c.oc_estado] ?? c.oc_estado}) · Ligar
+                          </button>
+                        ))}</td>
                       <td className="text-right cifra font-medium whitespace-nowrap">{numero(l.cantidad)} <span className="text-xs text-tenue font-normal">{l.unidad}</span></td>
                       <td className="text-right cifra text-tenue">{numero(l.en_planta ?? 0)}</td>
                       <td className="max-w-[220px]">{l.proveedor ? <p className="truncate text-sm">{l.proveedor}</p>

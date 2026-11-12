@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { QueryKey } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AlertTriangle, FileCheck2, FileUp, Loader2, Printer, RotateCcw, Truck } from "lucide-react";
 import { Boton } from "@/components/ui/boton";
@@ -38,6 +39,8 @@ export interface HojaSalida {
   cliente: { nombre: string; razon_social: string | null; rfc: string | null; ciudad: string | null; estado: string | null } | null;
   vendedor: { nombre: string; telefono: string | null } | null;
   puede_entregar: boolean; puede_reabrir: boolean;
+  /** Envíos del pedido que no se han entregado ni cancelado: si hay, la salida va por Envíos. */
+  envios_abiertos?: { id: string; folio: string; tipo: string; estado: string }[];
   partidas: (PartidaEntrega & { descripcion: string | null; clave: string | null; series: string[] })[];
   /** Pedidos que vinieron de la hoja: sus partidas de texto, para entregar por partes. */
   partidas_texto?: PartidaEntrega[] | null;
@@ -91,7 +94,9 @@ export function BotonEntregar({ pedido, invalidar = [], antes }: {
   antes?: () => boolean;
 }) {
   const hoja = useHojaSalida(pedido);
+  const ir = useNavigate();
   const [abierto, setAbierto] = useState(false);
+  const envios = hoja.data?.envios_abiertos ?? [];
   const [recibio, setRecibio] = useState("");
   const [nota, setNota] = useState("");
   const [archivo, setArchivo] = useState<File | null>(null);
@@ -117,6 +122,24 @@ export function BotonEntregar({ pedido, invalidar = [], antes }: {
     deshacer: () => q(supabase.rpc("deshacer_entrega", { p_pedido: pedido })),
   });
   const valido = recibio.trim().length >= 3 && !demas && (pendientes.length === 0 || lineas.length > 0);
+  // Con un envío abierto la salida va por Envíos (empaque con fotos); por aquí se quedaba el envío
+  // abierto y el pedido parecía por salir dos veces. La base también se niega.
+  if (envios.length > 0) return (
+    <>
+      <Boton variante="exito" onClick={() => setAbierto(true)} data-explain={GLOSARIO.entregaConEnvio} data-explain-title="Se entrega desde Envíos"><Truck className="h-4 w-4" />Entregar</Boton>
+      <Dialogo abierto={abierto} alCambiar={setAbierto} titulo="Este pedido se entrega desde Envíos"
+        descripcion="Tiene un envío abierto. Regístralo ahí: se empaca con fotos y check list, se anota quién se lo llevó y el pedido queda entregado solo. Si el envío ya no aplica, cancélalo en Envíos y entonces sí se entrega desde aquí."
+        pie={<Boton variante="fantasma" onClick={() => setAbierto(false)}>Cerrar</Boton>}>
+        <div className="space-y-2">
+          {envios.map((e) => (
+            <Boton key={e.id} variante="secundario" className="w-full justify-between" onClick={() => ir(`/almacen/envios?envio=${e.id}`)}>
+              <span className="font-medium">{e.folio}</span><span className="text-tenue text-sm">Ir al envío →</span>
+            </Boton>
+          ))}
+        </div>
+      </Dialogo>
+    </>
+  );
   return (
     <>
       <Boton variante="exito" onClick={() => { if (!antes || antes()) setAbierto(true); }} data-explain={GLOSARIO.botonEntregarPedido}><Truck className="h-4 w-4" />{yaSalio ? "Entregar lo que falta" : "Entregar"}</Boton>
