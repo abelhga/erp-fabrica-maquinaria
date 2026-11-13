@@ -8088,7 +8088,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "En qué paso va: Por cotizar, Cotizado, Guía lista, Empacado, En camino, Entregado o Cancelado. Lo que recoge el cliente o va a Full empieza en «Por empacar». Lo que surte Full o manda el proveedor está «Pendiente» hasta que se marca que salió (lo de Full queda «Surtido por Full»)."
+  "texto": "En qué paso va: Por cotizar, Cotizado, Guía lista, Empacado, En camino, Entregado o Cancelado. Lo que recoge el cliente o va a Full empieza en «Por empacar». Lo que surte Full o manda el proveedor está «Pendiente» hasta que se marca que salió (lo de Full queda «Surtido por Full»). Los de Mercado Libre avanzan solos con lo que reporta ML: cuando ya está en la paquetería pasan a «En camino» (y se descuenta el inventario), cuando lo entregan a «Entregado», y si ML cancela la venta, el envío que no ha salido se cancela."
  },
  {
   "clave": "estadoEquipoSerie",
