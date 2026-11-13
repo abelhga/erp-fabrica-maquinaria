@@ -9,7 +9,7 @@ import type { Rol } from "@/lib/sesion";
  */
 export type Tarjeta =
   | "ventas" | "cotizaciones" | "cobranza" | "por_pagar" | "taller" | "compras" | "valor_inventario" | "personal" | "embarques"
-  | "grafica_ventas" | "ordenes_por_vencer" | "leads" | "por_surtir";
+  | "grafica_ventas" | "ordenes_por_vencer" | "leads" | "por_surtir" | "pedidos_por_surtir";
 export type Pendiente =
   | "por_autorizar" | "tareas_vencidas" | "ajustes" | "faltantes" | "oc_atrasadas" | "requisiciones" | "costos_viejos" | "incidencias"
   | "docs_embarque" | "leads_por_tomar" | "leads_mios" | "leads_sin_atender" | "seguimientos";
@@ -20,11 +20,11 @@ export const INICIO_POR_ROL: Partial<Record<Rol, Contenido>> = {
   gerente_ventas: { tarjetas: ["ventas", "cotizaciones", "cobranza", "taller", "grafica_ventas", "ordenes_por_vencer"],
     pendientes: ["por_autorizar", "seguimientos", "leads_por_tomar", "leads_sin_atender", "tareas_vencidas"] },
   // El taller: para ver cómo van los equipos de sus clientes.
-  ventas: { tarjetas: ["ventas", "cotizaciones", "taller", "grafica_ventas", "ordenes_por_vencer"], pendientes: ["seguimientos", "leads_por_tomar", "leads_mios", "tareas_vencidas"] },
+  ventas: { tarjetas: ["ventas", "cotizaciones", "pedidos_por_surtir", "taller", "grafica_ventas", "ordenes_por_vencer"], pendientes: ["seguimientos", "leads_por_tomar", "leads_mios", "tareas_vencidas"] },
   ingenieria: { tarjetas: ["taller", "ordenes_por_vencer"], pendientes: [] },
-  compras: { tarjetas: ["compras", "valor_inventario", "taller"], pendientes: ["requisiciones", "oc_atrasadas", "faltantes", "costos_viejos"] },
+  compras: { tarjetas: ["compras", "pedidos_por_surtir", "valor_inventario", "taller"], pendientes: ["requisiciones", "oc_atrasadas", "faltantes", "costos_viejos"] },
   // Almacén: primero lo que tiene que preparar para el taller, en el orden del plan.
-  almacen: { tarjetas: ["por_surtir", "compras", "taller", "ordenes_por_vencer"], pendientes: ["ajustes", "faltantes", "oc_atrasadas"] },
+  almacen: { tarjetas: ["por_surtir", "pedidos_por_surtir", "compras", "taller", "ordenes_por_vencer"], pendientes: ["ajustes", "faltantes", "oc_atrasadas"] },
   gerente_produccion: { tarjetas: ["taller", "compras", "personal", "ordenes_por_vencer"], pendientes: ["ajustes", "faltantes", "incidencias"] },
   produccion: { tarjetas: ["taller", "ordenes_por_vencer"], pendientes: ["faltantes"] },
   rrhh: { tarjetas: ["personal"], pendientes: ["incidencias"] },
@@ -49,6 +49,8 @@ const SECCION: Record<Tarjeta | Pendiente, string | string[] | null> = {
   valor_inventario: ["costos", "inventario"], personal: "rrhh", embarques: "importaciones", grafica_ventas: null, ordenes_por_vencer: null,
   // Sale de ordenes_por_surtir(), no de indicadores().
   por_surtir: null,
+  // Sale de pedidos_por_surtir() (290).
+  pedidos_por_surtir: null,
   por_autorizar: "ventas", tareas_vencidas: "ventas", ajustes: "inventario", faltantes: "produccion", oc_atrasadas: "compras",
   requisiciones: "compras", costos_viejos: "costos", incidencias: "rrhh", docs_embarque: "importaciones",
   leads: "leads", leads_por_tomar: "leads", leads_mios: "leads", leads_sin_atender: "leads",
