@@ -14,6 +14,8 @@
 --     en el mismo almacén: el inventario queda igual, el costo queda ligado al pedido y la OC y el
 --     pedido avanzan. Lo hace quien recibe compras (compras, almacén, gerencia de producción).
 --   * Una partida directa no se recibe con «Recibir» (entraría al almacén sin estar ahí).
+--   * Si ventas ya pidió un envío «Directo del proveedor» para ese pedido, se cierra con la entrega
+--     directa: es la misma entrega vista desde ventas.
 -- =============================================================================
 
 alter table public.oc_lineas add column if not exists pedido_linea_id uuid references public.pedido_lineas(id) on delete set null;
@@ -97,6 +99,17 @@ begin
     raise exception 'Al pedido % le faltan % por entregar, no %', p.folio, trim_scale(v_pend), trim_scale(p_cantidad);
   end if;
   if coalesce(length(trim(p_recibio)), 0) < 3 then raise exception 'Anota quién recibió' using errcode = '23514'; end if;
+
+  -- Si ventas ya había pedido un envío «Directo del proveedor» para este pedido, es esta misma entrega:
+  -- se cierra aquí (no lleva guía ni inventario) para que no quede abierto ni bloquee la entrega.
+  update envios set estado = 'cancelado', cancelado_por = auth.uid(), cancelado_en = now(),
+    motivo_cancelacion = format('Se registró como entrega directa en la OC %s', o.folio)
+  where pedido_id = p.id and tipo = 'proveedor' and estado not in ('enviado', 'entregado', 'cancelado');
+  if exists (select 1 from envios where pedido_id = p.id and estado not in ('enviado', 'entregado', 'cancelado')) then
+    raise exception 'Este pedido tiene abierto el envío %: si lo mandó el proveedor, cancélalo en Envíos y vuelve a intentar',
+      (select string_agg(folio, ', ') from envios where pedido_id = p.id and estado not in ('enviado', 'entregado', 'cancelado'))
+      using errcode = '23514';
+  end if;
 
   -- El almacén del que va a salir la entrega es el mismo al que entra: el inventario queda igual.
   v_alm := almacen_de_salida(l.articulo_id, p_cantidad);

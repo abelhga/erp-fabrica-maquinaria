@@ -44,8 +44,13 @@ begin
   perform pg_temp.como(v_com);
   begin perform entregado_directo(v_l, 11, 'Juan del cliente'); v_ok := true; exception when raise_exception then v_ok := false; end;
   assert not v_ok, 'entregó más de lo pedido';
+  -- Ventas ya había pedido el envío «Directo del proveedor»: se cierra con la entrega directa.
+  perform pg_temp.como_postgres();
+  insert into envios (pedido_id, tipo, estado) values (v_ped, 'proveedor', 'solicitado');
+  perform pg_temp.como(v_com);
   perform entregado_directo(v_l, 10, 'Juan del cliente', 'Guía Transbelt 123');
   perform pg_temp.como_postgres();
+  assert not exists (select 1 from envios where pedido_id = v_ped and estado <> 'cancelado'), 'quedó abierto el envío del proveedor';
   assert (select estado from ordenes_compra where id = v_oc) = 'recibida', 'la OC no quedó recibida';
   assert (select estado from pedidos where id = v_ped) = 'entregado', 'el pedido no quedó entregado';
   assert (select sum(cantidad) from existencias where articulo_id = v_art) = v_antes, 'cambió el inventario';

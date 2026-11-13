@@ -7706,7 +7706,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "compras"
   ],
-  "texto": "Partida que el proveedor manda directo al cliente, sin pasar por la planta (casi siempre Transbelt). Compras la liga al pedido que surte, antes de recibir nada. No se recibe con «Recibir»: entraría al almacén algo que nunca estuvo ahí. En «Pedidos por entregar» sale como «Ya pedido»."
+  "texto": "Partida que el proveedor manda directo al cliente, sin pasar por la planta (casi siempre Transbelt). Compras la liga al pedido que surte, antes de recibir nada. No se recibe con «Recibir»: entraría al almacén algo que nunca estuvo ahí. En «Pedidos por entregar» sale como «Ya pedido». Si ventas ya había pedido un envío «Directo del proveedor», se cierra solo al registrar la entrega."
  },
  {
   "clave": "entregadoAntesDelErp",
