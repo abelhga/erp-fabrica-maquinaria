@@ -19,6 +19,7 @@ import { cn } from "@/lib/utilidades";
 import { CantidadConSigno, nombreCorto } from "@/modulos/almacen/componentes/comun";
 import { InsigniaOC, SelectorProveedor, useTiposCambio, type Moneda, type OrdenCompra, type ProveedorBreve } from "./componentes/comun";
 import { DialogoRecibir } from "./componentes/DialogoRecibir";
+import { ControlDirecto } from "./componentes/EntregaDirecta";
 import { RevisarCotizacion, SubirCotizacion, type CotizacionLeida } from "./componentes/LeerCotizacion";
 import { ImpresionOC, type Empresa } from "./componentes/ImpresionOC";
 import { PagosOC, useFacturasDeOC } from "./componentes/PagosOC";
@@ -216,6 +217,7 @@ function Detalle({ id }: { id: string }) {
                                 <p>{l.nombre}</p>
                                 {!l.articulo_id && <p className="text-[11px] text-aviso" data-explain={GLOSARIO.partidaSinArticulo} data-explain-title="Partida sin artículo">Sin artículo del catálogo: si es material, ponle su artículo</p>}
                                 <p className="text-xs text-tenue">{[l.clave, l.unidad, l.empaque && Number(l.empaque) > 1 ? `empaque de ${numero(l.empaque)}` : null, l.para && `para ${l.para}`].filter(Boolean).join(" · ")}</p>
+                                <ControlDirecto l={l} ocId={id!} activa={["borrador", "enviada", "parcial"].includes(o.estado)} />
                               </td>
                               <td className="text-right">
                                 {editable ? <CeldaEditable valor={Number(l.cantidad)} alGuardar={(v) => v > 0 && editarLinea.mutate({ linea: l.id, cambios: { cantidad: v } })} etiqueta={`Cantidad de ${l.nombre}`} />

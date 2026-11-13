@@ -26,7 +26,8 @@ export function DialogoRecibir({ abierto, alCambiar, ocId, folio, lineas }: {
   abierto: boolean; alCambiar: (v: boolean) => void; ocId: string; folio: string; lineas: LineaOC[];
 }) {
   const almacenes = useAlmacenes();
-  const pendientes = lineas.filter((l) => Number(l.pendiente) > 0);
+  // Las que van directo al cliente no entran al almacén: se registran con «Entregado directo».
+  const pendientes = lineas.filter((l) => Number(l.pendiente) > 0 && !l.pedido_linea_id);
   // Partida de texto → artículo elegido al recibir (solo las que aún no reciben nada).
   const [ligar, setLigar] = useState<Record<string, ArticuloEncontrado>>({});
   const conArticulo = (l: LineaOC) => !!l.articulo_id || !!ligar[l.id];

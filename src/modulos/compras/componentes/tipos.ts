@@ -2,6 +2,7 @@ export interface LineaOC {
   id: string; orden_compra_id: string; articulo_id: string | null; nombre: string; descripcion: string | null; clave: string | null;
   unidad: string; empaque: number | null; almacen_preferido_id: number | null; cantidad: number; costo_unitario: number; importe: number;
   recibido: number; pendiente: number; para: string | null;
+  pedido_linea_id: string | null; directo_a: string | null;
 }
 
 export interface ProveedorCompleto {
