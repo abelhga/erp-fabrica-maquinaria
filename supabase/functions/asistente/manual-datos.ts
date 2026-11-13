@@ -3472,6 +3472,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Guarda el diagnóstico. Si la orden estaba sin atender, pasa a En reparación con la hora de ahora; si la falla detiene la máquina, o es un preventivo, la máquina se ve En reparación hasta que se cierre la orden."
  },
  {
+  "clave": "botonEntregadoDirecto",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Cuando el proveedor ya entregó al cliente: anota cuánto y quién recibió. En un solo paso se recibe la orden (con su costo, como siempre) y se entrega el pedido; el inventario queda igual y el costo queda ligado al pedido. Lo registra compras o almacén."
+ },
+ {
   "clave": "botonEntregarInsumo",
   "modulos": [
    "servicio",
@@ -7693,6 +7700,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Este pedido tiene un envío abierto (paquetería, flete o el cliente recoge), así que se entrega desde Envíos: ahí se empaca con fotos y check list y se anota quién se lo llevó, y el pedido queda entregado solo. Si el envío ya no aplica, cancélalo en Envíos y entonces sí se entrega desde el pedido."
+ },
+ {
+  "clave": "entregaDirectaCliente",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Partida que el proveedor manda directo al cliente, sin pasar por la planta (casi siempre Transbelt). Compras la liga al pedido que surte, antes de recibir nada. No se recibe con «Recibir»: entraría al almacén algo que nunca estuvo ahí. En «Pedidos por entregar» sale como «Ya pedido». Si ventas ya había pedido un envío «Directo del proveedor», se cierra solo al registrar la entrega."
  },
  {
   "clave": "entregadoAntesDelErp",
