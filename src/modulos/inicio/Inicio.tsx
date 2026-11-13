@@ -23,6 +23,7 @@ import { useSaldoHoja } from "@/modulos/finanzas/componentes/SaldosArranque";
 import { contenidoInicio } from "./porRol";
 import { usePorVendedor } from "@/modulos/ventas/componentes/Seguimiento";
 import { PorSurtir } from "./PorSurtir";
+import { PedidosPorSurtir } from "./PedidosPorSurtir";
 import { ConsejosSemana, ICONO_REVISION, useMisPorRevisar } from "@/modulos/revision/PorRevisar";
 
 interface Indicadores {
@@ -161,6 +162,7 @@ function InicioPorArea() {
       {area && <ResumenIA area={area} conClaude={puede("asistente")} />}
       <ConsejosSemana />
       {ver.has("por_surtir") && puede("inventario", 2) && <PorSurtir />}
+      {ver.has("pedidos_por_surtir") && <PedidosPorSurtir />}
       {ind.isLoading ? <Cargando filas={4} /> : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

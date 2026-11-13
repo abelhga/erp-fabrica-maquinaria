@@ -12,7 +12,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 1: Lee «Lo que importa hoy»: rojo es riesgo, ámbar pide atención, verde va bien.",
    "Paso 2: Dale clic a una tarjeta o a un indicador para ir directo a donde se atiende.",
    "Lo que ves depende de tu puesto: ventas ve sus ventas y cotizaciones, finanzas lo que se cobra y se paga, importaciones sus embarques, producción el taller, recepción los leads que registró. Si tienes dos puestos, ves lo de los dos.",
-   "«Lo que importa hoy» junta lo urgente de tu área (en morado, lo que conviene saber); el botón de flechas lo vuelve a analizar. Abajo, a almacén le sale «Por surtir»: las órdenes con material pendiente, en el orden en que el taller las va a trabajar.",
+   "«Lo que importa hoy» junta lo urgente de tu área (en morado, lo que conviene saber); el botón de flechas lo vuelve a analizar. Abajo, a almacén le sale «Por surtir»: las órdenes con material pendiente, en el orden en que el taller las va a trabajar. A almacén, compras y cada vendedor (los suyos) les sale «Pedidos por entregar»: los componentes vendidos que no han salido, con si hay o falta, y un botón para pedir a compras lo que falta.",
    "A los supervisores de piso les sale lo del taller y a mantenimiento lo de las máquinas: paradas, fallas sin atender, preventivos vencidos o por vencer y herramienta sin regresar. Eso lo calcula el ERP con reglas, sin IA.",
    "Casi todos los indicadores se abren con un clic y te llevan a la lista de donde salen (Ventas del mes abre los pedidos, por ejemplo). Todo se calcula con tus permisos: un vendedor ve lo suyo, no el total de la empresa.",
    "En el tablero de área, la tarjeta «Pendientes» reúne lo que espera algo de ti según tu puesto: lo que encontró la revisión de la madrugada en algo tuyo, precios por autorizar, seguimientos de cotizaciones vencidos o para hoy, tareas con clientes vencidas, ajustes de inventario, compras atrasadas o documentos de embarques que faltan.",
@@ -4105,6 +4105,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Manda a compras, en una sola requisición con el folio, todo lo que sigue por entregar aquí. Esas partidas pasan a «En compras» y ya no se pueden quitar. Sale cuando lo pedido es más de lo que hay en planta."
+ },
+ {
+  "clave": "botonPedirMaterialPedido",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Levanta una requisición a compras solo con lo que le falta a este pedido: lo que no cubre lo que hay ni lo que ya viene en camino o pedido. Lleva el folio del pedido en la nota y su fecha compromiso como fecha en que se necesita. Si ya está todo pedido, no repite nada."
  },
  {
   "clave": "botonPedirServicio",
@@ -12283,6 +12291,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cuántos pedidos confirmados tienen equipos con lista de materiales que todavía no tienen orden de producción."
  },
  {
+  "clave": "pedidosPorSurtir",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Los pedidos confirmados (sin Mercado Libre) con componentes que todavía no se entregan, por fecha compromiso. Almacén y compras ven todos; cada vendedor, los suyos. Si ya se pidió el envío, dice cuál y en qué va. Cuando se entrega todo, el pedido sale de la lista."
+ },
+ {
   "clave": "pedimento",
   "modulos": [
    "importaciones"
@@ -15053,6 +15069,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "Lo que dice el sistema hoy en ese almacén. Se guarda con el ajuste: al autorizarlo se aplica la diferencia contra este número, aunque mientras tanto entre o salga algo."
+ },
+ {
+  "clave": "situacionPartidaPedido",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Hay: lo que hay en planta (sin lo apartado para otras órdenes o pedidos) alcanza. Ya pedido: no alcanza, pero lo que viene en una orden de compra o en una requisición lo completa. Falta: aunque llegue lo que ya se pidió, no alcanza; hay que pedirlo a compras."
  },
  {
   "clave": "situacionPreventivo",
