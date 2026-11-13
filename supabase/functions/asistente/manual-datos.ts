@@ -4103,7 +4103,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "inventario",
    "envios"
   ],
-  "texto": "Le pide a alguien que explique la diferencia: por omisión a quien pidió el ajuste, o a otra persona que estuvo en el conteo. Le llega como pendiente con el artículo, el almacén y las cantidades, y lo contesta escribiendo qué pasó. Al contestar te llega el aviso."
+  "texto": "Le pide a alguien que explique la diferencia: por omisión a quien pidió el ajuste, o a otra persona que estuvo en el conteo. Le llega como pendiente con el artículo, el almacén y las cantidades; si le pides varias, van todas en un solo pendiente con la lista, que se va vaciando conforme explica cada una y se cierra solo al terminar. Al contestar te llega el aviso."
  },
  {
   "clave": "botonPedirInsumosCompras",
