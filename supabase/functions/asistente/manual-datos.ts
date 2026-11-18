@@ -1598,7 +1598,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Los vendedores ven las suyas; la gerencia de ventas ve las de todo el equipo y autoriza precios.",
    "«Solo vencidas» deja las que pasaron su vigencia sin cerrarse (renglones en rojo). Abajo ves cuánto suma lo filtrado en pesos y sin IVA; con CSV te la llevas a Excel.",
    "Para la gerencia, «Por autorizar» es la cola de precios abajo del mínimo y de partidas libres de $20,000 o más: primero las que el vendedor ya pidió, con su nota, cuántas partidas van bajo el mínimo y qué tanto abajo de lista. «Autorizar» deja al vendedor enviarla.",
-   "«Seguimiento» es la lista de cotizaciones enviadas a las que toca preguntarles qué pasó: primero las vencidas, luego las de hoy y luego las que vienen. Cada cotización enviada aparece aquí 3 días hábiles después.",
+   "«Seguimiento» es la lista de cotizaciones enviadas a las que toca preguntarles qué pasó: primero las vencidas, luego las de hoy y luego las que vienen. Cada cotización enviada aparece aquí 3 días hábiles después; los siguientes se van espaciando (5 y luego 10 días hábiles) y no te tocan más de 15 el mismo día.",
    "En «¿Qué pasó?» eliges cómo va (sigue en pie, no contestó, contactado, negociando, ya compró o se perdió), por dónde fue (no viene marcado) y escribes lo que dijo el cliente; Enter lo guarda y abre la siguiente. Si sigue viva, se agenda la próxima.",
    "Para darla por perdida porque no respondió hacen falta 2 «No contestó» en días distintos o 10 días hábiles desde el envío; antes, la ventana te ofrece «No contestó». Al tercer «Sigue en pie» o «No contestó» seguido te pide decidir: otra fecha con su porqué, Negociación o perdida (si no contesta y aún no se puede perder, «No contestó» pasa sin más).",
    "El botón «Mensaje» (con destellos) de cada renglón, o «Redactar mensaje» dentro de «¿Qué pasó?», le pide a la IA el WhatsApp de seguimiento con lo que has anotado de esa venta: entre más detalle anotes, más a la medida sale.",
@@ -14029,6 +14029,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Un renglón de la hoja que finanzas marcó para que no cuente: una compra o un pago capturado de más (aunque la copia esté con otro nombre de proveedor) o una factura que se canceló. Se ve tachado con su motivo, no suma en el saldo ni sale en el historial de pagos, y la hoja no se toca. Para marcar uno, usa el botón de la derecha del renglón; con la flecha se deshace."
  },
  {
+  "clave": "repartirSeguimientos",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Reacomoda de una vez los seguimientos de ese vendedor: lo vencido y lo de los próximos 3 días hábiles se reparte desde hoy sin pasar de 15 por día, con las cotizaciones más grandes primero. Sus vencidos quedan en cero (si estaba frenado, el freno se quita solo) y le llega el aviso. No borra ninguno: cada cotización sigue pidiendo saber qué pasó, solo cambia el día. Las fechas que el vendedor puso a mano y lo que ya va más adelante no se mueven. Lo hace la gerencia de ventas."
+ },
+ {
   "clave": "reputacionML",
   "modulos": [
    "ventas",
@@ -14184,7 +14194,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cómo va la venta después de hablar con el cliente. Sigue en pie: lo está pensando; le vuelves a buscar en 3 días hábiles o la fecha que pongas. No contestó: se reintenta en 2. Negociando: pasa a Negociación. Ya compró: te lleva a convertir la cotización en pedido. Se perdió: con su motivo, la oportunidad y su cotización se cierran; por «No respondió», solo después de 2 «No contestó» en días distintos o de 10 días hábiles desde el envío. Al tercer «Sigue en pie» o «No contestó» seguido te pide la fecha y su porqué, o pasarla a Negociación o a perdida («No contestó» solo cuando ya se puede perder porque no respondió). Lo que escribes queda en la historia del cliente."
+  "texto": "Cómo va la venta después de hablar con el cliente. Sigue en pie: lo está pensando; le vuelves a buscar en el plazo que toca (5 días hábiles después del primer seguimiento, 10 después del segundo) o en la fecha que pongas. No contestó: se reintenta en ese mismo plazo. Negociando: pasa a Negociación. Ya compró: te lleva a convertir la cotización en pedido. Se perdió: con su motivo, la oportunidad y su cotización se cierran; por «No respondió», solo después de 2 «No contestó» en días distintos o de 10 días hábiles desde el envío. Al tercer «Sigue en pie» o «No contestó» seguido te pide la fecha y su porqué, o pasarla a Negociación o a perdida («No contestó» solo cuando ya se puede perder porque no respondió). Lo que escribes queda en la historia del cliente."
  },
  {
   "clave": "resumenDineroPorEmbarque",
@@ -14777,7 +14787,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "El día en que toca preguntarle al cliente qué pasó con una cotización. Se agenda solo al enviarla, a 3 días hábiles (sin contar fines de semana ni festivos), y solo se cierra anotando qué pasó; si sigue viva, se agenda el siguiente. Si mandas otra versión, se recorre en vez de duplicarse; si se vuelve pedido o se rechaza, se cierra solo. En rojo, los vencidos."
+  "texto": "El día en que toca preguntarle al cliente qué pasó con una cotización. Se agenda solo al enviarla, a 3 días hábiles (sin contar fines de semana ni festivos), y solo se cierra anotando qué pasó; si sigue viva, se agenda el siguiente, cada vez más espaciado: a 5 días hábiles después del primero y a 10 después del segundo. No te tocan más de 15 el mismo día: el que ya no cabe pasa al siguiente día hábil, y si llega uno de una cotización más grande, se queda ese y se recorre el más chico. La fecha que tú escribes se respeta siempre. Si mandas otra versión, se recorre en vez de duplicarse y la cuenta vuelve a empezar; si se vuelve pedido o se rechaza, se cierra solo. En rojo, los vencidos."
  },
  {
   "clave": "seguimientoEquipo",
@@ -14797,7 +14807,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cuántos seguimientos trae cada vendedor: vencidos, para hoy y en total, y en los últimos 7 días cuántas cotizaciones envió contra cuántos seguimientos anotó. «Frenado» = pasó del tope de vencidos (10) y no puede enviar; con «Liberar…» lo dejas enviar hasta la fecha que elijas, a él o a todos los frenados de una vez (pide el motivo y les avisa). «Liberado hasta el…» dice cuándo vuelve el freno. Clic en un vendedor filtra la lista de abajo."
+  "texto": "Cuántos seguimientos trae cada vendedor: vencidos, para hoy y en total, y en los últimos 7 días cuántas cotizaciones envió contra cuántos seguimientos anotó. «Frenado» = pasó del tope de vencidos (10) y no puede enviar; con «Liberar…» lo dejas enviar hasta la fecha que elijas, a él o a todos los frenados de una vez (pide el motivo y les avisa). «Liberado hasta el…» dice cuándo vuelve el freno. Con «Repartir…» le reacomodas lo atrasado a 15 por día. Clic en un vendedor filtra la lista de abajo."
  },
  {
   "clave": "selectorMesObjetivos",
@@ -14919,7 +14929,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cuándo le vuelves a preguntar, de hoy a cuatro meses. Si lo dejas vacío se agenda solo: en 2 días hábiles si no contestó y en 3 si sigue en pie o negociando. Desde el tercer «Sigue en pie» o «No contestó» seguido, la fecha y su porqué son obligatorios (en «No contestó», solo cuando ya se puede perder porque no respondió)."
+  "texto": "Cuándo le vuelves a preguntar, de hoy a cuatro meses. Si lo dejas vacío se agenda solo, en el plazo que te dice abajo: 5 días hábiles después del primer seguimiento de esa cotización y 10 después del segundo, igual si no contestó que si sigue en pie o negociando; si ese día ya tienes 15, pasa al siguiente día hábil. La fecha que escribes aquí se respeta tal cual, aunque el día esté lleno. Desde el tercer «Sigue en pie» o «No contestó» seguido, la fecha y su porqué son obligatorios (en «No contestó», solo cuando ya se puede perder porque no respondió)."
  },
  {
   "clave": "simuladorPrecios",
