@@ -26,6 +26,10 @@ begin
   -- Orden nueva → ingeniería y almacén la validan.
   insert into ordenes_produccion (pedido_id, articulo_id, cantidad, fecha_compromiso) values (v_ped, v_eq, 1, current_date + 20) returning id into v_op;
   assert exists (select 1 from avisos where usuario_id = v_ing and tipo = 'op_por_validar' and registro_id = v_op::text), 'ingeniería no supo de la orden';
+  -- La orden nueva también le llega a la gerencia de producción y al vendedor del pedido (294).
+  assert exists (select 1 from avisos where usuario_id = v_ger and tipo = 'op_nueva' and registro_id = v_op::text), 'la gerencia no supo de la orden nueva';
+  assert exists (select 1 from avisos where usuario_id = v_vend and tipo = 'op_en_produccion' and registro_id = v_op::text), 'el vendedor no supo que su equipo entró a producción';
+  assert not exists (select 1 from avisos where usuario_id = v_otro and tipo = 'op_en_produccion'), 'le llegó a otro vendedor';
 
   -- Terminada → al vendedor del pedido, no a otro vendedor.
   update ordenes_produccion set estado = 'terminada', terminada_en = now() where id = v_op;
@@ -102,14 +106,23 @@ begin
   exception when insufficient_privilege then null;
   end;
 
-  -- Validación atorada: más de 4 horas sin revisión → ingeniería, una vez.
+  -- Validación atorada: más de 4 horas sin revisión → un resumen al día por persona, con los folios
+  -- (no uno por orden: eran cientos al mes, 294).
   perform pg_temp.como_postgres();
+  update configuracion set valor = '{"especialidades": [{"clave": "general", "nombre": "Ingeniería", "personas": []}]}'
+  where clave = 'revision_ingenieria';
   update ordenes_produccion set estado = 'planeada', creado_en = now() - interval '5 hours',
     revisado_ingenieria_en = null, revisado_almacen_en = null where id = v_op;
+  delete from op_firmas_ingenieria where orden_id = v_op;
   perform avisos_periodicos();
   perform avisos_periodicos();
-  assert (select count(*) from avisos where usuario_id = v_ing and tipo = 'op_validacion_atorada' and registro_id = v_op::text) = 1,
-    'el recordatorio de validación se repitió o no llegó';
+  assert (select count(*) from avisos where usuario_id = v_ing and tipo = 'op_validacion_atorada' and registro_id = 'resumen-ingenieria') = 1,
+    'el resumen de validación se repitió o no llegó';
+  assert (select titulo like '%sin tu revisión' and cuerpo like 'OP-%' from avisos
+          where usuario_id = v_ing and tipo = 'op_validacion_atorada' and registro_id = 'resumen-ingenieria'), 'el resumen no dice cuántas ni cuáles';
+  assert (select count(*) from avisos where usuario_id = v_alm and tipo = 'op_validacion_atorada' and registro_id = 'resumen-almacen') = 1,
+    'a almacén no le llegó su resumen';
+  assert not exists (select 1 from avisos where tipo = 'op_validacion_atorada' and registro_id = v_op::text), 'siguió mandando uno por orden';
 
   -- Sin Cliq configurado no pasa nada (ni error).
   perform publicar_en_canal('almacen', 'prueba');
