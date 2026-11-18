@@ -53,6 +53,8 @@ export type Resultado = "sigue" | "no_contesta" | "contactado" | "negociacion" |
 export interface EstadoSeguimiento {
   no_contesto: number; no_contesto_pide: number; enviada: string; sin_respuesta_desde: string; dias_pide: number;
   dias_no_contesta: number; puede_sin_respuesta: boolean; racha: number; decidir: boolean;
+  /** A cuántos días hábiles queda el siguiente si se anota uno ahorita (los plazos se van abriendo). */
+  dias_siguiente?: number; maximo_por_dia?: number;
 }
 /** El motivo sugerido que la base solo acepta después de insistir. */
 const SIN_RESPUESTA = "No respondió";
@@ -110,7 +112,7 @@ export function ChipSeguimiento({ vence, alClic, className }: { vence: string; a
 
 const RESULTADOS: { valor: Resultado; texto: string; icono: typeof Phone; ayuda: string }[] = [
   { valor: "sigue", texto: "Sigue en pie", icono: Hourglass, ayuda: "Lo está pensando o comparando. Le vuelves a buscar en la fecha de abajo." },
-  { valor: "no_contesta", texto: "No contestó", icono: PhoneOff, ayuda: "Se vuelve a intentar en 2 días hábiles (o la fecha que pongas)." },
+  { valor: "no_contesta", texto: "No contestó", icono: PhoneOff, ayuda: "Se vuelve a intentar en el plazo que toca (o la fecha que pongas)." },
   { valor: "contactado", texto: "Contactado", icono: UserCheck, ayuda: "Ya hubo plática: la oportunidad pasa a Contactado." },
   { valor: "negociacion", texto: "Negociando", icono: Handshake, ayuda: "Pidió descuento, otra forma de pago o cambios: pasa a Negociación." },
   { valor: "pedido", texto: "Ya compró", icono: ShoppingCart, ayuda: "Te lleva a la cotización para convertirla en pedido; eso cierra el seguimiento." },
@@ -287,7 +289,7 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
             ))}
           </div>
           {elegido && <p className="text-xs text-tenue">{elegido.valor === "no_contesta" && est
-            ? `Se vuelve a intentar en ${est.dias_no_contesta} días hábiles (o la fecha que pongas). Esta venta lleva ${est.no_contesto === 1 ? "1 «No contestó»" : `${est.no_contesto} «No contestó»`}.`
+            ? `Se vuelve a intentar en ${est.dias_siguiente ?? est.dias_no_contesta} días hábiles (o la fecha que pongas). Esta venta lleva ${est.no_contesto === 1 ? "1 «No contestó»" : `${est.no_contesto} «No contestó»`}.`
             : elegido.ayuda}</p>}
         </div>
 
@@ -342,7 +344,7 @@ export function DialogoQuePaso({ objetivo, resultadoInicial, alCerrar, alGuardad
             {conFecha && (
               <div data-explain={GLOSARIO.siguienteSeguimientoCotizacion} data-explain-title="Siguiente seguimiento">
                 <Campo etiqueta="Siguiente seguimiento" className="sm:w-48"
-                  ayuda={decidir ? `Obligatoria: ya van ${est!.racha} seguidos` : proxima ? undefined : resultado === "no_contesta" ? "Vacío: en 2 días hábiles" : resultado === "contactado" ? "Vacío: sin fecha si no hay cotización" : "Vacío: en 3 días hábiles"}>
+                  ayuda={decidir ? `Obligatoria: ya van ${est!.racha} seguidos` : proxima ? undefined : resultado === "contactado" ? "Vacío: sin fecha si no hay cotización" : `Vacío: en ${est?.dias_siguiente ?? 3} días hábiles${est?.maximo_por_dia ? `; si ese día ya tienes ${est.maximo_por_dia}, pasa al siguiente` : ""}`}>
                   <Entrada type="date" value={proxima} min={hoyMx()} onChange={(e) => setProxima(e.target.value)} />
                 </Campo>
               </div>
@@ -435,6 +437,7 @@ export function ColaSeguimientos({ filas, cargando, conVendedor }: { filas: Segu
 /** Para la gerencia: cuánto debe cada vendedor, quién está frenado y lo que hizo en la semana. */
 export function ResumenVendedores({ filas, elegido, alElegir }: { filas: PorVendedor[]; elegido: string; alElegir: (id: string) => void }) {
   const [liberar, setLiberar] = useState<string[] | null>(null);
+  const [repartir, setRepartir] = useState<PorVendedor | null>(null);
   if (!filas.length) return null;
   const frenados = filas.filter((v) => v.frenado);
   return (
@@ -464,11 +467,41 @@ export function ResumenVendedores({ filas, elegido, alElegir }: { filas: PorVend
                 data-explain={GLOSARIO.liberarFrenoSeguimiento}>
                 <LockOpen className="h-3.5 w-3.5" />{v.frenado ? "Liberar…" : "Cambiar fecha…"}</Boton>
             )}
+            {v.vencidos > 0 && (
+              <Boton tamano="sm" variante="secundario" className="mt-3 ml-2 first:ml-0" onClick={(e) => { e.stopPropagation(); setRepartir(v); }}
+                data-explain={GLOSARIO.repartirSeguimientos}>
+                <CalendarClock className="h-3.5 w-3.5" />Repartir…</Boton>
+            )}
           </div>
         ))}
       </div>
       <DialogoLiberar filas={filas} inicial={liberar} alCerrar={() => setLiberar(null)} />
+      <DialogoRepartir vendedor={repartir} alCerrar={() => setRepartir(null)} />
     </>
+  );
+}
+
+/** Reacomodar lo atrasado de un vendedor al tope por día: lo hace la gerencia, de una vez. */
+function DialogoRepartir({ vendedor, alCerrar }: { vendedor: PorVendedor | null; alCerrar: () => void }) {
+  const accion = useAccion(() => q<{ repartidos: number; movidos: number; del: string | null; al: string | null; por_dia: number }>(
+    supabase.rpc("repartir_seguimientos", { p_vendedor: vendedor!.vendedor_id })), {
+    exito: (r) => r.movidos === 0 ? "Ya estaban repartidos: no hubo nada que mover"
+      : `${r.repartidos} seguimientos, hasta ${r.por_dia} por día, del ${fecha(r.del!)} al ${fecha(r.al!)}: ya le avisamos`,
+    invalidar: [["seguimientos"], ["calendario"]], alTerminar: alCerrar,
+  });
+  return (
+    <Dialogo abierto={!!vendedor} alCambiar={(v) => !v && alCerrar()} titulo={`Repartir los seguimientos de ${vendedor?.vendedor.split(" ")[0] ?? ""}`}
+      descripcion="Lo vencido y lo de los próximos 3 días hábiles se reacomoda desde hoy sin pasar del tope por día, con las cotizaciones más grandes primero."
+      pie={<>
+        <Boton variante="fantasma" onClick={alCerrar}>Cancelar</Boton>
+        <Boton cargando={accion.isPending} onClick={() => accion.mutate(undefined)}><CalendarClock className="h-4 w-4" />Repartir</Boton>
+      </>}>
+      <ul className="text-sm text-tenue space-y-1.5 list-disc pl-5">
+        <li>Hoy trae <b className="text-texto cifra">{vendedor?.vencidos}</b> vencidos y <b className="text-texto cifra">{vendedor?.pendientes}</b> en total. Al repartir, sus vencidos quedan en cero y, si estaba frenado, el freno se quita solo.</li>
+        <li>Las fechas que el vendedor puso a mano y lo que ya va más adelante no se mueven.</li>
+        <li>No borra ningún seguimiento: cada cotización sigue pidiendo saber qué pasó, solo cambia el día. Al vendedor le llega el aviso.</li>
+      </ul>
+    </Dialogo>
   );
 }
 
