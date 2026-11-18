@@ -3790,7 +3790,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Crea una orden de taller por cada equipo de este pedido que tiene lista de materiales y todavía no tiene orden (una por pieza), y el pedido pasa a «En producción». Si ya hay uno igual hecho para stock, mejor asígnalo con «Usar» en Producción → Pedidos."
+  "texto": "Crea una orden de taller por cada equipo de este pedido que tiene lista de materiales y todavía no tiene orden (una por pieza), y el pedido pasa a «En producción». Si ya hay uno igual hecho para stock, mejor asígnalo con «Usar» en Producción → Pedidos. En un pedido que venía de la hoja solo aparece cuando alguna de sus partidas ya está ligada a un equipo del catálogo y sigue sin orden."
  },
  {
   "clave": "botonMarcarAplicada",
