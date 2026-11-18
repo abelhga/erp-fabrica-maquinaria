@@ -57,6 +57,23 @@ qué y foto, etiquetas QR/NFC (213); terminal con play y pausa, y criticidad cal
 
 ## Para hacer
 
+- **Velocidad, lo que sigue lento (18 nov, después de 295–298):** medido en la nube con la base sola y
+  usuario de dirección. No tienen un error puntual (ya no hay permisos por renglón): son muchos cálculos.
+  El límite es 8 s (`statement_timeout` de `authenticated`), y en horas de trabajo todo tarda varias veces más.
+  - `hallazgos()` («Por revisar») 3.0 s: llama a `tablero_direccion()` por dentro (`hallazgos_nucleo`), así
+    que el Inicio de dirección calcula el tablero dos veces. Lo más pesado: `reabasto()` 0.5 s,
+    `v_saldos_pedido`/`v_saldo_arranque_*` 0.5 s, la familia de cada venta por expresión regular
+    (`reglas_familia_venta`, 488 llamadas, 0.4 s), `preventivo_proxima` por plan (0.5 s).
+  - `resultados_por_anio()` 2.4 s, `tablero_direccion()` 1.4 s, `reabasto_lista()` 1.3 s,
+    `almacen_salud()` 1.1 s, `produccion_analitica()` 1.1 s, `calendario()` 0.8 s, `ordenes_por_surtir()` 0.8 s.
+  - `puede()`/`mis_roles()` cuestan ~0.3 ms por llamada y hay decenas de sitios que las llaman dentro de un
+    `where` (lista en la sesión del 18 nov: `pedido_de_orden`, `cliente_visible`, `carga_semanal`…). Si
+    vuelve a pesar, la salida general es guardar los roles por transacción en `mis_roles()` (con disparadores
+    que lo limpien al cambiar `usuario_roles`, `perfiles.activo` o `simulacion_rol`); es tocar el corazón de
+    los permisos, así que va con su prueba y con Abel enterado.
+  - Para medir: `pg_stat_statements` (el mínimo de cada consulta dice lo que tarda sin atasco) y, dentro de
+    una transacción con rollback, `set local pg_stat_statements.track = 'all'` para ver qué pesa por dentro.
+
 - **Pendientes «Con copia a»** (idea de dirección, 5 nov): alguien que ve el pendiente y recibe sus avisos
   (creado, preguntas, terminado) sin ser responsable ni contar para su cumplimiento. Hacerlo si se
   vuelve a pedir; por ahora se avisa por fuera.
