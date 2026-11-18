@@ -137,7 +137,7 @@ export default function PantallaPiso() {
       <div className="absolute left-1/2 top-1/2 flex flex-col" style={{ width: ANCHO, height: ALTO, transform: `translate(-50%, -50%) scale(${escala})` }}>
         {/* Encabezado: logo, estado de la conexión, hora */}
         <header className="h-[120px] shrink-0 px-12 flex items-center gap-8 border-b-2 border-borde">
-          <Logo className="[&_svg]:h-16 [&_svg]:w-16 [&_span]:text-[52px] [&_span]:tracking-[0.2em]" grande />
+          <Logo className="[&_svg]:h-16" grande />
           {!sinConexion && <p className="text-[34px] text-tenue font-medium whitespace-nowrap">Producción en vivo</p>}
           <div className="ml-auto flex items-center gap-8">
             {sinConexion ? (
