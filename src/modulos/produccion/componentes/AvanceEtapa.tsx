@@ -24,13 +24,13 @@ export function AvanceEtapa({ operacion, avance, grande }: { operacion: string; 
   const actual = avance == null ? null : PASOS.reduce((m, p) => (Math.abs(p.v - avance) < Math.abs(m.v - avance) ? p : m)).v;
   return (
     <div className={cn("flex items-center gap-2", grande ? "flex-wrap" : "")} data-explain={GLOSARIO.avanceEtapa} data-explain-title="¿Cuánto lleva?">
-      <span className={cn("text-tenue", grande ? "text-lg" : "text-xs")}>¿Cuánto lleva?</span>
+      <span className={cn("text-tenue", grande ? "text-base" : "text-xs")}>¿Cuánto lleva?</span>
       <div className="flex gap-1">
         {PASOS.map((p) => (
           <button key={p.v} type="button" disabled={reportar.isPending} onClick={() => reportar.mutate(p.v)}
             aria-pressed={actual === p.v}
             className={cn("rounded-lg border font-semibold transition disabled:opacity-60",
-              grande ? "h-12 min-w-[3.25rem] px-3 text-xl" : "h-7 min-w-[2.25rem] px-2 text-xs",
+              grande ? "h-11 min-w-[3rem] px-3 lg:min-w-[2.6rem] lg:px-2 xl:min-w-[3rem] xl:px-3 text-lg" : "h-7 min-w-[2.25rem] px-2 text-xs",
               actual === p.v ? "border-marca bg-marca text-white" : "border-borde hover:bg-fondo")}>
             {p.t}
           </button>

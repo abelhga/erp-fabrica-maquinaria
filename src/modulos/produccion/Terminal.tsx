@@ -137,7 +137,7 @@ export default function Terminal() {
         {/* En un iPad vertical (810 px) el logo no cabe junto a los botones con su texto: los
             botones mandan, y la etapa y el nombre de quien trabaja se leen completos. */}
         <Logo className="hidden lg:flex" />
-        <span className="hidden lg:inline text-tenue">Terminal de piso</span>
+        <span className="hidden xl:inline text-tenue">Terminal de piso</span>
         <div className="ml-auto flex items-center gap-2 min-w-0">
           {/* Una idea de mejora se propone aquí mismo, con el nombre de quien está en la tablet. */}
           <button onClick={() => setIdea(true)} aria-label="Tengo una idea de mejora" data-explain={GLOSARIO.botonProponerIdea} data-explain-title="Tengo una idea"
@@ -172,22 +172,22 @@ export default function Terminal() {
         {!etapa ? (
           <ElegirEtapa etapas={etapas.data ?? []} cargando={etapas.isLoading} piso={todas} alElegir={elegirEtapa} />
         ) : (
-          <div className="max-w-5xl mx-auto p-3 sm:p-5 space-y-6">
+          <div className="max-w-7xl mx-auto p-3 sm:p-4 space-y-4">
             <AyudaDePantalla className="text-base" ayuda={PANTALLAS["/produccion/terminal"]} ruta="/produccion/terminal" />
             <div className="flex items-center gap-3">
-              <span className="h-10 w-2.5 rounded-full" style={{ background: etapa.color }} />
-              <h1 className="text-3xl font-bold">{etapa.nombre}</h1>
+              <span className="h-8 w-2.5 rounded-full" style={{ background: etapa.color }} />
+              <h1 className="text-2xl font-bold">{etapa.nombre}</h1>
               <span className="text-tenue">{deEtapa.length} {deEtapa.length === 1 ? "orden" : "órdenes"}</span>
-              <button onClick={() => elegirEtapa(null)} className="ml-auto h-12 px-4 rounded-xl border border-borde bg-superficie flex items-center gap-2"
+              <button onClick={() => elegirEtapa(null)} className="ml-auto h-11 px-4 rounded-xl border border-borde bg-superficie flex items-center gap-2"
                       data-explain={GLOSARIO.botonCambiarEtapaTerminal} data-explain-title="Otra etapa">
                 <LayoutGrid className="h-5 w-5" /><span className="hidden sm:inline">Otra etapa</span>
               </button>
             </div>
             {/* Lo que más se pregunta en el piso: ¿hay que pausar para desayunar? Depende del modo. */}
             {modoHoras && (
-              <p className={cn("flex items-center gap-2 text-base", modoHoras === "terminal" ? "text-aviso" : "text-tenue")}
+              <p className={cn("flex items-center gap-2 text-sm leading-snug", modoHoras === "terminal" ? "text-aviso" : "text-tenue")}
                  data-explain={fuera ? GLOSARIO.fueraDeHorario : GLOSARIO.horasTaller} data-explain-title={fuera ? "Fuera de horario" : "¿Hay que pausar?"}>
-                {fuera ? <Moon className="h-5 w-5 shrink-0" /> : <Clock className="h-5 w-5 shrink-0" />}
+                {fuera ? <Moon className="h-4 w-4 shrink-0" /> : <Clock className="h-4 w-4 shrink-0" />}
                 {modoHoras === "terminal"
                   ? fuera ? "Fuera de horario: lo que esté iniciado sigue contando. Si ya se van, pausen."
                     : "Pausa al desayunar, al comer y al irte: el tiempo corre mientras la etapa esté iniciada."
@@ -275,10 +275,13 @@ function Seccion({ titulo, ayuda, explica, lista, pedir, ahora, tenue }: {
 }) {
   if (lista.length === 0) return null;
   return (
-    <section className="space-y-3">
-      <h2 className="text-xl font-semibold" data-explain={explica} data-explain-title={explica ? titulo : undefined}>{titulo} <span className="text-tenue font-normal">{lista.length}</span>
+    <section className="space-y-2">
+      <h2 className="text-lg font-semibold" data-explain={explica} data-explain-title={explica ? titulo : undefined}>{titulo} <span className="text-tenue font-normal">{lista.length}</span>
         {ayuda && <span className="block text-base font-normal text-tenue">{ayuda}</span>}</h2>
-      {lista.map((o) => <TarjetaPiso key={o.id} o={o} pedir={pedir} ahora={ahora} tenue={tenue} />)}
+      {/* En un iPad acostado (1080 px) caben dos columnas; parado (810 px), una. */}
+      <div className="grid gap-3 lg:grid-cols-2 items-start">
+        {lista.map((o) => <TarjetaPiso key={o.id} o={o} pedir={pedir} ahora={ahora} tenue={tenue} />)}
+      </div>
     </section>
   );
 }
@@ -287,45 +290,48 @@ function TarjetaPiso({ o, pedir, ahora, tenue }: { o: OperacionPiso; pedir: (o: 
   const tono = tonoCompromiso(o.dias_restantes);
   const botones: Accion[] = o.estado === "pendiente" ? ["inicio", "problema"] : o.estado === "en_proceso" ? ["pausa", "fin", "problema"] : ["reanudar", "fin", "problema"];
   return (
-    <article className={cn("tarjeta p-4 sm:p-5 space-y-3 border-l-[6px]", tenue && "opacity-90")} style={{ borderLeftColor: o.color }}>
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-lg cifra"><b>{folioCorto(o.folio)}</b><span className="text-tenue">{o.numero_serie && ` · ${o.numero_serie}`}</span></p>
-          <p className="text-2xl font-bold leading-tight">{abreviarEquipo(o.equipo)}</p>
-          <p className="text-lg text-tenue">{o.pedido_folio ? <><span className="cifra">{o.pedido_folio}</span> · {o.cliente ?? "—"}</> : "Para stock"}</p>
+    <article className={cn("tarjeta p-3 sm:p-4 border-l-[6px] flex flex-col md:flex-row gap-3", tenue && "opacity-90")} style={{ borderLeftColor: o.color }}>
+      {/* Antes todo iba apilado y cabían dos órdenes por pantalla. Con los botones a un lado la
+          tarjeta mide poco más de la mitad: caben cuatro paradas, y más en dos columnas. */}
+      <div className="min-w-0 flex-1 space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-base cifra truncate"><b>{folioCorto(o.folio)}</b><span className="text-tenue">{o.numero_serie && ` · ${o.numero_serie}`}</span></p>
+            <p className="text-xl font-bold leading-tight">{abreviarEquipo(o.equipo)}</p>
+            <p className="text-base text-tenue">{o.pedido_folio ? <><span className="cifra">{o.pedido_folio}</span> · {o.cliente ?? "—"}</> : "Para stock"}</p>
+          </div>
+          <div className="text-right shrink-0">
+            <span className={cn("inline-block rounded-lg px-2.5 py-0.5 text-base font-semibold whitespace-nowrap",
+              tono === "peligro" ? "bg-peligro text-white" : tono === "aviso" ? "bg-aviso text-white" : "bg-ok-suave text-ok")}
+              data-explain={GLOSARIO.fechaCompromiso} data-explain-title="Fecha compromiso">
+              {textoDias(o.dias_restantes)}
+            </span>
+            <p className="text-sm text-tenue mt-0.5 cifra whitespace-nowrap">{fecha(o.fecha_compromiso)}</p>
+            {o.prioridad === 1 && <p className="text-base font-semibold text-peligro" data-explain={GLOSARIO.prioridadOrden} data-explain-title="Urgente">Urgente</p>}
+          </div>
         </div>
-        <div className="text-right">
-          <span className={cn("inline-block rounded-xl px-3 py-1 text-lg font-semibold",
-            tono === "peligro" ? "bg-peligro text-white" : tono === "aviso" ? "bg-aviso text-white" : "bg-ok-suave text-ok")}
-            data-explain={GLOSARIO.fechaCompromiso} data-explain-title="Fecha compromiso">
-            {textoDias(o.dias_restantes)}
-          </span>
-          <p className="text-lg text-tenue mt-1 cifra">{fecha(o.fecha_compromiso)}</p>
-          {o.prioridad === 1 && <p className="text-lg font-semibold text-peligro" data-explain={GLOSARIO.prioridadOrden} data-explain-title="Urgente">Urgente</p>}
+
+        <div className="text-base space-y-1.5">
+          {o.estado === "en_proceso" && <p className="font-medium text-marca-texto">● En proceso{o.inicio && ` · empezó ${haceRato(o.inicio, ahora)}`}</p>}
+          {o.estado === "en_proceso" && <CuadrillaEnEtapa o={o} ahora={ahora} />}
+          {o.estado === "pausada" && <p className="font-semibold text-aviso" data-explain={GLOSARIO.etapaPausada} data-explain-title="Pausada">❚❚ Pausada{o.responsable && ` · ${o.responsable}`}</p>}
+          {o.estado !== "en_proceso" && <LeToca o={o} />}
+          {(o.estado === "en_proceso" || o.estado === "pausada") && <AvanceEtapa operacion={o.id} avance={o.avance_etapa} grande />}
+          {o.estado === "pendiente" && (o.lista ? <p className="text-ok font-medium">Lista para empezar</p> : <p className="text-tenue">Todavía en {o.espera_a}</p>)}
+          {o.ultimo_problema && o.estado !== "pendiente" && (
+            <p className="text-peligro flex gap-2"><AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" /><span>{o.ultimo_problema} <span className="text-tenue">({haceRato(o.ultimo_problema_en, ahora)})</span></span></p>
+          )}
+          {o.materiales_faltantes > 0 && <p className="text-aviso flex gap-2" data-explain={GLOSARIO.faltanteMaterial} data-explain-title="Material con faltante"><PackageX className="h-5 w-5 shrink-0 mt-0.5" />{o.materiales_faltantes} material{o.materiales_faltantes === 1 ? "" : "es"} con faltante</p>}
         </div>
       </div>
 
-      <div className="text-lg space-y-1">
-        {o.estado === "en_proceso" && <p className="font-medium text-marca-texto">● En proceso{o.inicio && ` · empezó ${haceRato(o.inicio, ahora)}`}</p>}
-        {o.estado === "en_proceso" && <CuadrillaEnEtapa o={o} ahora={ahora} />}
-        {o.estado === "pausada" && <p className="font-semibold text-aviso" data-explain={GLOSARIO.etapaPausada} data-explain-title="Pausada">❚❚ Pausada{o.responsable && ` · ${o.responsable}`}</p>}
-        {o.estado !== "en_proceso" && <LeToca o={o} />}
-        {(o.estado === "en_proceso" || o.estado === "pausada") && <AvanceEtapa operacion={o.id} avance={o.avance_etapa} grande />}
-        {o.estado === "pendiente" && (o.lista ? <p className="text-ok font-medium">Lista para empezar</p> : <p className="text-tenue">Todavía en {o.espera_a}</p>)}
-        {o.ultimo_problema && o.estado !== "pendiente" && (
-          <p className="text-peligro flex gap-2"><AlertTriangle className="h-6 w-6 shrink-0" /><span>{o.ultimo_problema} <span className="text-tenue">({haceRato(o.ultimo_problema_en, ahora)})</span></span></p>
-        )}
-        {o.materiales_faltantes > 0 && <p className="text-aviso flex gap-2" data-explain={GLOSARIO.faltanteMaterial} data-explain-title="Material con faltante"><PackageX className="h-6 w-6 shrink-0" />{o.materiales_faltantes} material{o.materiales_faltantes === 1 ? "" : "es"} con faltante</p>}
-      </div>
-
-      <div className={cn("grid gap-2", botones.length === 3 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2")}>
-        {botones.map((a, i) => {
+      <div className={cn("shrink-0 grid gap-2 content-start md:w-40 lg:w-[8.25rem] xl:w-40 md:grid-cols-1", botones.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
+        {botones.map((a) => {
           const A = ACCIONES[a];
           return (
             <button key={a} onClick={() => pedir(o, a)} data-explain={EXPLICA[a]} data-explain-title={A.texto}
-                    className={cn("min-h-[64px] rounded-xl px-4 text-xl font-bold flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition",
-                      A.clase, botones.length === 3 && i === 2 && "col-span-2 sm:col-span-1")}>
-              <A.icono className="h-7 w-7" />{A.texto}
+                    className={cn("min-h-[56px] rounded-xl px-2 text-lg lg:text-base xl:text-lg font-bold flex items-center justify-center gap-2 lg:gap-1.5 xl:gap-2 shadow-sm active:scale-[0.98] transition", A.clase)}>
+              <A.icono className="h-6 w-6 lg:h-5 lg:w-5 xl:h-6 xl:w-6 shrink-0" />{A.texto}
             </button>
           );
         })}
@@ -523,7 +529,7 @@ function LeToca({ o }: { o: OperacionPiso }) {
   if (nombres.length === 0) return null;
   return (
     <p className="flex items-center gap-2" data-explain={GLOSARIO.cuadrillaPlaneada} data-explain-title="Le toca">
-      <Users className="h-6 w-6 text-tenue shrink-0" /><span><span className="text-tenue">Le toca:</span> {nombres.join(", ")}</span>
+      <Users className="h-5 w-5 text-tenue shrink-0" /><span><span className="text-tenue">Le toca:</span> {nombres.join(", ")}</span>
     </p>
   );
 }
@@ -545,16 +551,17 @@ function CuadrillaEnEtapa({ o, ahora }: { o: OperacionPiso; ahora: number }) {
       <div className="flex flex-wrap gap-2">
         {tramos.length === 0 && <span className="text-tenue">Nadie anotado{o.responsable ? ` (marcó ${o.responsable})` : ""}</span>}
         {tramos.map((t) => (
-          <span key={t.tiempo_id} className="inline-flex items-center gap-2 rounded-xl bg-fondo border border-borde pl-3 pr-1 py-1">
-            <span>{t.nombre} <span className="text-tenue text-base">· {haceRato(t.inicio, ahora)}</span></span>
+          <span key={t.tiempo_id} className="inline-flex items-center gap-2 rounded-xl bg-fondo border border-borde pl-3 pr-1">
+            {/* En dos columnas (iPad acostado) no cabe el «hace cuánto» junto a «Se une»: arriba ya dice cuándo empezó. */}
+            <span>{t.nombre} <span className="text-tenue text-sm lg:hidden xl:inline">· {haceRato(t.inicio, ahora)}</span></span>
             <button type="button" onClick={() => salir.mutate(t.tiempo_id)} disabled={salir.isPending} aria-label={`${t.nombre} sale`}
                     data-explain={GLOSARIO.botonSaleDeEtapa} data-explain-title={`${t.nombre} sale`}
-                    className="h-10 rounded-lg px-2 flex items-center gap-1 text-base text-tenue hover:text-texto"><LogOut className="h-5 w-5" />Sale</button>
+                    className="h-11 rounded-lg px-2 flex items-center gap-1 text-base text-tenue hover:text-texto"><LogOut className="h-5 w-5" />Sale</button>
           </span>
         ))}
-        <button type="button" onClick={() => setUniendo(true)} className="h-12 rounded-xl border-2 border-borde px-3 flex items-center gap-2 font-medium"
+        <button type="button" onClick={() => setUniendo(true)} className="h-11 rounded-xl border-2 border-borde px-3 flex items-center gap-2 font-medium"
                 data-explain={GLOSARIO.botonSeUneAEtapa} data-explain-title="Se une">
-          <UserPlus className="h-6 w-6" />Se une
+          <UserPlus className="h-5 w-5" />Se une
         </button>
       </div>
       {/* Empezó sin que nadie abriera su tiempo (se cargó de la hoja): a quién le toca, para darle «Se une». */}
