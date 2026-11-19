@@ -87,6 +87,12 @@ function DatosGenerales({ a }: { a: ArticuloCatalogo }) {
   const { guardar, estado } = useGuardarCampo(a.id);
   const [fotoRota, setFotoRota] = useState(false);
   useEffect(() => setFotoRota(false), [a.imagen_url]);
+  // Un servicio no lleva inventario: en vez de cobertura y stock, lo que importa es quién lo hace.
+  const esServicio = a.tipo === "servicio";
+  const interno = useQuery({
+    queryKey: ["costeo", "servicio_interno", a.id], enabled: esServicio,
+    queryFn: () => q<{ servicio_interno: boolean }>(supabase.from("articulos").select("servicio_interno").eq("id", a.id).single()),
+  }).data?.servicio_interno ?? false;
 
   const indicador = estado === "guardando" ? <span className="inline-flex items-center gap-1 text-xs text-tenue"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Guardando</span>
     : estado === "ok" ? <span className="inline-flex items-center gap-1 text-xs text-ok"><Check className="h-3.5 w-3.5" /> Guardado</span> : null;
@@ -99,7 +105,9 @@ function DatosGenerales({ a }: { a: ArticuloCatalogo }) {
           <Dato etiqueta="Unidad">{a.unidad}</Dato>
           <Dato etiqueta="Categoría">{a.categoria ?? "—"}</Dato>
           <Dato etiqueta="Tiempo de entrega" explica={GLOSARIO.tiempoEntregaArticulo}>{a.tiempo_entrega_dias != null ? `${a.tiempo_entrega_dias} días` : "—"}</Dato>
-          <Dato etiqueta="Origen" explica={GLOSARIO.articuloImportado}>{a.es_importado ? "Importado" : "Nacional"}</Dato>
+          {esServicio
+            ? <Dato etiqueta="Quién lo hace" explica={GLOSARIO.servicioInterno}>{interno ? "Nosotros, en casa" : "Un proveedor de fuera"}</Dato>
+            : <Dato etiqueta="Origen" explica={GLOSARIO.articuloImportado}>{a.es_importado ? "Importado" : "Nacional"}</Dato>}
           <Dato etiqueta="Se compra en múltiplos de" explica={GLOSARIO.empaqueCompra}>{numero(a.empaque)}</Dato>
           <Dato etiqueta="Peso" explica={GLOSARIO.kilosPorUnidad}>{a.kg_por_unidad ? `${numero(a.kg_por_unidad)} kg por ${a.unidad}` : "—"}</Dato>
           {a.descripcion && <div className="sm:col-span-3"><Dato etiqueta="Ficha técnica" explica={GLOSARIO.descripcionComponente}><p className="whitespace-pre-line">{a.descripcion}</p></Dato></div>}
@@ -133,6 +141,12 @@ function DatosGenerales({ a }: { a: ArticuloCatalogo }) {
         <Campo etiqueta="Tiempo de entrega (días)" ayuda="Si está vacío se usa el del proveedor.">
           <TextoAuto numerico valor={a.tiempo_entrega_dias} placeholder="—" explica={GLOSARIO.tiempoEntregaArticulo} tituloExplica="Tiempo de entrega" alGuardar={(v) => guardar({ tiempo_entrega_dias: v == null ? null : Math.round(Number(v)) })} />
         </Campo>
+        {esServicio ? (
+          <label className="flex items-center gap-2 text-sm sm:pt-7" data-explain={GLOSARIO.servicioInterno} data-explain-title="Lo hacemos en casa">
+            <input type="checkbox" checked={interno} onChange={(e) => guardar({ servicio_interno: e.target.checked })} className="h-4 w-4 accent-[hsl(var(--marca))]" />
+            <span>Lo hacemos en casa <span className="block text-xs text-tenue">Está en las listas solo por su costo: no baja a las órdenes ni se pide a compras.</span></span>
+          </label>
+        ) : (<>
         <label className="flex items-center gap-2 text-sm sm:pt-7" data-explain={GLOSARIO.articuloImportado} data-explain-title="Importado">
           <input type="checkbox" checked={a.es_importado} onChange={(e) => guardar({ es_importado: e.target.checked })} className="h-4 w-4 accent-[hsl(var(--marca))]" />
           <span>Importado <span className="block text-xs text-tenue">Pide 6 meses de cobertura en lugar de 1.</span></span>
@@ -143,12 +157,13 @@ function DatosGenerales({ a }: { a: ArticuloCatalogo }) {
         <Campo etiqueta="Stock de seguridad" ayuda="Se suma al punto de reorden.">
           <TextoAuto numerico valor={a.stock_minimo_fijo} placeholder="—" explica={GLOSARIO.stockSeguridad} tituloExplica="Stock de seguridad" alGuardar={(v) => guardar({ stock_minimo_fijo: v == null ? null : Number(v) })} />
         </Campo>
+        </>)}
         <Campo etiqueta="Se compra en múltiplos de">
           <TextoAuto numerico valor={a.empaque} explica={GLOSARIO.empaqueCompra} tituloExplica="Se compra en múltiplos de" alGuardar={(v) => v != null && Number(v) > 0 && guardar({ empaque: Number(v) })} />
         </Campo>
-        <Campo etiqueta={`Kilos por ${a.unidad}`} ayuda="Para reportar consumo de acero en kg.">
+        {!esServicio && <Campo etiqueta={`Kilos por ${a.unidad}`} ayuda="Para reportar consumo de acero en kg.">
           <TextoAuto numerico valor={a.kg_por_unidad} placeholder="—" explica={GLOSARIO.kilosPorUnidad} tituloExplica={`Kilos por ${a.unidad}`} alGuardar={(v) => guardar({ kg_por_unidad: v == null ? null : Number(v) })} />
-        </Campo>
+        </Campo>}
         <Campo etiqueta="Imagen" className="sm:col-span-2"
           ayuda={fotoRota ? <span className="text-aviso">No se pudo ver la imagen. Si es de Drive, compártela con «Cualquier persona con el enlace», o súbela aquí.</span>
             : "Pega la liga de Drive o de una imagen, o sube la foto. Sale en el buscador y en la cotización."}>
@@ -375,7 +390,7 @@ export function FichaComponente({ articulo }: { articulo: ArticuloCatalogo }) {
       <div className="lg:col-span-3"><DatosGenerales a={articulo} /></div>
       <div className="lg:col-span-2 space-y-4">
         {costos && <CostoComponente a={articulo} />}
-        {verExistencias && <Existencias a={articulo} />}
+        {verExistencias && articulo.tipo !== "servicio" && <Existencias a={articulo} />}
       </div>
       {costos && <div className="lg:col-span-5"><HistorialCosto a={articulo} /></div>}
       {verCanales && <div className="lg:col-span-5"><Publicaciones a={articulo} /></div>}

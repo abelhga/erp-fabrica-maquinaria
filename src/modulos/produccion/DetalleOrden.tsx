@@ -303,7 +303,7 @@ export default function DetalleOrden() {
         {/* Material, planos y horas: de quien fabrica; quien sigue el avance (ventas) ve etapas y fechas. */}
         {veFabricacion && <div className="2xl:col-span-2 space-y-4">
           <MaterialOrden ordenId={id} equipo={o.articulo.nombre} material={material.data} cargando={material.isLoading} error={material.error}
-            editable={abierta && p.ing}
+            editable={abierta && p.ing} marcaServicios={abierta && (puede("produccion", 3) || puede("compras", 2))}
             acciones={abierta && p.almacen && (
               <Boton tamano="sm" onClick={() => setDialogo("surtir")} data-explain={GLOSARIO.botonSurtirOrden} data-explain-title="Surtir"><PackageOpen className="h-3.5 w-3.5" />Surtir</Boton>
             )} />

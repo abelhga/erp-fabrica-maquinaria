@@ -100,6 +100,8 @@ export interface MaterialOP {
   quitado_en: string | null; motivo_quitado: string | null; quitado_por: string | null; requerido_antes: number | null;
   /** El renglón que este material reemplazó, y por cuál se reemplazó este. */
   reemplaza_a: string | null; reemplaza_a_nombre: string | null; reemplazado_por: string | null;
+  /** Servicio que se hace en casa: está por su costo, nunca falta ni se pide a compras. */
+  servicio_interno: boolean;
 }
 
 export function useTablero() {

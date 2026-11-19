@@ -379,6 +379,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "El costo sugerido de cada partida es el vigente del artículo; debajo ves si el del proveedor sale más caro o más barato. «Enviar al proveedor» fija las partidas, y no se envía con partidas en $0.",
    "«Por correo» la manda desde tu propio Gmail con el PDF de la orden adjunto (el mismo que sale al imprimir), al correo del proveedor que está en su ficha; puedes cambiar a quién, el asunto y el mensaje. La primera vez te pide conectar tu Gmail.",
    "Si estaba en borrador, al mandarla por correo queda enviada, con las mismas reglas que «Enviar al proveedor». Imprimir y «Por correo» solo salen a quien ve importes (costos o finanzas).",
+   "En «Recibir», un servicio no pide almacén: se recibe para decir que ya se hizo y, si se pidió para una orden de producción, queda como hecho en ella.",
    "En «Recibir», lo que falte queda pendiente. Si todavía no se recibe nada, compras la puede cancelar y sus requisiciones vuelven a pendientes.",
    "Si después de enviarla se acuerda con el proveedor otro artículo, otra cantidad u otro precio, compras da el lápiz de esa partida, la corrige y escribe por qué. Una partida de la que ya llegó algo no se cambia.",
    "El folio se queda (el proveedor ya lo tiene) y la orden sube de revisión: «Rev. 2» en el título y en lo impreso, para mandársela otra vez. Abajo de las partidas queda cada cambio con su antes y después, quién lo hizo y por qué.",
@@ -985,6 +986,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Si se apartó por error (o ese material va para otra orden), almacén o la gerencia usan «Soltar lo apartado» en el paso «Material apartado»: todo o solo unas partidas, con el motivo. Lo ya entregado al taller no cambia; si ya no queda nada apartado, el paso vuelve a Pendiente. No hace falta cancelar la orden.",
    "En Material, la lista sale agrupada por categoría (todo lo eléctrico junto, todo el material para aire, la tornillería…); con «Agrupar por» la cambias a subensamble (la parte del equipo donde va) y la próxima vez te sale como la dejaste. El buscador encuentra por nombre, clave o categoría, sin acentos.",
    "Falta es lo requerido que todavía no está surtido ni apartado; Pedido es lo que ya se pidió a compras para esta orden; Disponible es lo que hay en planta sin apartar para nadie.",
+   "Los renglones marcados «Servicio» (un vulcanizado, un maquilado) no pasan por almacén: faltan hasta que estén hechos. Se piden a compras con los demás faltantes y quedan como Hecho al recibir su orden de compra; si la compra se hizo aparte, la gerencia de producción o compras usan «Marcar hecho».",
    "Al surtir, la lista también sale por categoría y con buscador; si escribiste cantidades en partidas que la búsqueda esconde, te avisa que también salen. Las cantidades empiezan vacías: toca el número de «Por surtir» o de «Apartado» para llenarlo. Si es una parte, lo demás queda por surtir.",
    "De una partida no sale más de lo que falta: si hace falta más, pide el cambio con «Solicitar cambio a ingeniería», para que la lista del equipo quede como en la realidad. Tampoco puede llevarse lo apartado para otra orden.",
    "En las órdenes que venían de la hoja, «Ya se había entregado con la hoja» registra lo que ya se dio antes del ERP sin descontar inventario otra vez.",
@@ -3853,6 +3855,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "importaciones"
   ],
   "texto": "Márcalo cuando ya te lo regresaron: queda recuperado con fecha de hoy y por el monto completo, y deja de avisar. Hace falta para poder cerrar el embarque."
+ },
+ {
+  "clave": "botonMarcarServicioHecho",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Deja este servicio como hecho en esta orden, anotando cómo se cubrió. Úsalo cuando la compra se hizo sin pedirla desde la orden o el trabajo ya se hizo; si se pidió a compras desde aquí, se marca solo al recibir su orden de compra. Lo marcan la gerencia de producción o compras, queda en la línea de tiempo y se puede desmarcar."
  },
  {
   "clave": "botonNoSePuedeUbicar",
@@ -8653,7 +8663,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Lo que la orden necesita y todavía no está ni surtido ni apartado. Después de apartar, lo que queda es lo que no había libre en planta. En las tarjetas: ámbar si todo ya se pidió a compras, rojo si algo nadie lo ha pedido."
+  "texto": "Lo que la orden necesita y todavía no está ni surtido ni apartado. Después de apartar, lo que queda es lo que no había libre en planta. Un servicio de fuera (un vulcanizado, un maquilado) falta mientras no esté hecho; uno que hacemos en casa nunca falta. En las tarjetas: ámbar si todo ya se pidió a compras, rojo si algo nadie lo ha pedido."
  },
  {
   "clave": "faltanteMeta",
@@ -10570,7 +10580,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "El material de esta orden, copiado de la lista del equipo al crearla: un cambio aquí es solo para esta orden y queda en la línea de tiempo. Arriba, cuántas partidas lleva, cuántas tienen faltante y cuántas faltan por entregar al taller."
+  "texto": "El material de esta orden, copiado de la lista del equipo al crearla, con los servicios que se mandan a hacer fuera: un cambio aquí es solo para esta orden y queda en la línea de tiempo. Arriba, cuántas partidas lleva, cuántas tienen faltante y cuántas faltan por entregar al taller."
  },
  {
   "clave": "listaParaLlamar",
@@ -12152,7 +12162,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
  {
   "clave": "partidasPorSurtir",
   "modulos": [],
-  "texto": "Cuántos renglones del material de la orden faltan por entregar al taller, completos o en parte. No cuenta los consumibles del taller cuando esa opción está encendida."
+  "texto": "Cuántos renglones del material de la orden faltan por entregar al taller, completos o en parte. No cuenta los servicios (no pasan por almacén) ni los consumibles del taller cuando esa opción está encendida."
  },
  {
   "clave": "pasoApartarMaterial",
@@ -14938,6 +14948,29 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El número de la placa de cada equipo, uno por equipo. Si salió de una orden de producción, tiene que ser el de esa orden y la orden tiene que estar terminada; el mismo número no puede salir dos veces."
  },
  {
+  "clave": "servicioAlRecibir",
+  "modulos": [
+   "compras"
+  ],
+  "texto": "Un servicio (un vulcanizado, un maquilado, un flete) se recibe para decir que ya se hizo, pero no entra a ningún almacén. Si se pidió para una orden de producción, al recibirlo queda como Hecho en esa orden. El costo se actualiza igual que en un material."
+ },
+ {
+  "clave": "servicioEnOrden",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Un trabajo que hace un proveedor de fuera (un vulcanizado, un maquilado). No pasa por almacén: no se aparta ni se surte. Falta hasta que esté hecho: se pide a compras con «Pedir faltantes» y, al recibir su orden de compra, queda como Hecho solo. Si la compra se hizo aparte, la gerencia de producción o compras lo marcan con «Marcar hecho»."
+ },
+ {
+  "clave": "servicioInterno",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Un servicio que hacemos nosotros (corte en la CNC, puesta en marcha). Está en las listas de materiales solo para que su costo cuente: no baja a las órdenes de producción, nunca falta y no se pide a compras. Sin marcar, es un servicio de fuera: la orden lo lleva y se le pide a compras."
+ },
+ {
   "clave": "siguientePaso",
   "modulos": [
    "importaciones"
@@ -15391,7 +15424,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Lo que almacén ya le entregó al taller para esta orden (salió del inventario)."
+  "texto": "Lo que almacén ya le entregó al taller para esta orden (salió del inventario). En un servicio dice «Hecho» cuando ya se recibió su compra o alguien lo marcó."
  },
  {
   "clave": "surtidoOrdenes",
@@ -15708,7 +15741,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "costeo",
    "margenes"
   ],
-  "texto": "Equipo: lo que fabricamos y vendemos completo. Subensamble: un grupo de piezas que se captura una vez y se usa en varios equipos. Componente, materia prima y servicio son lo que se compra; los servicios (vulcanizado, calibración, puesta en marcha…) van en la lista de materiales, pero no se surten del almacén."
+  "texto": "Equipo: lo que fabricamos y vendemos completo. Subensamble: un grupo de piezas que se captura una vez y se usa en varios equipos. Componente, materia prima y servicio son lo que se compra; los servicios (vulcanizado, calibración, puesta en marcha…) van en la lista de materiales, pero no llevan inventario: no entran ni salen del almacén."
  },
  {
   "clave": "tipoCambio",

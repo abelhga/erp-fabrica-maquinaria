@@ -71,6 +71,7 @@ export const COMPRAS: Record<string, AyudaPantalla> = {
       "El costo sugerido de cada partida es el vigente del artículo; debajo ves si el del proveedor sale más caro o más barato. «Enviar al proveedor» fija las partidas, y no se envía con partidas en $0.",
       "«Por correo» la manda desde tu propio Gmail con el PDF de la orden adjunto (el mismo que sale al imprimir), al correo del proveedor que está en su ficha; puedes cambiar a quién, el asunto y el mensaje. La primera vez te pide conectar tu Gmail.",
       "Si estaba en borrador, al mandarla por correo queda enviada, con las mismas reglas que «Enviar al proveedor». Imprimir y «Por correo» solo salen a quien ve importes (costos o finanzas).",
+      "En «Recibir», un servicio no pide almacén: se recibe para decir que ya se hizo y, si se pidió para una orden de producción, queda como hecho en ella.",
       "En «Recibir», lo que falte queda pendiente. Si todavía no se recibe nada, compras la puede cancelar y sus requisiciones vuelven a pendientes.",
       "Si después de enviarla se acuerda con el proveedor otro artículo, otra cantidad u otro precio, compras da el lápiz de esa partida, la corrige y escribe por qué. Una partida de la que ya llegó algo no se cambia.",
       "El folio se queda (el proveedor ya lo tiene) y la orden sube de revisión: «Rev. 2» en el título y en lo impreso, para mandársela otra vez. Abajo de las partidas queda cada cambio con su antes y después, quién lo hizo y por qué.",
