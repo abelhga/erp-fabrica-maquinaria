@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeftRight, Boxes, PackageOpen, Plus, RotateCcw, Search, Trash2, X } from "lucide-react";
+import { ArrowLeftRight, Boxes, Check, PackageOpen, Plus, RotateCcw, Search, Trash2, X } from "lucide-react";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
 import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/insignia";
@@ -50,9 +50,11 @@ function CajaBuscar({ valor, alCambiar, className }: { valor: string; alCambiar:
  * lo que falta. Lo que falta se resalta (en la hoja salía en blanco). Ingeniería
  * corrige cantidades aquí y queda en la línea de tiempo; almacén surte contra la orden.
  */
-export function MaterialOrden({ ordenId, equipo, material, cargando, error, acciones, editable }: {
+export function MaterialOrden({ ordenId, equipo, material, cargando, error, acciones, editable, marcaServicios }: {
   ordenId: string; equipo: string; material: MaterialOP[] | undefined; cargando: boolean; error: unknown;
   acciones: React.ReactNode; editable: boolean;
+  /** Puede marcar un servicio como hecho (gerencia de producción o compras, con la orden abierta). */
+  marcaServicios: boolean;
 }) {
   const [vista, setVista] = useState<Vista>("todo");
   const [agrupar, setAgrupar] = useAgrupar();
@@ -60,6 +62,7 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
   const [agregando, setAgregando] = useState(false);
   const [reemplazando, setReemplazando] = useState<MaterialOP | null>(null);
   const [quitando, setQuitando] = useState<MaterialOP | null>(null);
+  const [marcando, setMarcando] = useState<{ m: MaterialOP; hecho: boolean } | null>(null);
   const lista = material ?? [];
   const vigentes = lista.filter((m) => !m.quitado_en);
   const filtradas = lista.filter((m) => (vista === "todo" || (vista === "falta" ? m.faltante > 0 : m.por_surtir > 0)) && enBusqueda(m, buscar));
@@ -87,6 +90,12 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
   });
   const quitar = useAccion((a: { id: string; motivo: string }) => q(supabase.rpc("quitar_material_orden", { p_material: a.id, p_motivo: a.motivo })), {
     exito: "Quitado: queda tachado en la lista y en la línea de tiempo", invalidar: [CLAVE], alTerminar: () => setQuitando(null),
+  });
+  // Un servicio no pasa por almacén: lo cubre la recepción de su compra o esta marca, que deja quién y por qué.
+  const marcar = useAccion((a: { id: string; hecho: boolean; nota: string }) =>
+    q(supabase.rpc("marcar_servicio_hecho", { p_material: a.id, p_nota: a.nota, p_hecho: a.hecho })), {
+    exito: "Servicio actualizado (queda en la línea de tiempo)",
+    invalidar: [CLAVE], alTerminar: () => setMarcando(null),
   });
   const reponer = useAccion((id: string) => q(supabase.rpc("reponer_material_orden", { p_material: id })), {
     exito: "Se volvió a poner en la lista", invalidar: [CLAVE],
@@ -162,7 +171,14 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
                             : m.agregado && <span className="inline-flex" data-explain={m.requerido === 0 ? GLOSARIO.fueraDeLista : GLOSARIO.materialAgregadoOrden}>
                                 <Insignia tono={m.requerido === 0 ? "aviso" : "info"}>{m.requerido === 0 ? "Fuera de lista" : "Agregado"}</Insignia></span>}
                           {m.del_taller && <span data-explain={GLOSARIO.consumibleTaller}><Insignia tono="neutro">Del taller</Insignia></span>}
+                          {m.tipo === "servicio" && <span data-explain={m.servicio_interno ? GLOSARIO.servicioInterno : GLOSARIO.servicioEnOrden}>
+                            <Insignia tono="neutro">{m.servicio_interno ? "Servicio interno" : "Servicio"}</Insignia></span>}
                           {m.notas && <span className="italic truncate">{m.notas}</span>}
+                          {marcaServicios && m.tipo === "servicio" && !m.servicio_interno && m.requerido > 0 && (servicioHecho(m)
+                            ? <button type="button" className="text-tenue underline hover:text-texto" onClick={() => setMarcando({ m, hecho: false })}>Desmarcar</button>
+                            : <button type="button" className="inline-flex items-center gap-1 font-medium text-marca-texto hover:underline"
+                                      data-explain={GLOSARIO.botonMarcarServicioHecho} data-explain-title="Marcar hecho"
+                                      onClick={() => setMarcando({ m, hecho: true })}><Check className="h-3.5 w-3.5" />Marcar hecho</button>)}
                         </p>
                       </td>
                       <td className="text-right cifra whitespace-nowrap">
@@ -170,12 +186,15 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
                           : <>{cifra(m.requerido)} <span className="text-tenue text-xs">{m.unidad}</span></>}
                       </td>
                       <td className="text-right cifra">{m.apartado > 0 ? cifra(m.apartado) : <span className="text-tenue">—</span>}</td>
-                      <td className="text-right cifra">{m.surtido > 0 ? cifra(m.surtido) : <span className="text-tenue">—</span>}</td>
+                      <td className="text-right cifra">{servicioHecho(m) ? <span className="text-ok font-medium">Hecho</span>
+                        : m.surtido > 0 ? cifra(m.surtido) : <span className="text-tenue">—</span>}</td>
                       <td className={cn("text-right cifra", m.faltante > 0 && "text-peligro font-semibold")}>{m.faltante > 0 ? cifra(m.faltante) : <span className="text-tenue">—</span>}</td>
                       <td className="text-right cifra">{m.pedido_a_compras > 0 ? cifra(m.pedido_a_compras) : <span className="text-tenue">—</span>}</td>
-                      <td className={cn("text-right cifra", m.disponible_planta <= 0 && "text-tenue")} title={`Existencia en planta: ${cifra(m.existencia_planta)}`}>
-                        {cifra(m.disponible_planta)}
-                      </td>
+                      {m.tipo === "servicio" ? <td className="text-right text-tenue" title="Un servicio no tiene existencia en almacén">—</td> : (
+                        <td className={cn("text-right cifra", m.disponible_planta <= 0 && "text-tenue")} title={`Existencia en planta: ${cifra(m.existencia_planta)}`}>
+                          {cifra(m.disponible_planta)}
+                        </td>
+                      )}
                       {editable && (
                         <td className="whitespace-nowrap text-right sticky right-0 bg-superficie">
                           <button type="button" className="p-1.5 text-tenue hover:text-marca-texto" title="Reemplazar por otro material" aria-label={`Reemplazar ${m.nombre}`}
@@ -201,9 +220,21 @@ export function MaterialOrden({ ordenId, equipo, material, cargando, error, acci
           {quitando && quitando.surtido > 0 && <span className="block mt-1 text-aviso">Ya se surtieron {cifra(quitando.surtido)} {quitando.unidad}: hay que regresarlos al almacén.</span>}</>}
         etiqueta="¿Por qué se quita?" sugerencias={["El cliente ya no lo quiere", "No lleva esta pieza", "Se usa una que ya había en el taller", "Estaba repetido en la lista"]}
         textoBoton="Quitar" cargando={quitar.isPending} alConfirmar={(motivo) => quitando && quitar.mutate({ id: quitando.id, motivo })} />}
+      {marcaServicios && <DialogoMotivo abierto={!!marcando} alCambiar={(v) => !v && setMarcando(null)} peligro={false}
+        titulo={marcando?.hecho ? `Marcar hecho: ${marcando.m.nombre}` : `Desmarcar ${marcando?.m.nombre ?? ""}`}
+        descripcion={marcando?.hecho
+          ? "Un servicio no pasa por almacén. Si se pidió a compras desde esta orden, se marca solo al recibir su orden de compra; márcalo aquí cuando la compra se hizo aparte o el trabajo ya está hecho."
+          : "Vuelve a quedar pendiente en esta orden."}
+        etiqueta={marcando?.hecho ? "¿Cómo se cubrió?" : "¿Por qué se desmarca?"}
+        sugerencias={marcando?.hecho ? ["Ya regresó del proveedor", "Se compró con otra orden de compra", "Se hizo antes de capturarlo aquí"] : ["Se marcó por error", "Era de otra orden"]}
+        textoBoton={marcando?.hecho ? "Marcar hecho" : "Desmarcar"} cargando={marcar.isPending}
+        alConfirmar={(nota) => marcando && marcar.mutate({ id: marcando.m.id, hecho: marcando.hecho, nota })} />}
     </Tarjeta>
   );
 }
+
+/** Un servicio de fuera ya cubierto: por la recepción de su compra o porque alguien lo marcó. */
+const servicioHecho = (m: MaterialOP) => m.tipo === "servicio" && !m.servicio_interno && m.requerido > 0 && m.surtido >= m.requerido;
 
 function CantidadEditable({ m, alGuardar }: { m: MaterialOP; alGuardar: (v: number) => void }) {
   const [v, setV] = useState(String(m.requerido));

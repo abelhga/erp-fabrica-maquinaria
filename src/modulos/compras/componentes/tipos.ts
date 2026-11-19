@@ -3,6 +3,8 @@ export interface LineaOC {
   unidad: string; empaque: number | null; almacen_preferido_id: number | null; cantidad: number; costo_unitario: number; importe: number;
   recibido: number; pendiente: number; para: string | null;
   pedido_linea_id: string | null; directo_a: string | null;
+  /** «servicio» no entra al almacén al recibirse. Nulo en las partidas de texto (sin artículo). */
+  tipo_articulo: string | null;
 }
 
 export interface ProveedorCompleto {

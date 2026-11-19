@@ -6,6 +6,7 @@ export const COMPRAS = {
   // --- Recibir ---
   partidaSinArticulo: "Una partida escrita a mano, sin artículo del catálogo (vienen así de la hoja o de un PDF). Si es material, búscala y elige su artículo: entra al almacén con el costo de la orden, como cualquier otra. Si es un cobro como «Manejo» o un flete, recíbela tal cual: cuenta como recibida y no toca el inventario. Cuando finanzas liga la factura a la orden, una partida sin artículo cuenta con la categoría de la factura; con artículo, como material o consumible del taller.",
   facturaAlRecibir: "El folio de la factura o remisión que vino con la mercancía. Queda en la orden y en la entrada del inventario; si es el de la factura, finanzas la liga sola a la orden.",
+  servicioAlRecibir: "Un servicio (un vulcanizado, un maquilado, un flete) se recibe para decir que ya se hizo, pero no entra a ningún almacén. Si se pidió para una orden de producción, al recibirlo queda como Hecho en esa orden. El costo se actualiza igual que en un material.",
   almacenParaTodas: "Pone el mismo almacén en todas las partidas de una vez; después puedes cambiar el de cada una. De entrada, cada artículo va a su almacén de siempre.",
   actualizarCostoAlRecibir: "Marcada, el precio de esta orden pasa a ser el costo vigente de cada artículo (en el historial dice «por orden de compra») y el costeo de los equipos que lo usan se mueve con él. Desmárcala si fue un precio especial. En una orden que viene en un embarque de importación no cambia el costo: ahí manda el costeo de la importación.",
 

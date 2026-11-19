@@ -21,6 +21,9 @@ import type { LineaOC } from "./tipos";
  * Las partidas de texto (las de la hoja o de un PDF, sin artículo) también se reciben: si son
  * material se ligan aquí a su artículo y entran al almacén; si son un cobro («Manejo», un flete)
  * se reciben tal cual y no tocan el inventario. Antes no salían y la orden no se cerraba nunca.
+ *
+ * Un servicio del catálogo (un vulcanizado, un maquilado) tampoco entra a ningún almacén: la base lo
+ * recibe sin movimiento y, si se pidió para una orden de producción, deja cubierto su renglón.
  */
 export function DialogoRecibir({ abierto, alCambiar, ocId, folio, lineas }: {
   abierto: boolean; alCambiar: (v: boolean) => void; ocId: string; folio: string; lineas: LineaOC[];
@@ -31,6 +34,9 @@ export function DialogoRecibir({ abierto, alCambiar, ocId, folio, lineas }: {
   // Partida de texto → artículo elegido al recibir (solo las que aún no reciben nada).
   const [ligar, setLigar] = useState<Record<string, ArticuloEncontrado>>({});
   const conArticulo = (l: LineaOC) => !!l.articulo_id || !!ligar[l.id];
+  const esServicio = (l: LineaOC) => l.tipo_articulo === "servicio";
+  // Solo lo que es material entra a un almacén.
+  const entra = (l: LineaOC) => conArticulo(l) && !esServicio(l);
   const [cant, setCant] = useState<Record<string, string>>({});
   const [alm, setAlm] = useState<Record<string, number>>({});
   const [factura, setFactura] = useState("");
@@ -54,7 +60,7 @@ export function DialogoRecibir({ abierto, alCambiar, ocId, folio, lineas }: {
     }
     return q(supabase.rpc("recibir_orden_compra", {
       p_oc: ocId, p_factura: factura.trim() || null, p_actualizar_costos: actualizar,
-      p_lineas: partidas.map(({ l, n }) => ({ linea_id: l.id, cantidad: n, almacen_id: conArticulo(l) ? alm[l.id] : null })),
+      p_lineas: partidas.map(({ l, n }) => ({ linea_id: l.id, cantidad: n, almacen_id: entra(l) ? alm[l.id] : null })),
     }));
   }, {
     exito: `${folio}: recibiste ${partidas.length} partida(s)`,
@@ -68,7 +74,7 @@ export function DialogoRecibir({ abierto, alCambiar, ocId, folio, lineas }: {
       pie={<>
         <Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
         <Boton onClick={() => recibir.mutate(undefined)} disabled={!partidas.length} cargando={recibir.isPending}>
-          <PackageCheck className="h-4 w-4" /> Dar entrada a {partidas.length} partida(s)
+          <PackageCheck className="h-4 w-4" /> {partidas.length > 0 && !partidas.some(({ l }) => entra(l)) ? "Recibir" : "Dar entrada a"} {partidas.length} partida(s)
         </Boton>
       </>}>
       <div className="space-y-4">
@@ -77,13 +83,13 @@ export function DialogoRecibir({ abierto, alCambiar, ocId, folio, lineas }: {
             <span className="text-sm font-medium" data-explain={GLOSARIO.facturaAlRecibir}>Factura o remisión</span>
             <input className="campo" value={factura} onChange={(e) => setFactura(e.target.value)} placeholder="F-12345" />
           </label>
-          <label className="space-y-1">
+          {pendientes.some(entra) && <label className="space-y-1">
             <span className="text-sm font-medium" data-explain={GLOSARIO.almacenParaTodas}>Todo entra a</span>
             <Seleccion value="" onChange={(e) => { const v = Number(e.target.value); if (v) setAlm(Object.fromEntries(pendientes.map((l) => [l.id, v]))); }}>
               <option value="">Elegir para todas…</option>
               {(almacenes.data ?? []).map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
             </Seleccion>
-          </label>
+          </label>}
         </div>
 
         <div className="rounded-lg border border-borde divide-y divide-borde">
@@ -116,7 +122,11 @@ export function DialogoRecibir({ abierto, alCambiar, ocId, folio, lineas }: {
                 </div>
                 <input inputMode="decimal" aria-label={`Cantidad recibida de ${l.nombre}`} className={cn("campo text-right cifra", demas && "border-peligro")}
                   value={cant[l.id] ?? ""} onChange={(e) => setCant((c) => ({ ...c, [l.id]: e.target.value.replace(/[^\d.,]/g, "") }))} />
-                {conArticulo(l) ? (
+                {esServicio(l) ? (
+                  <p className="text-xs text-tenue" data-explain={GLOSARIO.servicioAlRecibir} data-explain-title="Servicio">
+                    Servicio: no entra al almacén{l.para ? <>. Cubre a <b className="text-texto">{l.para}</b></> : null}
+                  </p>
+                ) : conArticulo(l) ? (
                   <Seleccion aria-label="Almacén" value={alm[l.id] ?? ""} onChange={(e) => setAlm((a) => ({ ...a, [l.id]: Number(e.target.value) }))}>
                     {(almacenes.data ?? []).map((a) => <option key={a.id} value={a.id}>{nombreCorto(a.nombre)}</option>)}
                   </Seleccion>

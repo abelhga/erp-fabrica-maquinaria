@@ -20,6 +20,8 @@ export interface ArticuloCatalogo {
   imagen_url: string | null; proveedor_id: string | null; proveedor: string | null; tiempo_entrega_dias: number | null;
   es_importado: boolean; meses_cobertura: number | null; stock_minimo_fijo: number | null; empaque: number;
   kg_por_unidad: number | null; se_vende: boolean; activo: boolean; controla_inventario: boolean;
+  /** Solo en servicios, y solo para guardarlo: la ficha lo lee aparte (no viene en el catálogo). */
+  servicio_interno?: boolean;
   precio: number | null; precio_calculado_en: string | null; existencia: number | null; lineas_bom: number; usado_en: number;
   costo_total?: number | null; costo_material?: number | null; costo_mano_obra?: number | null; horas?: number | null;
   sin_costo?: number | null; costo_mas_viejo?: string | null; costo_capturado?: number | null;
