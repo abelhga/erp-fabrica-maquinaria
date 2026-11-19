@@ -61,6 +61,7 @@ export function PasosValidacion({ pasos, acciones, firmar }: {
                     <span className="min-w-0">
                       <span className={cn("font-medium", f.por ? "text-ok" : "text-texto")}>{f.nombre}</span>{" "}
                       <span className="text-tenue">{f.por ? `· ${f.por}${f.en_lugar_de ? " (en lugar de)" : ""}` : `· ${f.responsables ?? "ingeniería"}`}</span>
+                      {!f.por && f.obligatoria === false && <span className="block text-tenue" title="Se puede firmar, pero la orden se libera sin esta firma">Opcional: no detiene</span>}
                     </span>
                     {!f.por && f.puedo && firmar && (
                       <Boton tamano="sm" variante={f.mia ? "primario" : "fantasma"} cargando={firmar.cargando} onClick={() => firmar.alFirmar(f.clave)}>

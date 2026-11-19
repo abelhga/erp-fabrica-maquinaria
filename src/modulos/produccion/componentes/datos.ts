@@ -85,6 +85,8 @@ export interface PasoValidacion {
 export interface FirmaIngenieria {
   clave: string; nombre: string; por: string | null; en: string | null; en_lugar_de: boolean;
   responsables: string | null; mia: boolean; puedo: boolean;
+  /** Falso: se puede firmar, pero la orden queda revisada (y se libera) sin ella. */
+  obligatoria: boolean;
 }
 
 export interface MaterialOP {
