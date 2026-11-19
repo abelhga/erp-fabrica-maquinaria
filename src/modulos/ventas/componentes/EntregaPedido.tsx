@@ -13,6 +13,7 @@ import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import type { EstadoPedido } from "../comun";
 
+import { abrirPagina } from "@/lib/instalada";
 /** Qué significa cada estado del pedido y qué sigue, para el globo de su insignia (modo tutorial). */
 export const EXPLICA_ESTADO_PEDIDO: Record<EstadoPedido, string> = {
   confirmado: GLOSARIO.pedidoEstadoConfirmado, en_produccion: GLOSARIO.pedidoEstadoEnProduccion, listo: GLOSARIO.pedidoEstadoListo,
@@ -77,7 +78,7 @@ async function abrirHoja(ruta: string) {
 /** La hoja de una entrega ya registrada (salida), o la de lo que va a salir (lineas, antes de registrarla). */
 export const abrirHojaSalida = (pedido: string, cual?: { salida?: string; lineas?: { id: string; cantidad: number }[] }) => {
   const q = cual?.salida ? `?salida=${cual.salida}` : cual?.lineas?.length ? `?lineas=${cual.lineas.map((l) => `${l.id}:${l.cantidad}`).join(",")}` : "";
-  window.open(`/pedidos/${pedido}/salida${q}`, "_blank", "noopener");
+  abrirPagina(`/pedidos/${pedido}/salida${q}`);
 };
 
 /** Las partidas que se pueden entregar, con lo que falta de cada una. */

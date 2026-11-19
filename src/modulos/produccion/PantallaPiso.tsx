@@ -9,6 +9,7 @@ import { cn } from "@/lib/utilidades";
 import { CLAVE, cuandoAbre, useEtapas, useHorarioAhora, useProduccionEnVivo, type Evento, type OperacionPiso, type OrdenTablero } from "./componentes/datos";
 import { abreviarEquipo, folioTV, haceRato, textoDias, textoEvento, tintaSobre } from "./componentes/util";
 
+import { useQuiosco } from "@/lib/instalada";
 // La TV se diseña a 1920×1080 y se escala a la pantalla que sea: así se ve
 // igual en la tele del taller que en la laptop del gerente.
 const ANCHO = 1920, ALTO = 1080;
@@ -66,6 +67,8 @@ function useEnLinea() {
  * Nunca muestra dinero: el rol "pantalla" ni siquiera puede leer pedidos.
  */
 export default function PantallaPiso() {
+  // La TV del taller se actualiza sola cuando se publica una versión nueva.
+  useQuiosco();
   useProduccionEnVivo();
   useSinApagar();
   const escala = useEscala();
