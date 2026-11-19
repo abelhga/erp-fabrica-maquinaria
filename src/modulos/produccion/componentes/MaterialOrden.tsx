@@ -225,7 +225,10 @@ function CantidadEditable({ m, alGuardar }: { m: MaterialOP; alGuardar: (v: numb
 }
 
 const TIPOS_MATERIAL: ArticuloEncontrado["tipo"][] = ["componente", "materia_prima"];
-const TIPOS_CAMBIO: ArticuloEncontrado["tipo"][] = ["componente", "materia_prima", "subensamble"];
+// Agregar o reemplazar en la lista de la orden también acepta servicios (un vulcanizado, un maquilado):
+// la lista del equipo los lleva y la orden los hereda. Surtir fuera de lista no: un servicio no sale del almacén.
+const TIPOS_AGREGAR: ArticuloEncontrado["tipo"][] = ["componente", "materia_prima", "servicio"];
+const TIPOS_CAMBIO: ArticuloEncontrado["tipo"][] = ["componente", "materia_prima", "subensamble", "servicio"];
 
 /** Un renglón quitado o reemplazado: tachado, con su motivo, para que quede constancia. */
 function FilaQuitada({ m, equipo, editable, alReponer, reponiendo }: {
@@ -282,7 +285,7 @@ function DialogoAgregarMaterial({ abierto, alCambiar, ordenId, existentes }: {
       <form id="agregar-material" className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (valido) agregar.mutate(undefined); }}>
         <div className="space-y-2" data-explain={GLOSARIO.subensambleEnOrden} data-explain-title="Agregar un subensamble">
           <Filtro<"material" | "sub"> valor={esSub ? "sub" : "material"} alCambiar={(v) => { setQue(v === "sub" ? "fabricar" : "material"); setArt(null); }} opciones={[
-            { valor: "material", texto: "Componente o materia prima" }, { valor: "sub", texto: "Subensamble" },
+            { valor: "material", texto: "Componente, materia prima o servicio" }, { valor: "sub", texto: "Subensamble" },
           ]} />
           {esSub && (
             <div className="flex flex-col gap-1 text-sm">
@@ -299,8 +302,8 @@ function DialogoAgregarMaterial({ abierto, alCambiar, ordenId, existentes }: {
               <span className="text-sm"><span className="text-tenue">{art.clave}</span> · {art.nombre}</span>
               <button type="button" onClick={() => setArt(null)} className="text-tenue hover:text-texto" aria-label="Quitar"><X className="h-4 w-4" /></button>
             </div>
-          ) : <BuscadorArticulo key={que === "material" ? "m" : "s"} alElegir={setArt} tipos={esSub ? ["subensamble"] : TIPOS_MATERIAL} mostrarPrecio={false} autoFocus
-               placeholder={esSub ? "Buscar subensamble…" : "Buscar componente o materia prima…"} />}
+          ) : <BuscadorArticulo key={que === "material" ? "m" : "s"} alElegir={setArt} tipos={esSub ? ["subensamble"] : TIPOS_AGREGAR} mostrarPrecio={false} autoFocus
+               placeholder={esSub ? "Buscar subensamble…" : "Buscar componente, materia prima o servicio…"} />}
         </Campo>
         <div className="grid grid-cols-2 gap-3">
           <Campo etiqueta={`Cantidad${art ? ` (${art.unidad})` : ""}`}>

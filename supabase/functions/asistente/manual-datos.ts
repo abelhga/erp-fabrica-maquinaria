@@ -2807,7 +2807,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Agrega a esta orden, y solo a ella, un componente, materia prima o un subensamble completo (un extra del pedido), con su motivo en la línea de tiempo. Si la lista del equipo está mal, pide además el cambio a ingeniería."
+  "texto": "Agrega a esta orden, y solo a ella, un componente, materia prima, un servicio (un vulcanizado, un maquilado) o un subensamble completo (un extra del pedido), con su motivo en la línea de tiempo. Si la lista del equipo está mal, pide además el cambio a ingeniería."
  },
  {
   "clave": "botonAgregarPlanPreventivo",
