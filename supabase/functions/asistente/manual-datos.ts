@@ -5795,6 +5795,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que deben los clientes, agrupado por días: 0 a 30, 31 a 60, 61 a 90 y más de 90. Los pedidos del ERP cuentan desde la fecha del pedido; lo que se debía en la hoja, desde la venta (los pagos tapan las ventas más viejas, así que lo que falta es lo más reciente). Lo de la hoja se reparte igual que en Cobranza, y lo de más de 90 días es lo que sale en rojo en «Por cobrar»."
  },
  {
+  "clave": "cobroPedidoDeLaHoja",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Un pedido que se cargó de la hoja no se cobra en su pantalla: su venta ya está en el saldo de la hoja del cliente, y cobrarlo aparte lo contaría dos veces. Finanzas registra el pago en Cobranza, pestaña «Saldos de arranque (hoja)», y baja ese saldo."
+ },
+ {
   "clave": "cobroSaldoHoja",
   "modulos": [
    "rrhh",
@@ -5804,7 +5814,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Un pago de un cliente a lo que debía en la hoja (antes de que sus pedidos se capturaran aquí). Baja su saldo al momento; no deja cobrar más de lo que debe."
+  "texto": "Un pago de un cliente a lo que debía en la hoja (antes de que sus pedidos se capturaran aquí). Baja su saldo al momento; no deja cobrar más de lo que debe. Si el saldo sale menor que lo que de verdad debe, a su libro de la hoja le falta una venta o le sobra un pago: avisa para que se corrija."
  },
  {
   "clave": "cobrosPedido",
@@ -8544,7 +8554,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Una factura con el mismo folio del mismo proveedor no se puede registrar dos veces (ni si ya está en la hoja): el sistema dice cuándo y quién la registró. Si no tiene folio o el folio es otro pero el monto es igual y la fecha está a una semana o menos, solo avisa: marca «Sí, es otra compra» si de verdad lo es."
+  "texto": "Una factura con el mismo folio del mismo proveedor no se puede registrar dos veces (ni si ya está en la hoja): el sistema dice cuándo y quién la registró. Si no tiene folio o el folio es otro pero el monto es igual y la fecha está a una semana o menos, solo avisa: marca «Sí, es otra compra» si de verdad lo es. Una compra de antes del arranque que se parece a una de la hoja solo entra con su folio (así se sabe que es otra factura, como los recibos mensuales de un seguro); sin folio se rechaza."
  },
  {
   "clave": "facturaSinRegistrar",

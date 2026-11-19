@@ -365,7 +365,14 @@ export default function DetallePedido() {
               acciones={puede("finanzas", 2) && !p.historico && <Boton variante="secundario" tamano="sm" onClick={() => setDlg("cobro")}><Wallet className="h-3.5 w-3.5" />Registrar</Boton>} />
             <div className="px-5 pb-4 text-sm space-y-2">
               {!p.historico && Number(p.total) > 0 && <Barra valor={(Number(r?.cobrado ?? 0) / Number(p.total)) * 100} tono="ok" />}
-              {(cobros.data?.length ?? 0) === 0 ? <p className="text-tenue">Sin cobros registrados.{!puede("finanzas", 2) && " Los captura finanzas."}</p>
+              {/* Un pedido de la hoja no se cobra aquí: su venta ya está en el saldo de la hoja del cliente y cobrarlo aparte lo contaría dos veces. */}
+              {p.historico ? <p className="text-tenue" data-explain={GLOSARIO.cobroPedidoDeLaHoja} data-explain-title="Pedido de la hoja">
+                  Este pedido viene de la hoja: se cobra contra el saldo de la hoja del cliente, no aquí.{" "}
+                  {puede("finanzas", 2)
+                    ? <Link className="text-marca-texto hover:underline" to={`/finanzas/cobranza?vista=arranque&cliente=${p.cliente_id}`}>Registrar el cobro en Cobranza</Link>
+                    : "Lo captura finanzas."}
+                </p>
+                : (cobros.data?.length ?? 0) === 0 ? <p className="text-tenue">Sin cobros registrados.{!puede("finanzas", 2) && " Los captura finanzas."}</p>
                 : cobros.data!.map((c) => (
                   <div key={c.id} className="flex items-center justify-between gap-2">
                     <span><Receipt className="inline h-3.5 w-3.5 text-tenue mr-1" />{fecha(c.fecha)} · {c.metodo === "mercadopago" ? "Mercado Pago" : c.metodo}{c.referencia ? ` · ${c.referencia.replace(/^Mercado Pago /, "pago ")}` : ""}</span>

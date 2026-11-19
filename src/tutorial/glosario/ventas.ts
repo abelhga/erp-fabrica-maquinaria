@@ -165,6 +165,7 @@ export const VENTAS = {
   botonCancelarPedido: "Cancela el pedido con su motivo: deja de contar para comisiones y cobranza. Sus órdenes de taller no se cancelan solas: avísale a producción.",
   botonCompartirCredito: "Reparte el crédito de esta venta entre varios vendedores, en porcentajes que deben sumar 100 %. Cada uno cobra comisión solo sobre su parte. Solo la gerencia de ventas.",
   facturasPedido: "Las facturas registradas de este pedido: folio, fecha, total y UUID del SAT. Las registra finanzas. Con una factura registrada, el pedido ya no puede quedar sin IVA.",
+  cobroPedidoDeLaHoja: "Un pedido que se cargó de la hoja no se cobra en su pantalla: su venta ya está en el saldo de la hoja del cliente, y cobrarlo aparte lo contaría dos veces. Finanzas registra el pago en Cobranza, pestaña «Saldos de arranque (hoja)», y baja ese saldo.",
   cobrosPedido: "Los pagos de este pedido, con su fecha, forma de pago y referencia. Los registra finanzas; los de Mercado Libre entran solos con su pago. La barra es lo cobrado contra el total.",
   botonBorrarCobroPedido: "Borra un cobro mal capturado (te pide confirmar). El saldo del pedido sube otra vez.",
   botonNuevoCliente: "Da de alta un cliente con lo mínimo para cotizar: su nombre y un teléfono; lo fiscal se completa después o con su constancia. Queda a tu nombre (la gerencia puede dejarlo libre). Búscalo antes en la lista: ahí salen todos, también los de otros vendedores.",

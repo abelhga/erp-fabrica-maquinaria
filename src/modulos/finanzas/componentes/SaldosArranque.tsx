@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { FileSpreadsheet, Trash2 } from "lucide-react";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { Lateral } from "@/components/ui/dialogo";
@@ -40,7 +41,8 @@ export const useSaldoHoja = (activo = true) => useQuery({
  */
 export function SaldosArranque() {
   const [vista, setVista] = useState<"saldo" | "todos">("saldo");
-  const [abierto, setAbierto] = useState<string | null>(null);
+  const [parametros] = useSearchParams();
+  const [abierto, setAbierto] = useState<string | null>(parametros.get("cliente"));
   const datos = useQuery({
     queryKey: ["v_saldo_arranque_clientes"],
     // Más de 1,000 clientes en el libro de la hoja: por páginas, que la API corta en 1,000.
@@ -170,7 +172,8 @@ function RegistrarCobro({ fila }: { fila: SaldoArranque }) {
   return (
     <form onSubmit={enviar} className="mb-5 rounded-xl border border-borde bg-fondo/50 p-3 grid gap-3 sm:grid-cols-2" data-explain={GLOSARIO.cobroSaldoHoja} data-explain-title="Cobro a un saldo de la hoja">
       <p className="sm:col-span-2 font-medium text-sm">Registrar cobro</p>
-      <Campo etiqueta="Monto (con IVA)" className="sm:col-span-2" ayuda={monto > 0 && monto < saldo - 0.5 ? `Queda un saldo de ${dinero(saldo - monto)}` : monto > 0 ? "Liquida el saldo" : undefined}>
+      <Campo etiqueta="Monto (con IVA)" className="sm:col-span-2" ayuda={monto > saldo + 0.005 ? `Es más que su saldo de la hoja (${dinero(saldo)}). Si de verdad debe más, revisa abajo su libro de la hoja: puede faltarle una venta o sobrarle un pago, y eso lo corrige sistemas.`
+        : monto > 0 && monto < saldo - 0.5 ? `Queda un saldo de ${dinero(saldo - monto)}` : monto > 0 ? "Liquida el saldo" : undefined}>
         <div className="flex gap-2">
           <Entrada autoFocus type="number" step="0.01" min="0" max={saldo} value={f.monto} onChange={(e) => setF({ ...f, monto: e.target.value })} className="cifra" placeholder={saldo.toFixed(2)} required />
           <Boton type="button" variante="secundario" onClick={() => setF({ ...f, monto: saldo.toFixed(2) })}>Todo</Boton>
