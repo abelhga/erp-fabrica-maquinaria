@@ -982,7 +982,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 3: Si algo de la lista está mal, usa «Solicitar cambio a ingeniería».",
    "Clic en el recuadro «Pedido y cliente» abre el pedido de la orden. «Lo que se le vendió al cliente» trae la descripción de su partida, sin precio; «Imprimir» la saca en una hoja para el taller.",
    "Ventas y quien solo sigue el avance ven el compromiso, las etapas y la historia; el material, los planos y las horas son de planta, almacén, ingeniería y compras.",
-   "«Validación de material» son los cinco pasos antes del taller, en orden: ingeniería revisa la lista, se aparta el material, se piden los faltantes a compras, almacén revisa la existencia física y la gerencia la libera. Cada paso guarda quién y cuándo. Sin la revisión de ingeniería no se puede liberar. La revisión de ingeniería se firma por especialidad (mecánica y eléctrica): cada quien presiona «Firmar» en lo suyo y cuenta hasta que firman todas; mientras, el paso dice «Falta una firma».",
+   "«Validación de material» son los cinco pasos antes del taller, en orden: ingeniería revisa la lista, se aparta el material, se piden los faltantes a compras, almacén revisa la existencia física y la gerencia la libera. Cada paso guarda quién y cuándo. Sin la revisión de ingeniería no se puede liberar. La revisión de ingeniería se firma por especialidad (mecánica y eléctrica): cada quien presiona «Firmar» en lo suyo y cuenta cuando firman las obligatorias (hoy basta Mecánica; la Eléctrica dice «opcional» y no detiene la liberación); mientras, el paso dice «Falta una firma».",
    "Si se apartó por error (o ese material va para otra orden), almacén o la gerencia usan «Soltar lo apartado» en el paso «Material apartado»: todo o solo unas partidas, con el motivo. Lo ya entregado al taller no cambia; si ya no queda nada apartado, el paso vuelve a Pendiente. No hace falta cancelar la orden.",
    "En Material, la lista sale agrupada por categoría (todo lo eléctrico junto, todo el material para aire, la tornillería…); con «Agrupar por» la cambias a subensamble (la parte del equipo donde va) y la próxima vez te sale como la dejaste. El buscador encuentra por nombre, clave o categoría, sin acentos.",
    "Falta es lo requerido que todavía no está surtido ni apartado; Pedido es lo que ya se pidió a compras para esta orden; Disponible es lo que hay en planta sin apartar para nadie.",
@@ -1053,6 +1053,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 1: Toca «Iniciar» en una orden y marca quiénes la trabajan.",
    "Paso 2: Usa «Se une» o «Sale» cuando alguien entra o se va, sin detener la etapa.",
    "Paso 3: Al acabar toca «Terminar»; si dejan la orden a medias, «Pausar» y toca por qué.",
+   "En la tablet se puede dejar como app: abre la terminal en el navegador, toca Compartir y luego «Agregar a inicio». Su ícono abre directo la terminal, a pantalla completa, y se actualiza sola cuando hay una versión nueva del ERP.",
    "Al pausar eliges con un toque por qué la dejan: falta material, esperan otra etapa o pieza, la máquina, una duda de ingeniería, retrabajo, los movieron a otra orden u otro. Con eso la gerencia ve qué detiene más al taller.",
    "La usan los encargados de piso. Sale lo que se trabaja en su etapa, en el orden de la cola que acomoda la gerencia en Cuadrillas o en el Gantt. Cada tarjeta dice primero la OP (la orden que se fabrica) y el equipo; abajo, más chico, el pedido y el cliente.",
    "Al iniciar o reanudar vienen marcados los que planeó la gerencia en Cuadrillas (en lo que no ha empezado dice «Le toca»); si no hay, la última cuadrilla de esa tablet. Primero sale la gente de esa etapa. Si alguien no está dado de alta o es un ayudante de paso, súmalo en «Sin nombre».",
@@ -9122,7 +9123,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "La revisión de ingeniería se firma por especialidad: cada quien revisa lo suyo y presiona «Firmar» (en Hegamex, Mecánica la firma Miguel y Eléctrica el Ing. Fernando). La orden queda revisada hasta que están todas. Si falta alguien, la gerencia de producción puede «Firmar en su lugar» y queda anotado así en la historia."
+  "texto": "La revisión de ingeniería se firma por especialidad: cada quien revisa lo suyo y presiona «Firmar» (en Hegamex, Mecánica la firma Miguel y Eléctrica el Ing. Fernando). La orden queda revisada cuando están las obligatorias: una firma marcada «opcional» (hoy, la Eléctrica) se puede dar antes o después y queda en la historia, pero no detiene la liberación. Si falta alguien, la gerencia de producción puede «Firmar en su lugar» y queda anotado así en la historia."
  },
  {
   "clave": "fleteCotizacion",
@@ -14347,7 +14348,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Ingeniería confirmó que la lista de materiales y las cantidades de la orden están bien; si hay varias especialidades (mecánica y eléctrica), cuenta hasta que firman todas. Sin esto la orden no se puede liberar, y almacén no puede apartar su material (la gerencia de producción sí, con un motivo, si es urgente). Lo que lleva un día hábil sin revisar le sale a ingeniería en «Por revisar»."
+  "texto": "Ingeniería confirmó que la lista de materiales y las cantidades de la orden están bien; si hay varias especialidades (mecánica y eléctrica), cuenta cuando firman las obligatorias (hoy basta la de Mecánica; la Eléctrica es opcional). Sin esto la orden no se puede liberar, y almacén no puede apartar su material (la gerencia de producción sí, con un motivo, si es urgente). Lo que lleva un día hábil sin revisar le sale a ingeniería en «Por revisar»."
  },
  {
   "clave": "revisionLectura",

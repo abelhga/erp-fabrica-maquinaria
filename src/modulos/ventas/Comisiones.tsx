@@ -18,6 +18,7 @@ import { Barra, CampoNumero } from "./componentes/campos";
 import { CANAL, hoyMx, type Canal } from "./comun";
 import { GLOSARIO } from "@/tutorial/glosario";
 
+import { destinoPagina } from "@/lib/instalada";
 interface FilaComision {
   vendedor_id: string; vendedor: string; plan: string; venta_maquinaria: number; venta_refacciones: number; venta_otros: number;
   comision: number; bono_meta: number; bono_refacciones: number; ajustes: number; total: number; siguiente_meta: number | null; pagado_en: string | null;
@@ -169,7 +170,7 @@ export default function Comisiones() {
                   <span className="text-sm font-medium">{f.pagado_en ? "Total pagado" : "Total a pagar"}</span>
                   <span className="flex items-center gap-3">
                     <span className="text-lg font-semibold cifra">{dinero(pago ? pago.total : f.total)}</span>
-                    <Link to={`/ventas/comisiones/recibo/${f.vendedor_id}/${mesTexto}`} target="_blank" rel="noopener"
+                    <Link to={`/ventas/comisiones/recibo/${f.vendedor_id}/${mesTexto}`} target={destinoPagina()} rel="noopener"
                           className="inline-flex items-center gap-1 rounded-md border border-borde px-2.5 py-1 text-sm hover:bg-fondo"
                           data-explain={GLOSARIO.botonReciboComision} data-explain-title="Imprimir recibo">
                       <Printer className="h-3.5 w-3.5" />Recibo

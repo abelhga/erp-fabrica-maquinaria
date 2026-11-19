@@ -89,6 +89,12 @@
     @apply bg-fondo text-texto font-sans antialiased;
     font-feature-settings: "cv11", "ss01";
   }
+  /* App instalada en un teléfono con muesca: el contenido no se mete debajo de ella. */
+  #root {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  /* Con el dedo: sin la espera del doble toque (que además acercaba la pantalla) ni el destello gris. */
+  a, button, [role="button"], label, summary { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   /* Cifras alineadas en tablas de dinero: sin esto los totales "bailan". */
   .cifra { font-variant-numeric: tabular-nums; }
   ::selection { @apply bg-marca/20; }
@@ -199,4 +205,14 @@
 .gantt-globo { animation: entrar-explicacion 120ms ease-out; }
 @media (prefers-reduced-motion: reduce) {
   .gantt-barra, .gantt-vivo, .gantt-latido { animation: none; transition: none; }
+}
+
+/* En iPad y iPhone, un campo con letra menor a 16 px hace que la pantalla se acerque sola al
+   tocarlo y no regresa. Solo donde se toca con el dedo: en escritorio los campos siguen compactos. */
+@media (pointer: coarse) {
+  .campo:not([class*="text-lg"]):not([class*="text-xl"]):not([class*="text-2xl"]):not([class*="text-3xl"]) { font-size: 16px !important; }
+}
+/* Instalada, la página completa no rebota al llegar al tope: lo que se desplaza es el contenido. */
+@media (display-mode: standalone) {
+  html, body { overscroll-behavior-y: none; }
 }

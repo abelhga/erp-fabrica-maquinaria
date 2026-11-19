@@ -2,8 +2,20 @@
 <html lang="es-MX">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0a74ff" />
+    <!-- viewport-fit=cover: instalada en un teléfono con muesca, la app llega a los bordes y
+         deja su margen con env(safe-area-inset-*) (index.css). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- El color de la barra de arriba lo pone lib/tema.ts según el tema (claro u oscuro);
+         este es el de arranque. -->
+    <meta name="theme-color" content="#181c26" />
+    <!-- App instalada («Agregar a inicio» en iPad y iPhone, «Instalar» en Chrome y Edge). La
+         terminal cambia este manifiesto por el suyo para que su ícono abra la terminal. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Hegamex" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="/iconos/icono-180.png" />
     <link rel="icon" type="image/svg+xml" href="/engrane.svg" />
     <title>Hegamex ERP</title>
   </head>

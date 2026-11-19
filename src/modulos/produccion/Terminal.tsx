@@ -9,6 +9,7 @@ import { Logo } from "@/components/layout/Logo";
 import { supabase } from "@/lib/supabase";
 import { mensajeError, q } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
+import { useManifiesto, useQuiosco } from "@/lib/instalada";
 import { fecha } from "@/lib/formato";
 import {
   CLAVE, cuandoAbre, useAsignaciones, useCuadrillas, useEtapas, useHorarioAhora, useHorasTaller, usePersonalPiso, usePiso, useProduccionEnVivo,
@@ -57,6 +58,9 @@ const EXPLICA: Record<Accion, string> = {
  * la pantalla (sin el menú) para que no se toque nada más por accidente.
  */
 export default function Terminal() {
+  // «Agregar a inicio» desde aquí instala la terminal (abre directo aquí), no el ERP completo.
+  useManifiesto("/manifest-terminal.webmanifest");
+  useQuiosco();
   useProduccionEnVivo(["op_eventos", "ordenes_produccion", "op_tiempos", "op_asignaciones"]);
   const etapas = useEtapas();
   const { puede, roles } = useSesion();
@@ -130,7 +134,9 @@ export default function Terminal() {
       <header className="h-16 shrink-0 flex items-center gap-2 sm:gap-3 px-3 sm:px-5 border-b border-borde bg-superficie">
         {/* En la tablet no hay a dónde salir: solo abre la terminal. */}
         {!soloTerminal && <Link to="/" className="p-2 -ml-2 text-tenue" aria-label="Salir de la terminal"><ArrowLeft className="h-6 w-6" /></Link>}
-        <Logo className="hidden md:flex" />
+        {/* En un iPad vertical (810 px) el logo no cabe junto a los botones con su texto: los
+            botones mandan, y la etapa y el nombre de quien trabaja se leen completos. */}
+        <Logo className="hidden lg:flex" />
         <span className="hidden lg:inline text-tenue">Terminal de piso</span>
         <div className="ml-auto flex items-center gap-2 min-w-0">
           {/* Una idea de mejora se propone aquí mismo, con el nombre de quien está en la tablet. */}
@@ -147,7 +153,7 @@ export default function Terminal() {
             </Link>
           )}
           {etapa && (
-            <button onClick={() => elegirEtapa(null)} className="h-12 rounded-xl px-3 sm:px-4 flex items-center gap-2 font-semibold min-w-0"
+            <button onClick={() => elegirEtapa(null)} className="h-12 rounded-xl px-3 sm:px-4 flex items-center gap-2 font-semibold min-w-0 shrink-0 max-w-[11rem]"
                     style={{ background: etapa.color, color: tintaSobre(etapa.color) }} aria-label="Cambiar de etapa"
                     data-explain={GLOSARIO.botonCambiarEtapaTerminal} data-explain-title="Cambiar de etapa">
               <span className="truncate">{etapa.nombre}</span><ChevronDown className="h-5 w-5 shrink-0" />

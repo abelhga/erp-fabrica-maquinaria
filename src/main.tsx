@@ -8,12 +8,15 @@ import { ProveedorTutorial } from "./tutorial/preferencia";
 import { App } from "./App";
 import { RastreoUso } from "./lib/uso";
 import { aplicarTema, temaInicial } from "./lib/tema";
+import { vigilarVersion } from "./lib/instalada";
 // La fuente va dentro de la app: la TV del taller no debe depender de Google Fonts.
 import "@fontsource-variable/inter";
 import "./index.css";
 
 // Aplica el tema guardado antes del primer pintado para que no parpadee.
 aplicarTema(temaInicial());
+// Una app instalada pasa días abierta: que se entere cuando se publica una versión nueva.
+vigilarVersion();
 // Igual el modo tutorial: sin esto, lo explicable se marcaba un instante después de pintar.
 try { document.documentElement.setAttribute("data-tutorial", String(localStorage.getItem("tutorial") === "si")); } catch { /* sin almacenamiento */ }
 

@@ -14,10 +14,11 @@ import { dinero, fecha, hoyISO, numero } from "@/lib/formato";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { SelectorCuenta } from "@/modulos/finanzas/componentes/cuentas";
 
+import { abrirPagina } from "@/lib/instalada";
 const n = (x: number | string | null | undefined) => Number(x ?? 0);
 const sumarDias = (f: string, d: number) => { const x = new Date(f + "T12:00:00"); x.setDate(x.getDate() + d); return x.toLocaleDateString("en-CA"); };
 /** Abre el papel para imprimir en otra pestaña: la lista se queda donde estaba. */
-export const abrirDocumento = (tipo: "pagare" | "abono" | "retiro", id: string) => window.open(`/rrhh/documento/${tipo}/${id}`, "_blank");
+export const abrirDocumento = (tipo: "pagare" | "abono" | "retiro", id: string) => abrirPagina(`/rrhh/documento/${tipo}/${id}`);
 
 export interface Reglas { dias_anticipacion: number; aportacion_empresa_pct: number; interes_moratorio_pct: number }
 export function useReglas() {

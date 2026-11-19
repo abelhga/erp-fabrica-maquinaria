@@ -21,7 +21,16 @@ function leer(llave: string): Tema | null {
 
 export const temaEmpresa = (): Tema => leer(EMPRESA) ?? "oscuro";
 export const temaInicial = (): Tema => leer(ELEGIDO) ?? temaEmpresa();
-export const aplicarTema = (t: Tema) => document.documentElement.classList.toggle("dark", t === "oscuro");
+export function aplicarTema(t: Tema) {
+  document.documentElement.classList.toggle("dark", t === "oscuro");
+  // La barra de arriba de la app instalada (hora, batería) toma este color: el del encabezado.
+  // Fijo en azul se veía como una franja ajena encima del encabezado oscuro.
+  try {
+    const superficie = getComputedStyle(document.documentElement).getPropertyValue("--superficie").trim();
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (superficie && meta) meta.setAttribute("content", `hsl(${superficie.replace(/\s+/g, ", ")})`);
+  } catch { /* sin estilos todavía: queda el color de arranque */ }
+}
 
 /** La persona escogió con el botón: eso manda en este navegador. */
 export function elegirTema(t: Tema) {

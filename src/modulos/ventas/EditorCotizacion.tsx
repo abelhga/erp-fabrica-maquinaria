@@ -40,6 +40,7 @@ import { AyudaDePantalla } from "@/tutorial/Explicacion";
 import { PANTALLAS } from "@/tutorial/pantallas";
 import { GLOSARIO } from "@/tutorial/glosario";
 
+import { abrirPagina } from "@/lib/instalada";
 export default function EditorCotizacion() {
   const { id } = useParams();
   if (!id || id === "nueva") return <CrearCotizacion />;
@@ -442,7 +443,7 @@ function Editor({ id }: { id: string }) {
     toast.error(mensajeFreno(freno.data), { duration: 10_000, action: { label: "Ponerme al día", onClick: () => ir("/ventas/cotizaciones?estado=seguimiento") } });
     return true;
   };
-  const abrirPdf = async () => { if (frenoHoja()) return; await guardar(); window.open(`/ventas/cotizaciones/${id}/imprimir`, "_blank"); };
+  const abrirPdf = async () => { if (frenoHoja()) return; await guardar(); abrirPagina(`/ventas/cotizaciones/${id}/imprimir`); };
   // Vista previa: la misma hoja que recibe el cliente, sin salir del editor. Se guarda antes
   // para que muestre lo último que se escribió; la llave obliga a recargarla cada vez.
   const [vista, setVista] = useState(0);

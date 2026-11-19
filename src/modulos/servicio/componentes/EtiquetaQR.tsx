@@ -8,6 +8,7 @@ import { Boton } from "@/components/ui/boton";
 import type { Maquina } from "../datos";
 import { GLOSARIO } from "@/tutorial/glosario";
 
+import { abrirPagina } from "@/lib/instalada";
 /**
  * La liga que va en el QR y en la etiqueta NFC de cada máquina: abre «Reportar falla» con la
  * máquina ya elegida. Es la de siempre (no una nueva), así una etiqueta impresa sigue sirviendo.
@@ -62,7 +63,7 @@ export function DialogoEtiqueta({ m, alCerrar }: { m: Pick<Maquina, "id" | "nume
       descripcion="Pégala en la máquina: quien vea una falla la escanea con la cámara del celular y le sale «Reportar falla» con esta máquina ya elegida."
       pie={<>
         {nfcDisponible() && <Boton variante="secundario" cargando={grabando} onClick={grabarNfc} data-explain={GLOSARIO.botonGrabarNfc}><Nfc className="h-4 w-4" />Grabar en etiqueta NFC</Boton>}
-        <Boton onClick={() => window.open(`/servicio/etiquetas?ids=${m.id}`, "_blank")} data-explain={GLOSARIO.botonImprimirEtiqueta}><Printer className="h-4 w-4" />Imprimir</Boton>
+        <Boton onClick={() => abrirPagina(`/servicio/etiquetas?ids=${m.id}`)} data-explain={GLOSARIO.botonImprimirEtiqueta}><Printer className="h-4 w-4" />Imprimir</Boton>
       </>}>
       <div className="space-y-3">
         <div data-explain={GLOSARIO.etiquetaQR} data-explain-title="Etiqueta QR"><Etiqueta m={m} /></div>

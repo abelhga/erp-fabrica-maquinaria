@@ -2,8 +2,16 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 
+// Identifica cada publicación: la app compara la suya con /version.json para saber si hay una
+// nueva (lib/instalada.ts). En Cloudflare es el commit; en local, la hora de la compilación.
+const VERSION = process.env.CF_PAGES_COMMIT_SHA ?? String(Date.now());
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), {
+    name: "version-json",
+    generateBundle() { this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify({ version: VERSION }) }); },
+  }],
+  define: { __VERSION__: JSON.stringify(VERSION) },
   resolve: { alias: { "@": path.resolve(__dirname, "src") } },
   server: {
     port: 5173,

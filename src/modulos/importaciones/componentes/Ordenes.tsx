@@ -13,6 +13,7 @@ import { InsigniaOC, type EstadoOC } from "@/modulos/compras/componentes/comun";
 import { CLAVE_EMBARQUES, type Embarque } from "./comun";
 import { GLOSARIO } from "@/tutorial/glosario";
 
+import { destinoPagina } from "@/lib/instalada";
 interface OCLibre { id: string; folio: string; proveedor: string; estado: EstadoOC; moneda: string; total: number | null; es_importacion: boolean; fecha: string }
 
 /**
@@ -77,7 +78,7 @@ export function Ordenes({ e }: { e: Embarque }) {
               <div className="flex items-center gap-1 ml-auto">
                 {puede("compras", 2) && (
                   <Boton asChild variante="secundario" tamano="sm" data-explain={GLOSARIO.ocContratoAduana}>
-                    <Link to={`/importaciones/oc/${o.id}/imprimir`} target="_blank"><Printer className="h-3.5 w-3.5" /> OC y contrato</Link>
+                    <Link to={`/importaciones/oc/${o.id}/imprimir`} target={destinoPagina()}><Printer className="h-3.5 w-3.5" /> OC y contrato</Link>
                   </Boton>
                 )}
                 {captura && <Boton variante="fantasma" tamano="sm" onClick={() => quitar.mutate(o.id)} title="Quitar del embarque"
