@@ -139,6 +139,7 @@ export const PRODUCCION: Record<string, Ayuda> = {
       "Al acabar toca «Terminar»; si dejan la orden a medias, «Pausar» y toca por qué.",
     ],
     detalle: [
+      "En cada tarjeta, «Planos» abre los planos de la orden (en Corte salen primero el corte y el programa de plasma) y «con faltante» enseña qué material no ha llegado, cuánto falta y si ya se pidió a compras.",
       "En la tablet se puede dejar como app: abre la terminal en el navegador, toca Compartir y luego «Agregar a inicio». Su ícono abre directo la terminal, a pantalla completa, y se actualiza sola cuando hay una versión nueva del ERP.",
       "Al pausar eliges con un toque por qué la dejan: falta material, esperan otra etapa o pieza, la máquina, una duda de ingeniería, retrabajo, los movieron a otra orden u otro. Con eso la gerencia ve qué detiene más al taller.",
       "La usan los encargados de piso. Sale lo que se trabaja en su etapa, en el orden de la cola que acomoda la gerencia en Cuadrillas o en el Gantt. Cada tarjeta dice primero la OP (la orden que se fabrica) y el equipo; abajo, más chico, el pedido y el cliente.",

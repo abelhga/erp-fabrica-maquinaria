@@ -1053,6 +1053,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 1: Toca «Iniciar» en una orden y marca quiénes la trabajan.",
    "Paso 2: Usa «Se une» o «Sale» cuando alguien entra o se va, sin detener la etapa.",
    "Paso 3: Al acabar toca «Terminar»; si dejan la orden a medias, «Pausar» y toca por qué.",
+   "En cada tarjeta, «Planos» abre los planos de la orden (en Corte salen primero el corte y el programa de plasma) y «con faltante» enseña qué material no ha llegado, cuánto falta y si ya se pidió a compras.",
    "En la tablet se puede dejar como app: abre la terminal en el navegador, toca Compartir y luego «Agregar a inicio». Su ícono abre directo la terminal, a pantalla completa, y se actualiza sola cuando hay una versión nueva del ERP.",
    "Al pausar eliges con un toque por qué la dejan: falta material, esperan otra etapa o pieza, la máquina, una duda de ingeniería, retrabajo, los movieron a otra orden u otro. Con eso la gerencia ve qué detiene más al taller.",
    "La usan los encargados de piso. Sale lo que se trabaja en su etapa, en el orden de la cola que acomoda la gerencia en Cuadrillas o en el Gantt. Cada tarjeta dice primero la OP (la orden que se fabrica) y el equipo; abajo, más chico, el pedido y el cliente.",
@@ -3609,6 +3610,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Baja la semana en un archivo para Excel: un renglón por persona con días pagados, horas extra, prima, bono, descuentos, préstamos y lo que se le paga. Es el que se le pasa al contador para ISR, IMSS y timbrado; si la semana sigue abierta, sale como borrador."
  },
  {
+  "clave": "botonFaltantesTerminal",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Enseña qué material de la orden todavía no está ni surtido ni apartado, cuánto falta de cada uno y si ya se pidió a compras. «Sin pedir» en rojo es lo que nadie ha pedido todavía. Es de toda la orden, no solo de tu etapa."
+ },
+ {
   "clave": "botonFamiliaMatriz",
   "modulos": [
    "analisis"
@@ -4165,6 +4174,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "La gente de Producción y cómo trabaja el taller: el área y la especialidad de cada quien y si entra a cuadrillas, cómo se cuentan las horas, el horario del taller y la capacidad por área. Solo la gerencia de producción."
+ },
+ {
+  "clave": "botonPlanosTerminal",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Abre los planos con los que se fabrica esta orden: el plano, el corte, el programa de plasma y lo demás que ingeniería ligó al equipo, cada uno con su revisión. Toca uno para abrirlo. Si sale un aviso rojo, ya hay una revisión más nueva que la que ingeniería revisó para esta orden: confirma con ingeniería antes de seguir."
  },
  {
   "clave": "botonPlayMto",

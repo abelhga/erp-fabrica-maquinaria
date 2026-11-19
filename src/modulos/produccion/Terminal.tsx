@@ -3,14 +3,15 @@ import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle, ArrowLeft, ArrowRightLeft, CheckCircle2, ChevronDown, Clock, Cog, HardHat, HelpCircle, Hourglass, LayoutGrid, Lightbulb, Loader2, LogOut, Minus, Moon,
-  PackageX, Pause, PenLine, Play, PlayCircle, Plus, RotateCcw, UserPlus, Users, X,
+  ExternalLink, FileText, PackageX, Pause, PenLine, Play, PlayCircle, Plus, RotateCcw, UserPlus, Users, X,
 } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { supabase } from "@/lib/supabase";
 import { mensajeError, q } from "@/lib/consultas";
 import { cn } from "@/lib/utilidades";
 import { useManifiesto, useQuiosco } from "@/lib/instalada";
-import { fecha } from "@/lib/formato";
+import { fecha, numero } from "@/lib/formato";
+import { TIPOS_DOC } from "@/components/planos/PlanosArticulo";
 import {
   CLAVE, cuandoAbre, useAsignaciones, useCuadrillas, useEtapas, useHorarioAhora, useHorasTaller, usePersonalPiso, usePiso, useProduccionEnVivo,
   type Etapa, type OperacionPiso, type PersonaPiso,
@@ -125,6 +126,21 @@ export default function Terminal() {
   // Primero el orden que dejó la gerencia en la cola de Cuadrillas; lo que nadie acomodó, por prioridad y fecha.
   const orden = (a: OperacionPiso, b: OperacionPiso) => (a.turno ?? 9999) - (b.turno ?? 9999) || a.prioridad - b.prioridad
     || (a.dias_restantes ?? 9999) - (b.dias_restantes ?? 9999);
+  // Los planos de las órdenes de esta etapa, en una sola consulta para todas las tarjetas.
+  const idsOrden = [...new Set(deEtapa.map((o) => o.orden_id))].sort();
+  const planos = useQuery({
+    queryKey: [...CLAVE, "planos_piso", idsOrden.join(",")], enabled: idsOrden.length > 0, staleTime: 5 * 60_000,
+    queryFn: () => q<PlanoOrden[]>(supabase.from("v_planos_orden")
+      .select("orden_id, documento_id, folio, revision, revision_vigente, tipo, titulo, drive_url, registrado_en").in("orden_id", idsOrden).order("folio")),
+  });
+  const planosDe = useMemo(() => {
+    const m = new Map<string, PlanoOrden[]>();
+    // En Corte lo primero es el corte y el programa de plasma; en las demás, el plano.
+    const peso = (t: string) => { const i = (/corte/i.test(etapa?.nombre ?? "") ? ORDEN_DOC_CORTE : ORDEN_DOC).indexOf(t); return i < 0 ? 99 : i; };
+    for (const d of planos.data ?? []) m.set(d.orden_id, [...(m.get(d.orden_id) ?? []), d]);
+    for (const l of m.values()) l.sort((a, b) => peso(a.tipo) - peso(b.tipo) || a.folio.localeCompare(b.folio));
+    return m;
+  }, [planos.data, etapa?.nombre]);
   const trabajando = deEtapa.filter((o) => o.estado !== "pendiente").sort(orden);
   const listas = deEtapa.filter((o) => o.estado === "pendiente" && o.lista).sort(orden);
   const despues = deEtapa.filter((o) => o.estado === "pendiente" && !o.lista).sort(orden);
@@ -203,9 +219,9 @@ export default function Terminal() {
               </div>
             ) : (
               <>
-                <Seccion titulo={fuera ? "Iniciadas (fuera de horario)" : "Trabajando ahora"} explica={GLOSARIO.terminalTrabajandoAhora} lista={trabajando} pedir={pedir} ahora={ahora} />
-                <Seccion titulo="Listas para empezar" explica={GLOSARIO.terminalListasParaEmpezar} lista={listas} pedir={pedir} ahora={ahora} />
-                <Seccion titulo="Todavía en otra etapa" explica={GLOSARIO.terminalEnOtraEtapa} ayuda="Se pueden empezar si hace falta" lista={despues} pedir={pedir} ahora={ahora} tenue />
+                <Seccion titulo={fuera ? "Iniciadas (fuera de horario)" : "Trabajando ahora"} explica={GLOSARIO.terminalTrabajandoAhora} lista={trabajando} pedir={pedir} ahora={ahora} planos={planosDe} />
+                <Seccion titulo="Listas para empezar" explica={GLOSARIO.terminalListasParaEmpezar} lista={listas} pedir={pedir} ahora={ahora} planos={planosDe} />
+                <Seccion titulo="Todavía en otra etapa" explica={GLOSARIO.terminalEnOtraEtapa} ayuda="Se pueden empezar si hace falta" lista={despues} pedir={pedir} ahora={ahora} planos={planosDe} tenue />
               </>
             )}
           </div>
@@ -270,8 +286,9 @@ function ElegirEtapa({ etapas, cargando, piso, alElegir }: { etapas: Etapa[]; ca
   );
 }
 
-function Seccion({ titulo, ayuda, explica, lista, pedir, ahora, tenue }: {
+function Seccion({ titulo, ayuda, explica, lista, pedir, ahora, tenue, planos }: {
   titulo: string; ayuda?: string; explica?: string; lista: OperacionPiso[]; pedir: (o: OperacionPiso, a: Accion) => void; ahora: number; tenue?: boolean;
+  planos: Map<string, PlanoOrden[]>;
 }) {
   if (lista.length === 0) return null;
   return (
@@ -280,13 +297,16 @@ function Seccion({ titulo, ayuda, explica, lista, pedir, ahora, tenue }: {
         {ayuda && <span className="block text-base font-normal text-tenue">{ayuda}</span>}</h2>
       {/* En un iPad acostado (1080 px) caben dos columnas; parado (810 px), una. */}
       <div className="grid gap-3 lg:grid-cols-2 items-start">
-        {lista.map((o) => <TarjetaPiso key={o.id} o={o} pedir={pedir} ahora={ahora} tenue={tenue} />)}
+        {lista.map((o) => <TarjetaPiso key={o.id} o={o} pedir={pedir} ahora={ahora} tenue={tenue} planos={planos.get(o.orden_id) ?? []} />)}
       </div>
     </section>
   );
 }
 
-function TarjetaPiso({ o, pedir, ahora, tenue }: { o: OperacionPiso; pedir: (o: OperacionPiso, a: Accion) => void; ahora: number; tenue?: boolean }) {
+function TarjetaPiso({ o, pedir, ahora, tenue, planos }: {
+  o: OperacionPiso; pedir: (o: OperacionPiso, a: Accion) => void; ahora: number; tenue?: boolean; planos: PlanoOrden[];
+}) {
+  const [viendo, setViendo] = useState<"planos" | "material" | null>(null);
   const tono = tonoCompromiso(o.dias_restantes);
   const botones: Accion[] = o.estado === "pendiente" ? ["inicio", "problema"] : o.estado === "en_proceso" ? ["pausa", "fin", "problema"] : ["reanudar", "fin", "problema"];
   return (
@@ -321,8 +341,27 @@ function TarjetaPiso({ o, pedir, ahora, tenue }: { o: OperacionPiso; pedir: (o: 
           {o.ultimo_problema && o.estado !== "pendiente" && (
             <p className="text-peligro flex gap-2"><AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" /><span>{o.ultimo_problema} <span className="text-tenue">({haceRato(o.ultimo_problema_en, ahora)})</span></span></p>
           )}
-          {o.materiales_faltantes > 0 && <p className="text-aviso flex gap-2" data-explain={GLOSARIO.faltanteMaterial} data-explain-title="Material con faltante"><PackageX className="h-5 w-5 shrink-0 mt-0.5" />{o.materiales_faltantes} material{o.materiales_faltantes === 1 ? "" : "es"} con faltante</p>}
+          {/* Lo que el encargado iba a buscar a otro lado: con qué plano se hace y qué material no ha llegado. */}
+          {(planos.length > 0 || o.materiales_faltantes > 0) && (
+            <div className="flex flex-wrap gap-2">
+              {planos.length > 0 && (
+                <button type="button" onClick={() => setViendo("planos")} className="h-11 rounded-xl border-2 border-borde px-3 flex items-center gap-2 font-medium"
+                        data-explain={GLOSARIO.botonPlanosTerminal} data-explain-title="Planos">
+                  <FileText className="h-5 w-5 shrink-0" />Planos <span className="text-tenue cifra">{planos.length}</span>
+                  {planos.some(planoCambio) && <AlertTriangle className="h-5 w-5 text-peligro shrink-0" aria-label="Hay una revisión nueva" />}
+                </button>
+              )}
+              {o.materiales_faltantes > 0 && (
+                <button type="button" onClick={() => setViendo("material")} className="h-11 rounded-xl border-2 border-aviso/50 text-aviso px-3 flex items-center gap-2 font-medium"
+                        data-explain={GLOSARIO.botonFaltantesTerminal} data-explain-title="Material con faltante">
+                  <PackageX className="h-5 w-5 shrink-0" />{o.materiales_faltantes} con faltante
+                </button>
+              )}
+            </div>
+          )}
         </div>
+        {viendo === "planos" && <PlanosDeOrden o={o} planos={planos} alCerrar={() => setViendo(null)} />}
+        {viendo === "material" && <MaterialFaltante o={o} alCerrar={() => setViendo(null)} />}
       </div>
 
       <div className={cn("shrink-0 grid gap-2 content-start md:w-40 lg:w-[8.25rem] xl:w-40 md:grid-cols-1", botones.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
@@ -337,6 +376,99 @@ function TarjetaPiso({ o, pedir, ahora, tenue }: { o: OperacionPiso; pedir: (o: 
         })}
       </div>
     </article>
+  );
+}
+
+interface PlanoOrden {
+  orden_id: string; documento_id: string; folio: string; revision: string; revision_vigente: string | null;
+  tipo: string; titulo: string; drive_url: string; registrado_en: string | null;
+}
+const ORDEN_DOC = ["plano", "corte", "programa_cnc", "ficha", "modelo_3d", "foto", "carpeta", "otro"];
+const ORDEN_DOC_CORTE = ["corte", "programa_cnc", "plano", "ficha", "modelo_3d", "foto", "carpeta", "otro"];
+/** La orden se revisó con una revisión y ya salió otra: hay que confirmar con ingeniería antes de seguir. */
+const planoCambio = (p: PlanoOrden) => !!p.registrado_en && !!p.revision_vigente && p.revision_vigente !== p.revision;
+
+/** Los planos con los que se fabrica esta orden; cada uno abre su archivo. */
+function PlanosDeOrden({ o, planos, alCerrar }: { o: OperacionPiso; planos: PlanoOrden[]; alCerrar: () => void }) {
+  return (
+    <Modal titulo={`Planos · ${folioCorto(o.folio)}`} alCerrar={alCerrar}>
+      <p className="text-tenue -mt-2 mb-4">{abreviarEquipo(o.equipo)}</p>
+      <div className="space-y-2">
+        {planos.map((p) => (
+          <a key={p.documento_id} href={p.drive_url} target="_blank" rel="noreferrer"
+             className={cn("flex items-center gap-3 rounded-2xl border-2 p-3 min-h-[64px] active:scale-[0.99] transition", planoCambio(p) ? "border-peligro/50 bg-peligro-suave/40" : "border-borde")}>
+            <span className="h-11 w-11 rounded-xl bg-fondo grid place-items-center font-bold shrink-0" aria-label={`Revisión ${p.revision}`}>{p.revision}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold leading-tight">{p.titulo}</span>
+              <span className="block text-base text-tenue">{TIPOS_DOC[p.tipo] ?? p.tipo} · <span className="cifra">{p.folio}</span></span>
+              {planoCambio(p) && <span className="block text-base text-peligro font-medium">Ya salió la revisión {p.revision_vigente}: confirma con ingeniería antes de seguir.</span>}
+            </span>
+            <ExternalLink className="h-6 w-6 text-marca-texto shrink-0" />
+          </a>
+        ))}
+      </div>
+      <p className="text-base text-tenue mt-4">Se abren desde Drive. Si pide iniciar sesión, avisa a tu encargado.</p>
+    </Modal>
+  );
+}
+
+interface Faltante {
+  id: string; clave: string; nombre: string; unidad: string; faltante: number; pedido_a_compras: number; tipo: string; categoria: string | null;
+}
+
+/** Qué material de la orden no está ni surtido ni apartado, y si ya se pidió a compras. */
+function MaterialFaltante({ o, alCerrar }: { o: OperacionPiso; alCerrar: () => void }) {
+  const mat = useQuery({
+    queryKey: [...CLAVE, "faltante_orden", o.orden_id],
+    queryFn: () => q<Faltante[]>(supabase.from("v_op_material")
+      .select("id, clave, nombre, unidad, faltante, pedido_a_compras, tipo, categoria").eq("orden_id", o.orden_id).gt("faltante", 0).order("nombre")),
+  });
+  const lista = mat.data ?? [];
+  const pedido = (m: Faltante) => Number(m.pedido_a_compras) >= Number(m.faltante) - 0.0005;
+  const grupos = useMemo(() => {
+    const g = new Map<string, Faltante[]>();
+    for (const m of lista) { const k = m.categoria ?? "Sin categoría"; g.set(k, [...(g.get(k) ?? []), m]); }
+    return [...g.entries()].sort(([a], [b]) => (a === "Sin categoría" ? 1 : b === "Sin categoría" ? -1 : a.localeCompare(b, "es")));
+  }, [lista]);
+  const sinPedir = lista.filter((m) => !pedido(m)).length;
+  return (
+    <Modal titulo={`Falta material · ${folioCorto(o.folio)}`} alCerrar={alCerrar}>
+      <p className="text-tenue -mt-2 mb-3">{abreviarEquipo(o.equipo)}</p>
+      {mat.isLoading ? <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin text-tenue" /></div>
+        : mat.error ? <p className="text-peligro">{mensajeError(mat.error)}</p>
+        : lista.length === 0 ? <p className="text-ok font-medium py-6 text-center">Ya no falta nada: todo está surtido o apartado.</p> : (
+        <>
+          <p className="mb-3">
+            <b>{lista.length}</b> {lista.length === 1 ? "material" : "materiales"}
+            {sinPedir > 0 ? <> · <span className="text-peligro font-semibold">{sinPedir} sin pedir a compras</span></> : <> · <span className="text-ok font-medium">todo ya se pidió a compras</span></>}
+          </p>
+          <div className="space-y-3">
+            {grupos.map(([grupo, filas]) => (
+              <section key={grupo}>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-tenue mb-1">{grupo} · {filas.length}</h3>
+                <ul className="divide-y divide-borde rounded-2xl border border-borde">
+                  {filas.map((m) => (
+                    <li key={m.id} className="flex items-start justify-between gap-3 px-3 py-2">
+                      <span className="min-w-0">
+                        <span className="block font-medium leading-snug">{m.nombre}</span>
+                        <span className="block text-sm text-tenue cifra">{m.clave}</span>
+                      </span>
+                      <span className="text-right shrink-0">
+                        <span className="block font-bold cifra whitespace-nowrap">{numero(m.faltante)} <span className="font-normal text-base text-tenue">{m.unidad}</span></span>
+                        <span className={cn("block text-sm whitespace-nowrap", m.tipo === "servicio" ? "text-tenue" : pedido(m) ? "text-ok" : "text-peligro font-medium")}>
+                          {m.tipo === "servicio" ? (pedido(m) ? "Servicio · ya pedido" : "Servicio · sin pedir") : pedido(m) ? "Ya pedido a compras" : "Sin pedir"}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+          <p className="text-base text-tenue mt-4">Lo surte almacén cuando llega. Si te detiene, pausa la orden y elige «Falta material».</p>
+        </>
+      )}
+    </Modal>
   );
 }
 
