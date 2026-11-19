@@ -6,6 +6,7 @@ import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
 import { Insignia } from "@/components/ui/insignia";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
+import { useSearchParams } from "react-router-dom";
 import { Pestanas, ListaPestanas, ContenidoPestana } from "@/components/ui/pestanas";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { SERIE, TooltipGrafica, ejeProps } from "@/components/graficas/comunes";
@@ -37,7 +38,9 @@ function agrupar(filas: FilaCobranza[], clave: (f: FilaCobranza) => string, nomb
 }
 
 export default function Cobranza() {
-  const [vistaElegida, setVista] = useState<string | null>(null);
+  // «?vista=arranque&cliente=…» llega desde un pedido de la hoja: abre de una vez el saldo de ese cliente.
+  const [parametros] = useSearchParams();
+  const [vistaElegida, setVista] = useState<string | null>(parametros.get("vista"));
   const { puede } = useSesion();
   const [complementos, setComplementos] = useState(false);
   const [rango, setRango] = useState<Rango | "todos">("todos");
