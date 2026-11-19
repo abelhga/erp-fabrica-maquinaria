@@ -132,6 +132,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
     detalle: [
       "La agenda enseña lo vencido primero y lo que viene en las próximas 4 semanas, sumado por proveedor cada semana. La cuenta de cada proveedor trae sus facturas pendientes, todos sus movimientos (los de la hoja y los de aquí) y el botón para registrar un pago.",
       "Al pagar, si no eliges factura, el pago va a las que vencen primero. Pagar de más solo se puede como anticipo.",
+      "Un anticipo se marca al registrarlo: queda a favor del proveedor y se descuenta de sus facturas de contado. No paga las facturas a crédito: esas siguen en «por pagar» y en vencidas hasta que se paguen, y la cuenta muestra aparte «Por pagar» y «A favor».",
       "Cada factura que llega (material, flete, luz, servicio) se registra con «Registrar compra o gasto»: el XML llena proveedor (por su RFC), folio, total y fecha, y puedes subir varios a la vez. Si no tienes el XML, sube el PDF o una foto: la IA la lee, y tú revisas los datos antes de registrar.",
       "Si la factura dice que es de contado, marca «Ya se pagó (de contado)» y elige la cuenta. Si el proveedor no existe, se da de alta ahí mismo con su RFC.",
       "Si el proveedor tiene órdenes de compra, el formulario te pregunta de cuál es la factura; ya viene marcada la que casa con el folio que anotó almacén al recibir. En la cuenta del proveedor, el botón del portapapeles en cada compra cambia de qué orden es.",
