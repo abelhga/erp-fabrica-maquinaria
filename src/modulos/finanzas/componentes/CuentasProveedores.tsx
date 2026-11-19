@@ -24,7 +24,8 @@ import { DialogoLigarOrdenes } from "./ElegirOrdenes";
 
 /**
  * Cuenta de cada proveedor: lo que venía en el libro de compras de la hoja más lo que se
- * registra en el ERP. Positivo: le debemos; negativo: anticipo o reembolso a favor.
+ * registra en el ERP. Lo que hay por pagar y lo que hay a favor van aparte: un anticipo sin usar
+ * no tapa una factura a crédito, así que un proveedor puede tener las dos cosas a la vez.
  */
 export function CuentasProveedores({ cuentas, cargando, error, alAbrir, vistaInicial = "debemos" }: {
   cuentas: CuentaProveedor[]; cargando: boolean; error: unknown; alAbrir: (llave: string) => void;
@@ -33,19 +34,23 @@ export function CuentasProveedores({ cuentas, cargando, error, alAbrir, vistaIni
   const [vista, setVista] = useState(vistaInicial);
   useEffect(() => setVista(vistaInicial), [vistaInicial]);
   // Préstamos de socios y créditos de banco van aparte: no son deuda con proveedores.
-  const debemos = cuentas.filter((f) => Number(f.saldo) > 1 && !esPrestamo(f.tipo_acreedor));
-  const socios = cuentas.filter((f) => Number(f.saldo) > 1 && esPrestamo(f.tipo_acreedor));
-  const favor = cuentas.filter((f) => Number(f.saldo) < -1);
-  const suma = (fs: CuentaProveedor[]) => fs.reduce((s, f) => s + Number(f.saldo), 0);
+  const debemos = cuentas.filter((f) => Number(f.por_pagar) > 1 && !esPrestamo(f.tipo_acreedor));
+  const socios = cuentas.filter((f) => Number(f.por_pagar) > 1 && esPrestamo(f.tipo_acreedor));
+  const favor = cuentas.filter((f) => Number(f.a_favor) > 1);
+  // En «A nuestro favor» y «Todos» se suma el saldo; donde se debe, lo que hay por pagar.
+  const cifra = (f: CuentaProveedor) => (vista === "favor" ? -Number(f.a_favor) : vista === "todos" ? Number(f.saldo) : Number(f.por_pagar));
+  const suma = (fs: CuentaProveedor[]) => fs.reduce((s, f) => s + cifra(f), 0);
   const filas = (vista === "debemos" ? debemos : vista === "socios" ? socios : vista === "favor" ? favor : cuentas).slice()
-    .sort((a, b) => (vista === "favor" ? Number(a.saldo) - Number(b.saldo) : Number(b.saldo) - Number(a.saldo)));
+    .sort((a, b) => (vista === "favor" ? cifra(a) - cifra(b) : cifra(b) - cifra(a)));
 
   const columnas: Columna<CuentaProveedor>[] = [
     { clave: "nombre", titulo: "Proveedor", clase: "min-w-[200px] max-w-[340px]",
       celda: (f) => <div><p className="font-medium break-words">{f.nombre}</p>
         {(f.tipo_acreedor !== "proveedor" || f.categoria) && <p className="text-xs text-tenue">{f.tipo_acreedor !== "proveedor" ? TIPO_ACREEDOR[f.tipo_acreedor] : f.categoria}</p>}</div> },
-    { clave: "saldo", titulo: "Saldo", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.saldo), explica: GLOSARIO.saldoProveedor,
-      celda: (f) => <b className={Number(f.saldo) < -1 ? "text-info" : ""}>{dinero(f.saldo)}</b> },
+    { clave: "saldo", titulo: vista === "favor" ? "A favor" : vista === "todos" ? "Saldo" : "Por pagar", alinear: "der", sinBusqueda: true, valor: cifra, explica: GLOSARIO.saldoProveedor,
+      celda: (f) => <div><b className={cifra(f) < -1 ? "text-info" : ""}>{dinero(cifra(f))}</b>
+        {vista !== "favor" && Number(f.a_favor) > 1 && <p className="text-xs text-info whitespace-nowrap" data-explain={GLOSARIO.aFavorProveedor} data-explain-title="A favor">{dinero(f.a_favor)} a favor</p>}
+        {vista === "favor" && Number(f.por_pagar) > 1 && <p className="text-xs text-tenue whitespace-nowrap">y se le deben {dinero(f.por_pagar)}</p>}</div> },
     { clave: "vencido", titulo: "Vencido", alinear: "der", sinBusqueda: true, valor: (f) => Number(f.vencido), explica: GLOSARIO.vencePago,
       celda: (f) => Number(f.vencido) > 1 ? <span className="text-peligro font-medium">{dinero(f.vencido)}</span> : <span className="text-tenue">—</span> },
     { clave: "proximo_vence", titulo: "Próximo vencimiento", explica: GLOSARIO.vencePago, sinBusqueda: true, valor: (f) => f.proximo_vence ?? "9999",
@@ -64,7 +69,7 @@ export function CuentasProveedores({ cuentas, cargando, error, alAbrir, vistaIni
         { valor: "favor", texto: "A nuestro favor", cuenta: favor.length, explica: GLOSARIO.filtroAFavorProveedor },
         { valor: "todos", texto: "Todos", cuenta: cuentas.length },
       ]} />}
-      pie={filas.length > 0 && <div className="flex justify-end gap-6 text-sm"><span className="text-tenue">Saldo de lo que se ve:</span><b className="cifra">{dinero(suma(filas))}</b></div>}
+      pie={filas.length > 0 && <div className="flex justify-end gap-6 text-sm"><span className="text-tenue">{vista === "favor" ? "A favor" : vista === "todos" ? "Saldo" : "Por pagar"} de lo que se ve:</span><b className="cifra">{dinero(suma(filas))}</b></div>}
       vacio={{ icono: Users, titulo: vista === "favor" ? "Ningún saldo a favor" : vista === "socios" ? "Sin préstamos de socios ni créditos" : "No le debemos a nadie",
         texto: "Aquí aparece cada proveedor con lo que se le debe. Registra una compra con «Registrar compra o gasto» (arriba) y su cuenta empieza." }} />
   );
@@ -149,7 +154,12 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
         <Boton variante="secundario" data-explain={GLOSARIO.botonRegistrarCompraGasto} data-explain-title="Registrar compra o gasto" onClick={() => alRegistrarCompra({ id: cuenta.proveedor_id!, nombre: cuenta.nombre })}><FilePlus2 className="h-4 w-4" /> Compra</Boton>
       )}
       subtitulo={cuenta && <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span>Saldo <b className="cifra text-texto">{dinero(cuenta.saldo)}</b></span>
+        {Number(cuenta.a_favor) > 1
+          ? <>
+            <span>Por pagar <b className="cifra text-texto">{dinero(cuenta.por_pagar)}</b></span>
+            <span className="text-info" data-explain={GLOSARIO.aFavorProveedor} data-explain-title="A favor">A favor <b className="cifra">{dinero(cuenta.a_favor)}</b></span>
+          </>
+          : <span>Saldo <b className="cifra text-texto">{dinero(cuenta.saldo)}</b></span>}
         {Number(cuenta.vencido) > 1 && <span className="text-peligro">Vencido {dinero(cuenta.vencido)}</span>}
         {cuenta.tipo_acreedor !== "proveedor" && <span data-explain={GLOSARIO.sociosBancos} data-explain-title={TIPO_ACREEDOR[cuenta.tipo_acreedor]}><Insignia tono="info">{TIPO_ACREEDOR[cuenta.tipo_acreedor]}</Insignia></span>}
         {cuenta.proveedor_id && prov.data && <Credito proveedorId={cuenta.proveedor_id} dias={prov.data.dias_credito} editable={editable} />}
@@ -166,7 +176,7 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
       )}
       {cuenta && editable && cuenta.proveedor_id && (pagando
         ? <RegistrarPagoProveedor cuenta={cuenta} vencido={Number(cuenta.vencido)} facturas={facturas} banco={prov.data?.datos_bancarios ?? null} alTerminar={() => setPagando(false)} />
-        : Number(cuenta.saldo) > 0.5 && <Boton className="mb-5 w-full sm:w-auto" data-explain={GLOSARIO.botonRegistrarPagoProveedor} onClick={() => setPagando(true)}><Wallet className="h-4 w-4" /> Registrar pago</Boton>)}
+        : <Boton className="mb-5 w-full sm:w-auto" data-explain={GLOSARIO.botonRegistrarPagoProveedor} onClick={() => setPagando(true)}><Wallet className="h-4 w-4" /> Registrar pago</Boton>)}
 
       {facturas.length > 0 && (
         <div className="mb-5">
@@ -276,26 +286,28 @@ function Credito({ proveedorId, dias, editable }: { proveedorId: string; dias: n
 
 /**
  * Un pago se aplica a la factura que se elija o, si no, a las que vencen primero (como la
- * hoja: el pago dice qué factura paga). Pagar de más solo como anticipo.
+ * hoja: el pago dice qué factura paga). Un anticipo se marca a propósito: queda a favor y se
+ * descuenta de las facturas de contado, no de las que son a crédito. Pagar de más solo como anticipo.
  */
 function RegistrarPagoProveedor({ cuenta, vencido, facturas, banco, alTerminar }: {
   cuenta: CuentaProveedor; vencido: number; facturas: FacturaPendiente[]; banco: string | null; alTerminar: () => void;
 }) {
-  const saldo = Number(cuenta.saldo);
+  // Contra lo que hay por pagar, no contra el saldo: con anticipo a favor el saldo es menor.
+  const saldo = Number(cuenta.por_pagar);
   const [f, setF] = useState({ fecha: hoyISO(), monto: "", cuenta: "", referencia: "", anticipo: false, factura: "" });
   const conFolio = facturas.filter((x) => x.factura);
   const monto = Number(f.monto) || 0;
   const demas = monto > saldo + 0.5;
   const guardar = useAccion(() => q(supabase.rpc("registrar_movimiento_proveedor", {
     p_proveedor: cuenta.proveedor_id, p_tipo: "pago", p_monto: monto, p_fecha: f.fecha, p_cuenta: f.cuenta,
-    p_descripcion: f.referencia.trim() || null, p_anticipo: demas && f.anticipo, p_factura: f.factura || null,
+    p_descripcion: f.referencia.trim() || null, p_anticipo: f.anticipo, p_factura: f.anticipo ? null : f.factura || null,
   })), { exito: "Pago registrado", invalidar: INVALIDAR_PROVEEDORES, alTerminar });
   function enviar(e: FormEvent) { e.preventDefault(); if (monto > 0 && f.cuenta && (!demas || f.anticipo)) guardar.mutate(undefined); }
   return (
     <form onSubmit={enviar} className="mb-5 rounded-xl border border-borde bg-fondo/50 p-3 grid gap-3 sm:grid-cols-2">
       <p className="sm:col-span-2 font-medium text-sm">Registrar pago</p>
       <Campo etiqueta="Monto (con IVA)" className="sm:col-span-2"
-        ayuda={demas ? `Es más de lo que se le debe (${dinero(saldo)}).` : monto > 0 && monto < saldo - 0.5 ? `Queda un saldo de ${dinero(saldo - monto)}` : monto > 0 ? "Liquida la cuenta" : undefined}>
+        ayuda={demas && !f.anticipo ? `Es más de lo que hay por pagar (${dinero(saldo)}). Registra eso como pago y lo demás aparte, como anticipo.` : f.anticipo ? undefined : monto > 0 && monto < saldo - 0.5 ? `Queda un saldo de ${dinero(saldo - monto)}` : monto > 0 ? "Liquida la cuenta" : undefined}>
         <div className="flex flex-wrap gap-2">
           <Entrada autoFocus type="number" step="0.01" min="0" value={f.monto} onChange={(e) => setF({ ...f, monto: e.target.value })}
             className="cifra flex-1 min-w-[140px]" placeholder={saldo.toFixed(2)} required />
@@ -303,13 +315,13 @@ function RegistrarPagoProveedor({ cuenta, vencido, facturas, banco, alTerminar }
           <Boton type="button" variante="secundario" data-explain={GLOSARIO.botonesMontoPagoProveedor} onClick={() => setF({ ...f, monto: saldo.toFixed(2) })}>Todo</Boton>
         </div>
       </Campo>
-      {demas && (
-        <label className="sm:col-span-2 flex items-start gap-2 text-sm" data-explain={GLOSARIO.anticipo}>
-          <input type="checkbox" checked={f.anticipo} onChange={(e) => setF({ ...f, anticipo: e.target.checked })} className="h-4 w-4 mt-0.5 accent-[hsl(var(--marca))]" />
-          Es un anticipo: lo que sobra queda a nuestro favor ({dinero(monto - saldo)})
-        </label>
-      )}
-      {conFolio.length > 0 && (
+      <label className="sm:col-span-2 flex items-start gap-2 text-sm" data-explain={GLOSARIO.anticipo} data-explain-title="Anticipo">
+        <input type="checkbox" checked={f.anticipo} onChange={(e) => setF({ ...f, anticipo: e.target.checked, factura: "" })} className="h-4 w-4 mt-0.5 accent-[hsl(var(--marca))]" />
+        <span>Es un anticipo
+          <span className="block text-xs text-tenue">Queda a nuestro favor y se descuenta de sus facturas de contado. No paga las facturas a crédito: esas se pagan una por una.</span>
+        </span>
+      </label>
+      {!f.anticipo && conFolio.length > 0 && (
         <Campo etiqueta="Factura que paga" className="sm:col-span-2" ayuda={f.factura ? undefined : "Si no eliges, se aplica a las que vencen primero."}>
           <Seleccion value={f.factura} data-explain={GLOSARIO.facturasPendientes} data-explain-title="Factura que paga" onChange={(e) => {
             const x = conFolio.find((c) => c.factura === e.target.value);

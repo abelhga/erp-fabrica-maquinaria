@@ -24,6 +24,8 @@ export interface CuentaProveedor {
   adeudo_2021: number | null; comprado: number | null; pagado: number | null; saldo_hoja: number;
   comprado_erp: number; pagado_erp: number; saldo: number;
   ultima_compra: string | null; ultimo_pago: string | null; movimientos: number; vencido: number; proximo_vence: string | null;
+  /** Lo que falta pagar de sus facturas y, aparte, lo que hay a favor (un anticipo sin usar). saldo = por_pagar − a_favor. */
+  por_pagar: number; a_favor: number;
 }
 
 /** Una factura (de la hoja o del ERP) con lo que falta pagarle. */

@@ -689,6 +689,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 3: En su cuenta, dale «Registrar pago» y, si quieres, elige qué factura liquidas.",
    "La agenda enseña lo vencido primero y lo que viene en las próximas 4 semanas, sumado por proveedor cada semana. La cuenta de cada proveedor trae sus facturas pendientes, todos sus movimientos (los de la hoja y los de aquí) y el botón para registrar un pago.",
    "Al pagar, si no eliges factura, el pago va a las que vencen primero. Pagar de más solo se puede como anticipo.",
+   "Un anticipo se marca al registrarlo: queda a favor del proveedor y se descuenta de sus facturas de contado. No paga las facturas a crédito: esas siguen en «por pagar» y en vencidas hasta que se paguen, y la cuenta muestra aparte «Por pagar» y «A favor».",
    "Cada factura que llega (material, flete, luz, servicio) se registra con «Registrar compra o gasto»: el XML llena proveedor (por su RFC), folio, total y fecha, y puedes subir varios a la vez. Si no tienes el XML, sube el PDF o una foto: la IA la lee, y tú revisas los datos antes de registrar.",
    "Si la factura dice que es de contado, marca «Ya se pagó (de contado)» y elige la cuenta. Si el proveedor no existe, se da de alta ahí mismo con su RFC.",
    "Si el proveedor tiene órdenes de compra, el formulario te pregunta de cuál es la factura; ya viene marcada la que casa con el folio que anotó almacén al recibir. En la cuenta del proveedor, el botón del portapapeles en cada compra cambia de qué orden es.",
@@ -1986,6 +1987,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Días tomados antes de que empiece el periodo al que se cargan: cuando ya no le queda nada vigente, o antes de su primer año. Se descuentan de ese periodo cuando llega (en la hoja se anotaban como «proporcionales»)."
  },
  {
+  "clave": "aFavorProveedor",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Dinero que ya le dimos al proveedor y todavía no se usa: un anticipo, o un pago de más. Un anticipo se descuenta solo de las facturas de contado (las que el proveedor factura contra el anticipo). No cubre las facturas a crédito: esas siguen saliendo por pagar y en vencidas hasta que se paguen."
+ },
+ {
   "clave": "agendaPagos",
   "modulos": [
    "rrhh",
@@ -2254,7 +2267,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Un pago mayor a lo que se le debe al proveedor. Lo que sobra queda a nuestro favor y se descuenta de su siguiente factura. Se marca a propósito, para que un cero de más no se vuelva un anticipo."
+  "texto": "Dinero que se le da al proveedor antes de que facture. Queda a nuestro favor y se descuenta de sus facturas de contado conforme llegan; no paga las facturas a crédito, que se pagan una por una. Se marca a propósito, para que un cero de más no se vuelva un anticipo; sin marcarlo no se puede pagar más de lo que hay por pagar."
  },
  {
   "clave": "antiguedadCobranza",
@@ -4634,7 +4647,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Anota un pago a este proveedor: cuánto, de qué cuenta salió y, si quieres, qué factura paga. Si no eliges factura, se aplica a las que vencen primero. Pagar más de lo que se le debe solo se puede marcándolo como anticipo."
+  "texto": "Anota un pago a este proveedor: cuánto, de qué cuenta salió y, si quieres, qué factura paga. Si no eliges factura, se aplica a las que vencen primero. Si es un anticipo, márcalo: queda a favor y no paga facturas a crédito. Pagar más de lo que hay por pagar solo se puede marcándolo como anticipo."
  },
  {
   "clave": "botonRegistrarSueldo",
@@ -8588,7 +8601,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Cada factura que sigue sin pagar y cuánto le falta. Un pago que dice qué factura paga se aplica a esa; uno que no lo dice, a la que vence primero: si le pagaste 10 mil a un proveedor sin decir cuál, se liquidan sus facturas más viejas hasta donde alcance."
+  "texto": "Cada factura que sigue sin pagar y cuánto le falta. Un pago que dice qué factura paga se aplica a esa; uno que no lo dice, a la que vence primero: si le pagaste 10 mil a un proveedor sin decir cuál, se liquidan sus facturas más viejas hasta donde alcance. Un anticipo solo se descuenta de las facturas de contado: una factura a crédito sigue aquí hasta que se le pague."
  },
  {
   "clave": "fallasMaquinaPeriodo",
@@ -8811,7 +8824,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Proveedores que nos deben a nosotros: les pagamos de más como anticipo o tienen una nota de crédito por aplicar. Lo que tenemos a favor se va contra su siguiente factura."
+  "texto": "Proveedores con algo a nuestro favor: un anticipo sin usar, un pago de más o una nota de crédito por aplicar. Un anticipo se va contra sus siguientes facturas de contado; si además se le debe una factura a crédito, sale debajo."
  },
  {
   "clave": "filtroAlmacenExistencias",
@@ -14573,7 +14586,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Lo que le debemos a cada proveedor: lo que venía en la hoja más las compras registradas aquí, menos los pagos. Negativo = nos debe él (un anticipo o un reembolso)."
+  "texto": "Lo que le debemos a cada proveedor: lo que venía en la hoja más las compras registradas aquí, menos los pagos. Se muestra lo que falta pagar de sus facturas; si además hay algo a favor (un anticipo sin usar o un reembolso), sale aparte debajo, porque no paga las facturas a crédito."
  },
  {
   "clave": "saldoSkydropx",

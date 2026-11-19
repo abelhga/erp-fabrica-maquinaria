@@ -91,15 +91,17 @@ begin
     'el crédito no movió el vencimiento de la hoja';
   perform fijar_credito_proveedor(v_prov, 30);
 
-  -- En todos los proveedores, lo pendiente factura por factura suma su saldo (lo que se le
-  -- debe), también con saldos a favor desde 2021 y pagos de más.
+  -- En todos los proveedores, lo pendiente factura por factura suma lo que hay por pagar, y eso
+  -- nunca es menos que su saldo (también con saldos a favor desde 2021 y pagos de más). Desde 303
+  -- puede ser más: un anticipo no cubre una factura a crédito del ERP y queda a favor.
   perform pg_temp.como_postgres();
   insert into historial_compras_hoja (fecha, proveedor_id, proveedor_nombre, proveedor_llave, tipo, monto, factura) values
     ('2021-12-31', v_nuevo, 'T101 CFE', 't101 cfe', 'Adeudo 2021', -50, null);
   perform pg_temp.como(v_fin);
   assert not exists (select 1 from v_saldo_arranque_proveedores x
     left join (select proveedor_llave, sum(restante) r from v_compras_proveedor_pendientes group by 1) p using (proveedor_llave)
-    where abs(greatest(x.saldo, 0) - coalesce(p.r, 0)) > 0.01), 'lo pendiente por factura no suma el saldo del proveedor';
+    where abs(x.por_pagar - coalesce(p.r, 0)) > 0.01 or x.por_pagar < greatest(x.saldo, 0) - 0.01
+       or abs(x.por_pagar - x.a_favor - x.saldo) > 0.01), 'lo pendiente por factura no cuadra con la cuenta del proveedor';
 
   -- Cobro a un saldo de cliente de la hoja: baja el saldo, no deja cobrar de más.
   v_c := registrar_cobro_saldo_hoja(v_cli, 3000, 'santander_fiscal', null, 'Transferencia');
