@@ -78,7 +78,14 @@ export default function DetallePedido() {
   const navegar = useNavigate();
   const producir = useAccion(() => q<number>(supabase.rpc("ordenes_desde_pedido", { p_pedido: id })), {
     exito: (n) => (n ? `Se crearon ${n} orden(es) de producción` : "No hay equipos con lista de materiales sin orden en este pedido"),
-    invalidar: [...inv, ["ordenes_pedido", id], ["v_tablero_produccion"]],
+    invalidar: [...inv, ["ordenes_pedido", id], ["v_tablero_produccion"], ["v_pedidos_por_producir"]],
+  });
+  // Un pedido de la hoja trae sus partidas en texto libre y sus órdenes cargadas a mano: ahí el botón
+  // de producción solo sale si alguna partida ya se ligó a un equipo del catálogo que sigue sin orden
+  // (el silo que se fabrica cuando el cliente reanude sus pagos). Es la misma lista que ve Producción.
+  const porProducir = useQuery({
+    queryKey: ["v_pedidos_por_producir", "pedido", id], enabled: !!ped.data?.historico && puede("produccion", 2),
+    queryFn: () => q<{ unidades: number } | null>(supabase.from("v_pedidos_por_producir").select("unidades").eq("id", id!).maybeSingle()),
   });
   const agregar = useAccion((a: { id: string; precio?: number }) =>
     q(supabase.rpc("agregar_partida_pedido", { p_pedido: id, p_articulo: a.id, p_cantidad: 1, p_precio: a.precio ?? null })),
@@ -140,7 +147,7 @@ export default function DetallePedido() {
         {vendedor.data && <> · {vendedor.data.nombre}</>}
       </span>}
       acciones={(!p.historico || abierto) && <>
-        {!p.historico && puede("produccion", 2) && ["confirmado", "en_produccion"].includes(p.estado) && (
+        {(!p.historico || (porProducir.data?.unidades ?? 0) > 0) && puede("produccion", 2) && ["confirmado", "en_produccion"].includes(p.estado) && (
           <Boton variante="secundario" onClick={() => producir.mutate(undefined)} cargando={producir.isPending} data-explain={GLOSARIO.botonMandarProduccion}><Factory className="h-4 w-4" />Mandar a producción</Boton>
         )}
         {puedeCambiar && ["confirmado", "en_produccion"].includes(p.estado) && (
