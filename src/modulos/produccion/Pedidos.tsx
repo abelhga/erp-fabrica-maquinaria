@@ -17,6 +17,7 @@ import { BarraAvance, InsigniaCompromiso } from "./componentes/piezas";
 import { ESTADO_OP, abreviarEquipo } from "./componentes/util";
 import { CLAVE } from "./componentes/datos";
 import { DialogoRegresarStock } from "./componentes/DialogosOrden";
+import { useCrearOrdenesPedido } from "./componentes/CrearOrdenesPedido";
 import { GanttCompacto } from "./Gantt";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { DescripcionVenta, abrirDescripcion } from "./componentes/DescripcionVenta";
@@ -163,7 +164,7 @@ export default function PedidosPlanta() {
 }
 
 function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenStock[]; gerencia: boolean }) {
-  const crear = useAccion(() => q<number>(supabase.rpc("ordenes_desde_pedido", { p_pedido: p.id })), {
+  const crear = useCrearOrdenesPedido({
     exito: (n) => n ? `${n} orden(es) creadas para ${p.folio}` : "No había equipos con lista de materiales por ordenar",
     invalidar: [CLAVE_PED, CLAVE],
   });
@@ -213,7 +214,7 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
         {gerencia && activo && p.sin_orden > 0 && (
           // Mientras crea, el botón se deshabilita y Chrome no le da el mouse: la explicación va afuera.
           <span className="ml-auto inline-flex" data-explain={GLOSARIO.botonCrearOrdenesFaltantes} data-explain-title="Crear las órdenes que faltan">
-            <Boton tamano="sm" onClick={() => crear.mutate(undefined)} cargando={crear.isPending}>
+            <Boton tamano="sm" onClick={() => crear.pedir(p.id)} cargando={crear.ocupado === p.id}>
               <ClipboardPlus className="h-3.5 w-3.5" /> Crear las órdenes que faltan
             </Boton>
           </span>
@@ -309,6 +310,7 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
           <GanttCompacto ordenes={enTaller.map((o) => o.id)} alAbrir={(op) => navegar(`/produccion/ordenes/${op}`)} />
         </div>
       )}
+      {crear.dialogo}
       {gerencia && <DialogoRegresarStock orden={regresar} pedido={p.folio} alCerrar={() => setRegresar(null)} invalidar={[CLAVE_PED]} />}
     </div>
   );

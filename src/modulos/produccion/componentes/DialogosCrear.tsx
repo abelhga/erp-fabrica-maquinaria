@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { fecha, hoyISO } from "@/lib/formato";
 import { CLAVE } from "./datos";
+import { useCrearOrdenesPedido } from "./CrearOrdenesPedido";
 import { tonoCompromiso, textoDias } from "./util";
 import { GLOSARIO } from "@/tutorial/glosario";
 
@@ -32,7 +33,7 @@ export function DialogoDesdePedido({ abierto, alCambiar }: { abierto: boolean; a
     enabled: abierto,
     queryFn: () => q<PedidoPorProducir[]>(supabase.from("v_pedidos_por_producir").select("*").order("fecha_compromiso", { nullsFirst: false })),
   });
-  const crear = useAccion((id: string) => q<number>(supabase.rpc("ordenes_desde_pedido", { p_pedido: id })), {
+  const crear = useCrearOrdenesPedido({
     exito: (n) => (n === 1 ? "Se creó 1 orden de producción" : `Se crearon ${n} órdenes de producción`),
     invalidar: [CLAVE],
   });
@@ -60,8 +61,8 @@ export function DialogoDesdePedido({ abierto, alCambiar }: { abierto: boolean; a
                   </div>
                   {/* En envoltorio: sin equipos con lista de materiales el botón está deshabilitado y no recibe el mouse. */}
                   <span className="inline-flex" data-explain={GLOSARIO.botonCrearOrdenesFaltantes} data-explain-title="Crear órdenes">
-                    <Boton tamano="sm" disabled={p.unidades === 0} cargando={crear.isPending && crear.variables === p.id}
-                           onClick={() => crear.mutate(p.id)}>
+                    <Boton tamano="sm" disabled={p.unidades === 0} cargando={crear.ocupado === p.id}
+                           onClick={() => crear.pedir(p.id)}>
                       {p.unidades === 0 ? "Nada que crear" : p.unidades === 1 ? "Crear 1 orden" : `Crear ${p.unidades} órdenes`}
                     </Boton>
                   </span>
@@ -82,6 +83,7 @@ export function DialogoDesdePedido({ abierto, alCambiar }: { abierto: boolean; a
           })}
         </div>
       )}
+      {crear.dialogo}
     </Dialogo>
   );
 }
