@@ -964,7 +964,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 3: Para crear, usa «Crear órdenes desde pedido», u «Orden para stock» si no tiene cliente.",
    "La usan la gerencia, almacén e ingeniería. Los renglones en rojo están atrasados; «En espera» en lugar de la fecha quiere decir que la orden está detenida (pasa el mouse para ver por qué).",
    "Debajo del material van tres palomitas: Ing. (ingeniería revisó la lista), Apartado (se apartó el material) y Alm. (almacén revisó la existencia física).",
-   "«Crear órdenes desde pedido» muestra los pedidos confirmados que todavía tienen equipos por producir (el número del botón) y «Orden para stock» crea una sin cliente.",
+   "«Crear órdenes desde pedido» muestra los pedidos confirmados que todavía tienen equipos por producir (el número del botón) y «Orden para stock» crea una sin cliente. Si de alguno de esos equipos ya hay uno igual para stock, antes de crear nada te lo enseña: con «Usar este» se asigna al pedido, y con «Fabricar nuevos de todos modos» se crean las órdenes y el de stock se queda en stock.",
    "Cada orden copia la lista de materiales del equipo al crearse, así un cambio posterior al catálogo no la mueve. Cada orden de un equipo saca su número de serie sola, si el equipo ya tiene código."
   ]
  },
@@ -1017,7 +1017,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "«Activos» son los confirmados, en producción y listos para entregar; «Sin orden», los que tienen equipos que nadie está fabricando todavía. Las ventas de Mercado Libre que no llevan nada que fabricar no salen ahí: están en «Mercado Libre», y su envío se lleva en Almacén → Envíos.",
    "Al abrir un pedido ves sus partidas y las órdenes de cada una, con su avance. Hasta abajo, «Plan del taller» es el Gantt de los equipos del pedido: cuándo entra y sale cada uno de cada área.",
    "La gerencia crea desde aquí las órdenes que faltan. Si hay un equipo igual (la misma clave) hecho o en proceso para stock, sale «Usar OP-…»: se asigna al pedido con un clic y ya no se fabrica otro. Así se reemplaza la «S-» de la hoja.",
-   "Usa primero «Usar» y después crea las que falten: una orden creada antes ocupa la partida y «Usar» ya no sale. Si te equivocas de orden, o el cliente cancela, la flecha junto a la orden la regresa a stock.",
+   "Usa primero «Usar» y después crea las que falten: una orden creada antes ocupa la partida y «Usar» ya no sale. Si se te pasa, al crear las órdenes sale un aviso con los equipos iguales que hay para stock, y ahí mismo los puedes usar. Si te equivocas de orden, o el cliente cancela, la flecha junto a la orden la regresa a stock.",
    "Las partidas de texto, como una instalación, dicen «No se fabrica».",
    "«Imprimir descripción» saca en una hoja lo que se vendió, partida por partida, para el taller (sin precios).",
    "Almacén entrega desde aquí: en el pedido, «Hoja de salida» imprime lo que firma el cliente (sin precios) y «Entregar» pide quién recibió y, si la tienes, la foto de la hoja firmada. Si fue un error, «Deshacer» en el aviso durante 15 minutos."
@@ -3282,7 +3282,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Crea una orden de producción por cada equipo vendido que todavía no tiene, con su lista de materiales y la fecha compromiso del pedido. Solo entran los equipos con lista de materiales. Si hay uno igual para stock, usa antes «Usar»."
+  "texto": "Crea una orden de producción por cada equipo vendido que todavía no tiene, con su lista de materiales y la fecha compromiso del pedido. Solo entran los equipos con lista de materiales. Si hay uno igual hecho o en proceso para stock, antes de crear nada te lo enseña para que lo uses en vez de fabricar otro."
  },
  {
   "clave": "botonCrearOrdenesRequisicion",
@@ -3815,7 +3815,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Crea una orden de taller por cada equipo de este pedido que tiene lista de materiales y todavía no tiene orden (una por pieza), y el pedido pasa a «En producción». Si ya hay uno igual hecho para stock, mejor asígnalo con «Usar» en Producción → Pedidos. En un pedido que venía de la hoja solo aparece cuando alguna de sus partidas ya está ligada a un equipo del catálogo y sigue sin orden."
+  "texto": "Crea una orden de taller por cada equipo de este pedido que tiene lista de materiales y todavía no tiene orden (una por pieza), y el pedido pasa a «En producción». Si ya hay uno igual hecho o en proceso para stock, antes de crear nada te lo enseña: la gerencia de producción lo asigna al pedido con «Usar este» y no se fabrica otro. En un pedido que venía de la hoja solo aparece cuando alguna de sus partidas ya está ligada a un equipo del catálogo y sigue sin orden."
  },
  {
   "clave": "botonMarcarAplicada",
@@ -8532,6 +8532,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "analisis"
   ],
   "texto": "Venta a clientes fuera de México: cuenta en el total, pero no sale en el mapa."
+ },
+ {
+  "clave": "fabricarNuevos",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Crea las órdenes que le faltan al pedido aunque haya equipos iguales para stock, que se quedan en stock. Úsalo solo si de verdad se va a fabricar otro: por ejemplo, si el de stock ya está apalabrado con otro cliente."
  },
  {
   "clave": "factorCosteoImportacion",

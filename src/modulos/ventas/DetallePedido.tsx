@@ -23,6 +23,7 @@ import { TarjetaMercadoLibre } from "./componentes/DineroML";
 import { BotonEntregar, EXPLICA_ESTADO_PEDIDO, RecuadroEntrega, abrirHojaSalida, useHojaSalida } from "./componentes/EntregaPedido";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { GanttCompacto } from "@/modulos/produccion/Gantt";
+import { useCrearOrdenesPedido } from "@/modulos/produccion/componentes/CrearOrdenesPedido";
 import { EditarFactura, type FacturaEditable } from "@/modulos/finanzas/componentes/EditarFactura";
 import { limpiarUuid } from "@/lib/cfdi";
 
@@ -76,7 +77,7 @@ export default function DetallePedido() {
   // Quién entrega lo dice la base (almacén, el vendedor lo suyo, gerencia de ventas, dirección).
   const hoja = useHojaSalida(id);
   const navegar = useNavigate();
-  const producir = useAccion(() => q<number>(supabase.rpc("ordenes_desde_pedido", { p_pedido: id })), {
+  const producir = useCrearOrdenesPedido({
     exito: (n) => (n ? `Se crearon ${n} orden(es) de producción` : "No hay equipos con lista de materiales sin orden en este pedido"),
     invalidar: [...inv, ["ordenes_pedido", id], ["v_tablero_produccion"], ["v_pedidos_por_producir"]],
   });
@@ -148,7 +149,7 @@ export default function DetallePedido() {
       </span>}
       acciones={(!p.historico || abierto) && <>
         {(!p.historico || (porProducir.data?.unidades ?? 0) > 0) && puede("produccion", 2) && ["confirmado", "en_produccion"].includes(p.estado) && (
-          <Boton variante="secundario" onClick={() => producir.mutate(undefined)} cargando={producir.isPending} data-explain={GLOSARIO.botonMandarProduccion}><Factory className="h-4 w-4" />Mandar a producción</Boton>
+          <Boton variante="secundario" onClick={() => producir.pedir(id!)} cargando={producir.ocupado === id} data-explain={GLOSARIO.botonMandarProduccion}><Factory className="h-4 w-4" />Mandar a producción</Boton>
         )}
         {puedeCambiar && ["confirmado", "en_produccion"].includes(p.estado) && (
           <Boton variante="secundario" onClick={() => actualizar.mutate({ estado: "listo" })} data-explain={GLOSARIO.botonMarcarListoPedido}><PackageCheck className="h-4 w-4" />Marcar listo</Boton>
@@ -387,6 +388,7 @@ export default function DetallePedido() {
         </div>
       </div>
 
+      {producir.dialogo}
       {montoLibre && (
         <MontoLibre nombre={montoLibre.nombre} moneda={p.moneda} tasaIva={Number(p.tasa_iva)} guardando={agregar.isPending}
           alGuardar={(precio) => agregar.mutate({ id: montoLibre.id, precio })} alCerrar={() => setMontoLibre(null)} />
