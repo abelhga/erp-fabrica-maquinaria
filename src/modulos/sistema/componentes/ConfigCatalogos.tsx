@@ -75,6 +75,44 @@ export function ConfigAlmacenes() {
 interface CategoriaConsumible { id: number; nombre: string; consumible_taller: boolean }
 
 /**
+ * El interruptor del lector de códigos de barras. Apagado, almacén no ve nada del lector; los
+ * códigos que ya se hayan ligado se conservan para cuando se vuelva a prender.
+ */
+export function ConfigLector() {
+  const { puede } = useSesion();
+  const editable = puede("inventario", 3) || puede("admin", 3);
+  const dato = useQuery({
+    queryKey: ["lector_codigos"],
+    queryFn: async () => (await q<{ valor: unknown }[]>(supabase.from("configuracion").select("valor").eq("clave", "almacen_lector_codigos")))[0]?.valor === true,
+  });
+  const fijar = useAccion((activo: boolean) => q(supabase.rpc("fijar_lector_codigos", { p_activo: activo })), {
+    exito: "Listo", invalidar: [["lector_codigos"]],
+  });
+  const activo = dato.data ?? false;
+  return (
+    <Tarjeta>
+      <EncabezadoTarjeta titulo="Lector de códigos de barras" explica={GLOSARIO.lectorCodigos}
+        descripcion="Para un almacén que registra con lector. Sirve cualquier lector USB o inalámbrico que escriba como teclado: se conecta y ya, no lleva instalación." />
+      <div className="px-5 pb-5 space-y-3">
+        {!editable && <SoloLectura quien="almacén (nivel administrar), sistemas o dirección" />}
+        {dato.isLoading ? <Cargando /> : (
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-borde px-4 py-3">
+            <div>
+              <p className="text-sm font-medium">Almacén trabaja con lector</p>
+              <p className="text-xs text-tenue">Prendido, en «Entradas y salidas» y en los conteos se lee el artículo en vez de buscarlo, y en el detalle de cada artículo se ligan sus códigos. La clave del artículo también se lee, así que una etiqueta con la clave funciona sin dar de alta nada.</p>
+            </div>
+            {editable
+              ? <Interruptor activo={activo} cargando={fijar.isPending} aria-label="Lector de códigos de barras" alCambiar={(v) => fijar.mutate(v)}
+                  data-explain={GLOSARIO.interruptorLector} data-explain-title="Lector de códigos" />
+              : <span data-explain={GLOSARIO.interruptorLector} data-explain-title="Lector de códigos"><Insignia tono={activo ? "ok" : "neutro"}>{activo ? "Prendido" : "Apagado"}</Insignia></span>}
+          </div>
+        )}
+      </div>
+    </Tarjeta>
+  );
+}
+
+/**
  * El switch de consumibles del taller y qué categorías cuentan. La regla vive en la base
  * (surtir manda esas partidas a consumo a nombre de quien recibe); aquí solo se prende.
  */

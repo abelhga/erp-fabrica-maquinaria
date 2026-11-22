@@ -13,6 +13,8 @@ import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { CantidadConSigno, InsigniaMovimiento, nombreCorto, useAlmacenes, type TipoMovimiento } from "./comun";
 import type { FilaExistencia } from "../Existencias";
+import { CodigosArticulo } from "./CodigosArticulo";
+import { useLectorActivo } from "@/lib/lector";
 
 interface MovKardex {
   id: number; en: string; tipo: TipoMovimiento; almacen_id: number; almacen: string; cantidad: number; saldo_almacen: number;
@@ -36,6 +38,7 @@ export function DetalleExistencia({ articuloId, fila, alCerrar }: {
   const almacenes = useAlmacenes();
   // Los movimientos traen costo y quién los hizo: la base solo los enseña a almacén y a quien ve costos.
   const verMovimientos = puede("inventario", 2) || puede("costos", 1);
+  const conLector = useLectorActivo();
 
   const kardex = useQuery({
     queryKey: ["kardex", articuloId],
@@ -93,6 +96,8 @@ export function DetalleExistencia({ articuloId, fila, alCerrar }: {
               {fila.llegada_estimada && <> · a planta hacia el <span className="text-texto">{fecha(fila.llegada_estimada)}</span></>}
             </p>
           )}
+
+          {conLector && articuloId && <CodigosArticulo articuloId={articuloId} clave={fila.clave} />}
 
           <section>
             <h3 className="etiqueta mb-2" data-explain={GLOSARIO.porAlmacenDetalle} data-explain-title="Por almacén">Por almacén</h3>

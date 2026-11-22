@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownToLine, ArrowRight, ArrowUpFromLine, ArrowLeftRight, Lock, RotateCcw, X } from "lucide-react";
+import { toast } from "sonner";
+import { ArrowDownToLine, ArrowRight, ArrowUpFromLine, ArrowLeftRight, Lock, RotateCcw, ScanBarcode, X } from "lucide-react";
 import { BuscadorArticulo, type ArticuloEncontrado } from "@/components/datos/BuscadorArticulo";
 import { Boton } from "@/components/ui/boton";
 import { Tarjeta } from "@/components/ui/tarjeta";
@@ -14,6 +15,7 @@ import { fechaYHora, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { useMinutosDeshacer } from "@/lib/deshacer";
+import { articuloPorCodigo, useLector, useLectorActivo } from "@/lib/lector";
 import { CantidadConSigno, InsigniaMovimiento, nombreCorto, unidadEn, useAlmacenes, type TipoMovimiento } from "./comun";
 
 type Modo = "salida" | "devolucion" | "traspaso";
@@ -90,11 +92,25 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existencias.data]);
 
+  const conLector = useLectorActivo();
   function elegir(a: ArticuloElegido | ArticuloEncontrado) {
     setArticulo({ id: a.id, clave: a.clave, nombre: a.nombre, unidad: a.unidad });
     setAlmacen(null);
-    setTimeout(() => refCantidad.current?.focus(), 50);
+    // Con lector lo normal es una pieza por lectura: la cantidad nace en 1 y cada lectura suma.
+    if (conLector) setCantidad((c) => c || "1");
+    // Con lector la cantidad ya trae un 1: se deja seleccionado para que teclear otra la reemplace.
+    setTimeout(() => { refCantidad.current?.focus(); if (conLector) refCantidad.current?.select(); }, 50);
   }
+
+  // Con lector: se lee el artículo esté donde esté el cursor. Leer otra vez el mismo suma una pieza,
+  // que es como se cuentan las cosas en un mostrador.
+  useLector(async (codigo) => {
+    const a = await articuloPorCodigo(codigo, ["componente", "materia_prima"]).catch(() => null);
+    if (!a) { toast.error(`El código ${codigo} no está ligado a ningún artículo. Búscalo por nombre y lígalo en su detalle, en Existencias.`); return; }
+    if (articulo?.id === a.id) { setCantidad((c) => String((Number(c.replace(",", ".")) || 0) + 1)); return; }
+    setCantidad("");
+    elegir(a);
+  }, conLector);
 
   const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
   const mios = useQuery({
@@ -177,7 +193,13 @@ export function Registrar({ irAAjustes }: { irAAjustes: () => void }) {
             )}
 
             <div className="space-y-1.5">
-              <span className="text-sm font-medium">Artículo</span>
+              <span className="text-sm font-medium flex items-center gap-2">Artículo
+                {conLector && (
+                  <span className="inline-flex items-center gap-1 text-xs font-normal text-tenue" data-explain={GLOSARIO.lectorEnRegistrar} data-explain-title="Lector de códigos">
+                    <ScanBarcode className="h-3.5 w-3.5" />o léelo con el lector
+                  </span>
+                )}
+              </span>
               {articulo ? (
                 <div className="flex items-center gap-2 rounded-lg border border-marca/40 bg-marca-suave/40 px-3 py-2">
                   <div className="min-w-0 flex-1">

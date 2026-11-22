@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { dinero, numero } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
 import { useSesion } from "@/lib/sesion";
+import { articuloPorCodigo } from "@/lib/lector";
 
 export interface ArticuloEncontrado {
   id: string; clave: string; nombre: string; tipo: "componente" | "materia_prima" | "subensamble" | "equipo" | "servicio";
@@ -20,6 +21,8 @@ export interface ArticuloEncontrado {
  * del cotizador en hojas.
  * Con `alNoEncontrar`, la última opción ofrece pedírselo a compras con lo que se
  * escribió (y si no hubo resultados, Enter la elige): así el vendedor no sale al chat.
+ * Un lector de códigos de barras escribe y da Enter antes de que lleguen los resultados: en
+ * ese caso se busca el artículo de ese código (o de esa clave exacta) y se elige solo.
  */
 export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo o componente…", autoFocus, className, mostrarPrecio = true, alNoEncontrar }: {
   alElegir: (a: ArticuloEncontrado) => void; tipos?: ArticuloEncontrado["tipo"][]; placeholder?: string;
@@ -36,6 +39,18 @@ export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo
   // escribir: sin esto, Enter solo no elegía nada y había que bajar con la flecha.
   const [marcado, setMarcado] = useState("");
   const entrada = useRef<HTMLInputElement>(null);
+  // Para qué texto son los resultados que hay en pantalla: si no son del texto actual, Enter no
+  // debe elegir el primero (sería el de la búsqueda anterior).
+  const [resDe, setResDe] = useState<string | null>(null);
+  const elegir = (a: ArticuloEncontrado) => { alElegir(a); setQ(""); setAbierto(false); entrada.current?.focus(); };
+  async function alEnter(e: React.KeyboardEvent<HTMLInputElement>) {
+    const texto = q.trim();
+    if (e.key !== "Enter" || texto.length < 3 || (!cargando && resDe === q)) return;
+    e.preventDefault();
+    const a = await articuloPorCodigo(texto, tipos).catch(() => null);
+    // Si mientras tanto se siguió escribiendo, ya no es la misma búsqueda.
+    if (a && entrada.current?.value.trim() === texto) elegir(a);
+  }
 
   useEffect(() => {
     if (!abierto) return;
@@ -44,6 +59,7 @@ export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo
       const { data } = await supabase.rpc("buscar_articulos", { q, p_tipos: tipos ?? null, p_limite: 30 });
       const lista = (data as ArticuloEncontrado[]) ?? [];
       setRes(lista);
+      setResDe(q);
       setMarcado(lista[0]?.id ?? (alNoEncontrar ? "__pedir" : ""));
       setCargando(false);
     }, 150);
@@ -58,7 +74,7 @@ export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo
             {cargando ? <Loader2 className="h-4 w-4 text-tenue absolute left-3 top-1/2 -translate-y-1/2 animate-spin" />
                       : <Search className="h-4 w-4 text-tenue absolute left-3 top-1/2 -translate-y-1/2" />}
             <Command.Input ref={entrada} autoFocus={autoFocus} value={q} onValueChange={(v) => { setQ(v); setAbierto(true); }}
-              onFocus={() => setAbierto(true)} placeholder={placeholder} className="campo pl-9" />
+              onFocus={() => setAbierto(true)} onKeyDown={alEnter} data-lector placeholder={placeholder} className="campo pl-9" />
           </div>
         </P.Anchor>
         <P.Portal>
@@ -68,7 +84,7 @@ export function BuscadorArticulo({ alElegir, tipos, placeholder = "Buscar equipo
               {!cargando && <Command.Empty className="p-4 text-sm text-tenue text-center">No hay artículos con “{q}”.</Command.Empty>}
               {res.map((a) => (
                 <Command.Item key={a.id} value={a.id}
-                  onSelect={() => { alElegir(a); setQ(""); setAbierto(false); entrada.current?.focus(); }}
+                  onSelect={() => elegir(a)}
                   className="flex items-center gap-3 rounded-lg px-2 py-2 cursor-pointer data-[selected=true]:bg-marca-suave">
                   {a.imagen_url ? <img src={a.imagen_url} alt="" className="h-9 w-9 rounded object-cover bg-fondo shrink-0" loading="lazy"
                     onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} />
