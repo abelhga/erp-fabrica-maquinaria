@@ -57,7 +57,7 @@ export const ALMACEN: Record<string, AyudaPantalla> = {
     ],
   },
   "/almacen/metricas": {
-    resumen: "Cómo anda el almacén: la salud del inventario hoy y lo que se movió en el periodo. La usan almacén, compras, la gerencia de producción y dirección.",
+    resumen: "Cómo anda el almacén: la salud del inventario hoy, lo que se movió en el periodo y cuándo se mueve más. La usan almacén, compras, gerencia de producción y dirección.",
     pasos: [
       "En «Salud del inventario», dale clic a un pedazo de la barra o de la matriz.",
       "Baja esa lista a Excel y actúa: rematar, devolver, no volver a pedir o pedir ya.",
@@ -77,6 +77,8 @@ export const ALMACEN: Record<string, AyudaPantalla> = {
       "Si «Consumibles del taller» está apagado en Configuración, arriba sale un aviso: los discos, la soldadura y el EPP que salen para una orden se cargan a la orden y cuentan como fuera de lista.",
       "«Consumibles por persona» suma lo que se llevó cada quien de las categorías consumibles (discos, lijas, soldadura, EPP…); «Sin anotar» son salidas a consumo que no dicen quién lo recibió.",
       "«Consumibles contra receta» compara lo que salió de cada consumible con lo que prevén las recetas de las órdenes terminadas en el periodo: en rojo, más de 20 % arriba. Lo que no viene en ninguna receta, como los guantes, solo se ve por persona.",
+      "«Cuándo se mueve» enseña el ritmo del almacén: el promedio de salidas, entradas y ajustes por día de la semana, un mapa de día y hora (entre más oscuro, más movimiento) y lo registrado cada mes. Eliges 3 meses, 12 meses o todo. Se cuentan renglones, no piezas, y la hora es la de captura.",
+      "Si la empresa cargó el historial de su sistema anterior, «Cuándo se mueve» lo junta con lo capturado en el ERP sin contar nada dos veces; abajo dice desde qué fecha hay datos y cuántos renglones vienen del historial.",
       "Abajo están los ajustes del periodo y los que esperan autorización, los conteos cerrados con cuántos renglones no coincidieron (clic en uno lo abre) y cuántos movimientos registró cada persona. Los montos solo los ve quien tiene acceso a costos.",
     ],
   },
