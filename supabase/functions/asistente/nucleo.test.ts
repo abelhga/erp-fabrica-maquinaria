@@ -6,7 +6,7 @@ import { describe, expect, it, beforeAll } from "vitest";
 import { readFileSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
-import { atender, DOCUMENTOS, ejecutarHerramienta, ejemploDocumento, esquemaPropuesta, explicarError, limpiarRespuestaML, mismaVista, respuestaMLSinIA, validarEsquema, vista, type DatosRespuestaML, type Evento, type TipoDocumento } from "./nucleo.ts";
+import { atender, HERRAMIENTAS, DOCUMENTOS, ejecutarHerramienta, ejemploDocumento, esquemaPropuesta, explicarError, limpiarRespuestaML, mismaVista, respuestaMLSinIA, validarEsquema, vista, type DatosRespuestaML, type Evento, type TipoDocumento } from "./nucleo.ts";
 
 const env = Object.fromEntries(
   readFileSync(new URL("../../../.env.local", import.meta.url), "utf8").split("\n")
@@ -353,6 +353,35 @@ describe.skipIf(!hayBase)("asistente contra la base local", () => {
     // El detalle va por consultar, con las columnas de siempre (sin la de costo).
     const detalle = await ejecutarHerramienta(alm.db, "consultar", { tabla: "v_movimientos", columnas: [], filtros: [], ordenar_por: "en", descendente: true, limite: 3, solo_contar: false });
     expect(detalle).not.toMatch(/costo_unitario/);
+  });
+
+  it("consultar: todas las tablas que se le ofrecen existen con sus columnas, y cada puesto lee sin tronar", async () => {
+    const tablas = ((HERRAMIENTAS.find((h) => h.name === "consultar")!.input_schema as { properties: { tabla: { enum: string[] } } }).properties.tabla.enum);
+    expect(tablas.length).toBeGreaterThan(60);
+    const dir = await sesion("direccion@hegamex.com");
+    const pedir = (db: typeof dir.db, tabla: string) => ejecutarHerramienta(db, "consultar", { tabla, columnas: [], filtros: [], ordenar_por: "", descendente: false, limite: 2, solo_contar: false });
+    const fallas: string[] = [];
+    for (const t of tablas) {
+      // Dirección ve todo: si algo falla aquí es que la tabla o una columna no existe.
+      await pedir(dir.db, t).catch((e) => fallas.push(`direccion · ${t}: ${(e as Error).message}`));
+      // Un vendedor lee lo suyo, o le sale vacío o «Sin permiso»; nunca un error de otra clase.
+      await pedir(isaac.db, t).catch((e) => { if (!/Sin permiso/.test((e as Error).message)) fallas.push(`ventas · ${t}: ${(e as Error).message}`); });
+    }
+    expect(fallas).toEqual([]);
+  }, 60_000);
+
+  it("consultar: en las vistas de columnas fijas no se piden costos, y vacío por permiso no es «no hay»", async () => {
+    const alm = await sesion("almacen@hegamex.com");
+    const base = { filtros: [], ordenar_por: "", descendente: false, limite: 2, solo_contar: false };
+    await expect(ejecutarHerramienta(alm.db, "consultar", { ...base, tabla: "v_ajustes", columnas: ["folio", "valor_diferencia"] })).rejects.toThrow(/no permitidas/);
+    await expect(ejecutarHerramienta(alm.db, "consultar", { ...base, tabla: "v_por_pagar", columnas: ["datos_bancarios"] })).rejects.toThrow(/no permitidas/);
+    await expect(ejecutarHerramienta(alm.db, "consultar", { ...base, tabla: "v_requisicion_lineas", columnas: [], filtros: [{ columna: "costo", operador: "mayor", valor: "0" }] })).rejects.toThrow(/no permitida/);
+    // Almacén no ve la cobranza: que el asistente lo diga así y no «no hay saldos».
+    const cobranza = JSON.parse(await ejecutarHerramienta(alm.db, "consultar", { ...base, tabla: "v_cobranza", columnas: [] }));
+    expect(cobranza.aviso).toMatch(/no tiene acceso a finanzas/);
+    const ritmo = JSON.parse(await ejecutarHerramienta(alm.db, "ritmo_almacen", { desde: "", hasta: "" }));
+    expect(ritmo).toHaveProperty("por_dia_semana");
+    await expect(ejecutarHerramienta(isaac.db, "ritmo_almacen", { desde: "", hasta: "" })).rejects.toThrow(/Sin permiso/);
   });
 
   it("sugerencias de mejora: Claude recibe los datos del taller sin las horas por persona; el supervisor no las pide", async () => {

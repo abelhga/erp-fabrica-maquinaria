@@ -102,6 +102,84 @@ const TABLAS: Record<string, string> = {
   v_ordenes_mantenimiento: "folio,numero,maquina,tipo,estado,falla,diagnostico,detiene,reportado_en,cerrada_en,horas_paro,vence,vencida",
   v_resguardos: "numero,herramienta,quien,entregado_en,devuelto_en,dias,vencido,servicio_folio",
 };
+/**
+ * Lo demás que cada puesto ve en sus pantallas, por módulo. Son tablas con RLS o vistas que corren
+ * con los permisos de quien pregunta, así que cada quien lee lo mismo que en su pantalla. Aquí las
+ * columnas son fijas (no se pueden pedir otras): quedan fuera costos de artículos, datos bancarios
+ * y teléfonos de llamadas. De recursos humanos no hay nada: sueldos, faltas y evaluaciones no pasan
+ * por la IA.
+ */
+const TABLAS_FIJAS: Record<string, { modulo: string; columnas: string }> = {
+  // Ventas
+  v_clientes: { modulo: "ventas", columnas: "id,nombre,razon_social,giro,ciudad,estado,vendedor,es_distribuidor,dias_credito,activo,creado_en,ultima_compra,saldo,compras_12m,cotizaciones_abiertas" },
+  v_leads: { modulo: "leads", columnas: "id,nombre,empresa,telefono,ciudad,estado_mx,interes,linea,fuente,estado,vendedor,creado_en,asignado_en,atendido_en,intentos,contesto,ultimo_intento,ultimo_resultado,motivo_descarte,cliente_id,oportunidad_id" },
+  v_oportunidades: { modulo: "ventas", columnas: "id,cliente_id,cliente,titulo,etapa,linea,canal,monto_estimado,probabilidad,fecha_cierre_estimada,vendedor,fuente,motivo_perdida,cerrada_en,dias_en_etapa,tarea,tarea_vence,cotizaciones,ultima_cotizacion_total,creado_en" },
+  v_cotizaciones: { modulo: "ventas", columnas: "id,folio,version,fecha,vence,vencida,estado,cliente_id,cliente,empresa,vendedor,moneda,subtotal,descuento,total,requiere_autorizacion,enviada_en,cerrada_en,motivo_rechazo,partidas,primera_partida,pedido_id" },
+  cotizacion_lineas: { modulo: "ventas", columnas: "cotizacion_id,orden,articulo_id,titulo,unidad,cantidad,precio_unitario,precio_lista,descuento_pct,opcional,bajo_minimo,importe" },
+  v_pedidos: { modulo: "ventas", columnas: "id,folio,folio_anterior,fecha,fecha_compromiso,estado,canal,cliente_id,cliente,vendedor,cotizacion_folio,moneda,subtotal,iva,total,cobrado,saldo,facturado,ordenes,terminadas,avance,atrasado,entregado_en,motivo_cancelacion" },
+  v_seguimientos: { modulo: "ventas", columnas: "oportunidad_id,cotizacion_id,vendedor,vence,vencido,dias_vencido,titulo,etapa,cliente_id,cliente,monto_estimado,folio,total,moneda,enviada_en,contacto,veces,ultimo_que_paso,ultimo_en" },
+  v_devoluciones: { modulo: "ventas", columnas: "folio,pedido_folio,canal,cliente,vendedor,tipo,estado,motivo,fecha_esperada,fecha_limite,responsable,recibido_en,resultado,almacen,monto_reclamado,resuelto_en,abierta,vencida,creado_en,resumen" },
+  llamadas: { modulo: "leads", columnas: "inicio,duracion_seg,estado,area_nombre,atendio_nombre,atendio_ia,nadie_contesto,cliente_id,cliente_nombre,lead_id,lead_nombre,resumen,regresada_en,historica" },
+  ml_ventas: { modulo: "mercadolibre", columnas: "order_id,pedido_id,full_ml,comprador,estado,nota,envio_tipo,guia,actualizado_en" },
+  ml_preguntas: { modulo: "mercadolibre", columnas: "titulo_publicacion,articulo_id,texto,estado,recibida_en,respuesta,contestada_en" },
+  v_ml_dinero: { modulo: "mercadolibre", columnas: "order_id,pedido_id,folio,comprador,full_ml,estado,pagado_en,total,comision,envio,retencion_iva,retencion_isr,otros,reembolsado,neto,libera_en,disponible" },
+  // Finanzas
+  v_cobranza: { modulo: "finanzas", columnas: "pedido_id,folio,cliente_id,cliente,vendedor,canal,fecha,estado,moneda,total,cobrado,saldo,facturado,facturas,ultimo_cobro,dias_credito,vence,dias,rango,saldo_mxn" },
+  cobros: { modulo: "finanzas", columnas: "pedido_id,fecha,monto,metodo,referencia,notas,cfdi_factura,creado_en" },
+  facturas: { modulo: "finanzas", columnas: "pedido_id,folio,uuid_sat,fecha,total,notas" },
+  v_por_pagar: { modulo: "finanzas", columnas: "orden_compra_id,folio,proveedor_id,proveedor,fecha,vence_pago,moneda,total,pagado,saldo,factura_proveedor,dias_credito,categoria,saldo_mxn,dias_para_vencer,ultimo_pago" },
+  v_compras_proveedor_pendientes: { modulo: "finanzas", columnas: "proveedor_id,fecha,factura,descripcion,categoria,monto,vence_el,origen,restante,cubierto_anticipo" },
+  v_pagos_hechos: { modulo: "finanzas", columnas: "origen,fecha,proveedor_id,proveedor,tipo_acreedor,monto,moneda,monto_mxn,referencia,descripcion" },
+  v_caja_chica: { modulo: "caja_chica", columnas: "fecha,tipo,importe,concepto,notas,saldo" },
+  // Compras
+  oc_lineas: { modulo: "compras", columnas: "orden_compra_id,articulo_id,descripcion,cantidad,recibido" },
+  v_requisicion_lineas: { modulo: "compras", columnas: "folio,origen,estado_requisicion,necesaria_para,creado_en,solicitante,articulo_id,clave,nombre,unidad,es_importado,cantidad,estado,notas,op_folio,proveedor,oc_folio,en_planta" },
+  // Almacén
+  v_existencias: { modulo: "inventario", columnas: "articulo_id,clave,nombre,unidad,tipo,es_importado,en_planta,en_mercadolibre,reservado,en_transito,en_produccion,en_mar,en_puerto,llegada_estimada" },
+  v_ajustes: { modulo: "inventario", columnas: "folio,articulo_id,clave,nombre,unidad,almacen,cantidad_sistema,cantidad_fisica,diferencia,motivo,conteo,estado,solicitado_por_nombre,solicitado_en,resuelto_por_nombre,resuelto_en,comentario,aplicado" },
+  v_conteos: { modulo: "inventario", columnas: "nombre,almacen,estado,creado_por_nombre,creado_en,cerrado_en,capturados,en_sistema,ajustes,ajustes_pendientes,a_ciegas" },
+  v_reservas: { modulo: "inventario", columnas: "articulo_id,clave,nombre,unidad,cantidad,surtido,pendiente,op_folio,pedido_folio,motivo,estado,creado_por_nombre,creado_en" },
+  v_envios: { modulo: "envios", columnas: "folio,pedido_folio,canal,cliente,vendedor,tipo_nombre,estado,paqueteria,servicio,destinatario,destino,numero_guia,solicitado_en,empacado_en,enviado_en,entregado_en,recibio,motivo_cancelacion,bultos,peso_total,partidas,piezas,resumen,abierto,falta_guia,falta_empaque,listo_para_salir,dias_desde_solicitud,dias_en_camino" },
+  // Producción e ingeniería
+  ordenes_produccion: { modulo: "produccion", columnas: "id,folio,numero_serie,pedido_id,articulo_id,cantidad,estado,prioridad,fecha_compromiso,inicio_plan,notas,revisado_ingenieria_en,revisado_almacen_en,material_apartado_en,terminada_en,entregada_en,cancelada_en,motivo_cancelacion,en_espera_motivo,en_espera_desde,creado_en" },
+  v_pedidos_produccion: { modulo: "produccion", columnas: "id,folio,cliente,vendedor,canal,estado,fecha,fecha_compromiso,dias_restantes,entregado_en,equipos,sin_orden,ordenes,ordenes_terminadas,avance" },
+  v_op_material: { modulo: "produccion", columnas: "orden_id,articulo_id,clave,nombre,unidad,categoria,tipo,requerido,surtido,apartado,por_surtir,faltante,pedido_a_compras,existencia_planta,disponible_planta,agregado,notas,quitado_en,motivo_quitado,reemplaza_a_nombre" },
+  v_piso_operaciones: { modulo: "produccion", columnas: "orden_id,folio,numero_serie,equipo,cliente,pedido_folio,etapa,estado,horas_estimadas,horas_reales,inicio,fin,responsable,cuadrilla,prioridad,fecha_compromiso,dias_restantes,atrasada,avance,avance_etapa,materiales_faltantes,espera_a,ultimo_problema,ultimo_problema_en" },
+  v_op_eventos: { modulo: "produccion", columnas: "orden_id,folio,numero_serie,equipo,etapa,tipo,nota,en,usuario,responsable" },
+  v_carga_etapas: { modulo: "produccion", columnas: "nombre,orden,capacidad_horas_semana,horas_pendientes,horas_planeadas,en_proceso,pausadas,en_espera" },
+  v_numeros_serie: { modulo: "produccion", columnas: "origen,numero_serie,familia,orden_folio,equipo,cliente,pedido,fecha,estado,factura,vendedor,entrega,ubicacion" },
+  v_mejoras: { modulo: "produccion", columnas: "folio,titulo,problema,propuesta,etapa,desperdicio,tipo,estado,objetivo,causa_raiz,plan,responsable,fecha_compromiso,resultado,ahorro_horas_mes,propuso,propuesta_en,hecha_en,vencida,origen_folio,origen_maquina" },
+  v_bom: { modulo: "costeo", columnas: "padre_id,hijo_id,hijo_clave,hijo_nombre,hijo_tipo,hijo_unidad,cantidad,cantidad_efectiva,parametro,por_parametro,merma,grupo,notas,orden" },
+  v_documentos_tecnicos: { modulo: "costeo", columnas: "folio,revision,articulo_id,clave,articulo,pedido_folio,tipo,titulo,estado,cambio,creado_por_nombre,creado_en,aprobado_por_nombre,aprobado_en,revisiones" },
+  solicitudes_cambio_bom: { modulo: "produccion", columnas: "orden_id,articulo_id,descripcion,estado,solicitado_en,resuelto_en,respuesta" },
+  // Importaciones
+  v_importacion_por_pagar: { modulo: "importaciones", columnas: "embarque,descripcion,fase,eta,llegada_planta_estimada,folio,proveedor,factura,moneda,total,pagado,programado,saldo,saldo_mxn,proximo_pago,proximo_monto" },
+  v_embarque_dinero: { modulo: "importaciones", columnas: "folio,comprometido_usd,pagado_usd,pagado_mxn,programado_usd,por_pagar_usd,por_pagar_mxn,tc_promedio,gastos_mxn,iva_acreditable_mxn,impuestos_mxn,por_recuperar_mxn,recuperado_mxn" },
+  pedimentos: { modulo: "importaciones", columnas: "embarque_id,numero,clave,aduana,fecha_pago,tipo_cambio,valor_aduana,igi,dta,iva,prv,otros,total" },
+  // Servicio y mantenimiento
+  v_planes_preventivos: { modulo: "mantenimiento", columnas: "numero,maquina,nombre,tareas,cada_dias,cada_horas,ultima_fecha,proxima_fecha,dias_restantes,horas_restantes,situacion,orden_folio,orden_estado,rutina,activo,orden_pospuesta_veces,orden_pospuesto_motivo" },
+  v_servicio_materiales: { modulo: "servicio", columnas: "folio,para,articulo_id,clave,nombre,unidad,cantidad,estado,notas,pedido_en,pedido_por_nombre,surtido_en,surtido_por_nombre,requisicion_folio,existencia_planta" },
+  // De todos
+  pendientes: { modulo: "", columnas: "titulo,detalle,responsable_id,creado_por,vence,estado,ruta,nota_cierre,cerrado_en,creado_en,esperando_respuesta" },
+  revision_hallazgos: { modulo: "", columnas: "modulo,titulo,detalle,gravedad,estado,ruta,respuesta,creado_en,cerrado_en" },
+};
+for (const [t, d] of Object.entries(TABLAS_FIJAS)) TABLAS[t] = d.columnas;
+/** A qué módulo pertenece cada tabla de siempre: para decir «no tienes acceso» en vez de «no hay». */
+const MODULO_DE: Record<string, string> = {
+  clientes: "ventas", v_cartera: "ventas", contactos: "ventas", historial_ventas_hoja: "ventas", cotizaciones: "ventas", pedidos: "ventas",
+  pedido_lineas: "ventas", oportunidades: "ventas", precios_lista: "ventas", existencias: "inventario", v_movimientos: "inventario",
+  v_tablero_produccion: "produccion", v_saldos_pedido: "finanzas", v_cuentas_por_pagar: "finanzas", proveedores: "compras",
+  v_ordenes_compra: "compras", historial_costos: "costos", costos_calculados: "costos", historial_costeo: "costos", v_embarques: "importaciones",
+  v_servicios: "servicio", v_maquinas: "mantenimiento", v_ordenes_mantenimiento: "mantenimiento", v_resguardos: "mantenimiento",
+  ...Object.fromEntries(Object.entries(TABLAS_FIJAS).map(([t, d]) => [t, d.modulo])),
+};
+const GUIA_TABLAS = "Por tema — ventas: v_clientes, v_leads, v_oportunidades, v_cotizaciones, cotizacion_lineas, v_pedidos, pedido_lineas, v_seguimientos, v_devoluciones, llamadas; " +
+  "Mercado Libre: ml_ventas, ml_preguntas, v_ml_dinero; cobranza y pagos: v_cobranza, cobros, facturas, v_por_pagar, v_compras_proveedor_pendientes, v_pagos_hechos, v_caja_chica; " +
+  "compras: v_ordenes_compra, oc_lineas, v_requisicion_lineas, proveedores; almacén: v_existencias, v_movimientos, v_ajustes, v_conteos, v_reservas, v_envios; " +
+  "producción: v_tablero_produccion, ordenes_produccion, v_pedidos_produccion, v_op_material (material y faltantes de una orden), v_piso_operaciones (etapas), v_op_eventos, v_carga_etapas, v_numeros_serie, v_mejoras, solicitudes_cambio_bom; " +
+  "ingeniería: v_bom (lista de materiales), v_documentos_tecnicos (planos); importaciones: v_embarques, v_importacion_por_pagar, v_embarque_dinero, pedimentos; " +
+  "servicio y mantenimiento: v_servicios, v_servicio_materiales, v_maquinas, v_ordenes_mantenimiento, v_planes_preventivos, v_resguardos; de cualquiera: pendientes, revision_hallazgos (lo de «Por revisar»).";
+
 // Aunque la RLS se los diera a alguien, al modelo no le hacen falta.
 const COLUMNAS_PROHIBIDAS = /^(datos_bancarios|clabe|cuenta.*|curp|nss|salario.*|sueldo.*|contrasena.*|token.*|password.*)$/;
 const OPERADORES = ["igual", "distinto", "mayor", "mayor_o_igual", "menor", "menor_o_igual", "contiene", "es_nulo", "no_es_nulo", "en_lista"] as const;
@@ -217,6 +295,14 @@ export const HERRAMIENTAS: Anthropic.Beta.BetaTool[] = [
     }, required: ["desde", "hasta"], additionalProperties: false },
   },
   {
+    name: "ritmo_almacen",
+    description: "Cuándo se mueve el almacén: renglones de salidas, entradas y ajustes por día de la semana, por hora, por mes y los días más pesados, juntando el ERP con el historial del sistema anterior si existe. Para '¿qué día sale más material?', '¿a qué hora se carga el almacén?', '¿qué meses son los fuertes?'. Fechas vacías = todo lo que hay. Mismos permisos que movimientos_almacen.",
+    strict: true,
+    input_schema: { type: "object", properties: {
+      desde: { type: "string", description: "AAAA-MM-DD, o vacío para desde el principio" }, hasta: { type: "string", description: "AAAA-MM-DD, o vacío para hasta hoy" },
+    }, required: ["desde", "hasta"], additionalProperties: false },
+  },
+  {
     name: "comisiones_del_mes",
     description: "Comisiones de vendedores de un mes: venta de maquinaria, refacciones y otros, comisión, bonos por escalón, total y cuánto le falta para la siguiente meta. Cada vendedor ve solo lo suyo.",
     strict: true,
@@ -224,7 +310,7 @@ export const HERRAMIENTAS: Anthropic.Beta.BetaTool[] = [
   },
   {
     name: "consultar",
-    description: `Lee filas de una tabla o vista del ERP con filtros simples. Tablas: ${Object.keys(TABLAS).join(", ")}. Si no pides columnas te da las más útiles. Los montos de pedidos y cotizaciones pueden estar en USD (columna moneda). Para contar sin traer filas usa solo_contar. Máximo 200 filas.`,
+    description: `Lee filas de una tabla o vista del ERP con filtros simples; cada persona ve lo mismo que en sus pantallas. ${GUIA_TABLAS} Si no pides columnas te da las más útiles (en las vistas v_… nuevas son las únicas). Los montos de pedidos y cotizaciones pueden estar en USD (columna moneda). Para contar sin traer filas usa solo_contar. Máximo 200 filas.`,
     strict: true,
     input_schema: {
       type: "object",
@@ -269,6 +355,7 @@ const ETIQUETAS: Record<string, string> = {
   historial_cliente: "Leyendo el historial del cliente",
   reabasto: "Revisando stock mínimo",
   movimientos_almacen: "Revisando entradas y salidas",
+  ritmo_almacen: "Viendo cuándo se mueve el almacén",
   comisiones_del_mes: "Calculando comisiones",
   consultar: "Consultando",
 };
@@ -368,6 +455,8 @@ export async function ejecutarHerramienta(db: SupabaseClient, nombre: string, en
       if (!esFecha(entrada.desde) || !esFecha(entrada.hasta)) throw new ErrorHerramienta("desde y hasta deben ser AAAA-MM-DD");
       return compacto(revisar(await db.rpc("movimientos_almacen", { p_desde: entrada.desde, p_hasta: entrada.hasta })));
     }
+    case "ritmo_almacen":
+      return compacto(revisar(await db.rpc("almacen_ritmo", { p_desde: esFecha(entrada.desde) ? entrada.desde : null, p_hasta: esFecha(entrada.hasta) ? entrada.hasta : null })));
     case "comisiones_del_mes": {
       if (!esFecha(entrada.mes)) throw new ErrorHerramienta("mes debe ser AAAA-MM-DD");
       return compacto(revisar(await db.rpc("comisiones_mes", { p_mes: (entrada.mes as string).slice(0, 8) + "01" })));
@@ -393,14 +482,17 @@ async function consultar(db: SupabaseClient, e: Record<string, unknown>): Promis
   const tabla = texto(e.tabla);
   if (!(tabla in TABLAS)) throw new ErrorHerramienta(`Tabla no permitida: ${tabla}`);
   const pedidas = Array.isArray(e.columnas) ? e.columnas.map(texto).filter(Boolean) : [];
-  const malas = pedidas.filter((c) => !esColumna(c));
-  if (malas.length) throw new ErrorHerramienta(`Columnas no permitidas: ${malas.join(", ")}`);
+  // En las tablas de columnas fijas no se pide, filtra ni ordena por nada que no esté en su lista.
+  const fijas = tabla in TABLAS_FIJAS ? new Set(TABLAS_FIJAS[tabla].columnas.split(",")) : null;
+  const permitida = (c: string) => esColumna(c) && (!fijas || fijas.has(c));
+  const malas = pedidas.filter((c) => !permitida(c));
+  if (malas.length) throw new ErrorHerramienta(`Columnas no permitidas en ${tabla}: ${malas.join(", ")}.${fijas ? ` Las que hay: ${TABLAS[tabla]}` : ""}`);
   const columnas = pedidas.length ? pedidas.join(",") : TABLAS[tabla];
   const contar = e.solo_contar === true;
   let q = db.from(tabla).select(columnas, contar ? { count: "exact", head: true } : undefined);
   for (const f of Array.isArray(e.filtros) ? e.filtros : []) {
     const { columna, operador, valor } = f as Record<string, string>;
-    if (!esColumna(columna)) throw new ErrorHerramienta(`Columna no permitida en filtro: ${columna}`);
+    if (!permitida(columna)) throw new ErrorHerramienta(`Columna no permitida en filtro: ${columna}.${fijas ? ` Las que hay: ${TABLAS[tabla]}` : ""}`);
     switch (operador) {
       case "igual": q = q.eq(columna, valor); break;
       case "distinto": q = q.neq(columna, valor); break;
@@ -422,10 +514,19 @@ async function consultar(db: SupabaseClient, e: Record<string, unknown>): Promis
   }
   const orden = texto(e.ordenar_por);
   if (orden) {
-    if (!esColumna(orden)) throw new ErrorHerramienta(`No se puede ordenar por ${orden}`);
+    if (!permitida(orden)) throw new ErrorHerramienta(`No se puede ordenar por ${orden}`);
     q = q.order(orden, { ascending: e.descendente !== true, nullsFirst: false });
   }
-  return compacto(revisar(await q.limit(entero(e.limite, 1, 200, 50))));
+  const filas = revisar(await q.limit(entero(e.limite, 1, 200, 50))) as unknown[];
+  // La RLS no avisa: a quien no puede ver una tabla le regresa cero filas, igual que cuando no hay
+  // nada. Para que no conteste «no hay» cuando es «no lo puedes ver», se le dice cuál de las dos.
+  if (Array.isArray(filas) && filas.length === 0 && MODULO_DE[tabla]) {
+    const s = (await db.rpc("mi_sesion")).data as { permisos?: Permisos } | null;
+    if (!((s?.permisos ?? {})[MODULO_DE[tabla]] >= 1)) {
+      return JSON.stringify({ filas: [], aviso: `Esta persona no tiene acceso a ${MODULO_DE[tabla]}: no es que no haya datos, es que no los puede ver. Díselo así.` });
+    }
+  }
+  return compacto(filas);
 }
 
 // -----------------------------------------------------------------------------
@@ -441,7 +542,7 @@ Para qué estás: para que cada persona venda más, compre mejor, entregue a tie
 
 Cómo trabajas:
 - Las cifras salen SIEMPRE de las herramientas. Si no las tienes, consulta; nunca las inventes ni las estimes de memoria. Si un dato no existe en el ERP, dilo.
-- Empieza por la herramienta más específica (hallazgos, tablero_direccion, oportunidades_de_venta, historial_cliente, reabasto, movimientos_almacen, comisiones_del_mes) y usa consultar para lo demás.
+- Empieza por la herramienta más específica (hallazgos, tablero_direccion, oportunidades_de_venta, historial_cliente, reabasto, movimientos_almacen, ritmo_almacen, comisiones_del_mes) y usa consultar para lo demás.
 - Si una herramienta dice "Sin permiso", esa persona no puede ver ese dato: díselo con naturalidad y no intentes conseguirlo por otro camino. Nunca menciones costos, márgenes ni utilidades si no te llegaron de una herramienta.
 - Solo lees. No puedes crear, cambiar ni borrar nada. Si te piden una acción, explica dónde hacerla en el ERP con un enlace.
 - Para preguntas de cómo, dónde o con qué se hace algo en el ERP, o qué significa algo de una pantalla, consulta primero como_se_usa: es el manual del ERP, el mismo que la gente ve en el modo tutorial. Contesta con los pasos y el enlace a la pantalla. No inventes pantallas, botones ni pasos que no salgan del manual; si no lo cubre, dilo. Si la pregunta tiene dos lados (por ejemplo, horas extra: el horario del taller para el plan y las horas, y el pago en prenómina), explica los dos.
