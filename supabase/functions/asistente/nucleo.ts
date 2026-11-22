@@ -80,6 +80,8 @@ const TABLAS: Record<string, string> = {
   precios_lista: "articulo_id,precio,moneda,calculado_en",
   existencias: "articulo_id,almacen_id,cantidad",
   almacenes: "id,nombre,tipo,disponible_para_planta",
+  // El detalle de entradas y salidas, para buscar un artículo o un folio; sin la columna de costo.
+  v_movimientos: "en,tipo,clave,nombre,unidad,almacen,cantidad,referencia,motivo,usuario,recibio",
   v_tablero_produccion: "folio,numero_serie,estado,prioridad,fecha_compromiso,equipo,cliente,avance,etapa_actual,pausada,materiales_faltantes,dias_restantes,atrasada,horas_pendientes",
   v_saldos_pedido: "folio,cliente_id,fecha,estado,moneda,total,cobrado,saldo",
   v_cuentas_por_pagar: "folio,proveedor,fecha,vence_pago,moneda,total,pagado,saldo",
@@ -207,6 +209,14 @@ export const HERRAMIENTAS: Anthropic.Beta.BetaTool[] = [
     },
   },
   {
+    name: "movimientos_almacen",
+    description: "Entradas y salidas del almacén en un periodo (hasta tres meses), ya contadas: cuántos movimientos por tipo, por día, por almacén y quién los registró; qué órdenes de compra se recibieron, a qué órdenes de producción y pedidos se les surtió, consumo interno, lo que más salió y lo que más entró, los ajustes (y cuántos siguen sin autorizar) y traspasos. Sin importes. Úsala para '¿cómo estuvo el almacén la semana pasada?', '¿qué entró?', '¿qué salió?'. Para el detalle de un artículo o un folio, después usa consultar(tabla='v_movimientos'). Solo quien ve los movimientos en pantalla (almacén, compras, gerencia de producción, dirección).",
+    strict: true,
+    input_schema: { type: "object", properties: {
+      desde: { type: "string", format: "date", description: "Primer día, AAAA-MM-DD" }, hasta: { type: "string", format: "date", description: "Último día, AAAA-MM-DD" },
+    }, required: ["desde", "hasta"], additionalProperties: false },
+  },
+  {
     name: "comisiones_del_mes",
     description: "Comisiones de vendedores de un mes: venta de maquinaria, refacciones y otros, comisión, bonos por escalón, total y cuánto le falta para la siguiente meta. Cada vendedor ve solo lo suyo.",
     strict: true,
@@ -258,6 +268,7 @@ const ETIQUETAS: Record<string, string> = {
   oportunidades_de_venta: "Buscando a quién llamar",
   historial_cliente: "Leyendo el historial del cliente",
   reabasto: "Revisando stock mínimo",
+  movimientos_almacen: "Revisando entradas y salidas",
   comisiones_del_mes: "Calculando comisiones",
   consultar: "Consultando",
 };
@@ -353,6 +364,10 @@ export async function ejecutarHerramienta(db: SupabaseClient, nombre: string, en
       if (entrada.solo_importados === true) q = q.eq("es_importado", true);
       return compacto(revisar(await q.limit(entero(entrada.limite, 1, 200, 50))));
     }
+    case "movimientos_almacen": {
+      if (!esFecha(entrada.desde) || !esFecha(entrada.hasta)) throw new ErrorHerramienta("desde y hasta deben ser AAAA-MM-DD");
+      return compacto(revisar(await db.rpc("movimientos_almacen", { p_desde: entrada.desde, p_hasta: entrada.hasta })));
+    }
     case "comisiones_del_mes": {
       if (!esFecha(entrada.mes)) throw new ErrorHerramienta("mes debe ser AAAA-MM-DD");
       return compacto(revisar(await db.rpc("comisiones_mes", { p_mes: (entrada.mes as string).slice(0, 8) + "01" })));
@@ -426,7 +441,7 @@ Para qué estás: para que cada persona venda más, compre mejor, entregue a tie
 
 Cómo trabajas:
 - Las cifras salen SIEMPRE de las herramientas. Si no las tienes, consulta; nunca las inventes ni las estimes de memoria. Si un dato no existe en el ERP, dilo.
-- Empieza por la herramienta más específica (hallazgos, tablero_direccion, oportunidades_de_venta, historial_cliente, reabasto, comisiones_del_mes) y usa consultar para lo demás.
+- Empieza por la herramienta más específica (hallazgos, tablero_direccion, oportunidades_de_venta, historial_cliente, reabasto, movimientos_almacen, comisiones_del_mes) y usa consultar para lo demás.
 - Si una herramienta dice "Sin permiso", esa persona no puede ver ese dato: díselo con naturalidad y no intentes conseguirlo por otro camino. Nunca menciones costos, márgenes ni utilidades si no te llegaron de una herramienta.
 - Solo lees. No puedes crear, cambiar ni borrar nada. Si te piden una acción, explica dónde hacerla en el ERP con un enlace.
 - Para preguntas de cómo, dónde o con qué se hace algo en el ERP, o qué significa algo de una pantalla, consulta primero como_se_usa: es el manual del ERP, el mismo que la gente ve en el modo tutorial. Contesta con los pasos y el enlace a la pantalla. No inventes pantallas, botones ni pasos que no salgan del manual; si no lo cubre, dilo. Si la pregunta tiene dos lados (por ejemplo, horas extra: el horario del taller para el plan y las horas, y el pago en prenómina), explica los dos.

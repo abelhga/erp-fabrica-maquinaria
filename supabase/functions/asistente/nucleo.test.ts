@@ -338,6 +338,23 @@ describe.skipIf(!hayBase)("asistente contra la base local", () => {
       .rejects.toThrow();
   });
 
+  it("movimientos de almacén: almacén los ve resumidos y sin costos; un vendedor no", async () => {
+    const alm = await sesion("almacen@hegamex.com");
+    const hoy = new Date().toISOString().slice(0, 10);
+    const hace30 = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+    const texto = await ejecutarHerramienta(alm.db, "movimientos_almacen", { desde: hace30, hasta: hoy });
+    const r = JSON.parse(texto);
+    expect(typeof r.movimientos).toBe("number");
+    expect(Array.isArray(r.por_tipo) && Array.isArray(r.por_dia) && Array.isArray(r.lo_que_mas_salio)).toBe(true);
+    expect(r.ajustes).toHaveProperty("pendientes_de_autorizar_hoy");
+    expect(texto).not.toMatch(/costo/i);
+    await expect(ejecutarHerramienta(isaac.db, "movimientos_almacen", { desde: hace30, hasta: hoy })).rejects.toThrow(/Sin permiso/);
+    await expect(ejecutarHerramienta(alm.db, "movimientos_almacen", { desde: "ayer", hasta: hoy })).rejects.toThrow(/AAAA-MM-DD/);
+    // El detalle va por consultar, con las columnas de siempre (sin la de costo).
+    const detalle = await ejecutarHerramienta(alm.db, "consultar", { tabla: "v_movimientos", columnas: [], filtros: [], ordenar_por: "en", descendente: true, limite: 3, solo_contar: false });
+    expect(detalle).not.toMatch(/costo_unitario/);
+  });
+
   it("sugerencias de mejora: Claude recibe los datos del taller sin las horas por persona; el supervisor no las pide", async () => {
     const ger = await sesion("gerente.produccion@hegamex.com");
     const sug = { lectura: "Pailería se pasa de sus horas.", sugerencias: [{ titulo: "Plantilla para barrenar la placa", etapa: "Pailería",
