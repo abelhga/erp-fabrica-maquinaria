@@ -75,7 +75,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   ],
   "nivel": 2,
   "texto": [
-   "Cómo anda el almacén: la salud del inventario hoy y lo que se movió en el periodo. La usan almacén, compras, la gerencia de producción y dirección.",
+   "Cómo anda el almacén: la salud del inventario hoy, lo que se movió en el periodo y cuándo se mueve más. La usan almacén, compras, gerencia de producción y dirección.",
    "Paso 1: En «Salud del inventario», dale clic a un pedazo de la barra o de la matriz.",
    "Paso 2: Baja esa lista a Excel y actúa: rematar, devolver, no volver a pedir o pedir ya.",
    "Paso 3: En «Movimiento del periodo», elige el periodo y revisa la tabla «Fuera de lista».",
@@ -92,6 +92,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Si «Consumibles del taller» está apagado en Configuración, arriba sale un aviso: los discos, la soldadura y el EPP que salen para una orden se cargan a la orden y cuentan como fuera de lista.",
    "«Consumibles por persona» suma lo que se llevó cada quien de las categorías consumibles (discos, lijas, soldadura, EPP…); «Sin anotar» son salidas a consumo que no dicen quién lo recibió.",
    "«Consumibles contra receta» compara lo que salió de cada consumible con lo que prevén las recetas de las órdenes terminadas en el periodo: en rojo, más de 20 % arriba. Lo que no viene en ninguna receta, como los guantes, solo se ve por persona.",
+   "«Cuándo se mueve» enseña el ritmo del almacén: el promedio de salidas, entradas y ajustes por día de la semana, un mapa de día y hora (entre más oscuro, más movimiento) y lo registrado cada mes. Eliges 3 meses, 12 meses o todo. Se cuentan renglones, no piezas, y la hora es la de captura.",
+   "Si la empresa cargó el historial de su sistema anterior, «Cuándo se mueve» lo junta con lo capturado en el ERP sin contar nada dos veces; abajo dice desde qué fecha hay datos y cuántos renglones vienen del historial.",
    "Abajo están los ajustes del periodo y los que esperan autorización, los conteos cerrados con cuántos renglones no coincidieron (clic en uno lo abre) y cuántos movimientos registró cada persona. Los montos solo los ve quien tiene acceso a costos."
   ]
  },
@@ -12564,6 +12566,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Tú eliges desde y hasta; se aplica al salir de cada fecha o con Enter. Si dura un año o menos se compara con las mismas fechas del año anterior; si es más largo, con un tramo igual de largo justo antes."
  },
  {
+  "clave": "periodoRitmoAlmacen",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cuánto hacia atrás se mira el ritmo: 3 meses, 12 meses o todo lo que hay. Si la empresa cargó el historial de su sistema anterior, «Todo» lo incluye."
+ },
+ {
   "clave": "periodoUsoErp",
   "modulos": [
    "admin"
@@ -12873,6 +12883,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "Para registrar una salida (consumo del taller o venta), una devolución o un traspaso entre almacenes. Lo que llega de compras entra al recibir la orden de compra, y lo que va a una orden de producción sale al surtirla desde la orden."
+ },
+ {
+  "clave": "pestanaRitmoAlmacen",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cuándo trabaja el almacén: qué día de la semana y a qué hora se registran más entradas y salidas, y cómo ha venido cada mes. Sirve para decidir cuándo contar, cuándo citar proveedores y cuándo hace falta otra persona en el mostrador."
  },
  {
   "clave": "pestanaTelefono",
@@ -14459,11 +14477,75 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Cada cuántos días suele comprar este cliente (lo típico entre una compra y otra). Compras a menos de 2 semanas de la anterior cuentan como la misma."
  },
  {
+  "clave": "ritmoDiaMasCargado",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "El día de la semana que en promedio tiene más salidas. El promedio se saca solo con los días en que hubo actividad, para que un festivo no lo baje."
+ },
+ {
+  "clave": "ritmoDiaRecord",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "El día con más renglones del periodo. Un día con muchos ajustes casi siempre es un conteo físico."
+ },
+ {
+  "clave": "ritmoDiasPico",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Los ocho días con más renglones del periodo, con cuántos fueron salidas, entradas y ajustes."
+ },
+ {
+  "clave": "ritmoHoraPico",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "La hora del día en que se registran más movimientos. Es la hora en que se capturó, no la hora en que se entregó el material: si almacén captura todo junto al final, aquí se nota."
+ },
+ {
+  "clave": "ritmoMapaDiaHora",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cada cuadro es una hora de un día de la semana; entre más oscuro, más renglones se registran ahí. Con los botones eliges si cuentan todos, solo salidas o solo entradas. Los renglones del historial que no traen hora no entran."
+ },
+ {
+  "clave": "ritmoMovimientosPorDia",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Renglones registrados (entradas, salidas y ajustes) entre los días en que hubo actividad. Un renglón es un movimiento de un artículo; no se suman piezas porque tornillos y láminas no se pueden sumar."
+ },
+ {
   "clave": "ritmoNecesario",
   "modulos": [
    "analisis"
   ],
   "texto": "Lo que falta para la meta entre los meses que quedan. Si sale una insignia «×1.3 el ritmo», hay que vender 1.3 veces el promedio mensual que lleva el año."
+ },
+ {
+  "clave": "ritmoPorDiaSemana",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Para cada día de la semana, cuántas salidas, entradas y ajustes se registran en promedio. Los ajustes incluyen los cambios de almacén."
+ },
+ {
+  "clave": "ritmoPorMes",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Cuántas salidas, entradas y ajustes se registraron cada mes. Si hay historial del sistema anterior, la línea punteada marca el mes en que el almacén empezó a capturar en el ERP."
  },
  {
   "clave": "rolUsuario",

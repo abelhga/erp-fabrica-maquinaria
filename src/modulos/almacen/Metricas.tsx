@@ -11,6 +11,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Leyenda, SERIE, ejeProps } from "@/components/graficas/comunes";
 import { Pestanas, ListaPestanas, ContenidoPestana } from "@/components/ui/pestanas";
 import { SaludInventario } from "./componentes/SaludInventario";
+import { RitmoAlmacen, PERIODOS_RITMO, type PeriodoRitmo } from "./componentes/RitmoAlmacen";
 import { useRpc } from "@/lib/consultas";
 import { dinero, fecha, fechaYHora, numero, porcentaje, hoyISO } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
@@ -65,7 +66,10 @@ export default function MetricasAlmacen() {
   const hasta = hoyISO();
   const desde = useMemo(() => restarDias(hasta, Number(periodo) - 1), [hasta, periodo]);
   // La salud del inventario es una foto de hoy; el periodo solo aplica a lo que se movió.
-  const vista = params.get("vista") === "periodo" ? "periodo" : "salud";
+  const vista = params.get("vista") === "periodo" ? "periodo" : params.get("vista") === "ritmo" ? "ritmo" : "salud";
+  // El ritmo se mira en meses: con 30 días un martes pesado ya mueve el promedio.
+  const cuanto = (PERIODOS_RITMO.some((p) => p.valor === params.get("cuanto")) ? params.get("cuanto") : "12") as PeriodoRitmo;
+  const desdeRitmo = useMemo(() => (cuanto === "todo" ? null : restarDias(hasta, Math.round(Number(cuanto) * 30.44))), [hasta, cuanto]);
   const cambiar = (cambios: Record<string, string | null>) => {
     const p = new URLSearchParams(params);
     for (const [k, v] of Object.entries(cambios)) { if (v == null) p.delete(k); else p.set(k, v); }
@@ -75,11 +79,15 @@ export default function MetricasAlmacen() {
   return (
     <Pagina titulo="Métricas de almacén" ancho="max-w-[1500px]"
       descripcion={vista === "salud" ? "Foto de hoy: cuánto alcanza el inventario contra lo que sale, y qué conviene controlar de cerca"
+        : vista === "ritmo" ? "Qué días y a qué horas se mueve más el almacén, y cómo ha venido mes con mes"
         : `Del ${fecha(desde)} al ${fecha(hasta)} · surtido, consumo, ajustes y conteos`}
-      acciones={vista === "periodo" ? <Filtro opciones={PERIODOS.map((p) => ({ ...p, explica: GLOSARIO.periodoMetricasAlmacen }))} valor={periodo} alCambiar={(v) => cambiar({ periodo: v === "30" ? null : v })} /> : undefined}>
+      acciones={vista === "periodo" ? <Filtro opciones={PERIODOS.map((p) => ({ ...p, explica: GLOSARIO.periodoMetricasAlmacen }))} valor={periodo} alCambiar={(v) => cambiar({ periodo: v === "30" ? null : v })} />
+        : vista === "ritmo" ? <Filtro opciones={PERIODOS_RITMO.map((p) => ({ ...p, explica: GLOSARIO.periodoRitmoAlmacen }))} valor={cuanto} alCambiar={(v) => cambiar({ cuanto: v === "12" ? null : v })} /> : undefined}>
       <Pestanas value={vista} onValueChange={(v) => cambiar({ vista: v === "salud" ? null : v })}>
-        <ListaPestanas opciones={[{ valor: "salud", texto: "Salud del inventario", explica: GLOSARIO.saludInventario }, { valor: "periodo", texto: "Movimiento del periodo", explica: GLOSARIO.pestanaMovimientoPeriodo }]} />
+        <ListaPestanas opciones={[{ valor: "salud", texto: "Salud del inventario", explica: GLOSARIO.saludInventario }, { valor: "periodo", texto: "Movimiento del periodo", explica: GLOSARIO.pestanaMovimientoPeriodo },
+          { valor: "ritmo", texto: "Cuándo se mueve", explica: GLOSARIO.pestanaRitmoAlmacen }]} />
         <ContenidoPestana value="salud" className="pt-4"><SaludInventario /></ContenidoPestana>
+        <ContenidoPestana value="ritmo" className="pt-4">{vista === "ritmo" && <RitmoAlmacen desde={desdeRitmo} />}</ContenidoPestana>
         <ContenidoPestana value="periodo" className="pt-4">
           {m.error ? <ErrorCarga error={m.error} /> : m.isLoading || !m.data ? <Cargando filas={8} /> : <Contenido d={m.data} />}
         </ContenidoPestana>
