@@ -693,7 +693,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 3: En su cuenta, dale «Registrar pago» y, si quieres, elige qué factura liquidas.",
    "La agenda enseña lo vencido primero y lo que viene en las próximas 4 semanas, sumado por proveedor cada semana. La cuenta de cada proveedor trae sus facturas pendientes, todos sus movimientos (los de la hoja y los de aquí) y el botón para registrar un pago.",
    "Al pagar, si no eliges factura, el pago va a las que vencen primero. Pagar de más solo se puede como anticipo.",
-   "Un anticipo se marca al registrarlo: queda a favor del proveedor y se descuenta de sus facturas de contado. No paga las facturas a crédito: esas siguen en «por pagar» y en vencidas hasta que se paguen, y la cuenta muestra aparte «Por pagar» y «A favor».",
+   "Un anticipo se marca al registrarlo: queda a favor del proveedor y se descuenta de sus facturas de contado. No paga las facturas a crédito: esas siguen en «por pagar» y en vencidas hasta que se paguen, y la cuenta muestra aparte «Por pagar» y «A favor». Si subes la factura de un anticipo, el ERP la reconoce y la registra como anticipo, no como compra: solo te pide de qué cuenta salió y qué día.",
+   "Dentro de la cuenta de un proveedor hay un buscador: escribe el final del folio, el concepto o el monto y deja solo esa factura, arriba si se debe y abajo con sus movimientos. Cada compra dice «Pagada» o cuánto se le debe.",
    "Cada factura que llega (material, flete, luz, servicio) se registra con «Registrar compra o gasto»: el XML llena proveedor (por su RFC), folio, total y fecha, y puedes subir varios a la vez. Si no tienes el XML, sube el PDF o una foto: la IA la lee, y tú revisas los datos antes de registrar.",
    "Si la factura dice que es de contado, marca «Ya se pagó (de contado)» y elige la cuenta. Si el proveedor no existe, se da de alta ahí mismo con su RFC.",
    "Si el proveedor tiene órdenes de compra, el formulario te pregunta de cuál es la factura; ya viene marcada la que casa con el folio que anotó almacén al recibir. En la cuenta del proveedor, el botón del portapapeles en cada compra cambia de qué orden es.",
@@ -5076,6 +5077,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Las cajas que van a salir, con peso y medidas. Salen del empaque capturado de cada artículo de la cotización (sin contar opcionales ni servicios); si a uno le falta, escríbelo o agrega un bulto a mano. Sin peso y medidas de todos, la paquetería no cotiza."
  },
  {
+  "clave": "buscadorFacturasProveedor",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Busca una factura en la cuenta de este proveedor: por su folio (basta el final, por ejemplo «4858»), por el concepto o por el monto. Filtra a la vez lo que hay por pagar y los movimientos, para ver si está, cuánto se le debe y cuándo se pagó."
+ },
+ {
   "clave": "buscadorGlobal",
   "modulos": [],
   "texto": "Un solo buscador para todo (también con Ctrl+K): clientes, sus contactos, leads, equipos y componentes, cotizaciones, pedidos, órdenes, proveedores y números de serie. A un cliente lo encuentras por su nombre, su RFC o por el nombre, el teléfono o el correo de cualquiera de sus contactos; a un lead, por su nombre, empresa o teléfono. Solo te salen las cosas que tu puesto puede ver."
@@ -5604,6 +5617,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Una factura que se canceló en el SAT (casi siempre porque salió mal y se volvió a timbrar). No cuenta: no se amarra a la hoja ni sale como pendiente. Las que vienen de una carpeta «Canceladas» de Drive se marcan solas; si el SAT dice que otra está cancelada, márcala con su botón y su renglón de la hoja pasa a la factura que la reemplazó."
+ },
+ {
+  "clave": "cfdiDeAnticipo",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Una factura de anticipo («Anticipo del bien o servicio») no es una compra: es dinero que se entregó por adelantado. El ERP la registra como pago de anticipo, que queda a favor con el proveedor y se va descontando de sus facturas de contado. Si se registrara como compra, saldría como una factura por pagar que no existe."
  },
  {
   "clave": "checklistAplica",
@@ -8228,6 +8253,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Sin atender: se reportó o se generó y nadie la ha tomado. En reparación: alguien ya escribió el diagnóstico o le dio play. Cerrada: se terminó y se anotó qué se hizo. Cancelada: no procedía, con su motivo."
+ },
+ {
+  "clave": "estadoPagoCompra",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Si esta compra está pagada o cuánto se le debe todavía, según cómo el ERP repartió los pagos: primero el pago que dice qué factura paga; el dinero de anticipos cubre las de contado; lo demás va a la que vence primero. Si una factura sale «Pagada» y no lo está, busca el pago que quedó sin decir a qué factura iba."
  },
  {
   "clave": "estadoPagoImportacion",
