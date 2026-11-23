@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Ban, ClipboardList, FilePlus2, Link2, Pencil, Trash2, Undo2, Users, Wallet } from "lucide-react";
+import { Ban, ClipboardList, FilePlus2, Link2, Pencil, Search, Trash2, Undo2, Users, Wallet } from "lucide-react";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
 import { Lateral } from "@/components/ui/dialogo";
 import { Insignia } from "@/components/ui/insignia";
@@ -12,7 +12,7 @@ import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
 import { q, useAccion } from "@/lib/consultas";
 import { dinero, fecha, hace, hoyISO } from "@/lib/formato";
-import { cn } from "@/lib/utilidades";
+import { cn, normalizar as sinAcentos } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import {
   INVALIDAR_PROVEEDORES, SelectorCuenta, TIPO_ACREEDOR, Vencimiento, diasPara, esPrestamo, useCuentasDinero,
@@ -147,6 +147,24 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
       factura: m.factura, descripcion: m.descripcion, hojaId: m.id, repetida: porRepetida.get(m.id) })),
   ].sort((a, b) => b.fecha.localeCompare(a.fecha));
   const vencidas = facturas.filter((x) => (diasPara(x.vence_el) ?? 0) < 0);
+  // Buscar una factura en la cuenta: por folio (basta el final: «4858»), por lo que dice o por el
+  // monto. Filtra lo que hay por pagar y los movimientos a la vez, para ver de un vistazo si una
+  // factura está, cuánto se le debe y con qué se pagó.
+  const [buscar, setBuscar] = useState("");
+  useEffect(() => setBuscar(""), [llave]);
+  const busca = sinAcentos(buscar.trim());
+  const digitos = busca.replace(/\D/g, "");
+  const coincideCon = (x: { factura?: string | null; descripcion?: string | null; monto: number | string; fecha: string }) => {
+    if (!busca) return true;
+    const texto = sinAcentos(`${x.factura ?? ""} ${x.descripcion ?? ""} ${fecha(x.fecha)}`);
+    return texto.includes(busca)
+      || (digitos.length >= 3 && (`${x.factura ?? ""}`.replace(/\D/g, "").includes(digitos) || Number(x.monto).toFixed(2).replace(".", "").includes(digitos)));
+  };
+  const facturasVistas = facturas.filter(coincideCon);
+  const renglonesVistos = renglones.filter(coincideCon);
+  // Lo que se le debe a cada compra según el reparto de pagos del ERP (0 = pagada).
+  const debe = new Map(facturas.map((x) => [x.id, Number(x.restante)]));
+  const debeDe = (m: Renglon) => debe.get(m.erp ? m.erp.id : `hoja:${m.hojaId}`) ?? 0;
 
   return (
     <Lateral abierto={!!cuenta} alCambiar={(v) => !v && alCerrar()} titulo={cuenta?.nombre ?? ""}
@@ -178,11 +196,21 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
         ? <RegistrarPagoProveedor cuenta={cuenta} vencido={Number(cuenta.vencido)} facturas={facturas} banco={prov.data?.datos_bancarios ?? null} alTerminar={() => setPagando(false)} />
         : <Boton className="mb-5 w-full sm:w-auto" data-explain={GLOSARIO.botonRegistrarPagoProveedor} onClick={() => setPagando(true)}><Wallet className="h-4 w-4" /> Registrar pago</Boton>)}
 
-      {facturas.length > 0 && (
+      {cuenta && renglones.length > 0 && (
+        <div className="mb-4" data-explain={GLOSARIO.buscadorFacturasProveedor} data-explain-title="Buscar una factura">
+          <div className="relative">
+            <Search className="h-4 w-4 text-tenue absolute left-3 top-1/2 -translate-y-1/2" />
+            <input className="campo pl-9" value={buscar} onChange={(e) => setBuscar(e.target.value)} aria-label="Buscar una factura"
+              placeholder="Buscar factura: folio (basta el final), concepto o monto…" />
+          </div>
+          {busca && <p className="mt-1 text-xs text-tenue">{facturasVistas.length ? `${facturasVistas.length} por pagar` : "Ninguna por pagar"} · {renglonesVistos.length} {renglonesVistos.length === 1 ? "movimiento" : "movimientos"} con «{buscar.trim()}»</p>}
+        </div>
+      )}
+      {facturasVistas.length > 0 && (
         <div className="mb-5">
-          <p className="etiqueta mb-1" data-explain={GLOSARIO.facturasPendientes}>Facturas por pagar ({facturas.length}{vencidas.length ? `, ${vencidas.length} vencidas` : ""})</p>
+          <p className="etiqueta mb-1" data-explain={GLOSARIO.facturasPendientes}>Facturas por pagar ({busca ? `${facturasVistas.length} de ${facturas.length}` : facturas.length}{!busca && vencidas.length ? `, ${vencidas.length} vencidas` : ""})</p>
           <div className="divide-y divide-borde">
-            {facturas.map((x) => (
+            {facturasVistas.map((x) => (
               <div key={x.id} className="py-2 flex items-start gap-3 text-sm">
                 <span className="w-20 shrink-0 text-tenue whitespace-nowrap">{fecha(x.fecha)}</span>
                 <div className="flex-1 min-w-0">
@@ -204,7 +232,8 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
       {erp.isLoading || hoja.isLoading ? <Cargando filas={6} /> : (
         <div className="divide-y divide-borde">
           {renglones.length === 0 && <p className="py-2 text-sm text-tenue">Sin movimientos todavía.</p>}
-          {renglones.map((m) => (
+          {renglones.length > 0 && renglonesVistos.length === 0 && <p className="py-2 text-sm text-tenue">Ningún movimiento con «{buscar.trim()}». Si la factura es de hace mucho, puede no estar entre los 200 más recientes de la hoja.</p>}
+          {renglonesVistos.map((m) => (
             <div key={m.clave} className={cn("py-2 flex items-start gap-3 text-sm", m.repetida && "opacity-60")}>
               <span className="w-20 shrink-0 text-tenue whitespace-nowrap">{fecha(m.fecha)}</span>
               <div className="flex-1 min-w-0">
@@ -225,6 +254,11 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
                     </span>
                   ))}
                   {m.erp?.tipo === "compra" && !ordenesDe(m.erp.id).length && m.erp.categoria && <span className="text-xs text-tenue">{m.erp.categoria}</span>}
+                  {(m.erp ? m.erp.tipo === "compra" : m.tipo === "Compra") && !m.repetida && (
+                    <span data-explain={GLOSARIO.estadoPagoCompra} data-explain-title="¿Está pagada?">
+                      {debeDe(m) >= 1 ? <Insignia tono="aviso">Debe {dinero(debeDe(m))}</Insignia> : <span className="text-xs text-ok">Pagada</span>}
+                    </span>
+                  )}
                 </p>
                 {m.descripcion && <p className="text-tenue mt-0.5 whitespace-pre-line break-words">{m.descripcion}</p>}
               </div>

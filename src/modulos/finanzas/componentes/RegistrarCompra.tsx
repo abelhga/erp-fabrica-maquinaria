@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, FileCode2, Loader2, Sparkles, Upload } from "lucide-react";
+import { AlertTriangle, FileCode2, Loader2, Sparkles, Upload, Wallet } from "lucide-react";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Boton } from "@/components/ui/boton";
 import { Campo, Entrada } from "@/components/ui/campo";
@@ -177,6 +177,12 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas 
   }
 
   const notaCredito = cfdi?.tipo === "E";
+  // El CFDI de un anticipo (clave del SAT 84111506, «Anticipo del bien o servicio») no es una
+  // compra: es dinero entregado por adelantado. Se registra como pago de anticipo, que queda a
+  // favor; la compra llega después con su propia factura. La base rechaza registrarlo como compra.
+  const clavesCfdi = cfdi?.claves ?? [];
+  const esAnticipo = !notaCredito && (clavesCfdi.length > 0 ? clavesCfdi.every((k) => k.clave === "84111506")
+    : /^anticipo del bien o servicio/i.test(cfdi?.conceptos[0] ?? ""));
   const monto = Number(f.monto) || 0;
   // Mismo proveedor, mismo monto, a una semana y con otro folio o sin folio: puede ser la
   // misma compra capturada otra vez. No se bloquea (dos cargas iguales de Google Ads existen):
@@ -224,6 +230,14 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas 
   });
   const guardar = useAccion(async () => {
     const comunes = { p_proveedor: prov!.id, p_fecha: f.fecha, p_factura: f.factura || null };
+    if (esAnticipo) {
+      await q(supabase.rpc("registrar_movimiento_proveedor", {
+        p_proveedor: prov!.id, p_fecha: f.fecha, p_tipo: "pago", p_monto: monto, p_cuenta: f.cuenta, p_anticipo: true,
+        p_descripcion: `Anticipo${f.factura ? ` · CFDI ${f.factura}` : ""}`, p_cfdi_uuid: cfdi?.uuid ?? null,
+        p_leido_de: actual?.deClaude ? "pdf" : cfdi ? "xml" : "captura", p_claves_sat: claves.length ? claves.map((k) => k.clave) : null,
+      }));
+      return;
+    }
     await q(supabase.rpc("registrar_movimiento_proveedor", {
       ...comunes, p_tipo: notaCredito ? "reembolso_pendiente" : "compra", p_monto: monto,
       p_descripcion: (notaCredito ? `Nota de crédito. ${f.descripcion}` : f.descripcion) || null,
@@ -242,12 +256,13 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas 
       }));
     }
   }, {
-    exito: notaCredito ? "Nota de crédito registrada" : f.pagada ? "Compra y pago registrados" : "Compra registrada",
+    exito: esAnticipo ? "Anticipo registrado: queda a favor con el proveedor" : notaCredito ? "Nota de crédito registrada" : f.pagada ? "Compra y pago registrados" : "Compra registrada",
     invalidar: [...INVALIDAR_PROVEEDORES, ["compra_oc"], ["ordenes_para_ligar"], ["v_por_pagar"], ["facturas_de_oc"], ["sugerir_categoria_sat"]], alTerminar: siguiente,
   });
 
   function enviar(e: FormEvent) {
     e.preventDefault();
+    if (esAnticipo) { if (prov && monto > 0 && !actual?.error && f.cuenta) guardar.mutate(undefined); return; }
     if (prov && monto > 0 && !actual?.error && (!f.pagada || f.cuenta) && (!hayParecidas || esOtra) && !faltaCategoria) guardar.mutate(undefined);
   }
 
@@ -255,14 +270,16 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas 
 
   return (
     <Dialogo abierto={abierto} alCambiar={(v) => !v && alCerrar()} ancho="max-w-2xl"
-      titulo={notaCredito ? "Registrar nota de crédito" : "Registrar compra o gasto"}
-      descripcion="Material, servicios, fletes, luz: todo lo que se le debe (o ya se le pagó) a un proveedor."
+      titulo={esAnticipo ? "Registrar anticipo" : notaCredito ? "Registrar nota de crédito" : "Registrar compra o gasto"}
+      descripcion={esAnticipo ? "Dinero entregado por adelantado: no es una compra, queda a favor con el proveedor."
+        : "Material, servicios, fletes, luz: todo lo que se le debe (o ya se le pagó) a un proveedor."}
       pie={<>
         {cola.length > 1 && <span className="mr-auto text-sm text-tenue">Factura {idx + 1} de {cola.length}</span>}
         {cola.length > 1 && <Boton variante="secundario" type="button" data-explain={GLOSARIO.botonSaltarFactura} onClick={siguiente}>Saltar</Boton>}
         <Boton variante="secundario" type="button" onClick={alCerrar}>Cerrar</Boton>
-        <Boton type="submit" form="registrar-compra" cargando={guardar.isPending} disabled={!prov || monto <= 0 || bloqueado || (f.pagada && !f.cuenta) || (hayParecidas && !esOtra) || faltaCategoria}>
-          {notaCredito ? "Registrar nota de crédito" : f.pagada ? "Registrar compra y pago" : "Registrar compra"}
+        <Boton type="submit" form="registrar-compra" cargando={guardar.isPending}
+          disabled={!prov || monto <= 0 || bloqueado || (esAnticipo ? !f.cuenta : (f.pagada && !f.cuenta) || (hayParecidas && !esOtra) || faltaCategoria)}>
+          {esAnticipo ? "Registrar anticipo" : notaCredito ? "Registrar nota de crédito" : f.pagada ? "Registrar compra y pago" : "Registrar compra"}
         </Boton>
       </>}>
       <div className="space-y-4">
@@ -288,6 +305,12 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas 
         </label>
         {actual?.error && (
           <p className="flex items-start gap-2 rounded-lg bg-aviso-suave px-3 py-2 text-sm"><AlertTriangle className="h-4 w-4 mt-0.5 text-aviso shrink-0" />{actual.error}</p>
+        )}
+        {esAnticipo && !actual?.error && (
+          <p className="flex items-start gap-2 rounded-lg bg-info-suave px-3 py-2 text-sm" data-explain={GLOSARIO.cfdiDeAnticipo} data-explain-title="CFDI de anticipo">
+            <Wallet className="h-4 w-4 mt-0.5 text-info shrink-0" />
+            <span><b>Esta factura es de un anticipo, no de una compra.</b> Se registra como pago de anticipo: queda a favor con el proveedor y se descuenta de las facturas de contado que vengan. Las facturas a crédito se siguen pagando aparte.</span>
+          </p>
         )}
         {actual?.deClaude && !actual.error && (
           <div className="rounded-lg bg-info-suave px-3 py-2 text-sm space-y-1" data-explain={GLOSARIO.facturaLeidaPdf} data-explain-title="Leída de un PDF">
@@ -325,13 +348,19 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas 
             )}
             {prov && <span className="block text-xs text-tenue">{prov.dias_credito ? `Crédito de ${prov.dias_credito} días` : "De contado (0 días de crédito)"}{prov.rfc ? ` · RFC ${prov.rfc}` : ""}</span>}
           </div>
-          <Campo etiqueta={notaCredito ? "Monto de la nota (con IVA)" : "Total (con IVA)"}>
+          <Campo etiqueta={esAnticipo ? "Monto del anticipo" : notaCredito ? "Monto de la nota (con IVA)" : "Total (con IVA)"}>
             <Entrada type="number" step="0.01" min="0" value={f.monto} onChange={(e) => setF({ ...f, monto: e.target.value })} className="cifra" required autoFocus={!cfdi} />
           </Campo>
-          <Campo etiqueta="Fecha de la factura">
+          <Campo etiqueta={esAnticipo ? "Fecha en que se pagó" : "Fecha de la factura"} ayuda={esAnticipo ? "Viene la de la factura; cámbiala si el dinero salió otro día." : undefined}>
             <Entrada type="date" value={f.fecha} max={hoyISO()} onChange={(e) => setF({ ...f, fecha: e.target.value })} required />
           </Campo>
-          {hayParecidas && (
+          {esAnticipo && <>
+            <Campo etiqueta="Factura del anticipo (serie y folio)">
+              <Entrada value={f.factura} onChange={(e) => setF({ ...f, factura: e.target.value })} />
+            </Campo>
+            <div className="space-y-1.5"><span className="text-sm font-medium">De qué cuenta salió</span><SelectorCuenta valor={f.cuenta} alCambiar={(v) => setF({ ...f, cuenta: v })} /></div>
+          </>}
+          {!esAnticipo && hayParecidas && (
             <div className="sm:col-span-2 rounded-lg border border-aviso/30 bg-aviso-suave px-3 py-2 text-sm space-y-1.5"
               data-explain={GLOSARIO.facturaRepetida} data-explain-title="¿Ya está registrada?">
               <p className="flex items-start gap-2 font-medium"><AlertTriangle className="h-4 w-4 mt-0.5 text-aviso shrink-0" />
@@ -346,15 +375,15 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas 
               </label>
             </div>
           )}
-          <Campo etiqueta="Factura (serie y folio)">
+          {!esAnticipo && <Campo etiqueta="Factura (serie y folio)">
             <Entrada value={f.factura} onChange={(e) => setF({ ...f, factura: e.target.value })} placeholder="A 3354" />
-          </Campo>
-          {(ordenes.data?.length ?? 0) > 0 && (
+          </Campo>}
+          {!esAnticipo && (ordenes.data?.length ?? 0) > 0 && (
             <div className="sm:col-span-2">
               <ElegirOrdenes ordenes={ordenes.data!} elegidas={ocs} alCambiar={(ids) => { setTocoOcs(true); setOcs(ids); }} />
             </div>
           )}
-          <div className="space-y-1">
+          {!esAnticipo && <div className="space-y-1">
             <Campo etiqueta={conOrden ? "Categoría (partidas sin artículo)" : "Categoría"}
               ayuda={usaSugerida ? undefined : conOrden ? "Fletes y servicios de la orden toman esta; lo demás, la de su artículo."
                 : notaCredito ? "La del proveedor si la dejas igual." : "Obligatoria sin orden de compra: dice en qué se gastó (Fletes, Luz, Publicidad…). Viene la del proveedor."}>
@@ -371,11 +400,11 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas 
                   onClick={() => { setTocoCategoria(true); setF((x) => ({ ...x, categoria: prov.categoria! })); }}>Usar la del proveedor ({prov.categoria})</button></>}
               </p>
             )}
-          </div>
-          <Campo etiqueta="Concepto" className="sm:col-span-2">
+          </div>}
+          {!esAnticipo && <Campo etiqueta="Concepto" className="sm:col-span-2">
             <Entrada value={f.descripcion} onChange={(e) => setF({ ...f, descripcion: e.target.value })} placeholder="Qué se compró" />
-          </Campo>
-          {!notaCredito && <>
+          </Campo>}
+          {!notaCredito && !esAnticipo && <>
             <Campo etiqueta="Vence el" ayuda={!tocoVence && prov ? "Fecha de la factura más los días de crédito del proveedor." : undefined}>
               <Entrada type="date" value={vence} disabled={f.pagada} onChange={(e) => { setTocoVence(true); setF({ ...f, vence: e.target.value }); }} />
             </Campo>
