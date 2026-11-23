@@ -63,7 +63,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 3: Dale clic a un renglón para ver el artículo por almacén y para qué está apartado.",
    "Disponible es lo que hay en planta menos lo apartado. Lo del Full de Mercado Libre existe, pero no cuenta para planta. Un número en rojo es existencia negativa: salió algo cuya entrada nunca se registró, y se corrige con un conteo y un ajuste.",
    "Si tu puesto ve compras o finanzas, también ves la columna Tránsito y el filtro En tránsito: lo que viene en órdenes de compra enviadas que todavía no llegan.",
-   "El selector de almacén deja solo lo que hay en ese almacén. El panel del artículo se abre a un lado: cuánto hay en cada almacén, para qué orden o pedido está apartado y, si tu puesto lo ve, su kardex.",
+   "El selector de almacén deja solo lo que hay en ese almacén. El panel del artículo se abre a un lado: cuánto hay en cada almacén, para qué orden o pedido está apartado y, si tu puesto lo ve, su kardex. Si la empresa trabaja con lector, ahí mismo están sus códigos de barras: para ligar uno, pon el cursor en el campo y lee el empaque.",
    "«Registrar entrada o salida» te lleva a Entradas y salidas; desde el panel del artículo llegas con el artículo ya elegido. El botón de CSV baja la lista para Excel. La tabla se actualiza sola cuando alguien registra un movimiento."
   ]
  },
@@ -113,6 +113,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Los botones de motivo llenan el texto por ti. A la derecha, «Lo que registraste hoy» enseña tus movimientos del día para que confirmes que quedaron bien. La fecha, la hora y tu nombre los pone el sistema: no se puede capturar con fecha atrasada ni a nombre de otro.",
    "Nada se edita ni se borra. Si te equivocaste en una salida o un traspaso que registraste tú, en «Lo que registraste hoy» tienes unos minutos para «Deshacer», con el motivo (15 de inicio; los fija dirección en Configuración y el botón dice cuántos quedan).",
    "Deshacer deja el movimiento contrario ligado al original (sale como «corrección» y el original como «deshecho»), con tu nombre y la hora, y el consumo se compensa. Un traspaso solo regresa si lo que llegó sigue en el destino.",
+   "Si la empresa trabaja con lector de códigos de barras (se prende en Configuración → Almacenes), en Registrar lees el artículo en vez de buscarlo: queda elegido con cantidad 1 y leerlo otra vez suma una pieza. En un conteo, leerlo lo trae a la lista y deja el cursor en su «Contado». También se lee la clave del artículo.",
    "Pasado ese tiempo, o si lo registró otra persona, no lo vuelvas a capturar al revés: pide un ajuste. Lo surtido a una orden, lo recibido de una compra, las entregas de pedidos y los envíos se corrigen desde su propia pantalla.",
    "Historial filtra por tipo, almacén, persona y fechas (al abrir, los últimos 30 días) y se baja a Excel. «Recibió» es quién se llevó el material; «Quién» es quién lo registró. Registrar solo sale si tu puesto captura almacén; Historial, si capturas almacén o tienes permiso de costos.",
    "En Ajustes pides una corrección cuando lo del estante no cuadra, y la gerencia la aprueba o la rechaza; hasta entonces la existencia no cambia. Si falta o sobra algo de valor, la gerencia te pide que expliques qué pasó o dónde están, y lo escribes ahí mismo en el ajuste.",
@@ -966,7 +967,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 3: Para crear, usa «Crear órdenes desde pedido», u «Orden para stock» si no tiene cliente.",
    "La usan la gerencia, almacén e ingeniería. Los renglones en rojo están atrasados; «En espera» en lugar de la fecha quiere decir que la orden está detenida (pasa el mouse para ver por qué).",
    "Debajo del material van tres palomitas: Ing. (ingeniería revisó la lista), Apartado (se apartó el material) y Alm. (almacén revisó la existencia física).",
-   "«Crear órdenes desde pedido» muestra los pedidos confirmados que todavía tienen equipos por producir (el número del botón) y «Orden para stock» crea una sin cliente. Si de alguno de esos equipos ya hay uno igual para stock, antes de crear nada te lo enseña: con «Usar este» se asigna al pedido, y con «Fabricar nuevos de todos modos» se crean las órdenes y el de stock se queda en stock.",
+   "«Crear órdenes desde pedido» muestra los pedidos confirmados que todavía tienen equipos por producir (el número del botón) y «Orden para stock» crea una sin cliente (si pides varios equipos, sale una orden por cada uno; de un subensamble, una sola por el lote). Si de alguno de esos equipos ya hay uno igual para stock, antes de crear nada te lo enseña: con «Usar este» se asigna al pedido, y con «Fabricar nuevos de todos modos» se crean las órdenes y el de stock se queda en stock.",
    "Cada orden copia la lista de materiales del equipo al crearse, así un cambio posterior al catálogo no la mueve. Cada orden de un equipo saca su número de serie sola, si el equipo ya tiene código."
   ]
  },
@@ -1429,7 +1430,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 3: En las tablas, la celda se guarda sola al salir de ella o con Enter; Escape la regresa.",
    "También están los datos fiscales, la fecha de arranque, el tema con el que abre el ERP (oscuro o claro), los minutos para deshacer errores y la semana laboral. Lo que tu rol no puede cambiar sale en solo lectura y dice quién sí puede. Cada cambio queda en la bitácora.",
    "Algunas cosas mueven números en otras pantallas: la semana laboral y los descansos cuentan los días de vacaciones y permisos; la fecha de arranque marca el corte entre la hoja y el ERP; un almacén no disponible para planta no cuenta para producción ni para el cotizador; el tipo de cambio más reciente convierte los costos en dólares y los saldos de proveedores y clientes (una cotización o un pedido en dólares guarda el suyo).",
-   "En «Taller», la capacidad de las áreas automáticas sale de su gente (no se escribe a mano) y la de las demás sí. En «Almacenes», con «Consumibles del taller» prendido, lo de las categorías marcadas sale a nombre de quien lo recibe y no a la orden; al prenderlo se suelta lo que estaba apartado de esos artículos para órdenes.",
+   "En «Taller», la capacidad de las áreas automáticas sale de su gente (no se escribe a mano) y la de las demás sí. En «Almacenes», con «Consumibles del taller» prendido, lo de las categorías marcadas sale a nombre de quien lo recibe y no a la orden; al prenderlo se suelta lo que estaba apartado de esos artículos para órdenes. «Lector de códigos de barras» prende el trabajo con lector en almacén: sirve cualquiera que escriba como teclado, sin instalar nada.",
    "En «Empresa», «Deshacer errores» fija cuántos minutos tiene quien se equivocó para deshacer una salida o un traspaso en almacén, y para reabrir un pendiente que cerró (15 de inicio). En 0 se apaga: almacén pide un ajuste y el pendiente se pide de nuevo.",
    "En «Ventas», la tarjeta «Leads de recepción» dice a quién le llega cada lead nuevo: bandeja (el primero que lo toma), la gerencia de ventas lo asigna o recepción elige al vendedor. La cambian la gerencia de ventas o dirección.",
    "Ahí mismo se ponen las horas para avisar a la gerencia si nadie toma un lead o nadie lo atiende, y qué vendedores reciben leads.",
@@ -3079,7 +3080,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Cancela la orden con su motivo: suelta el material apartado y cancela lo que se pidió a compras y todavía no está en una orden de compra. No se puede deshacer. Si ya se había surtido material, hay que regresarlo al almacén."
+  "texto": "Así se quita una orden que no va (se creó por error, el cliente canceló). La hace la gerencia de producción, con su motivo: la orden sale de las abiertas y queda en el historial como cancelada, se suelta el material apartado y se cancela lo que se pidió a compras y todavía no está en una orden de compra. Si la orden no había arrancado, su número de serie queda libre. No se puede deshacer. Si ya se había surtido material, hay que regresarlo al almacén."
  },
  {
   "clave": "botonCancelarOrdenMto",
@@ -5344,6 +5345,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Vacaciones, permisos y faltas se cuentan en días hábiles; la incapacidad, en días naturales, como el IMSS. El retardo va en minutos y las horas extra, en horas."
  },
  {
+  "clave": "cantidadOrdenStock",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Cuántos se van a fabricar. De un equipo, cada pieza es su propia orden con su número de serie: si pones 4, se crean 4 órdenes. De un subensamble se crea una sola orden por todo el lote."
+ },
+ {
   "clave": "cantidadRecibidaDevolucion",
   "modulos": [
    "ventas",
@@ -5699,6 +5708,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "El día en que crees que el cliente va a decidir. Sale en el calendario como «Cierre esperado», en ámbar si ya pasó y sigue abierta."
  },
  {
+  "clave": "claveComoCodigo",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "La clave del artículo también se lee con el lector, sin darla de alta: una etiqueta con la clave (en barras o en QR) ya funciona."
+ },
+ {
   "clave": "claveInegi",
   "modulos": [
    "analisis"
@@ -5878,6 +5895,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "El código que da Mercado Libre para esa devolución o reclamo. Queda aquí y no en el chat."
+ },
+ {
+  "clave": "codigosDeBarras",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Los códigos con los que el lector reconoce este artículo: el del fabricante, el del proveedor o uno propio. Un artículo puede tener varios; un código es de un solo artículo. Para ligar uno, pon el cursor en el campo y lee el empaque."
  },
  {
   "clave": "codigoSerie",
@@ -10198,6 +10223,13 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Prende o apaga el freno para todos y fija el tope: con más seguimientos vencidos que el tope, un vendedor no puede enviar cotizaciones nuevas. Apagado, nadie se frena, pero los seguimientos se siguen contando y avisando igual. Es para temporadas; para unos días y ciertos vendedores conviene «Liberar…» en el seguimiento de Cotizaciones, que se quita solo."
  },
  {
+  "clave": "interruptorLector",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Prendido, en «Entradas y salidas» y en los conteos el artículo se lee con el lector, y en el detalle de cada artículo, en Existencias, aparecen sus códigos de barras para ligarlos. Apagado no se ve nada de esto; los códigos ya ligados se conservan."
+ },
+ {
   "clave": "inventarioTablero",
   "modulos": [
    "costeo",
@@ -10462,6 +10494,21 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Cuánto tarda un equipo desde que se libera al taller hasta que se termina, en días de calendario. Solo cuentan las órdenes que se liberaron en el ERP: las que se cargaron de la hoja no tienen esa fecha (su «liberada» sería el día de la carga), por eso sale «—» mientras no haya terminadas que se liberaron aquí. La mediana es el caso típico: no la mueven uno o dos equipos que se quedaron detenidos meses."
+ },
+ {
+  "clave": "lectorCodigos",
+  "modulos": [
+   "admin"
+  ],
+  "texto": "Para un almacén que registra con lector de códigos de barras. Sirve cualquier lector que escriba como teclado (USB o inalámbrico): se conecta y funciona, sin instalar nada."
+ },
+ {
+  "clave": "lectorEnRegistrar",
+  "modulos": [
+   "inventario",
+   "envios"
+  ],
+  "texto": "Con el lector prendido no hace falta buscar: lee el código del artículo y queda elegido con cantidad 1, esté donde esté el cursor. Si lo lees otra vez, suma una pieza. Si el código no está ligado a nada, te avisa."
  },
  {
   "clave": "leerCotizacionProveedor",

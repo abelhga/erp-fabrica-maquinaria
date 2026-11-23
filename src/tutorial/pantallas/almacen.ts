@@ -15,7 +15,7 @@ export const ALMACEN: Record<string, AyudaPantalla> = {
     detalle: [
       "Disponible es lo que hay en planta menos lo apartado. Lo del Full de Mercado Libre existe, pero no cuenta para planta. Un número en rojo es existencia negativa: salió algo cuya entrada nunca se registró, y se corrige con un conteo y un ajuste.",
       "Si tu puesto ve compras o finanzas, también ves la columna Tránsito y el filtro En tránsito: lo que viene en órdenes de compra enviadas que todavía no llegan.",
-      "El selector de almacén deja solo lo que hay en ese almacén. El panel del artículo se abre a un lado: cuánto hay en cada almacén, para qué orden o pedido está apartado y, si tu puesto lo ve, su kardex.",
+      "El selector de almacén deja solo lo que hay en ese almacén. El panel del artículo se abre a un lado: cuánto hay en cada almacén, para qué orden o pedido está apartado y, si tu puesto lo ve, su kardex. Si la empresa trabaja con lector, ahí mismo están sus códigos de barras: para ligar uno, pon el cursor en el campo y lee el empaque.",
       "«Registrar entrada o salida» te lleva a Entradas y salidas; desde el panel del artículo llegas con el artículo ya elegido. El botón de CSV baja la lista para Excel. La tabla se actualiza sola cuando alguien registra un movimiento.",
     ],
   },
@@ -31,6 +31,7 @@ export const ALMACEN: Record<string, AyudaPantalla> = {
       "Los botones de motivo llenan el texto por ti. A la derecha, «Lo que registraste hoy» enseña tus movimientos del día para que confirmes que quedaron bien. La fecha, la hora y tu nombre los pone el sistema: no se puede capturar con fecha atrasada ni a nombre de otro.",
       "Nada se edita ni se borra. Si te equivocaste en una salida o un traspaso que registraste tú, en «Lo que registraste hoy» tienes unos minutos para «Deshacer», con el motivo (15 de inicio; los fija dirección en Configuración y el botón dice cuántos quedan).",
       "Deshacer deja el movimiento contrario ligado al original (sale como «corrección» y el original como «deshecho»), con tu nombre y la hora, y el consumo se compensa. Un traspaso solo regresa si lo que llegó sigue en el destino.",
+      "Si la empresa trabaja con lector de códigos de barras (se prende en Configuración → Almacenes), en Registrar lees el artículo en vez de buscarlo: queda elegido con cantidad 1 y leerlo otra vez suma una pieza. En un conteo, leerlo lo trae a la lista y deja el cursor en su «Contado». También se lee la clave del artículo.",
       "Pasado ese tiempo, o si lo registró otra persona, no lo vuelvas a capturar al revés: pide un ajuste. Lo surtido a una orden, lo recibido de una compra, las entregas de pedidos y los envíos se corrigen desde su propia pantalla.",
       "Historial filtra por tipo, almacén, persona y fechas (al abrir, los últimos 30 días) y se baja a Excel. «Recibió» es quién se llevó el material; «Quién» es quién lo registró. Registrar solo sale si tu puesto captura almacén; Historial, si capturas almacén o tienes permiso de costos.",
       "En Ajustes pides una corrección cuando lo del estante no cuadra, y la gerencia la aprueba o la rechaza; hasta entonces la existencia no cambia. Si falta o sobra algo de valor, la gerencia te pide que expliques qué pasó o dónde están, y lo escribes ahí mismo en el ajuste.",

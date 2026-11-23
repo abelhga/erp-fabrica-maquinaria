@@ -58,7 +58,7 @@ export function DialogoCancelar({ abierto, alCambiar, o }: { abierto: boolean; a
   });
   return (
     <Dialogo abierto={abierto} alCambiar={alCambiar} titulo={`Cancelar ${o.folio}`}
-             descripcion="Se suelta el material apartado y se cancela lo que se pidió a compras para esta orden. No se puede deshacer."
+             descripcion="La orden sale de las abiertas y queda en el historial como cancelada. Se suelta el material apartado y se cancela lo que se pidió a compras para ella. Si todavía no arrancaba, su número de serie queda libre. No se puede deshacer."
              pie={<><Boton variante="secundario" onClick={() => alCambiar(false)}>No cancelar</Boton>
                <Boton variante="peligro" onClick={() => cancelar.mutate(undefined)} disabled={motivo.trim().length < 5} cargando={cancelar.isPending}>Cancelar orden</Boton></>}>
       <Campo etiqueta="¿Por qué se cancela?">

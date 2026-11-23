@@ -18,6 +18,7 @@ import { dinero, fecha, fechaYHora, numero } from "@/lib/formato";
 import { cn, coincide } from "@/lib/utilidades";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { CantidadConSigno, useAlmacenes } from "./comun";
+import { articuloPorCodigo, useLector, useLectorActivo } from "@/lib/lector";
 
 interface Conteo {
   id: string; nombre: string; almacen_id: number; almacen: string; estado: "abierto" | "cerrado"; creado_por_nombre: string | null;
@@ -198,6 +199,14 @@ function Captura({ id, volver, irAAjustes }: { id: string; volver: () => void; i
     setFiltro("todos"); setBusqueda("");
     setTimeout(() => { const e = entradas.current.get(articuloId); e?.focus(); e?.select(); }, 150);
   }
+
+  // Con lector: leer un artículo lo trae a la lista (si no estaba) y deja el cursor en su «Contado».
+  const conLector = useLectorActivo();
+  useLector(async (codigo) => {
+    const a = await articuloPorCodigo(codigo, ["componente", "materia_prima"]).catch(() => null);
+    if (!a) { toast.error(`El código ${codigo} no está ligado a ningún artículo`); return; }
+    agregar(a.id);
+  }, conLector && editable);
 
   const cerrar = useAccion(() => q<number>(supabase.rpc("cerrar_conteo", { p_conteo: id })), {
     exito: (n) => n ? `Conteo cerrado: ${n} ajuste(s) quedaron por autorizar` : "Conteo cerrado: todo cuadró, no hubo ajustes",

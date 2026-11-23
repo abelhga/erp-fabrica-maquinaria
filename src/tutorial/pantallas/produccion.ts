@@ -163,7 +163,7 @@ export const PRODUCCION: Record<string, Ayuda> = {
     detalle: [
       "La usan la gerencia, almacén e ingeniería. Los renglones en rojo están atrasados; «En espera» en lugar de la fecha quiere decir que la orden está detenida (pasa el mouse para ver por qué).",
       "Debajo del material van tres palomitas: Ing. (ingeniería revisó la lista), Apartado (se apartó el material) y Alm. (almacén revisó la existencia física).",
-      "«Crear órdenes desde pedido» muestra los pedidos confirmados que todavía tienen equipos por producir (el número del botón) y «Orden para stock» crea una sin cliente. Si de alguno de esos equipos ya hay uno igual para stock, antes de crear nada te lo enseña: con «Usar este» se asigna al pedido, y con «Fabricar nuevos de todos modos» se crean las órdenes y el de stock se queda en stock.",
+      "«Crear órdenes desde pedido» muestra los pedidos confirmados que todavía tienen equipos por producir (el número del botón) y «Orden para stock» crea una sin cliente (si pides varios equipos, sale una orden por cada uno; de un subensamble, una sola por el lote). Si de alguno de esos equipos ya hay uno igual para stock, antes de crear nada te lo enseña: con «Usar este» se asigna al pedido, y con «Fabricar nuevos de todos modos» se crean las órdenes y el de stock se queda en stock.",
       "Cada orden copia la lista de materiales del equipo al crearse, así un cambio posterior al catálogo no la mueve. Cada orden de un equipo saca su número de serie sola, si el equipo ya tiene código.",
     ],
   },

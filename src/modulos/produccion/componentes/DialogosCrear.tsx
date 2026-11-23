@@ -98,21 +98,29 @@ export function DialogoOrdenStock({ abierto, alCambiar }: { abierto: boolean; al
   const [compromiso, setCompromiso] = useState("");
   const [serie, setSerie] = useState("");
   const [prioridad, setPrioridad] = useState("2");
-  const crear = useAccion(() => q<string>(supabase.rpc("crear_orden_produccion", {
-    p_articulo: equipo!.id, p_cantidad: Number(cantidad), p_fecha_compromiso: compromiso || null,
-    p_prioridad: Number(prioridad), p_numero_serie: serie.trim() || null,
+  const n = Math.floor(Number(cantidad));
+  // Un equipo es una unidad con su número de serie: 4 equipos son 4 órdenes. Un subensamble se
+  // fabrica por lote en una sola orden. La regla la aplica la base; aquí solo se anuncia.
+  const varias = equipo?.tipo === "equipo" && n > 1;
+  const crear = useAccion(() => q<{ ordenes: number; primera: string; folios: string[] }>(supabase.rpc("crear_ordenes_stock", {
+    p_articulo: equipo!.id, p_cantidad: n, p_fecha_compromiso: compromiso || null,
+    p_prioridad: Number(prioridad), p_numero_serie: varias ? null : serie.trim() || null,
   })), {
-    exito: "Orden creada", invalidar: [CLAVE],
-    alTerminar: (id) => { alCambiar(false); setEquipo(null); setSerie(""); setCompromiso(""); setCantidad("1"); ir(`/produccion/ordenes/${id}`); },
+    exito: (r) => (r.ordenes === 1 ? "Orden creada" : `Se crearon ${r.ordenes} órdenes: ${r.folios[0]} a ${r.folios[r.folios.length - 1]}`), invalidar: [CLAVE],
+    alTerminar: (r) => {
+      alCambiar(false); setEquipo(null); setSerie(""); setCompromiso(""); setCantidad("1");
+      // Con una sola se abre para seguir trabajándola; con varias se quedan a la vista en la lista.
+      if (r.ordenes === 1) ir(`/produccion/ordenes/${r.primera}`);
+    },
   });
-  const valido = !!equipo && Number(cantidad) > 0;
+  const valido = !!equipo && n > 0 && n <= 50;
 
   return (
     <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="Orden para stock"
              descripcion="Para fabricar sin pedido (equipos de exhibición o de línea). La lista de materiales se congela al crearla."
              pie={<>
                <Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton>
-               <Boton form="orden-stock" type="submit" disabled={!valido} cargando={crear.isPending}>Crear orden</Boton>
+               <Boton form="orden-stock" type="submit" disabled={!valido} cargando={crear.isPending}>{varias ? `Crear ${n} órdenes` : "Crear orden"}</Boton>
              </>}>
       <form id="orden-stock" className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (valido) crear.mutate(undefined); }}>
         <Campo etiqueta="Equipo o subensamble">
@@ -127,7 +135,8 @@ export function DialogoOrdenStock({ abierto, alCambiar }: { abierto: boolean; al
         </Campo>
         <div className="grid grid-cols-2 gap-3">
           <Campo etiqueta="Cantidad">
-            <Entrada type="number" min="1" step="1" inputMode="numeric" value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
+            <Entrada type="number" min="1" max="50" step="1" inputMode="numeric" value={cantidad} onChange={(e) => setCantidad(e.target.value)}
+                     data-explain={GLOSARIO.cantidadOrdenStock} data-explain-title="Cantidad" />
           </Campo>
           <Campo etiqueta="Prioridad">
             <Seleccion value={prioridad} onChange={(e) => setPrioridad(e.target.value)} data-explain={GLOSARIO.prioridadOrden} data-explain-title="Prioridad">
@@ -137,11 +146,17 @@ export function DialogoOrdenStock({ abierto, alCambiar }: { abierto: boolean; al
           <Campo etiqueta="Fecha compromiso">
             <Entrada type="date" min={hoyISO()} value={compromiso} onChange={(e) => setCompromiso(e.target.value)} />
           </Campo>
-          <Campo etiqueta="Número de serie" ayuda="Opcional; se puede poner después.">
-            <Entrada value={serie} onChange={(e) => setSerie(e.target.value)} placeholder="CV0200N157"
+          <Campo etiqueta="Número de serie" ayuda={varias ? "Cada orden toma el suyo." : "Opcional; se puede poner después."}>
+            <Entrada value={varias ? "" : serie} disabled={varias} onChange={(e) => setSerie(e.target.value)} placeholder={varias ? "Uno por orden" : "CV0200N157"}
                      data-explain={GLOSARIO.serieAlCrearOrden} data-explain-title="Número de serie" />
           </Campo>
         </div>
+        {equipo && n > 1 && (
+          <p className="text-sm text-tenue rounded-lg bg-fondo px-3 py-2">
+            {varias ? `Se crean ${n} órdenes, una por equipo: cada una con su número de serie, su material y su avance.`
+              : `Es un subensamble: se crea una sola orden por las ${n} piezas, con el material de todas.`}
+          </p>
+        )}
       </form>
     </Dialogo>
   );
