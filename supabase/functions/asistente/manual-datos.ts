@@ -967,7 +967,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 3: Para crear, usa «Crear órdenes desde pedido», u «Orden para stock» si no tiene cliente.",
    "La usan la gerencia, almacén e ingeniería. Los renglones en rojo están atrasados; «En espera» en lugar de la fecha quiere decir que la orden está detenida (pasa el mouse para ver por qué).",
    "Debajo del material van tres palomitas: Ing. (ingeniería revisó la lista), Apartado (se apartó el material) y Alm. (almacén revisó la existencia física).",
-   "«Crear órdenes desde pedido» muestra los pedidos confirmados que todavía tienen equipos por producir (el número del botón) y «Orden para stock» crea una sin cliente. Si de alguno de esos equipos ya hay uno igual para stock, antes de crear nada te lo enseña: con «Usar este» se asigna al pedido, y con «Fabricar nuevos de todos modos» se crean las órdenes y el de stock se queda en stock.",
+   "«Crear órdenes desde pedido» muestra los pedidos confirmados que todavía tienen equipos por producir (el número del botón) y «Orden para stock» crea una sin cliente (si pides varios equipos, sale una orden por cada uno; de un subensamble, una sola por el lote). Si de alguno de esos equipos ya hay uno igual para stock, antes de crear nada te lo enseña: con «Usar este» se asigna al pedido, y con «Fabricar nuevos de todos modos» se crean las órdenes y el de stock se queda en stock.",
    "Cada orden copia la lista de materiales del equipo al crearse, así un cambio posterior al catálogo no la mueve. Cada orden de un equipo saca su número de serie sola, si el equipo ya tiene código."
   ]
  },
@@ -3080,7 +3080,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "produccion",
    "procesos"
   ],
-  "texto": "Cancela la orden con su motivo: suelta el material apartado y cancela lo que se pidió a compras y todavía no está en una orden de compra. No se puede deshacer. Si ya se había surtido material, hay que regresarlo al almacén."
+  "texto": "Así se quita una orden que no va (se creó por error, el cliente canceló). La hace la gerencia de producción, con su motivo: la orden sale de las abiertas y queda en el historial como cancelada, se suelta el material apartado y se cancela lo que se pidió a compras y todavía no está en una orden de compra. Si la orden no había arrancado, su número de serie queda libre. No se puede deshacer. Si ya se había surtido material, hay que regresarlo al almacén."
  },
  {
   "clave": "botonCancelarOrdenMto",
@@ -5343,6 +5343,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Vacaciones, permisos y faltas se cuentan en días hábiles; la incapacidad, en días naturales, como el IMSS. El retardo va en minutos y las horas extra, en horas."
+ },
+ {
+  "clave": "cantidadOrdenStock",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Cuántos se van a fabricar. De un equipo, cada pieza es su propia orden con su número de serie: si pones 4, se crean 4 órdenes. De un subensamble se crea una sola orden por todo el lote."
  },
  {
   "clave": "cantidadRecibidaDevolucion",
