@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Ban, ClipboardList, FilePlus2, Link2, Pencil, Search, Trash2, Undo2, Users, Wallet } from "lucide-react";
 import { TablaDatos, Filtro, type Columna } from "@/components/datos/TablaDatos";
-import { Lateral } from "@/components/ui/dialogo";
+import { Dialogo, Lateral } from "@/components/ui/dialogo";
 import { Insignia } from "@/components/ui/insignia";
 import { Boton } from "@/components/ui/boton";
-import { Campo, Entrada, Seleccion } from "@/components/ui/campo";
+import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { Cargando } from "@/components/ui/estados";
 import { useSesion } from "@/lib/sesion";
 import { supabase } from "@/lib/supabase";
@@ -20,7 +20,7 @@ import {
 } from "./cuentas";
 import { BotonRepetida, DialogoNoCuenta, InsigniaRepetida, type Ignorada } from "./Repetida";
 import { SelectorProveedor } from "@/modulos/compras/componentes/comun";
-import { DialogoLigarOrdenes } from "./ElegirOrdenes";
+import { DialogoLigarOrdenes, ListaCategorias } from "./ElegirOrdenes";
 
 /**
  * Cuenta de cada proveedor: lo que venía en el libro de compras de la hoja más lo que se
@@ -132,6 +132,14 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
   });
   const ordenesDe = (id: string) => (ligas.data ?? []).filter((x) => x.movimiento_id === id);
   const [ligando, setLigando] = useState<MovErp | null>(null);
+  const [recategorizar, setRecategorizar] = useState<MovErp | null>(null);
+  // Las compras a las que se les cambió la categoría: se ve cuál tenían y por qué.
+  const cambiosCat = useQuery({
+    queryKey: ["movimiento_categoria_cambios", llave, idsCompras.join()], enabled: editable && idsCompras.length > 0,
+    queryFn: () => q<{ movimiento_id: string; antes: string | null; despues: string; motivo: string; en: string }[]>(
+      supabase.from("movimiento_categoria_cambios").select("movimiento_id, antes, despues, motivo, en").in("movimiento_id", idsCompras).order("en")),
+  });
+  const cambioDe = (id: string) => (cambiosCat.data ?? []).filter((x) => x.movimiento_id === id);
   const [noCuenta, setNoCuenta] = useState<Renglon | null>(null);
   const [ligarA, setLigarA] = useState<{ id: string; nombre: string } | null>(null);
   const ligar = useAccion(() => q<number>(supabase.rpc("ligar_hoja_proveedor", { p_llave: llave, p_proveedor: ligarA!.id })),
@@ -253,7 +261,16 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
                         : <Insignia tono="marca">{x.ordenes_compra?.folio}</Insignia>}
                     </span>
                   ))}
-                  {m.erp?.tipo === "compra" && !ordenesDe(m.erp.id).length && m.erp.categoria && <span className="text-xs text-tenue">{m.erp.categoria}</span>}
+                  {m.erp?.tipo === "compra" && (editable || !ordenesDe(m.erp.id).length) && (m.erp.categoria || editable) && (() => {
+                    const c = cambioDe(m.erp!.id); const primero = c[0];
+                    return (
+                      <span className="inline-flex items-center gap-1 text-xs text-tenue" title={primero ? `Antes: ${primero.antes ?? "sin categoría"} · ${c[c.length - 1].motivo}` : undefined}>
+                        {m.erp!.categoria ?? "Sin categoría"}{primero && <span className="italic">(antes {primero.antes ?? "sin categoría"})</span>}
+                        {editable && <button type="button" onClick={() => setRecategorizar(m.erp!)} className="p-0.5 rounded hover:text-texto" aria-label="Cambiar categoría"
+                          data-explain={GLOSARIO.cambiarCategoriaCompra} data-explain-title="Cambiar categoría"><Pencil className="h-3 w-3" /></button>}
+                      </span>
+                    );
+                  })()}
                   {(m.erp ? m.erp.tipo === "compra" : m.tipo === "Compra") && !m.repetida && (
                     <span data-explain={GLOSARIO.estadoPagoCompra} data-explain-title="¿Está pagada?">
                       {debeDe(m) >= 1 ? <Insignia tono="aviso">Debe {dinero(debeDe(m))}</Insignia> : <span className="text-xs text-ok">Pagada</span>}
@@ -285,6 +302,7 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
             </div>
           ))}
           {hoja.data?.length === 200 && <p className="py-2 text-xs text-tenue">De la hoja se muestran los 200 más recientes.</p>}
+          <DialogoCategoria compra={recategorizar} alCerrar={() => setRecategorizar(null)} />
           <DialogoLigarOrdenes compra={ligando && { id: ligando.id, proveedor_id: ligando.proveedor_id, factura: ligando.factura, monto: Number(ligando.monto), categoria: ligando.categoria, fecha: ligando.fecha }}
             alCerrar={() => setLigando(null)} />
           {noCuenta && <DialogoNoCuenta hojaId={noCuenta.hojaId!} tipo={noCuenta.tipo as "Compra" | "Pago"}
@@ -380,5 +398,40 @@ function RegistrarPagoProveedor({ cuenta, vencido, facturas, banco, alTerminar }
         <Boton type="submit" cargando={guardar.isPending} disabled={monto <= 0 || !f.cuenta || (demas && !f.anticipo)}>Registrar pago</Boton>
       </div>
     </form>
+  );
+}
+
+/**
+ * Cambiar la categoría de una compra ya registrada (por ejemplo a «Sin efectos», lo que no es
+ * de la empresa): el monto y lo que se le debe al proveedor no cambian, solo en qué se cuenta.
+ * Pide el porqué, que queda junto a la compra.
+ */
+function DialogoCategoria({ compra, alCerrar }: { compra: { id: string; categoria: string | null; factura: string | null; monto: number; fecha: string } | null; alCerrar: () => void }) {
+  const [cat, setCat] = useState("");
+  const [motivo, setMotivo] = useState("");
+  useEffect(() => { setCat(""); setMotivo(""); }, [compra]);
+  const guardar = useAccion(() => q(supabase.rpc("cambiar_categoria_compra", { p_movimiento: compra!.id, p_categoria: cat.trim(), p_motivo: motivo.trim() })), {
+    exito: `Categoría cambiada a «${cat.trim()}»`,
+    invalidar: [...INVALIDAR_PROVEEDORES, ["movimiento_categoria_cambios"], ["resultados_periodo"], ["categorias_compra_periodo"]], alTerminar: alCerrar,
+  });
+  const listo = cat.trim().length > 0 && motivo.trim().length >= 5 && cat.trim().toLowerCase() !== (compra?.categoria ?? "").toLowerCase();
+  return (
+    <Dialogo abierto={!!compra} alCambiar={(v) => !v && alCerrar()} titulo="Cambiar categoría"
+      descripcion={compra && `Compra del ${fecha(compra.fecha)}${compra.factura ? ` · Fact. ${compra.factura}` : ""} · ${dinero(compra.monto)}. Hoy: ${compra.categoria ?? "sin categoría"}. Lo que se le debe al proveedor no cambia.`}
+      pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton>
+        <Boton type="submit" form="cambiar-categoria" disabled={!listo} cargando={guardar.isPending}>Guardar</Boton></>}>
+      <form id="cambiar-categoria" className="grid gap-3" onSubmit={(e) => { e.preventDefault(); if (listo) guardar.mutate(undefined); }}>
+        <Campo etiqueta="Nueva categoría">
+          <div className="flex flex-wrap items-center gap-2">
+            <Entrada value={cat} onChange={(e) => setCat(e.target.value)} list="categorias-cambiar" autoFocus className="flex-1 min-w-[180px]" placeholder="Escribe o elige…" />
+            <Boton type="button" tamano="sm" variante="secundario" onClick={() => setCat("Sin efectos")} data-explain={GLOSARIO.sinEfectos} data-explain-title="Sin efectos">Sin efectos</Boton>
+          </div>
+          <ListaCategorias id="categorias-cambiar" />
+        </Campo>
+        <Campo etiqueta="¿Por qué?" ayuda="Obligatorio. Queda junto a la compra.">
+          <AreaTexto value={motivo} onChange={(e) => setMotivo(e.target.value)} rows={2} placeholder="Ej. no es para la empresa: lo pidió otra persona" />
+        </Campo>
+      </form>
+    </Dialogo>
   );
 }

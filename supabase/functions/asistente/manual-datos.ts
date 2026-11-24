@@ -703,6 +703,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Si el proveedor tiene órdenes de compra, el formulario te pregunta de cuál es la factura; ya viene marcada la que casa con el folio que anotó almacén al recibir. En la cuenta del proveedor, el botón del portapapeles en cada compra cambia de qué orden es.",
    "Con orden, cada partida cuenta por su artículo (consumible del taller o material) y la categoría solo aplica a lo que no tiene artículo, como un flete. Sin orden (luz, honorarios, publicidad), la categoría es obligatoria: es lo que dice en qué se gastó.",
    "Con el XML, la categoría se sugiere por la clave del SAT de lo que se compró (o por cómo registraste antes esa clave); si no, viene la del proveedor.",
+   "Si una compra ya registrada quedó en la categoría equivocada, o no era para la empresa («Sin efectos»), cámbiala con el lápiz junto a su categoría en la cuenta del proveedor: pide el porqué y no cambia lo que se le debe.",
    "«Facturas por pagar» es la lista de facturas con saldo. «Por proveedor», lo que se le debe a cada uno; ahí están aparte los préstamos de socios y los créditos del banco, y lo que tenemos a favor.",
    "«Órdenes de compra» son las órdenes recibidas con saldo que todavía no tienen su factura registrada; en cuanto se liga su factura, lo que se debe se paga por la factura.",
    "«Pagos hechos» es todo lo que ya se pagó, por periodo y por cuenta, con su total y el botón CSV para el contador. Va por la fecha del pago; lo que acabas de registrar, aunque sea de otro mes, está en «Recién capturados».",
@@ -5164,6 +5165,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Lo que salía con los pesos de cada criterio antes de aplicar los topes. Si es más alta que la calificación, un tope la bajó: abajo dice cuál y por qué."
+ },
+ {
+  "clave": "cambiarCategoriaCompra",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Cambia en qué se cuenta una compra ya registrada, sin borrarla: por ejemplo a «Sin efectos» si no era para la empresa. Pide el porqué; junto a la compra queda qué categoría tenía. El monto y lo que se le debe al proveedor no cambian. Lo hace finanzas."
  },
  {
   "clave": "cambiarCompromisoOrden",
@@ -15280,6 +15293,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Trabajo en proceso o listo para empezar que nadie tiene asignado. Arrastra a alguien del personal a la tarjeta para que le toque."
+ },
+ {
+  "clave": "sinEfectos",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Una compra que pasa por la cuenta del proveedor pero no es gasto de la empresa (por ejemplo, material que se pidió para alguien más). Se le debe y se le paga al proveedor igual, pero en Resultados va aparte y no resta a la utilidad, aunque la factura esté ligada a una orden de compra."
  },
  {
   "clave": "sinEnviarCotizado",
