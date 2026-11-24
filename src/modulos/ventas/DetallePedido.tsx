@@ -26,6 +26,8 @@ import { GanttCompacto } from "@/modulos/produccion/Gantt";
 import { useCrearOrdenesPedido } from "@/modulos/produccion/componentes/CrearOrdenesPedido";
 import { EditarFactura, type FacturaEditable } from "@/modulos/finanzas/componentes/EditarFactura";
 import { limpiarUuid } from "@/lib/cfdi";
+import { CorregirCobro, type CobroEditable } from "@/modulos/finanzas/componentes/CorregirCobro";
+import { HistorialPedido } from "./componentes/HistorialPedido";
 
 interface Pedido {
   id: string; folio: string; cotizacion_id: string | null; cliente_id: string; vendedor_id: string | null; canal: keyof typeof CANAL;
@@ -52,11 +54,12 @@ export default function DetallePedido() {
   const esGerente = puede("ventas", 3);
   const [dlg, setDlg] = useState<null | "cancelar" | "cobro" | "factura" | "credito">(null);
   const [corregir, setCorregir] = useState<FacturaEditable | null>(null);
+  const [cobroMal, setCobroMal] = useState<CobroEditable | null>(null);
 
   const ped = useQuery({ queryKey: ["pedido", id], queryFn: () => q<Pedido | null>(supabase.from("pedidos").select("*").eq("id", id!).maybeSingle()) });
   const resumen = useQuery({ queryKey: ["v_pedidos", id], queryFn: () => q<VPedido | null>(supabase.from("v_pedidos").select("*").eq("id", id!).maybeSingle()) });
   const lineas = useQuery({ queryKey: ["pedido_lineas", id], queryFn: () => q<LineaPedido[]>(supabase.from("pedido_lineas").select("*").eq("pedido_id", id!).order("orden")) });
-  const cobros = useQuery({ queryKey: ["cobros", id], queryFn: () => q<{ id: string; fecha: string; monto: number; metodo: string; referencia: string | null; notas: string | null }[]>(supabase.from("cobros").select("*").eq("pedido_id", id!).order("fecha")) });
+  const cobros = useQuery({ queryKey: ["cobros", id], queryFn: () => q<{ id: string; fecha: string; monto: number; metodo: string; referencia: string | null; notas: string | null; cfdi_uuid: string | null }[]>(supabase.from("cobros").select("*").eq("pedido_id", id!).order("fecha")) });
   const facturas = useQuery({ queryKey: ["facturas", id], queryFn: () => q<{ id: string; folio: string; uuid_sat: string | null; fecha: string; total: number }[]>(supabase.from("facturas").select("*").eq("pedido_id", id!).order("fecha")) });
   const credito = useQuery({ queryKey: ["pedido_vendedores", id], queryFn: () => q<{ vendedor_id: string; porcentaje: number; vendedor: { nombre: string } | null }[]>(supabase.from("pedido_vendedores").select("vendedor_id, porcentaje, vendedor:perfiles(nombre)").eq("pedido_id", id!) as never) });
   const ordenes = useQuery({
@@ -72,7 +75,7 @@ export default function DetallePedido() {
   const cliente = useQuery({ queryKey: ["cliente", p?.cliente_id], enabled: !!p?.cliente_id, queryFn: () => q<{ nombre: string }>(supabase.from("clientes").select("nombre").eq("id", p!.cliente_id).single()) });
   const vendedor = useQuery({ queryKey: ["perfil", p?.vendedor_id], enabled: !!p?.vendedor_id, queryFn: () => q<{ nombre: string; telefono: string | null; iniciales: string | null }>(supabase.from("perfiles").select("nombre, telefono, iniciales").eq("id", p!.vendedor_id!).single()) });
 
-  const inv = [["pedido", id], ["v_pedidos"], ["pedido_lineas", id], ["indicadores"]];
+  const inv = [["pedido", id], ["v_pedidos"], ["pedido_lineas", id], ["indicadores"], ["pedido_historial", id]];
   const actualizar = useAccion((cambios: Partial<Pedido>) => q(supabase.from("pedidos").update(cambios).eq("id", id!)), { exito: "Pedido actualizado", invalidar: inv });
   // Quién entrega lo dice la base (almacén, el vendedor lo suyo, gerencia de ventas, dirección).
   const hoja = useHojaSalida(id);
@@ -102,7 +105,6 @@ export default function DetallePedido() {
   const quitarLinea = useAccion((lid: string) => q(supabase.from("pedido_lineas").delete().eq("id", lid)), { invalidar: inv });
   const cambiarIva = useAccion(async (quitar: boolean) => { await q(supabase.rpc("pedido_sin_iva", { p_pedido: id, p_sin_iva: quitar })); return quitar; },
     { exito: (quitar) => (quitar ? "Pedido sin IVA: el total es el subtotal" : "El pedido vuelve a llevar IVA"), invalidar: inv });
-  const borrarCobro = useAccion((cid: string) => q(supabase.from("cobros").delete().eq("id", cid)), { exito: "Cobro borrado", invalidar: [...inv, ["cobros", id]] });
 
   if (ped.isLoading) return <div className="p-8"><Cargando filas={8} /></div>;
   if (!p) return <div className="p-8"><div className="tarjeta"><Vacio icono={ShoppingCart} titulo="No encontramos este pedido" texto="Puede ser de otro vendedor." accion={<Boton asChild variante="secundario"><Link to="/ventas/pedidos">Ir a pedidos</Link></Boton>} /></div></div>;
@@ -379,16 +381,22 @@ export default function DetallePedido() {
                     <span><Receipt className="inline h-3.5 w-3.5 text-tenue mr-1" />{fecha(c.fecha)} · {c.metodo === "mercadopago" ? "Mercado Pago" : c.metodo}{c.referencia ? ` · ${c.referencia.replace(/^Mercado Pago /, "pago ")}` : ""}</span>
                     <span className="flex items-center gap-1">
                       <span className="cifra font-medium">{dineroEn(Number(c.monto), p.moneda)}</span>
-                      {puede("finanzas", 2) && <button className="text-tenue hover:text-peligro" aria-label="Borrar cobro" data-explain={GLOSARIO.botonBorrarCobroPedido} data-explain-title="Borrar cobro" onClick={() => { if (confirm("¿Borrar este cobro?")) borrarCobro.mutate(c.id); }}><Trash2 className="h-3.5 w-3.5" /></button>}
+                      {puede("finanzas", 2) && <button className="text-tenue hover:text-texto" aria-label="Corregir cobro" data-explain={GLOSARIO.corregirCobro} data-explain-title="Corregir cobro" onClick={() => setCobroMal(c)}><Pencil className="h-3.5 w-3.5" /></button>}
                     </span>
                   </div>
                 ))}
             </div>
           </Tarjeta>
+
+          <Tarjeta>
+            <EncabezadoTarjeta titulo="Historial" descripcion="Quién hizo qué y cuándo" explica={GLOSARIO.historialPedido} />
+            <HistorialPedido pedidoId={p.id} className="px-5 pb-4 max-h-[520px] overflow-y-auto" />
+          </Tarjeta>
         </div>
       </div>
 
       {producir.dialogo}
+      <CorregirCobro cobro={cobroMal} moneda={p.moneda} alCerrar={() => setCobroMal(null)} invalidar={[...inv, ["cobros", id]]} />
       {montoLibre && (
         <MontoLibre nombre={montoLibre.nombre} moneda={p.moneda} tasaIva={Number(p.tasa_iva)} guardando={agregar.isPending}
           alGuardar={(precio) => agregar.mutate({ id: montoLibre.id, precio })} alCerrar={() => setMontoLibre(null)} />
@@ -427,7 +435,7 @@ function DialogoCobro({ abierto, alCambiar, pedidoId, saldo, moneda }: { abierto
   const [f, setF] = useState({ fecha: hoyMx(), monto: 0, metodo: "transferencia", referencia: "" });
   useEffect(() => { if (abierto) setF({ fecha: hoyMx(), monto: Math.max(0, saldo), metodo: "transferencia", referencia: "" }); }, [abierto, saldo]);
   const guardar = useAccion(() => q(supabase.from("cobros").insert({ pedido_id: pedidoId, fecha: f.fecha, monto: f.monto, metodo: f.metodo, referencia: f.referencia || null })),
-    { exito: "Cobro registrado", invalidar: [["cobros", pedidoId], ["v_pedidos"], ["pedido", pedidoId], ["indicadores"]], alTerminar: () => alCambiar(false) });
+    { exito: "Cobro registrado", invalidar: [["cobros", pedidoId], ["v_pedidos"], ["pedido", pedidoId], ["indicadores"], ["pedido_historial", pedidoId]], alTerminar: () => alCambiar(false) });
   return (
     <Dialogo abierto={abierto} alCambiar={alCambiar} titulo="Registrar cobro" descripcion={`Saldo actual: ${dineroEn(saldo, moneda)}`}
       pie={<><Boton variante="secundario" onClick={() => alCambiar(false)}>Cancelar</Boton><Boton onClick={() => guardar.mutate(undefined)} cargando={guardar.isPending} disabled={!f.monto}>Registrar</Boton></>}>

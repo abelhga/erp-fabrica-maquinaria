@@ -17,6 +17,8 @@ import { folioCfdi, leerCfdi, limpiarUuid, uuidValido } from "@/lib/cfdi";
 import { useEmpresa } from "@/modulos/ventas/comun";
 import { SubirComplementos } from "./SubirComplementos";
 import { EditarFactura, type FacturaEditable } from "./EditarFactura";
+import { CorregirCobro, type CobroEditable } from "./CorregirCobro";
+import { HistorialPedido } from "@/modulos/ventas/componentes/HistorialPedido";
 
 export interface FilaCobranza {
   pedido_id: string; folio: string; cliente_id: string; cliente: string; vendedor_id: string | null; vendedor: string | null;
@@ -25,7 +27,7 @@ export interface FilaCobranza {
   fecha_base: string; vence: string; dias: number; rango: Rango; saldo_mxn: number; total_mxn: number;
 }
 
-const INVALIDAR = [["v_cobranza"], ["cobranza_por_mes"], ["cobros"], ["facturas"], ["indicadores"]];
+const INVALIDAR = [["v_cobranza"], ["cobranza_por_mes"], ["cobros"], ["facturas"], ["indicadores"], ["pedido_historial"]];
 
 export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | null; alCerrar: () => void }) {
   const { puede } = useSesion();
@@ -33,11 +35,12 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
   const [factura, setFactura] = useState(false);
   const [complementos, setComplementos] = useState(false);
   const [corregir, setCorregir] = useState<FacturaEditable | null>(null);
+  const [cobroMal, setCobroMal] = useState<CobroEditable | null>(null);
   const cobros = useQuery({
     queryKey: ["cobros", p?.pedido_id],
     enabled: !!p,
-    queryFn: () => q<{ id: string; fecha: string; monto: number; metodo: string; referencia: string | null; notas: string | null}[]>(
-      supabase.from("cobros").select("id, fecha, monto, metodo, referencia, notas").eq("pedido_id", p!.pedido_id).order("fecha")),
+    queryFn: () => q<{ id: string; fecha: string; monto: number; metodo: string; referencia: string | null; notas: string | null; cfdi_uuid: string | null }[]>(
+      supabase.from("cobros").select("id, fecha, monto, metodo, referencia, notas, cfdi_uuid").eq("pedido_id", p!.pedido_id).order("fecha")),
   });
   const facturas = useQuery({
     queryKey: ["facturas", p?.pedido_id],
@@ -78,7 +81,7 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
             </div>
             {cobros.isLoading ? <Cargando filas={2} /> : (cobros.data ?? []).length === 0 ? <p className="text-sm text-tenue">Sin cobros todavía.</p> : (
               <table className="tabla rounded-xl border border-borde overflow-hidden">
-                <thead><tr><th>Fecha</th><th>Método</th><th>Referencia</th><th className="!text-right">Monto</th></tr></thead>
+                <thead><tr><th>Fecha</th><th>Método</th><th>Referencia</th><th className="!text-right">Monto</th>{puede("finanzas", 2) && <th className="w-8" />}</tr></thead>
                 <tbody>
                   {cobros.data!.map((c) => (
                     <tr key={c.id}>
@@ -86,6 +89,8 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
                       <td>{nombreMetodo(c.metodo)}</td>
                       <td className="text-tenue"><span>{c.referencia ?? "—"}</span>{c.notas && <span className="block text-xs">{c.notas}</span>}</td>
                       <td className="text-right cifra">{enMoneda(c.monto, m)}</td>
+                      {puede("finanzas", 2) && <td className="!px-1"><button type="button" className="text-tenue hover:text-texto p-1" aria-label="Corregir cobro"
+                        data-explain={GLOSARIO.corregirCobro} data-explain-title="Corregir cobro" onClick={() => setCobroMal(c)}><Pencil className="h-3.5 w-3.5" /></button></td>}
                     </tr>
                   ))}
                 </tbody>
@@ -114,7 +119,12 @@ export function DetalleCobranza({ fila: p, alCerrar }: { fila: FilaCobranza | nu
               </ul>
             )}
           </section>
+          <section className="space-y-2">
+            <h4 className="font-medium" data-explain={GLOSARIO.historialPedido} data-explain-title="Historial">Historial</h4>
+            <HistorialPedido pedidoId={p.pedido_id} className="rounded-xl border border-borde px-3 pt-3 max-h-[360px] overflow-y-auto" />
+          </section>
           <RegistrarCobro pedido={p} abierto={cobro} alCambiar={setCobro} />
+          <CorregirCobro cobro={cobroMal} moneda={m} alCerrar={() => setCobroMal(null)} invalidar={INVALIDAR} />
           <RegistrarFactura pedido={p} abierto={factura} alCambiar={setFactura} />
           <SubirComplementos abierto={complementos} alCambiar={setComplementos} />
           <EditarFactura factura={corregir} alCerrar={() => setCorregir(null)} invalidar={INVALIDAR} />
