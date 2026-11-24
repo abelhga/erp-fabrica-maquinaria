@@ -43,7 +43,9 @@ export default function HojaSalidaPagina() {
   const fis = empresa.data?.fiscal;
   // Qué entrega es: la que se pidió, o la última si ya está todo entregado (como antes).
   const pedidas = params.get("lineas")?.split(",").map((x) => x.split(":")).map(([lid, c]) => ({ id: lid, cantidad: Number(c) })).filter((x) => x.id && x.cantidad > 0);
-  const faltaAlgo = h.partidas.some((p) => Number(p.cantidad) > Number(p.entregado ?? 0));
+  // La hoja es de lo que sale por la puerta: los servicios no se reciben ni se firman.
+  const fisicas = h.partidas.filter((p) => !p.servicio);
+  const faltaAlgo = fisicas.some((p) => Number(p.cantidad) > Number(p.entregado ?? 0));
   const vigente = params.get("salida") ? h.salidas.find((s) => s.id === params.get("salida"))
     : !pedidas?.length && !faltaAlgo ? h.salidas.find((s) => !s.anulada_en) : undefined;
   // Cuánto va de cada partida: lo de esa entrega, lo que va a salir, o lo que falta (todo, si no ha salido nada).
@@ -58,7 +60,7 @@ export default function HojaSalidaPagina() {
     return deEsta?.length ? deEsta : p.series;
   };
   const renglones = [
-    ...h.partidas.map((p) => ({ p, n: cuanto(p) })).filter((x) => x.n > 0)
+    ...fisicas.map((p) => ({ p, n: cuanto(p) })).filter((x) => x.n > 0)
       .map(({ p, n }) => ({ clave: p.id, cantidad: `${numero(n)} ${plural(p.unidad, n)}`, texto: p.titulo, detalle: p.descripcion, series: series(p) })),
     ...h.sueltas.map((s) => ({ clave: s.folio, cantidad: "1 pieza", texto: s.equipo, detalle: null, series: s.serie ? [s.serie] : [] })),
   ];

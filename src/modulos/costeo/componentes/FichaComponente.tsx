@@ -17,6 +17,7 @@ import { GraficaEscalonada } from "./Graficas";
 import { FormulaEnPalabras, useDesglose } from "./CostoPrecio";
 import { DondeSeUsa } from "./DondeSeUsa";
 import { BotonReemplazarComponente } from "./ReemplazarComponente";
+import { ActivoArticulo } from "./Activo";
 import { GLOSARIO } from "@/tutorial/glosario";
 import { PulirDescripcion } from "./PulirDescripcion";
 import { BotonSubirFoto } from "@/components/datos/SubirFoto";
@@ -397,7 +398,10 @@ export function FichaComponente({ articulo }: { articulo: ArticuloCatalogo }) {
       <div className="lg:col-span-5 space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-semibold" data-explain={GLOSARIO.dondeSeUsaPieza} data-explain-title="Dónde se usa">Dónde se usa</h3>
-          <BotonReemplazarComponente viejo={articulo} variante="fantasma" />
+          <span className="flex flex-wrap items-center gap-1">
+            <BotonReemplazarComponente viejo={articulo} variante="fantasma" />
+            <ActivoArticulo a={articulo} forma="boton" />
+          </span>
         </div>
         <DondeSeUsa id={articulo.id} unidad={articulo.unidad} />
       </div>

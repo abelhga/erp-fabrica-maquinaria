@@ -102,9 +102,9 @@ function Cargando() {
 }
 
 /** La misma regla que la base: si no puedes, ni siquiera se carga la pantalla. */
-function Con({ m, n = 1, children }: { m: Modulo; n?: number; children: ReactNode }) {
+function Con({ m, n = 1, o, children }: { m: Modulo; n?: number; o?: [Modulo, number]; children: ReactNode }) {
   const { puede } = useSesion();
-  if (!puede(m, n)) {
+  if (!puede(m, n) && !(o && puede(o[0], o[1]))) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center p-8 text-tenue">
         <Lock className="h-8 w-8 mb-3" />
@@ -216,7 +216,7 @@ export function App() {
           <Route path="ventas/devoluciones" element={<Con m="envios"><Devoluciones /></Con>} />
           <Route path="ventas/mercadolibre" element={<Con m="mercadolibre"><MercadoLibre /></Con>} />
           <Route path="produccion/gerencia" element={<Con m="produccion"><Gerencia /></Con>} />
-          <Route path="produccion/pedidos" element={<Con m="produccion" n={2}><PedidosPlanta /></Con>} />
+          <Route path="produccion/pedidos" element={<Con m="produccion" n={2} o={["inventario", 2]}><PedidosPlanta /></Con>} />
           <Route path="produccion/cuadrillas" element={<Con m="produccion" n={2}><Cuadrillas /></Con>} />
           <Route path="produccion/mejoras" element={<Con m="produccion" n={2}><Mejoras /></Con>} />
           <Route path="produccion/gantt" element={<Con m="produccion" n={2}><Gantt /></Con>} />

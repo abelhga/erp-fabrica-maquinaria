@@ -54,6 +54,7 @@ export const COSTEO: Record<string, AyudaPantalla> = {
       "Ingeniería y compras lo dan de alta con «Nuevo componente»; los demás lo consultan. El botón CSV baja la lista para Excel.",
       "Al dar de alta o renombrar, el nombre se acomoda solo a la forma de escribir del catálogo (acentos, «8 x 25 mm», «para» en vez de «p/», nada en mayúsculas), y si ya existe uno igual aunque esté escrito distinto, te lo enseña antes de crear el repetido.",
       "La existencia suma los almacenes de planta: lo que está en el Full de Mercado Libre no cuenta aquí.",
+      "Un componente no se borra: en su ficha, «Inhabilitar» (de ingeniería y compras) lo saca de buscadores, cotizador y listas nuevas, y conserva sus compras, movimientos e historial; antes de confirmar te dice dónde se usa, cuánto hay y si viene en compras abiertas. Los inhabilitados quedan en su filtro, y de ahí se reactivan.",
       "Quien tiene permiso de costos ve además el costo, su fecha y el proveedor, y los filtros «Sin costo» y «Costo de +6 meses»; los renglones en rojo no tienen costo capturado.",
     ],
   },

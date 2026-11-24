@@ -25,6 +25,7 @@ export const PRODUCCION: Record<string, Ayuda> = {
       "Gerencia: usa primero «Usar OP-…» si hay uno en stock, y luego «Crear las órdenes que faltan».",
     ],
     detalle: [
+      "También la abren compras y almacén, para saber qué se vendió y qué hay que tener listo; ellos solo consultan (crear órdenes y asignar equipos de stock es de la gerencia de producción).",
       "La usan la gerencia de producción, los supervisores y almacén. Cada partida trae su descripción tal como se le cotizó al cliente (medidas, calibres, motor, acabado), sin precio; las largas se abren con «Ver toda la descripción».",
       "«Activos» son los confirmados, en producción y listos para entregar; «Sin orden», los que tienen equipos que nadie está fabricando todavía. Las ventas de Mercado Libre que no llevan nada que fabricar no salen ahí: están en «Mercado Libre», y su envío se lleva en Almacén → Envíos.",
       "Al abrir un pedido ves sus partidas y las órdenes de cada una, con su avance. Hasta abajo, «Plan del taller» es el Gantt de los equipos del pedido: cuándo entra y sale cada uno de cada área.",

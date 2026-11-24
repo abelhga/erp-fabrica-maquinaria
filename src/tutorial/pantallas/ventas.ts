@@ -138,6 +138,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     detalle: [
       "Mientras está Confirmado se pueden ajustar las partidas; se guardan al salir del campo (Enter o Tab). Los precios que vienen de una cotización ya pasaron por la autorización: solo la gerencia los cambia, o sacas una nueva versión de la cotización.",
       "«Mandar a producción» (lo usa producción) crea una orden por cada equipo con lista de materiales; «Marcar listo» avanza el estado; «Cancelar» pide el motivo. La «Hoja de salida» sale sin precios.",
+      "Los servicios (instalación, paquetería, capacitación) no van en la hoja de salida ni llevan firma: se dan por hechos cuando sale lo demás. Un pedido que es solo servicio no trae «Entregar» sino «Servicio realizado», sin hoja ni firma.",
       "En «Entregar» sacas todo o una parte de cada partida: lo demás queda por entregar. La foto de la hoja firmada la puedes subir después. Lo que sale se descuenta del inventario, y cada entrega sale en el recuadro de entregas con su hoja. Si el pedido tiene un envío abierto (paquetería, flete o el cliente recoge), se entrega desde Envíos.",
       "Si te equivocaste, el aviso trae «Deshacer» por 15 minutos; después la reabre la gerencia de ventas con el motivo. Entregan almacén, el vendedor sus pedidos, la gerencia de ventas y dirección.",
       "Facturas y cobros los registra finanzas, y el saldo se recalcula solo; una factura ya registrada se corrige o se quita con su lápiz.",
@@ -241,14 +242,15 @@ export const VENTAS: Record<string, AyudaPantalla> = {
     ],
   },
   "/catalogo": {
-    resumen: "Lo que vendemos: cada equipo y componente con su foto, descripción, precio de lista y lo que hay en planta.",
+    resumen: "Lo que vendemos: cada equipo y componente con su foto, descripción, precio de lista y lo que hay disponible.",
     pasos: [
       "Busca por clave, nombre o una palabra de la descripción.",
       "Clic en un renglón para ver su ficha con la foto grande.",
     ],
     detalle: [
       "Lo usan recepción, para contestar el teléfono, y ventas. El buscador de arriba también te trae aquí cuando buscas un artículo.",
-      "Los filtros de arriba separan equipos, componentes y lo que tiene existencia. Si ingeniería ya las subió, la ficha trae también la ficha técnica y las fotos para mandarle al cliente.",
+      "«Disponible» es lo que hay en planta menos lo apartado para órdenes y pedidos: es lo que se puede ofrecer o publicar. Si hay algo apartado, abajo dice cuánto.",
+      "Los filtros de arriba separan equipos, componentes y lo que está disponible. Si ingeniería ya las subió, la ficha trae también la ficha técnica y las fotos para mandarle al cliente.",
       "El precio es el de lista, en pesos y sin IVA. Si dice «Pregunta a ventas» o el cliente quiere cotización, descuento o algo a la medida, regístralo como lead para que lo atienda un vendedor.",
       "Marketing pone las fotos: en la ficha, «Subir foto» o pega la liga de Google Drive y Enter. El filtro «Sin foto» deja solo lo que todavía no tiene. La foto sale aquí y en las cotizaciones nuevas.",
     ],

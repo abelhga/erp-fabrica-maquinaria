@@ -12,7 +12,7 @@ import { COMPRADOS, NOMBRE_TIPO, esCostoViejo, useCatalogo, type ArticuloCatalog
 import { NuevoArticulo } from "./componentes/NuevoArticulo";
 import { GLOSARIO } from "@/tutorial/glosario";
 
-type FiltroComp = "todos" | "sin_costo" | "viejo" | "importados" | "con_existencia";
+type FiltroComp = "todos" | "sin_costo" | "viejo" | "importados" | "con_existencia" | "inactivos";
 
 /** Costo en su moneda; si no es pesos, con la equivalencia que usa el costeo debajo. */
 function CeldaCosto({ a }: { a: ArticuloCatalogo }) {
@@ -34,7 +34,10 @@ export default function Componentes() {
   const [params, setParams] = useSearchParams();
   const [nuevo, setNuevo] = useState(false);
   const costos = puede("costos");
-  const cat = useCatalogo(COMPRADOS);
+  // Con los inhabilitados: solo salen en su filtro, que es de donde se reactivan.
+  const todos = useCatalogo(COMPRADOS, { inactivos: true });
+  const cat = { ...todos, data: useMemo(() => todos.data?.filter((a) => a.activo), [todos.data]) };
+  const inactivos = useMemo(() => (todos.data ?? []).filter((a) => !a.activo), [todos.data]);
   const filtro = (params.get("filtro") as FiltroComp) ?? "todos";
 
   const cuentas = useMemo(() => {
@@ -54,9 +57,10 @@ export default function Componentes() {
       case "viejo": return costos ? f.filter((a) => a.costo_capturado && esCostoViejo(a.costo_actualizado_en)) : f;
       case "importados": return f.filter((a) => a.es_importado);
       case "con_existencia": return f.filter((a) => (a.existencia ?? 0) > 0);
+      case "inactivos": return inactivos;
       default: return f;
     }
-  }, [cat.data, filtro, costos]);
+  }, [cat.data, filtro, costos, inactivos]);
 
   const opciones: { valor: FiltroComp; texto: string; cuenta?: number; explica?: string }[] = [
     { valor: "todos", texto: "Todos", cuenta: cat.data?.length },
@@ -66,6 +70,7 @@ export default function Componentes() {
     ] : []),
     { valor: "importados", texto: "Importados", cuenta: cuentas.importados, explica: GLOSARIO.articuloImportado },
     { valor: "con_existencia", texto: "Con existencia", cuenta: cuentas.con_existencia, explica: GLOSARIO.filtroComponentesConExistencia },
+    ...(inactivos.length ? [{ valor: "inactivos" as const, texto: "Inhabilitados", cuenta: inactivos.length, explica: GLOSARIO.articuloInhabilitado }] : []),
   ];
 
   const columnas: Columna<ArticuloCatalogo>[] = [
