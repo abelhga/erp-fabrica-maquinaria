@@ -107,7 +107,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
     resumen: "Lo que nos deben los clientes (pedidos y saldos de la hoja), desde cuándo, y lo cobrado cada mes: para que finanzas sepa a quién llamar y registre cobros.",
     pasos: [
       "Empieza por «Los más atrasados»: son los pedidos con más días sin pagarse.",
-      "Dale clic a un pedido para ver sus cobros y facturas.",
+      "Dale clic a un pedido para ver sus cobros, facturas e historial.",
       "Ahí anota el pago con «Registrar cobro» o la factura con «Registrar factura».",
     ],
     detalle: [
@@ -117,6 +117,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
       "Las facturas y los cobros se pueden registrar subiendo su XML. En el pedido, «Registrar factura» lee la factura que timbramos (folio, UUID, fecha y total) y revisa que sea de ese cliente.",
       "«Subir complementos de pago», arriba, registra cada pago en el pedido de su factura, aunque subas muchos a la vez, y no duplica lo que ya estaba.",
       "Si a una factura le falta el UUID o tiene un dato mal, corrígela con el lápiz en vez de registrarla otra vez: un folio o un UUID repetido no entra.",
+      "Un cobro mal capturado se corrige o se quita con su lápiz, escribiendo qué pasó. «Historial», abajo, dice quién registró, corrigió o quitó cada cobro, con su motivo, y todo lo demás que le ha pasado al pedido.",
       "La antigüedad corre desde la primera factura, o desde el pedido si aún no se factura; la de la hoja, desde la venta (los pagos tapan primero las ventas más viejas).",
       "Los saldos en dólares se pasan a pesos con el tipo de cambio de hoy, que se ve arriba (finanzas y compras lo pueden capturar ahí).",
       "Te llega un aviso cuando un pedido de maquinaria con anticipo en sus condiciones de pago entra a producción sin ningún cobro registrado: o falta registrar el pago, o hay que hablarle al cliente.",

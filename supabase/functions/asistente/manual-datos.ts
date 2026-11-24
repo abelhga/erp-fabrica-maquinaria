@@ -646,7 +646,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "texto": [
    "Lo que nos deben los clientes (pedidos y saldos de la hoja), desde cuándo, y lo cobrado cada mes: para que finanzas sepa a quién llamar y registre cobros.",
    "Paso 1: Empieza por «Los más atrasados»: son los pedidos con más días sin pagarse.",
-   "Paso 2: Dale clic a un pedido para ver sus cobros y facturas.",
+   "Paso 2: Dale clic a un pedido para ver sus cobros, facturas e historial.",
    "Paso 3: Ahí anota el pago con «Registrar cobro» o la factura con «Registrar factura».",
    "Los indicadores de arriba suman los pedidos y lo de la hoja, y parten el saldo por antigüedad; dale clic a uno para filtrar la tabla de pedidos. Un cobro negativo es una devolución al cliente.",
    "Las pestañas agrupan por cliente o por vendedor (clic en un renglón para ver sus pedidos). Los filtros separan lo que tiene saldo y lo que falta facturar; el CSV baja lo que ves.",
@@ -654,6 +654,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Las facturas y los cobros se pueden registrar subiendo su XML. En el pedido, «Registrar factura» lee la factura que timbramos (folio, UUID, fecha y total) y revisa que sea de ese cliente.",
    "«Subir complementos de pago», arriba, registra cada pago en el pedido de su factura, aunque subas muchos a la vez, y no duplica lo que ya estaba.",
    "Si a una factura le falta el UUID o tiene un dato mal, corrígela con el lápiz en vez de registrarla otra vez: un folio o un UUID repetido no entra.",
+   "Un cobro mal capturado se corrige o se quita con su lápiz, escribiendo qué pasó. «Historial», abajo, dice quién registró, corrigió o quitó cada cobro, con su motivo, y todo lo demás que le ha pasado al pedido.",
    "La antigüedad corre desde la primera factura, o desde el pedido si aún no se factura; la de la hoja, desde la venta (los pagos tapan primero las ventas más viejas).",
    "Los saldos en dólares se pasan a pesos con el tipo de cambio de hoy, que se ve arriba (finanzas y compras lo pueden capturar ahí).",
    "Te llega un aviso cuando un pedido de maquinaria con anticipo en sus condiciones de pago entra a producción sin ningún cobro registrado: o falta registrar el pago, o hay que hablarle al cliente."
@@ -1845,7 +1846,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Los servicios (instalación, paquetería, capacitación) no van en la hoja de salida ni llevan firma: se dan por hechos cuando sale lo demás. Un pedido que es solo servicio no trae «Entregar» sino «Servicio realizado», sin hoja ni firma.",
    "En «Entregar» sacas todo o una parte de cada partida: lo demás queda por entregar. La foto de la hoja firmada la puedes subir después. Lo que sale se descuenta del inventario, y cada entrega sale en el recuadro de entregas con su hoja. Si el pedido tiene un envío abierto (paquetería, flete o el cliente recoge), se entrega desde Envíos.",
    "Si te equivocaste, el aviso trae «Deshacer» por 15 minutos; después la reabre la gerencia de ventas con el motivo. Entregan almacén, el vendedor sus pedidos, la gerencia de ventas y dirección.",
-   "Facturas y cobros los registra finanzas, y el saldo se recalcula solo; una factura ya registrada se corrige o se quita con su lápiz.",
+   "Facturas y cobros los registra finanzas, y el saldo se recalcula solo; una factura o un cobro ya registrados se corrigen o se quitan con su lápiz. Un cobro corregido pide escribir qué se corrigió.",
+   "«Historial» dice quién hizo qué y cuándo: quién creó el pedido, quién cambió el estado o la fecha compromiso, quién registró, corrigió o quitó cada cobro y por qué, las facturas, las órdenes de producción, las entregas y los envíos.",
    "Si el pedido es de maquinaria, sus condiciones de pago dicen anticipo y entra a producción sin ningún cobro registrado, al vendedor y a finanzas les llega un aviso, una sola vez. No detiene al taller: si el cliente ya pagó, falta registrar el cobro.",
    "Si el pedido tiene equipos en el taller, «Plan del taller» enseña cuándo entra y sale cada uno de cada área y si llega a la fecha compromiso (el rombo verde llega, el rojo no). Es el plan de la planta: se mueve solo con lo que pasa en el piso. Clic en un equipo abre su orden.",
    "Si es una venta de Mercado Libre, el recuadro «Mercado Libre» dice cómo va su envío allá (lista para enviar, en camino, entregada) y el dinero: lo que pagó el comprador, lo que se quedó Mercado Libre, las retenciones y lo que llega a Mercado Pago.",
@@ -2951,16 +2953,6 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Le pone a una persona una base distinta a la de su puesto."
- },
- {
-  "clave": "botonBorrarCobroPedido",
-  "modulos": [
-   "ventas",
-   "leads",
-   "catalogo",
-   "mercadolibre"
-  ],
-  "texto": "Borra un cobro mal capturado (te pide confirmar). El saldo del pedido sube otra vez."
  },
  {
   "clave": "botonBorrarCobroSaldoHoja",
@@ -6456,6 +6448,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Corregir una combinación de estado y ciudad escritos ubica a todos los clientes que la escribieron igual, también a los que se den de alta después. Se puede deshacer en «Corregidas por dirección»."
  },
  {
+  "clave": "corregirCobro",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Con el lápiz corriges un cobro mal capturado: monto, fecha, forma de pago o referencia. Tienes que escribir qué se corrigió, y eso queda en el historial del pedido junto con cómo estaba. Lo hace finanzas. Un cobro que salió de un complemento de pago no se corrige a mano: se quita y se vuelve a subir el complemento."
+ },
+ {
   "clave": "corregirFactura",
   "modulos": [
    "rrhh",
@@ -9823,6 +9825,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mantenimiento"
   ],
   "texto": "Cada falla y cada preventivo de esta máquina, del más nuevo al más viejo, con cuánto estuvo parada y en qué quedó. Con clic abres la orden."
+ },
+ {
+  "clave": "historialPedido",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Todo lo que le ha pasado al pedido, lo más nuevo arriba, con quién y cuándo: quién lo creó, cambios de estado, fecha compromiso, total y partidas, cada cobro registrado, corregido o quitado (con su motivo), facturas, órdenes de producción, entregas y envíos. Las órdenes y las salidas de almacén solo las ve quien ya las ve en su pantalla. Los cambios a las partidas se guardan desde el 24 de noviembre de 2026."
  },
  {
   "clave": "historiaRegistroBitacora",
@@ -13809,6 +13821,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "Cuántos movimientos registró cada persona en el ERP en el periodo, por tipo. Es quién lo capturó, no quién se lo llevó."
+ },
+ {
+  "clave": "quitarCobro",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Quita del pedido un cobro que no era (de otro pedido, capturado dos veces). Pide el porqué; el saldo sube otra vez y en el historial queda cómo se había capturado y quién lo quitó."
  },
  {
   "clave": "quitarDocumentoAlta",
