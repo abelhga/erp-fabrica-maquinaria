@@ -103,7 +103,7 @@ const QUE_MIRAR: Record<Modulo, string> = {
   compras: "órdenes de compra y artículos dados de alta: un artículo nuevo que ya existía con otro nombre (compáralo con sus «parecidos»), partidas con cantidades raras, fechas de entrega imposibles, notas que contradicen la orden, la misma compra hecha dos veces.",
   ventas: "cotizaciones, seguimientos, clientes y leads nuevos: un cliente dado de alta dos veces escrito distinto, una cotización con tiempo de entrega o condiciones que no cuadran, un seguimiento cerrado con un «qué pasó» que no dice nada o contradice el resultado, leads repetidos.",
   produccion: "problemas reportados, notas, cambios de material, etapas reabiertas y órdenes en espera: un motivo de espera que ya no aplica, el mismo problema reportado varias veces sin seguimiento, notas que señalan un error de captura.",
-  finanzas: "caja chica y pagos a proveedores: el mismo gasto o pago capturado dos veces, un concepto que no dice qué se compró, importes con un cero de más o de menos, un pago sin factura que debería tenerla.",
+  finanzas: "caja chica y pagos a proveedores: el mismo pago capturado dos veces (mismo proveedor, monto y factura, o sin factura), un concepto que no dice qué se compró, importes con un cero de más o de menos, un préstamo o un retiro capturado como compra.",
 };
 
 function sistemaModulo(modulo: Modulo): string {
@@ -118,10 +118,19 @@ Reglas:
 - «para»: "responsable" si es un error que quien lo capturó puede corregir; "direccion" si es un patrón que podría señalar un mal uso (faltantes que se repiten, gastos raros, salidas que no se parecen a las demás). En ese caso describe el patrón con hechos y NUNCA acuses a nadie ni supongas intención.
 - No repitas nada de «ya_dicho». Si alguien contestó que algo está bien así, eso es normal en esta empresa: no lo vuelvas a señalar ni algo igual.
 - Las reglas automáticas ya revisan artículos y clientes repetidos por nombre, pagos repetidos, costos de compra fuera de lo normal y compras atrasadas; busca lo que una regla no ve.
+- Antes de decir que a un registro le falta un dato (folio, concepto, cuenta), confírmalo en sus datos: si el campo trae algo, no lo señales.
+- Si hay una explicación normal para lo que ves, no lo señales. Señalar algo que estaba bien le quita tiempo a la persona y hace que deje de leer la revisión.${modulo === "finanzas" || modulo === "compras" ? FINANZAS_NORMAL : ""}
 - No te nombres ni nombres al modelo o a su proveedor: para la gente esto es «la revisión» o «la IA».
 - Escribe en español de México, de tú, claro y corto: el título en una línea (qué y en qué registro), el detalle en dos o tres frases (qué viste, por qué parece error, qué revisar). Sin jerga técnica.
 - «lectura»: dos o tres frases de cómo se vio el día en este módulo, para dirección.`;
 }
+
+// Lo que en finanzas parece raro pero así se trabaja (sacado de lo que finanzas contestó «está bien así»).
+const FINANZAS_NORMAL = `
+- Una compra lleva la fecha de su factura y un pago la fecha en que salió el dinero. Que la factura llegue días o semanas después del pago, que se pague meses después, o que el proveedor facture por adelantado varios meses (pólizas, rentas), es normal: no lo señales.
+- Varias compras o pagos del mismo proveedor por el mismo monto con folios distintos (casetas, tickets, pólizas mensuales, dos fletes del mismo precio) no son repetidos. Solo es repetido si es el mismo folio, o si alguno no trae folio y coincide monto y fecha.
+- Un pago que cubre una de varias facturas, o una parte de una factura, es normal.
+- Lo que alguien ya explicó en «ya_dicho» (aunque sea de otro proveedor o de otro día) aplica igual a casos parecidos.`;
 
 const VICIOS_HOJA = `Hegamex trabajó años con hojas de Google Sheets y apenas se pasó a este ERP. Hábitos que vienen de la hoja y lo que conviene en el ERP:
 - Anotar en papel o de memoria y pasarlo todo de golpe al final del día («rachas» de 20 capturas o más en 15 minutos) → capturar al momento: las existencias, el avance del taller y los avisos les llegan a los demás a tiempo.
@@ -168,6 +177,15 @@ export function diaPlanta(d: Date): number {
 
 export interface Peticion { custom_id: string; params: Anthropic.MessageCreateParamsNonStreaming }
 
+// Lo ya dicho de este módulo (y de los que revisan lo mismo): con medio año de respuestas, mandarlo
+// todo a cada módulo era pagar por leer lo de ventas al revisar caja chica.
+const AFINES: Record<string, string[]> = { finanzas: ["finanzas", "compras"], compras: ["compras", "finanzas"], inventario: ["inventario", "almacen"] };
+export function yaDichoDe(lista: unknown, m: string): Dict[] {
+  const todos = Array.isArray(lista) ? (lista as Dict[]) : [];
+  const mios = AFINES[m] ?? [m];
+  return todos.filter((x) => !x.modulo || mios.includes(String(x.modulo)));
+}
+
 export function armarPeticiones(datos: Dict, consejos: Dict[] | null, modelo: string): Peticion[] {
   const base = { model: modelo, max_tokens: 16000, thinking: { type: "adaptive" as const } };
   const peticiones: Peticion[] = [];
@@ -179,7 +197,7 @@ export function armarPeticiones(datos: Dict, consejos: Dict[] | null, modelo: st
         ...base,
         system: sistemaModulo(m),
         output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA_MODULO } },
-        messages: [{ role: "user", content: JSON.stringify({ hoy: datos.hoy, [m]: datos[m], ya_dicho: o(datos).ya_dicho ?? [] }) }],
+        messages: [{ role: "user", content: JSON.stringify({ hoy: datos.hoy, [m]: datos[m], ya_dicho: yaDichoDe(o(datos).ya_dicho, m) }) }],
       } as Anthropic.MessageCreateParamsNonStreaming,
     });
   }

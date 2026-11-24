@@ -709,7 +709,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "«Pagos hechos» es todo lo que ya se pagó, por periodo y por cuenta, con su total y el botón CSV para el contador. Va por la fecha del pago; lo que acabas de registrar, aunque sea de otro mes, está en «Recién capturados».",
    "Los retiros de caja de ahorro que entrega Recursos Humanos salen en «Pagos hechos» al elegir «Nómina e impuestos», a nombre de «Caja de ahorro del personal». Los abonos en efectivo a préstamos entran en la cuenta de «Préstamos al personal». De los dos te llega un aviso.",
    "Cada factura vence en su fecha más los días de crédito del proveedor; cámbialos en su cuenta si no están bien y todas sus fechas se recorren. Lo que venía de 2021 cuenta como vencido. Las órdenes en dólares se pasan a pesos con el tipo de cambio de hoy.",
-   "Si un pago o compra también se anotó en la hoja, no se cuenta dos veces. Una factura ya registrada (mismo folio y proveedor) no entra otra vez; si se parece a otra (mismo monto, misma semana), te lo avisa antes de guardar.",
+   "Si un pago o compra también se anotó en la hoja, no se cuenta dos veces. Una factura ya registrada (mismo folio y proveedor) no entra otra vez. Te avisa antes de guardar si una compra sin folio coincide en monto y semana con otra, o si el número de factura ya está con otra serie; dos folios distintos no avisan. Un pago igual a otro (mismo proveedor, monto y factura, a cinco días) también se avisa antes de guardar. Si en la referencia del pago escribes «FAC. 0174983» y no eliges factura, el pago queda ligado a esa factura.",
    "Si una factura sale «¿Repetida en la hoja?», es que la hoja la tiene dos veces y la otra ya se pagó: no la pagues; ábrela en la cuenta del proveedor y márcala con «Estaba repetida».",
    "Si encuentras en la hoja una compra o un pago de más (aunque la copia esté con otro nombre de proveedor) o una factura que se canceló, usa el botón de la derecha del renglón en los movimientos de la cuenta: queda tachado con tu motivo, deja de contar y se puede deshacer.",
    "Una factura de la hoja de menos de $1 por pagar son centavos de redondeo y no se enseña. Si una cuenta de la hoja dice que no está ligada a un proveedor del catálogo, elige cuál es ahí mismo para poder pagarle."
@@ -1092,7 +1092,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Si no era error, «Está bien así» lo cancela en Pendientes y no cuenta para nadie. Lo que se arregla solo (una compra que por fin se recibe) se cierra sin que hagas nada.",
    "«Está bien así» pide siempre el porqué. Si dirección lo tiene prendido, la IA lo lee (salvo en una compra a un precio muy distinto al de la anterior): si es una razón de verdad (son dos sucursales, el proveedor cambió la fecha) se cierra; si suena a costumbre (dejar vacío un dato porque «todavía no se sabe»), te pregunta, hasta 3 veces.",
    "Si al final no queda claro, se queda abierto con «Lo ve dirección» y le llega con la conversación. Lo que contesta dirección no pasa por la IA.",
-   "«Ayúdame a corregirlo» sale cuando la corrección es un dato de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida). La IA te propone el cambio exacto, con cómo está y cómo quedaría; puedes decirle algo que deba saber («el tiempo es de 45 días hábiles»).",
+   "«Ayúdame a corregirlo» sale cuando la corrección es un dato de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida; en finanzas, la descripción o el folio de una compra o un pago y el concepto de caja chica). La IA te propone el cambio exacto, con cómo está y cómo quedaría; puedes decirle algo que deba saber («el tiempo es de 45 días hábiles»).",
    "Nada se aplica hasta que eliges «Aplicar a mi nombre»: se hace con tus permisos, como si lo capturaras a mano, y queda en la bitácora. Precios, dinero, existencias y permisos nunca se cambian así.",
    "Lo que dice «Regla» lo encontró una regla fija; lo que dice «IA» (con destellos ✦) lo señaló la IA al leer lo de ayer. Ninguno cambia nada sin que tú lo digas. En «Contestado» ves lo que ya respondiste.",
    "Todos abren en «Para ti», con lo suyo. Dirección tiene además «Todo lo abierto», donde lo de otra persona dice «Le toca a …» y se filtra por persona con «De quién», y «Patrones» (consumos que se disparan, ajustes a la baja que se repiten, gastos iguales en caja chica), que nunca le llegan a la persona.",
@@ -8697,7 +8697,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Una factura con el mismo folio del mismo proveedor no se puede registrar dos veces (ni si ya está en la hoja): el sistema dice cuándo y quién la registró. Si no tiene folio o el folio es otro pero el monto es igual y la fecha está a una semana o menos, solo avisa: marca «Sí, es otra compra» si de verdad lo es. Una compra de antes del arranque que se parece a una de la hoja solo entra con su folio (así se sabe que es otra factura, como los recibos mensuales de un seguro); sin folio se rechaza."
+  "texto": "Una factura con el mismo folio del mismo proveedor no se puede registrar dos veces (ni si ya está en la hoja): el sistema dice cuándo y quién la registró. Solo avisa, sin bloquear, en dos casos: si alguna de las dos no trae folio y el monto es igual a una semana o menos, o si es el mismo número de factura escrito de otra forma (con o sin serie, como «0174983» y «08-01UD0501 0174983»). Dos compras del mismo monto con folios distintos (casetas, tickets, pólizas) no avisan. Si de verdad es otra, marca «Sí, es otra compra»."
  },
  {
   "clave": "facturaSinRegistrar",
@@ -12097,6 +12097,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que pagaron los compradores en el mes (por la fecha del pago), ya sin lo que se les regresó. Abajo, cuántos pagos fueron."
  },
  {
+  "clave": "pagoRepetido",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Antes de guardar un pago, el sistema busca otro al mismo proveedor por el mismo monto en cinco días y por la misma factura (o sin factura). Si lo hay, te lo enseña con quién y cuándo lo capturó: si es el mismo pago, no lo registres; si de verdad es otro, márcalo y regístralo."
+ },
+ {
   "clave": "pagosHechos",
   "modulos": [
    "rrhh",
@@ -14457,7 +14469,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
  {
   "clave": "revisionAyudaCorregir",
   "modulos": [],
-  "texto": "La IA lee lo que se señaló y el registro y te propone el cambio exacto (por ejemplo, escribir el tiempo de entrega que falta). Nada se aplica hasta que lo aceptas, y se hace a tu nombre con tus permisos, como si lo capturaras a mano: queda en la bitácora. Solo cambia datos de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida); nunca precios, dinero, existencias ni permisos. Si el dato correcto solo lo sabes tú, te lo pide."
+  "texto": "La IA lee lo que se señaló y el registro y te propone el cambio exacto (por ejemplo, escribir el tiempo de entrega que falta). Nada se aplica hasta que lo aceptas, y se hace a tu nombre con tus permisos, como si lo capturaras a mano: queda en la bitácora. Solo cambia datos de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida; en finanzas, la descripción y el folio de una compra o un pago, y el concepto de caja chica); nunca precios, montos, existencias ni permisos. Si el dato correcto solo lo sabes tú, te lo pide."
  },
  {
   "clave": "revisionBienAsi",

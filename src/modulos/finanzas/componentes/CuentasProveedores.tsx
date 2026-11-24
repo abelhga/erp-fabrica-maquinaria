@@ -350,11 +350,21 @@ function RegistrarPagoProveedor({ cuenta, vencido, facturas, banco, alTerminar }
   const conFolio = facturas.filter((x) => x.factura);
   const monto = Number(f.monto) || 0;
   const demas = monto > saldo + 0.5;
+  // El pago repetido sí pasaba (cinco en mes y medio): mismo proveedor y monto a cinco días, por la
+  // misma factura o sin factura. Se enseña antes de guardar y se pide confirmar.
+  const parecidos = useQuery({
+    queryKey: ["pagos_parecidos", cuenta.proveedor_id, monto, f.fecha, f.factura], enabled: !!cuenta.proveedor_id && monto > 0 && !!f.fecha, staleTime: 30_000,
+    queryFn: () => q<{ fecha: string; monto: number; factura: string | null; descripcion: string | null; cuenta: string | null; capturado: string }[]>(
+      supabase.rpc("pagos_parecidos", { p_proveedor: cuenta.proveedor_id, p_monto: monto, p_fecha: f.fecha, p_factura: f.factura || null })),
+  });
+  const [esOtro, setEsOtro] = useState(false);
+  useEffect(() => setEsOtro(false), [monto, f.fecha, f.factura]);
+  const hayParecidos = (parecidos.data?.length ?? 0) > 0 && !esOtro;
   const guardar = useAccion(() => q(supabase.rpc("registrar_movimiento_proveedor", {
     p_proveedor: cuenta.proveedor_id, p_tipo: "pago", p_monto: monto, p_fecha: f.fecha, p_cuenta: f.cuenta,
     p_descripcion: f.referencia.trim() || null, p_anticipo: f.anticipo, p_factura: f.anticipo ? null : f.factura || null,
   })), { exito: "Pago registrado", invalidar: INVALIDAR_PROVEEDORES, alTerminar });
-  function enviar(e: FormEvent) { e.preventDefault(); if (monto > 0 && f.cuenta && (!demas || f.anticipo)) guardar.mutate(undefined); }
+  function enviar(e: FormEvent) { e.preventDefault(); if (monto > 0 && f.cuenta && (!demas || f.anticipo) && !hayParecidos) guardar.mutate(undefined); }
   return (
     <form onSubmit={enviar} className="mb-5 rounded-xl border border-borde bg-fondo/50 p-3 grid gap-3 sm:grid-cols-2">
       <p className="sm:col-span-2 font-medium text-sm">Registrar pago</p>
@@ -393,9 +403,23 @@ function RegistrarPagoProveedor({ cuenta, vencido, facturas, banco, alTerminar }
       <Campo etiqueta="Referencia" className="sm:col-span-2" ayuda={banco ? `Cuenta del proveedor: ${banco}` : undefined}>
         <Entrada value={f.referencia} onChange={(e) => setF({ ...f, referencia: e.target.value })} placeholder="SPEI, cheque, facturas que liquida…" />
       </Campo>
+      {(parecidos.data?.length ?? 0) > 0 && (
+        <div className="sm:col-span-2 rounded-lg border border-aviso/30 bg-aviso-suave px-3 py-2 text-sm space-y-1.5"
+          data-explain={GLOSARIO.pagoRepetido} data-explain-title="¿Ya está registrado?">
+          <p className="font-medium">{parecidos.data!.length === 1 ? "Ya hay un pago igual a este proveedor:" : "Ya hay pagos iguales a este proveedor:"}</p>
+          {parecidos.data!.map((p, i) => (
+            <p key={i} className="text-tenue">{dinero(p.monto)} del {fecha(p.fecha)}{p.factura ? ` · Fact. ${p.factura}` : " · sin factura"}
+              {p.descripcion ? ` · ${p.descripcion}` : ""} · capturado el {p.capturado}</p>
+          ))}
+          <label className="flex items-center gap-2 pt-1">
+            <input type="checkbox" checked={esOtro} onChange={(e) => setEsOtro(e.target.checked)} className="h-4 w-4 accent-[hsl(var(--marca))]" />
+            Sí, es otro pago: registrarlo
+          </label>
+        </div>
+      )}
       <div className="sm:col-span-2 flex justify-end gap-2">
         <Boton type="button" variante="secundario" onClick={alTerminar}>Cancelar</Boton>
-        <Boton type="submit" cargando={guardar.isPending} disabled={monto <= 0 || !f.cuenta || (demas && !f.anticipo)}>Registrar pago</Boton>
+        <Boton type="submit" cargando={guardar.isPending} disabled={monto <= 0 || !f.cuenta || (demas && !f.anticipo) || hayParecidos}>Registrar pago</Boton>
       </div>
     </form>
   );
