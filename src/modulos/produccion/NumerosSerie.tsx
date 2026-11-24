@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Hash, Wrench } from "lucide-react";
+import { Hash, Sparkles, Wrench } from "lucide-react";
+import { toast } from "sonner";
+import { sugerirCodigosSerie } from "@/lib/asistente";
 import { Pagina } from "@/components/layout/Shell";
 import { Kpi } from "@/components/ui/kpi";
 import { Lateral } from "@/components/ui/dialogo";
@@ -24,7 +26,11 @@ interface Equipo {
   factura: string | null; vendedor: string | null; entrega: string | null; ubicacion: string | null; contacto: string | null;
 }
 interface Familia { clave: string; nombre: string; prefijo: string | null; ultimo: number; orden: number }
-interface EquipoCatalogo { id: string; clave: string; nombre: string; familia: string | null; familia_serie: string | null; codigo_serie: string | null; dias_fabricacion: number | null }
+interface EquipoCatalogo {
+  id: string; clave: string; nombre: string; familia: string | null; familia_serie: string | null; codigo_serie: string | null;
+  codigo_serie_sugerido: string | null; familia_serie_sugerida: string | null; codigo_sugerido_seguro: "alto" | "medio" | "bajo" | null;
+  codigo_sugerido_nota: string | null; codigo_sugerido_en: string | null;
+}
 
 const ESTADO: Record<Estado, { texto: string; tono: Tono }> = {
   espera: { texto: "En espera", tono: "neutro" }, proceso: { texto: "En proceso", tono: "marca" }, terminado: { texto: "Terminado", tono: "aviso" },
@@ -88,7 +94,7 @@ export default function NumerosSerie() {
       <Pestanas value={pestana} onValueChange={(v) => setPestana(v as "equipos" | "codigos")}>
         <ListaPestanas opciones={[
           { valor: "equipos", texto: "Equipos", cuenta: todos.length },
-          { valor: "codigos", texto: "Códigos y tiempos por equipo", explica: GLOSARIO.codigoSerie },
+          { valor: "codigos", texto: "Códigos por equipo", explica: GLOSARIO.codigoSerie },
         ]} />
         <ContenidoPestana value="equipos" className="pt-4">
           <TablaDatos filas={filas} columnas={columnas} cargando={datos.isLoading} error={datos.error} claveFila={(e) => e.numero_serie}
@@ -170,60 +176,100 @@ function FichaEquipo({ equipo: e, familia, alCerrar }: { equipo: Equipo | null; 
  * con ella el ERP arma el serial de cada unidad al crear su orden de producción.
  */
 function CodigosPorEquipo({ familias, editable }: { familias: Familia[]; editable: boolean }) {
-  const [vista, setVista] = useState<"sin" | "todos">("sin");
+  const [vista, setVista] = useState<"sin" | "sugeridos" | "todos">("sin");
   const datos = useQuery({
     queryKey: [...CLAVE, "codigos"],
-    queryFn: () => todasLasFilas<EquipoCatalogo>((d, h) => supabase.from("articulos").select("id, clave, nombre, familia, familia_serie, codigo_serie, dias_fabricacion")
+    queryFn: () => todasLasFilas<EquipoCatalogo>((d, h) => supabase.from("articulos")
+      .select("id, clave, nombre, familia, familia_serie, codigo_serie, codigo_serie_sugerido, familia_serie_sugerida, codigo_sugerido_seguro, codigo_sugerido_nota, codigo_sugerido_en")
       .eq("tipo", "equipo").eq("activo", true).order("clave").range(d, h)),
   });
   const todos = datos.data ?? [];
   const sin = todos.filter((a) => !a.codigo_serie);
-  const filas = vista === "sin" ? sin : todos;
+  const sugeridos = sin.filter((a) => a.codigo_serie_sugerido);
+  const seguros = sugeridos.filter((a) => a.codigo_sugerido_seguro === "alto");
+  const porPedir = sin.filter((a) => !a.codigo_sugerido_en).length;
+  const filas = vista === "sin" ? sin : vista === "sugeridos" ? sugeridos : todos;
+  // La IA propone de 25 en 25 (cada tanda tarda cerca de un minuto); se sigue sola hasta acabar o hasta que la detengas.
+  const [pidiendo, setPidiendo] = useState<{ hechos: number; quedan: number } | null>(null);
+  const detener = useRef(false);
+  async function pedirSugerencias() {
+    detener.current = false;
+    let hechos = 0;
+    setPidiendo({ hechos, quedan: porPedir });
+    try {
+      for (;;) {
+        const r = await sugerirCodigosSerie();
+        hechos += r.guardados;
+        setPidiendo({ hechos, quedan: r.quedan });
+        await datos.refetch();
+        if (!r.quedan || !r.guardados || detener.current) break;
+      }
+      toast.success(`La IA propuso ${hechos} códigos: revísalos en «Por aceptar».`);
+      setVista("sugeridos");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPidiendo(null);
+    }
+  }
+  const aceptarSeguros = useAccion(() => q<number>(supabase.rpc("aceptar_codigos_sugeridos", { p_ids: null, p_seguro: "alto" })), {
+    exito: (n) => `Listo: ${n} equipos ya tienen código. Sus órdenes sin serie lo recibieron.`, invalidar: [CLAVE],
+  });
   const columnas: Columna<EquipoCatalogo>[] = [
     { clave: "clave", titulo: "Clave", celda: (a) => <span className="cifra text-tenue">{a.clave}</span> },
     { clave: "nombre", titulo: "Equipo", clase: "min-w-[240px] max-w-[420px]", celda: (a) => <span className="line-clamp-2 break-words">{a.nombre}</span> },
-    { clave: "codigo_serie", titulo: "Familia y código", sinBusqueda: true, explica: GLOSARIO.codigoSerie, valor: (a) => a.codigo_serie ?? "",
+    { clave: "codigo_serie", titulo: "Familia y código", sinBusqueda: true, explica: GLOSARIO.codigoSerie, valor: (a) => a.codigo_serie ?? a.codigo_serie_sugerido ?? "",
       celda: (a) => <EditorCodigo articulo={a} familias={familias} editable={editable} /> },
-    { clave: "dias_fabricacion", titulo: "Días de fabricación", alinear: "der", sinBusqueda: true, explica: GLOSARIO.diasFabricacion,
-      valor: (a) => a.dias_fabricacion ?? -1, celda: (a) => <EditorDias articulo={a} editable={editable} /> },
   ];
   return (
-    <TablaDatos filas={filas} columnas={columnas} cargando={datos.isLoading} error={datos.error} claveFila={(a) => a.id}
-      exportarComo="codigos-de-serie" placeholder="Buscar equipo o clave…"
-      filtros={<Filtro valor={vista} alCambiar={setVista} opciones={[{ valor: "sin", texto: "Sin código", cuenta: sin.length, explica: GLOSARIO.codigoSerie }, { valor: "todos", texto: "Todos", cuenta: todos.length }]} />}
-      vacio={{ icono: Hash, titulo: vista === "sin" ? "Todos los equipos tienen código" : "Sin equipos", texto: "Cada equipo del catálogo necesita su código (por ejemplo TB20090275E para una banda de 20\" × 9 m, 2 HP, caja 75) para que su orden de producción saque número de serie sola." }} />
-  );
-}
-
-function EditorDias({ articulo: a, editable }: { articulo: EquipoCatalogo; editable: boolean }) {
-  const [dias, setDias] = useState(a.dias_fabricacion != null ? String(a.dias_fabricacion) : "");
-  useEffect(() => { setDias(a.dias_fabricacion != null ? String(a.dias_fabricacion) : ""); }, [a.dias_fabricacion]);
-  const guardar = useAccion(() => q(supabase.rpc("fijar_dias_fabricacion", { p_articulo: a.id, p_dias: dias ? Number(dias) : null })), {
-    exito: "Días de fabricación guardados", invalidar: [CLAVE, ["estimar_entrega"]],
-  });
-  if (!editable) return a.dias_fabricacion != null ? <span className="cifra">{a.dias_fabricacion} días</span> : <span className="text-xs text-tenue">Sin dato</span>;
-  const cambio = dias !== (a.dias_fabricacion != null ? String(a.dias_fabricacion) : "");
-  return (
-    <form className="flex items-center justify-end gap-2" onSubmit={(e) => { e.preventDefault(); if (cambio) guardar.mutate(undefined); }}>
-      <Entrada type="number" min={1} max={365} value={dias} onChange={(e) => setDias(e.target.value)} className="h-8 w-20 cifra text-right"
-        aria-label="Días hábiles de fabricación" placeholder="—" />
-      {cambio && <Boton type="submit" className="h-8" cargando={guardar.isPending}>Guardar</Boton>}
-    </form>
+    <div className="space-y-3">
+      {editable && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-borde bg-superficie px-4 py-3 text-sm">
+          <span className="flex-1 min-w-[220px] text-tenue">
+            {pidiendo ? `La IA está proponiendo códigos… ${pidiendo.hechos} listos, faltan ${pidiendo.quedan}.`
+              : sin.length ? `${sin.length} equipos sin código${sugeridos.length ? ` · ${sugeridos.length} con propuesta por aceptar` : ""}${porPedir ? ` · ${porPedir} sin propuesta` : ""}.`
+              : "Todos los equipos tienen código."}
+          </span>
+          {pidiendo
+            ? <Boton tamano="sm" variante="secundario" onClick={() => { detener.current = true; }}>Detener después de esta tanda</Boton>
+            : porPedir > 0 && <Boton tamano="sm" variante="secundario" onClick={pedirSugerencias} data-explain={GLOSARIO.codigoSugerido} data-explain-title="Sugerir con IA">
+                <Sparkles className="h-4 w-4" />Sugerir con IA</Boton>}
+          {seguros.length > 0 && !pidiendo && (
+            <Boton tamano="sm" onClick={() => aceptarSeguros.mutate(undefined)} cargando={aceptarSeguros.isPending} data-explain={GLOSARIO.aceptarCodigosSeguros}>
+              {seguros.length === 1 ? "Aceptar la segura" : `Aceptar las ${seguros.length} seguras`}</Boton>
+          )}
+        </div>
+      )}
+      <TablaDatos filas={filas} columnas={columnas} cargando={datos.isLoading} error={datos.error} claveFila={(a) => a.id}
+        exportarComo="codigos-de-serie" placeholder="Buscar equipo o clave…"
+        filtros={<Filtro valor={vista} alCambiar={setVista} opciones={[
+          { valor: "sin", texto: "Sin código", cuenta: sin.length, explica: GLOSARIO.codigoSerie },
+          { valor: "sugeridos", texto: "Por aceptar", cuenta: sugeridos.length, explica: GLOSARIO.codigoSugerido },
+          { valor: "todos", texto: "Todos", cuenta: todos.length }]} />}
+        vacio={{ icono: Hash, titulo: vista === "sin" ? "Todos los equipos tienen código" : vista === "sugeridos" ? "Nada por aceptar" : "Sin equipos",
+          texto: vista === "sugeridos" ? "Dale «Sugerir con IA» y aquí aparecen los códigos propuestos para que los aceptes."
+            : "Cada equipo del catálogo necesita su código (por ejemplo TB20090275E para una banda de 20\" × 9 m, 2 HP, caja 75) para que su orden de producción saque número de serie sola." }} />
+    </div>
   );
 }
 
 function EditorCodigo({ articulo: a, familias, editable }: { articulo: EquipoCatalogo; familias: Familia[]; editable: boolean }) {
-  const [fam, setFam] = useState(a.familia_serie ?? "");
-  const [cod, setCod] = useState(a.codigo_serie ?? "");
-  useEffect(() => { setFam(a.familia_serie ?? ""); setCod(a.codigo_serie ?? ""); }, [a.familia_serie, a.codigo_serie]);
+  // Sin código pero con propuesta de la IA: el formulario ya viene lleno con ella; «Guardar» la acepta (o lo que cambies).
+  const inicialFam = a.familia_serie ?? (a.codigo_serie ? "" : a.familia_serie_sugerida ?? "");
+  const inicialCod = a.codigo_serie ?? a.codigo_serie_sugerido ?? "";
+  const [fam, setFam] = useState(inicialFam);
+  const [cod, setCod] = useState(inicialCod);
+  useEffect(() => { setFam(inicialFam); setCod(inicialCod); }, [inicialFam, inicialCod]);
+  const sugerido = !a.codigo_serie && !!a.codigo_serie_sugerido;
+  const noLleva = !a.codigo_serie && !a.codigo_serie_sugerido && !!a.codigo_sugerido_en;
   const guardar = useAccion(() => q(supabase.rpc("fijar_codigo_serie", { p_articulo: a.id, p_familia: fam || null, p_codigo: cod || null })), {
     exito: "Código guardado", invalidar: [CLAVE],
   });
   const f = familias.find((x) => x.clave === fam);
   if (!editable) return a.codigo_serie
     ? <span className="cifra" data-explain={GLOSARIO.codigoSerie} data-explain-title="Código de serie">{a.codigo_serie}<span className="text-tenue">###</span> <span className="text-xs text-tenue">· {f?.nombre}</span></span>
-    : <span className="text-xs text-aviso">Sin código</span>;
-  const cambio = fam !== (a.familia_serie ?? "") || cod.toUpperCase() !== (a.codigo_serie ?? "");
+    : <span className="text-xs text-aviso">Sin código{sugerido ? ` (propuesto ${a.codigo_serie_sugerido}, por aceptar)` : ""}</span>;
+  const cambio = sugerido ? !!fam && !!cod : fam !== (a.familia_serie ?? "") || cod.toUpperCase() !== (a.codigo_serie ?? "");
   return (
     <form className="flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); if (cambio) guardar.mutate(undefined); }}>
       <Seleccion value={fam} onChange={(e) => setFam(e.target.value)} className="h-8 w-44 text-xs" aria-label="Familia de serie"
@@ -234,7 +280,14 @@ function EditorCodigo({ articulo: a, familias, editable }: { articulo: EquipoCat
       <Entrada value={cod} onChange={(e) => setCod(e.target.value.toUpperCase())} className="h-8 w-40 cifra" aria-label="Código de serie"
         placeholder={f?.prefijo ? `${f.prefijo}…` : "Código"} />
       {f && cod && <span className="text-xs text-tenue cifra" data-explain={GLOSARIO.serialSiguiente} data-explain-title="El que sigue">→ {cod.replace(/\s/g, "")}{String(f.ultimo + 1).padStart(3, "0")}</span>}
-      {cambio && <Boton type="submit" className="h-8" cargando={guardar.isPending}>Guardar</Boton>}
+      {cambio && <Boton type="submit" className="h-8" cargando={guardar.isPending}>{sugerido && fam === a.familia_serie_sugerida && cod === a.codigo_serie_sugerido ? "Aceptar" : "Guardar"}</Boton>}
+      {sugerido && (
+        <span className="w-full text-xs text-tenue" data-explain={GLOSARIO.codigoSugerido} data-explain-title="Propuesto por la IA">
+          <Sparkles className="inline h-3 w-3 mr-1 text-marca-texto" />Propuesto por la IA · {a.codigo_sugerido_seguro === "alto" ? "seguro" : a.codigo_sugerido_seguro === "medio" ? "revisa: supuso un dato" : "poco seguro"}
+          {a.codigo_sugerido_nota && <> · {a.codigo_sugerido_nota}</>}
+        </span>
+      )}
+      {noLleva && <span className="w-full text-xs text-tenue"><Sparkles className="inline h-3 w-3 mr-1" />La IA no le puso código{a.codigo_sugerido_nota ? `: ${a.codigo_sugerido_nota}` : "."}</span>}
     </form>
   );
 }

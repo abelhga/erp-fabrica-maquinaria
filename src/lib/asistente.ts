@@ -175,6 +175,18 @@ export async function pedirSugerenciasMejora(forzar = false): Promise<Sugerencia
   return fin;
 }
 
+/** Propone códigos de serie para ~25 equipos sin código (ingeniería los acepta). Llega como flujo con latidos. */
+export async function sugerirCodigosSerie(): Promise<{ guardados: number; quedan: number }> {
+  const r = await llamar({ modo: "sugerir_codigos_serie" });
+  if (!(r.headers.get("Content-Type") ?? "").includes("text/event-stream")) return r.json();
+  const texto = await r.text();
+  const eventos = texto.split("\n\n").filter((l) => l.startsWith("data: ")).map((l) => JSON.parse(l.slice(6)));
+  const fin = eventos[eventos.length - 1] as ({ tipo: "listo"; guardados: number; quedan: number }) | { tipo: "error"; mensaje: string } | undefined;
+  if (!fin) throw new Error("El asistente cortó la respuesta. Intenta de nuevo.");
+  if (fin.tipo === "error") throw new Error(fin.mensaje);
+  return fin;
+}
+
 /** «Está bien así»: la IA lee el porqué (ya anotado con revision_bien_asi) y acepta, pregunta o lo escala a dirección. */
 export async function revisarPorque(hallazgo_id: string) {
   return (await llamar({ modo: "bien_asi", hallazgo_id })).json() as

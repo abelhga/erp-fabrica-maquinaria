@@ -1046,9 +1046,9 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 2: Dale clic a un renglón para abrir su ficha, con su orden y sus servicios.",
    "Aquí están los del libro de seriales de la hoja (desde 2015) y los que numera el ERP. «En taller o por entregar» deja solo lo que sigue en planta.",
    "El número de serie ya no se escribe a mano: al crear la orden de producción de un equipo, el ERP arma su código y le pone el siguiente número de su familia, sin repetir ni saltar.",
-   "Para eso cada equipo necesita su código una vez, en la pestaña «Códigos y tiempos por equipo»; la flecha muestra el serial que saldría con el número que sigue.",
-   "En esa misma pestaña van los días de fabricación de cada equipo: lo que tarda con el taller libre. Con ellos y con la fila del taller, ventas ve al cotizar cuándo sale de verdad un equipo; si un equipo no tiene días, solo cuenta la fila.",
-   "Si un equipo no tenía código cuando se creó su orden, la orden queda sin serie; captura el código y asígnalo desde la orden."
+   "Para eso cada equipo necesita su código una vez, en la pestaña «Códigos por equipo»; la flecha muestra el serial que saldría con el número que sigue.",
+   "Los equipos sin código no tienes que capturarlos uno por uno: «Sugerir con IA» propone la familia y el código de cada uno con las reglas del libro de seriales, y tú los aceptas en «Por aceptar» (o todos los seguros de un jalón). Puedes corregir cualquiera antes de guardar.",
+   "Si un equipo no tenía código cuando se creó su orden, la orden queda sin serie; en cuanto el equipo tiene código, sus órdenes abiertas sin serie lo reciben solas."
   ]
  },
  {
@@ -1950,6 +1950,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "admin"
   ],
   "texto": "Alta: se creó el registro. Cambio: se modificó (se ve el antes y el después). Baja: se borró (se ve lo que tenía)."
+ },
+ {
+  "clave": "aceptarCodigosSeguros",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Acepta de un jalón los códigos que la IA propuso con seguridad alta (cada pedazo salió del nombre o de sus motores). Los demás revísalos uno por uno. Al aceptar, las órdenes abiertas de esos equipos que nacieron sin número de serie lo reciben solas."
  },
  {
   "clave": "actividad",
@@ -5948,6 +5956,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La parte fija del número de serie de un equipo: su tipo, medidas y motor, como en la hoja (TB20090275E = banda, 20 pulgadas, 9 m, 2 HP, caja 75). Se captura una vez por equipo; sin él, su orden de producción se crea sin número de serie."
  },
  {
+  "clave": "codigoSugerido",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "La IA propone la familia y el código de los equipos que no lo tienen: lee el nombre del equipo, sus motores y reductores, y cómo están armados los códigos de esa familia en el libro de seriales. Dice qué tan segura está y por qué. No numera nada hasta que alguien de ingeniería o la gerencia de producción lo acepta; puedes corregirlo antes de guardar. Si no es una máquina que lleve serie (una refacción, un rodillo), lo dice y no le pone código."
+ },
+ {
   "clave": "cohortesClientes",
   "modulos": [
    "analisis"
@@ -7343,14 +7359,6 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Días hábiles que tarda el proveedor en entregar. Si ya hay historia, son los reales del proveedor; si no, los capturados o el estándar."
  },
  {
-  "clave": "diasFabricacion",
-  "modulos": [
-   "produccion",
-   "procesos"
-  ],
-  "texto": "Días hábiles (lunes a viernes) que tarda el equipo cuando el taller está libre. Vienen de la tabla de tiempos de entrega de producción; en elevadores y bazucas se ajustan por metro como en la tabla. Ventas los usa para prometer la fecha, junto con la fila del taller."
- },
- {
   "clave": "diasHabiles",
   "modulos": [
    "rrhh",
@@ -7874,7 +7882,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cuándo sale de verdad lo que vas a vender: lo que tarda el equipo, o lo que tarda el taller en acabar todo lo que ya tiene antes que este pedido, lo que sea más tarde. Cambia todos los días con lo que entra y sale del taller. Si prometes menos, el pedido nace atrasado."
+  "texto": "Cuándo sale de verdad lo que vas a vender: lo que tarda el taller en acabar todo lo que ya tiene antes que este pedido, más las horas de este equipo, en la etapa que más carga tiene. Cambia todos los días con lo que entra y sale del taller. Si prometes menos, el pedido nace atrasado."
  },
  {
   "clave": "entregasATiempo",
@@ -14375,7 +14383,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "La IA propone la respuesta con la ficha del artículo (medidas, existencia libre, días de fabricación), lo que dice la publicación en Mercado Libre, lo que ese comprador ya preguntó y los datos para contestar. Queda en la caja para que la leas y la corrijas: no se manda sola. Debajo te dice en qué se basó y qué no sabía. Nunca pone teléfonos, correos ni ligas, porque Mercado Libre lo castiga."
+  "texto": "La IA propone la respuesta con la ficha del artículo (medidas, existencia libre), lo que dice la publicación en Mercado Libre, lo que ese comprador ya preguntó y los datos para contestar. Queda en la caja para que la leas y la corrijas: no se manda sola. Debajo te dice en qué se basó y qué no sabía. Nunca pone teléfonos, correos ni ligas, porque Mercado Libre lo castiga."
  },
  {
   "clave": "restarHorasSubensamble",

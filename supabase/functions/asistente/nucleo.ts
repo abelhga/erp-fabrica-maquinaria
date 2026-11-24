@@ -1135,18 +1135,17 @@ export async function datosRespuestaML(db: SupabaseClient, preguntaId: number) {
   if (artId) {
     const [cat, ficha, libre] = await Promise.all([
       db.from("v_catalogo").select("clave,tipo,nombre,descripcion,unidad,categoria").eq("id", artId).maybeSingle(),
-      db.from("articulos").select("dias_fabricacion,tiempo_entrega_dias").eq("id", artId).maybeSingle(),
+      db.from("articulos").select("tiempo_entrega_dias").eq("id", artId).maybeSingle(),
       db.rpc("libre_en_planta", { p_articulo: artId }),
     ]);
     const c = revisar(cat) as Record<string, unknown> | null;
-    const f = (ficha.data ?? {}) as { dias_fabricacion?: number | null; tiempo_entrega_dias?: number | null };
+    const f = (ficha.data ?? {}) as { tiempo_entrega_dias?: number | null };
     const piezas = Number(ligada?.piezas_por_paquete ?? 1) || 1;
     articulo = c && {
       ...c,
       piezas_por_venta_en_ml: piezas,
       // Lo que se puede vender hoy, en unidades de la publicación (no cuenta lo apartado para otros).
       disponibles_para_vender: typeof libre.data === "number" ? Math.floor(libre.data / piezas) : null,
-      dias_de_fabricacion: c.tipo === "equipo" ? f.dias_fabricacion ?? null : null,
       dias_de_entrega_del_proveedor_si_no_hay: c.tipo !== "equipo" ? f.tiempo_entrega_dias ?? null : null,
     };
   }
@@ -1834,6 +1833,80 @@ export async function sugerirMejoras(opts: { anthropic: Pick<Anthropic, "beta">;
   return { sugerencias, modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens, cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
 }
 
+/** Lo que la base le da a la IA para proponer códigos de serie (codigos_serie_por_sugerir). */
+export interface DatosCodigos {
+  equipos: { id: string; clave: string; nombre: string; familia_catalogo: string | null; motores_y_reductores: string[] }[];
+  familias: { clave: string; nombre: string; prefijo: string | null }[];
+  libro_de_seriales: Record<string, { codigo: string; equipo: string }[]>;
+  confirmados: { equipo: string; familia: string; codigo: string }[];
+  quedan: number;
+}
+export interface CodigoSugerido { id: string; familia: string | null; codigo: string | null; seguro: "alto" | "medio" | "bajo"; por_que: string }
+
+export function esquemaCodigos(familias: string[]) {
+  return {
+    type: "object", additionalProperties: false, required: ["codigos"],
+    properties: {
+      codigos: {
+        type: "array",
+        items: {
+          type: "object", additionalProperties: false, required: ["id", "familia", "codigo", "seguro", "por_que"],
+          properties: {
+            id: { type: "string" },
+            familia: { anyOf: [{ type: "string", enum: familias }, { type: "null" }] },
+            codigo: { anyOf: [{ type: "string" }, { type: "null" }] },
+            seguro: { type: "string", enum: ["alto", "medio", "bajo"] },
+            por_que: { type: "string", description: "Una frase: de qué parte del nombre o de qué ejemplo del libro salió cada pedazo del código." },
+          },
+        },
+      },
+    },
+  } as const;
+}
+
+/**
+ * Propone la parte fija del número de serie de cada equipo, con las reglas que se ven en el libro
+ * de seriales de su familia. Ingeniería las acepta: la IA no numera nada.
+ */
+export async function sugerirCodigosSerie(opts: { anthropic: Pick<Anthropic, "beta">; config: Config; datos: DatosCodigos }) {
+  const esquema = esquemaCodigos(opts.datos.familias.map((f) => f.clave));
+  const flujo = opts.anthropic.beta.messages.stream({
+    model: opts.config.modelo,
+    max_tokens: 16000,
+    betas: BETAS,
+    fallbacks: "default",
+    output_config: { effort: "medium", format: { type: "json_schema", schema: esquema } },
+    system: "Eres el ingeniero que asigna los códigos de número de serie en Hegamex, una fábrica mexicana de maquinaria. " +
+      "No te nombres ni nombres al modelo o a su proveedor.",
+    messages: [{
+      role: "user",
+      content: "Propón la familia y la parte fija del número de serie (el código, SIN el consecutivo de 3 dígitos del final) de cada equipo de «equipos».\n" +
+        "Cómo se arma: cada familia tiene su forma, y la sacas de «libro_de_seriales» (códigos reales con la descripción de un equipo que lo usó) y de " +
+        "«confirmados» (códigos que ingeniería ya aceptó). Por ejemplo, en bandas TB20090275E es TB + ancho en pulgadas (20) + largo en metros sin " +
+        "decimales (09) + HP del motor (02) + caja del reductor (75) + E eléctrica. Respeta los mismos dígitos por campo, el mismo orden y las mismas " +
+        "letras finales que los ejemplos de esa familia. HP y caja salen de «motores_y_reductores» (de su lista de materiales) cuando el nombre no los dice.\n" +
+        "Reglas:\n" +
+        "- Solo letras mayúsculas y números, sin espacios ni guiones, sin el consecutivo.\n" +
+        "- «alto» solo si cada pedazo del código sale del nombre o de sus motores y la familia tiene ejemplos claros; «medio» si tuviste que suponer un " +
+        "dato (HP, caja, una letra); «bajo» si casi todo es suposición.\n" +
+        "- Si no es una máquina que lleve número de serie (una refacción, un rodillo, una pieza suelta, un juego de cribas, un servicio) o si en su " +
+        "familia el serial es el número del remolque (silos y dosificadoras móviles), regresa familia y código en null, seguro «bajo», y dilo en por_que.\n" +
+        "- Regresa uno por cada equipo, con su mismo id.\n\n" +
+        "```json\n" + JSON.stringify(opts.datos) + "\n```",
+    }],
+  });
+  const r = await flujo.finalMessage();
+  if (r.stop_reason === "refusal") throw new ErrorHerramienta("La IA no quiso proponer códigos con estos datos.");
+  if (r.stop_reason === "max_tokens") throw new ErrorHerramienta("La respuesta salió demasiado larga; intenta de nuevo.");
+  const bloque = r.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text");
+  if (!bloque) throw new ErrorHerramienta("La IA no devolvió códigos.");
+  const salida = JSON.parse(bloque.text) as { codigos: CodigoSugerido[] };
+  if (validarEsquema(salida, esquema as unknown as Esquema).length) throw new ErrorHerramienta("Los códigos llegaron incompletos; intenta de nuevo.");
+  const ids = new Set(opts.datos.equipos.map((e) => e.id));
+  return { codigos: salida.codigos.filter((c) => ids.has(c.id)), modelo: r.model, entrada: r.usage.input_tokens, salida: r.usage.output_tokens,
+    cache: r.usage.cache_read_input_tokens ?? 0, escritura: r.usage.cache_creation_input_tokens ?? 0 };
+}
+
 /** Sin llave de Claude: lo que las reglas ya ven en los mismos datos, sin interpretación. */
 export function mejorasSinIA(d: DatosMejoras): Sugerencias {
   const sugerencias: SugerenciaMejora[] = [];
@@ -2120,6 +2193,37 @@ export async function atender(req: Request, entorno: Entorno): Promise<Response>
           generado_en: new Date().toISOString() }),
       ]);
       return json({ ...r.resumen, numeros, generado_en: new Date().toISOString(), modelo: r.modelo });
+    }
+
+    if (modo === "sugerir_codigos_serie") {
+      const [{ data: prod }, { data: ing }] = await Promise.all([
+        db.rpc("puede", { p_modulo: "produccion", p_nivel: 3 }), db.rpc("puede", { p_modulo: "costeo", p_nivel: 3 })]);
+      if (prod !== true && ing !== true) return json({ error: "Los códigos de serie los propone ingeniería o la gerencia de producción." }, 403);
+      if (!anthropic) return json({ error: "La IA no está disponible en este momento." }, 503);
+      const datos = revisar(await db.rpc("codigos_serie_por_sugerir", { p_limite: 25 })) as DatosCodigos;
+      if (!datos.equipos.length) return json({ guardados: 0, quedan: 0 });
+      // Unos 25 equipos tardan cerca de un minuto: latidos para que el celular no corte (ver sugerir_mejoras).
+      const codificador = new TextEncoder();
+      const flujoSSE = new ReadableStream<Uint8Array>({
+        async start(ctrl) {
+          const latido = setInterval(() => ctrl.enqueue(codificador.encode(": pensando\n\n")), 15_000);
+          const enviar = (x: unknown) => ctrl.enqueue(codificador.encode(`data: ${JSON.stringify(x)}\n\n`));
+          try {
+            const r = await sugerirCodigosSerie({ anthropic, config, datos });
+            const guardados = revisar(await db.rpc("guardar_codigos_sugeridos", { p_sugerencias: r.codigos })) as number;
+            await registrar(r);
+            enviar({ tipo: "listo", guardados, quedan: Math.max(0, datos.quedan - datos.equipos.length) });
+          } catch (e) {
+            const x = explicarError(e);
+            await registrar({ error: x.codigo });
+            enviar({ tipo: "error", ...x });
+          } finally {
+            clearInterval(latido);
+            ctrl.close();
+          }
+        },
+      });
+      return new Response(flujoSSE, { headers: { ...CORS, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" } });
     }
 
     if (modo === "sugerir_mejoras") {

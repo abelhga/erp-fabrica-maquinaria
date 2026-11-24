@@ -127,9 +127,9 @@ export const PRODUCCION: Record<string, Ayuda> = {
     detalle: [
       "Aquí están los del libro de seriales de la hoja (desde 2015) y los que numera el ERP. «En taller o por entregar» deja solo lo que sigue en planta.",
       "El número de serie ya no se escribe a mano: al crear la orden de producción de un equipo, el ERP arma su código y le pone el siguiente número de su familia, sin repetir ni saltar.",
-      "Para eso cada equipo necesita su código una vez, en la pestaña «Códigos y tiempos por equipo»; la flecha muestra el serial que saldría con el número que sigue.",
-      "En esa misma pestaña van los días de fabricación de cada equipo: lo que tarda con el taller libre. Con ellos y con la fila del taller, ventas ve al cotizar cuándo sale de verdad un equipo; si un equipo no tiene días, solo cuenta la fila.",
-      "Si un equipo no tenía código cuando se creó su orden, la orden queda sin serie; captura el código y asígnalo desde la orden.",
+      "Para eso cada equipo necesita su código una vez, en la pestaña «Códigos por equipo»; la flecha muestra el serial que saldría con el número que sigue.",
+      "Los equipos sin código no tienes que capturarlos uno por uno: «Sugerir con IA» propone la familia y el código de cada uno con las reglas del libro de seriales, y tú los aceptas en «Por aceptar» (o todos los seguros de un jalón). Puedes corregir cualquiera antes de guardar.",
+      "Si un equipo no tenía código cuando se creó su orden, la orden queda sin serie; en cuanto el equipo tiene código, sus órdenes abiertas sin serie lo reciben solas.",
     ],
   },
   "/produccion/terminal": {
