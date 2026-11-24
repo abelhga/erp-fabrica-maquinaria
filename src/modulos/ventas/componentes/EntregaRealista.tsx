@@ -14,8 +14,8 @@ export interface Estimacion {
 }
 
 /**
- * La fecha realista de lo que se fabrica: su tiempo estándar o lo que tarda la fila
- * del taller con este equipo al final, lo que sea más tarde. La calcula la base.
+ * La fecha realista de lo que se fabrica: lo que tarda la fila del taller con este equipo al
+ * final (las horas de su lista de materiales contra la capacidad de cada etapa). La calcula la base.
  */
 export function useEstimacionEntrega(partidas: { articulo_id: string | null; cantidad: number; opcional?: boolean }[], activo = true) {
   const lineas = partidas.filter((p) => p.articulo_id && !p.opcional).map((p) => ({ articulo_id: p.articulo_id, cantidad: Number(p.cantidad) || 1 }));
@@ -42,7 +42,6 @@ export function EntregaRealista({ e, prometido, editable, alUsar }: {
   if (!e || !e.equipos || !e.dias_propuestos) return null;
   const dias = diasPrometidos(prometido);
   const corto = dias != null && dias < e.dias_propuestos;
-  const porFila = (e.dias_carga ?? 0) > (e.dias_estandar ?? 0);
   return (
     <div className={`rounded-lg border px-3 py-2.5 text-sm space-y-1.5 ${corto ? "border-aviso/40 bg-aviso-suave" : "border-borde bg-fondo"}`}
       data-explain={GLOSARIO.entregaRealista} data-explain-title="Entrega realista">
@@ -57,10 +56,9 @@ export function EntregaRealista({ e, prometido, editable, alUsar }: {
         )}
       </p>
       <p className="text-xs text-tenue">
-        {porFila
+        {e.semanas_cola > 0
           ? <>El taller trae {numero(e.semanas_cola)} semanas de trabajo en {e.cuello?.toLowerCase()}; este pedido entra al final de la fila.</>
-          : <>El taller tiene lugar: manda el tiempo de fabricación del equipo{e.dias_estandar ? ` (${e.dias_estandar} días hábiles)` : ""}.</>}
-        {e.sin_dias.length > 0 && <> Sin tiempo de fabricación capturado: {e.sin_dias.join(", ")}.</>}
+          : <>El taller tiene lugar: es lo que tarda el equipo en {e.cuello?.toLowerCase() ?? "el taller"}.</>}
       </p>
       {corto && <p className="text-xs font-medium text-aviso">Estás prometiendo {dias} días hábiles: con la carga de hoy no sale a tiempo.</p>}
     </div>

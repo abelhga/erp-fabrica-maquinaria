@@ -5,7 +5,23 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import pg from "pg";
-import { armarPeticiones, atender, diaPlanta, jsonDeMensaje, leerConsejos, leerModulo, tieneDatos, type ClienteLotes } from "./nucleo.ts";
+import { armarPeticiones, atender, diaPlanta, jsonDeMensaje, leerConsejos, leerModulo, tieneDatos, yaDichoDe, type ClienteLotes } from "./nucleo.ts";
+
+describe("lo ya dicho por módulo", () => {
+  it("a finanzas le llega lo de finanzas y compras, no lo de ventas", () => {
+    const lista = [{ modulo: "finanzas", titulo: "a" }, { modulo: "compras", titulo: "b" }, { modulo: "ventas", titulo: "c" }, { titulo: "sin módulo" }];
+    expect(yaDichoDe(lista, "finanzas").map((x) => x.titulo)).toEqual(["a", "b", "sin módulo"]);
+    expect(yaDichoDe(lista, "ventas").map((x) => x.titulo)).toEqual(["c", "sin módulo"]);
+    expect(yaDichoDe(null, "ventas")).toEqual([]);
+  });
+  it("finanzas lleva lo que ahí es normal; ventas no", () => {
+    const datos = { hoy: "2026-11-02 02:07", finanzas: { pagos: [{ ref: "x" }] }, ventas: { cotizaciones: [{ ref: "y" }] } };
+    const ps = armarPeticiones(datos, null, "modelo");
+    const sis = (id: string) => String((ps.find((p) => p.custom_id === id)!.params as { system: string }).system);
+    expect(sis("m-finanzas")).toContain("Una compra lleva la fecha de su factura");
+    expect(sis("m-ventas")).not.toContain("Una compra lleva la fecha de su factura");
+  });
+});
 
 describe("armar y leer", () => {
   const datos = {

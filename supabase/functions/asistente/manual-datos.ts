@@ -703,12 +703,13 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Si el proveedor tiene órdenes de compra, el formulario te pregunta de cuál es la factura; ya viene marcada la que casa con el folio que anotó almacén al recibir. En la cuenta del proveedor, el botón del portapapeles en cada compra cambia de qué orden es.",
    "Con orden, cada partida cuenta por su artículo (consumible del taller o material) y la categoría solo aplica a lo que no tiene artículo, como un flete. Sin orden (luz, honorarios, publicidad), la categoría es obligatoria: es lo que dice en qué se gastó.",
    "Con el XML, la categoría se sugiere por la clave del SAT de lo que se compró (o por cómo registraste antes esa clave); si no, viene la del proveedor.",
+   "Si una compra ya registrada quedó en la categoría equivocada, o no era para la empresa («Sin efectos»), cámbiala con el lápiz junto a su categoría en la cuenta del proveedor: pide el porqué y no cambia lo que se le debe.",
    "«Facturas por pagar» es la lista de facturas con saldo. «Por proveedor», lo que se le debe a cada uno; ahí están aparte los préstamos de socios y los créditos del banco, y lo que tenemos a favor.",
    "«Órdenes de compra» son las órdenes recibidas con saldo que todavía no tienen su factura registrada; en cuanto se liga su factura, lo que se debe se paga por la factura.",
    "«Pagos hechos» es todo lo que ya se pagó, por periodo y por cuenta, con su total y el botón CSV para el contador. Va por la fecha del pago; lo que acabas de registrar, aunque sea de otro mes, está en «Recién capturados».",
    "Los retiros de caja de ahorro que entrega Recursos Humanos salen en «Pagos hechos» al elegir «Nómina e impuestos», a nombre de «Caja de ahorro del personal». Los abonos en efectivo a préstamos entran en la cuenta de «Préstamos al personal». De los dos te llega un aviso.",
    "Cada factura vence en su fecha más los días de crédito del proveedor; cámbialos en su cuenta si no están bien y todas sus fechas se recorren. Lo que venía de 2021 cuenta como vencido. Las órdenes en dólares se pasan a pesos con el tipo de cambio de hoy.",
-   "Si un pago o compra también se anotó en la hoja, no se cuenta dos veces. Una factura ya registrada (mismo folio y proveedor) no entra otra vez; si se parece a otra (mismo monto, misma semana), te lo avisa antes de guardar.",
+   "Si un pago o compra también se anotó en la hoja, no se cuenta dos veces. Una factura ya registrada (mismo folio y proveedor) no entra otra vez. Te avisa antes de guardar si una compra sin folio coincide en monto y semana con otra, o si el número de factura ya está con otra serie; dos folios distintos no avisan. Un pago igual a otro (mismo proveedor, monto y factura, a cinco días) también se avisa antes de guardar. Si en la referencia del pago escribes «FAC. 0174983» y no eliges factura, el pago queda ligado a esa factura.",
    "Si una factura sale «¿Repetida en la hoja?», es que la hoja la tiene dos veces y la otra ya se pagó: no la pagues; ábrela en la cuenta del proveedor y márcala con «Estaba repetida».",
    "Si encuentras en la hoja una compra o un pago de más (aunque la copia esté con otro nombre de proveedor) o una factura que se canceló, usa el botón de la derecha del renglón en los movimientos de la cuenta: queda tachado con tu motivo, deja de contar y se puede deshacer.",
    "Una factura de la hoja de menos de $1 por pagar son centavos de redondeo y no se enseña. Si una cuenta de la hoja dice que no está ligada a un proveedor del catálogo, elige cuál es ahí mismo para poder pagarle."
@@ -1045,9 +1046,9 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 2: Dale clic a un renglón para abrir su ficha, con su orden y sus servicios.",
    "Aquí están los del libro de seriales de la hoja (desde 2015) y los que numera el ERP. «En taller o por entregar» deja solo lo que sigue en planta.",
    "El número de serie ya no se escribe a mano: al crear la orden de producción de un equipo, el ERP arma su código y le pone el siguiente número de su familia, sin repetir ni saltar.",
-   "Para eso cada equipo necesita su código una vez, en la pestaña «Códigos y tiempos por equipo»; la flecha muestra el serial que saldría con el número que sigue.",
-   "En esa misma pestaña van los días de fabricación de cada equipo: lo que tarda con el taller libre. Con ellos y con la fila del taller, ventas ve al cotizar cuándo sale de verdad un equipo; si un equipo no tiene días, solo cuenta la fila.",
-   "Si un equipo no tenía código cuando se creó su orden, la orden queda sin serie; captura el código y asígnalo desde la orden."
+   "Para eso cada equipo necesita su código una vez, en la pestaña «Códigos por equipo»; la flecha muestra el serial que saldría con el número que sigue.",
+   "Los equipos sin código no tienes que capturarlos uno por uno: «Sugerir con IA» propone la familia y el código de cada uno con las reglas del libro de seriales, y tú los aceptas en «Por aceptar» (o todos los seguros de un jalón). Puedes corregir cualquiera antes de guardar.",
+   "Si un equipo no tenía código cuando se creó su orden, la orden queda sin serie; en cuanto el equipo tiene código, sus órdenes abiertas sin serie lo reciben solas."
   ]
  },
  {
@@ -1091,7 +1092,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Si no era error, «Está bien así» lo cancela en Pendientes y no cuenta para nadie. Lo que se arregla solo (una compra que por fin se recibe) se cierra sin que hagas nada.",
    "«Está bien así» pide siempre el porqué. Si dirección lo tiene prendido, la IA lo lee (salvo en una compra a un precio muy distinto al de la anterior): si es una razón de verdad (son dos sucursales, el proveedor cambió la fecha) se cierra; si suena a costumbre (dejar vacío un dato porque «todavía no se sabe»), te pregunta, hasta 3 veces.",
    "Si al final no queda claro, se queda abierto con «Lo ve dirección» y le llega con la conversación. Lo que contesta dirección no pasa por la IA.",
-   "«Ayúdame a corregirlo» sale cuando la corrección es un dato de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida). La IA te propone el cambio exacto, con cómo está y cómo quedaría; puedes decirle algo que deba saber («el tiempo es de 45 días hábiles»).",
+   "«Ayúdame a corregirlo» sale cuando la corrección es un dato de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida; en finanzas, la descripción o el folio de una compra o un pago y el concepto de caja chica). La IA te propone el cambio exacto, con cómo está y cómo quedaría; puedes decirle algo que deba saber («el tiempo es de 45 días hábiles»).",
    "Nada se aplica hasta que eliges «Aplicar a mi nombre»: se hace con tus permisos, como si lo capturaras a mano, y queda en la bitácora. Precios, dinero, existencias y permisos nunca se cambian así.",
    "Lo que dice «Regla» lo encontró una regla fija; lo que dice «IA» (con destellos ✦) lo señaló la IA al leer lo de ayer. Ninguno cambia nada sin que tú lo digas. En «Contestado» ves lo que ya respondiste.",
    "Todos abren en «Para ti», con lo suyo. Dirección tiene además «Todo lo abierto», donde lo de otra persona dice «Le toca a …» y se filtra por persona con «De quién», y «Patrones» (consumos que se disparan, ajustes a la baja que se repiten, gastos iguales en caja chica), que nunca le llegan a la persona.",
@@ -1949,6 +1950,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "admin"
   ],
   "texto": "Alta: se creó el registro. Cambio: se modificó (se ve el antes y el después). Baja: se borró (se ve lo que tenía)."
+ },
+ {
+  "clave": "aceptarCodigosSeguros",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "Acepta de un jalón los códigos que la IA propuso con seguridad alta (cada pedazo salió del nombre o de sus motores). Los demás revísalos uno por uno. Al aceptar, las órdenes abiertas de esos equipos que nacieron sin número de serie lo reciben solas."
  },
  {
   "clave": "actividad",
@@ -5166,6 +5175,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que salía con los pesos de cada criterio antes de aplicar los topes. Si es más alta que la calificación, un tope la bajó: abajo dice cuál y por qué."
  },
  {
+  "clave": "cambiarCategoriaCompra",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Cambia en qué se cuenta una compra ya registrada, sin borrarla: por ejemplo a «Sin efectos» si no era para la empresa. Pide el porqué; junto a la compra queda qué categoría tenía. El monto y lo que se le debe al proveedor no cambian. Lo hace finanzas."
+ },
+ {
   "clave": "cambiarCompromisoOrden",
   "modulos": [
    "produccion",
@@ -5933,6 +5954,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "La parte fija del número de serie de un equipo: su tipo, medidas y motor, como en la hoja (TB20090275E = banda, 20 pulgadas, 9 m, 2 HP, caja 75). Se captura una vez por equipo; sin él, su orden de producción se crea sin número de serie."
+ },
+ {
+  "clave": "codigoSugerido",
+  "modulos": [
+   "produccion",
+   "procesos"
+  ],
+  "texto": "La IA propone la familia y el código de los equipos que no lo tienen: lee el nombre del equipo, sus motores y reductores, y cómo están armados los códigos de esa familia en el libro de seriales. Dice qué tan segura está y por qué. No numera nada hasta que alguien de ingeniería o la gerencia de producción lo acepta; puedes corregirlo antes de guardar. Si no es una máquina que lleve serie (una refacción, un rodillo), lo dice y no le pone código."
  },
  {
   "clave": "cohortesClientes",
@@ -7330,14 +7359,6 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Días hábiles que tarda el proveedor en entregar. Si ya hay historia, son los reales del proveedor; si no, los capturados o el estándar."
  },
  {
-  "clave": "diasFabricacion",
-  "modulos": [
-   "produccion",
-   "procesos"
-  ],
-  "texto": "Días hábiles (lunes a viernes) que tarda el equipo cuando el taller está libre. Vienen de la tabla de tiempos de entrega de producción; en elevadores y bazucas se ajustan por metro como en la tabla. Ventas los usa para prometer la fecha, junto con la fila del taller."
- },
- {
   "clave": "diasHabiles",
   "modulos": [
    "rrhh",
@@ -7861,7 +7882,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Cuándo sale de verdad lo que vas a vender: lo que tarda el equipo, o lo que tarda el taller en acabar todo lo que ya tiene antes que este pedido, lo que sea más tarde. Cambia todos los días con lo que entra y sale del taller. Si prometes menos, el pedido nace atrasado."
+  "texto": "Cuándo sale de verdad lo que vas a vender: lo que tarda el taller en acabar todo lo que ya tiene antes que este pedido, más las horas de este equipo, en la etapa que más carga tiene. Cambia todos los días con lo que entra y sale del taller. Si prometes menos, el pedido nace atrasado."
  },
  {
   "clave": "entregasATiempo",
@@ -8684,7 +8705,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "caja_chica",
    "mi_desempeno"
   ],
-  "texto": "Una factura con el mismo folio del mismo proveedor no se puede registrar dos veces (ni si ya está en la hoja): el sistema dice cuándo y quién la registró. Si no tiene folio o el folio es otro pero el monto es igual y la fecha está a una semana o menos, solo avisa: marca «Sí, es otra compra» si de verdad lo es. Una compra de antes del arranque que se parece a una de la hoja solo entra con su folio (así se sabe que es otra factura, como los recibos mensuales de un seguro); sin folio se rechaza."
+  "texto": "Una factura con el mismo folio del mismo proveedor no se puede registrar dos veces (ni si ya está en la hoja): el sistema dice cuándo y quién la registró. Solo avisa, sin bloquear, en dos casos: si alguna de las dos no trae folio y el monto es igual a una semana o menos, o si es el mismo número de factura escrito de otra forma (con o sin serie, como «0174983» y «08-01UD0501 0174983»). Dos compras del mismo monto con folios distintos (casetas, tickets, pólizas) no avisan. Si de verdad es otra, marca «Sí, es otra compra»."
  },
  {
   "clave": "facturaSinRegistrar",
@@ -12084,6 +12105,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Lo que pagaron los compradores en el mes (por la fecha del pago), ya sin lo que se les regresó. Abajo, cuántos pagos fueron."
  },
  {
+  "clave": "pagoRepetido",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Antes de guardar un pago, el sistema busca otro al mismo proveedor por el mismo monto en cinco días y por la misma factura (o sin factura). Si lo hay, te lo enseña con quién y cuándo lo capturó: si es el mismo pago, no lo registres; si de verdad es otro, márcalo y regístralo."
+ },
+ {
   "clave": "pagosHechos",
   "modulos": [
    "rrhh",
@@ -14350,7 +14383,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "La IA propone la respuesta con la ficha del artículo (medidas, existencia libre, días de fabricación), lo que dice la publicación en Mercado Libre, lo que ese comprador ya preguntó y los datos para contestar. Queda en la caja para que la leas y la corrijas: no se manda sola. Debajo te dice en qué se basó y qué no sabía. Nunca pone teléfonos, correos ni ligas, porque Mercado Libre lo castiga."
+  "texto": "La IA propone la respuesta con la ficha del artículo (medidas, existencia libre), lo que dice la publicación en Mercado Libre, lo que ese comprador ya preguntó y los datos para contestar. Queda en la caja para que la leas y la corrijas: no se manda sola. Debajo te dice en qué se basó y qué no sabía. Nunca pone teléfonos, correos ni ligas, porque Mercado Libre lo castiga."
  },
  {
   "clave": "restarHorasSubensamble",
@@ -14444,7 +14477,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
  {
   "clave": "revisionAyudaCorregir",
   "modulos": [],
-  "texto": "La IA lee lo que se señaló y el registro y te propone el cambio exacto (por ejemplo, escribir el tiempo de entrega que falta). Nada se aplica hasta que lo aceptas, y se hace a tu nombre con tus permisos, como si lo capturaras a mano: queda en la bitácora. Solo cambia datos de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida); nunca precios, dinero, existencias ni permisos. Si el dato correcto solo lo sabes tú, te lo pide."
+  "texto": "La IA lee lo que se señaló y el registro y te propone el cambio exacto (por ejemplo, escribir el tiempo de entrega que falta). Nada se aplica hasta que lo aceptas, y se hace a tu nombre con tus permisos, como si lo capturaras a mano: queda en la bitácora. Solo cambia datos de captura (fechas, tiempo de entrega, notas, contacto, categoría, cantidades de partida; en finanzas, la descripción y el folio de una compra o un pago, y el concepto de caja chica); nunca precios, montos, existencias ni permisos. Si el dato correcto solo lo sabes tú, te lo pide."
  },
  {
   "clave": "revisionBienAsi",
@@ -15280,6 +15313,18 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Trabajo en proceso o listo para empezar que nadie tiene asignado. Arrastra a alguien del personal a la tarjeta para que le toque."
+ },
+ {
+  "clave": "sinEfectos",
+  "modulos": [
+   "rrhh",
+   "nomina",
+   "objetivos",
+   "finanzas",
+   "caja_chica",
+   "mi_desempeno"
+  ],
+  "texto": "Una compra que pasa por la cuenta del proveedor pero no es gasto de la empresa (por ejemplo, material que se pidió para alguien más). Se le debe y se le paga al proveedor igual, pero en Resultados va aparte y no resta a la utilidad, aunque la factura esté ligada a una orden de compra."
  },
  {
   "clave": "sinEnviarCotizado",

@@ -184,13 +184,14 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas 
   const esAnticipo = !notaCredito && (clavesCfdi.length > 0 ? clavesCfdi.every((k) => k.clave === "84111506")
     : /^anticipo del bien o servicio/i.test(cfdi?.conceptos[0] ?? ""));
   const monto = Number(f.monto) || 0;
-  // Mismo proveedor, mismo monto, a una semana y con otro folio o sin folio: puede ser la
-  // misma compra capturada otra vez. No se bloquea (dos cargas iguales de Google Ads existen):
-  // se pide confirmar.
+  // Puede ser la misma compra capturada otra vez: sin folio en alguna de las dos (mismo monto, a
+  // una semana), o el mismo número de factura escrito distinto (con o sin serie). Dos folios
+  // distintos ya no avisan: casetas, tickets y pólizas del mismo importe son compras distintas.
+  // No se bloquea: se pide confirmar.
   const parecidas = useQuery({
     queryKey: ["compras_parecidas", prov?.id, monto, f.fecha, llaveFolio(f.factura)], enabled: !!prov && monto > 0 && !notaCredito && !!f.fecha,
     staleTime: 30_000,
-    queryFn: () => q<{ origen: "erp" | "hoja"; fecha: string; monto: number; factura: string | null; descripcion: string | null }[]>(
+    queryFn: () => q<{ origen: "erp" | "hoja"; fecha: string; monto: number; factura: string | null; descripcion: string | null; por: "sin_folio" | "mismo_numero" }[]>(
       supabase.rpc("compras_parecidas", { p_proveedor: prov!.id, p_monto: monto, p_fecha: f.fecha, p_factura: f.factura || null })),
   });
   const hayParecidas = (parecidas.data?.length ?? 0) > 0;
@@ -364,7 +365,9 @@ export function RegistrarCompra({ abierto, alCerrar, proveedorInicial, facturas 
             <div className="sm:col-span-2 rounded-lg border border-aviso/30 bg-aviso-suave px-3 py-2 text-sm space-y-1.5"
               data-explain={GLOSARIO.facturaRepetida} data-explain-title="¿Ya está registrada?">
               <p className="flex items-start gap-2 font-medium"><AlertTriangle className="h-4 w-4 mt-0.5 text-aviso shrink-0" />
-                {parecidas.data!.length === 1 ? "Hay una compra igual de este proveedor:" : "Hay compras iguales de este proveedor:"}</p>
+                {parecidas.data!.some((p) => p.por === "mismo_numero")
+                  ? "Esta factura parece ya registrada con el folio escrito de otra forma:"
+                  : parecidas.data!.length === 1 ? "Hay una compra sin folio del mismo monto y la misma semana:" : "Hay compras sin folio del mismo monto y la misma semana:"}</p>
               {parecidas.data!.map((p, i) => (
                 <p key={i} className="pl-6 text-tenue">{dinero(p.monto)} del {fecha(p.fecha)}{p.factura ? ` · Fact. ${p.factura}` : " · sin folio"}
                   {p.descripcion ? ` · ${p.descripcion}` : ""} · {p.origen === "hoja" ? "en la hoja" : "en el ERP"}</p>

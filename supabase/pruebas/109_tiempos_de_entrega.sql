@@ -1,5 +1,5 @@
--- Tiempos de entrega: el equipo nuevo entra al final de la fila del taller; la fecha
--- propuesta es la más tardía entre su tiempo estándar y lo que tarda la fila.
+-- Tiempos de entrega: el equipo nuevo entra al final de la fila del taller y la fecha propuesta
+-- es lo que tarda esa fila (desde 316, los «días de fabricación» capturados ya no cuentan).
 do $$
 declare
   v_vend uuid; v_gp uuid; v_rh uuid; v_mp uuid; v_eq uuid; v_eq2 uuid; v_op uuid; j jsonb; j2 jsonb; v_pail int;
@@ -17,14 +17,14 @@ begin
   insert into articulos (clave, tipo, nombre, dias_fabricacion) values ('T109-EQ', 'equipo', 'Banda de prueba', 20) returning id into v_eq;
   insert into articulos (clave, tipo, nombre) values ('T109-EQ2', 'equipo', 'Equipo sin días') returning id into v_eq2;
   insert into bom_lineas (padre_id, hijo_id, cantidad) values (v_eq, v_mp, 1), (v_eq2, v_mp, 1);
-  -- 200 h de pailería por equipo: con el taller vacío son 2 semanas (10 días hábiles), menos que sus 20 de estándar.
+  -- 200 h de pailería por equipo: con el taller vacío son 2 semanas (10 días hábiles). Sus 20 días capturados ya no cuentan.
   insert into bom_operaciones (articulo_id, etapa_id, horas) values (v_eq, v_pail, 200), (v_eq2, v_pail, 200);
 
   perform pg_temp.como(v_vend);
   j := estimar_entrega(jsonb_build_array(jsonb_build_object('articulo_id', v_eq, 'cantidad', 1)));
-  assert (j->>'equipos')::int = 1 and (j->>'dias_estandar')::int = 20, format('estándar: %s', j);
-  assert (j->>'dias_carga')::int = 10 and (j->>'dias_propuestos')::int = 20, format('taller libre: manda el estándar: %s', j);
-  assert (j->>'fecha_propuesta')::date = sumar_dias_habiles(hoy_planta(), 20), 'fecha propuesta en días hábiles';
+  assert (j->>'equipos')::int = 1 and j->>'dias_estandar' is null, format('los días capturados se siguen usando: %s', j);
+  assert (j->>'dias_carga')::int = 10 and (j->>'dias_propuestos')::int = 10, format('taller libre: manda la fila: %s', j);
+  assert (j->>'fecha_propuesta')::date = sumar_dias_habiles(hoy_planta(), 10), 'fecha propuesta en días hábiles';
   assert j->>'cuello' = 'Pailería prueba', 'cuello de botella';
 
   -- Con 1,000 h ya en la fila (10 semanas), el nuevo sale en 12 semanas = 60 días hábiles.
@@ -43,23 +43,19 @@ begin
   perform pg_temp.como(v_vend);
   assert (estimar_entrega(jsonb_build_array(jsonb_build_object('articulo_id', v_eq)))->>'semanas_cola')::numeric = 0, 'lo terminado no cuenta';
 
-  -- Equipo sin días de fabricación: lo dice, y propone con la fila.
+  -- Un equipo sin días capturados sale igual, sin avisos de que le faltan.
   j := estimar_entrega(jsonb_build_array(jsonb_build_object('articulo_id', v_eq2)));
-  assert j->'sin_dias' ? 'Equipo sin días' and j->>'dias_estandar' is null and (j->>'dias_propuestos')::int = 10, format('sin días: %s', j);
+  assert coalesce(jsonb_array_length(j->'sin_dias'), 0) = 0 and (j->>'dias_propuestos')::int = 10, format('sin días: %s', j);
   -- Sin partidas que se fabriquen: solo la fila, sin fecha.
   j := estimar_entrega(jsonb_build_array(jsonb_build_object('articulo_id', v_mp)));
   assert (j->>'equipos')::int = 0 and j->>'fecha_propuesta' is null, format('solo componentes: %s', j);
-  -- Ventas no puede cambiar los días.
+  -- Los días ya no se capturan: nadie llama a la función de antes.
+  perform pg_temp.como(v_gp);
   begin
-    perform fijar_dias_fabricacion(v_eq, 5);
-    assert false, 'ventas cambió los días de fabricación';
+    perform fijar_dias_fabricacion(v_eq, 30);
+    assert false, 'todavía se pueden capturar días de fabricación';
   exception when insufficient_privilege then null;
   end;
-
-  -- La gerencia de producción sí.
-  perform pg_temp.como(v_gp);
-  perform fijar_dias_fabricacion(v_eq, 30);
-  assert (estimar_entrega(jsonb_build_array(jsonb_build_object('articulo_id', v_eq)))->>'dias_estandar')::int = 30, 'días ajustados';
 
   -- Quien no es de ventas ni de producción no ve la fila del taller.
   perform pg_temp.como(v_rh);
