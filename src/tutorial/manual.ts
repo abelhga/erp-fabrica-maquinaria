@@ -49,7 +49,7 @@ export function armarManual(): { pantallas: PantallaManual[]; conceptos: Concept
     return {
       ruta,
       nombre: m ? (m.resto ? `${m.e.texto} › ${legible(m.resto)}` : m.e.texto) : legible(ruta.slice(1)),
-      modulos: publica ? [] : [m!.e.modulo],
+      modulos: publica ? [] : [m!.e.modulo, ...(m!.e.o ? [m!.e.o.modulo] : [])],
       nivel: publica ? 1 : m!.e.nivel ?? 1,
       // Resumen, pasos y detalle: el asistente lee todo, aunque arriba de la pantalla se vea poco.
       texto: textoAyuda(texto),

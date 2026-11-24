@@ -341,11 +341,12 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   ],
   "nivel": 1,
   "texto": [
-   "Lo que vendemos: cada equipo y componente con su foto, descripción, precio de lista y lo que hay en planta.",
+   "Lo que vendemos: cada equipo y componente con su foto, descripción, precio de lista y lo que hay disponible.",
    "Paso 1: Busca por clave, nombre o una palabra de la descripción.",
    "Paso 2: Clic en un renglón para ver su ficha con la foto grande.",
    "Lo usan recepción, para contestar el teléfono, y ventas. El buscador de arriba también te trae aquí cuando buscas un artículo.",
-   "Los filtros de arriba separan equipos, componentes y lo que tiene existencia. Si ingeniería ya las subió, la ficha trae también la ficha técnica y las fotos para mandarle al cliente.",
+   "«Disponible» es lo que hay en planta menos lo apartado para órdenes y pedidos: es lo que se puede ofrecer o publicar. Si hay algo apartado, abajo dice cuánto.",
+   "Los filtros de arriba separan equipos, componentes y lo que está disponible. Si ingeniería ya las subió, la ficha trae también la ficha técnica y las fotos para mandarle al cliente.",
    "El precio es el de lista, en pesos y sin IVA. Si dice «Pregunta a ventas» o el cliente quiere cotización, descuento o algo a la medida, regístralo como lead para que lo atienda un vendedor.",
    "Marketing pone las fotos: en la ficha, «Subir foto» o pega la liga de Google Drive y Enter. El filtro «Sin foto» deja solo lo que todavía no tiene. La foto sale aquí y en las cotizaciones nuevas."
   ]
@@ -495,6 +496,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Ingeniería y compras lo dan de alta con «Nuevo componente»; los demás lo consultan. El botón CSV baja la lista para Excel.",
    "Al dar de alta o renombrar, el nombre se acomoda solo a la forma de escribir del catálogo (acentos, «8 x 25 mm», «para» en vez de «p/», nada en mayúsculas), y si ya existe uno igual aunque esté escrito distinto, te lo enseña antes de crear el repetido.",
    "La existencia suma los almacenes de planta: lo que está en el Full de Mercado Libre no cuenta aquí.",
+   "Un componente no se borra: en su ficha, «Inhabilitar» (de ingeniería y compras) lo saca de buscadores, cotizador y listas nuevas, y conserva sus compras, movimientos e historial; antes de confirmar te dice dónde se usa, cuánto hay y si viene en compras abiertas. Los inhabilitados quedan en su filtro, y de ahí se reactivan.",
    "Quien tiene permiso de costos ve además el costo, su fecha y el proveedor, y los filtros «Sin costo» y «Costo de +6 meses»; los renglones en rojo no tienen costo capturado."
   ]
  },
@@ -1009,7 +1011,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "ruta": "/produccion/pedidos",
   "nombre": "Pedidos",
   "modulos": [
-   "produccion"
+   "produccion",
+   "inventario"
   ],
   "nivel": 2,
   "texto": [
@@ -1017,6 +1020,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 1: Elige un filtro (Activos, Sin orden, Listos para entregar…) y dale clic a un pedido.",
    "Paso 2: Revisa cada partida con su descripción y sus órdenes; el folio de la orden abre su detalle.",
    "Paso 3: Gerencia: usa primero «Usar OP-…» si hay uno en stock, y luego «Crear las órdenes que faltan».",
+   "También la abren compras y almacén, para saber qué se vendió y qué hay que tener listo; ellos solo consultan (crear órdenes y asignar equipos de stock es de la gerencia de producción).",
    "La usan la gerencia de producción, los supervisores y almacén. Cada partida trae su descripción tal como se le cotizó al cliente (medidas, calibres, motor, acabado), sin precio; las largas se abren con «Ver toda la descripción».",
    "«Activos» son los confirmados, en producción y listos para entregar; «Sin orden», los que tienen equipos que nadie está fabricando todavía. Las ventas de Mercado Libre que no llevan nada que fabricar no salen ahí: están en «Mercado Libre», y su envío se lleva en Almacén → Envíos.",
    "Al abrir un pedido ves sus partidas y las órdenes de cada una, con su avance. Hasta abajo, «Plan del taller» es el Gantt de los equipos del pedido: cuándo entra y sale cada uno de cada área.",
@@ -1838,6 +1842,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 3: Dale «Entregar»: elige qué sale, quién recibió y sube la foto de la hoja firmada.",
    "Mientras está Confirmado se pueden ajustar las partidas; se guardan al salir del campo (Enter o Tab). Los precios que vienen de una cotización ya pasaron por la autorización: solo la gerencia los cambia, o sacas una nueva versión de la cotización.",
    "«Mandar a producción» (lo usa producción) crea una orden por cada equipo con lista de materiales; «Marcar listo» avanza el estado; «Cancelar» pide el motivo. La «Hoja de salida» sale sin precios.",
+   "Los servicios (instalación, paquetería, capacitación) no van en la hoja de salida ni llevan firma: se dan por hechos cuando sale lo demás. Un pedido que es solo servicio no trae «Entregar» sino «Servicio realizado», sin hoja ni firma.",
    "En «Entregar» sacas todo o una parte de cada partida: lo demás queda por entregar. La foto de la hoja firmada la puedes subir después. Lo que sale se descuenta del inventario, y cada entrega sale en el recuadro de entregas con su hoja. Si el pedido tiene un envío abierto (paquetería, flete o el cliente recoge), se entrega desde Envíos.",
    "Si te equivocaste, el aviso trae «Deshacer» por 15 minutos; después la reabre la gerencia de ventas con el motivo. Entregan almacén, el vendedor sus pedidos, la gerencia de ventas y dirección.",
    "Facturas y cobros los registra finanzas, y el saldo se recalcula solo; una factura ya registrada se corrige o se quita con su lápiz.",
@@ -2457,7 +2462,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "costeo",
    "margenes"
   ],
-  "texto": "Un equipo o subensamble que ya no se fabrica ni se vende: deja de salir en el cotizador, en pedidos nuevos y al armar listas de materiales, y no tiene precio de lista. Lo que ya existe no cambia: dentro de los equipos que lo usan sigue igual, y las cotizaciones y pedidos abiertos conservan sus partidas. Se reactiva con el mismo interruptor y regresa con su precio."
+  "texto": "Un equipo, subensamble o componente que ya no se fabrica, no se compra o no se vende. No se borra (tiene compras, movimientos y listas que lo usan): se inhabilita, y deja de salir en el cotizador, en pedidos nuevos y al armar listas de materiales, y no tiene precio de lista. Lo que ya existe no cambia: dentro de los equipos que lo usan sigue igual, y las cotizaciones y pedidos abiertos conservan sus partidas. Se reactiva con el mismo interruptor y regresa con su precio."
  },
  {
   "clave": "articulosConExistencia",
@@ -7492,6 +7497,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "envios"
   ],
   "texto": "En planta menos lo apartado: lo que de verdad se puede usar o vender hoy. En rojo quiere decir que hay más apartado que existencia."
+ },
+ {
+  "clave": "disponibleCatalogo",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Lo que de verdad se puede ofrecer hoy: lo que hay en la planta menos lo que ya está apartado para órdenes de producción y pedidos. Si dice «3 apartado de 10», en el almacén hay 10 pero solo 7 están libres. No incluye lo del Full de Mercado Libre."
  },
  {
   "clave": "disponiblePlanta",
@@ -15161,6 +15176,26 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "margenes"
   ],
   "texto": "Un servicio que hacemos nosotros (corte en la CNC, puesta en marcha). Está en las listas de materiales solo para que su costo cuente: no baja a las órdenes de producción, nunca falta y no se pide a compras. Sin marcar, es un servicio de fuera: la orden lo lleva y se le pide a compras."
+ },
+ {
+  "clave": "servicioRealizado",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Para un pedido que es solo servicio (una instalación, una barrenación, un flete): no sale nada del almacén, así que no lleva hoja de salida ni firma de recibido. Al marcarlo queda entregado. Lo marca el vendedor del pedido, almacén o la gerencia."
+ },
+ {
+  "clave": "serviciosEnEntrega",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Los servicios del pedido (instalación, paquetería, capacitación, una maniobra) no van en la hoja de salida ni necesitan quien los firme: se dan por hechos cuando ya salió todo lo demás. Cuenta como servicio el del catálogo y la partida escrita a mano que empieza con «Servicio», «Flete», «Paquetería», «Envío», «Instalación», «Puesta en marcha», «Capacitación», «Maniobra» o «Mano de obra»."
  },
  {
   "clave": "siguientePaso",

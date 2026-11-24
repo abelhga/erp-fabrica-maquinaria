@@ -24,7 +24,11 @@ import { FichasTecnicas } from "@/modulos/ventas/componentes/Fichas";
 interface Articulo {
   id: string; clave: string; tipo: "equipo" | "componente"; nombre: string; descripcion: string | null; unidad: string;
   categoria: string | null; imagen_url: string | null; precio: number | null; existencia: number | null;
+  /** Lo que ya está apartado para órdenes y pedidos: está en planta, pero no se puede ofrecer. */
+  apartado: number | null;
 }
+/** Lo que de verdad se puede vender hoy: lo que hay en planta menos lo apartado. */
+const disponible = (a: Articulo) => Math.max((a.existencia ?? 0) - (a.apartado ?? 0), 0);
 
 type FiltroCat = "todos" | "equipo" | "componente" | "con_existencia" | "sin_foto";
 
@@ -72,7 +76,7 @@ export default function Catalogo() {
   const cat = useQuery({
     queryKey: ["catalogo_venta"],
     queryFn: () => traerTodas<Articulo>((d, h) =>
-      supabase.from("v_catalogo").select("id, clave, tipo, nombre, descripcion, unidad, categoria, imagen_url, precio, existencia")
+      supabase.from("v_catalogo").select("id, clave, tipo, nombre, descripcion, unidad, categoria, imagen_url, precio, existencia, apartado")
         .in("tipo", ["equipo", "componente"]).eq("activo", true).eq("se_vende", true)
         .order("clave").range(d, h) as unknown as PromiseLike<{ data: Articulo[] | null; error: { message: string } | null }>),
     staleTime: 60_000,
@@ -81,7 +85,7 @@ export default function Catalogo() {
   const suelto = useQuery({
     queryKey: ["catalogo_venta", "uno", articuloId],
     enabled: !!articuloId && !!cat.data && !enLista,
-    queryFn: () => q<Articulo | null>(supabase.from("v_catalogo").select("id, clave, tipo, nombre, descripcion, unidad, categoria, imagen_url, precio, existencia")
+    queryFn: () => q<Articulo | null>(supabase.from("v_catalogo").select("id, clave, tipo, nombre, descripcion, unidad, categoria, imagen_url, precio, existencia, apartado")
       .eq("id", articuloId!).maybeSingle() as unknown as PromiseLike<{ data: Articulo | null; error: { message: string } | null }>),
   });
   useEffect(() => {
@@ -96,7 +100,7 @@ export default function Catalogo() {
   const filas = useMemo(() => {
     const f = cat.data ?? [];
     if (filtro === "equipo" || filtro === "componente") return f.filter((a) => a.tipo === filtro);
-    if (filtro === "con_existencia") return f.filter((a) => (a.existencia ?? 0) > 0);
+    if (filtro === "con_existencia") return f.filter((a) => disponible(a) > 0);
     if (filtro === "sin_foto") return f.filter((a) => !a.imagen_url);
     return f;
   }, [cat.data, filtro]);
@@ -106,7 +110,7 @@ export default function Catalogo() {
     { valor: "todos", texto: "Todo", cuenta: cat.data?.length },
     { valor: "equipo", texto: "Equipos", cuenta: cuenta((a) => a.tipo === "equipo"), explica: GLOSARIO.tipoCatalogoVenta },
     { valor: "componente", texto: "Componentes", cuenta: cuenta((a) => a.tipo === "componente"), explica: GLOSARIO.tipoCatalogoVenta },
-    { valor: "con_existencia", texto: "Con existencia", cuenta: cuenta((a) => (a.existencia ?? 0) > 0), explica: GLOSARIO.enPlanta },
+    { valor: "con_existencia", texto: "Disponibles", cuenta: cuenta((a) => disponible(a) > 0), explica: GLOSARIO.disponibleCatalogo },
     { valor: "sin_foto", texto: "Sin foto", cuenta: cuenta((a) => !a.imagen_url), explica: GLOSARIO.fotoCatalogo },
   ];
 
@@ -126,9 +130,13 @@ export default function Catalogo() {
     },
     { clave: "categoria", titulo: "Categoría", clase: "text-tenue", celda: (a) => <span className="block max-w-[140px] truncate">{a.categoria ?? "—"}</span> },
     {
-      clave: "existencia", titulo: "Existencia", alinear: "der", sinBusqueda: true, valor: (a) => a.existencia ?? 0, clase: "whitespace-nowrap",
-      explica: GLOSARIO.enPlanta,
-      celda: (a) => <span className={cn("cifra", !a.existencia && "text-tenue")}>{numero(a.existencia ?? 0)} <span className="text-xs text-tenue">{a.unidad}</span></span>,
+      clave: "existencia", titulo: "Disponible", alinear: "der", sinBusqueda: true, valor: (a) => disponible(a), clase: "whitespace-nowrap",
+      explica: GLOSARIO.disponibleCatalogo,
+      celda: (a) => (
+        <span className={cn("cifra", !disponible(a) && "text-tenue")}>{numero(disponible(a))} <span className="text-xs text-tenue">{a.unidad}</span>
+          {(a.apartado ?? 0) > 0 && <span className="block text-[11px] text-aviso font-normal">{numero(a.apartado ?? 0)} apartado de {numero(a.existencia ?? 0)}</span>}
+        </span>
+      ),
     },
     {
       clave: "precio", titulo: "Precio de lista", alinear: "der", sinBusqueda: true, valor: (a) => a.precio, explica: GLOSARIO.precioListaCatalogo,
@@ -158,9 +166,10 @@ export default function Catalogo() {
                 <dt className="text-xs text-tenue">Precio de lista</dt>
                 <dd className="text-xl font-semibold cifra">{abierto.precio != null ? dinero(abierto.precio) : "Pregunta a ventas"}</dd>
               </div>
-              <div data-explain={GLOSARIO.enPlanta} data-explain-title="Existencia">
-                <dt className="text-xs text-tenue">Existencia en planta</dt>
-                <dd className="text-xl font-semibold cifra">{numero(abierto.existencia ?? 0)} <span className="text-sm font-normal text-tenue">{abierto.unidad}</span></dd>
+              <div data-explain={GLOSARIO.disponibleCatalogo} data-explain-title="Disponible">
+                <dt className="text-xs text-tenue">Disponible para vender</dt>
+                <dd className="text-xl font-semibold cifra">{numero(disponible(abierto))} <span className="text-sm font-normal text-tenue">{abierto.unidad}</span></dd>
+                {(abierto.apartado ?? 0) > 0 && <dd className="text-xs text-aviso">En planta hay {numero(abierto.existencia ?? 0)}, pero {numero(abierto.apartado ?? 0)} ya están apartados para órdenes o pedidos.</dd>}
               </div>
               <div data-explain={GLOSARIO.tipoCatalogoVenta} data-explain-title="Tipo"><dt className="text-xs text-tenue">Tipo</dt><dd>{abierto.tipo === "equipo" ? "Equipo" : "Componente"}</dd></div>
               <div><dt className="text-xs text-tenue">Categoría</dt><dd>{abierto.categoria ?? "—"}</dd></div>

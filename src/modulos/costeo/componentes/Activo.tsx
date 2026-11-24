@@ -13,10 +13,11 @@ import { GLOSARIO } from "@/tutorial/glosario";
 import type { ArticuloCatalogo } from "./comun";
 
 type Art = Pick<ArticuloCatalogo, "id" | "clave" | "nombre" | "tipo" | "activo">;
-interface Uso { equipos_activos: number; pedidos_abiertos: number; cotizaciones_abiertas: number }
+interface Uso { equipos_activos: number; pedidos_abiertos: number; cotizaciones_abiertas: number; existencia?: number; compras_abiertas?: number }
 
 /**
- * Activo / inhabilitado de un equipo o subensamble. Inhabilitar pide confirmar con lo que
+ * Activo / inhabilitado de un equipo, subensamble o componente (un artículo no se borra: tiene
+ * compras, movimientos y listas que lo usan; se inhabilita). Inhabilitar pide confirmar con lo que
  * conviene saber (dónde se usa, qué pedidos lo traen); reactivar es un clic. Quien no puede
  * cambiarlo solo ve la insignia.
  */
@@ -29,7 +30,9 @@ export function ActivoArticulo({ a, forma }: { a: Art; forma: "interruptor" | "b
   });
   const cambiar = (v: boolean) => (v ? fijar.mutate(true) : setConfirmar(true));
 
-  if (!puede("costeo", 2)) {
+  // Equipos y subensambles son de ingeniería; lo que se compra, también de compras.
+  const fabricado = a.tipo === "equipo" || a.tipo === "subensamble";
+  if (!(puede("costeo", 2) || (!fabricado && puede("compras", 2)))) {
     return a.activo ? (forma === "interruptor" ? <span className="text-tenue">Sí</span> : null)
       : <span data-explain={GLOSARIO.articuloInhabilitado} data-explain-title="Inhabilitado"><Insignia tono="neutro">Inhabilitado</Insignia></span>;
   }
@@ -70,7 +73,9 @@ function Confirmar({ a, cargando, alCerrar, alConfirmar }: { a: Art; cargando: b
             <li>Lo traen {[u.pedidos_abiertos && plural(u.pedidos_abiertos, "pedido abierto", "pedidos abiertos"),
               u.cotizaciones_abiertas && plural(u.cotizaciones_abiertas, "cotización abierta", "cotizaciones abiertas")].filter(Boolean).join(" y ")}: no cambian.</li>
           )}
-          <li>Lo puedes reactivar cuando quieras desde el filtro «Inhabilitados»; regresa con su precio.</li>
+          {Number(u.existencia ?? 0) > 0 && <li>Hay <b>{Number(u.existencia)} en existencia</b>: se quedan en el almacén y se pueden seguir sacando.</li>}
+          {Number(u.compras_abiertas ?? 0) > 0 && <li>Viene en {plural(Number(u.compras_abiertas), "orden de compra abierta", "órdenes de compra abiertas")}: se reciben normal.</li>}
+          <li>No se borra nada: conserva sus compras, sus movimientos y su historial. Lo puedes reactivar cuando quieras desde el filtro «Inhabilitados»; regresa con su precio.</li>
         </ul>
       )}
     </Dialogo>

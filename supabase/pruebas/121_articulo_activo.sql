@@ -57,13 +57,12 @@ begin
   perform pg_temp.como_postgres();
   assert (select precio from precios_lista where articulo_id = v_eq) > 0, 'el equipo reactivado no recuperó su precio';
 
-  -- Los componentes no se inhabilitan desde aquí.
+  -- Desde 312 un componente también se inhabilita (en vez de borrarse) y se reactiva.
   perform pg_temp.como(v_ing);
-  begin
-    perform fijar_articulo_activo(v_pieza, false);
-    assert false, 'se inhabilitó un componente desde equipos';
-  exception when others then if sqlerrm not like '%equipos y subensambles%' then raise; end if;
-  end;
+  j := fijar_articulo_activo(v_pieza, false);
+  assert not (j->>'activo')::boolean, format('inhabilitar un componente: %s', j);
+  j := fijar_articulo_activo(v_pieza, true);
+  assert (j->>'activo')::boolean, 'el componente no se reactivó';
   perform pg_temp.como_postgres();
   assert not has_function_privilege('anon', 'fijar_articulo_activo(uuid, boolean)', 'execute'), 'anon inhabilita equipos';
 end $$;

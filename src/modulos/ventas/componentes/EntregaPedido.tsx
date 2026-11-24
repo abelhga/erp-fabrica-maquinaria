@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { QueryKey } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { AlertTriangle, FileCheck2, FileUp, Loader2, Printer, RotateCcw, Truck } from "lucide-react";
+import { AlertTriangle, Check, FileCheck2, FileUp, Loader2, Printer, RotateCcw, Truck } from "lucide-react";
 import { Boton } from "@/components/ui/boton";
 import { Campo, Entrada } from "@/components/ui/campo";
 import { Dialogo } from "@/components/ui/dialogo";
@@ -34,12 +34,18 @@ export interface Salida {
   /** Lo que no se pudo descontar del inventario (no había en el ERP): almacén lo revisa. */
   sin_inventario: { articulo: string; cantidad: number; hay: number }[];
 }
-export interface PartidaEntrega { id: string; cantidad: number; unidad: string; entregado: number; titulo: string }
+export interface PartidaEntrega {
+  id: string; cantidad: number; unidad: string; entregado: number; titulo: string;
+  /** Instalación, paquetería, una maniobra: no sale del almacén ni lleva firma de recibido. */
+  servicio?: boolean;
+}
 export interface HojaSalida {
   pedido: { id: string; folio: string; folio_anterior: string | null; fecha: string; fecha_compromiso: string | null; estado: string; direccion_entrega: string | null; canal: string };
   cliente: { nombre: string; razon_social: string | null; rfc: string | null; ciudad: string | null; estado: string | null } | null;
   vendedor: { nombre: string; telefono: string | null } | null;
   puede_entregar: boolean; puede_reabrir: boolean;
+  /** El pedido no trae nada físico: se cierra marcando el servicio como realizado, sin hoja ni firma. */
+  solo_servicios?: boolean;
   /** Envíos del pedido que no se han entregado ni cancelado: si hay, la salida va por Envíos. */
   envios_abiertos?: { id: string; folio: string; tipo: string; estado: string }[];
   partidas: (PartidaEntrega & { descripcion: string | null; clave: string | null; series: string[] })[];
@@ -103,8 +109,11 @@ export function BotonEntregar({ pedido, invalidar = [], antes }: {
   const [archivo, setArchivo] = useState<File | null>(null);
   const [cant, setCant] = useState<Record<string, string>>({});
   const archivoRef = useRef<HTMLInputElement>(null);
-  const pendientes = partidasDeEntrega(hoja.data).filter((p) => p.falta > 0);
-  const yaSalio = partidasDeEntrega(hoja.data).some((p) => Number(p.entregado) > 0);
+  // Lo que se entrega es lo físico. Los servicios se dan por hechos cuando sale lo demás.
+  const soloServicios = !!hoja.data?.solo_servicios;
+  const servicios = partidasDeEntrega(hoja.data).filter((p) => p.servicio && p.falta > 0);
+  const pendientes = partidasDeEntrega(hoja.data).filter((p) => !p.servicio && p.falta > 0);
+  const yaSalio = partidasDeEntrega(hoja.data).some((p) => !p.servicio && Number(p.entregado) > 0);
   // Al abrir se propone todo lo que falta: lo normal es entregar completo.
   useEffect(() => {
     if (abierto) setCant(Object.fromEntries(pendientes.map((p) => [p.id, String(p.falta)])));
@@ -114,15 +123,15 @@ export function BotonEntregar({ pedido, invalidar = [], antes }: {
   const completa = pendientes.every((p) => Number(cant[p.id] || 0) >= p.falta);
   const entregar = useAccion(async () => {
     const evidencia = archivo ? await subirHoja(pedido, archivo) : null;
-    return q<string>(supabase.rpc("entregar_pedido", { p_id: pedido, p_recibio: recibio, p_nota: nota || null, p_evidencia: evidencia,
+    return q<string>(supabase.rpc("entregar_pedido", { p_id: pedido, p_recibio: soloServicios ? null : recibio, p_nota: nota || null, p_evidencia: evidencia,
       p_lineas: pendientes.length ? lineas : null }));
   }, {
-    exito: completa ? "Pedido entregado" : "Entrega parcial registrada: lo demás queda por entregar",
+    exito: soloServicios ? "Servicio marcado como realizado" : completa ? "Pedido entregado" : "Entrega parcial registrada: lo demás queda por entregar",
     invalidar: [claveHoja(pedido), ...invalidar],
     alTerminar: () => { setAbierto(false); setRecibio(""); setNota(""); setArchivo(null); },
     deshacer: () => q(supabase.rpc("deshacer_entrega", { p_pedido: pedido })),
   });
-  const valido = recibio.trim().length >= 3 && !demas && (pendientes.length === 0 || lineas.length > 0);
+  const valido = soloServicios || (recibio.trim().length >= 3 && !demas && (pendientes.length === 0 || lineas.length > 0));
   // Con un envío abierto la salida va por Envíos (empaque con fotos); por aquí se quedaba el envío
   // abierto y el pedido parecía por salir dos veces. La base también se niega.
   if (envios.length > 0) return (
@@ -138,6 +147,25 @@ export function BotonEntregar({ pedido, invalidar = [], antes }: {
             </Boton>
           ))}
         </div>
+      </Dialogo>
+    </>
+  );
+  // Un pedido que es solo servicio no tiene hoja que firmar: se cierra diciendo que ya se hizo.
+  if (soloServicios) return (
+    <>
+      <Boton variante="exito" onClick={() => setAbierto(true)} data-explain={GLOSARIO.servicioRealizado} data-explain-title="Servicio realizado"><Check className="h-4 w-4" />Servicio realizado</Boton>
+      <Dialogo abierto={abierto} alCambiar={setAbierto} titulo="Marcar el servicio como realizado"
+        descripcion="Este pedido no trae nada que salga del almacén: no lleva hoja de salida ni firma de recibido. Al marcarlo queda entregado."
+        pie={<>
+          <Boton variante="fantasma" onClick={() => setAbierto(false)}>No, todavía no</Boton>
+          <Boton variante="exito" cargando={entregar.isPending} onClick={() => entregar.mutate(undefined)}><Check className="h-4 w-4" />Sí, ya se hizo</Boton>
+        </>}>
+        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); entregar.mutate(undefined); }}>
+          <ul className="text-sm space-y-1">{servicios.map((p) => <li key={p.id}>{numero(Number(p.cantidad))} × {p.titulo}</li>)}</ul>
+          <Campo etiqueta="Nota (opcional)">
+            <Entrada value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Cuándo se hizo, quién fue, con quién se quedó…" />
+          </Campo>
+        </form>
       </Dialogo>
     </>
   );
@@ -178,6 +206,11 @@ export function BotonEntregar({ pedido, invalidar = [], antes }: {
               </table>
               {demas && <p className="text-xs text-peligro mt-1">De «{demas.titulo}» faltan {numero(demas.falta)}: no puede salir más.</p>}
             </div>
+          )}
+          {servicios.length > 0 && (
+            <p className="text-xs text-tenue rounded-lg bg-fondo px-3 py-2" data-explain={GLOSARIO.serviciosEnEntrega} data-explain-title="Servicios del pedido">
+              <b className="text-texto">No van en la hoja ni llevan firma:</b> {servicios.map((p) => p.titulo).join(" · ")}. Son servicios; se dan por hechos cuando sale todo lo demás.
+            </p>
           )}
           <Boton type="button" variante="secundario" onClick={() => abrirHojaSalida(pedido, completa ? undefined : { lineas })} disabled={pendientes.length > 0 && lineas.length === 0}>
             <Printer className="h-4 w-4" />Imprimir hoja de salida
