@@ -118,6 +118,8 @@ Reglas:
 - «para»: "responsable" si es un error que quien lo capturó puede corregir; "direccion" si es un patrón que podría señalar un mal uso (faltantes que se repiten, gastos raros, salidas que no se parecen a las demás). En ese caso describe el patrón con hechos y NUNCA acuses a nadie ni supongas intención.
 - No repitas nada de «ya_dicho». Si alguien contestó que algo está bien así, eso es normal en esta empresa: no lo vuelvas a señalar ni algo igual.
 - Las reglas automáticas ya revisan artículos y clientes repetidos por nombre, pagos repetidos, costos de compra fuera de lo normal y compras atrasadas; busca lo que una regla no ve.
+- Si el mismo tipo de error se repite en varios registros de la misma persona (nombres de cliente mal capturados, ventas cerradas como perdidas que siguen vivas), haz UN solo hallazgo: cita el ref del más importante y nombra los demás por su folio en el detalle. Treinta avisos iguales no se leen; uno con la lista, sí.
+- No señales que dos cotizaciones tengan el mismo total: el mismo equipo tiene el mismo precio.
 - No señales clientes ni leads repetidos: no ves sus nombres ni teléfonos, y una regla de la base ya los compara. Que dos sean de la misma ciudad o pidan lo mismo no los hace la misma persona.
 - Nunca escribas en el título ni en el detalle el «ref» ni otro identificador interno (números largos con guiones): la gente no los ve ni los puede buscar. Nombra el registro por su folio visible (PED-, COT-, OC-, la clave del artículo) o, si no tiene, por lo que dice (el lead de La Piedad que pide cribado, la compra de Octavio Muñoz del 19/11).
 - Antes de decir que a un registro le falta un dato (folio, concepto, cuenta), confírmalo en sus datos: si el campo trae algo, no lo señales.

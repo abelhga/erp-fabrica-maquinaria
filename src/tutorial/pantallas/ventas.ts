@@ -177,6 +177,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
       "Arriba ves de quién es la cuenta y hasta cuándo. Si es de otro vendedor solo ves eso: contactos, compras y saldo quedan privados. Si te buscó a ti, pídele a la gerencia que lo reasigne o que compartan el crédito.",
       "En «Actividad», si le pones fecha a una nota se vuelve tarea. Tus seguimientos alargan la vigencia de la cuenta a tu nombre.",
       "Para facturar bien captura RFC, régimen, CP fiscal y uso de CFDI, o llénalos con la constancia de situación fiscal; o marca «Público en general» si no pide factura a su nombre.",
+      "El nombre es el de la persona (nombre y apellido) o la razón social: un teléfono, «pendiente» o texto copiado del chat no se aceptan. El estado se elige de la lista; si escribes una ciudad en el estado (Toluca, Pachuca), el ERP la pasa a «Ciudad» y pone el estado que le toca.",
       "Al agregar un contacto, si su teléfono o correo ya está en otro cliente, te lo dice antes de guardar.",
       "Si el mismo cliente está dos veces (uno con el nombre del contacto y otro con el de la empresa), «Juntar con otro» pasa todo al que se queda: pedidos, cotizaciones, oportunidades, saldo de la hoja, facturas y contactos (los que ya tiene no se repiten).",
       "Al juntar, lo que le falte al que se queda (RFC, régimen, ciudad, vendedor) lo toma del otro, y el otro se borra. Lo hacen la gerencia de ventas, o tú si los dos clientes son tuyos o libres.",

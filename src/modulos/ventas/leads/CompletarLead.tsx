@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SelectorEstado } from "@/components/datos/SelectorEstado";
 import type { QueryKey } from "@tanstack/react-query";
 import { Boton } from "@/components/ui/boton";
 import { Entrada } from "@/components/ui/campo";
@@ -30,7 +31,7 @@ export function CompletarLead({ lead: l, invalidar }: { lead: Lead; invalidar: Q
           </div>
         )}
         {!l.cliente_id && <Entrada value={f.ciudad} onChange={cambia("ciudad")} aria-label="Ciudad" placeholder="Ciudad" />}
-        {!l.cliente_id && <Entrada value={f.estado_mx} onChange={cambia("estado_mx")} aria-label="Estado" placeholder="Estado" />}
+        {!l.cliente_id && <SelectorEstado valor={f.estado_mx} alCambiar={(v) => setF({ ...f, estado_mx: v })} />}
         <Entrada className="sm:col-span-2" value={f.interes} onChange={cambia("interes")} aria-label="Qué busca"
           placeholder="Qué busca: equipo con modelo o medida, para qué material" />
       </div>

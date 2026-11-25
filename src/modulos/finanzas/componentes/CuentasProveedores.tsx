@@ -140,6 +140,15 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
       supabase.from("movimiento_categoria_cambios").select("movimiento_id, antes, despues, motivo, en").in("movimiento_id", idsCompras).order("en")),
   });
   const cambioDe = (id: string) => (cambiosCat.data ?? []).filter((x) => x.movimiento_id === id);
+  // Los renglones de la hoja también se pueden pasar a otra categoría (Manguitos → «Sin efectos»).
+  const idsHoja = (hoja.data ?? []).filter((m) => m.tipo === "Compra").map((m) => m.id);
+  const catHoja = useQuery({
+    queryKey: ["compras_hoja_categoria_renglon", llave, idsHoja.join()], enabled: editable && idsHoja.length > 0,
+    queryFn: () => q<{ hoja_id: number; categoria: string; antes: string | null; motivo: string }[]>(
+      supabase.from("compras_hoja_categoria_renglon").select("hoja_id, categoria, antes, motivo").in("hoja_id", idsHoja)),
+  });
+  const catDeHoja = (id: number) => (catHoja.data ?? []).find((x) => x.hoja_id === id);
+  const [recatHoja, setRecatHoja] = useState<{ id: number; categoria: string | null; factura: string | null; monto: number; fecha: string } | null>(null);
   const [noCuenta, setNoCuenta] = useState<Renglon | null>(null);
   const [ligarA, setLigarA] = useState<{ id: string; nombre: string } | null>(null);
   const ligar = useAccion(() => q<number>(supabase.rpc("ligar_hoja_proveedor", { p_llave: llave, p_proveedor: ligarA!.id })),
@@ -271,6 +280,17 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
                       </span>
                     );
                   })()}
+                  {editable && !m.erp && m.hojaId && m.tipo === "Compra" && !m.repetida && (() => {
+                    const c = catDeHoja(m.hojaId!);
+                    return (
+                      <span className="inline-flex items-center gap-1 text-xs text-tenue" title={c ? `Antes: ${c.antes ?? "la del proveedor"} · ${c.motivo}` : undefined}>
+                        {c ? <>{c.categoria} <span className="italic">(antes {c.antes ?? "la del proveedor"})</span></> : "Categoría del proveedor"}
+                        <button type="button" onClick={() => setRecatHoja({ id: m.hojaId!, categoria: c?.categoria ?? null, factura: m.factura, monto: m.monto, fecha: m.fecha })}
+                          className="p-0.5 rounded hover:text-texto" aria-label="Cambiar categoría" data-explain={GLOSARIO.cambiarCategoriaCompra} data-explain-title="Cambiar categoría">
+                          <Pencil className="h-3 w-3" /></button>
+                      </span>
+                    );
+                  })()}
                   {(m.erp ? m.erp.tipo === "compra" : m.tipo === "Compra") && !m.repetida && (
                     <span data-explain={GLOSARIO.estadoPagoCompra} data-explain-title="¿Está pagada?">
                       {debeDe(m) >= 1 ? <Insignia tono="aviso">Debe {dinero(debeDe(m))}</Insignia> : <span className="text-xs text-ok">Pagada</span>}
@@ -303,6 +323,7 @@ export function PanelProveedor({ cuenta, facturas, alCerrar, alRegistrarCompra }
           ))}
           {hoja.data?.length === 200 && <p className="py-2 text-xs text-tenue">De la hoja se muestran los 200 más recientes.</p>}
           <DialogoCategoria compra={recategorizar} alCerrar={() => setRecategorizar(null)} />
+          <DialogoCategoria compra={recatHoja && { ...recatHoja, id: String(recatHoja.id) }} deLaHoja alCerrar={() => setRecatHoja(null)} />
           <DialogoLigarOrdenes compra={ligando && { id: ligando.id, proveedor_id: ligando.proveedor_id, factura: ligando.factura, monto: Number(ligando.monto), categoria: ligando.categoria, fecha: ligando.fecha }}
             alCerrar={() => setLigando(null)} />
           {noCuenta && <DialogoNoCuenta hojaId={noCuenta.hojaId!} tipo={noCuenta.tipo as "Compra" | "Pago"}
@@ -430,18 +451,20 @@ function RegistrarPagoProveedor({ cuenta, vencido, facturas, banco, alTerminar }
  * de la empresa): el monto y lo que se le debe al proveedor no cambian, solo en qué se cuenta.
  * Pide el porqué, que queda junto a la compra.
  */
-function DialogoCategoria({ compra, alCerrar }: { compra: { id: string; categoria: string | null; factura: string | null; monto: number; fecha: string } | null; alCerrar: () => void }) {
+function DialogoCategoria({ compra, alCerrar, deLaHoja }: { compra: { id: string; categoria: string | null; factura: string | null; monto: number; fecha: string } | null; alCerrar: () => void; deLaHoja?: boolean }) {
   const [cat, setCat] = useState("");
   const [motivo, setMotivo] = useState("");
   useEffect(() => { setCat(""); setMotivo(""); }, [compra]);
-  const guardar = useAccion(() => q(supabase.rpc("cambiar_categoria_compra", { p_movimiento: compra!.id, p_categoria: cat.trim(), p_motivo: motivo.trim() })), {
+  const guardar = useAccion(() => q(deLaHoja
+    ? supabase.rpc("cambiar_categoria_compra_hoja", { p_hoja: Number(compra!.id), p_categoria: cat.trim(), p_motivo: motivo.trim() })
+    : supabase.rpc("cambiar_categoria_compra", { p_movimiento: compra!.id, p_categoria: cat.trim(), p_motivo: motivo.trim() })), {
     exito: `Categoría cambiada a «${cat.trim()}»`,
-    invalidar: [...INVALIDAR_PROVEEDORES, ["movimiento_categoria_cambios"], ["resultados_periodo"], ["categorias_compra_periodo"]], alTerminar: alCerrar,
+    invalidar: [...INVALIDAR_PROVEEDORES, ["movimiento_categoria_cambios"], ["compras_hoja_categoria_renglon"], ["resultados_periodo"], ["categorias_compra_periodo"]], alTerminar: alCerrar,
   });
   const listo = cat.trim().length > 0 && motivo.trim().length >= 5 && cat.trim().toLowerCase() !== (compra?.categoria ?? "").toLowerCase();
   return (
     <Dialogo abierto={!!compra} alCambiar={(v) => !v && alCerrar()} titulo="Cambiar categoría"
-      descripcion={compra && `Compra del ${fecha(compra.fecha)}${compra.factura ? ` · Fact. ${compra.factura}` : ""} · ${dinero(compra.monto)}. Hoy: ${compra.categoria ?? "sin categoría"}. Lo que se le debe al proveedor no cambia.`}
+      descripcion={compra && `Compra del ${fecha(compra.fecha)}${compra.factura ? ` · Fact. ${compra.factura}` : ""} · ${dinero(compra.monto)}. Hoy: ${compra.categoria ?? (deLaHoja ? "la del proveedor" : "sin categoría")}. Lo que se le debe al proveedor no cambia.`}
       pie={<><Boton variante="secundario" onClick={alCerrar}>Cancelar</Boton>
         <Boton type="submit" form="cambiar-categoria" disabled={!listo} cargando={guardar.isPending}>Guardar</Boton></>}>
       <form id="cambiar-categoria" className="grid gap-3" onSubmit={(e) => { e.preventDefault(); if (listo) guardar.mutate(undefined); }}>

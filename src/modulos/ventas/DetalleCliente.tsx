@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SelectorEstado } from "@/components/datos/SelectorEstado";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, FilePlus, History, Lock, Mail, Merge, MessageCircle, Pencil, Phone, Plus, Star, Trash2, UserPlus, Users } from "lucide-react";
@@ -247,7 +248,7 @@ function DatosFiscales({ c, editable, esGerente }: { c: Cliente; editable: boole
         <Campo etiqueta="Uso de CFDI"><Entrada value={f.uso_cfdi ?? ""} onChange={t("uso_cfdi")} placeholder="G03 Gastos en general" /></Campo>
         <Campo etiqueta="Giro"><Entrada value={f.giro ?? ""} onChange={t("giro")} /></Campo>
         <Campo etiqueta="Ciudad"><Entrada value={f.ciudad ?? ""} onChange={t("ciudad")} /></Campo>
-        <Campo etiqueta="Estado"><Entrada value={f.estado ?? ""} onChange={t("estado")} /></Campo>
+        <Campo etiqueta="Estado"><SelectorEstado valor={f.estado} alCambiar={(v) => setF({ ...f, estado: v })} /></Campo>
         <Campo etiqueta="País"><Entrada value={f.pais ?? ""} onChange={t("pais")} /></Campo>
         <Campo etiqueta="Días de crédito"><Entrada type="number" min={0} data-explain={GLOSARIO.diasCreditoCliente} data-explain-title="Días de crédito" value={f.dias_credito} onChange={(e) => setF({ ...f, dias_credito: Number(e.target.value) || 0 })} /></Campo>
         <Campo etiqueta="¿Cómo llegó?">
