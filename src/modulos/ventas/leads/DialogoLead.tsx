@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { SelectorEstado } from "@/components/datos/SelectorEstado";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -239,7 +240,7 @@ export function DialogoLead({ abierto, alCambiar }: { abierto: boolean; alCambia
         </Campo>
         <div className="grid gap-3 sm:grid-cols-4">
           <Campo etiqueta="Ciudad"><Entrada value={f.ciudad} onChange={cambia("ciudad")} /></Campo>
-          <Campo etiqueta="Estado"><Entrada value={f.estado_mx} onChange={cambia("estado_mx")} /></Campo>
+          <Campo etiqueta="Estado"><SelectorEstado valor={f.estado_mx} alCambiar={(v) => setF({ ...f, estado_mx: v })} /></Campo>
           <Campo etiqueta="Línea">
             <Seleccion value={f.linea} onChange={cambia("linea")} data-explain={GLOSARIO.lineaLead} data-explain-title="Línea">
               {(Object.keys(LINEA) as Linea[]).map((l) => <option key={l} value={l}>{LINEA[l]}</option>)}
