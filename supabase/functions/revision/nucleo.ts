@@ -101,7 +101,7 @@ export const ESQUEMA_CONSEJOS = {
 const QUE_MIRAR: Record<Modulo, string> = {
   inventario: "salidas, entradas, traspasos y ajustes de inventario: cantidades que no cuadran con la unidad (metros contra piezas), salidas sin orden ni motivo, la misma salida capturada dos veces, un ajuste que contradice otro, quien recibe que no corresponde.",
   compras: "órdenes de compra y artículos dados de alta: un artículo nuevo que ya existía con otro nombre (compáralo con sus «parecidos»), partidas con cantidades raras, fechas de entrega imposibles, notas que contradicen la orden, la misma compra hecha dos veces.",
-  ventas: "cotizaciones, seguimientos, clientes y leads nuevos: un cliente dado de alta dos veces escrito distinto, una cotización con tiempo de entrega o condiciones que no cuadran, un seguimiento cerrado con un «qué pasó» que no dice nada o contradice el resultado, leads repetidos.",
+  ventas: "cotizaciones, seguimientos, clientes y leads nuevos: una cotización con tiempo de entrega o condiciones que no cuadran, un seguimiento cerrado con un «qué pasó» que no dice nada o contradice el resultado, un lead o cliente con datos que se contradicen.",
   produccion: "problemas reportados, notas, cambios de material, etapas reabiertas y órdenes en espera: un motivo de espera que ya no aplica, el mismo problema reportado varias veces sin seguimiento, notas que señalan un error de captura.",
   finanzas: "caja chica y pagos a proveedores: el mismo pago capturado dos veces (mismo proveedor, monto y factura, o sin factura), un concepto que no dice qué se compró, importes con un cero de más o de menos, un préstamo o un retiro capturado como compra.",
 };
@@ -118,6 +118,8 @@ Reglas:
 - «para»: "responsable" si es un error que quien lo capturó puede corregir; "direccion" si es un patrón que podría señalar un mal uso (faltantes que se repiten, gastos raros, salidas que no se parecen a las demás). En ese caso describe el patrón con hechos y NUNCA acuses a nadie ni supongas intención.
 - No repitas nada de «ya_dicho». Si alguien contestó que algo está bien así, eso es normal en esta empresa: no lo vuelvas a señalar ni algo igual.
 - Las reglas automáticas ya revisan artículos y clientes repetidos por nombre, pagos repetidos, costos de compra fuera de lo normal y compras atrasadas; busca lo que una regla no ve.
+- No señales clientes ni leads repetidos: no ves sus nombres ni teléfonos, y una regla de la base ya los compara. Que dos sean de la misma ciudad o pidan lo mismo no los hace la misma persona.
+- Nunca escribas en el título ni en el detalle el «ref» ni otro identificador interno (números largos con guiones): la gente no los ve ni los puede buscar. Nombra el registro por su folio visible (PED-, COT-, OC-, la clave del artículo) o, si no tiene, por lo que dice (el lead de La Piedad que pide cribado, la compra de Octavio Muñoz del 19/11).
 - Antes de decir que a un registro le falta un dato (folio, concepto, cuenta), confírmalo en sus datos: si el campo trae algo, no lo señales.
 - Si hay una explicación normal para lo que ves, no lo señales. Señalar algo que estaba bien le quita tiempo a la persona y hace que deje de leer la revisión.${modulo === "finanzas" || modulo === "compras" ? FINANZAS_NORMAL : ""}
 - No te nombres ni nombres al modelo o a su proveedor: para la gente esto es «la revisión» o «la IA».
