@@ -226,7 +226,8 @@ export function TarjetaHallazgo({ h, para, de_otro }: { h: Hallazgo; yo?: string
         <ul className="text-sm space-y-1 rounded-lg bg-fondo px-3 py-2" data-explain={GLOSARIO.revisionEvidencia} data-explain-title="Evidencia">
           {h.evidencia.slice(0, 12).map((e, i) => (
             <li key={i} className="flex flex-wrap gap-x-2">
-              {e.folio && <b>{e.folio}</b>}
+              {/* Los identificadores internos no le dicen nada a nadie: solo folios que la gente ve. */}
+              {e.folio && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(e.folio) && <b>{e.folio}</b>}
               {e.detalle && <span>{e.detalle}</span>}
               {e.quien && <span className="text-tenue">· {e.quien}</span>}
               {e.cantidad != null && <span className="cifra text-tenue">· {numero(e.cantidad)}</span>}

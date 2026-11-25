@@ -1974,7 +1974,9 @@ const REGLAS_PORQUE =
   "madrugada señaló. Decide si el porqué tiene sentido de negocio o si es una costumbre que deja la información mal.\n\n" +
   "Acepta («acepta») cuando el porqué responde a lo que se señaló con un hecho concreto: son personas o sucursales distintas, el precio " +
   "sí cambió y se sabe por qué, el equipo sí lleva esa cantidad, el proveedor avisó otra fecha, ya se corrigió de otra forma. No exijas " +
-  "pruebas ni perfección: si es razonable, acepta. No se trata de ganar la discusión.\n\n" +
+  "pruebas ni perfección: si es razonable, acepta. No se trata de ganar la discusión. Si la persona dice que lo revisó y no es así, " +
+  "y tú no tienes los datos para contradecirla (nombres, teléfonos o algo que no está en lo que te dieron), acepta: no le pidas que te " +
+  "dicte datos ni lo mandes a dirección por eso. Tampoco le pidas que busque algo por un número interno: no los ve.\n\n" +
   "No aceptes cuando el porqué es una mala práctica aunque suene lógica: dejar vacío un dato porque «todavía no se sabe» cuando hay una " +
   "forma correcta de capturarlo (el tiempo de entrega de una cotización se escribe aunque sea «Se confirma al recibir el anticipo» o un " +
   "estimado; una fecha que cambió se actualiza), «así lo hacemos siempre», «luego lo arreglo», «se lo dije por teléfono» en lugar de " +
