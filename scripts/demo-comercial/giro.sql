@@ -178,17 +178,20 @@ from _art x where x.clave = a.clave;
 update public.etapas set nombre = x.n from (values
   (1, 'Corte'), (2, 'Soldadura'), (3, 'Maquinado'), (4, 'Pintura'), (5, 'Ensamble'), (6, 'Eléctrico'),
   (7, 'Calidad'), (8, 'Embarque')) x(id, n) where etapas.id = x.id;
+-- Un taller de remolques de buen tamaño: con la capacidad de Hegamex el plan acababa en abril de 2027.
+update public.etapas set capacidad_horas_semana = x.h from (values
+  (1, 180), (2, 1000), (3, 180), (4, 220), (5, 300), (6, 120), (7, 90), (8, 90)) x(id, h) where etapas.id = x.id;
 
 -- Tipos de equipo y sus políticas de precio. "ESPECIAL CEMEX" era un cliente real.
 update public.categorias set nombre = x.n from (values
-  ('Banda Transportadora', 'Caja seca'), ('Bazuca', 'Remolque cañero'), ('Cribadora', 'Góndola'),
-  ('Dosificadora', 'Cama baja'), ('Silo para Cemento', 'Pipa'), ('Tolva', 'Plataforma'),
-  ('Mezcladora', 'Remolque agrícola'), ('Elevador', 'Remolque ganadero'), ('ESPECIAL CEMEX', 'Especial flotillas')) x(a, n)
+  ('Banda Transportadora', 'Plataforma'), ('Bazuca', 'Caja seca'), ('Cribadora', 'Remolque utilitario'),
+  ('Dosificadora', 'Cama baja'), ('Silo para Cemento', 'Pipa'), ('Tolva', 'Remolque recreativo'),
+  ('Mezcladora', 'Remolque agrícola'), ('Elevador', 'Remolque cañero'), ('ESPECIAL CEMEX', 'Especial flotillas')) x(a, n)
 where categorias.nombre = x.a;
 update public.politicas_precio set nombre = x.n from (values
-  ('Banda Transportadora', 'Caja seca'), ('Bazuca', 'Remolque cañero'), ('Cribadora', 'Góndola'),
-  ('Dosificadora', 'Cama baja'), ('Silo para Cemento', 'Pipa'), ('Tolva', 'Plataforma'),
-  ('Mezcladora', 'Remolque agrícola'), ('Elevador', 'Remolque ganadero'), ('ESPECIAL CEMEX', 'Especial flotillas')) x(a, n)
+  ('Banda Transportadora', 'Plataforma'), ('Bazuca', 'Caja seca'), ('Cribadora', 'Remolque utilitario'),
+  ('Dosificadora', 'Cama baja'), ('Silo para Cemento', 'Pipa'), ('Tolva', 'Remolque recreativo'),
+  ('Mezcladora', 'Remolque agrícola'), ('Elevador', 'Remolque cañero'), ('ESPECIAL CEMEX', 'Especial flotillas')) x(a, n)
 where politicas_precio.nombre = x.a;
 
 -- Familias de venta: la clave es interna (el libro y las reglas la usan); el nombre es lo que se ve.
@@ -259,35 +262,35 @@ insert into _rx (patron, nuevo) values
   ('20 cosedoras N600A, 10 F300A y 2 cabezales F900A', '40 rines de acero, 20 de aluminio y 2 quintas ruedas'),
   ('10 cosedoras N620A y un cabezal F900A', '20 rines de aluminio y una quinta rueda'),
   ('71 celdas de carga, 6 indicadores y 6 cajas suma', '70 sensores de suspensión, 6 módulos ABS y 6 cajas de conexiones'),
-  ('Silo de 60 t, 4 helicoidales de 8 y 10 pulgadas, colgantes y motovibradores', '4 ejes de 25,000 y 30,000 lb, colgantes de suspensión y cámaras de freno'),
+  ('\mSilo de 60 t, 4 helicoidales de 8 y 10 pulgadas, colgantes y motovibradores', '4 ejes de 25,000 y 30,000 lb, colgantes de suspensión y cámaras de freno'),
   ('3 bandas flexibles motorizadas y 4 de gravedad de 10 m', '3 puertas cortina y 4 rampas de aluminio'),
   ('20 patines hidráulicos de 3 t y un volteador 360', '20 patines hidráulicos de 3 t y un cilindro de volteo'),
-  ('Dosificadoras? ZEUS ?(\d+)', 'Cama baja de \1 t'),
+  ('\mDosificadoras? ZEUS ?(\d+)', 'Cama baja de \1 t'),
   ('\mZEUS\M ?(\d+)?', 'cama baja'), ('\mZAR[- ]?\d*T?\M', 'góndola'), ('\mTHOR\M ?\d*', 'pipa'),
-  ('dosificadoras', 'camas bajas'), ('dosificadora', 'cama baja'),
-  ('cribadoras?', 'góndola'), ('cribas', 'góndolas'), ('\mcriba\M', 'góndola'), ('zarandas?', 'góndola'),
-  ('elevadores de cangilones', 'remolques ganaderos'), ('elevador de cangilones', 'remolque ganadero'),
-  ('elevadores', 'remolques ganaderos'), ('elevador', 'remolque ganadero'),
-  ('bandas? transportadoras?', 'caja seca'), ('bandas? cargadoras?', 'plataforma'), ('banda artesa', 'caja seca'),
-  ('bandas? pedestal', 'dolly'), ('bandas? flexibles?', 'rampa'),
-  ('engrapar su banda', 'alinear su remolque'), ('grapas? (para|de) banda', 'bisagras'),
-  ('metros de banda', 'metros de lona'), ('rollo de banda', 'rollo de lona'),
+  ('\mdosificadoras', 'camas bajas'), ('\mdosificadora', 'cama baja'),
+  ('\mcribadoras?', 'góndola'), ('\mcribas', 'góndolas'), ('\mcriba\M', 'góndola'), ('\mzarandas?', 'góndola'),
+  ('\melevadores de cangilones', 'remolques ganaderos'), ('\melevador de cangilones', 'remolque ganadero'),
+  ('\melevadores', 'remolques ganaderos'), ('\melevador', 'remolque ganadero'),
+  ('\mbandas? transportadoras?', 'caja seca'), ('\mbandas? cargadoras?', 'plataforma'), ('\mbanda artesa', 'caja seca'),
+  ('\mbandas? pedestal', 'dolly'), ('\mbandas? flexibles?', 'rampa'),
+  ('\mengrapar su banda', 'alinear su remolque'), ('\mgrapas? (para|de) banda', 'bisagras'),
+  ('\mmetros de banda', 'metros de lona'), ('\mrollo de banda', 'rollo de lona'),
   ('\mbandas\M', 'cajas secas'), ('\mbanda\M', 'caja seca'),
-  ('cangilones', 'plafones LED'), ('cangil[oó]n', 'plafón LED'),
-  ('bazucas?', 'remolque cañero'), ('helicoidal(es)?', 'eje'), ('rompesacos', 'redilas altas'),
-  ('tolvas', 'góndolas'), ('\mtolva\M', 'góndola'), ('silos', 'pipas'), ('\msilo\M', 'pipa'),
-  ('colectores? de polvos?', 'suspensión neumática'), ('colectores', 'suspensiones'), ('colector', 'suspensión'),
-  ('cosedoras', 'rines'), ('cosedora', 'rin'), ('cabezal(es)? cosedor(es)?', 'quinta rueda'),
-  ('celdas de carga', 'sensores de carga'), ('celda de carga', 'sensor de carga'),
-  ('motovibradores', 'cámaras de freno'), ('moto ?vibrador', 'cámara de freno'), ('vibradores', 'cámaras de freno'),
-  ('motorreductores', 'patines de aterrizaje'), ('motorreductor', 'patín de aterrizaje'),
-  ('chumaceras', 'baleros'), ('chumacera', 'balero'), ('catarinas', 'rótulas'), ('catarina', 'rótula'),
+  ('\mcangilones', 'plafones LED'), ('\mcangil[oó]n', 'plafón LED'),
+  ('\mbazucas?', 'remolque cañero'), ('\mhelicoidal(es)?', 'eje'), ('\mrompesacos', 'redilas altas'),
+  ('\mtolvas', 'góndolas'), ('\mtolva\M', 'góndola'), ('\msilos', 'pipas'), ('\msilo\M', 'pipa'),
+  ('\mcolectores? de polvos?', 'suspensión neumática'), ('\mcolectores', 'suspensiones'), ('\mcolector', 'suspensión'),
+  ('\mcosedoras', 'rines'), ('\mcosedora', 'rin'), ('\mcabezal(es)? cosedor(es)?', 'quinta rueda'),
+  ('\mceldas de carga', 'sensores de carga'), ('\mcelda de carga', 'sensor de carga'),
+  ('\mmotovibradores', 'cámaras de freno'), ('\mmoto ?vibrador', 'cámara de freno'), ('\mvibradores', 'cámaras de freno'),
+  ('\mmotorreductores', 'patines de aterrizaje'), ('\mmotorreductor', 'patín de aterrizaje'),
+  ('\mchumaceras', 'baleros'), ('\mchumacera', 'balero'), ('\mcatarinas', 'rótulas'), ('\mcatarina', 'rótula'),
   ('\mpoleas\M', 'tambores de freno'), ('\mpolea\M', 'tambor de freno'),
-  ('rodillos', 'travesaños'), ('rodillo', 'travesaño'),
-  ('mezcladora', 'remolque forrajero'), ('envasadora', 'caja térmica'),
-  ('grip ?top', 'antiderrapante'), ('Tapco', 'Truck-Lite'), ('Flexco', 'Hendrickson'),
-  ('la bomba de la caja seca', 'la bomba de volteo'), ('costales', 'tarimas'), ('costal', 'tarima'),
-  ('Pailería', 'Soldadura'), ('\mPailer(o|a)s?\M', 'Soldador'), ('\mDetallado\M', 'Ensamble');
+  ('\mrodillos', 'travesaños'), ('\mrodillo', 'travesaño'),
+  ('\mmezcladora', 'remolque forrajero'), ('\menvasadora', 'caja térmica'),
+  ('\mgrip ?top', 'antiderrapante'), ('\mTapco', 'Truck-Lite'), ('\mFlexco', 'Hendrickson'),
+  ('\mla bomba de la caja seca', 'la bomba de volteo'), ('\mcostales', 'tarimas'), ('\mcostal', 'tarima'),
+  ('\mPailería', 'Soldadura'), ('\mPailer(o|a)s?\M', 'Soldador'), ('\mDetallado\M', 'Ensamble');
 
 -- Frases que, ya cambiadas, quedaban forzadas («la rin de tarimas ya no cose»): una por una.
 create temp table _fin (viejo text, nuevo text) on commit drop;
@@ -413,7 +416,7 @@ begin
              and c.table_name !~ '^(geo_|nombres_palabras$|reglas_familia_venta$|compras_categorias$|compras_hoja|categoria_clave_sat$|familia_categoria$|historial_ventas_hoja$)'
              and c.column_name not in ('legacy_id', 'legacy_ref', 'clave', 'familia', 'categoria') loop
     execute format('select count(*) from public.%I where %I::text ~* %L', r.t, r.col,
-      '(banda|cangil|dosificad|\mtolva|\msilo|criba|zaranda|zeus|thor|bazuca|helicoidal|elevador|cosedora|colector|celda de carga|motorreduct|vibrador|chumacera|pailer)') into n;
+      '(banda|cangil|dosificad|\mtolva|\msilo|criba|zaranda|zeus|thor|bazuca|helicoidal|\melevador|cosedora|colector|celda de carga|motorreduct|vibrador|chumacera|pailer)') into n;
     if n > 0 then v := v || format('%s.%s (%s) ', r.t, r.col, n); end if;
   end loop;
   if v <> '' then raise notice 'Quedó vocabulario de Hegamex en: %', v; end if;

@@ -142,6 +142,17 @@ cross join lateral (
 cross join lateral generate_series(1, case when g.correo similar to '(direccion|isaac|juan|susana|gerente.ventas|compras|finanzas)@%' then 3 else 1 end) k
 where g.correo not similar to '(tv|taller)@%' and random() < 0.45;
 
+-- La bitácora: todo lo que hicieron los scripts quedó con la hora de la carga, y «Cambios por día»
+-- era una sola barra hoy. Se reparte en las últimas semanas, en horario de oficina (lo más
+-- reciente pesa más), dejando lo de hoy en hoy.
+set local session_replication_role = replica;
+update public.bitacora set en =
+  ((current_date - (1 + floor(power(random(), 1.4) * 40))::int) + time '08:30' + (random() * 560) * interval '1 minute')
+    at time zone 'America/Mexico_City'
+where en > now() - interval '6 hours' and random() < 0.9;
+update public.bitacora set en = en + interval '1 day' where extract(dow from en at time zone 'America/Mexico_City') = 0;
+set local session_replication_role = origin;
+
 do $$
 begin
   raise notice 'Uso: % renglones en % días; % consultas a la IA',
