@@ -6,6 +6,9 @@
 #   docker exec $C pg_dump -U postgres --data-only --inserts -t auth.users -t auth.identities -f /tmp/auth.sql postgres
 #   docker cp $C:/tmp/publico.sql . && docker cp $C:/tmp/auth.sql .
 #   NUBE_REF=<ref> python3 scripts/demo-comercial/subir_datos.py auth.sql publico.sql
+#   NUBE_REF=<ref> python3 scripts/demo-comercial/subir_datos.py --reemplazar auth.sql publico.sql
+# --reemplazar: el proyecto ya tiene una versión anterior de la demostración y se cambia completa
+# (se niega si encuentra datos importados de las hojas reales o cuentas que no sean de la demo).
 #
 # (El pg_dump del contenedor: el de Ubuntu es de otra versión y se niega.)
 # Vacía antes todas las tablas de public: las migraciones ya sembraron configuración, permisos y
@@ -15,13 +18,19 @@ import json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "../nube"))
 from sql_nube import correr
 
+REEMPLAZAR = "--reemplazar" in sys.argv
+archivos = [a for a in sys.argv[1:] if a != "--reemplazar"]
 ok, cuerpo = correr("select (select count(*) from public.pedidos) + (select count(*) from public.historial_ventas_hoja) n,"
-                    " (select count(*) from auth.users) u", "¿proyecto vacío?")
+                    " (select count(*) from auth.users) u,"
+                    " (select count(*) from public.clientes where legacy_ref like 'CLI:%') reales,"
+                    " (select count(*) from auth.users where email not like '%.demo') ajenas", "¿proyecto vacío?")
 if not ok:
     sys.exit(1)
 r = json.loads(cuerpo)[0]
-if r["n"] or r["u"]:
-    sys.exit(f"El proyecto ya tiene datos ({r['n']} pedidos/ventas, {r['u']} cuentas): no se toca.")
+if r["reales"] or r["ajenas"]:
+    sys.exit(f"El proyecto tiene datos reales ({r['reales']} clientes de las hojas, {r['ajenas']} cuentas que no son .demo): no se toca.")
+if (r["n"] or r["u"]) and not REEMPLAZAR:
+    sys.exit(f"El proyecto ya tiene datos ({r['n']} pedidos/ventas, {r['u']} cuentas): usa --reemplazar si es la demo de antes.")
 
 # Disparadores apagados: hay llaves circulares (cotizaciones, movimientos) y tablas que no dejan
 # insertar historia "a mano"; los datos ya vienen cuadrados de la base local.
@@ -32,6 +41,11 @@ ok, _ = correr(REPLICA + """do $$ declare t text; begin
 end $$;""", "vaciar public")
 if not ok:
     sys.exit(1)
+# Las cuentas de la demo anterior, después de vaciar public (perfiles y lo que las nombra).
+if REEMPLAZAR:
+    ok, _ = correr("delete from auth.users where email like '%.demo';", "quitar las cuentas de la demo anterior")
+    if not ok:
+        sys.exit(1)
 
 
 def sentencias(archivo):
@@ -48,7 +62,7 @@ def sentencias(archivo):
         yield "".join(actual)
 
 
-for archivo in sys.argv[1:]:
+for archivo in archivos:
     pedazo, tam, n = [], 0, 0
     def mandar():
         global pedazo, tam, n

@@ -166,8 +166,7 @@ update public.configuracion set valor = '{"carpeta": null}' where clave = 'drive
 update public.configuracion set valor = valor - 'cuentas' - 'banco' - 'clabe' - 'cuenta' where clave = 'empresa_fiscal';
 -- Los mensajes de las funciones («Le toca a Hegamex»…) los cambia funciones_con_marca.sql, aparte:
 -- en la nube las funciones vienen de las migraciones, no del respaldo de datos.
--- "Dosificadoras (Zeus)": Zeus es la línea de Hegamex; aquí basta con el nombre del producto.
-update public.familias_venta set nombre = 'Dosificadoras' where clave = 'dosificadoras';
+-- Los nombres de las familias de venta los pone giro.sql (las de remolques).
 
 -- ---------------------------------------------------------------------------
 -- 3. Lo que quedó: si algo sigue nombrando a Hegamex o a su gente, que no pase.

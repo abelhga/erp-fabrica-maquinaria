@@ -131,42 +131,45 @@ update public.clientes set rfc = null where legacy_ref like 'demo-com-%' and rfc
 -- ---------------------------------------------------------------------------
 -- Libro de ventas: enero de 2023 a septiembre de 2026.
 -- ---------------------------------------------------------------------------
-create temp table _producto (familia text, descripcion text, minimo numeric, maximo numeric, peso int) on commit drop;
+create temp table _producto (familia text, descripcion text, minimo numeric, maximo numeric, peso numeric) on commit drop;
 insert into _producto values
-  -- Equipos (pocos y caros)
-  ('equipo', 'Dosificadora ZEUS 15 móvil', 520000, 690000, 3),
-  ('equipo', 'Dosificadora ZEUS 30 con 3 tolvas móvil', 980000, 1350000, 2),
-  ('equipo', 'Banda transportadora 18" x 12 m', 165000, 210000, 6),
-  ('equipo', 'Banda transportadora 24" x 20 m con variador', 310000, 395000, 3),
-  ('equipo', 'Banda cargadora 20" x 10 m con levante y remolque', 230000, 290000, 5),
-  ('equipo', 'Banda transportadora tipo artesa 30" x 15 m', 420000, 560000, 2),
-  ('equipo', 'Elevador de cangilones 8 m con cangilón 6 x 5', 180000, 240000, 4),
-  ('equipo', 'Elevador de cangilones 14 m', 290000, 360000, 2),
-  ('equipo', 'Cribadora vibratoria 3 x 6 ft, 2 pisos', 210000, 270000, 3),
-  ('equipo', 'Cribadora ZAR 4T con turbina', 340000, 410000, 2),
-  ('equipo', 'Silo de 60 toneladas con accesorios', 450000, 580000, 2),
-  ('equipo', 'Tolva de 5 m³ con descarga lateral', 95000, 130000, 4),
-  ('equipo', 'Transportador helicoidal tipo bazuca 8" x 9 m', 85000, 115000, 5),
-  ('equipo', 'Colector de polvos de 14 cartuchos', 145000, 185000, 2),
+  -- Remolques: los nombres y precios del catálogo de la demostración (giro.sql)
+  ('equipo', 'Cama baja de 60 t con suspensión de aire', 1950000, 2250000, 0.1),
+  ('equipo', 'Caja refrigerada de 53 ft con equipo de frío', 1850000, 2050000, 0.1),
+  ('equipo', 'Pipa de 30,000 L de acero inoxidable', 1900000, 2200000, 0.1),
+  ('equipo', 'Remolque granelero de 40 t', 1800000, 2000000, 0.1),
+  ('equipo', 'Cama baja de 50 t de 3 ejes', 1050000, 1200000, 0.1),
+  ('equipo', 'Pipa de agua de 10,000 L', 350000, 410000, 3),
+  ('equipo', 'Góndola de 14 m³ con volteo hidráulico', 340000, 400000, 4),
+  ('equipo', 'Plataforma de 30 ft con laterales abatibles', 230000, 280000, 6),
+  ('equipo', 'Remolque ganadero de 1 piso', 220000, 260000, 5),
+  ('equipo', 'Remolque cañero de 2 ejes', 200000, 245000, 5),
+  ('equipo', 'Caja seca de 28 ft', 200000, 240000, 5),
+  ('equipo', 'Dolly convertidor de 2 ejes', 190000, 225000, 4),
+  ('equipo', 'Remolque agrícola de volteo de 8 t', 170000, 205000, 6),
+  ('equipo', 'Remolque jaula para pacas', 150000, 180000, 4),
+  ('equipo', 'Remolque utilitario de 3.5 t', 115000, 145000, 8),
+  ('equipo', 'Remolque utilitario de 2.5 t', 95000, 115000, 8),
   -- Refacciones (muchas y baratas)
-  ('refaccion', 'Banda grip top 2 capas 18" (30 m)', 18000, 26000, 8),
-  ('refaccion', 'Metros de banda lisa 3 capas 24"', 6000, 22000, 8),
-  ('refaccion', 'Cangilón 6 x 5 azul (caja de 50)', 7000, 11000, 9),
-  ('refaccion', 'Tornillo para cangilón 1/4 x 1 1/2 galv. (500 pzas)', 1800, 3200, 6),
-  ('refaccion', 'Chumacera de piso UCP 207', 900, 2400, 10),
-  ('refaccion', 'Polea motriz 10" x 20" ahulada', 6500, 9500, 5),
-  ('refaccion', 'Motorreductor 3 HP relación 25:1', 14000, 19000, 6),
-  ('refaccion', 'Rodillo de carga 4" x 20" con flecha (10 pzas)', 9000, 14000, 6),
-  ('refaccion', 'Grapas RS 187 de 24" (caja)', 4500, 7000, 6),
-  ('refaccion', 'Cosedora manual F300A', 5200, 6900, 7),
-  ('refaccion', 'Cabezal cosedor F900', 38000, 52000, 2),
-  ('refaccion', 'Malla para criba 1/4" inoxidable', 3500, 9000, 5),
-  ('refaccion', 'Catarina 80B14 y cadena', 2500, 6000, 5),
-  ('refaccion', 'Variador de frecuencia 5 HP 220 V', 9000, 13000, 3),
+  ('refaccion', 'Llanta 11R22.5 (juego de 4)', 24000, 32000, 9),
+  ('refaccion', 'Rin de acero de 22.5"', 2800, 3900, 8),
+  ('refaccion', 'Rin de aluminio de 22.5" pulido', 6200, 8200, 4),
+  ('refaccion', 'Tambor de freno de 16.5"', 3400, 4600, 8),
+  ('refaccion', 'Cámara de freno 30/30', 1900, 2900, 9),
+  ('refaccion', 'Balero de rueda cónico (juego)', 1100, 2300, 10),
+  ('refaccion', 'Bolsa de aire para suspensión', 2600, 3800, 7),
+  ('refaccion', 'Eje de 25,000 lb con frenos de tambor', 26000, 34000, 3),
+  ('refaccion', 'Suspensión neumática de 2 ejes', 68000, 86000, 2),
+  ('refaccion', 'Patín de aterrizaje de 2 velocidades', 9800, 13500, 5),
+  ('refaccion', 'Calavera LED trasera (par)', 1400, 2600, 9),
+  ('refaccion', 'Plafón LED lateral (caja de 20)', 2400, 3600, 6),
+  ('refaccion', 'Lona de cubierta de 22 oz (rollo)', 9000, 16000, 4),
+  ('refaccion', 'Perno rey de 2"', 1600, 2600, 5),
+  ('refaccion', 'Quinta rueda de 2"', 24000, 31000, 2),
   -- Servicio
-  ('servicio', 'Instalación y puesta en marcha', 18000, 65000, 4),
-  ('servicio', 'Flete a obra', 4500, 18000, 6),
-  ('servicio', 'Reparación de banda y cambio de rodillos', 8000, 30000, 3);
+  ('servicio', 'Instalación de caja en chasis', 18000, 45000, 4),
+  ('servicio', 'Flete a cliente', 6500, 22000, 6),
+  ('servicio', 'Reparación de piso y cambio de travesaños', 12000, 38000, 3);
 
 -- Un renglón por venta. Cuántas por mes: temporada × crecimiento.
 create temp table _mes on commit drop as
@@ -190,7 +193,7 @@ begin
   for m in select * from _mes order by mes loop
     -- equipos, refacciones, servicios y Mercado Libre
     foreach k in array array[1, 2, 3, 4] loop
-      n := round(m.factor * (array[7, 55, 6, 70])[k] * (0.85 + random() * 0.3));
+      n := round(m.factor * (array[9, 50, 6, 70])[k] * (0.85 + random() * 0.3));
       for i in 1..n loop
         v_fecha := m.mes + floor(random() * extract(day from (m.mes + interval '1 month' - interval '1 day')))::int;
         if extract(dow from v_fecha) = 0 then v_fecha := v_fecha + 1; end if;
@@ -227,6 +230,120 @@ select least(h.fecha + case when random() < 0.7 then floor(random() * 6)::int el
        h.cliente_id, h.cliente_nombre, 'Pago', h.monto, h.cuenta, 'Pago ' || coalesce(h.factura, 'Mercado Libre'), h.factura
 from public.historial_ventas_hoja h
 where h.tipo = 'Venta' and not (h.fecha > date '2026-09-10' and random() < 0.45);
+
+-- ---------------------------------------------------------------------------
+-- Octubre y noviembre en el ERP: desde el arranque las ventas salen de los pedidos, y los de los
+-- scripts de casa son pocos (Resultados de noviembre salía con pérdida: un mes de nómina contra
+-- $600 mil de ventas). Aquí, un mes normal: ~9 remolques del catálogo a precio de lista y
+-- refacciones casi a diario, con sus cobros. Las refacciones van como partida libre (sin artículo)
+-- para no pedir salidas de almacén que nadie dio.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  d date; c record; a record; r record; p uuid; v_vend uuid; v_estado public.estado_pedido; n int;
+  v_vendedores uuid[] := array(select id from public.perfiles where correo in ('isaac@hegamex.com', 'juan@hegamex.com', 'susana@hegamex.com'));
+  v_fin uuid := (select id from public.perfiles where correo = 'finanzas@hegamex.com');
+begin
+  for d in select x::date from generate_series(date '2026-10-01', current_date - 1, interval '1 day') x loop
+    continue when extract(dow from d) = 0;
+    -- Remolques: ~9 al mes, más los baratos que los caros.
+    if random() < 0.30 then
+      select x.id, x.nombre, round(pl.precio, -2) precio into a
+      from public.articulos x join public.precios_lista pl on pl.articulo_id = x.id
+      where x.tipo = 'equipo' and x.activo and pl.precio between 90000 and 2300000
+        and exists (select 1 from public.bom_operaciones o where o.articulo_id = x.id)  -- con horas: su orden llena el Gantt
+      order by -ln(random()) * case when pl.precio > 900000 then 40 else 1 end limit 1;
+      select * into c from _cli order by random() limit 1;
+      v_vend := coalesce((select vendedor_id from public.clientes where id = c.id), v_vendedores[1 + floor(random() * 3)::int]);
+      -- Lo de las últimas cuatro semanas sigue por fabricarse: actividad.sql lo manda al taller.
+      v_estado := case when d < current_date - 35 then 'entregado' when d < current_date - 28 then 'listo' else 'confirmado' end;
+      insert into public.pedidos (cliente_id, vendedor_id, fecha, fecha_compromiso, estado, condiciones_pago, entregado_en, notas)
+      values (c.id, v_vend, d, d + 30, v_estado, '50 % de anticipo y 50 % contra entrega',
+              case when v_estado = 'entregado' then (d + 30)::timestamptz + interval '12 hours' end, 'Pedido de piso')
+      returning id into p;
+      insert into public.pedido_lineas (pedido_id, orden, articulo_id, titulo, cantidad, precio_unitario, linea, cantidad_entregada)
+      values (p, 1, a.id, a.nombre, 1, a.precio, 'maquinaria', case when v_estado = 'entregado' then 1 else 0 end);
+    end if;
+    -- Refacciones: casi a diario, de 1 a 3 partidas.
+    for n in 1 .. (case when random() < 0.75 then 1 else 2 end) loop
+      select * into c from _cli order by random() limit 1;
+      v_vend := coalesce((select vendedor_id from public.clientes where id = c.id), v_vendedores[1 + floor(random() * 3)::int]);
+      insert into public.pedidos (cliente_id, vendedor_id, fecha, estado, condiciones_pago, entregado_en, notas)
+      values (c.id, v_vend, d, case when d < current_date - 3 then 'entregado'::public.estado_pedido else 'confirmado' end,
+              'Contado', case when d < current_date - 3 then (d + 1)::timestamptz + interval '11 hours' end, 'Refacciones de mostrador')
+      returning id into p;
+      for r in select x.*, row_number() over () o from (
+                 select descripcion, round((minimo + random() * (maximo - minimo))::numeric, -1) precio, 1 + floor(random() * 3)::int cant
+                 from _producto where familia = 'refaccion' order by -ln(random()) / peso limit (1 + floor(random() * 3)::int)) x loop
+        insert into public.pedido_lineas (pedido_id, orden, titulo, cantidad, precio_unitario, linea, cantidad_entregada)
+        values (p, r.o, r.descripcion, r.cant, r.precio, 'refacciones', case when d < current_date - 3 then r.cant else 0 end);
+      end loop;
+    end loop;
+  end loop;
+
+  -- Cobros: lo entregado, pagado (anticipo y liquidación); lo que está en fábrica, su anticipo.
+  insert into public.cobros (pedido_id, fecha, monto, metodo, referencia, notas, registrado_por)
+  select p.id, x.fecha, round(x.monto, 2), 'transferencia', 'SPEI ' || upper(substr(md5(p.id::text || x.cual), 1, 8)), x.nota, v_fin
+  from public.pedidos p
+  cross join lateral (
+    select 'unico' cual, least(p.fecha + 2, current_date) fecha, p.total monto, 'Pago de contado' nota where p.notas = 'Refacciones de mostrador'
+    union all
+    select 'anticipo', least(p.fecha + 2, current_date), p.total * 0.5, 'Anticipo 50 %' where p.notas = 'Pedido de piso'
+    union all
+    select 'saldo', (p.entregado_en at time zone 'America/Mexico_City')::date, p.total * 0.5, 'Liquidación'
+    where p.notas = 'Pedido de piso' and p.estado = 'entregado'
+  ) x
+  where p.notas in ('Pedido de piso', 'Refacciones de mostrador') and p.total > 0
+    and (p.notas <> 'Refacciones de mostrador' or p.estado = 'entregado')
+    and not exists (select 1 from public.cobros cb where cb.pedido_id = p.id);
+  update public.pedidos set notas = null where notas in ('Pedido de piso', 'Refacciones de mostrador');
+end $$;
+
+-- Gastos de octubre y noviembre: Resultados los toma de las compras con categoría, y la demostración
+-- no traía ninguna (salía una fábrica sin renta ni luz, con 39 % de utilidad). Proveedores de
+-- servicios inventados; cada gasto con su factura y pagado.
+do $$
+declare g record; d date; p uuid; n int := 0;
+begin
+  for g in select * from (values
+    ('Inmobiliaria Parque Industrial Zapopan', 'renta',                                   1, 98000, 0.00),
+    ('Energía y Servicios de Occidente',      'luz (electricidad)',                      1, 46000, 0.12),
+    ('Gases Industriales de Jalisco',         'gases, soldadura, consumibles, etc.',     4, 11500, 0.25),
+    ('Ferretería La Tuerca',                  'ferreteria en general',                   5, 5200, 0.35),
+    ('Seguridad Industrial Bajío',            'equipo de seguridad para personal',      1, 9800, 0.20),
+    ('Gasolinera Periférico Sur',             'combustible (gasolina)',                  6, 5600, 0.25),
+    ('Fletes y Paquetería del Centro',        'fletes (exclusivamente)',                 5, 12800, 0.40),
+    ('Telefonía Empresarial MX',              'servicios de teléfono',                   1, 7400, 0.00),
+    ('Seguros Unidos del Pacífico',           'seguros (vehículos)',                     1, 14600, 0.00),
+    ('Publicidad Digital Occidente',          'publicidad',                              1, 28000, 0.15),
+    ('Viajes Corporativos GDL',               'viajes de ventas',                        2, 9500, 0.30),
+    ('Taller de Mantenimiento Industrial',    'reparación de equipos y maquinaria (torno, plasma, etc)', 1, 17500, 0.40),
+    ('Papelería Corporativa',                 'consumibles oficina',                     1, 5200, 0.20),
+    ('Software y Licencias MX',               'servicio de correo y herramientas online', 1, 6300, 0.00),
+    ('Servicios Profesionales Contables',     'servicios profesionales (varios)',        1, 32000, 0.00),
+    ('Uniformes Industriales del Bajío',        'uniformes',                               1, 8800, 0.30)
+  ) x(nombre, categoria, veces, monto, variacion) loop
+    insert into public.proveedores (nombre, razon_social, categoria, dias_credito, legacy_id)
+    values (g.nombre, g.nombre || ' S.A. de C.V.', 'Servicios', 0, 'demo-com-gasto-' || md5(g.nombre))
+    returning id into p;
+    for d in select x::date from generate_series(date '2026-10-01', current_date - 1, interval '1 month') x loop
+      for i in 1 .. g.veces loop
+        n := n + 1;
+        insert into public.movimientos_proveedor (proveedor_id, proveedor_llave, tipo, fecha, monto, cuenta, categoria, factura, descripcion, leido_de, metodo_pago, registrado_por)
+        values (p, lower(public.sin_acentos(g.nombre)), 'compra',
+                least(d + case when g.veces = 1 then 2 + floor(random() * 5)::int else floor(random() * 27)::int end, current_date - 1),
+                round((g.monto * (1 + (random() * 2 - 1) * g.variacion))::numeric, 2) * 1.16,
+                'santander_fiscal', g.categoria, 'F-' || (20000 + n), g.categoria, 'captura', 'PUE',
+                (select id from public.perfiles where correo = 'finanzas@hegamex.com'));
+      end loop;
+    end loop;
+  end loop;
+  -- Pagados al día (de contado): el saldo con proveedores es el de la operación, no el de estos.
+  insert into public.movimientos_proveedor (proveedor_id, proveedor_llave, tipo, fecha, monto, cuenta, descripcion, leido_de, registrado_por)
+  select m.proveedor_id, m.proveedor_llave, 'pago', m.fecha, m.monto, m.cuenta, 'Pago ' || m.factura, 'captura', m.registrado_por
+  from public.movimientos_proveedor m join public.proveedores pr on pr.id = m.proveedor_id
+  where m.tipo = 'compra' and pr.legacy_id like 'demo-com-gasto-%';
+end $$;
 
 -- La familia la pone el disparador con las reglas de la base; las que no reconoció, a la vista.
 do $$

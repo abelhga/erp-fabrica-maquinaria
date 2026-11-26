@@ -36,7 +36,9 @@ for s in costeo compras_almacen importaciones ventas produccion rrhh_finanzas ob
          servicio envios solicitudes_precio; do
   correr "scripts/demo/$s.sql"
 done
+correr scripts/demo-comercial/giro.sql
 correr scripts/demo-comercial/historial.sql
+correr scripts/demo-comercial/actividad.sql
 correr scripts/demo/analisis.sql
 correr scripts/demo-comercial/maquillaje.sql
 correr scripts/demo-comercial/funciones_con_marca.sql
