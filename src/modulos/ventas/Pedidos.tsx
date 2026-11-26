@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { PedidosPorAtender } from "./componentes/PedidosPorAtender";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, ShoppingCart } from "lucide-react";
@@ -10,7 +11,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Dialogo } from "@/components/ui/dialogo";
 import { Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { supabase } from "@/lib/supabase";
-import { mensajeError } from "@/lib/consultas";
+import { mensajeError, q } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { dinero, fecha } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
@@ -21,7 +22,7 @@ import { DialogoCliente, ElegirCliente } from "./componentes/dialogos";
 import { EXPLICA_ESTADO_PEDIDO } from "./componentes/EntregaPedido";
 import { CANAL, ESTADO_PEDIDO, dineroEn, todas, useAncho, type Canal, type VPedido } from "./comun";
 
-type Vista = "abiertos" | "entregados" | "cancelados" | "todos";
+type Vista = "abiertos" | "atender" | "entregados" | "cancelados" | "todos";
 const ABIERTOS = ["confirmado", "en_produccion", "listo"];
 
 /**
@@ -33,7 +34,11 @@ export default function Pedidos() {
   const { puede } = useSesion();
   const hoja = useSaldoHoja();
   const ir = useNavigate();
-  const [vista, setVista] = useState<Vista>("abiertos");
+  // ?vista=atender abre «Por atender» (así llega el aviso diario).
+  const [params] = useSearchParams();
+  const [vista, setVista] = useState<Vista>(params.get("vista") === "atender" ? "atender" : "abiertos");
+  const porAtender = useQuery({ queryKey: ["pedidos_por_atender"], staleTime: 60_000,
+    queryFn: () => q<{ pedido_id: string }[]>(supabase.rpc("pedidos_por_atender")) });
   const [canal, setCanal] = useState<"todos" | Canal>("todos");
   const [historicos, setHistoricos] = useState(false);
   const [alta, setAlta] = useState(false);
@@ -122,22 +127,25 @@ export default function Pedidos() {
   ];
 
   const totalMxn = filas.reduce((s, p) => s + Number(p.total) * Number(p.tipo_cambio), 0);
+  const opcionesVista: { valor: Vista; texto: string; cuenta?: number; explica?: string }[] = [
+    { valor: "abiertos", texto: "Abiertos", cuenta: cuenta((p) => ABIERTOS.includes(p.estado)), explica: GLOSARIO.pedidosAbiertos },
+    { valor: "atender", texto: "Por atender", cuenta: new Set((porAtender.data ?? []).map((x) => x.pedido_id)).size, explica: GLOSARIO.pedidosPorAtender },
+    { valor: "entregados", texto: "Entregados", cuenta: cuenta((p) => p.estado === "entregado") },
+    { valor: "cancelados", texto: "Cancelados", cuenta: cuenta((p) => p.estado === "cancelado") },
+    { valor: "todos", texto: "Todos", cuenta: base.length },
+  ];
   const saldoMxn = filas.reduce((s, p) => s + Number(p.saldo) * Number(p.tipo_cambio), 0);
 
   return (
     <Pagina titulo="Pedidos" ancho="max-w-[1500px]" descripcion="Cotizaciones aceptadas y ventas de Mercado Libre, sitio web y mostrador."
       acciones={puede("ventas", 2) && <Boton onClick={() => setAlta(true)} data-explain={GLOSARIO.pedidoSinCotizacion}><Plus className="h-4 w-4" />Pedido sin cotización</Boton>}>
+      {vista === "atender" ? <PedidosPorAtender filtros={<Filtro valor={vista} alCambiar={setVista} opciones={opcionesVista} />} /> :
       <TablaDatos filas={filas} columnas={columnas} cargando={lista.isLoading} error={lista.error} claveFila={(p) => p.id}
         alClicFila={(p) => ir(`/ventas/pedidos/${p.id}`)} exportarComo="pedidos" placeholder="Folio, número de ML, cliente…"
         claseFila={(p) => (p.atrasado ? "bg-peligro-suave/30" : undefined)}
         filtros={
           <div className="flex flex-wrap items-center gap-2">
-            <Filtro valor={vista} alCambiar={setVista} opciones={[
-              { valor: "abiertos", texto: "Abiertos", cuenta: cuenta((p) => ABIERTOS.includes(p.estado)), explica: GLOSARIO.pedidosAbiertos },
-              { valor: "entregados", texto: "Entregados", cuenta: cuenta((p) => p.estado === "entregado") },
-              { valor: "cancelados", texto: "Cancelados", cuenta: cuenta((p) => p.estado === "cancelado") },
-              { valor: "todos", texto: "Todos", cuenta: base.length },
-            ]} />
+            <Filtro valor={vista} alCambiar={setVista} opciones={opcionesVista} />
             <select className="campo h-8 w-auto pr-8 text-xs" value={canal} onChange={(e) => setCanal(e.target.value as Canal | "todos")} aria-label="Canal"
               data-explain={GLOSARIO.canalVenta} data-explain-title="Canal">
               <option value="todos">Todos los canales</option>
@@ -154,7 +162,7 @@ export default function Pedidos() {
         pie={filas.length > 0 && <p className="text-sm text-tenue text-right">Total <b className="text-texto cifra">{dinero(totalMxn)}</b> · por cobrar <b className="text-aviso cifra">{dinero(saldoMxn)}</b> (en pesos)
           {/* Los pedidos de la hoja se cobran contra el saldo de arranque: sin esto el pie decía $0. */}
           {Number(hoja.data?.total) > 0 && <span data-explain={GLOSARIO.saldoArranque}> · más <b className="text-aviso cifra">{dinero(hoja.data!.total)}</b> que ya se debía en la hoja</span>}</p>}
-      />
+      />}
       <DialogoPedido abierto={alta} alCambiar={setAlta} alCrear={(id) => ir(`/ventas/pedidos/${id}`)} />
     </Pagina>
   );

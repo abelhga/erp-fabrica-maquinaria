@@ -1022,6 +1022,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 1: Elige un filtro (Activos, Sin orden, Listos para entregar…) y dale clic a un pedido.",
    "Paso 2: Revisa cada partida con su descripción y sus órdenes; el folio de la orden abre su detalle.",
    "Paso 3: Gerencia: usa primero «Usar OP-…» si hay uno en stock, y luego «Crear las órdenes que faltan».",
+   "«Por atender» dice qué espera cada pedido abierto y a quién le toca: almacén entregar lo que ya hay, compras pedir lo que falta, producción crear la orden o fabricar, el vendedor ligar al catálogo una partida escrita a mano o conseguir el anticipo. Los días son hábiles desde el pedido; en rojo, ya pasó el tiempo de esa área (1 día almacén, 2 los demás). El numerito rojo de «Pedidos» en el menú es lo que te toca a ti, y cada mañana llega un aviso con la lista; a los 4 días hábiles le llega también a dirección.",
    "También la abren compras y almacén, para saber qué se vendió y qué hay que tener listo; ellos solo consultan (crear órdenes y asignar equipos de stock es de la gerencia de producción).",
    "La usan la gerencia de producción, los supervisores y almacén. Cada partida trae su descripción tal como se le cotizó al cliente (medidas, calibres, motor, acabado), sin precio; las largas se abren con «Ver toda la descripción».",
    "«Activos» son los confirmados, en producción y listos para entregar; «Sin orden», los que tienen equipos que nadie está fabricando todavía. Las ventas de Mercado Libre que no llevan nada que fabricar no salen ahí: están en «Mercado Libre», y su envío se lleva en Almacén → Envíos.",
@@ -1823,6 +1824,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Los pedidos de todos los canales en una sola lista: ventas, producción y cobranza saben en qué va cada uno sin preguntar por WhatsApp.",
    "Paso 1: Filtra por abiertos, entregados o cancelados y por canal; clic en un renglón abre el pedido.",
    "Paso 2: Para una venta de Mercado Libre, sitio web o mostrador, usa «Pedido sin cotización».",
+   "«Por atender» dice qué espera cada pedido abierto y a quién le toca: almacén entregar lo que ya hay, compras pedir lo que falta, producción crear la orden o fabricar, el vendedor ligar al catálogo una partida escrita a mano o conseguir el anticipo. Los días son hábiles desde el pedido; en rojo, ya pasó el tiempo de esa área (1 día almacén, 2 los demás). El numerito rojo de «Pedidos» en el menú es lo que te toca a ti, y cada mañana llega un aviso con la lista; a los 4 días hábiles le llega también a dirección.",
    "Los renglones en rojo están atrasados: pasó su fecha compromiso. «Producción» muestra el avance del taller y «Saldo» lo que falta por cobrar (dice «pagado» en verde si ya se cobró todo).",
    "En «Pedido sin cotización» eliges cliente, canal y número de venta, y en el siguiente paso agregas las partidas con su precio de lista. Los servicios sin precio fijo, como «Servicio de paquetería», te piden el monto (sin IVA) al agregarlos.",
    "En un pedido sin cotización, una partida escrita a mano de $20,000 o más sin IVA que no es flete, instalación, puesta en marcha ni «manejo y entrega» solo la captura la gerencia de ventas; si eres vendedor, cotízala y pide la autorización.",
@@ -6375,6 +6377,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mercadolibre"
   ],
   "texto": "Este cliente es de la cartera de otro vendedor: sus contactos solo los ven él, la gerencia y cobranza. Si la regla de cartera está prendida y su cuenta sigue vigente, no te deja ligarlo a tu cotización (a la gerencia sí): pide a la gerencia que lo reasigne o que compartan el crédito."
+ },
+ {
+  "clave": "contadorPedidosMenu",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "El numerito rojo en «Pedidos»: cuántos pedidos esperan algo de tu área (almacén, compras o producción). Si vendes, cuántos de tus pedidos ya se atrasaron con alguien. Dirección ve los que ya pasaron 4 días hábiles."
  },
  {
   "clave": "contadosConteo",
@@ -12405,6 +12417,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "La fecha compromiso ya pasó y el pedido todavía no se entrega."
  },
  {
+  "clave": "pedidoDiasEsperando",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Días hábiles desde que se hizo el pedido. En rojo, ya pasó el tiempo de esa área: 1 día almacén, 2 compras, producción y el vendedor. A los 4 días le avisa también a dirección."
+ },
+ {
   "clave": "pedidoEstadoCancelado",
   "modulos": [
    "ventas",
@@ -12465,6 +12487,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Pedido que viene de las hojas. Cuenta para el historial y para las comisiones de su mes, pero no es una cuenta por cobrar del ERP: lo que el cliente debe está en su saldo de arranque. Si sigue en el taller, su avance y su entrega se llevan aquí como cualquier otro."
  },
  {
+  "clave": "pedidoLeTocaA",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Quién tiene que mover el pedido ahora: Almacén (entregar lo que hay), Compras (pedir lo que falta), Producción (crear la orden o fabricar) o el Vendedor (ligar al catálogo una partida escrita a mano, o el anticipo si las condiciones lo piden: mientras no haya cobro, no se alarma a nadie más)."
+ },
+ {
   "clave": "pedidosAbiertos",
   "modulos": [
    "ventas",
@@ -12501,6 +12533,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "procesos"
   ],
   "texto": "Ventas de Mercado Libre de los últimos 60 días que no llevan nada que fabricar (componentes, refacciones). Van aparte para no tapar los pedidos del taller, y su envío se lleva en Almacén → Envíos. Si una venta de Mercado Libre lleva un equipo, sale con los demás pedidos."
+ },
+ {
+  "clave": "pedidosPorAtender",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "Los pedidos abiertos que esperan algo de alguien: almacén entregar lo que ya hay, compras pedir lo que falta, producción crear la orden o fabricar, el vendedor ligar al catálogo una partida escrita a mano o conseguir el anticipo. Lo que ya viene en una orden de compra o requisición no espera a nadie. Los de Mercado Libre tienen su propio flujo y no salen aquí."
  },
  {
   "clave": "pedidosPorProducir",

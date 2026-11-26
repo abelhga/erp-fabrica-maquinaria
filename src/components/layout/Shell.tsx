@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useMisPedidosPorAtender } from "@/modulos/ventas/componentes/PedidosPorAtender";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp, LogOut, Menu, Moon, Pin, PinOff, RotateCcw, Search, Sun, X } from "lucide-react";
@@ -64,6 +65,7 @@ export function Shell() {
   const porPuesto = ordenPorRol(roles);
   const orden = [...new Set([...(prefs.orden ?? []), ...porPuesto])];
   const secciones = [...visibles].sort((a, b) => orden.indexOf(a.titulo) - orden.indexOf(b.titulo));
+  const pedidosPorAtender = useMisPedidosPorAtender();
   const ordenVisible = secciones.map((s) => s.titulo);
   const fijadas = prefs.fijadas.map((r) => visibles.flatMap((s) => s.entradas).find((e) => e.ruta === r)).filter((e): e is EntradaMenu => !!e);
   const conRutaActual = (entradas: EntradaMenu[]) => entradas.some((e) => pathname === e.ruta || pathname.startsWith(`${e.ruta}/`));
@@ -81,7 +83,8 @@ export function Shell() {
         <div>
           <p className="px-3 mb-1 text-[11px] font-semibold uppercase tracking-wider text-tenue/80" data-explain={GLOSARIO.menuFijadas} data-explain-title="Fijadas">Fijadas</p>
           <div className="space-y-0.5">
-            {fijadas.map((e) => <ItemMenu key={e.ruta} ruta={e.ruta} texto={e.texto} Icono={e.icono} fijada alFijar={() => menuPersonal.fijar(e.ruta)} />)}
+            {fijadas.map((e) => <ItemMenu key={e.ruta} ruta={e.ruta} texto={e.texto} Icono={e.icono} fijada alFijar={() => menuPersonal.fijar(e.ruta)}
+              contador={PEDIDOS_RUTAS.includes(e.ruta) ? pedidosPorAtender : undefined} />)}
           </div>
         </div>
       )}
@@ -107,7 +110,8 @@ export function Shell() {
             {!colapsada && (
               <div className="space-y-0.5">
                 {s.entradas.map((e) => <ItemMenu key={e.ruta} ruta={e.ruta} texto={e.texto} Icono={e.icono}
-                  fijada={prefs.fijadas.includes(e.ruta)} alFijar={() => menuPersonal.fijar(e.ruta)} />)}
+                  fijada={prefs.fijadas.includes(e.ruta)} alFijar={() => menuPersonal.fijar(e.ruta)}
+                  contador={PEDIDOS_RUTAS.includes(e.ruta) ? pedidosPorAtender : undefined} />)}
               </div>
             )}
           </div>
@@ -189,8 +193,12 @@ export function Shell() {
   );
 }
 
-function ItemMenu({ ruta, texto, Icono, fijada, alFijar }: {
+// Las entradas de pedidos llevan el numerito rojo de lo que espera a mi área (pedidos_por_atender).
+const PEDIDOS_RUTAS = ["/ventas/pedidos", "/produccion/pedidos"];
+
+function ItemMenu({ ruta, texto, Icono, fijada, alFijar, contador }: {
   ruta: string; texto: string; Icono: React.ComponentType<{ className?: string }>; fijada?: boolean; alFijar?: () => void;
+  contador?: { total: number; atrasados: number };
 }) {
   const enlace = (
     <NavLink
@@ -205,6 +213,11 @@ function ItemMenu({ ruta, texto, Icono, fijada, alFijar }: {
     >
       <Icono className="h-[18px] w-[18px] shrink-0" />
       {texto}
+      {!!contador?.total && (
+        <span className="ml-auto min-w-[20px] rounded-full bg-peligro px-1.5 text-center text-[11px] font-semibold leading-5 text-white cifra"
+          data-explain={GLOSARIO.contadorPedidosMenu} data-explain-title="Pedidos por atender"
+          aria-label={`${contador.total} pedidos por atender`}>{contador.total}</span>
+      )}
     </NavLink>
   );
   if (!alFijar) return enlace;

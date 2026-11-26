@@ -120,6 +120,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
       "Para una venta de Mercado Libre, sitio web o mostrador, usa «Pedido sin cotización».",
     ],
     detalle: [
+      "«Por atender» dice qué espera cada pedido abierto y a quién le toca: almacén entregar lo que ya hay, compras pedir lo que falta, producción crear la orden o fabricar, el vendedor ligar al catálogo una partida escrita a mano o conseguir el anticipo. Los días son hábiles desde el pedido; en rojo, ya pasó el tiempo de esa área (1 día almacén, 2 los demás). El numerito rojo de «Pedidos» en el menú es lo que te toca a ti, y cada mañana llega un aviso con la lista; a los 4 días hábiles le llega también a dirección.",
       "Los renglones en rojo están atrasados: pasó su fecha compromiso. «Producción» muestra el avance del taller y «Saldo» lo que falta por cobrar (dice «pagado» en verde si ya se cobró todo).",
       "En «Pedido sin cotización» eliges cliente, canal y número de venta, y en el siguiente paso agregas las partidas con su precio de lista. Los servicios sin precio fijo, como «Servicio de paquetería», te piden el monto (sin IVA) al agregarlos.",
       "En un pedido sin cotización, una partida escrita a mano de $20,000 o más sin IVA que no es flete, instalación, puesta en marcha ni «manejo y entrega» solo la captura la gerencia de ventas; si eres vendedor, cotízala y pide la autorización.",

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { PedidosPorAtender } from "@/modulos/ventas/componentes/PedidosPorAtender";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ClipboardPlus, PackageCheck, Printer, ShoppingCart, Undo2 } from "lucide-react";
@@ -43,7 +44,7 @@ interface PedidoPlanta {
 }
 interface OrdenStock { id: string; folio: string; articulo_id: string; estado: keyof typeof ESTADO_OP; numero_serie: string | null }
 
-type FiltroPed = "activos" | "por_ordenar" | "listos" | "entregados" | "ml" | "todos";
+type FiltroPed = "activos" | "atender" | "por_ordenar" | "listos" | "entregados" | "ml" | "todos";
 const ACTIVOS: EstadoPedido[] = ["confirmado", "en_produccion", "listo"];
 // Una venta de Mercado Libre de componentes no pasa por el taller (su envío se lleva en Envíos) y se
 // queda «confirmada» aunque ya se mandó: entre los pedidos de la planta tapaba lo que sí se fabrica.
@@ -88,6 +89,7 @@ export default function PedidosPlanta() {
   const cuenta = (pred: (p: PedidoPlanta) => boolean) => lista.data?.filter(pred).length;
   const opciones: { valor: FiltroPed; texto: string; cuenta?: number; explica?: string }[] = [
     { valor: "activos", texto: "Activos", cuenta: cuenta((p) => ACTIVOS.includes(p.estado) && !deML(p)), explica: GLOSARIO.filtroPedidosActivos },
+    { valor: "atender", texto: "Por atender", explica: GLOSARIO.pedidosPorAtender },
     { valor: "por_ordenar", texto: "Sin orden", cuenta: cuenta((p) => ACTIVOS.includes(p.estado) && p.sin_orden > 0), explica: GLOSARIO.sinOrden },
     { valor: "listos", texto: "Listos para entregar", cuenta: cuenta((p) => p.estado === "listo" && !deML(p)), explica: GLOSARIO.filtroPedidosListos },
     { valor: "entregados", texto: "Entregados (60 días)", explica: GLOSARIO.filtroPedidosEntregados },
@@ -146,6 +148,7 @@ export default function PedidosPlanta() {
 
   return (
     <Pagina titulo="Pedidos" descripcion="Lo que se vendió y cómo va cada equipo en el taller: cliente, compromiso, equipos y sus órdenes. Sin montos.">
+      {filtro === "atender" ? <PedidosPorAtender filtros={<Filtro opciones={opciones} valor={filtro} alCambiar={(v) => setParams(v === "activos" ? {} : { filtro: v }, { replace: true })} />} /> :
       <TablaDatos
         filas={filas} columnas={columnas} cargando={lista.isLoading} error={lista.error} claveFila={(p) => p.id}
         alClicFila={(p) => abrir(p.id)} exportarComo="pedidos-planta" placeholder="Buscar pedido, cliente, vendedor o equipo…"
@@ -153,7 +156,7 @@ export default function PedidosPlanta() {
         vacio={{ icono: ShoppingCart, titulo: filtro === "por_ordenar" ? "Todos los equipos vendidos tienen orden" : filtro === "ml" ? "Sin ventas de Mercado Libre en 60 días" : "No hay pedidos con este filtro",
           texto: filtro === "por_ordenar" ? "Cuando ventas confirme un pedido con equipos, aparece aquí hasta que se creen sus órdenes."
             : filtro === "ml" ? "Aquí salen las ventas de Mercado Libre que no llevan nada que fabricar. Su envío se lleva en Almacén → Envíos." : "Prueba con otro filtro." }}
-      />
+      />}
       <Lateral abierto={!!abierto} alCambiar={(v) => !v && abrir(null)} ancho="max-w-2xl"
         titulo={abierto ? `${abierto.folio} · ${abierto.cliente ?? ""}` : ""}
         subtitulo={abierto && <>{ESTADO_PEDIDO[abierto.estado].texto} · {abierto.vendedor ?? "sin vendedor"} · pedido el {fecha(abierto.fecha)}</>}>
