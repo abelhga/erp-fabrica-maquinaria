@@ -66,3 +66,10 @@ begin
   update clientes set estado = 'Jal' where id = v_cli;
   assert (select estado from clientes where id = v_cli) = 'Jalisco', 'el estado abreviado no se acomodó';
 end $$;
+
+-- 320: «después se comunica» también es venta viva; «se comunicó y no le interesó», no.
+do $$ begin
+  assert texto_venta_viva('después e comunica') and texto_venta_viva('Él se comunica') and texto_venta_viva('se reporta después'),
+    '«después se comunica» no se reconoció como venta viva';
+  assert not texto_venta_viva('Se comunicó y no le interesó') and not texto_venta_viva('Compró con otro'), 'una venta perdida de verdad se tomó por viva';
+end $$;
