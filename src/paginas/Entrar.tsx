@@ -6,6 +6,7 @@ import { Boton } from "@/components/ui/boton";
 import { Campo, Entrada } from "@/components/ui/campo";
 import { Logo } from "@/components/layout/Logo";
 
+import { EMPRESA } from "@/lib/marca";
 /** Dónde estaba la persona antes de irse a Google (un QR de máquina, una liga que le mandaron). */
 export const VOLVER_A = "volver_a";
 
@@ -44,7 +45,7 @@ export function Entrar() {
       <div className="hidden lg:flex flex-col justify-between p-12 bg-[#0b1220] text-white relative overflow-hidden">
         <Logo className="text-white" grande />
         <div className="relative z-10 max-w-md">
-          <h1 className="text-4xl font-semibold leading-tight">Todo Hegamex en un solo lugar.</h1>
+          <h1 className="text-4xl font-semibold leading-tight">Todo {EMPRESA} en un solo lugar.</h1>
           <p className="mt-4 text-white/70 text-lg">
             Cotiza con precios al día, fabrica con el material validado y compra antes de que falte.
           </p>

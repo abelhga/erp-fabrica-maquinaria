@@ -1,3 +1,5 @@
+import { EMPRESA } from "@/lib/marca";
+
 export const SISTEMA = {
   tiempoActivoErp: "Los minutos en que la persona estuvo trabajando en el ERP: un minuto cuenta si la pestaña estaba a la vista y movió el mouse, tecleó o tocó la pantalla en los últimos dos minutos. Dejar el ERP abierto sin usarlo no suma. Se cuenta desde el 5 de noviembre de 2026.",
   diasActivosErp: "Los días del periodo en que la persona hizo algo en el ERP: abrió una pantalla, registró un cambio o le preguntó a la IA.",
@@ -86,7 +88,7 @@ export const SISTEMA = {
   tasaIvaEmpresa: "La tasa de IVA con que nacen las cotizaciones y los pedidos nuevos: 16 % general, 8 % en la región fronteriza. Los que ya están hechos guardan su propia tasa y no cambian.",
   descansosEmpresa: "Días que la empresa no trabaja aunque caigan en día laboral (12 de diciembre, Semana Santa…). Se descuentan igual que los feriados al contar vacaciones y permisos.",
   feriadosLey: "Los descansos obligatorios del artículo 74 de la Ley Federal del Trabajo de este año (los que van en lunes ya vienen movidos). Los pone el ERP solo y se descuentan de vacaciones y permisos.",
-  tipoAlmacen: "Físico: una bodega de Hegamex. Mercado Libre (Full): la bodega de Mercado Libre; ahí llega lo que se manda a Full y de ahí salen sus ventas. Un almacén físico nuevo nace disponible para planta; uno de Mercado Libre, no.",
+  tipoAlmacen: `Físico: una bodega de ${EMPRESA}. Mercado Libre (Full): la bodega de Mercado Libre; ahí llega lo que se manda a Full y de ahí salen sus ventas. Un almacén físico nuevo nace disponible para planta; uno de Mercado Libre, no.`,
   lectorCodigos: "Para un almacén que registra con lector de códigos de barras. Sirve cualquier lector que escriba como teclado (USB o inalámbrico): se conecta y funciona, sin instalar nada.",
   interruptorLector: "Prendido, en «Entradas y salidas» y en los conteos el artículo se lee con el lector, y en el detalle de cada artículo, en Existencias, aparecen sus códigos de barras para ligarlos. Apagado no se ve nada de esto; los códigos ya ligados se conservan.",
   interruptorConsumiblesTaller: "Prendido, lo de las categorías marcadas sale a nombre de quien lo recibe y no a la orden. Al prenderlo se suelta lo que estaba apartado de esos artículos para órdenes. Apagado, todo lo que sale para una orden se carga a la orden.",
@@ -108,7 +110,7 @@ export const SISTEMA = {
   envioCanal: "Lo que se suma al precio del canal (antes de IVA) cuando se publica con envío incluido.",
   ultimoAvisoML: "Cuándo llegó el último aviso de Mercado Libre (una venta, un reclamo o una pregunta que cambió). «Pendientes» son avisos que todavía no se procesan; si alguno falló, el error sale abajo en rojo.",
   botonRevisarAhoraML: "Vuelve a procesar los avisos de Mercado Libre que quedaron pendientes o con error, hasta 50 a la vez, también los que ya se habían dejado de intentar.",
-  botonConectarML: "Te lleva a Mercado Libre para dar permiso con la cuenta de Hegamex. Antes hay que hacer los pasos de «Cómo se conecta».",
+  botonConectarML: `Te lleva a Mercado Libre para dar permiso con la cuenta de ${EMPRESA}. Antes hay que hacer los pasos de «Cómo se conecta».`,
   botonDesconectarML: "Quita la conexión con Mercado Libre (pide confirmar): las ventas, los reclamos y las preguntas dejan de entrar solos hasta que se vuelva a conectar.",
   responsableVentasML: "La persona a cuyo nombre entran como pedidos las ventas de Mercado Libre: es a quien se le cuentan para la comisión. «Nadie» = los pedidos entran sin vendedor.",
   botonProbarSkydropx: "Revisa que el ERP pueda entrar a Skydropx: muestra el saldo de la cuenta y las direcciones dadas de alta allá, para que elijas la de la planta. No genera ni cobra nada.",

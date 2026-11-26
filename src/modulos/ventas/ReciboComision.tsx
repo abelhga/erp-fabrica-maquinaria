@@ -10,6 +10,7 @@ import { Logo } from "@/components/layout/Logo";
 import { Boton } from "@/components/ui/boton";
 import { hoyMx, useEmpresa } from "./comun";
 
+import { EMPRESA, conMarca } from "@/lib/marca";
 interface Fila {
   vendedor_id: string; vendedor: string; plan: string; venta_maquinaria: number; venta_refacciones: number; venta_otros: number;
   comision: number; bono_meta: number; bono_refacciones: number; ajustes: number; total: number; pagado_en: string | null;
@@ -61,7 +62,7 @@ export default function ReciboComision() {
   useEffect(() => {
     if (!f) return;
     const antes = document.title;
-    document.title = `Comisión ${nombreMes(mesTexto!)} ${f.vendedor} - Hegamex`;
+    document.title = conMarca(`Comisión ${nombreMes(mesTexto!)} ${f.vendedor}`);
     return () => { document.title = antes; };
   }, [f, mesTexto]);
 
@@ -71,7 +72,7 @@ export default function ReciboComision() {
   const plan = planes.data?.find((p) => p.nombre === f.plan);
   const pct = Number(plan?.pct_maquinaria ?? 0.02);
   const baseMaq = Number(f.venta_maquinaria) + (plan?.otros_como_maquinaria ? Number(f.venta_otros) : 0);
-  const razon = empresa.data?.fiscal?.razon_social || "Hegamex";
+  const razon = empresa.data?.fiscal?.razon_social || EMPRESA;
   const folio = `COM-${mesTexto}`;
   const lista = pedidos.data ?? [];
   const suma = (k: "maquinaria" | "refacciones" | "otros") => lista.reduce((s, p) => s + Number(p[k]), 0);

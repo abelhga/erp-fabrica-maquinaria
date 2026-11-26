@@ -1,3 +1,5 @@
+import { EMPRESA } from "@/lib/marca";
+
 export const PRODUCCION = {
   ordenProduccion: "La orden para fabricar un equipo (o varios iguales). Al crearse copia la lista de materiales del equipo, así un cambio posterior al catálogo no la mueve.",
   opPlaneada: "Planeada: la orden existe y se está validando el material. Todavía no entra al taller.",
@@ -25,7 +27,7 @@ export const PRODUCCION = {
   disponiblePlanta: "Lo que hay en planta sin apartar para ninguna orden ni pedido: lo que todavía se puede tomar.",
   botonPlanosTerminal: "Abre los planos con los que se fabrica esta orden: el plano, el corte, el programa de plasma y lo demás que ingeniería ligó al equipo, cada uno con su revisión. Toca uno para abrirlo. Si sale un aviso rojo, ya hay una revisión más nueva que la que ingeniería revisó para esta orden: confirma con ingeniería antes de seguir.",
   botonFaltantesTerminal: "Enseña qué material de la orden todavía no está ni surtido ni apartado, cuánto falta de cada uno y si ya se pidió a compras. «Sin pedir» en rojo es lo que nadie ha pedido todavía. Es de toda la orden, no solo de tu etapa.",
-  firmasIngenieria: "La revisión de ingeniería se firma por especialidad: cada quien revisa lo suyo y presiona «Firmar» (en Hegamex, Mecánica la firma Miguel y Eléctrica el Ing. Fernando). La orden queda revisada cuando están las obligatorias: una firma marcada «opcional» (hoy, la Eléctrica) se puede dar antes o después y queda en la historia, pero no detiene la liberación. Si falta alguien, la gerencia de producción puede «Firmar en su lugar» y queda anotado así en la historia.",
+  firmasIngenieria: `La revisión de ingeniería se firma por especialidad: cada quien revisa lo suyo y presiona «Firmar» (en ${EMPRESA}, Mecánica la firma Miguel y Eléctrica el Ing. Fernando). La orden queda revisada cuando están las obligatorias: una firma marcada «opcional» (hoy, la Eléctrica) se puede dar antes o después y queda en la historia, pero no detiene la liberación. Si falta alguien, la gerencia de producción puede «Firmar en su lugar» y queda anotado así en la historia.`,
   revisionIngenieria: "Ingeniería confirmó que la lista de materiales y las cantidades de la orden están bien; si hay varias especialidades (mecánica y eléctrica), cuenta cuando firman las obligatorias (hoy basta la de Mecánica; la Eléctrica es opcional). Sin esto la orden no se puede liberar, y almacén no puede apartar su material (la gerencia de producción sí, con un motivo, si es urgente). Lo que lleva un día hábil sin revisar le sale a ingeniería en «Por revisar».",
   revisionAlmacen: "Almacén revisó la existencia física del material de la orden, no solo lo que dice el sistema.",
   validacionMaterial: "Los cinco pasos antes del taller: ingeniería revisa la lista, se aparta el material, se piden los faltantes, almacén revisa y la gerencia libera. Cada uno guarda quién y cuándo.",

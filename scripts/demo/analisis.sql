@@ -27,6 +27,8 @@ begin
   perform set_config('role', 'authenticated', true);
   return v;
 end $$;
+-- Desde la 223 ninguna función se ejecuta sin permiso explícito, ni las temporales de este script.
+grant execute on all functions in schema pg_temp to authenticated;
 
 create temporary table demo_ubicaciones (estado text, ciudad text, municipio text, cve_ent text, no_ubicable boolean) on commit drop;
 insert into demo_ubicaciones values

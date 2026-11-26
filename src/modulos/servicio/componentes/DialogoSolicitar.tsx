@@ -12,6 +12,7 @@ import { cn } from "@/lib/utilidades";
 import { CLAVE, ORDEN_TIPOS, TIPOS, type TipoServicio } from "../datos";
 import { GLOSARIO } from "@/tutorial/glosario";
 
+import { EMPRESA } from "@/lib/marca";
 interface EquipoCliente {
   orden_id: string; folio: string; numero_serie: string | null; equipo: string; pedido_id: string; pedido_folio: string;
   estado: string; entregado: string | null; garantia_vence: string | null;
@@ -91,7 +92,7 @@ export function DialogoSolicitar({ abierto, alCambiar }: { abierto: boolean; alC
                  ayuda={eq?.garantia_vence ? `Entregado el ${fecha(eq.entregado)} · garantía hasta el ${fecha(eq.garantia_vence)}` : undefined}>
             <span data-explain={GLOSARIO.equipoServicio} data-explain-title="Equipo" className="block">
               <Seleccion value={equipo} onChange={(e) => setEquipo(e.target.value)} disabled={!cliente}>
-                <option value="">{cliente ? (tipo === "garantia" ? "Elige el equipo…" : "Otro equipo / sin número Hegamex") : "Primero elige el cliente"}</option>
+                <option value="">{cliente ? (tipo === "garantia" ? "Elige el equipo…" : `Otro equipo / sin número de ${EMPRESA}`) : "Primero elige el cliente"}</option>
                 {(tipo === "garantia" ? entregados : equipos.data ?? []).map((e) => (
                   <option key={e.orden_id} value={e.orden_id}>{e.numero_serie ?? e.folio} · {e.equipo.slice(0, 50)} · {e.pedido_folio}</option>
                 ))}

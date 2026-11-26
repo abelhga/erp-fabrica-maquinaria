@@ -10,6 +10,7 @@ import { Logo } from "@/components/layout/Logo";
 import { Boton } from "@/components/ui/boton";
 import { useEmpresa } from "@/modulos/ventas/comun";
 
+import { EMPRESA, conMarca } from "@/lib/marca";
 type Tipo = "pagare" | "abono" | "retiro";
 interface Documento {
   folio: string; fecha: string; importe?: number; monto?: number; nota?: string | null; saldo_despues?: number;
@@ -40,14 +41,14 @@ export default function DocumentoNomina() {
   useEffect(() => {
     if (!doc.data) return;
     const antes = document.title;
-    document.title = `${doc.data.folio} ${doc.data.empleado.nombre} - Hegamex`;
+    document.title = conMarca(`${doc.data.folio} ${doc.data.empleado.nombre}`);
     return () => { document.title = antes; };
   }, [doc.data]);
 
   if (doc.isLoading) return <p className="p-10 text-center text-tenue">Preparando el documento…</p>;
   if (doc.error || !doc.data) return <p className="p-10 text-center text-tenue">No encontramos este documento (o tu rol no lo puede ver).</p>;
   const d = doc.data;
-  const razon = empresa.data?.fiscal?.razon_social || "Hegamex";
+  const razon = empresa.data?.fiscal?.razon_social || EMPRESA;
   const domicilio = empresa.data?.fiscal?.domicilio || "";
   const ciudad = "Atotonilco el Alto, Jalisco";
 

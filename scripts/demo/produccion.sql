@@ -156,6 +156,8 @@ begin
   where m.orden_id = p_op and m.apartado > 0;
   if jsonb_array_length(v || p_extra) > 0 then perform public.surtir_material(p_op, v || p_extra, 'Demo'); end if;
 end $$;
+-- Desde la 223 ninguna función se ejecuta sin permiso explícito, ni las temporales de este script.
+grant execute on all functions in schema pg_temp to authenticated;
 
 do $$
 declare

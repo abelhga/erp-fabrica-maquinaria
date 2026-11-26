@@ -76,6 +76,8 @@ returns uuid language sql as $$
   values (p_cot, coalesce((select max(orden) from public.cotizacion_lineas where cotizacion_id = p_cot), 0) + 1, p_titulo, p_desc, 'servicio', 1, p_precio, p_opcional)
   returning id
 $$;
+-- Desde la 223 ninguna función se ejecuta sin permiso explícito, ni las temporales de este script.
+grant execute on all functions in schema pg_temp to authenticated;
 
 do $$
 declare
@@ -98,6 +100,9 @@ begin
   v_ger := pg_temp.como('gerente.ventas@hegamex.com');
   v_fin := pg_temp.como('finanzas@hegamex.com');
   perform set_config('request.jwt.claims', '', true);
+  -- Las oportunidades nacen ya en su etapa; en la app pasar a Negociación pide «qué pasó»
+  -- (registrar_seguimiento), y aquí la historia ya viene contada en las notas.
+  perform set_config('hegamex.que_paso', '1', true);
 
   -- Celular del agente: sale en la cotización impresa (en la hoja se escribía a mano en D5).
   update public.perfiles set telefono = '33 1890 4417' where id = v_isaac and telefono is null;
@@ -156,6 +161,10 @@ begin
   insert into public.clientes (nombre, giro, ciudad, estado, fuente_id) values
     ('DEMO Cementos y Block Atotonilco', 'Bloquera', 'Atotonilco el Alto', 'Jalisco', (select id from public.fuentes_contacto where nombre = 'Llamada a recepción'))
     returning id into c_block;
+  -- Desde la 256 un pedido pide los datos fiscales del cliente (o «Público en general»).
+  update public.clientes set rfc = 'CAC140210MN5' where id = c_altiplano;
+  update public.clientes set rfc = 'GSA110805LP4' where id = c_altos;
+  update public.clientes set publico_general = true where id in (c_ml, c_block);
 
   insert into public.contactos (cliente_id, nombre, puesto, telefono, whatsapp, correo, principal) values
     (c_bajio, 'Ing. Rodrigo Ramírez', 'Gerente de planta', '477 210 4410', '477 210 4410', 'rramirez@concretosbajio.demo', true),

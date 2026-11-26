@@ -7,6 +7,7 @@ import { fecha, fechaYHora, numero } from "@/lib/formato";
 import { useEmpresa } from "./comun";
 import { useHojaSalida } from "./componentes/EntregaPedido";
 
+import { EMPRESA, conMarca } from "@/lib/marca";
 // «2 pieza» se ve mal en un papel que firma el cliente.
 const plural = (u: string, n: number) => (n === 1 || /s$/.test(u) ? u : /[aeiou]$/i.test(u) ? `${u}s` : `${u}es`);
 
@@ -33,7 +34,7 @@ export default function HojaSalidaPagina() {
   useEffect(() => {
     if (!h) return;
     const antes = document.title;
-    document.title = `Hoja de salida ${h.pedido.folio}${h.cliente ? " " + h.cliente.nombre : ""} - Hegamex`;
+    document.title = conMarca(`Hoja de salida ${h.pedido.folio}${h.cliente ? " " + h.cliente.nombre : ""}`);
     return () => { document.title = antes; };
   }, [h]);
 
@@ -151,7 +152,7 @@ export default function HojaSalidaPagina() {
         <section className="bloque mt-10 grid grid-cols-2 gap-10 text-center text-[11.5px]">
           <div>
             <div className="h-16 border-b border-texto flex items-end justify-center pb-1 text-[13px]">{vigente?.entregado_por ?? ""}</div>
-            <p className="mt-1 font-semibold">Entrega (Hegamex)</p>
+            <p className="mt-1 font-semibold">Entrega ({EMPRESA})</p>
             <p className="text-tenue">Nombre y firma</p>
           </div>
           <div>

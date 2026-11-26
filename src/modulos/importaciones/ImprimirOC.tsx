@@ -16,6 +16,7 @@ import type { OrdenCompra } from "@/modulos/compras/componentes/comun";
 import type { LineaOC, ProveedorCompleto } from "@/modulos/compras/componentes/tipos";
 import type { Empresa } from "@/modulos/compras/componentes/ImpresionOC";
 
+import { EMPRESA } from "@/lib/marca";
 interface Ligado { embarques: { folio: string; incoterm: string | null; puerto_origen: string | null; puerto_destino: string; modalidad: string } | null; factura: string | null }
 
 export default function ImprimirOC() {
@@ -38,7 +39,7 @@ export default function ImprimirOC() {
   if (!oc.data || !lineas.data) return <div className="p-6"><Cargando /></div>;
   const o = oc.data, p = proveedor.data, emp = empresa.data, emb = ligado.data?.[0]?.embarques;
   const m = o.moneda === "USD" ? "USD" : "MXN";
-  const comprador = emp?.razon_social || emp?.nombre || "Máquinas y Herramientas Gamex";
+  const comprador = emp?.razon_social || emp?.nombre || EMPRESA;
   const vendedor = p?.razon_social || o.proveedor;
   const incoterm = emb?.incoterm ? `${emb.incoterm} ${["EXW", "FCA", "FAS", "FOB"].includes(emb.incoterm) ? emb.puerto_origen ?? "" : emb.puerto_destino} (Incoterms® 2020)` : "Por definir / To be defined";
   const fr = (art: string | null) => { const f = fracciones.data?.find((x) => x.id === art); return f?.fraccion_arancelaria ? `${f.fraccion_arancelaria}${f.nico ? "-" + f.nico : ""}` : ""; };

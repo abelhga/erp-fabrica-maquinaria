@@ -18,6 +18,7 @@ import {
 import { FichaEmpleado } from "./componentes/FichaEmpleado";
 import { GLOSARIO } from "@/tutorial/glosario";
 
+import { EMPRESA } from "@/lib/marca";
 type VistaEstado = "activos" | "bajas" | "todos";
 
 export default function Empleados() {
@@ -126,7 +127,7 @@ export default function Empleados() {
   return (
     <Pagina
       titulo="Personal"
-      descripcion="Quién trabaja en Hegamex, en qué área y cuántas vacaciones le quedan."
+      descripcion={`Quién trabaja en ${EMPRESA}, en qué área y cuántas vacaciones le quedan.`}
       acciones={puede("rrhh", 2) && <Boton onClick={() => abrir("nuevo")} data-explain={GLOSARIO.botonNuevoEmpleado}><Plus className="h-4 w-4" /> Nuevo empleado</Boton>}
     >
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">

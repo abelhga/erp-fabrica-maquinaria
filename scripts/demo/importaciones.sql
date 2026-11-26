@@ -293,3 +293,5 @@ begin
     (select folio from embarques where id = e_c), (select folio from embarques where id = e_d), (select folio from embarques where id = e_e),
     (select folio from embarques where id = e_f);
 end $$;
+-- Desde la 223 ninguna función se ejecuta sin permiso explícito, ni las temporales de este script.
+grant execute on all functions in schema pg_temp to authenticated;

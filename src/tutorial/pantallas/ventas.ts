@@ -1,5 +1,6 @@
 import type { AyudaPantalla } from "./index";
 
+import { EMPRESA } from "@/lib/marca";
 // Esto lo leen vendedores: nada de cómo se arma el precio, ni costos ni márgenes (es texto, pero
 // filtra igual). Arriba va solo para qué sirve la pantalla y lo mínimo para usarla; los botones y
 // columnas se explican en su globo (glosario de ventas). «detalle» guarda todas las reglas que
@@ -285,7 +286,7 @@ export const VENTAS: Record<string, AyudaPantalla> = {
       "Al ligar una publicación, sus ventas y sus envíos toman ese artículo. El envío ya se pidió solo cuando entró la venta, así que almacén ve el paquete aunque nadie la haya ligado, y también la puede ligar desde el envío; lo que no puede es cerrar la caja sin ligarla.",
       "Si la publicación es un paquete (24 cangilones), pon en «Piezas por venta» cuántas trae: cada venta entra como esas piezas al precio de cada una. Si cada venta es una parte de lo que cuenta el catálogo (1 juego y la clave es una caja de 4), pon la fracción: 0.25.",
       "Si la publicación trae como SKU la clave del ERP, se liga sola.",
-      "Si una publicación no es de Hegamex (en la misma cuenta vende otra tienda), da «No es de Hegamex»: sus ventas en el ERP se cancelan sin cobro y las siguientes ya no entran. Quedan abajo, en «No son de Hegamex», con «Sí es nuestra» por si fue un error.",
+      `Si una publicación no es de ${EMPRESA} (en la misma cuenta vende otra tienda), da «No es de ${EMPRESA}»: sus ventas en el ERP se cancelan sin cobro y las siguientes ya no entran. Quedan abajo, en «No son de ${EMPRESA}», con «Sí es nuestra» por si fue un error.`,
       "En «Ligadas» ves cada publicación con su artículo. Si se ligó mal, «Corregir» cambia el artículo o las piezas y rehace las ventas abiertas que todavía no tienen guía; «Desligar» la regresa a «Por ligar».",
       "«Publicaciones» pone cada publicación junto a lo que dice el catálogo: precio en ML contra el sugerido de su tipo (clásica o premium, con la comisión y el envío que ML le cobra a esa publicación), existencia en ML contra lo libre en planta, visitas, preguntas, ventas y conversión de 30 días.",
       "Ahí, «Por revisar» deja lo que conviene arreglar. «Traer de Mercado Libre» lo pone al día; solo lee, no cambia nada allá.",

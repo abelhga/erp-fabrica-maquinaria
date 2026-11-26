@@ -1,5 +1,6 @@
 import type { AyudaPantalla } from "./index";
 
+import { EMPRESA } from "@/lib/marca";
 // Arriba de cada pantalla solo va para qué sirve y lo mínimo para trabajar; los botones, columnas y
 // pestañas ya traen su globo (glosario de administración). El «detalle» conserva todas las reglas
 // porque el asistente lo lee como manual: si se quita de aquí, el asistente deja de saberlo.
@@ -187,7 +188,7 @@ export const ADMINISTRACION: Record<string, AyudaPantalla> = {
     ],
     detalle: [
       "La usa finanzas; lo ve también dirección. Los XML se leen en tu navegador y solo sube lo que dicen; puede tardar unos minutos por año.",
-      "Volver a cargar lo mismo no duplica nada: cada factura se guarda una vez por su folio fiscal. Las que no son de Hegamex (ni la emitió ni la recibió) no se guardan.",
+      `Volver a cargar lo mismo no duplica nada: cada factura se guarda una vez por su folio fiscal. Las que no son de ${EMPRESA} (ni la emitió ni la recibió) no se guardan.`,
       "Cada factura recibida se amarra a su renglón del libro de compras de la hoja (por folio y monto, o por monto exacto y fecha cercana); de ahí sale su número de orden de compra, que abre el PDF de esa orden en Drive. Cada factura emitida se amarra a su venta por serie y folio.",
       "La tabla de arriba dice, por año, cuántas compras y ventas de la hoja ya tienen su XML; clic en un año para ver sus facturas.",
       "Las facturas canceladas no cuentan: las que vienen de una carpeta «Canceladas» de Drive se marcan solas, y si el SAT dice que otra está cancelada, el botón al final de su renglón la marca (y su renglón de la hoja pasa a la factura que la reemplazó).",

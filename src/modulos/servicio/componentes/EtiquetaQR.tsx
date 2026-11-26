@@ -9,6 +9,7 @@ import type { Maquina } from "../datos";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 import { abrirPagina } from "@/lib/instalada";
+import { EMPRESA } from "@/lib/marca";
 /**
  * La liga que va en el QR y en la etiqueta NFC de cada máquina: abre «Reportar falla» con la
  * máquina ya elegida. Es la de siempre (no una nueva), así una etiqueta impresa sigue sirviendo.
@@ -34,7 +35,7 @@ export function Etiqueta({ m }: { m: Pick<Maquina, "id" | "numero" | "nombre"> }
         <p className="text-2xl font-bold tracking-wide leading-none">{m.numero}</p>
         <p className="text-sm leading-tight mt-1 line-clamp-2">{m.nombre}</p>
         <p className="text-[11px] mt-2 leading-tight">¿Falla? Escanea con la cámara del celular o acércalo a la etiqueta y repórtala.</p>
-        <p className="text-[10px] mt-1 font-semibold tracking-[0.15em]">HEGAMEX · MANTENIMIENTO</p>
+        <p className="text-[10px] mt-1 font-semibold tracking-[0.15em]">{EMPRESA.toUpperCase()} · MANTENIMIENTO</p>
       </div>
     </div>
   );

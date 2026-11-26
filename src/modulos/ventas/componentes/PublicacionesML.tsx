@@ -14,6 +14,7 @@ import { q, useAccion } from "@/lib/consultas";
 import { dinero, hace, numero } from "@/lib/formato";
 import { GLOSARIO } from "@/tutorial/glosario";
 
+import { EMPRESA } from "@/lib/marca";
 export interface SinLigar { item_id: string; titulo: string | null; sku: string | null; precio: number | null; veces: number; visto_en: string }
 interface Ligada {
   id: string; id_externo: string; titulo: string | null; precio: number | null; piezas_por_paquete: number;
@@ -78,8 +79,8 @@ export function Ligar({ s, editable }: { s: SinLigar; editable: boolean }) {
         {editable && (
           <button type="button" className="mt-1 inline-flex items-center gap-1 text-xs text-tenue hover:text-peligro" data-explain={GLOSARIO.publicacionAjenaML}
             disabled={ajena.isPending}
-            onClick={() => confirm(`¿«${s.titulo ?? s.item_id}» no es de Hegamex? Sus ventas en el ERP se cancelan sin cobro (si ya se empacaron, no te deja) y las siguientes ya no entran.`) && ajena.mutate(undefined)}>
-            <Ban className="h-3.5 w-3.5" /> No es de Hegamex
+            onClick={() => confirm(`¿«${s.titulo ?? s.item_id}» no es de ${EMPRESA}? Sus ventas en el ERP se cancelan sin cobro (si ya se empacaron, no te deja) y las siguientes ya no entran.`) && ajena.mutate(undefined)}>
+            <Ban className="h-3.5 w-3.5" /> No es de {EMPRESA}
           </button>
         )}
       </div>
@@ -101,7 +102,7 @@ export function PublicacionesAjenas({ editable }: { editable: boolean }) {
   if (!ajenas.data?.length) return null;
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium" data-explain={GLOSARIO.publicacionAjenaML}>No son de Hegamex ({numero(ajenas.data.length)})</p>
+      <p className="text-sm font-medium" data-explain={GLOSARIO.publicacionAjenaML}>No son de {EMPRESA} ({numero(ajenas.data.length)})</p>
       <Tarjeta>
         <ul className="divide-y divide-borde">
           {ajenas.data.map((a) => (

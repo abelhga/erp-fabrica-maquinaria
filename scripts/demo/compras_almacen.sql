@@ -319,3 +319,5 @@ begin
 
   raise notice 'Datos DEMO de compras y almacén listos.';
 end $$;
+-- Desde la 223 ninguna función se ejecuta sin permiso explícito, ni las temporales de este script.
+grant execute on all functions in schema pg_temp to authenticated;

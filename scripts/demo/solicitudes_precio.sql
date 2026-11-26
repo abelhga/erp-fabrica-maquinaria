@@ -74,6 +74,8 @@ begin
   end loop;
   return hi;
 end $$;
+-- Desde la 223 ninguna función se ejecuta sin permiso explícito, ni las temporales de este script.
+grant execute on all functions in schema pg_temp to authenticated;
 
 do $$
 declare
@@ -96,12 +98,15 @@ begin
           E'• 2 tolvas de 6 m³ con básculas independientes\n• Banda de 24" con variador de velocidad\n• Tablero con dosificación automática por receta', 'equipo')
   on conflict (clave) do nothing;
   select id into v_eq from public.articulos where clave = 'DEMO-SP-ZAR6';
+  -- Los costos ya no se escriben directo ni con permiso de costos: el costo de arranque lo pone la carga.
+  perform pg_temp.postgres();
   insert into public.costos_articulo (articulo_id, costo, precio_fijo) values (v_eq, 231000, 385000) on conflict (articulo_id) do nothing;
+  perform pg_temp.soy('ingenieria@hegamex.com');
   insert into public.articulos (clave, tipo, nombre, unidad) values ('DEMO-SP-CAT', 'componente', 'Catarina 80B14 para elevador de cangilones', 'pieza')
   on conflict (clave) do nothing;
   select id into v_cat from public.articulos where clave = 'DEMO-SP-CAT';
   -- La catarina llega sin costo (y por eso sin precio de lista), aunque otra corrida ya lo haya contestado.
-  perform pg_temp.soy('compras@hegamex.com');
+  perform pg_temp.postgres();
   delete from public.costos_articulo where articulo_id = v_cat;
   perform pg_temp.soy('ingenieria@hegamex.com');
 

@@ -14,6 +14,7 @@ import { cn } from "@/lib/utilidades";
 import { SoloLectura } from "./Editables";
 import { GLOSARIO } from "@/tutorial/glosario";
 
+import { EMPRESA } from "@/lib/marca";
 export type Config = Record<string, unknown>;
 
 export function useConfiguracion() {
@@ -113,7 +114,7 @@ function Comercial({ inicial, editable }: { inicial: Config; editable: boolean }
   }));
   const guardar = useGuardarConfig("Datos de la empresa guardados");
   return (
-    <TarjetaForm titulo="Empresa" descripcion="Cómo aparece Hegamex en documentos y en el ERP." editable={editable} quien="sistemas o dirección"
+    <TarjetaForm titulo="Empresa" descripcion={`Cómo aparece ${EMPRESA} en documentos y en el ERP.`} editable={editable} quien="sistemas o dirección"
       guardando={guardar.isPending} alGuardar={() => guardar.mutate({ clave: "empresa", valor: { ...inicial, ...f } })}>
       <div className="grid gap-4 sm:grid-cols-2">
         <Campo etiqueta="Nombre comercial"><Entrada value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} /></Campo>

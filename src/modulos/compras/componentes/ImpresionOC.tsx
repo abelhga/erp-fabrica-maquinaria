@@ -3,6 +3,7 @@ import { dinero, fecha, numero } from "@/lib/formato";
 import type { OrdenCompra } from "./comun";
 import type { LineaOC, ProveedorCompleto } from "./tipos";
 
+import { EMPRESA } from "@/lib/marca";
 export interface Empresa { nombre?: string; razon_social?: string; rfc?: string; telefono?: string; sitio?: string; direccion?: string }
 
 /**
@@ -29,7 +30,7 @@ export function ImpresionOC({ oc, lineas, proveedor, empresa }: {
       <div className="flex items-start justify-between gap-6 pb-3 border-b-2">
         <div>
           <Logo />
-          <p className="mt-2 font-medium">{empresa?.razon_social || empresa?.nombre || "Hegamex"}</p>
+          <p className="mt-2 font-medium">{empresa?.razon_social || empresa?.nombre || EMPRESA}</p>
           <p className="tenue">{[empresa?.rfc && `RFC ${empresa.rfc}`, empresa?.telefono, empresa?.sitio].filter(Boolean).join(" · ")}</p>
           {empresa?.direccion && <p className="tenue">{empresa.direccion}</p>}
         </div>
@@ -54,7 +55,7 @@ export function ImpresionOC({ oc, lineas, proveedor, empresa }: {
           <p className="tenue uppercase text-[9px] tracking-wider">Condiciones</p>
           <p>{oc.condiciones || "—"}</p>
           <p>Moneda: {oc.moneda}{oc.moneda !== "MXN" && ` · tipo de cambio de referencia ${numero(oc.tipo_cambio)}`}</p>
-          <p>Facturar a: {empresa?.razon_social || empresa?.nombre || "Hegamex"}{empresa?.rfc ? ` (${empresa.rfc})` : ""}</p>
+          <p>Facturar a: {empresa?.razon_social || empresa?.nombre || EMPRESA}{empresa?.rfc ? ` (${empresa.rfc})` : ""}</p>
         </div>
       </div>
 

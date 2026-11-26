@@ -27,6 +27,8 @@ create or replace function pg_temp.mes(n int) returns date language sql stable a
 -- Viernes en que empieza la semana de nómina actual (n = 0) o las anteriores (n < 0).
 create or replace function pg_temp.viernes(n int) returns date language sql stable as $$
   select current_date - ((extract(isodow from current_date)::int - 5 + 7) % 7) + 7 * n $$;
+-- Desde la 223 ninguna función se ejecuta sin permiso explícito, ni las temporales de este script.
+grant execute on all functions in schema pg_temp to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- El almacenista DEMO entra con almacen@: así es jefe de su gente y tiene "Mi desempeño".

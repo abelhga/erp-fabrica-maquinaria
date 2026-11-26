@@ -20,9 +20,12 @@ create or replace function pg_temp.como(c text) returns void language sql as $$
 -- El siguiente día hábil (para que una falta o un retardo nunca caigan en domingo).
 create or replace function pg_temp.habil(d date) returns date language sql stable as $$
   select min(x)::date from generate_series(d, d + 10, interval '1 day') x where public.dias_habiles(x::date, x::date) = 1 $$;
--- Lunes de esta semana: las vacaciones se piden de lunes a sábado.
+-- Lunes de esta semana: las vacaciones se piden de lunes a sábado. Lo de un solo día va
+-- envuelto en habil(): un lunes puede ser feriado (el de la Revolución) y la base lo rechaza.
 create or replace function pg_temp.lunes(n int) returns date language sql stable as $$
   select (date_trunc('week', current_date)::date + n) $$;
+-- Desde la 223 ninguna función se ejecuta sin permiso explícito, ni las temporales de este script.
+grant execute on all functions in schema pg_temp to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Personal
@@ -102,8 +105,8 @@ insert into demo_inc values
   ('vac-oscar',     '1014', 'vacaciones',       pg_temp.lunes(28),  pg_temp.lunes(33),  'aprobada',   null,                                     null, null),
   ('vac-martin',    '1002', 'vacaciones',       pg_temp.lunes(-21), pg_temp.lunes(-16), 'aprobada',   null,                                     null, null),
   ('hx-martin',     '1002', 'horas_extra',      pg_temp.habil(current_date - 2), null,  'aprobada',   'Terminar la banda de 18" para embarque', 4,    null),
-  ('falta-hector',  '1012', 'falta',            pg_temp.lunes(-7),  pg_temp.lunes(-7),  'aprobada',   'No se presentó ni avisó',                null, null),
-  ('ret-raul',      '1009', 'retardo',          pg_temp.lunes(1),   null,               'aprobada',   'Llegó 30 minutos tarde',                 0.5,  null),
+  ('falta-hector',  '1012', 'falta',            pg_temp.habil(pg_temp.lunes(-7)), pg_temp.habil(pg_temp.lunes(-7)),  'aprobada',   'No se presentó ni avisó',                null, null),
+  ('ret-raul',      '1009', 'retardo',          pg_temp.habil(pg_temp.lunes(1)), null,               'aprobada',   'Llegó 30 minutos tarde',                 0.5,  null),
   ('psg-eduardo',   '1011', 'permiso_sin_goce', pg_temp.lunes(3),   pg_temp.lunes(4),   'aprobada',   'Asuntos personales',                     null, null),
   ('vac-daniel',    '1013', 'vacaciones',       pg_temp.lunes(14),  pg_temp.lunes(16),  'rechazada',  'Coincide con la entrega de la cribadora de Minera Santa Cruz', null, null),
   ('vac-joseluis',  '1001', 'vacaciones',       '2026-03-30',       '2026-04-04',       'aprobada',   'Semana Santa',                           null, null),

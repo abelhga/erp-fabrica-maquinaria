@@ -17,6 +17,7 @@ import { GLOSARIO } from "@/tutorial/glosario";
 import { ConfigSkydropx } from "./ConfigSkydropx";
 import { ConfigTelefono } from "./ConfigTelefono";
 
+import { EMPRESA } from "@/lib/marca";
 /** Mercado Libre (conectar la cuenta, a quién le llegan las ventas, si los avisos entran), Skydropx (guías) y el teléfono con IA. */
 export function ConfigIntegraciones() {
   const { tieneRol, puede } = useSesion();
@@ -194,15 +195,15 @@ export function ConfigIntegraciones() {
 
       {direccion && (
         <Tarjeta>
-          <EncabezadoTarjeta titulo="Cómo se conecta (una sola vez)" descripcion="Lo hace quien administra la cuenta de vendedor de Hegamex en Mercado Libre." />
+          <EncabezadoTarjeta titulo="Cómo se conecta (una sola vez)" descripcion={`Lo hace quien administra la cuenta de vendedor de ${EMPRESA} en Mercado Libre.`} />
           <ol className="px-5 pb-5 space-y-3 text-sm list-decimal pl-9">
-            <li>En <a className="text-marca-texto hover:underline" href="https://developers.mercadolibre.com.mx/devcenter" target="_blank" rel="noreferrer">developers.mercadolibre.com.mx</a>, con la cuenta de Hegamex: <b>Crear aplicación</b>.</li>
+            <li>En <a className="text-marca-texto hover:underline" href="https://developers.mercadolibre.com.mx/devcenter" target="_blank" rel="noreferrer">developers.mercadolibre.com.mx</a>, con la cuenta de {EMPRESA}: <b>Crear aplicación</b>.</li>
             <li>URI de redirección:
               <CopiarUrl texto={`${URL_ML}/autorizar`} alCopiar={copiar} /></li>
             <li>URL de notificaciones, con los tópicos <b>Orders</b>, <b>Claims</b> y <b>Questions</b>:
               <CopiarUrl texto={`${URL_ML}/aviso`} alCopiar={copiar} /></li>
             <li>Copia el <b>Client ID</b> y el <b>Client Secret</b> a Supabase → Edge Functions → Secrets como <code>ML_CLIENT_ID</code> y <code>ML_CLIENT_SECRET</code>. No los mandes por chat ni correo.</li>
-            <li>Regresa aquí y da clic en <b>Conectar Mercado Libre</b>; acepta el permiso con la cuenta de Hegamex.</li>
+            <li>Regresa aquí y da clic en <b>Conectar Mercado Libre</b>; acepta el permiso con la cuenta de {EMPRESA}.</li>
           </ol>
         </Tarjeta>
       )}

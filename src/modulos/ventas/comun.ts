@@ -5,6 +5,7 @@ import { q } from "@/lib/consultas";
 import { dinero, fecha } from "@/lib/formato";
 import type { Tono } from "@/components/ui/insignia";
 
+import { EMPRESA } from "@/lib/marca";
 // ---------------------------------------------------------------------------
 // Catálogos de estados con su color. Un solo lugar para que "Por autorizar" se
 // vea igual en la lista, el editor, el detalle del cliente y el inicio.
@@ -201,7 +202,7 @@ export function textoWhatsApp(c: Pick<Cotizacion, "folio" | "atencion" | "total"
   plan?: PlanMeses | null) {
   const suman = partidas.filter((p) => !p.opcional);
   const lineas = [
-    `Hola${c.atencion ? " " + c.atencion : ""}, le comparto la cotización ${c.folio} de HEGAMEX:`,
+    `Hola${c.atencion ? " " + c.atencion : ""}, le comparto la cotización ${c.folio} de ${EMPRESA.toUpperCase()}:`,
     ...suman.slice(0, 3).map((p) => `• ${p.titulo}`),
     suman.length > 3 ? `• y ${suman.length - 3} partida(s) más` : null,
     `Total: ${dineroEn(c.total, c.moneda)}${c.moneda !== "MXN" ? "" : " MXN"} IVA incluido.`,

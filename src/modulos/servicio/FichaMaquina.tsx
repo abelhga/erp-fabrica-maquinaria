@@ -22,6 +22,7 @@ import { DialogoEtiqueta } from "./componentes/EtiquetaQR";
 import { TarjetaCriticidad } from "./componentes/Criticidad";
 import { GLOSARIO } from "@/tutorial/glosario";
 
+import { EMPRESA } from "@/lib/marca";
 interface CostoOrden { mantenimiento_id: string; material: number | null; servicio_externo: number | null; mano_obra: number | null; otro: number | null; total: number }
 
 /** Ficha de una máquina: estado, historial con costo acumulado, preventivos y quién la tiene. */
@@ -381,7 +382,7 @@ function DialogoDocumento({ m, alCerrar }: { m: Maquina; alCerrar: () => void })
             }} />
           </Campo>
         ) : (
-          <Campo etiqueta="Liga" ayuda="Que esté compartida con la gente de Hegamex para que la puedan abrir.">
+          <Campo etiqueta="Liga" ayuda={`Que esté compartida con la gente de ${EMPRESA} para que la puedan abrir.`}>
             <Entrada type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://drive.google.com/…" />
           </Campo>
         )}

@@ -79,6 +79,8 @@ end $$;
 create or replace function pg_temp.a_las(p_dia date, p_hora time) returns timestamptz language sql as $$
   select (p_dia + p_hora) at time zone 'America/Mexico_City'
 $$;
+-- Desde la 223 ninguna función se ejecuta sin permiso explícito, ni las temporales de este script.
+grant execute on all functions in schema pg_temp to authenticated;
 
 do $$
 declare

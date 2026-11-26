@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { q } from "@/lib/consultas";
 import { fecha, numero } from "@/lib/formato";
 
+import { conMarca } from "@/lib/marca";
 /**
  * Lo que se le vendió al cliente, para el taller: cada partida con su descripción como se cotizó,
  * sin un solo precio (sale de v_pedidos_produccion, que no trae montos). La gerencia la copiaba
@@ -60,7 +61,7 @@ export default function ImprimirPedido() {
   useEffect(() => {
     if (!p) return;
     const antes = document.title;
-    document.title = `Descripción ${p.folio}${p.cliente ? " " + p.cliente : ""} - Hegamex`;
+    document.title = conMarca(`Descripción ${p.folio}${p.cliente ? " " + p.cliente : ""}`);
     return () => { document.title = antes; };
   }, [p]);
 

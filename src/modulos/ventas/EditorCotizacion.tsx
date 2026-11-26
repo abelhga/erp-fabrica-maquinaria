@@ -41,6 +41,7 @@ import { PANTALLAS } from "@/tutorial/pantallas";
 import { GLOSARIO } from "@/tutorial/glosario";
 
 import { abrirPagina } from "@/lib/instalada";
+import { EMPRESA } from "@/lib/marca";
 export default function EditorCotizacion() {
   const { id } = useParams();
   if (!id || id === "nueva") return <CrearCotizacion />;
@@ -872,9 +873,9 @@ function Editor({ id }: { id: string }) {
                 <Notas notas={c.notas ?? []} catalogo={notasCatalogo} editable={editable} alCambiar={(n) => editarEnc({ notas: n })} />
               </div>
               <details className="md:col-span-2">
-                <summary className="text-sm text-marca-texto cursor-pointer" data-explain={GLOSARIO.formatoComarca} data-explain-title="Formato co-marca">Formato co-marca (“Powered by Hegamex”)</summary>
+                <summary className="text-sm text-marca-texto cursor-pointer" data-explain={GLOSARIO.formatoComarca} data-explain-title="Formato co-marca">Formato co-marca (“Powered by {EMPRESA}”)</summary>
                 <label className="mt-2 block space-y-1.5">
-                  <span className="text-sm text-tenue">Liga del logo del cliente o distribuidor (si se llena, la cotización sale con su logo y “Powered by HEGAMEX”)</span>
+                  <span className="text-sm text-tenue">Liga del logo del cliente o distribuidor (si se llena, la cotización sale con su logo y “Powered by {EMPRESA.toUpperCase()}”)</span>
                   <input className="campo" value={c.logo_comarca_url ?? ""} disabled={!editable} placeholder="https://…/logo.png"
                     onChange={(e) => editarEnc({ logo_comarca_url: e.target.value || null })} />
                 </label>

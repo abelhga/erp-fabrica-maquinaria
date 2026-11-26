@@ -12,6 +12,7 @@ import { useFichas } from "./componentes/Fichas";
 import { SIN_ENVIAR, mensajeFreno, useFreno } from "./componentes/Seguimiento";
 import { useSesion } from "@/lib/sesion";
 
+import { EMPRESA, conMarca } from "@/lib/marca";
 const NOMBRE_MONEDA = { MXN: "Pesos mexicanos (MXN)", USD: "Dólares estadounidenses (USD)", EUR: "Euros (EUR)" } as const;
 
 /**
@@ -72,7 +73,7 @@ export default function ImprimirCotizacion() {
   useEffect(() => {
     if (!c) return;
     const antes = document.title;
-    document.title = `${c.folio}${cliente.data ? " " + cliente.data.nombre : ""} - Hegamex`;
+    document.title = conMarca(`${c.folio}${cliente.data ? " " + cliente.data.nombre : ""}`);
     return () => { document.title = antes; };
   }, [c, cliente.data]);
 
@@ -337,7 +338,7 @@ export default function ImprimirCotizacion() {
         })()}
 
         <footer className="bloque mt-6 pt-3 border-t border-borde flex items-start justify-between gap-6 text-[10px] text-tenue">
-          <span>{fis?.razon_social ?? "Hegamex"} · Fabricantes de bandas transportadoras, dosificadoras, cribadoras, tolvas, silos y elevadores</span>
+          <span>{fis?.razon_social ?? EMPRESA} · Fabricantes de bandas transportadoras, dosificadoras, cribadoras, tolvas, silos y elevadores</span>
           <span className="tabular-nums shrink-0">{c.folio}{iniciales ? ` · ${iniciales}` : ""}</span>
         </footer>
       </div>

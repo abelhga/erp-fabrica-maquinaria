@@ -6,6 +6,7 @@ import { q, useTiempoReal } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { cn } from "@/lib/utilidades";
 
+import { EMPRESA } from "@/lib/marca";
 export type Fase = "cotizando" | "produccion" | "listo" | "transito" | "puerto" | "planta" | "cerrado" | "cancelado";
 export type Debe = "proveedor" | "agente" | "naviera" | "forwarder" | "hegamex" | "transportista";
 export type Modalidad = "fcl" | "lcl" | "consolidado" | "aereo";
@@ -23,7 +24,7 @@ export const FASES: Record<Fase, { texto: string; tono: Tono; icono: LucideIcon 
 };
 
 export const NOMBRE_DEBE: Record<Debe, string> = {
-  proveedor: "Proveedor", agente: "Agente aduanal", naviera: "Naviera", forwarder: "Forwarder", hegamex: "Hegamex", transportista: "Transportista",
+  proveedor: "Proveedor", agente: "Agente aduanal", naviera: "Naviera", forwarder: "Forwarder", hegamex: EMPRESA, transportista: "Transportista",
 };
 
 export const MODALIDADES: Record<Modalidad, string> = {
