@@ -5,8 +5,8 @@
 # aquí se cambian en una copia, no en el código de planta.
 #
 #   NUBE_REF=<ref> bash scripts/demo-comercial/desplegar_funciones.sh
-# El CLI necesita SUPABASE_ACCESS_TOKEN; en una sesión de Claude en la nube lo pone el proxy y aquí
-# solo va un valor de relleno con la forma que el CLI revisa.
+# El CLI necesita SUPABASE_ACCESS_TOKEN (en una sesión de Claude en la nube, cualquier valor con
+# forma de token: el proxy pone el de verdad).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 REF=${NUBE_REF:?Falta NUBE_REF}

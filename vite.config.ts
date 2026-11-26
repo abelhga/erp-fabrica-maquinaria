@@ -15,6 +15,8 @@ const EMPRESA = ENV.VITE_EMPRESA?.trim();
 const PRODUCTO = ENV.VITE_PRODUCTO?.trim();
 // "Hegamex ERP" es el nombre de la app (el producto); "Hegamex" a secas, el de la empresa.
 const conEmpresa = (texto: string) => {
+  // El engrane azul es el logo de Hegamex: con la marca genérica, el ícono de la pestaña es una fábrica.
+  if (ENV.VITE_LOGO === "generico") texto = texto.replace("/engrane.svg", "/fabrica.svg");
   if (PRODUCTO) texto = texto.replace(/Hegamex ERP/g, PRODUCTO);
   return EMPRESA ? texto.replace(/Hegamex/g, EMPRESA) : texto;
 };

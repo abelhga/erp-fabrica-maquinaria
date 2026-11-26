@@ -1,4 +1,4 @@
-import { Cog } from "lucide-react";
+import { Factory } from "lucide-react";
 import { cn } from "@/lib/utilidades";
 import { EMPRESA, LOGO_GENERICO, PRODUCTO } from "@/lib/marca";
 import { LOGO_ALTO, LOGO_ANCHO, LOGO_ANCHO_SIN_REGISTRO, LOGO_ENGRANE, LOGO_LETRAS, LOGO_REGISTRO } from "./logoTrazo";
@@ -7,15 +7,16 @@ import { LOGO_ALTO, LOGO_ANCHO, LOGO_ANCHO_SIN_REGISTRO, LOGO_ENGRANE, LOGO_LETR
  * El logo oficial de Hegamex (engrane azul + letras), trazado en SVG para que no se pixele en la TV
  * ni en los impresos. Las letras toman el color del texto: negras en claro e impresos, blancas en
  * oscuro. La ® solo sale en grande; en el menú serían tres pixeles ilegibles.
- * Construido con VITE_LOGO=generico (la demostración) es un engrane, el nombre de la empresa y,
+ * Construido con VITE_LOGO=generico (la demostración) es una fábrica, el nombre de la empresa y,
  * abajo, el del ERP (VITE_PRODUCTO):
- * el logo de Hegamex es una marca registrada y no se le presta a nadie.
+ * el logo de Hegamex (engrane azul) es una marca registrada y no se le presta a nadie; por eso
+ * el genérico no es un engrane.
  */
 export function Logo({ className, grande }: { className?: string; grande?: boolean }) {
   if (LOGO_GENERICO) {
     return (
       <div className={cn("flex items-center gap-2 select-none", className)} role="img" aria-label={EMPRESA}>
-        <Cog className={cn("shrink-0 text-marca", grande ? "h-10 w-10" : "h-7 w-7")} strokeWidth={2.2} />
+        <Factory className={cn("shrink-0 text-marca", grande ? "h-10 w-10" : "h-7 w-7")} strokeWidth={2.2} />
         <span className="flex flex-col leading-tight min-w-0">
           <span className={cn("font-semibold tracking-tight truncate", grande ? "text-2xl" : "text-[15px]")}>{EMPRESA}</span>
           {PRODUCTO && <span className={cn("text-tenue tracking-wide", grande ? "text-sm" : "text-[11px]")}>{PRODUCTO}</span>}

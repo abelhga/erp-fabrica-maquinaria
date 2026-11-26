@@ -17,3 +17,4 @@ capturas
 
 # Caché de Python (scripts/nube)
 __pycache__
+dist-demo/
