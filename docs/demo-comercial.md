@@ -1,4 +1,4 @@
-# Demostración comercial: «Maquinaria Modelo»
+# Demostración comercial: «Fábrica Atlas Industrial»
 
 Una copia del ERP con una fábrica inventada, para enseñárselo a un posible socio sin enseñar
 nada de Hegamex (clientes, costos, márgenes, ventas, personas, proveedores, agentes aduanales).
@@ -9,12 +9,12 @@ nada de Hegamex (clientes, costos, márgenes, ventas, personas, proveedores, age
   prueba, los scripts de `scripts/demo/*`, la historia de ventas inventada (`historial.sql`), el
   análisis y al final `maquillaje.sql`, que cambia personas, correos, proveedores y la marca
   «DEMO» por los de la empresa inventada y se detiene si queda algo de Hegamex.
-- **Sitio**: el mismo código construido con `VITE_EMPRESA="Maquinaria Modelo"` y
+- **Sitio**: el mismo código construido con `VITE_EMPRESA="Fábrica Atlas Industrial"` y
   `VITE_LOGO=generico` (ver `src/lib/marca.ts`). Sin esas variables todo dice Hegamex.
 - **Cuentas** (una por puesto): `direccion@`, `rodrigo@` / `fernando@` / `paola@` (ventas),
   `gerente.ventas@`, `ingenieria@`, `compras@`, `almacen@`, `gerente.produccion@`, `taller@`,
   `rrhh@`, `finanzas@`, `importaciones@`, `recepcion@`, `mantenimiento@`, `marketing@`,
-  `procesos@`, `tv@` y `sistemas@`, todas `@maquinariamodelo.demo`.
+  `procesos@`, `tv@` y `sistemas@`, todas `@fabricaatlas.demo`.
 
 ## Armarla en local
 
@@ -41,8 +41,8 @@ en la nube (la del conector de claude.ai) solo alcanzaba a `erp-hegamex`; hay qu
    cambiados por la empresa inventada (sus instrucciones a la IA traen el nombre escrito).
 5. La llave de la IA: Abel la pone en `erp-demo` → Edge Functions → Secrets → `ANTHROPIC_API_KEY`.
 6. Sitio: Worker aparte en Cloudflare (otro `name`, no `erp-fabrica-maquinaria`) con
-   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_DOMINIO_EMPRESA=maquinariamodelo.demo`,
-   `VITE_EMPRESA=Maquinaria Modelo`, `VITE_LOGO=generico`.
+   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_DOMINIO_EMPRESA=fabricaatlas.demo`,
+   `VITE_EMPRESA=Fábrica Atlas Industrial`, `VITE_LOGO=generico`.
 7. Borrar la función `cargador` de `erp-demo` (quedó desactivada; fue un intento de carga sin la
    API de administración).
 8. Revisar con `capturas.mjs` contra el sitio publicado, con varios puestos.

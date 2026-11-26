@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Llena una base VACÍA (solo migraciones) con "Maquinaria Modelo", la fábrica inventada de la
+# Llena una base VACÍA (solo migraciones) con "Fábrica Atlas Industrial", la fábrica inventada de la
 # demostración comercial. Se arma en el Supabase local y de ahí se pasa a la nube
 # (scripts/demo-comercial/subir.sh); ver docs/demo-comercial.md.
 #

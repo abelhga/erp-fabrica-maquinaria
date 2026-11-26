@@ -10,8 +10,14 @@ const VERSION = process.env.CF_PAGES_COMMIT_SHA ?? String(Date.now());
 export default defineConfig(({ mode }) => {
 // Construido para otra empresa (VITE_EMPRESA, ver src/lib/marca.ts), el título de la pestaña y el
 // nombre de la app instalada dicen el suyo: index.html y los manifiestos traen "Hegamex" escrito.
-const EMPRESA = loadEnv(mode, process.cwd(), "VITE_").VITE_EMPRESA?.trim();
-const conEmpresa = (texto: string) => (EMPRESA ? texto.replace(/Hegamex/g, EMPRESA) : texto);
+const ENV = loadEnv(mode, process.cwd(), "VITE_");
+const EMPRESA = ENV.VITE_EMPRESA?.trim();
+const PRODUCTO = ENV.VITE_PRODUCTO?.trim();
+// "Hegamex ERP" es el nombre de la app (el producto); "Hegamex" a secas, el de la empresa.
+const conEmpresa = (texto: string) => {
+  if (PRODUCTO) texto = texto.replace(/Hegamex ERP/g, PRODUCTO);
+  return EMPRESA ? texto.replace(/Hegamex/g, EMPRESA) : texto;
+};
 
 return {
   plugins: [react(), {

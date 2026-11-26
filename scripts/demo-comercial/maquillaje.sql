@@ -1,5 +1,5 @@
 -- =============================================================================
--- Convierte la base de demostración en "Maquinaria Modelo", una fábrica que no existe,
+-- Convierte la base de demostración en "Fábrica Atlas Industrial", una fábrica que no existe,
 -- para enseñarle el ERP a alguien de fuera.
 --
 -- Los scripts de scripts/demo/* se escribieron para probar pantallas en casa: firman
@@ -33,25 +33,25 @@ set local statement_timeout = '15min';
 -- ---------------------------------------------------------------------------
 create temp table _cuenta (antes text, despues text, nombre text) on commit drop;
 insert into _cuenta values
-  ('direccion@hegamex.com',          'direccion@maquinariamodelo.demo',          'Gabriel Medina Lozano'),
-  ('isaac@hegamex.com',              'rodrigo@maquinariamodelo.demo',            'Rodrigo Valdez Aranda'),
-  ('juan@hegamex.com',               'fernando@maquinariamodelo.demo',           'Fernando Ochoa Quintero'),
-  ('susana@hegamex.com',             'paola@maquinariamodelo.demo',              'Paola Ibarra Núñez'),
-  ('gerente.ventas@hegamex.com',     'gerente.ventas@maquinariamodelo.demo',     'Verónica Lara Ponce'),
-  ('ingenieria@hegamex.com',         'ingenieria@maquinariamodelo.demo',         'Miguel Ángel Ortiz Plascencia'),
-  ('compras@hegamex.com',            'compras@maquinariamodelo.demo',            'Claudia Ivonne Rivas Orozco'),
-  ('almacen@hegamex.com',            'almacen@maquinariamodelo.demo',            'Ramón Aguilar Solís'),
-  ('gerente.produccion@hegamex.com', 'gerente.produccion@maquinariamodelo.demo', 'Jaime Contreras Vega'),
-  ('taller@hegamex.com',             'taller@maquinariamodelo.demo',             'Felipe Andrade Mora'),
-  ('rrhh@hegamex.com',               'rrhh@maquinariamodelo.demo',               'Mariana Castañeda Villa'),
-  ('finanzas@hegamex.com',           'finanzas@maquinariamodelo.demo',           'Laura Patricia Gómez Ruvalcaba'),
-  ('sistemas@hegamex.com',           'sistemas@maquinariamodelo.demo',           'Soporte de Sistemas'),
-  ('tv@hegamex.com',                 'tv@maquinariamodelo.demo',                 'Pantalla del taller'),
-  ('importaciones@hegamex.com',      'importaciones@maquinariamodelo.demo',      'Fernanda Robles Mejía'),
-  ('recepcion@hegamex.com',          'recepcion@maquinariamodelo.demo',          'Diana Herrera Gil'),
-  ('mantenimiento@hegamex.com',      'mantenimiento@maquinariamodelo.demo',      'Iván Saldaña Ríos'),
-  ('marketing@hegamex.com',          'marketing@maquinariamodelo.demo',          'Andrea Montes Lira'),
-  ('procesos@hegamex.com',           'procesos@maquinariamodelo.demo',           'Tomás Beltrán Cázares');
+  ('direccion@hegamex.com',          'direccion@fabricaatlas.demo',          'Gabriel Medina Lozano'),
+  ('isaac@hegamex.com',              'rodrigo@fabricaatlas.demo',            'Rodrigo Valdez Aranda'),
+  ('juan@hegamex.com',               'fernando@fabricaatlas.demo',           'Fernando Ochoa Quintero'),
+  ('susana@hegamex.com',             'paola@fabricaatlas.demo',              'Paola Ibarra Núñez'),
+  ('gerente.ventas@hegamex.com',     'gerente.ventas@fabricaatlas.demo',     'Verónica Lara Ponce'),
+  ('ingenieria@hegamex.com',         'ingenieria@fabricaatlas.demo',         'Miguel Ángel Ortiz Plascencia'),
+  ('compras@hegamex.com',            'compras@fabricaatlas.demo',            'Claudia Ivonne Rivas Orozco'),
+  ('almacen@hegamex.com',            'almacen@fabricaatlas.demo',            'Ramón Aguilar Solís'),
+  ('gerente.produccion@hegamex.com', 'gerente.produccion@fabricaatlas.demo', 'Jaime Contreras Vega'),
+  ('taller@hegamex.com',             'taller@fabricaatlas.demo',             'Felipe Andrade Mora'),
+  ('rrhh@hegamex.com',               'rrhh@fabricaatlas.demo',               'Mariana Castañeda Villa'),
+  ('finanzas@hegamex.com',           'finanzas@fabricaatlas.demo',           'Laura Patricia Gómez Ruvalcaba'),
+  ('sistemas@hegamex.com',           'sistemas@fabricaatlas.demo',           'Soporte de Sistemas'),
+  ('tv@hegamex.com',                 'tv@fabricaatlas.demo',                 'Pantalla del taller'),
+  ('importaciones@hegamex.com',      'importaciones@fabricaatlas.demo',      'Fernanda Robles Mejía'),
+  ('recepcion@hegamex.com',          'recepcion@fabricaatlas.demo',          'Diana Herrera Gil'),
+  ('mantenimiento@hegamex.com',      'mantenimiento@fabricaatlas.demo',      'Iván Saldaña Ríos'),
+  ('marketing@hegamex.com',          'marketing@fabricaatlas.demo',          'Andrea Montes Lira'),
+  ('procesos@hegamex.com',           'procesos@fabricaatlas.demo',           'Tomás Beltrán Cázares');
 
 -- Texto libre que nombra a esas personas (avisos, bitácora, planes, notas). De lo más
 -- largo a lo más corto, para que "Isaac Hernández García" no quede en "Rodrigo Hernández García".
@@ -67,12 +67,12 @@ insert into _texto values
   (19, 'Almacenista Hegamex', 'Ramón Aguilar Solís'), (20, 'Comprador Hegamex', 'Claudia Ivonne Rivas Orozco'),
   (21, 'Finanzas Hegamex', 'Laura Patricia Gómez Ruvalcaba'), (22, 'Miguel Ingeniería', 'Miguel Ángel Ortiz Plascencia'),
   (23, 'Marketing Hegamex', 'Andrea Montes Lira'), (24, 'Recepción Hegamex', 'Diana Herrera Gil'), (25, 'Sistemas Hegamex', 'Soporte de Sistemas'),
-  (26, 'isaac@hegamex\.com', 'rodrigo@maquinariamodelo.demo'), (27, 'juan@hegamex\.com', 'fernando@maquinariamodelo.demo'),
-  (28, 'susana@hegamex\.com', 'paola@maquinariamodelo.demo'),
+  (26, 'isaac@hegamex\.com', 'rodrigo@fabricaatlas.demo'), (27, 'juan@hegamex\.com', 'fernando@fabricaatlas.demo'),
+  (28, 'susana@hegamex\.com', 'paola@fabricaatlas.demo'),
   -- La empresa
-  (30, 'M[áa]quinas y Herramientas Gamex( S\.A\. de C\.V\.)?', 'Maquinaria Industrial Modelo S.A. de C.V.'),
-  (31, '\s*-\s*Hegamex®', ''), (32, 'Hegamex®', 'Maquinaria Modelo'), (33, 'hegamex\.com', 'maquinariamodelo.demo'),
-  (34, 'HEGAMEX', 'MAQUINARIA MODELO'), (35, 'Hegamex', 'Maquinaria Modelo'),
+  (30, 'M[áa]quinas y Herramientas Gamex( S\.A\. de C\.V\.)?', 'Fábrica Atlas Industrial S.A. de C.V.'),
+  (31, '\s*-\s*Hegamex®', ''), (32, 'Hegamex®', 'Fábrica Atlas Industrial'), (33, 'hegamex\.com', 'fabricaatlas.demo'),
+  (34, 'HEGAMEX', 'FÁBRICA ATLAS INDUSTRIAL'), (35, 'Hegamex', 'Fábrica Atlas Industrial'),
   -- Proveedores de importación reales → inventados
   (40, 'Yao ?Han Industries', 'Huaxin Packing Machinery'), (41, '\s+yao ?han\M', ''), (42, '\myao ?han\M', 'Huaxin'),
   (43, 'Gavin Electronic', 'Hengli Weighing'), (44, '\mGavin\M', 'Hengli'),
@@ -126,7 +126,7 @@ delete from auth.audit_log_entries;
 delete from auth.sessions;
 delete from auth.refresh_tokens;
 -- La invitación que sembró una migración es de una persona real.
-delete from public.invitaciones where correo !~* 'maquinariamodelo\.demo$';
+delete from public.invitaciones where correo !~* 'fabricaatlas\.demo$';
 
 -- Todo el texto de la base (menos catálogos geográficos y reglas internas, que no nombran a nadie).
 do $$
@@ -155,11 +155,11 @@ end $$;
 -- ---------------------------------------------------------------------------
 -- 2. La empresa y lo que la configura.
 -- ---------------------------------------------------------------------------
-update public.configuracion set valor = '{"nombre": "Maquinaria Modelo", "razon_social": "Maquinaria Industrial Modelo S.A. de C.V.", "rfc": "MIM150101AB1", "telefono": "33 0000 0000", "sitio": "maquinariamodelo.demo", "direccion": "Av. de la Industria 1250, Parque Industrial, Zapopan, Jal."}'
+update public.configuracion set valor = '{"nombre": "Fábrica Atlas Industrial", "razon_social": "Fábrica Atlas Industrial S.A. de C.V.", "rfc": "FAI150101AB1", "telefono": "33 0000 0000", "sitio": "fabricaatlas.demo", "direccion": "Av. de la Industria 1250, Parque Industrial, Zapopan, Jal."}'
 where clave = 'empresa';
-update public.configuracion set valor = valor || '{"razon_social": "Maquinaria Industrial Modelo S.A. de C.V.", "rfc": "MIM150101AB1", "domicilio": "Av. de la Industria 1250, Parque Industrial, 45130, Zapopan, Jal."}'::jsonb
+update public.configuracion set valor = valor || '{"razon_social": "Fábrica Atlas Industrial S.A. de C.V.", "rfc": "FAI150101AB1", "domicilio": "Av. de la Industria 1250, Parque Industrial, 45130, Zapopan, Jal."}'::jsonb
 where clave = 'empresa_fiscal';
-update public.configuracion set valor = '["maquinariamodelo.demo"]' where clave = 'dominios_permitidos';
+update public.configuracion set valor = '["fabricaatlas.demo"]' where clave = 'dominios_permitidos';
 -- La carpeta de Drive de las órdenes de compra es de Hegamex.
 update public.configuracion set valor = '{"carpeta": null}' where clave = 'drive_ordenes_compra';
 -- Cuentas bancarias, datos de pago o teléfonos de la configuración fiscal: los de Hegamex no.
@@ -174,7 +174,7 @@ begin
            where n.nspname = 'public' and p.prosrc ~ 'Hegamex|Herramientas Gamex|Tavol' loop
     -- «Un pago a Tavol estuvo retenido 38 días» es una anécdota de Hegamex escrita en una alerta.
     execute regexp_replace(regexp_replace(regexp_replace(pg_get_functiondef(r.oid), 'a Tavol', 'a un proveedor', 'g'),
-      'M[áa]quinas y Herramientas Gamex', 'Maquinaria Industrial Modelo', 'g'), 'Hegamex', 'Maquinaria Modelo', 'g');
+      'M[áa]quinas y Herramientas Gamex', 'Fábrica Atlas Industrial', 'g'), 'Hegamex', 'Fábrica Atlas Industrial', 'g');
   end loop;
 end $$;
 -- "Dosificadoras (Zeus)": Zeus es la línea de Hegamex; aquí basta con el nombre del producto.
