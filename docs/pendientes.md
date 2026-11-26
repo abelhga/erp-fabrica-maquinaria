@@ -5,6 +5,9 @@ se borra de aquí (y queda en `git log`). Lo más reciente arriba en cada secci�
 
 ## Por decidir o esperar a alguien
 
+- **Demostración comercial (26 nov):** la base y el sitio de «Maquinaria Modelo» están listos en el
+  repositorio; falta subirlos al proyecto `erp-demo` (ver `docs/demo-comercial.md`, «Subirla a la nube»).
+  Espera a que el conector de Supabase tenga acceso a ese proyecto.
 - **Catálogo, bandas «H» (11 nov):** 37 bandas existen dos veces, sin nada y con «H» al final (categoría
   «Bandas transportadoras H»). La H es la importada de China; sin H, la de Transbelt (más cara). Abel
   todavía no decide si se quedan separadas (y entonces el nombre debe decir el origen en vez de «H») o
