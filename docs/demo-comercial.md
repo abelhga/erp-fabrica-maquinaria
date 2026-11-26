@@ -9,8 +9,10 @@ nada de Hegamex (clientes, costos, márgenes, ventas, personas, proveedores, age
   prueba, los scripts de `scripts/demo/*`, la historia de ventas inventada (`historial.sql`), el
   análisis y al final `maquillaje.sql`, que cambia personas, correos, proveedores y la marca
   «DEMO» por los de la empresa inventada y se detiene si queda algo de Hegamex.
-- **Sitio**: el mismo código construido con `VITE_EMPRESA="Fábrica Atlas Industrial"` y
-  `VITE_LOGO=generico` (ver `src/lib/marca.ts`). Sin esas variables todo dice Hegamex.
+- **Sitio**: https://forja-erp-demo.pages.dev (Cloudflare Pages, proyecto `forja-erp-demo`, se
+  construye solo desde la rama `claude/dazzling-einstein-7mh2of`). El mismo código con
+  `VITE_EMPRESA="Fábrica Atlas Industrial"`, `VITE_PRODUCTO="Forja ERP"`, `VITE_LOGO=generico` y
+  `VITE_ENTRAR_CON_GOOGLE=no` (ver `src/lib/marca.ts`). Sin esas variables todo dice Hegamex.
 - **Cuentas** (una por puesto): `direccion@`, `rodrigo@` / `fernando@` / `paola@` (ventas),
   `gerente.ventas@`, `ingenieria@`, `compras@`, `almacen@`, `gerente.produccion@`, `taller@`,
   `rrhh@`, `finanzas@`, `importaciones@`, `recepcion@`, `mantenimiento@`, `marketing@`,

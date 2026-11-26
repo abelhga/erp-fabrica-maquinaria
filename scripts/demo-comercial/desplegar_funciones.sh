@@ -23,6 +23,12 @@ find "$COPIA/supabase/functions" -name "*.ts" -exec sed -i -E \
   -e "s/M(á|a)quinas y Herramientas Gamex( S\.A\. de C\.V\.)?/$RAZON/g" \
   -e "s/Hegamex/$EMPRESA/g; s/HEGAMEX/${EMPRESA^^}/g" \
   -e "s/Yao Han Industries Co\., Ltd\./Huaxin Packing Machinery Co., Ltd./g" {} +
+# Los datos de importaciones guardan «hegamex» como la clave de «nos toca» (una regla de la base la
+# exige así) y la IA la leía tal cual: «la carta de Hegamex». Se le dice qué significa.
+NOTA="En los datos, la clave «hegamex» (por ejemplo en «debe») quiere decir esta empresa: escríbela como «nosotros» o con su nombre, nunca tal cual."
+sed -i -E "s/(Eres el asistente del ERP de [^\n]*Jalisco\)\.)/\1 $NOTA/" "$COPIA/supabase/functions/asistente/nucleo.ts"
+sed -i -E "s/(Eres el revisor nocturno del ERP de [^,]*, )/\1($NOTA) /" "$COPIA/supabase/functions/revision/nucleo.ts"
+grep -q "la clave «hegamex»" "$COPIA/supabase/functions/asistente/nucleo.ts" || { echo "No entró la nota de «hegamex» al asistente" >&2; exit 1; }
 if grep -rn "Hegamex\|Gamex\|Yao Han" "$COPIA/supabase/functions" --include=*.ts | grep -v "^\S*:\s*//" | grep -q .; then
   echo "Quedó «Hegamex» en las funciones:" >&2
   grep -rn "Hegamex\|Gamex\|Yao Han" "$COPIA/supabase/functions" --include=*.ts | head >&2

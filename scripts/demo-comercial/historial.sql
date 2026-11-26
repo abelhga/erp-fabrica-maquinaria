@@ -39,7 +39,7 @@ select setseed(0.4242);
 
 -- Los pedidos de los scripts de casa casi no tienen cobros: la cobranza salía con $20 M por cobrar
 -- y octubre y noviembre casi sin cobrar. Como lo haría finanzas: lo entregado, liquidado; lo que
--- está en fábrica, con su anticipo del 50 %. Cuatro se quedan sin cobrar (los atrasados de la demo).
+-- está en fábrica, con su anticipo del 50 % (y el pago contra avance si ya lleva un mes). Cuatro se quedan sin cobrar (los atrasados de la demo).
 insert into public.cobros (pedido_id, fecha, monto, metodo, referencia, notas, registrado_por)
 select p.id, x.fecha, round(x.monto, 2), 'transferencia', 'SPEI ' || upper(substr(md5(p.id::text || x.cual), 1, 8)), x.nota,
        (select id from public.perfiles where correo = 'finanzas@hegamex.com')
@@ -49,11 +49,17 @@ cross join lateral (
   union all
   select 'saldo', least(p.fecha + 25, current_date), p.total * 0.5, 'Liquidación'
   where p.estado in ('entregado', 'listo')
+  union all
+  -- Lo que lleva más de un mes en fábrica ya dio su pago contra avance: sin él, la mitad de cada
+  -- equipo grande salía «vencida» y la cartera parecía un incendio que no es.
+  select 'avance', p.fecha + 30, p.total * 0.25, 'Pago contra avance'
+  where p.estado not in ('entregado', 'listo') and p.fecha + 30 <= current_date
 ) x
 where p.estado <> 'cancelado' and not p.historico and p.total > 0
   and not exists (select 1 from public.cobros c where c.pedido_id = p.id)
   and p.id not in (select id from public.pedidos where estado <> 'cancelado' and not historico
                    and not exists (select 1 from public.cobros c where c.pedido_id = pedidos.id)
+                   and total * tipo_cambio < 600000   -- los atrasados, de los chicos: un equipo grande sin anticipo no se fabrica
                    order by md5(folio) limit 4);
 
 -- ---------------------------------------------------------------------------

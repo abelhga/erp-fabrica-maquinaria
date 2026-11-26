@@ -7,6 +7,10 @@ import { Campo, Entrada } from "@/components/ui/campo";
 import { Logo } from "@/components/layout/Logo";
 
 import { EMPRESA, LOGO_GENERICO } from "@/lib/marca";
+/** Sin Google (VITE_ENTRAR_CON_GOOGLE=no): la demostración no tiene cuentas de Google, y un botón que
+ * falla frente a un cliente es peor que no tenerlo. Ahí se entra directo con correo y contraseña. */
+const CON_GOOGLE = import.meta.env.VITE_ENTRAR_CON_GOOGLE !== "no";
+
 /** Dónde estaba la persona antes de irse a Google (un QR de máquina, una liga que le mandaron). */
 export const VOLVER_A = "volver_a";
 
@@ -64,10 +68,10 @@ export function Entrar() {
           <Logo className="lg:hidden" />
           <div>
             <h2 className="text-2xl font-semibold">Entrar</h2>
-            <p className="text-tenue mt-1">Usa tu cuenta de Google de @{DOMINIO_EMPRESA}.</p>
+            <p className="text-tenue mt-1">{CON_GOOGLE ? `Usa tu cuenta de Google de @${DOMINIO_EMPRESA}.` : "Con tu correo y contraseña."}</p>
           </div>
 
-          <Boton tamano="lg" variante="secundario" className="w-full" onClick={google} cargando={cargando && !conCorreo}>
+          {CON_GOOGLE && <Boton tamano="lg" variante="secundario" className="w-full" onClick={google} cargando={cargando && !conCorreo}>
             <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden>
               <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
               <path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
@@ -75,9 +79,9 @@ export function Entrar() {
               <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
             </svg>
             Continuar con Google
-          </Boton>
+          </Boton>}
 
-          {!conCorreo ? (
+          {!conCorreo && CON_GOOGLE ? (
             <button onClick={() => setConCorreo(true)} className="w-full text-sm text-tenue hover:text-texto flex items-center justify-center gap-2">
               <KeyRound className="h-4 w-4" /> Entrar con correo y contraseña (pantallas de piso)
             </button>
