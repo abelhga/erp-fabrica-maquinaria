@@ -8,7 +8,7 @@ import { AreaTexto, Campo, Entrada, Seleccion } from "@/components/ui/campo";
 import { Insignia } from "@/components/ui/insignia";
 import { Vacio } from "@/components/ui/estados";
 import { supabase } from "@/lib/supabase";
-import { mensajeError, q } from "@/lib/consultas";
+import { mensajeError, q, useAccion } from "@/lib/consultas";
 import { useSesion } from "@/lib/sesion";
 import { dinero, fecha, fechaYHora, hace, numero, porcentaje } from "@/lib/formato";
 import { cn } from "@/lib/utilidades";
@@ -79,6 +79,33 @@ function Dato({ etiqueta, children, explica }: { etiqueta: string; children: Rea
   return <div data-explain={explica} data-explain-title={explica ? etiqueta : undefined}><dt className={cn("text-xs text-tenue", explica && "titulo-explicable")}>{etiqueta}</dt><dd className="text-sm mt-0.5">{children}</dd></div>;
 }
 
+/**
+ * «Lo fabricamos nosotros»: un componente sin lista de materiales que hace el taller (el helicoidal
+ * de descarga). Con la marca, cuando falta en un pedido le toca a producción y no a compras. Lo
+ * cambian ingeniería y la gerencia de producción; los demás solo lo leen.
+ */
+function LoFabricamos({ a }: { a: ArticuloCatalogo }) {
+  const { puede } = useSesion();
+  const marca = useQuery({
+    queryKey: ["costeo", "lo_fabricamos", a.id],
+    queryFn: () => q<{ lo_fabricamos: boolean }>(supabase.from("articulos").select("lo_fabricamos").eq("id", a.id).single()),
+  });
+  const fijar = useAccion(async (v: boolean) => { await q(supabase.rpc("fijar_lo_fabricamos", { p_articulo: a.id, p_valor: v })); return v; }, {
+    exito: (v) => (v ? `${a.clave}: si falta en un pedido, le toca a producción` : `${a.clave}: si falta en un pedido, le toca a compras`),
+    invalidar: [["costeo"], ["pedidos_por_atender"], ["mis_pedidos_por_atender"]],
+  });
+  const valor = marca.data?.lo_fabricamos ?? false;
+  if (!(puede("costeo", 2) || puede("produccion", 3))) {
+    return <Dato etiqueta="Quién lo hace" explica={GLOSARIO.loFabricamos}>{valor ? "Lo fabricamos nosotros" : "Se compra"}</Dato>;
+  }
+  return (
+    <label className="flex items-center gap-2 text-sm sm:pt-7" data-explain={GLOSARIO.loFabricamos} data-explain-title="Lo fabricamos nosotros">
+      <input type="checkbox" checked={valor} onChange={(e) => !marca.isLoading && !fijar.isPending && fijar.mutate(e.target.checked)} className="h-4 w-4 accent-[hsl(var(--marca))]" />
+      <span>Lo fabricamos nosotros <span className="block text-xs text-tenue">Aunque no tenga lista de materiales: si falta en un pedido, le toca a producción.</span></span>
+    </label>
+  );
+}
+
 function DatosGenerales({ a }: { a: ArticuloCatalogo }) {
   const { puede } = useSesion();
   const editar = puede("costeo", 2) || puede("compras", 2);
@@ -108,7 +135,7 @@ function DatosGenerales({ a }: { a: ArticuloCatalogo }) {
           <Dato etiqueta="Tiempo de entrega" explica={GLOSARIO.tiempoEntregaArticulo}>{a.tiempo_entrega_dias != null ? `${a.tiempo_entrega_dias} días` : "—"}</Dato>
           {esServicio
             ? <Dato etiqueta="Quién lo hace" explica={GLOSARIO.servicioInterno}>{interno ? "Nosotros, en casa" : "Un proveedor de fuera"}</Dato>
-            : <Dato etiqueta="Origen" explica={GLOSARIO.articuloImportado}>{a.es_importado ? "Importado" : "Nacional"}</Dato>}
+            : <><Dato etiqueta="Origen" explica={GLOSARIO.articuloImportado}>{a.es_importado ? "Importado" : "Nacional"}</Dato><LoFabricamos a={a} /></>}
           <Dato etiqueta="Se compra en múltiplos de" explica={GLOSARIO.empaqueCompra}>{numero(a.empaque)}</Dato>
           <Dato etiqueta="Peso" explica={GLOSARIO.kilosPorUnidad}>{a.kg_por_unidad ? `${numero(a.kg_por_unidad)} kg por ${a.unidad}` : "—"}</Dato>
           {a.descripcion && <div className="sm:col-span-3"><Dato etiqueta="Ficha técnica" explica={GLOSARIO.descripcionComponente}><p className="whitespace-pre-line">{a.descripcion}</p></Dato></div>}
@@ -152,6 +179,7 @@ function DatosGenerales({ a }: { a: ArticuloCatalogo }) {
           <input type="checkbox" checked={a.es_importado} onChange={(e) => guardar({ es_importado: e.target.checked })} className="h-4 w-4 accent-[hsl(var(--marca))]" />
           <span>Importado <span className="block text-xs text-tenue">Pide 6 meses de cobertura en lugar de 1.</span></span>
         </label>
+        <LoFabricamos a={a} />
         <Campo etiqueta="Meses de cobertura" ayuda={`Vacío = ${a.es_importado ? 6 : 1} (${a.es_importado ? "importado" : "nacional"}).`}>
           <TextoAuto numerico valor={a.meses_cobertura} placeholder={a.es_importado ? "6" : "1"} explica={GLOSARIO.mesesCobertura} tituloExplica="Meses de cobertura" alGuardar={(v) => guardar({ meses_cobertura: v == null || Number(v) <= 0 ? null : Number(v) })} />
         </Campo>
