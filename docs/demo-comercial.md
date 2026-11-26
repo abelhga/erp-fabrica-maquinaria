@@ -32,7 +32,8 @@ en la nube (la del conector de claude.ai) solo alcanzaba a `erp-hegamex`; hay qu
 `erp-demo` antes de seguir. Falta, en orden:
 
 1. Migraciones: `NUBE_REF=ommeldwculmfxbxihxhl python3 scripts/nube/migrar.py` (crea pg_cron).
-   Antes, `create extension if not exists pg_net;`.
+   Antes, `create extension if not exists pg_net;`. Después (y después de cada migración nueva),
+   `scripts/demo-comercial/funciones_con_marca.sql`: los mensajes de las funciones dicen Hegamex.
 2. Datos: armar la base local (arriba) y pasar un respaldo de solo datos de `public` y de
    `auth.users` / `auth.identities` (pg_dump del contenedor: el de Ubuntu es versión 16), vaciando
    antes las tablas de `public` que llenan las migraciones y con

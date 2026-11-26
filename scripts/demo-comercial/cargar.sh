@@ -39,4 +39,5 @@ done
 correr scripts/demo-comercial/historial.sql
 correr scripts/demo/analisis.sql
 correr scripts/demo-comercial/maquillaje.sql
+correr scripts/demo-comercial/funciones_con_marca.sql
 echo "Listo. Bitácoras en $LOG"

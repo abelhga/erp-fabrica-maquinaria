@@ -164,19 +164,8 @@ update public.configuracion set valor = '["fabricaatlas.demo"]' where clave = 'd
 update public.configuracion set valor = '{"carpeta": null}' where clave = 'drive_ordenes_compra';
 -- Cuentas bancarias, datos de pago o teléfonos de la configuración fiscal: los de Hegamex no.
 update public.configuracion set valor = valor - 'cuentas' - 'banco' - 'clabe' - 'cuenta' where clave = 'empresa_fiscal';
--- Las funciones que dicen "Hegamex" en un mensaje («Le toca a Hegamex», «No es de Hegamex»…):
--- en esta base, con el nombre de la empresa. Solo con mayúscula: "hegamex." en minúsculas son
--- banderas internas (set_config) y la clave de «a quién le toca», que no se ven.
-do $$
-declare r record;
-begin
-  for r in select p.oid from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-           where n.nspname = 'public' and p.prosrc ~ 'Hegamex|Herramientas Gamex|Tavol' loop
-    -- «Un pago a Tavol estuvo retenido 38 días» es una anécdota de Hegamex escrita en una alerta.
-    execute regexp_replace(regexp_replace(regexp_replace(pg_get_functiondef(r.oid), 'a Tavol', 'a un proveedor', 'g'),
-      'M[áa]quinas y Herramientas Gamex', 'Fábrica Atlas Industrial', 'g'), 'Hegamex', 'Fábrica Atlas Industrial', 'g');
-  end loop;
-end $$;
+-- Los mensajes de las funciones («Le toca a Hegamex»…) los cambia funciones_con_marca.sql, aparte:
+-- en la nube las funciones vienen de las migraciones, no del respaldo de datos.
 -- "Dosificadoras (Zeus)": Zeus es la línea de Hegamex; aquí basta con el nombre del producto.
 update public.familias_venta set nombre = 'Dosificadoras' where clave = 'dosificadoras';
 
