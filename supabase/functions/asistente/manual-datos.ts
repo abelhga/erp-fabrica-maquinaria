@@ -10849,6 +10849,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "texto": "Todas las cotizaciones que empezaron en el periodo, cada una una sola vez aunque tenga varias versiones, con el monto de su última versión, sin IVA y en pesos (las de dólares, con su tipo de cambio)."
  },
  {
+  "clave": "loFabricamos",
+  "modulos": [
+   "costeo",
+   "margenes"
+  ],
+  "texto": "Un componente que hace nuestro taller aunque no tenga lista de materiales (por ejemplo, un helicoidal de descarga). Con la marca, si falta en un pedido, en «Por atender» le toca a producción («Fabricar lo que no hay») y no a compras. Lo cambian ingeniería y la gerencia de producción."
+ },
+ {
   "clave": "loLeidoImportacion",
   "modulos": [
    "admin"
@@ -12494,7 +12502,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "Quién tiene que mover el pedido ahora: Almacén (entregar lo que hay), Compras (pedir lo que falta), Producción (crear la orden o fabricar) o el Vendedor (ligar al catálogo una partida escrita a mano, o el anticipo si las condiciones lo piden: mientras no haya cobro, no se alarma a nadie más)."
+  "texto": "Quién tiene que mover el pedido ahora: Almacén (entregar lo que hay), Compras (pedir lo que falta), Producción (crear la orden, o fabricar lo que falta si es de lo que hacemos nosotros) o el Vendedor (ligar al catálogo una partida escrita a mano, o el anticipo si las condiciones lo piden: mientras no haya cobro, no se alarma a nadie más)."
  },
  {
   "clave": "pedidosAbiertos",

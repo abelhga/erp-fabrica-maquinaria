@@ -63,3 +63,23 @@ begin
   assert (select count(*) from avisos where usuario_id = v_ven and tipo = 'pedidos_por_atender') = 1, 'el vendedor no recibió su aviso';
   assert (select ruta from avisos where usuario_id = v_alm and tipo = 'pedidos_por_atender') = '/produccion/pedidos?filtro=atender', 'almacén abre otra pantalla';
 end $$;
+
+-- 322: un componente marcado «Lo fabricamos nosotros» que falta le toca a producción, no a compras.
+do $$
+declare v_gp uuid; v_ven uuid; v_cli uuid; v_ped uuid; v_heli uuid; v_ok boolean;
+begin
+  v_gp := pg_temp.usuario('gp322@hegamex.com', '{gerente_produccion}');
+  v_ven := pg_temp.usuario('ven322@hegamex.com', '{ventas}');
+  insert into articulos (clave, tipo, nombre) values ('HEL322', 'componente', 'Helicoidal 322') returning id into v_heli;
+  insert into clientes (nombre, vendedor_id) values ('Cliente 322', v_ven) returning id into v_cli;
+  insert into pedidos (cliente_id, vendedor_id, canal, estado, fecha, condiciones_pago) values (v_cli, v_ven, 'directo', 'confirmado', hoy_mx(), 'Contado') returning id into v_ped;
+  insert into pedido_lineas (pedido_id, articulo_id, titulo, cantidad, precio_unitario) values (v_ped, v_heli, 'Helicoidal 322', 1, 1000);
+  perform pg_temp.como(v_gp);
+  assert (select area from pedidos_por_atender() where pedido_id = v_ped) = 'compras', 'sin marca debía ser de compras';
+  perform pg_temp.como(v_ven);
+  begin perform fijar_lo_fabricamos(v_heli, true); v_ok := true; exception when insufficient_privilege then v_ok := false; end;
+  assert not v_ok, 'ventas marcó que lo fabricamos';
+  perform pg_temp.como(v_gp);
+  perform fijar_lo_fabricamos(v_heli, true);
+  assert (select area || ':' || accion from pedidos_por_atender() where pedido_id = v_ped) = 'produccion:Fabricar lo que no hay', 'el que fabricamos siguió en compras';
+end $$;
