@@ -1014,7 +1014,8 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
   "nombre": "Pedidos",
   "modulos": [
    "produccion",
-   "inventario"
+   "inventario",
+   "importaciones"
   ],
   "nivel": 2,
   "texto": [
@@ -1024,6 +1025,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 3: Gerencia: usa primero «Usar OP-…» si hay uno en stock, y luego «Crear las órdenes que faltan».",
    "«Por atender» dice qué espera cada pedido abierto y a quién le toca: almacén entregar lo que ya hay, compras pedir lo que falta, producción crear la orden o fabricar, el vendedor ligar al catálogo una partida escrita a mano o conseguir el anticipo. Los días son hábiles desde el pedido; en rojo, ya pasó el tiempo de esa área (1 día almacén, 2 los demás). En la lista normal, esos pedidos llevan una marca con a quién le toca y los días («Compras · 20 días»). El numerito rojo de «Pedidos» en el menú es lo que te toca a ti y, con un clic, abre esta lista; cada mañana llega un aviso con ella, y a los 4 días hábiles le llega también a dirección.",
    "También la abren compras y almacén, para saber qué se vendió y qué hay que tener listo; ellos solo consultan (crear órdenes y asignar equipos de stock es de la gerencia de producción).",
+   "Importaciones también la abre, solo para consultar: ahí ve lo que se vendió y su descripción, sin montos, para hacer los manuales y fichas técnicas que se entregan al cliente. «Imprimir descripción» le da la hoja lista.",
    "La usan la gerencia de producción, los supervisores y almacén. Cada partida trae su descripción tal como se le cotizó al cliente (medidas, calibres, motor, acabado), sin precio; las largas se abren con «Ver toda la descripción».",
    "«Activos» son los confirmados, en producción y listos para entregar; «Sin orden», los que tienen equipos que nadie está fabricando todavía. Las ventas de Mercado Libre que no llevan nada que fabricar no salen ahí: están en «Mercado Libre», y su envío se lleva en Almacén → Envíos.",
    "Al abrir un pedido ves sus partidas y las órdenes de cada una, con su avance. Hasta abajo, «Plan del taller» es el Gantt de los equipos del pedido: cuándo entra y sale cada uno de cada área.",
