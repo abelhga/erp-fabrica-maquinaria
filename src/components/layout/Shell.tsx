@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMisPedidosPorAtender } from "@/modulos/ventas/componentes/PedidosPorAtender";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp, LogOut, Menu, Moon, Pin, PinOff, RotateCcw, Search, Sun, X } from "lucide-react";
 import { MENU, INICIO, PENDIENTES, REVISION, CALENDARIO, SEMANA, ordenPorRol, type EntradaMenu } from "@/navegacion";
@@ -200,6 +200,8 @@ function ItemMenu({ ruta, texto, Icono, fijada, alFijar, contador }: {
   ruta: string; texto: string; Icono: React.ComponentType<{ className?: string }>; fijada?: boolean; alFijar?: () => void;
   contador?: { total: number; atrasados: number };
 }) {
+  const navegar = useNavigate();
+  const destinoAtender = ruta.startsWith("/produccion") ? `${ruta}?filtro=atender` : `${ruta}?vista=atender`;
   const enlace = (
     <NavLink
       to={ruta}
@@ -214,9 +216,13 @@ function ItemMenu({ ruta, texto, Icono, fijada, alFijar, contador }: {
       <Icono className="h-[18px] w-[18px] shrink-0" />
       {texto}
       {!!contador?.total && (
-        <span className="ml-auto min-w-[20px] rounded-full bg-peligro px-1.5 text-center text-[11px] font-semibold leading-5 text-white cifra"
+        // El numerito abre directo «Por atender»; el resto del renglón, la lista normal.
+        <span role="link" tabIndex={0}
+          className="ml-auto min-w-[20px] rounded-full bg-peligro px-1.5 text-center text-[11px] font-semibold leading-5 text-white cifra hover:ring-2 hover:ring-peligro/40"
           data-explain={GLOSARIO.contadorPedidosMenu} data-explain-title="Pedidos por atender"
-          aria-label={`${contador.total} pedidos por atender`}>{contador.total}</span>
+          aria-label={`${contador.total} pedidos por atender: abrir la lista`}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); navegar(destinoAtender); }}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); navegar(destinoAtender); } }}>{contador.total}</span>
       )}
     </NavLink>
   );
@@ -227,7 +233,9 @@ function ItemMenu({ ruta, texto, Icono, fijada, alFijar, contador }: {
       {enlace}
       <button type="button" onClick={alFijar} aria-label={fijada ? `Quitar ${texto} de fijadas` : `Fijar ${texto} arriba`}
         title={fijada ? "Quitar de fijadas" : "Fijar arriba"}
-        className={cn("absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded text-tenue hover:text-texto hover:bg-superficie transition-opacity",
+        // Con numerito, el alfiler va a su izquierda: encima lo tapaba y el clic fijaba en vez de abrir.
+        className={cn("absolute top-1/2 -translate-y-1/2 p-1 rounded text-tenue hover:text-texto hover:bg-superficie transition-opacity",
+          contador?.total ? "right-10" : "right-1.5",
           "opacity-0 group-hover/item:opacity-100 focus:opacity-100")}>
         {fijada ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
       </button>

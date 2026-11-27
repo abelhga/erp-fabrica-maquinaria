@@ -1022,7 +1022,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Paso 1: Elige un filtro (Activos, Sin orden, Listos para entregar…) y dale clic a un pedido.",
    "Paso 2: Revisa cada partida con su descripción y sus órdenes; el folio de la orden abre su detalle.",
    "Paso 3: Gerencia: usa primero «Usar OP-…» si hay uno en stock, y luego «Crear las órdenes que faltan».",
-   "«Por atender» dice qué espera cada pedido abierto y a quién le toca: almacén entregar lo que ya hay, compras pedir lo que falta, producción crear la orden o fabricar, el vendedor ligar al catálogo una partida escrita a mano o conseguir el anticipo. Los días son hábiles desde el pedido; en rojo, ya pasó el tiempo de esa área (1 día almacén, 2 los demás). El numerito rojo de «Pedidos» en el menú es lo que te toca a ti, y cada mañana llega un aviso con la lista; a los 4 días hábiles le llega también a dirección.",
+   "«Por atender» dice qué espera cada pedido abierto y a quién le toca: almacén entregar lo que ya hay, compras pedir lo que falta, producción crear la orden o fabricar, el vendedor ligar al catálogo una partida escrita a mano o conseguir el anticipo. Los días son hábiles desde el pedido; en rojo, ya pasó el tiempo de esa área (1 día almacén, 2 los demás). En la lista normal, esos pedidos llevan una marca con a quién le toca y los días («Compras · 20 días»). El numerito rojo de «Pedidos» en el menú es lo que te toca a ti y, con un clic, abre esta lista; cada mañana llega un aviso con ella, y a los 4 días hábiles le llega también a dirección.",
    "También la abren compras y almacén, para saber qué se vendió y qué hay que tener listo; ellos solo consultan (crear órdenes y asignar equipos de stock es de la gerencia de producción).",
    "La usan la gerencia de producción, los supervisores y almacén. Cada partida trae su descripción tal como se le cotizó al cliente (medidas, calibres, motor, acabado), sin precio; las largas se abren con «Ver toda la descripción».",
    "«Activos» son los confirmados, en producción y listos para entregar; «Sin orden», los que tienen equipos que nadie está fabricando todavía. Las ventas de Mercado Libre que no llevan nada que fabricar no salen ahí: están en «Mercado Libre», y su envío se lleva en Almacén → Envíos.",
@@ -1824,7 +1824,7 @@ export const PANTALLAS_MANUAL: PantallaManual[] = [
    "Los pedidos de todos los canales en una sola lista: ventas, producción y cobranza saben en qué va cada uno sin preguntar por WhatsApp.",
    "Paso 1: Filtra por abiertos, entregados o cancelados y por canal; clic en un renglón abre el pedido.",
    "Paso 2: Para una venta de Mercado Libre, sitio web o mostrador, usa «Pedido sin cotización».",
-   "«Por atender» dice qué espera cada pedido abierto y a quién le toca: almacén entregar lo que ya hay, compras pedir lo que falta, producción crear la orden o fabricar, el vendedor ligar al catálogo una partida escrita a mano o conseguir el anticipo. Los días son hábiles desde el pedido; en rojo, ya pasó el tiempo de esa área (1 día almacén, 2 los demás). El numerito rojo de «Pedidos» en el menú es lo que te toca a ti, y cada mañana llega un aviso con la lista; a los 4 días hábiles le llega también a dirección.",
+   "«Por atender» dice qué espera cada pedido abierto y a quién le toca: almacén entregar lo que ya hay, compras pedir lo que falta, producción crear la orden o fabricar, el vendedor ligar al catálogo una partida escrita a mano o conseguir el anticipo. Los días son hábiles desde el pedido; en rojo, ya pasó el tiempo de esa área (1 día almacén, 2 los demás). En la lista normal, esos pedidos llevan una marca con a quién le toca y los días («Compras · 20 días»). El numerito rojo de «Pedidos» en el menú es lo que te toca a ti y, con un clic, abre esta lista; cada mañana llega un aviso con ella, y a los 4 días hábiles le llega también a dirección.",
    "Los renglones en rojo están atrasados: pasó su fecha compromiso. «Producción» muestra el avance del taller y «Saldo» lo que falta por cobrar (dice «pagado» en verde si ya se cobró todo).",
    "En «Pedido sin cotización» eliges cliente, canal y número de venta, y en el siguiente paso agregas las partidas con su precio de lista. Los servicios sin precio fijo, como «Servicio de paquetería», te piden el monto (sin IVA) al agregarlos.",
    "En un pedido sin cotización, una partida escrita a mano de $20,000 o más sin IVA que no es flete, instalación, puesta en marcha ni «manejo y entrega» solo la captura la gerencia de ventas; si eres vendedor, cotízala y pide la autorización.",
@@ -6386,7 +6386,7 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "catalogo",
    "mercadolibre"
   ],
-  "texto": "El numerito rojo en «Pedidos»: cuántos pedidos esperan algo de tu área (almacén, compras o producción). Si vendes, cuántos de tus pedidos ya se atrasaron con alguien. Dirección ve los que ya pasaron 4 días hábiles."
+  "texto": "El numerito rojo en «Pedidos»: cuántos pedidos esperan algo de tu área (almacén, compras o producción). Si vendes, cuántos de tus pedidos ya se atrasaron con alguien. Dirección ve los que ya pasaron 4 días hábiles. Haz clic en el numerito para abrir directo la lista «Por atender»."
  },
  {
   "clave": "contadosConteo",
@@ -10994,6 +10994,16 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
    "mi_desempeno"
   ],
   "texto": "Cada marca guarda a quién, quién marcó y a qué hora. Se puede corregir hasta una semana atrás (después, solo Recursos Humanos) y nunca en un mes ya calificado. Un día sin marca no cuenta en contra."
+ },
+ {
+  "clave": "marcaPorAtender",
+  "modulos": [
+   "ventas",
+   "leads",
+   "catalogo",
+   "mercadolibre"
+  ],
+  "texto": "El pedido espera a alguien: a quién le toca moverlo y cuántos días hábiles lleva desde que se capturó. En rojo, ya pasó el tiempo de esa área; en gris, todavía está en tiempo. Pasa el mouse para ver qué falta, o ábrelo todo en la pestaña «Por atender»."
  },
  {
   "clave": "margenResultados",

@@ -27,6 +27,37 @@ export function useMisPedidosPorAtender() {
   }).data;
 }
 
+/** Lo que espera cada pedido, por pedido: para marcarlo en las listas normales de pedidos. */
+export function usePorAtenderPorPedido() {
+  const lista = useQuery({
+    queryKey: ["pedidos_por_atender"], staleTime: 60_000,
+    queryFn: () => q<PorAtender[]>(supabase.rpc("pedidos_por_atender")),
+  });
+  return useMemo(() => {
+    const m = new Map<string, PorAtender[]>();
+    for (const f of lista.data ?? []) m.set(f.pedido_id, [...(m.get(f.pedido_id) ?? []), f]);
+    return m;
+  }, [lista.data]);
+}
+
+/**
+ * La marca en la lista de pedidos: a quién le toca y cuántos días lleva («Compras · 20 días»). Roja
+ * si ya pasó el tiempo de esa área; gris mientras todavía está en tiempo.
+ */
+export function MarcaPorAtender({ filas }: { filas?: PorAtender[] }) {
+  if (!filas?.length) return null;
+  const areas = [...new Map(filas.map((f) => [f.area, f])).values()];
+  return (
+    <>
+      {areas.map((f) => (
+        <span key={f.area} data-explain={GLOSARIO.marcaPorAtender} data-explain-title={`${f.accion}: ${f.detalle}`}>
+          <Insignia tono={f.atrasado ? "peligro" : "neutro"}>{AREA[f.area].texto} · {f.dias} {f.dias === 1 ? "día" : "días"}</Insignia>
+        </span>
+      ))}
+    </>
+  );
+}
+
 /**
  * Qué le falta a cada pedido y a quién le toca: almacén entrega lo que hay, compras pide lo que falta,
  * producción crea la orden o fabrica, el vendedor liga la partida a mano o consigue el anticipo. Lo
