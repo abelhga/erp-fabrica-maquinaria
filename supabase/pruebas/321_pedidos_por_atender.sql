@@ -68,6 +68,7 @@ end $$;
 do $$
 declare v_gp uuid; v_ven uuid; v_cli uuid; v_ped uuid; v_heli uuid; v_ok boolean;
 begin
+  perform pg_temp.como_postgres();
   v_gp := pg_temp.usuario('gp322@hegamex.com', '{gerente_produccion}');
   v_ven := pg_temp.usuario('ven322@hegamex.com', '{ventas}');
   insert into articulos (clave, tipo, nombre) values ('HEL322', 'componente', 'Helicoidal 322') returning id into v_heli;
@@ -82,4 +83,25 @@ begin
   perform pg_temp.como(v_gp);
   perform fijar_lo_fabricamos(v_heli, true);
   assert (select area || ':' || accion from pedidos_por_atender() where pedido_id = v_ped) = 'produccion:Fabricar lo que no hay', 'el que fabricamos siguió en compras';
+end $$;
+
+-- 323: sin sesión (el aviso de las 8:37, la revisión nocturna) lo que viene en una OC enviada cuenta
+-- como ya pedido: no se le alarma a compras.
+do $$
+declare v_ven uuid; v_cli uuid; v_ped uuid; v_art uuid; v_prov uuid; v_oc uuid;
+begin
+  perform pg_temp.como_postgres();
+  v_ven := pg_temp.usuario('ven323@hegamex.com', '{ventas}');
+  insert into articulos (clave, tipo, nombre) values ('AV323', 'componente', 'Aerovibrador 323') returning id into v_art;
+  insert into proveedores (nombre) values ('T323 Proveedor') returning id into v_prov;
+  insert into ordenes_compra (proveedor_id, estado) values (v_prov, 'enviada') returning id into v_oc;
+  insert into oc_lineas (orden_compra_id, articulo_id, descripcion, cantidad, costo_unitario) values (v_oc, v_art, 'Aerovibrador 323', 2, 100);
+  insert into clientes (nombre, vendedor_id) values ('Cliente 323', v_ven) returning id into v_cli;
+  insert into pedidos (cliente_id, vendedor_id, canal, estado, fecha, condiciones_pago) values (v_cli, v_ven, 'directo', 'confirmado', hoy_mx(), 'Contado') returning id into v_ped;
+  insert into pedido_lineas (pedido_id, articulo_id, titulo, cantidad, precio_unitario) values (v_ped, v_art, 'Aerovibrador 323', 1, 1000);
+  perform pg_temp.como_postgres();
+  perform set_config('request.jwt.claims', '', true);
+  assert auth.uid() is null, 'la prueba debía correr sin sesión';
+  assert (select situacion from _pedidos_por_surtir(true, null) where pedido_id = v_ped) = 'pedido', 'sin sesión no vio la OC en camino';
+  assert not exists (select 1 from _pedidos_por_atender(true, null) where pedido_id = v_ped), 'sin sesión se le alarmó a compras algo ya pedido';
 end $$;

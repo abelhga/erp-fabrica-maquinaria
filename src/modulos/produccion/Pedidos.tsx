@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { PedidosPorAtender } from "@/modulos/ventas/componentes/PedidosPorAtender";
+import { MarcaPorAtender, PedidosPorAtender, usePorAtenderPorPedido } from "@/modulos/ventas/componentes/PedidosPorAtender";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ClipboardPlus, PackageCheck, Printer, ShoppingCart, Undo2 } from "lucide-react";
@@ -60,6 +60,7 @@ export default function PedidosPlanta() {
   const { puede } = useSesion();
   const [params, setParams] = useSearchParams();
   const filtro = (params.get("filtro") as FiltroPed) ?? "activos";
+  const porAtender = usePorAtenderPorPedido();
   const pedidoId = params.get("pedido");
 
   const lista = useQuery({
@@ -143,7 +144,12 @@ export default function PedidosPlanta() {
         </div>
       ),
     },
-    { clave: "estado", titulo: "Estado", explica: GLOSARIO.estadoPedido, valor: (p) => ESTADO_PEDIDO[p.estado].texto, celda: (p) => <Insignia tono={ESTADO_PEDIDO[p.estado].tono}>{ESTADO_PEDIDO[p.estado].texto}</Insignia> },
+    { clave: "estado", titulo: "Estado", explica: GLOSARIO.estadoPedido, valor: (p) => ESTADO_PEDIDO[p.estado].texto, celda: (p) => (
+      <div className="flex flex-wrap gap-1">
+        <Insignia tono={ESTADO_PEDIDO[p.estado].tono}>{ESTADO_PEDIDO[p.estado].texto}</Insignia>
+        <MarcaPorAtender filas={porAtender.get(p.id)} />
+      </div>
+    ) },
   ];
 
   return (
