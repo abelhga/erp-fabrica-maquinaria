@@ -36,6 +36,25 @@ export default function Clientes() {
     queryFn: () => todas<Cartera>((a, b) => supabase.from("v_cartera").select("cliente_id, vendedor_id, vendedor, ultima_venta, ultimo_seguimiento, vence_en, estado, dias_restantes").order("cliente_id").range(a, b)),
   });
   const porId = useMemo(() => new Map((cartera.data ?? []).map((c) => [c.cliente_id, c])), [cartera.data]);
+  // Para encontrar al cliente por su gente: nombre, correo o teléfono de sus contactos (Juan Manuel
+  // buscaba a la persona y no salía). La base solo da los contactos de los clientes que puedo ver.
+  const contactos = useQuery({
+    queryKey: ["contactos_para_buscar"], staleTime: 5 * 60_000,
+    queryFn: () => todas<{ cliente_id: string; nombre: string; correo: string | null; telefono: string | null; principal: boolean }>((a, b) =>
+      supabase.from("contactos").select("cliente_id, nombre, correo, telefono, principal").order("cliente_id").order("id").range(a, b)),
+  });
+  const gente = useMemo(() => {
+    const m = new Map<string, { texto: string; principal: string }>();
+    for (const x of contactos.data ?? []) {
+      const prev = m.get(x.cliente_id) ?? { texto: "", principal: "" };
+      const tel = x.telefono ? `${x.telefono} ${x.telefono.replace(/\D/g, "")}` : "";
+      m.set(x.cliente_id, {
+        texto: `${prev.texto} ${x.nombre} ${x.correo ?? ""} ${tel}`,
+        principal: x.principal || !prev.principal ? x.nombre : prev.principal,
+      });
+    }
+    return m;
+  }, [contactos.data]);
 
   const filas = useMemo(() => {
     let r = lista.data ?? [];
@@ -60,10 +79,14 @@ export default function Clientes() {
   const columnas: Columna<VCliente>[] = [
     {
       clave: "nombre", titulo: "Cliente", valor: (c) => `${c.nombre} ${c.razon_social ?? ""} ${c.rfc ?? ""}`,
+      buscarTambien: (c) => gente.get(c.id)?.texto,
       celda: (c) => (
         <div className="min-w-[220px] max-w-[360px]">
           <p className="font-medium truncate">{c.nombre}{c.es_distribuidor && <span data-explain={GLOSARIO.esDistribuidor} data-explain-title="Distribuidor"><Insignia tono="info" className="ml-2">distribuidor</Insignia></span>}</p>
           <p className="text-xs text-tenue truncate">{[c.razon_social !== c.nombre ? c.razon_social : null, c.rfc, c.giro].filter(Boolean).join(" · ")}</p>
+          {gente.get(c.id)?.principal && gente.get(c.id)?.principal !== c.nombre && (
+            <p className="text-xs text-tenue truncate">Contacto: {gente.get(c.id)?.principal}</p>
+          )}
         </div>
       ),
     },
@@ -88,7 +111,7 @@ export default function Clientes() {
     <Pagina titulo="Clientes" descripcion="Un solo directorio para todos los vendedores, con dueño y vigencia de cada cuenta."
       acciones={<Boton onClick={() => setAlta(true)} data-explain={GLOSARIO.botonNuevoCliente}><Plus className="h-4 w-4" />Nuevo cliente</Boton>}>
       <TablaDatos filas={filas} columnas={columnas} cargando={lista.isLoading} error={lista.error} claveFila={(c) => c.id}
-        alClicFila={(c) => ir(`/ventas/clientes/${c.id}`)} exportarComo="clientes" placeholder="Nombre, razón social, RFC, ciudad…"
+        alClicFila={(c) => ir(`/ventas/clientes/${c.id}`)} exportarComo="clientes" placeholder="Nombre, razón social, RFC, contacto, ciudad…"
         filtros={
           <div className="flex flex-wrap items-center gap-2">
             <Filtro valor={filtro} alCambiar={setFiltro} opciones={[
