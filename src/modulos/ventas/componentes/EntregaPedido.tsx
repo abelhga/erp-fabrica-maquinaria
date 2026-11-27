@@ -82,6 +82,9 @@ async function abrirHoja(ruta: string) {
 }
 
 /** La hoja de una entrega ya registrada (salida), o la de lo que va a salir (lineas, antes de registrarla). */
+/** La constancia que firma el cliente de que se le dio el servicio (opcional, como en las instalaciones). */
+export const abrirConstanciaServicio = (pedido: string) => abrirPagina(`/pedidos/${pedido}/salida?servicio=1`);
+
 export const abrirHojaSalida = (pedido: string, cual?: { salida?: string; lineas?: { id: string; cantidad: number }[] }) => {
   const q = cual?.salida ? `?salida=${cual.salida}` : cual?.lineas?.length ? `?lineas=${cual.lineas.map((l) => `${l.id}:${l.cantidad}`).join(",")}` : "";
   abrirPagina(`/pedidos/${pedido}/salida${q}`);
@@ -155,7 +158,7 @@ export function BotonEntregar({ pedido, invalidar = [], antes }: {
     <>
       <Boton variante="exito" onClick={() => setAbierto(true)} data-explain={GLOSARIO.servicioRealizado} data-explain-title="Servicio realizado"><Check className="h-4 w-4" />Servicio realizado</Boton>
       <Dialogo abierto={abierto} alCambiar={setAbierto} titulo="Marcar el servicio como realizado"
-        descripcion="Este pedido no trae nada que salga del almacén: no lleva hoja de salida ni firma de recibido. Al marcarlo queda entregado."
+        descripcion="Este pedido no trae nada que salga del almacén: no lleva hoja de salida. Al marcarlo queda entregado. Si quieres que el cliente firme de conformidad, después imprime la «Constancia de servicio»."
         pie={<>
           <Boton variante="fantasma" onClick={() => setAbierto(false)}>No, todavía no</Boton>
           <Boton variante="exito" cargando={entregar.isPending} onClick={() => entregar.mutate(undefined)}><Check className="h-4 w-4" />Sí, ya se hizo</Boton>
@@ -209,7 +212,7 @@ export function BotonEntregar({ pedido, invalidar = [], antes }: {
           )}
           {servicios.length > 0 && (
             <p className="text-xs text-tenue rounded-lg bg-fondo px-3 py-2" data-explain={GLOSARIO.serviciosEnEntrega} data-explain-title="Servicios del pedido">
-              <b className="text-texto">No van en la hoja ni llevan firma:</b> {servicios.map((p) => p.titulo).join(" · ")}. Son servicios; se dan por hechos cuando sale todo lo demás.
+              <b className="text-texto">No van en la hoja de salida:</b> {servicios.map((p) => p.titulo).join(" · ")}. Son servicios; se dan por hechos cuando sale todo lo demás. Si el cliente debe firmarlos, después imprime la «Constancia de servicio».
             </p>
           )}
           <Boton type="button" variante="secundario" onClick={() => abrirHojaSalida(pedido, completa ? undefined : { lineas })} disabled={pendientes.length > 0 && lineas.length === 0}>
@@ -256,9 +259,13 @@ export function RecuadroEntrega({ hoja, invalidar = [] }: { hoja: HojaSalida; in
     exito: "La entrega se reabrió", invalidar: inv, alTerminar: () => { setReabrir(false); setMotivo(""); },
   });
   const adjuntar = useAccion((a: { salida: string; ruta: string }) => q(supabase.rpc("adjuntar_hoja_salida", { p_salida: a.salida, p_ruta: a.ruta })), {
-    exito: "Se guardó la hoja firmada", invalidar: inv,
+    exito: hoja.solo_servicios ? "Se guardó la constancia firmada" : "Se guardó la hoja firmada", invalidar: inv,
   });
   if (!vigentes.length && !anuladas.length) return null;
+  // Solo servicio: no hubo hoja de salida; la constancia firmada es opcional. Con servicios y cosas
+  // físicas, la constancia va aparte de la hoja de salida.
+  const soloServicios = !!hoja.solo_servicios;
+  const conServicios = partidas.some((p) => p.servicio);
   return (
     <section className="tarjeta p-4 space-y-3" data-explain={GLOSARIO.hojaSalida} data-explain-title="Entrega">
       <input ref={entrada} type="file" accept="image/*,application/pdf" hidden onChange={async (e) => {
@@ -276,14 +283,14 @@ export function RecuadroEntrega({ hoja, invalidar = [] }: { hoja: HojaSalida; in
       {vigentes.length === 0 && <p className="text-sm text-tenue">Sin entrega vigente.</p>}
       {vigentes.map((s, k) => (
         <div key={s.id} className={cn("flex flex-wrap items-start gap-3", k > 0 && "border-t border-borde pt-3")}>
-          <div className={cn("h-9 w-9 shrink-0 rounded-lg grid place-items-center", s.evidencia_ruta ? "bg-ok-suave text-ok" : "bg-aviso-suave text-aviso")}>
-            {s.evidencia_ruta ? <FileCheck2 className="h-5 w-5" /> : <FileUp className="h-5 w-5" />}
+          <div className={cn("h-9 w-9 shrink-0 rounded-lg grid place-items-center", s.evidencia_ruta || soloServicios ? "bg-ok-suave text-ok" : "bg-aviso-suave text-aviso")}>
+            {s.evidencia_ruta ? <FileCheck2 className="h-5 w-5" /> : soloServicios ? <Check className="h-5 w-5" /> : <FileUp className="h-5 w-5" />}
           </div>
           <div className="min-w-0 flex-1 text-sm">
-            <p className="font-semibold">{vigentes.length > 1 || s.lineas ? `Entrega ${s.numero} · ` : ""}Recibió {s.recibio}</p>
+            <p className="font-semibold">{vigentes.length > 1 || s.lineas ? `Entrega ${s.numero} · ` : ""}{soloServicios ? "Servicio realizado" : `Recibió ${s.recibio}`}</p>
             <p className="text-tenue">{fechaYHora(s.entregado_en)}{s.entregado_por ? ` · entregó ${s.entregado_por}` : ""}{s.nota ? ` · ${s.nota}` : ""}</p>
             {s.lineas && <p className="text-tenue">{s.lineas.map((l) => `${numero(Number(l.cantidad))} × ${titulo(l.id)}`).join(" · ")}</p>}
-            {!s.evidencia_ruta && <p className="text-aviso mt-0.5">Falta subir la hoja de salida firmada.</p>}
+            {!s.evidencia_ruta && !soloServicios && <p className="text-aviso mt-0.5">Falta subir la hoja de salida firmada.</p>}
             {s.sin_inventario?.length > 0 && (
               <p className="text-aviso mt-0.5 flex gap-1.5" data-explain={GLOSARIO.sinSalidaInventario} data-explain-title="Sin salida de inventario">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
@@ -292,14 +299,20 @@ export function RecuadroEntrega({ hoja, invalidar = [] }: { hoja: HojaSalida; in
             )}
           </div>
           <div className="flex flex-wrap gap-2">
-            <Boton variante="secundario" tamano="sm" onClick={() => abrirHojaSalida(pedido, { salida: s.id })}><Printer className="h-4 w-4" />Hoja de salida</Boton>
+            {!soloServicios && <Boton variante="secundario" tamano="sm" onClick={() => abrirHojaSalida(pedido, { salida: s.id })}><Printer className="h-4 w-4" />Hoja de salida</Boton>}
+            {conServicios && k === 0 && (
+              <Boton variante="secundario" tamano="sm" onClick={() => abrirConstanciaServicio(pedido)}
+                data-explain={GLOSARIO.constanciaServicio} data-explain-title="Constancia de servicio">
+                <Printer className="h-4 w-4" />Constancia de servicio
+              </Boton>
+            )}
             {s.evidencia_ruta ? (
               <Boton variante="secundario" tamano="sm" onClick={() => abrirHoja(s.evidencia_ruta!).catch((e) => toast.error(e.message))}>
-                <FileCheck2 className="h-4 w-4" />Ver hoja firmada
+                <FileCheck2 className="h-4 w-4" />{soloServicios ? "Ver constancia firmada" : "Ver hoja firmada"}
               </Boton>
             ) : hoja.puede_entregar && (
-              <Boton tamano="sm" onClick={() => { setSubiendoA(s.id); entrada.current?.click(); }} cargando={(subiendo || adjuntar.isPending) && subiendoA === s.id}>
-                {subiendo && subiendoA === s.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}Subir hoja firmada
+              <Boton tamano="sm" variante={soloServicios ? "secundario" : undefined} onClick={() => { setSubiendoA(s.id); entrada.current?.click(); }} cargando={(subiendo || adjuntar.isPending) && subiendoA === s.id}>
+                {subiendo && subiendoA === s.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}{soloServicios ? "Subir constancia firmada" : "Subir hoja firmada"}
               </Boton>
             )}
             {hoja.puede_reabrir && k === 0 && (

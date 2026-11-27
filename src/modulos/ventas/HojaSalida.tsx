@@ -15,6 +15,8 @@ const plural = (u: string, n: number) => (n === 1 || /s$/.test(u) ? u : /[aeiou]
  * precios, y los renglones de firma. Va fuera del menú y en claro (es papel). La abre quien
  * ve el pedido, almacén incluido. Con ?salida= es la de esa entrega (con quién recibió); con
  * ?lineas= la de lo que va a salir en una entrega parcial; sin nada, lo que falta por entregar.
+ * Con ?servicio=1 es la constancia de servicio: los servicios del pedido (que no van en la hoja de
+ * salida) para que el cliente firme de conformidad que se le dio, como al cerrar una instalación.
  */
 export default function HojaSalidaPagina() {
   const { id } = useParams();
@@ -23,6 +25,7 @@ export default function HojaSalidaPagina() {
   const [params] = useSearchParams();
   const empresa = useEmpresa();
   const h = hoja.data;
+  const servicio = params.get("servicio") === "1";
 
   useEffect(() => {
     const html = document.documentElement;
@@ -33,11 +36,11 @@ export default function HojaSalidaPagina() {
   useEffect(() => {
     if (!h) return;
     const antes = document.title;
-    document.title = `Hoja de salida ${h.pedido.folio}${h.cliente ? " " + h.cliente.nombre : ""} - Hegamex`;
+    document.title = `${servicio ? "Constancia de servicio" : "Hoja de salida"} ${h.pedido.folio}${h.cliente ? " " + h.cliente.nombre : ""} - Hegamex`;
     return () => { document.title = antes; };
-  }, [h]);
+  }, [h, servicio]);
 
-  if (hoja.isLoading) return <p className="p-10 text-center text-tenue">Preparando la hoja de salida…</p>;
+  if (hoja.isLoading) return <p className="p-10 text-center text-tenue">{servicio ? "Preparando la constancia…" : "Preparando la hoja de salida…"}</p>;
   if (!h) return <p className="p-10 text-center text-tenue">No encontramos este pedido (o no lo puedes ver).</p>;
 
   const fis = empresa.data?.fiscal;
@@ -59,7 +62,11 @@ export default function HojaSalidaPagina() {
     const deEsta = vigente?.lineas?.find((l) => l.id === p.id)?.series;
     return deEsta?.length ? deEsta : p.series;
   };
-  const renglones = [
+  // La constancia: los servicios del pedido, completos, con la fecha en que se marcaron hechos.
+  const realizado = h.salidas.filter((x) => !x.anulada_en).map((x) => x.entregado_en).sort().pop();
+  const renglones = servicio ? h.partidas.filter((p) => p.servicio).map((p) => ({
+    clave: p.id, cantidad: `${numero(Number(p.cantidad))} ${plural(p.unidad, Number(p.cantidad))}`, texto: p.titulo, detalle: p.descripcion, series: [] as string[],
+  })) : [
     ...fisicas.map((p) => ({ p, n: cuanto(p) })).filter((x) => x.n > 0)
       .map(({ p, n }) => ({ clave: p.id, cantidad: `${numero(n)} ${plural(p.unidad, n)}`, texto: p.titulo, detalle: p.descripcion, series: series(p) })),
     ...h.sueltas.map((s) => ({ clave: s.folio, cantidad: "1 pieza", texto: s.equipo, detalle: null, series: s.serie ? [s.serie] : [] })),
@@ -81,7 +88,7 @@ export default function HojaSalidaPagina() {
           <button type="button" onClick={() => (window.history.length > 1 ? navegar(-1) : window.close())} className="inline-flex items-center gap-1.5 text-sm text-tenue hover:text-texto">
             <ArrowLeft className="h-4 w-4" /> Volver
           </button>
-          <span className="text-sm text-tenue hidden sm:inline">Imprime dos: una se queda el cliente y la firmada regresa a la planta.</span>
+          <span className="text-sm text-tenue hidden sm:inline">{servicio ? "El cliente la firma de conformidad; súbela firmada al pedido si quieres guardarla." : "Imprime dos: una se queda el cliente y la firmada regresa a la planta."}</span>
           <Boton className="ml-auto" onClick={() => window.print()}><Printer className="h-4 w-4" />Imprimir / PDF</Boton>
         </div>
       </div>
@@ -98,8 +105,8 @@ export default function HojaSalidaPagina() {
             )}
           </div>
           <div className="text-right shrink-0">
-            <p className="text-[22px] font-bold tracking-[0.12em] text-marca">HOJA DE SALIDA</p>
-            <p className="mt-1 text-[15px] font-semibold cifra">{h.pedido.folio}{vigente ? ` · ${vigente.numero}` : ""}</p>
+            <p className="text-[22px] font-bold tracking-[0.12em] text-marca">{servicio ? "CONSTANCIA DE SERVICIO" : "HOJA DE SALIDA"}</p>
+            <p className="mt-1 text-[15px] font-semibold cifra">{h.pedido.folio}{vigente && !servicio ? ` · ${vigente.numero}` : ""}</p>
             {h.pedido.folio_anterior && <p className="text-[11px] text-tenue">Antes {h.pedido.folio_anterior}</p>}
             <p className="text-[11px] text-tenue mt-1">Pedido del {fecha(h.pedido.fecha)}</p>
           </div>
@@ -114,8 +121,9 @@ export default function HojaSalidaPagina() {
             {(h.cliente?.ciudad || h.cliente?.estado) && <p className="text-tenue">{[h.cliente.ciudad, h.cliente.estado].filter(Boolean).join(", ")}</p>}
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wide text-tenue">Entrega</p>
-            <p>{h.pedido.direccion_entrega || "Recoge en planta"}</p>
+            <p className="text-[10px] uppercase tracking-wide text-tenue">{servicio ? "Lugar del servicio" : "Entrega"}</p>
+            <p>{h.pedido.direccion_entrega || (servicio ? "—" : "Recoge en planta")}</p>
+            {servicio && realizado && <p className="mt-1">Realizado el {fecha(realizado)}</p>}
             {h.vendedor && <p className="text-tenue mt-1">Vendedor: {h.vendedor.nombre}{h.vendedor.telefono ? ` · ${h.vendedor.telefono}` : ""}</p>}
           </div>
         </section>
@@ -125,7 +133,7 @@ export default function HojaSalidaPagina() {
             <tr className="text-left text-[11px] uppercase tracking-wide text-tenue border-b border-borde">
               <th className="py-2 pr-3 w-[16%]">Cantidad</th>
               <th className="py-2 pr-3">Descripción</th>
-              <th className="py-2 w-[26%]">Número de serie</th>
+              {!servicio && <th className="py-2 w-[26%]">Número de serie</th>}
             </tr>
           </thead>
           <tbody>
@@ -136,7 +144,7 @@ export default function HojaSalidaPagina() {
                   <p className="font-medium">{r.texto}</p>
                   {r.detalle && <p className="text-[11px] text-tenue whitespace-pre-line">{r.detalle}</p>}
                 </td>
-                <td className="py-2.5 cifra">{r.series.length ? r.series.join(", ") : <span className="text-tenue">—</span>}</td>
+                {!servicio && <td className="py-2.5 cifra">{r.series.length ? r.series.join(", ") : <span className="text-tenue">—</span>}</td>}
               </tr>
             ))}
           </tbody>
@@ -144,23 +152,25 @@ export default function HojaSalidaPagina() {
         {h.como_venia && <p className="mt-2 text-[11px] text-tenue">Así venía en el pedido: {h.como_venia}</p>}
 
         <section className="bloque mt-6 rounded-lg border border-borde p-3 text-[11.5px]">
-          <p>Recibo el equipo descrito arriba completo y en buen estado aparente. Las observaciones, si las hay, se anotan aquí:</p>
+          <p>{servicio
+            ? "Hago constar que se me dio el servicio descrito arriba y que lo recibo de conformidad. Las observaciones, si las hay, se anotan aquí:"
+            : "Recibo el equipo descrito arriba completo y en buen estado aparente. Las observaciones, si las hay, se anotan aquí:"}</p>
           <div className="mt-2 h-14 border-b border-dashed border-borde" />
         </section>
 
         <section className="bloque mt-10 grid grid-cols-2 gap-10 text-center text-[11.5px]">
           <div>
-            <div className="h-16 border-b border-texto flex items-end justify-center pb-1 text-[13px]">{vigente?.entregado_por ?? ""}</div>
-            <p className="mt-1 font-semibold">Entrega (Hegamex)</p>
+            <div className="h-16 border-b border-texto flex items-end justify-center pb-1 text-[13px]">{servicio ? "" : vigente?.entregado_por ?? ""}</div>
+            <p className="mt-1 font-semibold">{servicio ? "Realizó (Hegamex)" : "Entrega (Hegamex)"}</p>
             <p className="text-tenue">Nombre y firma</p>
           </div>
           <div>
-            <div className="h-16 border-b border-texto flex items-end justify-center pb-1 text-[13px]">{vigente?.recibio ?? ""}</div>
-            <p className="mt-1 font-semibold">Recibe (cliente)</p>
-            <p className="text-tenue">Nombre, firma y fecha{vigente ? ` · ${fechaYHora(vigente.entregado_en)}` : ""}</p>
+            <div className="h-16 border-b border-texto flex items-end justify-center pb-1 text-[13px]">{servicio ? "" : vigente?.recibio ?? ""}</div>
+            <p className="mt-1 font-semibold">{servicio ? "Recibe de conformidad (cliente)" : "Recibe (cliente)"}</p>
+            <p className="text-tenue">Nombre, firma y fecha{vigente && !servicio ? ` · ${fechaYHora(vigente.entregado_en)}` : ""}</p>
           </div>
         </section>
-        <section className="bloque mt-8 grid grid-cols-2 gap-10 text-center text-[11.5px]">
+        {!servicio && <section className="bloque mt-8 grid grid-cols-2 gap-10 text-center text-[11.5px]">
           <div>
             <div className="h-10 border-b border-borde" />
             <p className="mt-1 text-tenue">Transportista o chofer</p>
@@ -169,7 +179,7 @@ export default function HojaSalidaPagina() {
             <div className="h-10 border-b border-borde" />
             <p className="mt-1 text-tenue">Placas del vehículo</p>
           </div>
-        </section>
+        </section>}
       </div>
     </div>
   );
