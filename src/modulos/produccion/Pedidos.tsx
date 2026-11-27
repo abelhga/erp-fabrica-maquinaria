@@ -173,6 +173,7 @@ export default function PedidosPlanta() {
 }
 
 function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenStock[]; gerencia: boolean }) {
+  const verTaller = useSesion().puede("produccion");
   const crear = useCrearOrdenesPedido({
     exito: (n) => n ? `${n} orden(es) creadas para ${p.folio}` : "No había equipos con lista de materiales por ordenar",
     invalidar: [CLAVE_PED, CLAVE],
@@ -251,7 +252,8 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
                 <ul className="mt-2 space-y-1.5">
                   {x.ordenes.map((o) => (
                     <li key={o.id} className="flex items-center gap-3 text-sm">
-                      <Link to={`/produccion/ordenes/${o.id}`} className="font-medium cifra text-marca-texto hover:underline whitespace-nowrap">{o.folio}</Link>
+                      {verTaller ? <Link to={`/produccion/ordenes/${o.id}`} className="font-medium cifra text-marca-texto hover:underline whitespace-nowrap">{o.folio}</Link>
+                    : <span className="font-medium cifra whitespace-nowrap">{o.folio}</span>}
                       {o.serie && <span className="text-xs text-tenue cifra" data-explain={GLOSARIO.numeroSerie} data-explain-title="Número de serie">{o.serie}</span>}
                       <span data-explain={EXPLICA_ESTADO_OP[o.estado]}><Insignia tono={ESTADO_OP[o.estado]?.tono}>{ESTADO_OP[o.estado]?.texto ?? o.estado}</Insignia></span>
                       <div className="flex-1 min-w-[80px]" data-explain={GLOSARIO.avanceOrden} data-explain-title="Avance"><BarraAvance valor={o.avance} /></div>
@@ -295,7 +297,8 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
               <li key={o.id} className="text-sm">
                 <p className="truncate" title={o.equipo}>{abreviarEquipo(o.equipo)} <span className="text-xs text-tenue cifra">{o.clave}</span></p>
                 <div className="flex items-center gap-3">
-                  <Link to={`/produccion/ordenes/${o.id}`} className="font-medium cifra text-marca-texto hover:underline whitespace-nowrap">{o.folio}</Link>
+                  {verTaller ? <Link to={`/produccion/ordenes/${o.id}`} className="font-medium cifra text-marca-texto hover:underline whitespace-nowrap">{o.folio}</Link>
+                    : <span className="font-medium cifra whitespace-nowrap">{o.folio}</span>}
                   {o.serie && <span className="text-xs text-tenue cifra" data-explain={GLOSARIO.numeroSerie} data-explain-title="Número de serie">{o.serie}</span>}
                   <span data-explain={EXPLICA_ESTADO_OP[o.estado]}><Insignia tono={ESTADO_OP[o.estado]?.tono}>{ESTADO_OP[o.estado]?.texto ?? o.estado}</Insignia></span>
                   <div className="flex-1 min-w-[80px]" data-explain={GLOSARIO.avanceOrden} data-explain-title="Avance"><BarraAvance valor={o.avance} /></div>
@@ -313,7 +316,8 @@ function DetallePedido({ p, stock, gerencia }: { p: PedidoPlanta; stock: OrdenSt
           </ul>
         </div>
       )}
-      {enTaller.length > 0 && (
+      {/* El plan y las órdenes son de producción: importaciones abre esta pantalla solo para las descripciones. */}
+      {enTaller.length > 0 && verTaller && (
         <div data-explain={GLOSARIO.planTaller} data-explain-title="Plan del taller">
           <p className="font-medium mb-2">Plan del taller</p>
           <GanttCompacto ordenes={enTaller.map((o) => o.id)} alAbrir={(op) => navegar(`/produccion/ordenes/${op}`)} />

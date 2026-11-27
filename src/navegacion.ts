@@ -14,8 +14,8 @@ import type { Modulo, Rol } from "./lib/sesion";
 // `tambien`: un segundo permiso que también hace falta (Resultados: finanzas y costos, porque trae márgenes).
 export interface EntradaMenu {
   ruta: string; texto: string; icono: LucideIcon; modulo: Modulo; nivel?: number; tambien?: { modulo: Modulo; nivel?: number };
-  /** Otro permiso con el que también se entra (compras ve los pedidos de la planta sin ser de producción). */
-  o?: { modulo: Modulo; nivel?: number };
+  /** Otros permisos con los que también se entra (almacén e importaciones ven los pedidos de la planta sin ser de producción). */
+  o?: { modulo: Modulo; nivel?: number } | { modulo: Modulo; nivel?: number }[];
 }
 export interface SeccionMenu { titulo: string; entradas: EntradaMenu[] }
 
@@ -92,7 +92,9 @@ export const MENU: SeccionMenu[] = [
       { ruta: "/produccion/gantt", texto: "Gantt (plan del taller)", icono: GanttChart, modulo: "produccion", nivel: 2 },
       { ruta: "/produccion/metricas", texto: "Métricas", icono: Gauge, modulo: "procesos" },
       { ruta: "/produccion/mejoras", texto: "Mejoras (kaizen)", icono: Lightbulb, modulo: "produccion", nivel: 2 },
-      { ruta: "/produccion/pedidos", texto: "Pedidos", icono: ShoppingCart, modulo: "produccion", nivel: 2, o: { modulo: "inventario", nivel: 2 } },
+      { ruta: "/produccion/pedidos", texto: "Pedidos", icono: ShoppingCart, modulo: "produccion", nivel: 2,
+        // Importaciones también hace los manuales y fichas técnicas que se entregan con cada equipo.
+        o: [{ modulo: "inventario", nivel: 2 }, { modulo: "importaciones", nivel: 3 }] },
       { ruta: "/produccion/ordenes", texto: "Órdenes y material", icono: ClipboardCheck, modulo: "produccion" },
       { ruta: "/produccion/seriales", texto: "Números de serie", icono: Hash, modulo: "produccion" },
       { ruta: "/produccion/terminal", texto: "Terminal de piso", icono: Tablet, modulo: "produccion", nivel: 2 },
