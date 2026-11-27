@@ -156,11 +156,12 @@ export const VENTAS: Record<string, AyudaPantalla> = {
   "/ventas/clientes": {
     resumen: "El directorio de clientes de todos los vendedores: de quién es cada cuenta y hasta cuándo, para no duplicarla ni pisarse.",
     pasos: [
-      "Antes de dar de alta uno, búscalo por nombre, razón social, RFC o ciudad.",
+      "Antes de dar de alta uno, búscalo por nombre, razón social, RFC, contacto o ciudad.",
       "Dale «Nuevo cliente»: mientras escribes nombre y teléfono te dice si ya existe; si sí, «Usar este».",
     ],
     detalle: [
       "Todos ven que la cuenta existe y de quién es; teléfonos, historial y saldo solo los ven el dueño, la gerencia y cobranza.",
+      "La búsqueda también encuentra al cliente por el nombre, correo o teléfono de una de sus personas de contacto, pero solo en los clientes cuyos contactos puedes ver: los tuyos, los libres y, si eres gerente o de cobranza, todos.",
       "«Mis clientes» son los tuyos y «Libres» los que no tienen dueño. En «Vendedor dueño» ves hasta cuándo es suya la cuenta: en ámbar si le quedan menos de 30 días, en rojo si ya venció.",
       "Con CSV te llevas la lista a Excel.",
       "Si das de alta a alguien que ya es cliente de otro vendedor (mismo teléfono, correo o nombre), o le cotizas a un cliente de otro, a ese vendedor y a la gerencia les llega un aviso. No se bloquea: es para que se pongan de acuerdo.",

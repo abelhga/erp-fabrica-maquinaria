@@ -15,6 +15,8 @@ export interface Columna<T> {
   oculta?: boolean;
   /** No entra en la búsqueda de texto (p.ej. importes). */
   sinBusqueda?: boolean;
+  /** Texto que también encuentra la fila al buscar, sin enseñarse ni exportarse (los contactos de un cliente). */
+  buscarTambien?: (f: T) => string | null | undefined;
   /** Qué significa la columna, para el modo tutorial (casi siempre una entrada de `GLOSARIO`). */
   explica?: string;
 }
@@ -51,7 +53,7 @@ export function TablaDatos<T>({
   const procesadas = useMemo(() => {
     let r = filas ?? [];
     if (busqueda.trim()) {
-      r = r.filter((f) => coincide(visibles.filter((c) => !c.sinBusqueda).map((c) => String(valorDe(c, f) ?? "")).join(" "), busqueda));
+      r = r.filter((f) => coincide(visibles.filter((c) => !c.sinBusqueda).map((c) => `${valorDe(c, f) ?? ""} ${c.buscarTambien?.(f) ?? ""}`).join(" "), busqueda));
     }
     if (orden) {
       const c = columnas.find((x) => x.clave === orden.clave);
