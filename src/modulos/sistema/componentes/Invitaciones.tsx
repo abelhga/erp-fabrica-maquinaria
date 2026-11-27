@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createClient } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { Copy, Info, MailPlus, Monitor, RefreshCw, Tablet, Trash2 } from "lucide-react";
 import { Tarjeta, EncabezadoTarjeta } from "@/components/ui/tarjeta";
@@ -170,26 +169,25 @@ function CrearCuentaAparato({ tipo, alCerrar }: { tipo: Aparato; alCerrar: () =>
   const a = APARATO[tipo];
   const [f, setF] = useState(() => ({ nombre: a.nombre, correo: correoDeAparato(a.nombre, tipo), clave: contrasenaNueva() }));
   const [correoAMano, setCorreoAMano] = useState(false);
-  const [estado, setEstado] = useState<"captura" | "creando" | { listo: boolean; confirmar: boolean }>("captura");
+  const [estado, setEstado] = useState<"captura" | "creando" | { listo: boolean }>("captura");
 
   async function crear(e: FormEvent) {
     e.preventDefault();
     const correo = f.correo.trim().toLowerCase();
     setEstado("creando");
     try {
-      // 1) La invitación le da su rol (pantalla o terminal) al crearse la cuenta (al_crear_usuario).
-      await q(supabase.from("invitaciones").insert({ correo, nombre: f.nombre.trim(), roles: [a.rol] }));
-      // 2) La cuenta con contraseña, con un cliente aparte que no guarda sesión:
-      //    con el cliente normal, signUp cambiaría tu sesión por la del aparato.
-      const aparte = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY, {
-        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: "hegamex-alta-pantalla" },
-      });
-      const { data, error } = await aparte.auth.signUp({ email: correo, password: f.clave, options: { data: { full_name: f.nombre.trim() } } });
-      if (error) {
-        await supabase.from("invitaciones").delete().eq("correo", correo);
-        throw error;
-      }
-      setEstado({ listo: true, confirmar: !data.session });
+      // La cuenta se crea en el servidor ya confirmada (función crear-aparato): con signUp desde
+      // aquí Supabase mandaba un correo de confirmación por cuenta, a un buzón que no existe, y a
+      // la tercera de la hora fallaba con «email rate limit exceeded».
+      const { data: ses } = await supabase.auth.getSession();
+      const r = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/crear-aparato`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${ses.session?.access_token}`, apikey: import.meta.env.VITE_SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo, nombre: f.nombre.trim(), correo, clave: f.clave }),
+      }).catch(() => { throw new Error("No se pudo hablar con el servidor. Revisa la conexión y vuelve a intentar."); });
+      const cuerpo = await r.json().catch(() => ({})) as { ok?: boolean; error?: string };
+      if (!r.ok || !cuerpo.ok) throw new Error(cuerpo.error ?? `El servidor respondió ${r.status}`);
+      setEstado({ listo: true });
       qc.invalidateQueries({ queryKey: ["lista_usuarios"] });
       qc.invalidateQueries({ queryKey: ["invitaciones"] });
     } catch (err) {
@@ -225,7 +223,6 @@ function CrearCuentaAparato({ tipo, alCerrar }: { tipo: Aparato; alCerrar: () =>
               <li>Ajustes → Pantalla y brillo → Bloqueo automático: <b className="text-texto">Nunca</b>, y déjala con su cargador.</li>
             </ol>
           )}
-          {estado.confirmar && <p className="text-aviso">El servidor pide confirmar el correo: llegará un mensaje a {f.correo}; hasta abrirlo {tipo === "tv" ? "la TV" : "la tablet"} no podrá entrar.</p>}
           <p className="text-tenue">Guarda la contraseña: no se vuelve a mostrar. Si se pierde, crea otra cuenta y desactiva esta.</p>
         </div>
       ) : (
@@ -233,7 +230,7 @@ function CrearCuentaAparato({ tipo, alCerrar }: { tipo: Aparato; alCerrar: () =>
           <Campo etiqueta="Nombre" ayuda="Para reconocerla en la lista de usuarios.">
             <Entrada autoFocus required value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value, correo: correoAMano ? f.correo : correoDeAparato(e.target.value, tipo) })} />
           </Campo>
-          <Campo etiqueta="Correo de la cuenta" ayuda="Sale del nombre, sin acentos ni espacios. No necesita ser un buzón real si el servidor no pide confirmación.">
+          <Campo etiqueta="Correo de la cuenta" ayuda="Sale del nombre, sin acentos ni espacios. No tiene que ser un buzón real: la cuenta se crea ya confirmada, sin mandar correo.">
             <Entrada type="email" required value={f.correo} onChange={(e) => { setCorreoAMano(true); setF({ ...f, correo: correoLimpio(e.target.value) }); }} />
           </Campo>
           <Campo etiqueta="Contraseña" ayuda={`Generada para dictarla fácil ${tipo === "tv" ? "en la TV" : "en la tablet"} (sin 0/O ni 1/l).`}>

@@ -6919,14 +6919,14 @@ export const CONCEPTOS_MANUAL: ConceptoManual[] = [
   "modulos": [
    "admin"
   ],
-  "texto": "Cuenta con correo y contraseña para la TV del taller, con el rol Pantalla de piso: entra directo al tablero de piso y no ve nada más. El correo se arma solo con el nombre de la pantalla (sin acentos ni espacios, que un correo no admite) y no necesita ser un buzón real, salvo que al crearla el ERP pida confirmar el correo."
+  "texto": "Cuenta con correo y contraseña para la TV del taller, con el rol Pantalla de piso: entra directo al tablero de piso y no ve nada más. El correo se arma solo con el nombre de la pantalla (sin acentos ni espacios, que un correo no admite) y no necesita ser un buzón real: la cuenta se crea ya confirmada, sin mandar ningún correo."
  },
  {
   "clave": "cuentaTerminal",
   "modulos": [
    "admin"
   ],
-  "texto": "Cuenta con correo y contraseña para la tablet del taller, con el rol Terminal de piso: entra directo a la terminal y no ve nada más. Con ella se marca el avance de las etapas (iniciar, pausar, terminar, quién trabaja) y se reportan fallas de máquinas. Cada quien elige su nombre en la terminal, así que una cuenta basta para toda el área. No necesita cuenta de Google, y el correo no tiene que ser un buzón real salvo que al crearla el ERP pida confirmar el correo."
+  "texto": "Cuenta con correo y contraseña para la tablet del taller, con el rol Terminal de piso: entra directo a la terminal y no ve nada más. Con ella se marca el avance de las etapas (iniciar, pausar, terminar, quién trabaja) y se reportan fallas de máquinas. Cada quien elige su nombre en la terminal, así que una cuenta basta para toda el área. No necesita cuenta de Google, y el correo no tiene que ser un buzón real: la cuenta se crea ya confirmada, sin mandar ningún correo."
  },
  {
   "clave": "cumplimientoEquipo",
